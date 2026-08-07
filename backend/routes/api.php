@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TaskController;
+use App\Http\Controllers\Api\AccessController;
+use App\Http\Controllers\Api\DirectoryController;
 
 Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
 
@@ -18,5 +20,18 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/dashboard', DashboardController::class);
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus']);
+        Route::get('/users', [AccessController::class, 'users']);
+        Route::post('/users', [AccessController::class, 'storeUser']);
+        Route::post('/users/{user}/roles', [AccessController::class, 'assignRole']);
+        Route::get('/roles', [AccessController::class, 'roles']);
+        Route::post('/roles', [AccessController::class, 'storeRole']);
+        Route::get('/permissions', [AccessController::class, 'permissions']);
+        Route::post('/permissions', [AccessController::class, 'storePermission']);
+        Route::prefix('directory')->group(function (): void {
+            Route::get('/{module}', [DirectoryController::class, 'index']);
+            Route::post('/{module}', [DirectoryController::class, 'store']);
+            Route::put('/{module}/{id}', [DirectoryController::class, 'update']);
+            Route::delete('/{module}/{id}', [DirectoryController::class, 'destroy']);
+        });
     });
 });
