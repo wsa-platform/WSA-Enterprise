@@ -64,3 +64,6 @@ export const updateTaskStatus = (token: string, taskId: number, status: string) 
   }, token)
 
 export const logout = (token: string) => request<void>('/auth/logout', { method: 'POST' }, token)
+
+export const getModule = (token: string, path: string) => request<unknown[]>(path, {}, token)
+export const getReport = (token: string) => request<Record<string, number>>('/reports/summary', {}, token)

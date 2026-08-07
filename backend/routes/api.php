@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AccessController;
 use App\Http\Controllers\Api\DirectoryController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\OperationsController;
+use App\Http\Controllers\Api\CommerceController;
 
 Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
 
@@ -46,5 +47,12 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/purchase-orders', [OperationsController::class, 'purchaseOrders']);
         Route::post('/purchase-orders', [OperationsController::class, 'storePurchaseOrder']);
         Route::post('/purchase-orders/{purchaseOrder}/receive', [OperationsController::class, 'receivePurchaseOrder']);
+        Route::get('/sales-orders', [CommerceController::class, 'salesOrders']);
+        Route::post('/sales-orders', [CommerceController::class, 'storeSalesOrder']);
+        Route::get('/invoices', [CommerceController::class, 'invoices']);
+        Route::post('/invoices', [CommerceController::class, 'storeInvoice']);
+        Route::get('/reports/summary', [CommerceController::class, 'report']);
+        Route::get('/notifications', [CommerceController::class, 'notifications']);
+        Route::post('/notifications/{notification}/read', [CommerceController::class, 'readNotification']);
     });
 });

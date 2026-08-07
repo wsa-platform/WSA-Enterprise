@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
   getDashboard,
+  getModule,
+  getReport,
   login,
   logout,
   updateTaskStatus,
@@ -26,6 +28,9 @@ function App() {
   const [loading, setLoading] = useState(Boolean(token))
   const [email, setEmail] = useState('admin@wsa.test')
   const [password, setPassword] = useState('password')
+  const [modulePath, setModulePath] = useState('/users')
+  const [moduleRows, setModuleRows] = useState<unknown[]>([])
+  const [report, setReport] = useState<Record<string, number> | null>(null)
 
   const loadDashboard = async () => {
     if (!token) return
@@ -78,6 +83,21 @@ function App() {
     }
   }
 
+  const loadModule = async (path = modulePath) => {
+    try {
+      setModulePath(path)
+      if (path === '/reports/summary') {
+        setReport(await getReport(token))
+        setModuleRows([])
+      } else {
+        setReport(null)
+        setModuleRows(await getModule(token, path))
+      }
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Unable to load module.')
+    }
+  }
+
   if (!token || !user) {
     return (
       <main className="login-shell">
@@ -105,6 +125,7 @@ function App() {
           <a className="active" href="#overview">Overview</a>
           <a href="#projects">Projects</a>
           <a href="#tasks">Tasks</a>
+          <a href="#modules">Business modules</a>
         </nav>
         <div className="account">
           <strong>{user.name}</strong>
@@ -156,12 +177,28 @@ function App() {
                 </article>)}
               </div>
             </section>
+            <section className="panel" id="modules">
+              <div className="panel-heading"><div><p className="eyebrow">PHASE 3</p><h2>Business modules</h2></div></div>
+              <div className="module-tabs">
+                {modules.map((module) => <button key={module.path} className={modulePath === module.path ? 'selected' : ''} onClick={() => void loadModule(module.path)}>{module.label}</button>)}
+              </div>
+              {report ? <div className="report-grid">{Object.entries(report).map(([key, value]) => <div key={key}><span>{formatStatus(key)}</span><strong>{value}</strong></div>)}</div> : <div className="module-results">
+                {moduleRows.length === 0 ? <p className="muted">Select a module to load its records.</p> : moduleRows.slice(0, 8).map((row, index) => <pre key={index}>{JSON.stringify(row, null, 2)}</pre>)}
+              </div>}
+            </section>
           </>
         )}
       </main>
     </div>
   )
 }
+
+const modules = [
+  { label: 'Users', path: '/users' }, { label: 'Roles', path: '/roles' }, { label: 'Permissions', path: '/permissions' },
+  { label: 'Companies', path: '/directory/companies' }, { label: 'Branches', path: '/directory/branches' }, { label: 'Employees', path: '/directory/employees' },
+  { label: 'Customers', path: '/catalog/customers' }, { label: 'Suppliers', path: '/catalog/suppliers' }, { label: 'Products', path: '/catalog/products' }, { label: 'Categories', path: '/catalog/categories' }, { label: 'Warehouses', path: '/catalog/warehouses' },
+  { label: 'Inventory', path: '/inventory' }, { label: 'Purchase orders', path: '/purchase-orders' }, { label: 'Sales orders', path: '/sales-orders' }, { label: 'Invoices', path: '/invoices' }, { label: 'Reports', path: '/reports/summary' }, { label: 'Notifications', path: '/notifications' },
+]
 
 function Metric({ label, value, tone }: { label: string; value: number; tone: string }) {
   return <article className={`metric ${tone}`}><span>{label}</span><strong>{value}</strong></article>
