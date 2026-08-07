@@ -1,0 +1,17 @@
+FROM composer:2 AS dependencies
+WORKDIR /app
+COPY composer.json composer.lock* ./
+RUN composer install --no-interaction --no-scripts --prefer-dist
+
+FROM php:8.3-fpm-alpine
+WORKDIR /var/www/html
+RUN apk add --no-cache postgresql-dev libzip-dev oniguruma-dev $PHPIZE_DEPS \
+    && docker-php-ext-install pdo_pgsql zip bcmath opcache \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del $PHPIZE_DEPS
+COPY --from=dependencies /app/vendor ./vendor
+COPY . .
+RUN chown -R www-data:www-data storage bootstrap/cache
+EXPOSE 9000
+CMD ["php-fpm"]

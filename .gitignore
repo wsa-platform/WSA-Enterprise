@@ -1,0 +1,16 @@
+# Environment and dependencies
+.env
+**/.env
+**/vendor/
+**/node_modules/
+
+# Builds and tooling
+**/dist/
+**/.dart_tool/
+**/build/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

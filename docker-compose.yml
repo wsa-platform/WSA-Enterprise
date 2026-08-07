@@ -1,0 +1,61 @@
+services:
+  backend:
+    build: ./backend
+    env_file: ./backend/.env.example
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./backend:/var/www/html
+      - backend_vendor:/var/www/html/vendor
+    networks: [wsa]
+
+  frontend:
+    build: ./frontend
+    networks: [wsa]
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    depends_on: [backend, frontend]
+    volumes:
+      - ./backend:/var/www/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [wsa]
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: wsa_enterprise
+      POSTGRES_USER: wsa
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wsa -d wsa_enterprise"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [wsa]
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks: [wsa]
+
+volumes:
+  backend_vendor:
+  postgres_data:
+  redis_data:
+
+networks:
+  wsa:
+    driver: bridge
