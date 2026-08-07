@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\AccessController;
 use App\Http\Controllers\Api\DirectoryController;
 use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\OperationsController;
 
 Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
 
@@ -40,5 +41,10 @@ Route::prefix('v1')->group(function (): void {
             Route::put('/{module}/{id}', [CatalogController::class, 'update']);
             Route::delete('/{module}/{id}', [CatalogController::class, 'destroy']);
         });
+        Route::get('/inventory', [OperationsController::class, 'inventory']);
+        Route::post('/inventory/adjustments', [OperationsController::class, 'adjustInventory']);
+        Route::get('/purchase-orders', [OperationsController::class, 'purchaseOrders']);
+        Route::post('/purchase-orders', [OperationsController::class, 'storePurchaseOrder']);
+        Route::post('/purchase-orders/{purchaseOrder}/receive', [OperationsController::class, 'receivePurchaseOrder']);
     });
 });
