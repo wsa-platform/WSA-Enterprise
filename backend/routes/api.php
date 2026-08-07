@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\AccessController;
 use App\Http\Controllers\Api\DirectoryController;
+use App\Http\Controllers\Api\CatalogController;
 
 Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
 
@@ -32,6 +33,12 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/{module}', [DirectoryController::class, 'store']);
             Route::put('/{module}/{id}', [DirectoryController::class, 'update']);
             Route::delete('/{module}/{id}', [DirectoryController::class, 'destroy']);
+        });
+        Route::prefix('catalog')->group(function (): void {
+            Route::get('/{module}', [CatalogController::class, 'index']);
+            Route::post('/{module}', [CatalogController::class, 'store']);
+            Route::put('/{module}/{id}', [CatalogController::class, 'update']);
+            Route::delete('/{module}/{id}', [CatalogController::class, 'destroy']);
         });
     });
 });
