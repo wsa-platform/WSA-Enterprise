@@ -10,6 +10,9 @@ use App\Http\Controllers\Api\DirectoryController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\OperationsController;
 use App\Http\Controllers\Api\CommerceController;
+use App\Http\Controllers\Api\FarmController;
+use App\Http\Controllers\Api\CropController;
+use App\Http\Controllers\Api\SoilController;
 
 Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
 
@@ -54,5 +57,23 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/reports/summary', [CommerceController::class, 'report']);
         Route::get('/notifications', [CommerceController::class, 'notifications']);
         Route::post('/notifications/{notification}/read', [CommerceController::class, 'readNotification']);
+        Route::prefix('farm')->group(function (): void {
+            Route::get('/{module}', [FarmController::class, 'index']);
+            Route::post('/{module}', [FarmController::class, 'store']);
+            Route::put('/{module}/{id}', [FarmController::class, 'update']);
+            Route::delete('/{module}/{id}', [FarmController::class, 'destroy']);
+        });
+        Route::prefix('crop')->group(function (): void {
+            Route::get('/{module}', [CropController::class, 'index']);
+            Route::post('/{module}', [CropController::class, 'store']);
+            Route::put('/{module}/{id}', [CropController::class, 'update']);
+            Route::delete('/{module}/{id}', [CropController::class, 'destroy']);
+        });
+        Route::prefix('soil')->group(function (): void {
+            Route::get('/{module}', [SoilController::class, 'index']);
+            Route::post('/{module}', [SoilController::class, 'store']);
+            Route::put('/{module}/{id}', [SoilController::class, 'update']);
+            Route::delete('/{module}/{id}', [SoilController::class, 'destroy']);
+        });
     });
 });

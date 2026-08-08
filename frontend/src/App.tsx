@@ -178,7 +178,7 @@ function App() {
               </div>
             </section>
             <section className="panel" id="modules">
-              <div className="panel-heading"><div><p className="eyebrow">PHASE 3</p><h2>Business modules</h2></div></div>
+              <div className="panel-heading"><div><p className="eyebrow">MODULES</p><h2>Business &amp; agriculture</h2></div></div>
               <div className="module-tabs">
                 {modules.map((module) => <button key={module.path} className={modulePath === module.path ? 'selected' : ''} onClick={() => void loadModule(module.path)}>{module.label}</button>)}
               </div>
@@ -198,6 +198,9 @@ const modules = [
   { label: 'Companies', path: '/directory/companies' }, { label: 'Branches', path: '/directory/branches' }, { label: 'Employees', path: '/directory/employees' },
   { label: 'Customers', path: '/catalog/customers' }, { label: 'Suppliers', path: '/catalog/suppliers' }, { label: 'Products', path: '/catalog/products' }, { label: 'Categories', path: '/catalog/categories' }, { label: 'Warehouses', path: '/catalog/warehouses' },
   { label: 'Inventory', path: '/inventory' }, { label: 'Purchase orders', path: '/purchase-orders' }, { label: 'Sales orders', path: '/sales-orders' }, { label: 'Invoices', path: '/invoices' }, { label: 'Reports', path: '/reports/summary' }, { label: 'Notifications', path: '/notifications' },
+  { label: 'Farms', path: '/farm/farms' }, { label: 'Regions', path: '/farm/regions' }, { label: 'Fields', path: '/farm/fields' }, { label: 'Blocks', path: '/farm/blocks' }, { label: 'Greenhouses', path: '/farm/greenhouses' }, { label: 'Irrigation zones', path: '/farm/irrigation-zones' }, { label: 'GPS coordinates', path: '/farm/gps-coordinates' }, { label: 'GIS maps', path: '/farm/gis-maps' },
+  { label: 'Crop types', path: '/crop/types' }, { label: 'Varieties', path: '/crop/varieties' }, { label: 'Seasons', path: '/crop/seasons' }, { label: 'Growth stages', path: '/crop/growth-stages' }, { label: 'Harvest', path: '/crop/harvests' }, { label: 'Yield', path: '/crop/yields' },
+  { label: 'Soil analysis', path: '/soil/analyses' }, { label: 'Soil nutrients', path: '/soil/nutrients' }, { label: 'Soil recommendations', path: '/soil/recommendations' },
 ]
 
 function Metric({ label, value, tone }: { label: string; value: number; tone: string }) {
