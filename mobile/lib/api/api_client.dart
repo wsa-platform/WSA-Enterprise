@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -244,19 +245,15 @@ class ApiClient {
     final exception = ApiException(message, statusCode: response.statusCode, errors: errors);
 
     if (response.statusCode == 401 && _token != null) {
-      _token = null;
-      _organizationId = null;
-      _user = null;
-      _organizations = [];
-      SharedPreferences.getInstance().then((prefs) async {
-        await prefs.remove('wsa_token');
-        await prefs.remove('wsa_organization_id');
-        await prefs.remove('wsa_user');
-      });
-      onUnauthorized?.call();
+      unawaited(_handleUnauthorized());
     }
 
     return exception;
+  }
+
+  Future<void> _handleUnauthorized() async {
+    await _clearSession();
+    onUnauthorized?.call();
   }
 
   Map<String, String> _headers({bool includeJson = false}) {

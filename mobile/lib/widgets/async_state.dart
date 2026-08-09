@@ -5,6 +5,7 @@ class AsyncState extends StatelessWidget {
     super.key,
     required this.loading,
     this.error,
+    this.forbidden = false,
     this.empty = false,
     this.emptyMessage = 'No records found.',
     this.onRetry,
@@ -13,6 +14,7 @@ class AsyncState extends StatelessWidget {
 
   final bool loading;
   final String? error;
+  final bool forbidden;
   final bool empty;
   final String emptyMessage;
   final VoidCallback? onRetry;
@@ -22,6 +24,26 @@ class AsyncState extends StatelessWidget {
   Widget build(BuildContext context) {
     if (loading && empty) {
       return const Center(child: CircularProgressIndicator());
+    }
+
+    if (forbidden) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.lock_outline, size: 40, color: Colors.orange),
+              const SizedBox(height: 12),
+              Text(
+                error ?? 'You do not have permission to view these records.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.orange),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     if (error != null) {

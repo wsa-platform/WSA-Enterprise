@@ -81,6 +81,7 @@ class ModuleListScreen extends StatefulWidget {
 class _ModuleListScreenState extends State<ModuleListScreen> {
   List<dynamic> rows = [];
   String? error;
+  bool forbidden = false;
   bool loading = false;
 
   @override
@@ -102,10 +103,12 @@ class _ModuleListScreenState extends State<ModuleListScreen> {
     setState(() {
       loading = true;
       error = null;
+      forbidden = false;
     });
     try {
       rows = await widget.client.fetchList(widget.path);
     } on ApiException catch (e) {
+      forbidden = e.statusCode == 403;
       error = e.toString();
       rows = [];
     } catch (e) {
@@ -122,6 +125,19 @@ class _ModuleListScreenState extends State<ModuleListScreen> {
   }
 
   Future<void> deleteRecord(int id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete record'),
+        content: const Text('This action cannot be undone. Delete this record?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     await widget.client.deleteRecord(widget.path.split('?').first, id);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -138,6 +154,7 @@ class _ModuleListScreenState extends State<ModuleListScreen> {
     return AsyncState(
       loading: loading && rows.isEmpty && widget.createFields.isEmpty,
       error: error,
+      forbidden: forbidden,
       empty: showEmptyOnly,
       emptyMessage: widget.emptyMessage,
       onRetry: load,
