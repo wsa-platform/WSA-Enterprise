@@ -1,11 +1,13 @@
 # WSA-Enterprise Production Readiness Report
 
 **Date:** 2026-08-09  
-**Scope:** Phase 7 E + F + G review (post A–D merge on `main`)
+**Scope:** Phase 8 production hardening (branch `phase-8`, baseline Phase 7 E–F–G)
 
 ## Executive summary
 
-WSA-Enterprise is suitable for **controlled demo/staging deployment** with the Docker stack documented in `README.md`. The API, React web client, and Flutter mobile client share consistent tenant scoping and permission enforcement. Several items remain before **unrestricted public production** deployment.
+WSA-Enterprise is suitable for **controlled demo/staging deployment** with the Docker stack documented in `README.md` and `docs/deployment.md`. Phase 8 adds security hardening, opt-in pagination, enterprise UX improvements (401/403 handling, delete confirmations), expanded regression tests, and deployment documentation. Several items remain before **unrestricted public production** deployment.
+
+**Phase 8 additions:** See `docs/phase8.md`, `docs/security.md`, `docs/e2e-testing.md`.
 
 ---
 
@@ -35,7 +37,10 @@ WSA-Enterprise is suitable for **controlled demo/staging deployment** with the D
 
 | Control | Status | Notes |
 | --- | --- | --- |
-| Authentication | Sanctum tokens | Login/register throttled (`20/min`) |
+| Authentication | Sanctum tokens | Login/register throttled (`20/min`); API `120/min` |
+| Registration | **Disabled by default** | `ALLOW_REGISTRATION=false`; explicit opt-in for production |
+| Token expiry | Configurable | `SANCTUM_TOKEN_EXPIRATION` (minutes) |
+| API logging | Structured | Method/path/status/user/org — no bodies |
 | Authorization | PermissionService + policies | Pivot admin → `*`; explicit roles replace baseline |
 | Tenant isolation | `X-Organization-Id` + FK validation | Cross-tenant header → 403; tested |
 | AI endpoints | Throttled (`30/min`) | Mock provider by default |
@@ -47,7 +52,7 @@ WSA-Enterprise is suitable for **controlled demo/staging deployment** with the D
 ### Findings
 
 - **Low:** Demo login pre-filled in web/mobile clients — acceptable for demo, remove for production builds.
-- **Medium:** No refresh-token rotation or token expiry policy documented for mobile long-lived sessions.
+- **Resolved (Phase 8):** Token expiry documented via `SANCTUM_TOKEN_EXPIRATION`; open registration disabled by default.
 - **Medium:** Rate limits are per-IP; consider authenticated user throttles for AI/diagnosis in high-traffic deployments.
 
 ---
