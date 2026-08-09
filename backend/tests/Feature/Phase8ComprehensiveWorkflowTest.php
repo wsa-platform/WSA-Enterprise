@@ -82,18 +82,22 @@ class Phase8ComprehensiveWorkflowTest extends TestCase
         $this->withHeader('X-Organization-Id', (string) $foreign->id)
             ->getJson('/api/v1/dashboard')
             ->assertForbidden();
+    }
 
+    public function test_bearer_token_is_invalidated_after_logout(): void
+    {
+        $organization = Organization::create(['name' => 'Tenant A', 'slug' => 'tenant-a']);
+        $user = User::create(['name' => 'Admin', 'email' => 'admin@wsa.test', 'password' => Hash::make('password')]);
+        $organization->members()->attach($user->id, ['role' => 'admin']);
         $token = $user->createToken('phase8-test')->plainTextToken;
         $headers = [
             'Authorization' => "Bearer {$token}",
             'X-Organization-Id' => (string) $organization->id,
         ];
-        $this->withHeaders($headers)
-            ->postJson('/api/v1/auth/logout')
-            ->assertNoContent();
-        $this->withHeaders($headers)
-            ->getJson('/api/v1/dashboard')
-            ->assertUnauthorized();
+
+        $this->withHeaders($headers)->getJson('/api/v1/dashboard')->assertOk();
+        $this->withHeaders($headers)->postJson('/api/v1/auth/logout')->assertNoContent();
+        $this->withHeaders($headers)->getJson('/api/v1/dashboard')->assertUnauthorized();
     }
 
     public function test_farm_list_pagination_and_update_remain_backward_compatible(): void
