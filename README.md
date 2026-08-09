@@ -36,3 +36,23 @@ cd mobile && flutter create . && flutter pub get && flutter run
 ```
 
 Sanctum protects API routes via `auth:sanctum`; `/api/v1/user` is the initial authenticated endpoint.
+
+## Agricultural modules (Phase 4)
+
+Farm, crop, and soil endpoints are organization-scoped and require authentication:
+
+| Prefix | Examples |
+| --- | --- |
+| `/api/v1/farm/{module}` | farms, regions, fields, blocks, greenhouses, irrigation-zones, gps-coordinates, gis-maps |
+| `/api/v1/crop/{module}` | types, varieties, seasons, growth-stages, harvests, yields |
+| `/api/v1/soil/{module}` | analyses, nutrients, recommendations |
+
+Seed demo agricultural data after migrating:
+
+```bash
+cd backend && php artisan migrate --seed
+```
+
+Demo login: `admin@wsa.test` / `password`. The web workspace loads farm records by default under **Business & agriculture** module tabs.
+
+See `docs/database.md` for the full agricultural schema and Phase 5 extension points.

@@ -28,7 +28,7 @@ function App() {
   const [loading, setLoading] = useState(Boolean(token))
   const [email, setEmail] = useState('admin@wsa.test')
   const [password, setPassword] = useState('password')
-  const [modulePath, setModulePath] = useState('/users')
+  const [modulePath, setModulePath] = useState('/farm/farms')
   const [moduleRows, setModuleRows] = useState<unknown[]>([])
   const [report, setReport] = useState<Record<string, number> | null>(null)
 
@@ -48,6 +48,11 @@ function App() {
   useEffect(() => {
     void loadDashboard()
   }, [token])
+
+  useEffect(() => {
+    if (!token || !dashboard) return
+    void loadModule('/farm/farms')
+  }, [token, dashboard])
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()

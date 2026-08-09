@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\CropType;
 use App\Models\Farm;
+use App\Models\FarmBlock;
+use App\Models\FarmField;
 use App\Models\Organization;
+use App\Models\SoilAnalysis;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -101,6 +105,27 @@ class AgriculturalModuleTest extends TestCase
         $this->deleteJson("/api/v1/farm/farms/{$foreignFarm->id}")->assertNotFound();
     }
 
+    public function test_farm_module_rejects_foreign_organization_relations(): void
+    {
+        $this->actingAsTenantMember();
+
+        $foreignOrganization = Organization::create(['name' => 'Tenant B', 'slug' => 'tenant-b']);
+        $foreignFarm = Farm::create([
+            'organization_id' => $foreignOrganization->id,
+            'code' => 'X1',
+            'name' => 'Foreign Farm',
+            'area_hectares' => 5,
+            'is_active' => true,
+        ]);
+
+        $this->postJson('/api/v1/farm/regions', [
+            'farm_id' => $foreignFarm->id,
+            'code' => 'R1',
+            'name' => 'Blocked Region',
+            'area_hectares' => 1,
+        ])->assertStatus(422);
+    }
+
     public function test_crop_modules_validate_and_persist_records(): void
     {
         [$organization] = $this->actingAsTenantMember();
@@ -111,6 +136,29 @@ class AgriculturalModuleTest extends TestCase
             'scientific_name' => 'Solanum lycopersicum',
         ])->assertCreated()
             ->assertJsonPath('organization_id', $organization->id);
+
+        $this->getJson('/api/v1/crop/types')
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.code', 'TOM');
+    }
+
+    public function test_crop_records_from_other_organizations_are_not_listed(): void
+    {
+        [$organizationA] = $this->actingAsTenantMember();
+
+        $organizationB = Organization::create(['name' => 'Tenant B', 'slug' => 'tenant-b']);
+        CropType::create([
+            'organization_id' => $organizationB->id,
+            'code' => 'FOR',
+            'name' => 'Foreign Crop',
+        ]);
+
+        CropType::create([
+            'organization_id' => $organizationA->id,
+            'code' => 'TOM',
+            'name' => 'Tomato',
+        ]);
 
         $this->getJson('/api/v1/crop/types')
             ->assertOk()
@@ -134,6 +182,92 @@ class AgriculturalModuleTest extends TestCase
         $this->getJson('/api/v1/soil/analyses')
             ->assertOk()
             ->assertJsonCount(1);
+    }
+
+    public function test_soil_records_from_other_organizations_are_not_listed(): void
+    {
+        [$organizationA] = $this->actingAsTenantMember();
+
+        $organizationB = Organization::create(['name' => 'Tenant B', 'slug' => 'tenant-b']);
+        SoilAnalysis::create([
+            'organization_id' => $organizationB->id,
+            'sample_reference' => 'FOREIGN-001',
+            'sampled_at' => '2026-01-10',
+        ]);
+
+        SoilAnalysis::create([
+            'organization_id' => $organizationA->id,
+            'sample_reference' => 'LOCAL-001',
+            'sampled_at' => '2026-01-11',
+        ]);
+
+        $this->getJson('/api/v1/soil/analyses')
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.sample_reference', 'LOCAL-001');
+    }
+
+    public function test_integrated_agricultural_workflow(): void
+    {
+        [$organization] = $this->actingAsTenantMember();
+
+        $farm = $this->postJson('/api/v1/farm/farms', [
+            'code' => 'GVF',
+            'name' => 'Green Valley Farm',
+            'area_hectares' => 20,
+            'is_active' => true,
+        ])->assertCreated()->json();
+
+        $field = $this->postJson('/api/v1/farm/fields', [
+            'farm_id' => $farm['id'],
+            'code' => 'FLD-A',
+            'name' => 'Tomato Block A',
+            'area_hectares' => 4,
+            'status' => 'active',
+        ])->assertCreated()->json();
+
+        $block = $this->postJson('/api/v1/farm/blocks', [
+            'field_id' => $field['id'],
+            'code' => 'A1',
+            'name' => 'Rows 1-8',
+            'area_hectares' => 1.2,
+            'status' => 'active',
+        ])->assertCreated()->json();
+
+        $analysis = $this->postJson('/api/v1/soil/analyses', [
+            'farm_id' => $farm['id'],
+            'field_id' => $field['id'],
+            'block_id' => $block['id'],
+            'sample_reference' => 'SOIL-2026-001',
+            'sampled_at' => '2026-01-20',
+            'ph' => 6.4,
+            'laboratory' => 'WSA Soil Lab',
+        ])->assertCreated()
+            ->assertJsonPath('organization_id', $organization->id)
+            ->json();
+
+        $this->postJson('/api/v1/soil/nutrients', [
+            'soil_analysis_id' => $analysis['id'],
+            'nutrient' => 'N',
+            'value' => 28,
+            'unit' => 'mg/kg',
+            'status' => 'optimal',
+        ])->assertCreated();
+
+        $this->postJson('/api/v1/soil/recommendations', [
+            'soil_analysis_id' => $analysis['id'],
+            'field_id' => $field['id'],
+            'block_id' => $block['id'],
+            'title' => 'Apply balanced NPK before transplant',
+            'recommendation' => 'Apply 120 kg/ha of 15-15-15 before transplanting.',
+            'category' => 'fertilization',
+            'priority' => 'high',
+            'status' => 'open',
+            'due_at' => '2026-02-10',
+        ])->assertCreated();
+
+        $this->getJson('/api/v1/soil/nutrients')->assertOk()->assertJsonCount(1);
+        $this->getJson('/api/v1/soil/recommendations')->assertOk()->assertJsonCount(1);
     }
 
     public function test_unknown_agricultural_module_returns_not_found(): void
