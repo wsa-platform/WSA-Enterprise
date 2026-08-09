@@ -60,7 +60,9 @@ class Phase7E2EWorkflowTest extends TestCase
         $this->postJson('/api/v1/ai/requests', [
             'request_type' => 'library_qa',
             'input' => ['query' => 'What irrigation method is best?'],
-        ])->assertCreated();
+        ])->assertCreated()
+            ->assertJsonPath('provider', 'mock')
+            ->assertJsonPath('status', 'completed');
 
         $this->assertSame(1, Farm::where('organization_id', $organization->id)->count());
     }

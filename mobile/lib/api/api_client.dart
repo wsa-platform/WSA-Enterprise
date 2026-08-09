@@ -12,6 +12,9 @@ class ApiException implements Exception {
 
   @override
   String toString() {
+    if (statusCode == 403) {
+      return message.isNotEmpty ? message : 'You do not have permission to perform this action.';
+    }
     if (errors != null && errors!.isNotEmpty) {
       final details = errors!.entries
           .expand((entry) => entry.value.map((value) => '${entry.key}: $value'))
@@ -37,6 +40,9 @@ class ApiClient {
   int? get organizationId => _organizationId;
   Map<String, dynamic>? get user => _user;
   List<Map<String, dynamic>> get organizations => List.unmodifiable(_organizations);
+
+  /// Called when any API response returns HTTP 401 after clearing the local session.
+  void Function()? onUnauthorized;
 
   Future<void> restoreSession() async {
     final prefs = await SharedPreferences.getInstance();
@@ -235,7 +241,22 @@ class ApiClient {
     }
 
     final message = payload?['message']?.toString() ?? 'Unable to complete the request.';
-    return ApiException(message, statusCode: response.statusCode, errors: errors);
+    final exception = ApiException(message, statusCode: response.statusCode, errors: errors);
+
+    if (response.statusCode == 401 && _token != null) {
+      _token = null;
+      _organizationId = null;
+      _user = null;
+      _organizations = [];
+      SharedPreferences.getInstance().then((prefs) async {
+        await prefs.remove('wsa_token');
+        await prefs.remove('wsa_organization_id');
+        await prefs.remove('wsa_user');
+      });
+      onUnauthorized?.call();
+    }
+
+    return exception;
   }
 
   Map<String, String> _headers({bool includeJson = false}) {

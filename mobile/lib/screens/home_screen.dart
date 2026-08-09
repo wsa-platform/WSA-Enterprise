@@ -31,6 +31,14 @@ class _HomeScreenState extends State<HomeScreen> {
   AppModule module = AppModule.dashboard;
   int reloadToken = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    widget.client.refreshOrganizations().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   void reloadAll() => setState(() => reloadToken++);
 
   Future<void> signOut() async {

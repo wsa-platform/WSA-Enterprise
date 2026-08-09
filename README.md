@@ -68,7 +68,7 @@ Phase 7 adds permission enforcement, React and Flutter CRUD workflows, business 
 | Mobile | Full module navigation, org switcher, CRUD forms, session restore |
 | Testing | Phase 7 feature + E2E workflow tests; CI runs backend, frontend build, flutter analyze/test |
 
-See `docs/phase7.md` and `docs/production-readiness.md`.
+See `docs/phase7.md` and `docs/production-readiness.md`. Verification matrix: `docs/phase7-verification.md`.
 
 ## Phase 5 modules
 

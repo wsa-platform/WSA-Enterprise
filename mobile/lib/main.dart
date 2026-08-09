@@ -55,6 +55,12 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     }
 
     if (widget.client.token != null) {
+      widget.client.onUnauthorized = () {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => LoginScreen(client: widget.client, bootstrapError: 'Your session has expired. Please sign in again.')),
+        );
+      };
       return HomeScreen(
         client: widget.client,
         onSignedOut: () {
@@ -100,13 +106,19 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await widget.client.login(email.text.trim(), password.text);
       if (!mounted) return;
+      widget.client.onUnauthorized = () {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => LoginScreen(client: widget.client, bootstrapError: 'Your session has expired. Please sign in again.')),
+        );
+      };
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => HomeScreen(
             client: widget.client,
             onSignedOut: () {
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => LoginScreen(client: widget.client)),
+                MaterialPageRoute(builder: (_) => LoginScreen(client: widget.client, bootstrapError: 'Your session has expired. Please sign in again.')),
               );
             },
           ),

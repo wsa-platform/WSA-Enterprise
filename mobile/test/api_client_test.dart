@@ -31,5 +31,10 @@ void main() {
       final error = ApiException('Forbidden', statusCode: 403);
       expect(error.toString(), 'Forbidden');
     });
+
+    test('uses default forbidden message for 403 without body message', () {
+      final error = ApiException('', statusCode: 403);
+      expect(error.toString(), 'You do not have permission to perform this action.');
+    });
   });
 }

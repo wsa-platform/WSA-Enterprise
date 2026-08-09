@@ -181,11 +181,18 @@ class _RecordTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = row['title_ar'] ?? row['title'] ?? row['reference'] ?? row['name'] ?? row['code'] ?? 'Record';
-    final subtitle = row['summary_ar'] ?? row['summary'] ?? row['notes'] ?? row['status'] ?? '';
+    final title = row['title_ar'] ?? row['title'] ?? row['reference'] ?? row['name'] ?? row['code'] ?? row['request_type'] ?? 'Record';
+    final subtitle = row['summary_ar'] ??
+        row['summary'] ??
+        row['notes'] ??
+        row['status'] ??
+        row['output']?['summary'] ??
+        row['output']?['answer'] ??
+        '';
+    final meta = [row['provider'], row['status'], row['confidence_score']].where((value) => value != null).join(' · ');
     return ListTile(
       title: Text('$title', textDirection: TextDirection.rtl),
-      subtitle: '$subtitle'.isEmpty ? null : Text('$subtitle', textDirection: TextDirection.rtl),
+      subtitle: '$subtitle'.isEmpty ? (meta.isEmpty ? null : Text(meta)) : Text('$subtitle${meta.isEmpty ? '' : ' · $meta'}', textDirection: TextDirection.rtl),
       trailing: allowDelete && row['id'] != null
           ? IconButton(
               icon: const Icon(Icons.delete_outline),
