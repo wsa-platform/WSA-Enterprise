@@ -7,8 +7,10 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -39,9 +41,15 @@ class AuthController extends Controller
         return $this->authenticatedResponse($user, $data['device_name'] ?? 'web');
     }
 
-    public function logout(): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
-        request()->user()->currentAccessToken()?->delete();
+        $token = $request->user()?->currentAccessToken();
+
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        } elseif ($bearer = $request->bearerToken()) {
+            PersonalAccessToken::findToken($bearer)?->delete();
+        }
 
         return response()->json(status: 204);
     }
