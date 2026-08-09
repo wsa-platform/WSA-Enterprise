@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { createModuleRecord, deleteModuleRecord, getModule, unwrapModuleRows } from '../api'
+import { ApiError, createModuleRecord, deleteModuleRecord, getModule, modulePaginationMeta, unwrapModuleRows } from '../api'
 import { ModuleTabs, Panel, RecordList } from '../components/AppShell'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { RecordForm } from '../components/RecordForm'
 import { useAuth } from '../context/AuthContext'
 
@@ -16,18 +17,31 @@ export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: 
   const { token, organizationId } = useAuth()
   const [activePath, setActivePath] = useState(defaultPath)
   const [rows, setRows] = useState<unknown[]>([])
+  const [pagination, setPagination] = useState<{ currentPage: number; lastPage: number; total: number } | null>(null)
   const [error, setError] = useState('')
+  const [forbidden, setForbidden] = useState(false)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [pendingDelete, setPendingDelete] = useState<Record<string, unknown> | null>(null)
 
   const load = async (path = activePath) => {
     if (!token) return
     setLoading(true)
     setError('')
+    setForbidden(false)
     try {
-      setRows(unwrapModuleRows(await getModule(token, path, organizationId ?? undefined)))
+      const payload = await getModule(token, path, organizationId ?? undefined)
+      setRows(unwrapModuleRows(payload))
+      setPagination(modulePaginationMeta(payload))
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to load records.')
+      if (requestError instanceof ApiError && requestError.isForbidden) {
+        setForbidden(true)
+        setError('You do not have permission to view these records in the selected organization.')
+      } else {
+        setError(requestError instanceof Error ? requestError.message : 'Unable to load records.')
+      }
+      setRows([])
+      setPagination(null)
     } finally {
       setLoading(false)
     }
@@ -39,23 +53,32 @@ export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: 
 
   const createRecord = async (values: Record<string, string>) => {
     if (!token) return
-    await createModuleRecord(token, activePath, values, organizationId ?? undefined)
-    setMessage('Record created successfully.')
-    await load()
+    try {
+      await createModuleRecord(token, activePath, values, organizationId ?? undefined)
+      setMessage('Record created successfully.')
+      await load()
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Unable to create record.')
+    }
   }
 
   const removeRecord = async (record: Record<string, unknown>) => {
     if (!token || typeof record.id !== 'number') return
     const basePath = activePath.split('?')[0]
-    await deleteModuleRecord(token, basePath, record.id, organizationId ?? undefined)
-    setMessage('Record deleted.')
-    await load()
+    try {
+      await deleteModuleRecord(token, basePath, record.id, organizationId ?? undefined)
+      setMessage('Record deleted.')
+      setPendingDelete(null)
+      await load()
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Unable to delete record.')
+    }
   }
 
   return (
     <Panel eyebrow={eyebrow} title={title}>
       <ModuleTabs tabs={tabs} activePath={activePath} onSelect={setActivePath} />
-      {createFields && (
+      {createFields && !forbidden && (
         <RecordForm
           title="Create record"
           fields={createFields}
@@ -64,17 +87,23 @@ export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: 
         />
       )}
       {message && <p className="notice">{message}</p>}
+      {forbidden && <p className="banner forbidden">Access denied for this organization.</p>}
       {error && <p className="error">{error}</p>}
       {loading ? <p className="loading">Loading records…</p> : (
         <>
-          <RecordList rows={rows} emptyLabel="No records found." />
-          {rows.length > 0 && createFields && (
+          {pagination && (
+            <p className="muted pagination-meta">
+              Showing page {pagination.currentPage} of {pagination.lastPage} ({pagination.total} total)
+            </p>
+          )}
+          <RecordList rows={rows} emptyLabel={forbidden ? 'Records unavailable.' : 'No records found.'} />
+          {rows.length > 0 && createFields && !forbidden && (
             <div className="module-results">
               {rows.slice(0, 8).map((row, index) => {
                 const record = row as Record<string, unknown>
                 if (typeof record.id !== 'number') return null
                 return (
-                  <button key={index} type="button" className="link-button" onClick={() => void removeRecord(record)}>
+                  <button key={index} type="button" className="link-button danger-link" onClick={() => setPendingDelete(record)}>
                     Delete #{String(record.id)}
                   </button>
                 )
@@ -83,6 +112,14 @@ export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: 
           )}
         </>
       )}
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Delete record"
+        message="This action cannot be undone. Delete this record?"
+        confirmLabel="Delete"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => pendingDelete && void removeRecord(pendingDelete)}
+      />
     </Panel>
   )
 }
