@@ -88,3 +88,26 @@ No API credentials are stored in source control. Future providers can be added w
 | `/api/v1/ai/requests` | Generic AI request log and invocation |
 
 Demo Phase 5 data is seeded by `Phase5Seeder` after `AgriculturalSeeder` for the `wsa-demo` workspace.
+
+## Phase 6 additions
+
+### Platform endpoints
+
+| Endpoint | Purpose |
+| --- | --- |
+| `/api/v1/platform/organizations` | Organizations available to the signed-in user |
+| `/api/v1/platform/workflow-summary` | Cross-module counts for dashboard/workflow views |
+
+### Authorization
+
+- Optional `X-Organization-Id` request header selects the active tenant when a user belongs to multiple organizations.
+- Invalid tenant selection returns **403**.
+- Resource lookups remain scoped by `organization_id`.
+
+### Media metadata
+
+Diagnosis requests and library items expose safe `{ disk, reference }` metadata in API responses. Raw storage paths are hidden.
+
+### Search and indexes
+
+Library search supports category, crop type, tag, and relevance ordering. Phase 6 adds tenant-scoped indexes on high-traffic tables documented in `docs/phase6.md`.

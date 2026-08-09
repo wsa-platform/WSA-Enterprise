@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wsa_enterprise/api/api_client.dart';
+import 'package:wsa_enterprise/screens/dashboard_screen.dart';
+import 'package:wsa_enterprise/screens/module_screens.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.client});
@@ -12,60 +14,41 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int tab = 0;
-  List<dynamic> rows = [];
-  String? error;
-  bool loading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    loadTab();
-  }
-
-  Future<void> loadTab() async {
-    setState(() {
-      loading = true;
-      error = null;
-    });
-    try {
-      final paths = ['/diagnosis/requests', '/training/courses', '/library/items?publication_status=published'];
-      rows = await widget.client.fetchList(paths[tab]);
-    } catch (e) {
-      error = e.toString();
-      rows = [];
-    } finally {
-      if (mounted) setState(() => loading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    final titles = ['Diagnosis', 'Training', 'Library'];
+    final titles = ['Dashboard', 'Farms', 'Diagnosis', 'Training', 'Library'];
+    final screens = [
+      DashboardScreen(client: widget.client),
+      FarmsScreen(client: widget.client),
+      ModuleListScreen(client: widget.client, title: 'Diagnosis', path: '/diagnosis/requests'),
+      ModuleListScreen(client: widget.client, title: 'Training', path: '/training/courses'),
+      ModuleListScreen(client: widget.client, title: 'Library', path: '/library/items?publication_status=published'),
+    ];
+
     return Scaffold(
       appBar: AppBar(title: Text('WSA ${titles[tab]}')),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : error != null
-              ? Center(child: Text(error!))
-              : ListView.builder(
-                  itemCount: rows.length,
-                  itemBuilder: (context, index) {
-                    final row = rows[index] as Map<String, dynamic>;
-                    final title = row['title_ar'] ?? row['title'] ?? row['reference'] ?? row['name'] ?? 'Record';
-                    final subtitle = row['summary_ar'] ?? row['summary'] ?? row['status'] ?? '';
-                    return ListTile(
-                      title: Text('$title', textDirection: TextDirection.rtl),
-                      subtitle: subtitle.toString().isEmpty ? null : Text('$subtitle', textDirection: TextDirection.rtl),
-                    );
-                  },
-                ),
+      drawer: Drawer(
+        child: ListView(
+          children: List.generate(titles.length, (index) {
+            return ListTile(
+              selected: tab == index,
+              title: Text(titles[index]),
+              onTap: () {
+                setState(() => tab = index);
+                Navigator.of(context).pop();
+              },
+            );
+          }),
+        ),
+      ),
+      body: screens[tab],
       bottomNavigationBar: NavigationBar(
-        selectedIndex: tab,
-        onDestinationSelected: (value) {
-          setState(() => tab = value);
-          loadTab();
-        },
+        selectedIndex: tab.clamp(0, 4),
+        onDestinationSelected: (value) => setState(() => tab = value),
         destinations: const [
+          NavigationDestination(icon: Icon(Icons.dashboard_outlined), label: 'Dashboard'),
+          NavigationDestination(icon: Icon(Icons.agriculture_outlined), label: 'Farms'),
           NavigationDestination(icon: Icon(Icons.biotech_outlined), label: 'Diagnosis'),
           NavigationDestination(icon: Icon(Icons.school_outlined), label: 'Training'),
           NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: 'Library'),

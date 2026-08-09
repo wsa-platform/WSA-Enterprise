@@ -17,7 +17,11 @@ class AppServiceProvider extends ServiceProvider
             };
         });
 
-        $this->app->singleton(AiService::class, fn ($app) => new AiService($app->make(AiProviderInterface::class)));
+        $this->app->singleton(AiService::class, fn ($app) => new AiService(
+            $app->make(AiProviderInterface::class),
+            $app->make(AiRequestValidator::class),
+            $app->make(AiResponseNormalizer::class),
+        ));
     }
 
     public function boot(): void

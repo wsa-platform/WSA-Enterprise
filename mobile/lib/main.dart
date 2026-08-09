@@ -12,8 +12,46 @@ class WsaEnterpriseApp extends StatelessWidget {
     return MaterialApp(
       title: 'WSA Enterprise',
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6D28D9))),
-      home: LoginScreen(client: ApiClient()),
+      home: BootstrapScreen(client: ApiClient()),
     );
+  }
+}
+
+class BootstrapScreen extends StatefulWidget {
+  const BootstrapScreen({super.key, required this.client});
+
+  final ApiClient client;
+
+  @override
+  State<BootstrapScreen> createState() => _BootstrapScreenState();
+}
+
+class _BootstrapScreenState extends State<BootstrapScreen> {
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    await widget.client.restoreSession();
+    if (!mounted) return;
+    setState(() => loading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (widget.client.token != null) {
+      return HomeScreen(client: widget.client);
+    }
+
+    return LoginScreen(client: widget.client);
   }
 }
 
@@ -64,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const Text('WSA Enterprise', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                const Text('Sign in to access diagnosis, training, and library modules.'),
+                const Text('Sign in to access dashboard, farms, diagnosis, training, and library modules.'),
                 const SizedBox(height: 24),
                 TextField(controller: email, decoration: const InputDecoration(labelText: 'Email')),
                 const SizedBox(height: 12),

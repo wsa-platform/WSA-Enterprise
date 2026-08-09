@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\DiagnosisRequestController;
 use App\Http\Controllers\Api\TrainingController;
 use App\Http\Controllers\Api\LibraryController;
 use App\Http\Controllers\Api\AiController;
+use App\Http\Controllers\Api\PlatformController;
 
 Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
 
@@ -29,6 +30,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/user', fn () => request()->user());
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/dashboard', DashboardController::class);
+        Route::get('/platform/organizations', [PlatformController::class, 'organizations']);
+        Route::get('/platform/workflow-summary', [PlatformController::class, 'workflowSummary']);
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus']);
         Route::get('/users', [AccessController::class, 'users']);

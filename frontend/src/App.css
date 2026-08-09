@@ -2,6 +2,7 @@
 aside { display: flex; flex-direction: column; padding: 28px 18px; background: #111827; color: #d1d5db; }
 .brand { color: #fff; font-weight: 800; font-size: 22px; letter-spacing: .08em; padding: 0 10px 42px; }.brand span { display: inline-grid; place-items: center; width: 26px; height: 26px; color: #111827; background: #8b5cf6; border-radius: 7px; font-size: 15px; }
 nav { display: grid; gap: 6px; } nav a { color: #aab4c7; padding: 11px 12px; border-radius: 8px; text-decoration: none; } nav a:hover, nav a.active { color: #fff; background: #273449; }
+nav a.active { box-shadow: inset 3px 0 0 #8b5cf6; }
 .account { margin-top: auto; display: grid; gap: 4px; padding: 12px; font-size: 13px; }.account span { color: #94a3b8; }
 .link-button { background: none; border: 0; padding: 10px 0 0; color: #c4b5fd; cursor: pointer; font: inherit; text-align: left; }
 .dashboard { max-width: 1280px; width: 100%; box-sizing: border-box; padding: 48px clamp(24px, 5vw, 72px); margin: 0 auto; }

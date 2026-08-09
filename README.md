@@ -53,9 +53,9 @@ Seed demo agricultural data after migrating:
 cd backend && php artisan migrate --seed
 ```
 
-Demo login: `admin@wsa.test` / `password`. The web workspace loads farm records by default under **Business & agriculture** module tabs.
+Demo login: `admin@wsa.test` / `password`. The web workspace provides route-based navigation for dashboard, farms, crops, soil, diagnosis, training, library, and AI services.
 
-See `docs/database.md` for the full agricultural schema and Phase 5 extension points.
+See `docs/database.md` for the full agricultural schema and `docs/phase6.md` for production integration details.
 
 ## Phase 5 modules
 
@@ -81,4 +81,16 @@ AI_PROVIDER=mock
 AI_TIMEOUT=30
 ```
 
-The React workspace includes a **Diagnosis, training, library & AI** section. The Flutter app provides login plus Diagnosis, Training, and Library tabs.
+The React workspace provides dedicated navigation for dashboard, farms, crops, soil, diagnosis, training, library, and AI services. The Flutter app adds dashboard and farms screens plus session restore.
+
+## Phase 6 production integration
+
+Phase 6 adds tenant header selection, platform workflow endpoints, hardened AI validation/normalization, safe media metadata handling, improved library search filters, performance indexes, and integrated web/mobile navigation.
+
+| Area | API prefix | Notes |
+| --- | --- | --- |
+| Platform | `/api/v1/platform/*` | Organizations and workflow summary |
+| Authorization | `X-Organization-Id` header | Optional active-tenant selection |
+| AI services | `/api/v1/ai/*` | Validated request types + normalized outputs |
+
+See `docs/phase6.md` for architecture, authorization, testing, and demo workflow details.

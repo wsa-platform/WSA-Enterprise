@@ -8,7 +8,11 @@ use Illuminate\Support\Facades\Log;
 
 class AiService
 {
-    public function __construct(private AiProviderInterface $provider) {}
+    public function __construct(
+        private AiProviderInterface $provider,
+        private AiRequestValidator $validator,
+        private AiResponseNormalizer $normalizer,
+    ) {}
 
     public function providerName(): string
     {
@@ -24,6 +28,8 @@ class AiService
         ?string $sourceType = null,
         ?int $sourceId = null,
     ): AiRequest {
+        $validatedInput = $this->validator->validate($requestType, $input);
+
         $record = AiRequest::create([
             'organization_id' => $organizationId,
             'user_id' => $userId,
@@ -32,23 +38,27 @@ class AiService
             'source_id' => $sourceId,
             'provider' => $this->provider->name(),
             'status' => 'processing',
-            'input' => $input,
+            'input' => $validatedInput,
         ]);
 
         $started = microtime(true);
+        $timeout = max(1, (int) config('ai.timeout', 30));
 
         try {
-            $output = $this->provider->complete($requestType, $input);
+            $output = $this->callWithTimeout($requestType, $validatedInput, $timeout);
+            $normalized = $this->normalizer->normalize($requestType, $output);
+
             $record->update([
                 'status' => 'completed',
-                'output' => $output,
+                'output' => $normalized,
                 'latency_ms' => (int) ((microtime(true) - $started) * 1000),
-                'tokens_used' => 0,
+                'tokens_used' => (int) ($output['tokens_used'] ?? 0),
             ]);
         } catch (\Throwable $exception) {
             Log::warning('AI provider failed', [
                 'provider' => $this->provider->name(),
                 'request_type' => $requestType,
+                'organization_id' => $organizationId,
                 'message' => $exception->getMessage(),
             ]);
 
@@ -60,5 +70,19 @@ class AiService
         }
 
         return $record->fresh();
+    }
+
+    /** @param  array<string, mixed>  $input */
+    private function callWithTimeout(string $requestType, array $input, int $timeoutSeconds): array
+    {
+        $started = microtime(true);
+
+        $output = $this->provider->complete($requestType, $input);
+
+        if ((microtime(true) - $started) > $timeoutSeconds) {
+            throw new \RuntimeException('AI provider exceeded configured timeout.');
+        }
+
+        return $output;
     }
 }
