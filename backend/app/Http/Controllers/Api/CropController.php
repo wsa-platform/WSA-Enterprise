@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\ResolvesOrganization;
 use App\Http\Controllers\Controller;
 use App\Models\{CropHarvest, CropSeason, CropType, CropVariety, CropYield, Farm, FarmBlock, FarmField, GrowthStage};
 use Illuminate\Http\JsonResponse;
@@ -9,6 +10,8 @@ use Illuminate\Http\Request;
 
 class CropController extends Controller
 {
+    use ResolvesOrganization;
+
     private const MODULES = [
         'types' => [CropType::class, ['code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'scientific_name'=>['nullable','string'], 'description'=>['nullable','string']], []],
         'varieties' => [CropVariety::class, ['crop_type_id'=>['required','integer','exists:crop_types,id'], 'code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'supplier'=>['nullable','string'], 'maturity_days'=>['nullable','integer','min:1'], 'notes'=>['nullable','string']], ['crop_type_id'=>CropType::class]],
@@ -23,11 +26,6 @@ class CropController extends Controller
         abort_unless(isset(self::MODULES[$module]), 404);
 
         return self::MODULES[$module];
-    }
-
-    private function organization(Request $request): int
-    {
-        return $request->user()->organizations()->firstOrFail()->id;
     }
 
     private function validatedPayload(Request $request, string $module): array

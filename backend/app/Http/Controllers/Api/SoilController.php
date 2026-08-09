@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\ResolvesOrganization;
 use App\Http\Controllers\Controller;
 use App\Models\{Farm, FarmBlock, FarmField, SoilAnalysis, SoilNutrient, SoilRecommendation};
 use Illuminate\Http\JsonResponse;
@@ -9,6 +10,8 @@ use Illuminate\Http\Request;
 
 class SoilController extends Controller
 {
+    use ResolvesOrganization;
+
     private const MODULES = [
         'analyses' => [SoilAnalysis::class, ['farm_id'=>['nullable','integer','exists:farms,id'], 'field_id'=>['nullable','integer','exists:farm_fields,id'], 'block_id'=>['nullable','integer','exists:farm_blocks,id'], 'sample_reference'=>['required','string','max:64'], 'sampled_at'=>['required','date'], 'ph'=>['nullable','numeric','between:0,14'], 'ec'=>['nullable','numeric','min:0'], 'organic_matter_percent'=>['nullable','numeric','min:0','max:100'], 'moisture_percent'=>['nullable','numeric','min:0','max:100'], 'laboratory'=>['nullable','string'], 'notes'=>['nullable','string']], ['farm_id'=>Farm::class, 'field_id'=>FarmField::class, 'block_id'=>FarmBlock::class]],
         'nutrients' => [SoilNutrient::class, ['soil_analysis_id'=>['required','integer','exists:soil_analyses,id'], 'nutrient'=>['required','string','max:32'], 'value'=>['required','numeric'], 'unit'=>['required','string','max:32'], 'target_min'=>['nullable','numeric'], 'target_max'=>['nullable','numeric'], 'status'=>['nullable','string','max:32']], ['soil_analysis_id'=>SoilAnalysis::class]],
@@ -20,11 +23,6 @@ class SoilController extends Controller
         abort_unless(isset(self::MODULES[$module]), 404);
 
         return self::MODULES[$module];
-    }
-
-    private function organization(Request $request): int
-    {
-        return $request->user()->organizations()->firstOrFail()->id;
     }
 
     private function validatedPayload(Request $request, string $module): array

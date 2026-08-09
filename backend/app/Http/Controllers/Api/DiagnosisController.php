@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\ResolvesOrganization;
 use App\Http\Controllers\Controller;
 use App\Models\{CropType, DiagnosisCategory, DiagnosisDisease, DiagnosisRecommendation, DiagnosisSubject, DiagnosisSymptom};
 use Illuminate\Http\JsonResponse;
@@ -9,6 +10,8 @@ use Illuminate\Http\Request;
 
 class DiagnosisController extends Controller
 {
+    use ResolvesOrganization;
+
     private const MODULES = [
         'categories' => [DiagnosisCategory::class, ['code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'name_ar'=>['nullable','string','max:255'], 'description'=>['nullable','string'], 'is_active'=>['boolean']], []],
         'subjects' => [DiagnosisSubject::class, ['category_id'=>['nullable','integer','exists:diagnosis_categories,id'], 'crop_type_id'=>['nullable','integer','exists:crop_types,id'], 'code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'name_ar'=>['nullable','string','max:255'], 'subject_type'=>['sometimes','string','max:32'], 'description'=>['nullable','string'], 'is_active'=>['boolean']], ['category_id'=>DiagnosisCategory::class, 'crop_type_id'=>CropType::class]],
@@ -18,7 +21,6 @@ class DiagnosisController extends Controller
     ];
 
     private function config(string $module): array { abort_unless(isset(self::MODULES[$module]), 404); return self::MODULES[$module]; }
-    private function organization(Request $request): int { return $request->user()->organizations()->firstOrFail()->id; }
 
     private function validatedPayload(Request $request, string $module): array
     {

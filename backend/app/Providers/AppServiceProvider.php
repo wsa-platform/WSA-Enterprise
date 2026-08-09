@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Contracts\AiProviderInterface;
+use App\Services\Ai\AiRequestValidator;
+use App\Services\Ai\AiResponseNormalizer;
 use App\Services\Ai\AiService;
 use App\Services\Ai\MockAiProvider;
 use Illuminate\Support\ServiceProvider;

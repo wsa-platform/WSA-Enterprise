@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\ResolvesOrganization;
 use App\Http\Controllers\Controller;
 use App\Models\{TrainingCertificate, TrainingCourse, TrainingEnrollment, TrainingLesson, TrainingObjective, TrainingProgress, TrainingQuestion, TrainingQuiz};
 use Illuminate\Http\JsonResponse;
@@ -9,6 +10,8 @@ use Illuminate\Http\Request;
 
 class TrainingController extends Controller
 {
+    use ResolvesOrganization;
+
     private const MODULES = [
         'courses' => [TrainingCourse::class, ['code'=>['required','string','max:32'], 'title'=>['required','string','max:255'], 'title_ar'=>['nullable','string','max:255'], 'description'=>['nullable','string'], 'description_ar'=>['nullable','string'], 'locale'=>['sometimes','string','max:8'], 'status'=>['sometimes','string','max:32'], 'sort_order'=>['sometimes','integer','min:0']], []],
         'lessons' => [TrainingLesson::class, ['course_id'=>['required','integer','exists:training_courses,id'], 'code'=>['required','string','max:32'], 'title'=>['required','string','max:255'], 'title_ar'=>['nullable','string','max:255'], 'content'=>['nullable','string'], 'content_ar'=>['nullable','string'], 'sort_order'=>['sometimes','integer','min:0'], 'status'=>['sometimes','string','max:32']], ['course_id'=>TrainingCourse::class]],
@@ -18,7 +21,6 @@ class TrainingController extends Controller
     ];
 
     private function config(string $module): array { abort_unless(isset(self::MODULES[$module]), 404); return self::MODULES[$module]; }
-    private function organization(Request $request): int { return $request->user()->organizations()->firstOrFail()->id; }
 
     private function validatedPayload(Request $request, string $module): array
     {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\ResolvesOrganization;
 use App\Http\Controllers\Controller;
 use App\Models\{Farm, FarmBlock, FarmField, FarmRegion, GisMap, GpsCoordinate, Greenhouse, IrrigationZone};
 use Illuminate\Http\JsonResponse;
@@ -9,6 +10,8 @@ use Illuminate\Http\Request;
 
 class FarmController extends Controller
 {
+    use ResolvesOrganization;
+
     private const MODULES = [
         'farms' => [Farm::class, ['code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'owner_name'=>['nullable','string'], 'address'=>['nullable','string'], 'area_hectares'=>['numeric','min:0'], 'is_active'=>['boolean']], []],
         'regions' => [FarmRegion::class, ['farm_id'=>['required','integer','exists:farms,id'], 'code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'description'=>['nullable','string'], 'area_hectares'=>['numeric','min:0']], ['farm_id'=>Farm::class]],
@@ -32,11 +35,6 @@ class FarmController extends Controller
         abort_unless(isset(self::MODULES[$module]), 404);
 
         return self::MODULES[$module];
-    }
-
-    private function organization(Request $request): int
-    {
-        return $request->user()->organizations()->firstOrFail()->id;
     }
 
     private function validatedPayload(Request $request, string $module): array
