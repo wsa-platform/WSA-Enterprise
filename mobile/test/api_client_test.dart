@@ -26,5 +26,10 @@ void main() {
       });
       expect(error.toString(), 'email: The email field is required.');
     });
+
+    test('returns message when no field errors exist', () {
+      final error = ApiException('Forbidden', statusCode: 403);
+      expect(error.toString(), 'Forbidden');
+    });
   });
 }

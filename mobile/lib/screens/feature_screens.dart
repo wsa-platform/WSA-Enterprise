@@ -70,6 +70,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   List<dynamic> searchRows = [];
   String? searchError;
   bool searching = false;
+  int reloadToken = 0;
 
   @override
   void dispose() {
@@ -97,6 +98,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ...values,
       'publication_status': 'published',
     });
+    setState(() => reloadToken++);
   }
 
   @override
@@ -145,7 +147,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             child: TabBarView(
               children: [
                 ModuleListScreen(
-                  key: ValueKey('library-published-${widget.client.organizationId}'),
+                  key: ValueKey('library-published-$reloadToken-${widget.client.organizationId}'),
                   client: widget.client,
                   title: 'Published',
                   path: '/library/items?publication_status=published',
@@ -226,7 +228,7 @@ class _AiScreenState extends State<AiScreen> {
   Future<void> submitRequest(Map<String, String> values) async {
     await widget.client.createAiRequest(
       requestType: 'library_qa',
-      input: {'question': values['question'] ?? ''},
+      input: {'query': values['question'] ?? ''},
     );
     setState(() => reloadToken++);
   }

@@ -6,11 +6,17 @@ import 'package:wsa_enterprise/widgets/async_state.dart';
 import 'package:wsa_enterprise/widgets/record_form.dart';
 
 class ModuleTab {
-  const ModuleTab({required this.label, required this.path, this.createFields = const []});
+  const ModuleTab({
+    required this.label,
+    required this.path,
+    this.createFields = const [],
+    this.allowDelete = false,
+  });
 
   final String label;
   final String path;
   final List<FormFieldConfig> createFields;
+  final bool allowDelete;
 }
 
 class TabbedModuleScreen extends StatelessWidget {
@@ -39,6 +45,7 @@ class TabbedModuleScreen extends StatelessWidget {
                     title: tab.label,
                     path: tab.path,
                     createFields: tab.createFields,
+                    allowDelete: tab.allowDelete,
                   ),
               ],
             ),
@@ -202,7 +209,7 @@ class _RecordTile extends StatelessWidget {
 }
 
 const farmTabs = [
-  ModuleTab(label: 'Farms', path: '/farm/farms', createFields: [
+  ModuleTab(label: 'Farms', path: '/farm/farms', allowDelete: true, createFields: [
     FormFieldConfig(name: 'code', label: 'Code', required: true),
     FormFieldConfig(name: 'name', label: 'Name', required: true),
   ]),
