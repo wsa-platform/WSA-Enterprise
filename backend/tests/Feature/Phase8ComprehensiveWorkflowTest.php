@@ -89,7 +89,8 @@ class Phase8ComprehensiveWorkflowTest extends TestCase
         $organization = Organization::create(['name' => 'Tenant A', 'slug' => 'tenant-a']);
         $user = User::create(['name' => 'Admin', 'email' => 'admin@wsa.test', 'password' => Hash::make('password')]);
         $organization->members()->attach($user->id, ['role' => 'admin']);
-        $token = $user->createToken('phase8-test')->plainTextToken;
+        $accessToken = $user->createToken('phase8-test');
+        $token = $accessToken->plainTextToken;
         $headers = [
             'Authorization' => "Bearer {$token}",
             'X-Organization-Id' => (string) $organization->id,
@@ -97,6 +98,8 @@ class Phase8ComprehensiveWorkflowTest extends TestCase
 
         $this->withHeaders($headers)->getJson('/api/v1/dashboard')->assertOk();
         $this->withHeaders($headers)->postJson('/api/v1/auth/logout')->assertNoContent();
+        $this->assertDatabaseMissing('personal_access_tokens', ['id' => $accessToken->accessToken->id]);
+        $this->app['auth']->forgetGuards();
         $this->withHeaders($headers)->getJson('/api/v1/dashboard')->assertUnauthorized();
     }
 
