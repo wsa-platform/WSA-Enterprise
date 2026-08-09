@@ -3,7 +3,8 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { AppShell } from './components/AppShell'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage, useDashboardTitle } from './pages/DashboardPage'
-import { ModulePage, cropTabs, farmTabs, soilTabs } from './pages/ModulePage'
+import { ModulePage, cropCreateFields, cropTabs, farmCreateFields, farmTabs, soilCreateFields, soilTabs } from './pages/ModulePage'
+import { BusinessPage } from './pages/BusinessPage'
 import { DiagnosisPage } from './pages/DiagnosisPage'
 import { TrainingPage } from './pages/TrainingPage'
 import { LibraryPage } from './pages/LibraryPage'
@@ -27,9 +28,10 @@ function AppRoutes() {
       <Route path="/login" element={token ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route element={<ProtectedShell />}>
         <Route path="/" element={<DashboardPage />} />
-        <Route path="/farms" element={<ModulePage eyebrow="AGRICULTURE" title="Farms" tabs={farmTabs} defaultPath="/farm/farms" />} />
-        <Route path="/crops" element={<ModulePage eyebrow="AGRICULTURE" title="Crops" tabs={cropTabs} defaultPath="/crop/types" />} />
-        <Route path="/soil" element={<ModulePage eyebrow="AGRICULTURE" title="Soil" tabs={soilTabs} defaultPath="/soil/analyses" />} />
+        <Route path="/farms" element={<ModulePage eyebrow="AGRICULTURE" title="Farms" tabs={farmTabs} defaultPath="/farm/farms" createFields={farmCreateFields} />} />
+        <Route path="/crops" element={<ModulePage eyebrow="AGRICULTURE" title="Crops" tabs={cropTabs} defaultPath="/crop/types" createFields={cropCreateFields} />} />
+        <Route path="/soil" element={<ModulePage eyebrow="AGRICULTURE" title="Soil" tabs={soilTabs} defaultPath="/soil/analyses" createFields={soilCreateFields} />} />
+        <Route path="/business" element={<BusinessPage />} />
         <Route path="/diagnosis" element={<DiagnosisPage />} />
         <Route path="/training" element={<TrainingPage />} />
         <Route path="/library" element={<LibraryPage />} />

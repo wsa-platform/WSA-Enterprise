@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Concerns\ResolvesOrganization;
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use App\Models\DiagnosisRequest;
 use App\Models\Farm;
@@ -14,10 +14,11 @@ use Illuminate\Http\Request;
 
 class PlatformController extends Controller
 {
-    use ResolvesOrganization;
+    use AuthorizesOrganizationAccess;
 
     public function organizations(Request $request): JsonResponse
     {
+        $this->authorizePermission($request, 'platform.view');
         $organizations = $request->user()
             ->organizations()
             ->select(['organizations.id', 'organizations.name', 'organizations.slug'])
@@ -33,6 +34,7 @@ class PlatformController extends Controller
 
     public function workflowSummary(Request $request): JsonResponse
     {
+        $this->authorizePermission($request, 'platform.view');
         $organizationId = $this->organization($request);
 
         return response()->json([

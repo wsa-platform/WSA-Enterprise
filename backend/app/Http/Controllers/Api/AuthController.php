@@ -3,22 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function register(Request $request): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'device_name' => ['nullable', 'string', 'max:255'],
-        ]);
+        $data = $request->validated();
 
         $user = User::create([
             'name' => $data['name'],
@@ -29,14 +25,9 @@ class AuthController extends Controller
         return $this->authenticatedResponse($user, $data['device_name'] ?? 'web');
     }
 
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-            'device_name' => ['nullable', 'string', 'max:255'],
-        ]);
-
+        $data = $request->validated();
         $user = User::where('email', $data['email'])->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
@@ -46,9 +37,9 @@ class AuthController extends Controller
         return $this->authenticatedResponse($user, $data['device_name'] ?? 'web');
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logout(): JsonResponse
     {
-        $request->user()->currentAccessToken()?->delete();
+        request()->user()->currentAccessToken()?->delete();
 
         return response()->json(status: 204);
     }
@@ -57,7 +48,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'token' => $user->createToken($deviceName)->plainTextToken,
-            'user' => $user,
+            'user' => $user->only(['id', 'name', 'email']),
         ]);
     }
 }

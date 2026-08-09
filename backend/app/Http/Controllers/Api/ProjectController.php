@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
+    use AuthorizesOrganizationAccess;
+
     public function index(Request $request): JsonResponse
     {
-        $organization = $request->user()->organizations()->firstOrFail();
+        $this->authorizePermission($request, 'platform.view');
+        $organization = $this->organizationModel($request);
 
         return response()->json(
             $organization->projects()

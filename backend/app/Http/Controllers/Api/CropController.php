@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Concerns\ResolvesOrganization;
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use App\Models\{CropHarvest, CropSeason, CropType, CropVariety, CropYield, Farm, FarmBlock, FarmField, GrowthStage};
 use Illuminate\Http\JsonResponse;
@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class CropController extends Controller
 {
-    use ResolvesOrganization;
+    use AuthorizesOrganizationAccess;
 
     private const MODULES = [
         'types' => [CropType::class, ['code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'scientific_name'=>['nullable','string'], 'description'=>['nullable','string']], []],
@@ -32,13 +32,14 @@ class CropController extends Controller
     {
         [, $rules, $relations] = $this->config($module);
         $data = $request->validate($rules);
-        AgriculturalScopeValidator::assert($this->organization($request), $data, $relations);
+        OrganizationScopeValidator::assert($this->organization($request), $data, $relations);
 
         return $data;
     }
 
     public function index(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'crop.view');
         [$class] = $this->config($module);
 
         return response()->json($class::where('organization_id', $this->organization($request))->latest()->get());
@@ -46,6 +47,7 @@ class CropController extends Controller
 
     public function store(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'crop.manage');
         [$class] = $this->config($module);
 
         return response()->json($class::create([
@@ -56,6 +58,7 @@ class CropController extends Controller
 
     public function update(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'crop.manage');
         [$class] = $this->config($module);
         $record = $class::where('organization_id', $this->organization($request))->findOrFail($id);
         $record->update($this->validatedPayload($request, $module));
@@ -65,6 +68,7 @@ class CropController extends Controller
 
     public function destroy(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'crop.manage');
         [$class] = $this->config($module);
         $class::where('organization_id', $this->organization($request))->findOrFail($id)->delete();
 

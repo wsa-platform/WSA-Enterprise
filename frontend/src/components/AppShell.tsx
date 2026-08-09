@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { logout } from '../api'
+import { OrgSwitcher } from './OrgSwitcher'
 
 const navItems = [
   { to: '/', label: 'Dashboard', end: true },
@@ -12,6 +13,7 @@ const navItems = [
   { to: '/training', label: 'Training' },
   { to: '/library', label: 'Library' },
   { to: '/ai', label: 'AI Services' },
+  { to: '/business', label: 'Business' },
 ]
 
 export function AppShell({ workspaceName, onRefresh }: { workspaceName: string; onRefresh?: () => void }) {
@@ -45,7 +47,10 @@ export function AppShell({ workspaceName, onRefresh }: { workspaceName: string; 
             <p className="eyebrow">WORKSPACE</p>
             <h1>{workspaceName}</h1>
           </div>
-          {onRefresh && <button className="refresh" type="button" onClick={onRefresh}>Refresh</button>}
+          <div className="header-actions">
+            <OrgSwitcher />
+            {onRefresh && <button className="refresh" type="button" onClick={onRefresh}>Refresh</button>}
+          </div>
         </header>
         <Outlet />
       </main>

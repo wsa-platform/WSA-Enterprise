@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Concerns\ResolvesOrganization;
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use App\Models\{TrainingCertificate, TrainingCourse, TrainingEnrollment, TrainingLesson, TrainingObjective, TrainingProgress, TrainingQuestion, TrainingQuiz};
 use Illuminate\Http\JsonResponse;
@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class TrainingController extends Controller
 {
-    use ResolvesOrganization;
+    use AuthorizesOrganizationAccess;
 
     private const MODULES = [
         'courses' => [TrainingCourse::class, ['code'=>['required','string','max:32'], 'title'=>['required','string','max:255'], 'title_ar'=>['nullable','string','max:255'], 'description'=>['nullable','string'], 'description_ar'=>['nullable','string'], 'locale'=>['sometimes','string','max:8'], 'status'=>['sometimes','string','max:32'], 'sort_order'=>['sometimes','integer','min:0']], []],
@@ -26,43 +26,54 @@ class TrainingController extends Controller
     {
         [, $rules, $relations] = $this->config($module);
         $data = $request->validate($rules);
-        AgriculturalScopeValidator::assert($this->organization($request), $data, $relations);
+        OrganizationScopeValidator::assert($this->organization($request), $data, $relations);
+
         return $data;
     }
 
     public function index(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'training.view');
         [$class] = $this->config($module);
         $query = $class::where('organization_id', $this->organization($request))->latest();
         if ($module === 'courses' && $request->query('status')) {
             $query->where('status', $request->query('status'));
         }
+
         return response()->json($query->get());
     }
 
     public function store(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'training.manage');
         [$class] = $this->config($module);
+
         return response()->json($class::create(['organization_id'=>$this->organization($request), ...$this->validatedPayload($request, $module)]), 201);
     }
 
     public function update(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'training.manage');
         [$class] = $this->config($module);
         $record = $class::where('organization_id', $this->organization($request))->findOrFail($id);
         $record->update($this->validatedPayload($request, $module));
+
         return response()->json($record);
     }
 
     public function destroy(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'training.manage');
         [$class] = $this->config($module);
         $class::where('organization_id', $this->organization($request))->findOrFail($id)->delete();
+
         return response()->json(status: 204);
     }
 
     public function enrollments(Request $request): JsonResponse
     {
+        $this->authorizePermission($request, 'training.view');
+
         return response()->json(
             TrainingEnrollment::where('organization_id', $this->organization($request))
                 ->where('user_id', $request->user()->id)
@@ -74,9 +85,10 @@ class TrainingController extends Controller
 
     public function enroll(Request $request): JsonResponse
     {
+        $this->authorizePermission($request, 'training.view');
         $organizationId = $this->organization($request);
         $data = $request->validate(['course_id' => ['required', 'integer', 'exists:training_courses,id']]);
-        AgriculturalScopeValidator::assert($organizationId, $data, ['course_id' => TrainingCourse::class]);
+        OrganizationScopeValidator::assert($organizationId, $data, ['course_id' => TrainingCourse::class]);
 
         $enrollment = TrainingEnrollment::firstOrCreate(
             ['user_id' => $request->user()->id, 'course_id' => $data['course_id']],
@@ -88,6 +100,7 @@ class TrainingController extends Controller
 
     public function completeLesson(Request $request): JsonResponse
     {
+        $this->authorizePermission($request, 'training.view');
         $organizationId = $this->organization($request);
         $data = $request->validate([
             'enrollment_id' => ['required', 'integer', 'exists:training_enrollments,id'],
@@ -99,7 +112,7 @@ class TrainingController extends Controller
             ->where('user_id', $request->user()->id)
             ->findOrFail($data['enrollment_id']);
 
-        AgriculturalScopeValidator::assert($organizationId, $data, ['lesson_id' => TrainingLesson::class]);
+        OrganizationScopeValidator::assert($organizationId, $data, ['lesson_id' => TrainingLesson::class]);
 
         $progress = TrainingProgress::updateOrCreate(
             ['enrollment_id' => $enrollment->id, 'lesson_id' => $data['lesson_id']],

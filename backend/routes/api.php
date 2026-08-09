@@ -23,8 +23,10 @@ use App\Http\Controllers\Api\PlatformController;
 Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
 
 Route::prefix('v1')->group(function (): void {
-    Route::post('/auth/register', [AuthController::class, 'register']);
-    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::middleware('throttle:20,1')->group(function (): void {
+        Route::post('/auth/register', [AuthController::class, 'register']);
+        Route::post('/auth/login', [AuthController::class, 'login']);
+    });
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/user', fn () => request()->user());
@@ -108,7 +110,7 @@ Route::prefix('v1')->group(function (): void {
             Route::put('/{module}/{id}', [LibraryController::class, 'update']);
             Route::delete('/{module}/{id}', [LibraryController::class, 'destroy']);
         });
-        Route::prefix('ai')->group(function (): void {
+        Route::prefix('ai')->middleware('throttle:30,1')->group(function (): void {
             Route::get('/provider', [AiController::class, 'provider']);
             Route::get('/requests', [AiController::class, 'index']);
             Route::post('/requests', [AiController::class, 'store']);
