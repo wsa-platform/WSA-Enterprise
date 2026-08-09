@@ -82,5 +82,6 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(AgriculturalSeeder::class);
+        $this->call(Phase5Seeder::class);
     }
 }

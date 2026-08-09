@@ -13,6 +13,11 @@ use App\Http\Controllers\Api\CommerceController;
 use App\Http\Controllers\Api\FarmController;
 use App\Http\Controllers\Api\CropController;
 use App\Http\Controllers\Api\SoilController;
+use App\Http\Controllers\Api\DiagnosisController;
+use App\Http\Controllers\Api\DiagnosisRequestController;
+use App\Http\Controllers\Api\TrainingController;
+use App\Http\Controllers\Api\LibraryController;
+use App\Http\Controllers\Api\AiController;
 
 Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
 
@@ -74,6 +79,36 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/{module}', [SoilController::class, 'store']);
             Route::put('/{module}/{id}', [SoilController::class, 'update']);
             Route::delete('/{module}/{id}', [SoilController::class, 'destroy']);
+        });
+        Route::prefix('diagnosis')->group(function (): void {
+            Route::get('/requests', [DiagnosisRequestController::class, 'index']);
+            Route::post('/requests', [DiagnosisRequestController::class, 'store']);
+            Route::get('/requests/{id}', [DiagnosisRequestController::class, 'show']);
+            Route::get('/{module}', [DiagnosisController::class, 'index']);
+            Route::post('/{module}', [DiagnosisController::class, 'store']);
+            Route::put('/{module}/{id}', [DiagnosisController::class, 'update']);
+            Route::delete('/{module}/{id}', [DiagnosisController::class, 'destroy']);
+        });
+        Route::prefix('training')->group(function (): void {
+            Route::get('/enrollments', [TrainingController::class, 'enrollments']);
+            Route::post('/enrollments', [TrainingController::class, 'enroll']);
+            Route::post('/progress/complete', [TrainingController::class, 'completeLesson']);
+            Route::get('/{module}', [TrainingController::class, 'index']);
+            Route::post('/{module}', [TrainingController::class, 'store']);
+            Route::put('/{module}/{id}', [TrainingController::class, 'update']);
+            Route::delete('/{module}/{id}', [TrainingController::class, 'destroy']);
+        });
+        Route::prefix('library')->group(function (): void {
+            Route::get('/search', [LibraryController::class, 'search']);
+            Route::get('/{module}', [LibraryController::class, 'index']);
+            Route::post('/{module}', [LibraryController::class, 'store']);
+            Route::put('/{module}/{id}', [LibraryController::class, 'update']);
+            Route::delete('/{module}/{id}', [LibraryController::class, 'destroy']);
+        });
+        Route::prefix('ai')->group(function (): void {
+            Route::get('/provider', [AiController::class, 'provider']);
+            Route::get('/requests', [AiController::class, 'index']);
+            Route::post('/requests', [AiController::class, 'store']);
         });
     });
 });

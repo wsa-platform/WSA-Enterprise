@@ -65,5 +65,18 @@ export const updateTaskStatus = (token: string, taskId: number, status: string) 
 
 export const logout = (token: string) => request<void>('/auth/logout', { method: 'POST' }, token)
 
-export const getModule = (token: string, path: string) => request<unknown[]>(path, {}, token)
+export const getModule = (token: string, path: string) => request<unknown[] | PaginatedResponse<unknown>>(path, {}, token)
 export const getReport = (token: string) => request<Record<string, number>>('/reports/summary', {}, token)
+
+export type PaginatedResponse<T> = { data: T[]; current_page: number; last_page: number; total: number }
+
+export type AiProviderInfo = { provider: string; decision_support_notice: string }
+
+export const getAiProvider = (token: string) => request<AiProviderInfo>('/ai/provider', {}, token)
+
+export const searchLibrary = (token: string, query: string) =>
+  request<PaginatedResponse<Record<string, unknown>>>(`/library/search?q=${encodeURIComponent(query)}`, {}, token)
+
+export function unwrapModuleRows(payload: unknown[] | PaginatedResponse<unknown>): unknown[] {
+  return Array.isArray(payload) ? payload : payload.data ?? []
+}

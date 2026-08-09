@@ -8,86 +8,83 @@ WSA-Enterprise uses organization-scoped multi-tenancy. All tenant-owned records 
 users --< organization_user >-- organizations --< projects --< tasks
 ```
 
-| Table | Purpose |
-| --- | --- |
-| users | User identities |
-| organizations | Tenant/workspace boundary |
-| organization_user | Membership and role |
-| projects | Organization-owned initiatives |
-| tasks | Project work items |
-| personal_access_tokens | Sanctum API tokens |
-
 ## Business modules (Phase 3)
 
-| Domain | Tables |
-| --- | --- |
-| Access control | roles, permissions, role_user, permission_role |
-| Workforce directory | companies, branches, employees |
-| Catalog | customers, suppliers, products, categories, warehouses |
-| Operations | inventory_balances, inventory_movements, purchase_orders, purchase_order_items |
-| Commerce | sales_orders, sales_order_items, invoices, invoice_items, app_notifications |
+Access control, workforce directory, catalog, operations, and commerce tables remain unchanged from earlier phases.
 
 ## Agricultural modules (Phase 4)
 
-Farm, crop, and soil data form the foundation for future Phase 5 capabilities (plant disease diagnosis, treatment recommendations, training, research library, and AI services).
+Farm, crop, and soil tables provide the operational foundation for Phase 5 decision-support features.
+
+## Phase 5 modules
+
+### Disease diagnosis
 
 ```
-organizations --< farms --< farm_regions
-                      \--< farm_fields --< farm_blocks
-                      \--< greenhouses
-                      \--< irrigation_zones
-                      \--< gis_maps
-
-farm_fields / farm_blocks / greenhouses ~~~ gps_coordinates (polymorphic)
-
-organizations --< crop_types --< crop_varieties
-              \--< crop_seasons
-              \--< growth_stages
-              \--< crop_harvests
-              \--< crop_yields
-
-organizations --< soil_analyses --< soil_nutrients
-              \--< soil_recommendations
+organizations --< diagnosis_categories --< diagnosis_subjects
+              \--< diagnosis_symptoms
+              \--< diagnosis_diseases
+              \--< diagnosis_requests --< diagnosis_results --< diagnosis_recommendations
 ```
 
-| Table | Purpose | Key relationships |
-| --- | --- | --- |
-| farms | Top-level farm sites | organization |
-| farm_regions | Subdivisions within a farm | farm |
-| farm_fields | Planting areas | farm, region (optional) |
-| farm_blocks | Sub-field planting units | field |
-| greenhouses | Protected cultivation structures | farm, field (optional) |
-| irrigation_zones | Water delivery zones | farm, field/block/greenhouse (optional) |
-| gps_coordinates | Boundary/location points | polymorphic (`coordinateable`) |
-| gis_maps | GeoJSON map layers | farm (optional) |
-| crop_types | Crop catalog | organization |
-| crop_varieties | Varieties per crop type | crop_type |
-| crop_seasons | Planting seasons | farm (optional) |
-| growth_stages | Phenological stages | crop_type (optional) |
-| crop_harvests | Harvest events | season, crop_type, field/block |
-| crop_yields | Yield forecasts vs actuals | season, crop_type, field/block |
-| soil_analyses | Lab/field soil samples | farm, field, block |
-| soil_nutrients | Nutrient readings per analysis | soil_analysis |
-| soil_recommendations | Agronomic actions | soil_analysis, field, block |
+Diagnosis outputs are stored with `is_decision_support = true` and are not authoritative medical/scientific diagnoses.
 
-### API surface
-
-All agricultural endpoints require Sanctum authentication and are scoped by organization:
-
-| Prefix | Modules |
+| Table | Purpose |
 | --- | --- |
-| `/api/v1/farm/{module}` | farms, regions, fields, blocks, greenhouses, irrigation-zones, gps-coordinates, gis-maps |
-| `/api/v1/crop/{module}` | types, varieties, seasons, growth-stages, harvests, yields |
-| `/api/v1/soil/{module}` | analyses, nutrients, recommendations |
+| diagnosis_categories | High-level diagnosis groupings |
+| diagnosis_subjects | Crop/animal/topic subjects, optionally linked to `crop_types` |
+| diagnosis_symptoms | Symptom catalog |
+| diagnosis_diseases | Possible diseases/problems |
+| diagnosis_requests | User-submitted cases with notes, symptoms, image metadata, workflow status |
+| diagnosis_results | Decision-support results with confidence, severity, provider metadata |
+| diagnosis_recommendations | Follow-up actions linked to a result |
 
-### Phase 5 extension points
+### Training / education
 
-The Phase 4 schema is designed so future modules can attach without restructuring core tables:
+```
+organizations --< training_courses --< training_lessons --< training_objectives
+                                              \--< training_quizzes --< training_questions
+organizations --< training_enrollments --< training_progress
+              \--< training_certificates
+```
 
-- **Plant disease diagnosis** — add `diagnosis_requests` (organization, field/block, image path, status) and `diagnosis_results` linked to crop types; reuse existing file storage config.
-- **Treatment recommendations** — extend `soil_recommendations` category enum or add `treatment_recommendations` referencing diagnosis results.
-- **Training & courses** — add `courses`, `course_modules`, `enrollments` scoped by organization.
-- **Research library** — add `library_items` (organization, title, type, file/url, tags) with optional links to crop types.
-- **AI services** — queue-backed inference jobs referencing organization and source records (diagnosis, soil analysis, etc.).
+Arabic content fields (`title_ar`, `content_ar`, etc.) support Arabic-first delivery with English/Turkish-ready locale fields.
 
-Demo agricultural data is seeded by `AgriculturalSeeder` (invoked from `DatabaseSeeder`) for the `wsa-demo` workspace.
+### Agricultural library
+
+```
+organizations --< library_categories
+              \--< library_tags
+              \--< library_items >--< library_item_tag >-- library_tags
+```
+
+Library items support articles/documents/resources, publication status, tags, crop links, and safe file metadata (`file_disk`, `file_path`).
+
+### AI services foundation
+
+```
+organizations --< ai_requests
+```
+
+AI execution uses a provider contract (`AiProviderInterface`) with a default `mock` provider for local development and tests. Configuration:
+
+- `AI_PROVIDER=mock`
+- `AI_TIMEOUT=30`
+
+No API credentials are stored in source control. Future providers can be added without rewriting diagnosis, training, or library business logic.
+
+### Phase 5 API surface
+
+| Prefix | Purpose |
+| --- | --- |
+| `/api/v1/diagnosis/requests` | Submit and review diagnosis workflow |
+| `/api/v1/diagnosis/{module}` | categories, subjects, symptoms, diseases, recommendations |
+| `/api/v1/training/enrollments` | Learner enrollment and progress |
+| `/api/v1/training/progress/complete` | Lesson completion tracking |
+| `/api/v1/training/{module}` | courses, lessons, objectives, quizzes, questions |
+| `/api/v1/library/search` | Published library search/filter |
+| `/api/v1/library/{module}` | categories, tags, items |
+| `/api/v1/ai/provider` | Active provider metadata |
+| `/api/v1/ai/requests` | Generic AI request log and invocation |
+
+Demo Phase 5 data is seeded by `Phase5Seeder` after `AgriculturalSeeder` for the `wsa-demo` workspace.

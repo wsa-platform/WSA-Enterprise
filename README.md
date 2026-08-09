@@ -56,3 +56,29 @@ cd backend && php artisan migrate --seed
 Demo login: `admin@wsa.test` / `password`. The web workspace loads farm records by default under **Business & agriculture** module tabs.
 
 See `docs/database.md` for the full agricultural schema and Phase 5 extension points.
+
+## Phase 5 modules
+
+Phase 5 adds decision-support diagnosis, training, library, and AI foundation services on top of the agricultural core.
+
+| Area | API prefix | Notes |
+| --- | --- | --- |
+| Disease diagnosis | `/api/v1/diagnosis/*` | Decision-support only; mock AI provider by default |
+| Training / education | `/api/v1/training/*` | Arabic-first course content, enrollments, progress, certificates |
+| Agricultural library | `/api/v1/library/*` | Searchable articles/resources with tags and categories |
+| AI services | `/api/v1/ai/*` | Provider abstraction via `AI_PROVIDER=mock` |
+
+Seed all demo data:
+
+```bash
+cd backend && php artisan migrate --seed
+```
+
+Environment configuration:
+
+```bash
+AI_PROVIDER=mock
+AI_TIMEOUT=30
+```
+
+The React workspace includes a **Diagnosis, training, library & AI** section. The Flutter app provides login plus Diagnosis, Training, and Library tabs.

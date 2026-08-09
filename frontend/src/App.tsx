@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
+  getAiProvider,
   getDashboard,
   getModule,
   getReport,
   login,
   logout,
+  searchLibrary,
+  unwrapModuleRows,
   updateTaskStatus,
 } from './api'
-import type { Dashboard, User } from './api'
+import type { AiProviderInfo, Dashboard, User } from './api'
 import './App.css'
 
 const statuses = ['todo', 'in_progress', 'blocked', 'done', 'cancelled']
@@ -30,7 +33,11 @@ function App() {
   const [password, setPassword] = useState('password')
   const [modulePath, setModulePath] = useState('/farm/farms')
   const [moduleRows, setModuleRows] = useState<unknown[]>([])
+  const [phase5Path, setPhase5Path] = useState('/diagnosis/requests')
+  const [phase5Rows, setPhase5Rows] = useState<unknown[]>([])
   const [report, setReport] = useState<Record<string, number> | null>(null)
+  const [aiProvider, setAiProvider] = useState<AiProviderInfo | null>(null)
+  const [libraryQuery, setLibraryQuery] = useState('طماطم')
 
   const loadDashboard = async () => {
     if (!token) return
@@ -51,7 +58,9 @@ function App() {
 
   useEffect(() => {
     if (!token || !dashboard) return
+    void loadPhase5Module('/diagnosis/requests')
     void loadModule('/farm/farms')
+    void getAiProvider(token).then(setAiProvider).catch(() => undefined)
   }, [token, dashboard])
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
@@ -88,6 +97,19 @@ function App() {
     }
   }
 
+  const loadPhase5Module = async (path: string) => {
+    try {
+      setPhase5Path(path)
+      if (path === '/library/search') {
+        setPhase5Rows(unwrapModuleRows(await searchLibrary(token, libraryQuery)))
+      } else {
+        setPhase5Rows(unwrapModuleRows(await getModule(token, path)))
+      }
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Unable to load Phase 5 module.')
+    }
+  }
+
   const loadModule = async (path = modulePath) => {
     try {
       setModulePath(path)
@@ -96,7 +118,7 @@ function App() {
         setModuleRows([])
       } else {
         setReport(null)
-        setModuleRows(await getModule(token, path))
+        setModuleRows(unwrapModuleRows(await getModule(token, path)))
       }
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Unable to load module.')
@@ -131,6 +153,7 @@ function App() {
           <a href="#projects">Projects</a>
           <a href="#tasks">Tasks</a>
           <a href="#modules">Business modules</a>
+          <a href="#phase5">Diagnosis &amp; education</a>
         </nav>
         <div className="account">
           <strong>{user.name}</strong>
@@ -182,13 +205,33 @@ function App() {
                 </article>)}
               </div>
             </section>
+            <section className="panel" id="phase5">
+              <div className="panel-heading"><div><p className="eyebrow">PHASE 5</p><h2>Diagnosis, training, library &amp; AI</h2></div></div>
+              {aiProvider && <p className="notice">{aiProvider.decision_support_notice} Provider: <strong>{aiProvider.provider}</strong></p>}
+              <div className="module-tabs">
+                {phase5Modules.map((module) => <button key={module.path} className={phase5Path === module.path ? 'selected' : ''} onClick={() => void loadPhase5Module(module.path)}>{module.label}</button>)}
+              </div>
+              {phase5Path === '/library/search' && (
+                <div className="search-bar">
+                  <input value={libraryQuery} onChange={(event) => setLibraryQuery(event.target.value)} placeholder="ابحث في المكتبة الزراعية" aria-label="Library search" />
+                  <button onClick={() => void loadPhase5Module('/library/search')}>Search</button>
+                </div>
+              )}
+              <div className="module-results">
+                {phase5Rows.length === 0 ? <p className="muted">Select a Phase 5 module to load records.</p> : phase5Rows.slice(0, 8).map((row, index) => (
+                  <article className="record-card" key={index}>{renderRecordCard(row)}</article>
+                ))}
+              </div>
+            </section>
             <section className="panel" id="modules">
               <div className="panel-heading"><div><p className="eyebrow">MODULES</p><h2>Business &amp; agriculture</h2></div></div>
               <div className="module-tabs">
                 {modules.map((module) => <button key={module.path} className={modulePath === module.path ? 'selected' : ''} onClick={() => void loadModule(module.path)}>{module.label}</button>)}
               </div>
               {report ? <div className="report-grid">{Object.entries(report).map(([key, value]) => <div key={key}><span>{formatStatus(key)}</span><strong>{value}</strong></div>)}</div> : <div className="module-results">
-                {moduleRows.length === 0 ? <p className="muted">Select a module to load its records.</p> : moduleRows.slice(0, 8).map((row, index) => <pre key={index}>{JSON.stringify(row, null, 2)}</pre>)}
+                {moduleRows.length === 0 ? <p className="muted">Select a module to load its records.</p> : moduleRows.slice(0, 8).map((row, index) => (
+                  <article className="record-card" key={index}>{renderRecordCard(row)}</article>
+                ))}
               </div>}
             </section>
           </>
@@ -207,6 +250,32 @@ const modules = [
   { label: 'Crop types', path: '/crop/types' }, { label: 'Varieties', path: '/crop/varieties' }, { label: 'Seasons', path: '/crop/seasons' }, { label: 'Growth stages', path: '/crop/growth-stages' }, { label: 'Harvest', path: '/crop/harvests' }, { label: 'Yield', path: '/crop/yields' },
   { label: 'Soil analysis', path: '/soil/analyses' }, { label: 'Soil nutrients', path: '/soil/nutrients' }, { label: 'Soil recommendations', path: '/soil/recommendations' },
 ]
+
+const phase5Modules = [
+  { label: 'Diagnosis requests', path: '/diagnosis/requests' },
+  { label: 'Diagnosis categories', path: '/diagnosis/categories' },
+  { label: 'Symptoms', path: '/diagnosis/symptoms' },
+  { label: 'Diseases', path: '/diagnosis/diseases' },
+  { label: 'Courses', path: '/training/courses' },
+  { label: 'Lessons', path: '/training/lessons' },
+  { label: 'My enrollments', path: '/training/enrollments' },
+  { label: 'Library items', path: '/library/items?publication_status=published' },
+  { label: 'Library search', path: '/library/search' },
+  { label: 'AI requests', path: '/ai/requests' },
+]
+
+function renderRecordCard(row: unknown) {
+  if (!row || typeof row !== 'object') return <pre>{JSON.stringify(row, null, 2)}</pre>
+  const record = row as Record<string, unknown>
+  const title = String(record.title_ar ?? record.title ?? record.name ?? record.reference ?? record.code ?? 'Record')
+  const subtitle = String(record.summary_ar ?? record.summary ?? record.description ?? record.status ?? record.notes ?? '')
+  const meta = [record.code, record.status, record.locale, record.provider, record.confidence_score].filter(Boolean).map(String).join(' · ')
+  return <>
+    <strong dir="auto">{title}</strong>
+    {subtitle && <p dir="auto">{subtitle}</p>}
+    {meta && <span>{meta}</span>}
+  </>
+}
 
 function Metric({ label, value, tone }: { label: string; value: number; tone: string }) {
   return <article className={`metric ${tone}`}><span>{label}</span><strong>{value}</strong></article>
