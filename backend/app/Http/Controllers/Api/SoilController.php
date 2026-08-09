@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Concerns\ResolvesOrganization;
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use App\Models\{Farm, FarmBlock, FarmField, SoilAnalysis, SoilNutrient, SoilRecommendation};
 use Illuminate\Http\JsonResponse;
@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class SoilController extends Controller
 {
-    use ResolvesOrganization;
+    use AuthorizesOrganizationAccess;
 
     private const MODULES = [
         'analyses' => [SoilAnalysis::class, ['farm_id'=>['nullable','integer','exists:farms,id'], 'field_id'=>['nullable','integer','exists:farm_fields,id'], 'block_id'=>['nullable','integer','exists:farm_blocks,id'], 'sample_reference'=>['required','string','max:64'], 'sampled_at'=>['required','date'], 'ph'=>['nullable','numeric','between:0,14'], 'ec'=>['nullable','numeric','min:0'], 'organic_matter_percent'=>['nullable','numeric','min:0','max:100'], 'moisture_percent'=>['nullable','numeric','min:0','max:100'], 'laboratory'=>['nullable','string'], 'notes'=>['nullable','string']], ['farm_id'=>Farm::class, 'field_id'=>FarmField::class, 'block_id'=>FarmBlock::class]],
@@ -29,13 +29,14 @@ class SoilController extends Controller
     {
         [, $rules, $relations] = $this->config($module);
         $data = $request->validate($rules);
-        AgriculturalScopeValidator::assert($this->organization($request), $data, $relations);
+        OrganizationScopeValidator::assert($this->organization($request), $data, $relations);
 
         return $data;
     }
 
     public function index(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'soil.view');
         [$class] = $this->config($module);
 
         return response()->json($class::where('organization_id', $this->organization($request))->latest()->get());
@@ -43,6 +44,7 @@ class SoilController extends Controller
 
     public function store(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'soil.manage');
         [$class] = $this->config($module);
 
         return response()->json($class::create([
@@ -53,6 +55,7 @@ class SoilController extends Controller
 
     public function update(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'soil.manage');
         [$class] = $this->config($module);
         $record = $class::where('organization_id', $this->organization($request))->findOrFail($id);
         $record->update($this->validatedPayload($request, $module));
@@ -62,6 +65,7 @@ class SoilController extends Controller
 
     public function destroy(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'soil.manage');
         [$class] = $this->config($module);
         $class::where('organization_id', $this->organization($request))->findOrFail($id)->delete();
 

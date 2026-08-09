@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Concerns\ResolvesOrganization;
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
@@ -10,10 +10,11 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    use ResolvesOrganization;
+    use AuthorizesOrganizationAccess;
 
     public function __invoke(Request $request): JsonResponse
     {
+        $this->authorizePermission($request, 'platform.view');
         $organization = $this->organizationModel($request);
         $tasks = Task::query()->whereHas('project', fn ($query) => $query->where('organization_id', $organization->id));
 

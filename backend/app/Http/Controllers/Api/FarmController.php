@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Concerns\ResolvesOrganization;
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use App\Models\{Farm, FarmBlock, FarmField, FarmRegion, GisMap, GpsCoordinate, Greenhouse, IrrigationZone};
 use Illuminate\Http\JsonResponse;
@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class FarmController extends Controller
 {
-    use ResolvesOrganization;
+    use AuthorizesOrganizationAccess;
 
     private const MODULES = [
         'farms' => [Farm::class, ['code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'owner_name'=>['nullable','string'], 'address'=>['nullable','string'], 'area_hectares'=>['numeric','min:0'], 'is_active'=>['boolean']], []],
@@ -23,12 +23,7 @@ class FarmController extends Controller
         'gis-maps' => [GisMap::class, ['farm_id'=>['nullable','integer','exists:farms,id'], 'name'=>['required','string','max:255'], 'layer_type'=>['required','string','max:64'], 'source_url'=>['nullable','url'], 'geojson'=>['nullable','array'], 'metadata'=>['nullable','array']], ['farm_id'=>Farm::class]],
     ];
 
-    private const COORDINATEABLE = [
-        Farm::class,
-        FarmField::class,
-        FarmBlock::class,
-        Greenhouse::class,
-    ];
+    private const COORDINATEABLE = [Farm::class, FarmField::class, FarmBlock::class, Greenhouse::class];
 
     private function config(string $module): array
     {
@@ -43,11 +38,11 @@ class FarmController extends Controller
         $organizationId = $this->organization($request);
         $data = $request->validate($rules);
 
-        AgriculturalScopeValidator::assert($organizationId, $data, $relations);
+        OrganizationScopeValidator::assert($organizationId, $data, $relations);
 
         if ($module === 'gps-coordinates') {
             abort_unless(in_array($data['coordinateable_type'], self::COORDINATEABLE, true), 422);
-            AgriculturalScopeValidator::assert($organizationId, $data, [
+            OrganizationScopeValidator::assert($organizationId, $data, [
                 'coordinateable_id' => $data['coordinateable_type'],
             ]);
         }
@@ -57,6 +52,7 @@ class FarmController extends Controller
 
     public function index(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'farm.view');
         [$class] = $this->config($module);
 
         return response()->json($class::where('organization_id', $this->organization($request))->latest()->get());
@@ -64,6 +60,7 @@ class FarmController extends Controller
 
     public function store(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'farm.manage');
         [$class] = $this->config($module);
 
         return response()->json($class::create([
@@ -74,6 +71,7 @@ class FarmController extends Controller
 
     public function update(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'farm.manage');
         [$class] = $this->config($module);
         $record = $class::where('organization_id', $this->organization($request))->findOrFail($id);
         $record->update($this->validatedPayload($request, $module));
@@ -83,6 +81,7 @@ class FarmController extends Controller
 
     public function destroy(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'farm.manage');
         [$class] = $this->config($module);
         $class::where('organization_id', $this->organization($request))->findOrFail($id)->delete();
 

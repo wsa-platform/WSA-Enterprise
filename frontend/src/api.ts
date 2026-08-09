@@ -68,7 +68,11 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
   })
 
   if (!response.ok) {
-    const payload = await response.json().catch(() => null)
+    const payload = await response.json().catch(() => null) as { message?: string; errors?: Record<string, string[]> } | null
+    if (payload?.errors) {
+      const details = Object.entries(payload.errors).flatMap(([field, messages]) => messages.map((message) => `${field}: ${message}`))
+      throw new Error(details.join(' · ') || payload.message || 'Validation failed.')
+    }
     throw new Error(payload?.message ?? 'Unable to complete the request.')
   }
 
@@ -121,3 +125,31 @@ export const createAiRequest = (
 export function unwrapModuleRows(payload: unknown[] | PaginatedResponse<unknown>): unknown[] {
   return Array.isArray(payload) ? payload : payload.data ?? []
 }
+
+export const createModuleRecord = (
+  token: string,
+  path: string,
+  payload: Record<string, unknown>,
+  organizationId?: number,
+) => request<Record<string, unknown>>(path.split('?')[0], {
+  method: 'POST',
+  body: JSON.stringify(payload),
+}, token, organizationId)
+
+export const updateModuleRecord = (
+  token: string,
+  path: string,
+  id: number,
+  payload: Record<string, unknown>,
+  organizationId?: number,
+) => request<Record<string, unknown>>(`${path.split('?')[0]}/${id}`, {
+  method: 'PUT',
+  body: JSON.stringify(payload),
+}, token, organizationId)
+
+export const deleteModuleRecord = (
+  token: string,
+  path: string,
+  id: number,
+  organizationId?: number,
+) => request<void>(`${path.split('?')[0]}/${id}`, { method: 'DELETE' }, token, organizationId)

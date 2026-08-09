@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Concerns\ResolvesOrganization;
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use App\Models\{CropType, DiagnosisCategory, DiagnosisDisease, DiagnosisRecommendation, DiagnosisSubject, DiagnosisSymptom};
 use Illuminate\Http\JsonResponse;
@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class DiagnosisController extends Controller
 {
-    use ResolvesOrganization;
+    use AuthorizesOrganizationAccess;
 
     private const MODULES = [
         'categories' => [DiagnosisCategory::class, ['code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'name_ar'=>['nullable','string','max:255'], 'description'=>['nullable','string'], 'is_active'=>['boolean']], []],
@@ -26,34 +26,43 @@ class DiagnosisController extends Controller
     {
         [, $rules, $relations] = $this->config($module);
         $data = $request->validate($rules);
-        AgriculturalScopeValidator::assert($this->organization($request), $data, $relations);
+        OrganizationScopeValidator::assert($this->organization($request), $data, $relations);
+
         return $data;
     }
 
     public function index(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'diagnosis.view');
         [$class] = $this->config($module);
+
         return response()->json($class::where('organization_id', $this->organization($request))->latest()->get());
     }
 
     public function store(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'diagnosis.manage');
         [$class] = $this->config($module);
+
         return response()->json($class::create(['organization_id'=>$this->organization($request), ...$this->validatedPayload($request, $module)]), 201);
     }
 
     public function update(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'diagnosis.manage');
         [$class] = $this->config($module);
         $record = $class::where('organization_id', $this->organization($request))->findOrFail($id);
         $record->update($this->validatedPayload($request, $module));
+
         return response()->json($record);
     }
 
     public function destroy(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'diagnosis.manage');
         [$class] = $this->config($module);
         $class::where('organization_id', $this->organization($request))->findOrFail($id)->delete();
+
         return response()->json(status: 204);
     }
 }

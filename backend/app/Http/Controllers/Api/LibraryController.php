@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Concerns\ResolvesOrganization;
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use App\Models\{CropType, LibraryCategory, LibraryItem, LibraryTag};
 use App\Services\Media\MediaReferenceService;
@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class LibraryController extends Controller
 {
-    use ResolvesOrganization;
+    use AuthorizesOrganizationAccess;
 
     private const MODULES = [
         'categories' => [LibraryCategory::class, ['parent_id'=>['nullable','integer','exists:library_categories,id'], 'code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'name_ar'=>['nullable','string','max:255']], ['parent_id'=>LibraryCategory::class]],
@@ -27,7 +27,7 @@ class LibraryController extends Controller
     {
         [, $rules, $relations] = $this->config($module);
         $data = $request->validate($rules);
-        AgriculturalScopeValidator::assert($this->organization($request), $data, $relations);
+        OrganizationScopeValidator::assert($this->organization($request), $data, $relations);
 
         if ($module === 'items') {
             $data = $this->media->validateAndSanitize($data);
@@ -38,6 +38,7 @@ class LibraryController extends Controller
 
     public function index(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'library.view');
         [$class] = $this->config($module);
         $query = $class::where('organization_id', $this->organization($request))->latest();
         if ($module === 'items') {
@@ -62,6 +63,7 @@ class LibraryController extends Controller
 
     public function search(Request $request): JsonResponse
     {
+        $this->authorizePermission($request, 'library.view');
         $organizationId = $this->organization($request);
         $validated = $request->validate([
             'q' => ['required', 'string', 'min:2', 'max:255'],
@@ -85,12 +87,12 @@ class LibraryController extends Controller
             ->with(['tags', 'category:id,name,name_ar', 'cropType:id,code,name']);
 
         if ($categoryId = $validated['category_id'] ?? null) {
-            AgriculturalScopeValidator::assert($organizationId, ['category_id' => $categoryId], ['category_id' => LibraryCategory::class]);
+            OrganizationScopeValidator::assert($organizationId, ['category_id' => $categoryId], ['category_id' => LibraryCategory::class]);
             $query->where('category_id', $categoryId);
         }
 
         if ($cropTypeId = $validated['crop_type_id'] ?? null) {
-            AgriculturalScopeValidator::assert($organizationId, ['crop_type_id' => $cropTypeId], ['crop_type_id' => CropType::class]);
+            OrganizationScopeValidator::assert($organizationId, ['crop_type_id' => $cropTypeId], ['crop_type_id' => CropType::class]);
             $query->where('crop_type_id', $cropTypeId);
         }
 
@@ -116,6 +118,7 @@ class LibraryController extends Controller
 
     public function store(Request $request, string $module): JsonResponse
     {
+        $this->authorizePermission($request, 'library.manage');
         [$class] = $this->config($module);
         $payload = $this->validatedPayload($request, $module);
         $tagIds = $payload['tag_ids'] ?? null;
@@ -133,6 +136,7 @@ class LibraryController extends Controller
 
     public function update(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'library.manage');
         [$class] = $this->config($module);
         $record = $class::where('organization_id', $this->organization($request))->findOrFail($id);
         $payload = $this->validatedPayload($request, $module);
@@ -149,6 +153,7 @@ class LibraryController extends Controller
 
     public function destroy(Request $request, string $module, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'library.manage');
         [$class] = $this->config($module);
         $class::where('organization_id', $this->organization($request))->findOrFail($id)->delete();
 

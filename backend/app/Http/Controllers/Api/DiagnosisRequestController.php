@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Concerns\ResolvesOrganization;
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Diagnosis\StoreDiagnosisRequestRequest;
 use App\Models\{CropType, DiagnosisDisease, DiagnosisRequest, DiagnosisSubject, FarmBlock, FarmField};
 use App\Services\Diagnosis\DiagnosisWorkflowService;
 use App\Services\Media\MediaReferenceService;
@@ -12,7 +13,7 @@ use Illuminate\Http\Request;
 
 class DiagnosisRequestController extends Controller
 {
-    use ResolvesOrganization;
+    use AuthorizesOrganizationAccess;
 
     public function __construct(
         private DiagnosisWorkflowService $workflow,
@@ -21,6 +22,8 @@ class DiagnosisRequestController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorizePermission($request, 'diagnosis.view');
+
         $query = DiagnosisRequest::where('organization_id', $this->organization($request))
             ->with(['results.recommendations', 'user:id,name'])
             ->latest();
@@ -37,6 +40,8 @@ class DiagnosisRequestController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
+        $this->authorizePermission($request, 'diagnosis.view');
+
         $record = DiagnosisRequest::where('organization_id', $this->organization($request))
             ->with(['results.recommendations'])
             ->findOrFail($id);
@@ -44,26 +49,14 @@ class DiagnosisRequestController extends Controller
         return response()->json($this->presentRequest($record));
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreDiagnosisRequestRequest $request): JsonResponse
     {
+        $this->authorizePermission($request, 'diagnosis.manage');
+
         $organizationId = $this->organization($request);
-        $data = $request->validate([
-            'reference' => ['required', 'string', 'max:64'],
-            'field_id' => ['nullable', 'integer', 'exists:farm_fields,id'],
-            'block_id' => ['nullable', 'integer', 'exists:farm_blocks,id'],
-            'crop_type_id' => ['nullable', 'integer', 'exists:crop_types,id'],
-            'subject_id' => ['nullable', 'integer', 'exists:diagnosis_subjects,id'],
-            'disease_id' => ['nullable', 'integer', 'exists:diagnosis_diseases,id'],
-            'notes' => ['nullable', 'string'],
-            'image_disk' => ['nullable', 'string', 'max:32'],
-            'image_path' => ['nullable', 'string', 'max:255'],
-            'symptom_ids' => ['nullable', 'array'],
-            'symptom_ids.*' => ['integer'],
-        ]);
+        $data = $this->media->validateAndSanitize($request->validated(), 'image_disk', 'image_path');
 
-        $data = $this->media->validateAndSanitize($data, 'image_disk', 'image_path');
-
-        AgriculturalScopeValidator::assert($organizationId, $data, [
+        OrganizationScopeValidator::assert($organizationId, $data, [
             'field_id' => FarmField::class,
             'block_id' => FarmBlock::class,
             'crop_type_id' => CropType::class,
