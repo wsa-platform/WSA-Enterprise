@@ -28,14 +28,14 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/auth/login', [AuthController::class, 'login']);
     });
 
-    Route::middleware('auth:sanctum')->group(function (): void {
-        Route::get('/user', fn () => request()->user());
+    Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function (): void {
+        Route::get('/user', fn () => request()->user()?->only(['id', 'name', 'email']));
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/dashboard', DashboardController::class);
         Route::get('/platform/organizations', [PlatformController::class, 'organizations']);
         Route::get('/platform/workflow-summary', [PlatformController::class, 'workflowSummary']);
         Route::get('/projects', [ProjectController::class, 'index']);
-        Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus']);
+        Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->whereNumber('task');
         Route::get('/users', [AccessController::class, 'users']);
         Route::post('/users', [AccessController::class, 'storeUser']);
         Route::post('/users/{user}/roles', [AccessController::class, 'assignRole']);

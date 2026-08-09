@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{AppNotification, Customer, Invoice, Product, SalesOrder, Warehouse};
 use Illuminate\Http\JsonResponse;
@@ -12,19 +13,20 @@ use Illuminate\Support\Facades\DB;
 class CommerceController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use PaginatesOrganizationRecords;
 
     public function salesOrders(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'business.view');
 
-        return response()->json(SalesOrder::where('organization_id', $this->organization($request))->with('items')->latest()->get());
+        return $this->paginateQuery($request, SalesOrder::where('organization_id', $this->organization($request))->with('items')->latest());
     }
 
     public function invoices(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'business.view');
 
-        return response()->json(Invoice::where('organization_id', $this->organization($request))->with('items')->latest()->get());
+        return $this->paginateQuery($request, Invoice::where('organization_id', $this->organization($request))->with('items')->latest());
     }
 
     public function storeSalesOrder(Request $request): JsonResponse
@@ -96,7 +98,12 @@ class CommerceController extends Controller
     {
         $this->authorizePermission($request, 'platform.view');
 
-        return response()->json(AppNotification::where('organization_id', $this->organization($request))->where(fn ($q) => $q->whereNull('user_id')->orWhere('user_id', $request->user()->id))->latest()->get());
+        return $this->paginateQuery(
+            $request,
+            AppNotification::where('organization_id', $this->organization($request))
+                ->where(fn ($q) => $q->whereNull('user_id')->orWhere('user_id', $request->user()->id))
+                ->latest()
+        );
     }
 
     public function readNotification(Request $request, AppNotification $notification): JsonResponse

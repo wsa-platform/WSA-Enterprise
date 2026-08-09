@@ -48,6 +48,32 @@ export type AiProviderInfo = {
   supported_request_types?: string[]
 }
 
+export class ApiError extends Error {
+  status: number
+  errors?: Record<string, string[]>
+
+  constructor(message: string, status: number, errors?: Record<string, string[]>) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.errors = errors
+  }
+
+  get isUnauthorized() {
+    return this.status === 401
+  }
+
+  get isForbidden() {
+    return this.status === 403
+  }
+}
+
+let unauthorizedHandler: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  unauthorizedHandler = handler
+}
+
 function buildHeaders(token?: string, organizationId?: number, body?: unknown) {
   return {
     Accept: 'application/json',
@@ -69,11 +95,14 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
 
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { message?: string; errors?: Record<string, string[]> } | null
+    if (response.status === 401 && token) {
+      unauthorizedHandler?.()
+    }
     if (payload?.errors) {
       const details = Object.entries(payload.errors).flatMap(([field, messages]) => messages.map((message) => `${field}: ${message}`))
-      throw new Error(details.join(' · ') || payload.message || 'Validation failed.')
+      throw new ApiError(details.join(' · ') || payload.message || 'Validation failed.', response.status, payload.errors)
     }
-    throw new Error(payload?.message ?? 'Unable to complete the request.')
+    throw new ApiError(payload?.message ?? 'Unable to complete the request.', response.status)
   }
 
   return response.status === 204 ? (undefined as T) : response.json() as Promise<T>
@@ -124,6 +153,15 @@ export const createAiRequest = (
 
 export function unwrapModuleRows(payload: unknown[] | PaginatedResponse<unknown>): unknown[] {
   return Array.isArray(payload) ? payload : payload.data ?? []
+}
+
+export function modulePaginationMeta(payload: unknown[] | PaginatedResponse<unknown>) {
+  if (Array.isArray(payload)) return null
+  return {
+    currentPage: payload.current_page,
+    lastPage: payload.last_page,
+    total: payload.total,
+  }
 }
 
 export const createModuleRecord = (

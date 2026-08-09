@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'phase-7-*', 'phase-8', 'phase-8-*']
   pull_request:
 
 jobs:
@@ -67,3 +67,4 @@ jobs:
       - run: flutter create .
       - run: flutter pub get
       - run: flutter analyze
+      - run: flutter test

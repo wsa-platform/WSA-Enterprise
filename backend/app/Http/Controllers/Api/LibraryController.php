@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{CropType, LibraryCategory, LibraryItem, LibraryTag};
 use App\Services\Media\MediaReferenceService;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 class LibraryController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use PaginatesOrganizationRecords;
 
     private const MODULES = [
         'categories' => [LibraryCategory::class, ['parent_id'=>['nullable','integer','exists:library_categories,id'], 'code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'name_ar'=>['nullable','string','max:255']], ['parent_id'=>LibraryCategory::class]],
@@ -52,13 +54,12 @@ class LibraryController extends Controller
                 $query->where('crop_type_id', $cropTypeId);
             }
 
-            return response()->json(
-                $query->with(['tags', 'category:id,name,name_ar', 'cropType:id,code,name'])
-                    ->paginate((int) $request->query('per_page', 15))
-            );
+            $query->with(['tags', 'category:id,name,name_ar', 'cropType:id,code,name']);
+
+            return $this->paginateQuery($request, $query);
         }
 
-        return response()->json($query->get());
+        return $this->paginateQuery($request, $query);
     }
 
     public function search(Request $request): JsonResponse

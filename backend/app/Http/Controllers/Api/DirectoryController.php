@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{Branch, Company, Employee};
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 class DirectoryController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use PaginatesOrganizationRecords;
 
     private const MODULES = [
         'companies' => [Company::class, ['name' => ['required', 'string', 'max:255'], 'legal_name' => ['nullable', 'string'], 'tax_number' => ['nullable', 'string', 'max:80'], 'email' => ['nullable', 'email'], 'phone' => ['nullable', 'string'], 'address' => ['nullable', 'string'], 'is_active' => ['boolean']], []],
@@ -40,7 +42,7 @@ class DirectoryController extends Controller
         $this->authorizePermission($request, 'business.view');
         [$class] = $this->module($module);
 
-        return response()->json($class::where('organization_id', $this->organization($request))->latest()->get());
+        return $this->paginateQuery($request, $class::where('organization_id', $this->organization($request))->latest());
     }
 
     public function store(Request $request, string $module): JsonResponse

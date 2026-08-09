@@ -28,6 +28,7 @@ class BootstrapScreen extends StatefulWidget {
 
 class _BootstrapScreenState extends State<BootstrapScreen> {
   bool loading = true;
+  String? error;
 
   @override
   void initState() {
@@ -36,9 +37,15 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
   }
 
   Future<void> _bootstrap() async {
-    await widget.client.restoreSession();
-    if (!mounted) return;
-    setState(() => loading = false);
+    try {
+      await widget.client.restoreSession();
+    } on ApiException catch (e) {
+      error = e.toString();
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
   }
 
   @override
@@ -48,17 +55,32 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     }
 
     if (widget.client.token != null) {
-      return HomeScreen(client: widget.client);
+      widget.client.onUnauthorized = () {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => LoginScreen(client: widget.client, bootstrapError: 'Your session has expired. Please sign in again.')),
+        );
+      };
+      return HomeScreen(
+        client: widget.client,
+        onSignedOut: () {
+          setState(() {});
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => LoginScreen(client: widget.client)),
+          );
+        },
+      );
     }
 
-    return LoginScreen(client: widget.client);
+    return LoginScreen(client: widget.client, bootstrapError: error);
   }
 }
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.client});
+  const LoginScreen({super.key, required this.client, this.bootstrapError});
 
   final ApiClient client;
+  final String? bootstrapError;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -70,17 +92,40 @@ class _LoginScreenState extends State<LoginScreen> {
   bool loading = false;
   String? error;
 
+  @override
+  void initState() {
+    super.initState();
+    error = widget.bootstrapError;
+  }
+
   Future<void> signIn() async {
     setState(() {
       loading = true;
       error = null;
     });
     try {
-      await widget.client.login(email.text, password.text);
+      await widget.client.login(email.text.trim(), password.text);
       if (!mounted) return;
+      widget.client.onUnauthorized = () {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => LoginScreen(client: widget.client, bootstrapError: 'Your session has expired. Please sign in again.')),
+        );
+      };
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen(client: widget.client)),
+        MaterialPageRoute(
+          builder: (_) => HomeScreen(
+            client: widget.client,
+            onSignedOut: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => LoginScreen(client: widget.client, bootstrapError: 'Your session has expired. Please sign in again.')),
+              );
+            },
+          ),
+        ),
       );
+    } on ApiException catch (e) {
+      setState(() => error = e.toString());
     } catch (e) {
       setState(() => error = e.toString());
     } finally {
@@ -102,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const Text('WSA Enterprise', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                const Text('Sign in to access dashboard, farms, diagnosis, training, and library modules.'),
+                const Text('Sign in to access dashboard, farms, crops, soil, diagnosis, training, library, and AI services.'),
                 const SizedBox(height: 24),
                 TextField(controller: email, decoration: const InputDecoration(labelText: 'Email')),
                 const SizedBox(height: 12),
@@ -110,6 +155,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (error != null) ...[const SizedBox(height: 12), Text(error!, style: const TextStyle(color: Colors.red))],
                 const SizedBox(height: 20),
                 FilledButton(onPressed: loading ? null : signIn, child: Text(loading ? 'Signing in…' : 'Sign in')),
+                const SizedBox(height: 12),
+                const Text('Demo: admin@wsa.test / password', style: TextStyle(fontSize: 12)),
               ],
             ),
           ),

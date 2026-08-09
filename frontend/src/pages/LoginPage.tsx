@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { getOrganizations, login } from '../api'
 import { useAuth } from '../context/AuthContext'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const expired = (location.state as { expired?: boolean } | null)?.expired === true
   const { setSession, setOrganizationId } = useAuth()
   const [email, setEmail] = useState('admin@wsa.test')
   const [password, setPassword] = useState('password')
@@ -34,6 +36,7 @@ export function LoginPage() {
         <p className="eyebrow">WSA ENTERPRISE</p>
         <h1>Integrated agricultural platform.</h1>
         <p className="muted" dir="auto">Sign in to access farms, diagnosis, training, library, and AI services.</p>
+        {expired && <p className="banner">Your session has expired. Please sign in again.</p>}
         <form onSubmit={handleLogin}>
           <label>Email<input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required /></label>
           <label>Password<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" required /></label>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{CropType, DiagnosisCategory, DiagnosisDisease, DiagnosisRecommendation, DiagnosisSubject, DiagnosisSymptom};
 use Illuminate\Http\JsonResponse;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 class DiagnosisController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use PaginatesOrganizationRecords;
 
     private const MODULES = [
         'categories' => [DiagnosisCategory::class, ['code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'name_ar'=>['nullable','string','max:255'], 'description'=>['nullable','string'], 'is_active'=>['boolean']], []],
@@ -36,7 +38,7 @@ class DiagnosisController extends Controller
         $this->authorizePermission($request, 'diagnosis.view');
         [$class] = $this->config($module);
 
-        return response()->json($class::where('organization_id', $this->organization($request))->latest()->get());
+        return $this->paginateQuery($request, $class::where('organization_id', $this->organization($request))->latest());
     }
 
     public function store(Request $request, string $module): JsonResponse

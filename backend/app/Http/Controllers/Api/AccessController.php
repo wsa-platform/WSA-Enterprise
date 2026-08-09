@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
@@ -16,13 +17,33 @@ use Illuminate\Validation\Rule;
 class AccessController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use PaginatesOrganizationRecords;
 
     public function users(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'access.manage');
         $organization = $this->organization($request);
+        $organizationModel = $request->user()->organizations()->findOrFail($organization);
 
-        return response()->json($request->user()->organizations()->findOrFail($organization)->members()->with('roles')->get());
+        $transform = function (User $user) use ($organization): array {
+            $roles = $user->roles()->wherePivot('organization_id', $organization)->get(['roles.id', 'roles.name']);
+
+            return [
+                ...$user->only(['id', 'name', 'email']),
+                'roles' => $roles,
+            ];
+        };
+
+        if (! $request->has('page') && ! $request->has('per_page')) {
+            return response()->json($organizationModel->members()->get()->map($transform)->values());
+        }
+
+        $paginator = $organizationModel->members()->paginate(
+            min(max((int) $request->query('per_page', 15), 1), 100)
+        );
+        $paginator->getCollection()->transform($transform);
+
+        return response()->json($paginator);
     }
 
     public function storeUser(Request $request): JsonResponse
@@ -40,7 +61,10 @@ class AccessController extends Controller
     {
         $this->authorizePermission($request, 'access.manage');
 
-        return response()->json(Role::where('organization_id', $this->organization($request))->with('permissions')->get());
+        return $this->paginateQuery(
+            $request,
+            Role::where('organization_id', $this->organization($request))->with('permissions')->latest()
+        );
     }
 
     public function storeRole(Request $request): JsonResponse
@@ -58,7 +82,10 @@ class AccessController extends Controller
     {
         $this->authorizePermission($request, 'access.manage');
 
-        return response()->json(Permission::where('organization_id', $this->organization($request))->get());
+        return $this->paginateQuery(
+            $request,
+            Permission::where('organization_id', $this->organization($request))->latest()
+        );
     }
 
     public function storePermission(Request $request): JsonResponse
@@ -74,10 +101,15 @@ class AccessController extends Controller
         $this->authorizePermission($request, 'access.manage');
         $organization = $this->organization($request);
         abort_unless($user->organizations()->whereKey($organization)->exists(), 404);
-        $data = $request->validate(['role_id' => ['required', Rule::exists('roles', 'id')]]);
+        $data = $request->validate([
+            'role_id' => ['required', Rule::exists('roles', 'id')->where('organization_id', $organization)],
+        ]);
         $role = Role::where('organization_id', $organization)->findOrFail($data['role_id']);
         DB::table('role_user')->updateOrInsert(['role_id' => $role->id, 'user_id' => $user->id, 'organization_id' => $organization]);
 
-        return response()->json($user->load('roles'));
+        return response()->json([
+            ...$user->only(['id', 'name', 'email']),
+            'roles' => $user->roles()->wherePivot('organization_id', $organization)->get(['roles.id', 'roles.name']),
+        ]);
     }
 }

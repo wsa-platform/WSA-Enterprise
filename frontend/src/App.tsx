@@ -1,5 +1,7 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { useEffect, type ReactNode } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { setUnauthorizedHandler } from './api'
 import { AppShell } from './components/AppShell'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage, useDashboardTitle } from './pages/DashboardPage'
@@ -18,6 +20,21 @@ function ProtectedShell() {
   if (!token) return <Navigate to="/login" replace />
 
   return <AppShell workspaceName={workspaceName} />
+}
+
+function SessionGuard({ children }: { children: ReactNode }) {
+  const { clearSession } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      clearSession()
+      navigate('/login', { replace: true, state: { expired: true } })
+    })
+    return () => setUnauthorizedHandler(null)
+  }, [clearSession, navigate])
+
+  return children
 }
 
 function AppRoutes() {
@@ -45,7 +62,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <SessionGuard>
+        <AppRoutes />
+      </SessionGuard>
     </AuthProvider>
   )
 }
