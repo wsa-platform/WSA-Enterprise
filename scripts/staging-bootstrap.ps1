@@ -45,6 +45,6 @@ Write-Host "Running migrations and demo seeders..."
 docker compose exec backend php artisan migrate --seed --force
 
 Write-Host ""
-Write-Host "Staging stack is ready at http://localhost:8080"
-Write-Host "Health:  curl http://localhost:8080/api/v1/health"
+Write-Host "Staging stack is ready at http://localhost:8081"
+Write-Host "Health:  curl http://localhost:8081/api/v1/health"
 Write-Host "Login:   admin@wsa.test / password"

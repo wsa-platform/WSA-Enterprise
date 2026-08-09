@@ -32,6 +32,6 @@ docker compose up -d --build
 docker compose exec backend php artisan migrate --seed --force
 
 echo
-echo "Staging stack is ready at http://localhost:8080"
-echo "Health:  curl http://localhost:8080/api/v1/health"
+echo "Staging stack is ready at http://localhost:8081"
+echo "Health:  curl http://localhost:8081/api/v1/health"
 echo "Login:   admin@wsa.test / password"
