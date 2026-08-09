@@ -14,11 +14,36 @@
 
 ## Docker Compose (local / staging)
 
-```bash
-docker compose up -d --build
+### Windows (Docker Desktop + WSL2)
+
+1. Install **Docker Desktop for Windows**.
+2. Enable **Use the WSL 2 based engine** (Settings → General).
+3. Enable integration with your default WSL distro (Settings → Resources → WSL Integration).
+4. Clone or open the repo. Prefer a WSL filesystem path (e.g. `~/WSA-Enterprise`) for faster bind mounts; Windows paths (`C:\Users\...`) also work but may be slower.
+5. Ensure ports **8080**, **5432**, and **6379** are free (or stop conflicting local Postgres/Redis services).
+
+Bootstrap:
+
+```powershell
+.\scripts\staging-bootstrap.ps1
 ```
 
-Services:
+Or manually:
+
+```powershell
+Copy-Item backend\.env.example backend\.env
+docker compose up --build -d
+docker compose exec backend php artisan key:generate --force
+docker compose exec backend php artisan migrate --seed --force
+```
+
+### Linux / macOS / WSL shell
+
+```bash
+./scripts/staging-bootstrap.sh
+```
+
+### Compose services
 
 | Service | Purpose |
 | --- | --- |
@@ -32,7 +57,7 @@ Laravel health: `GET /up` (framework) and `GET /api/v1/health` (API).
 
 ## Environment variables
 
-Copy `backend/.env.example` to `backend/.env` and set:
+Copy `backend/.env.example` to `backend/.env` before starting Compose (`docker-compose.yml` loads `backend/.env`). The bootstrap scripts create this file and run `php artisan key:generate`.
 
 ### Required (production)
 

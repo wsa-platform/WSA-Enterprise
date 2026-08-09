@@ -15,12 +15,25 @@ PostgreSQL stores application data and Redis provides cache, sessions, and queue
 
 ## Start with Docker
 
-```bash
-cp backend/.env.example backend/.env
-docker compose up --build
+**Windows:** Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) with the **WSL2 backend** enabled. Run commands from PowerShell, Git Bash, or a WSL distro terminal in the project directory.
+
+```powershell
+# Recommended one-shot bootstrap (creates backend/.env, key, migrate + seed)
+.\scripts\staging-bootstrap.ps1
 ```
 
-The API is available at `http://localhost:8080`; its health endpoint is `GET /api/v1/health`.
+Manual flow:
+
+```powershell
+Copy-Item backend\.env.example backend\.env
+docker compose up --build -d
+docker compose exec backend php artisan key:generate --force
+docker compose exec backend php artisan migrate --seed --force
+```
+
+The app is available at `http://localhost:8080`. Health check: `GET /api/v1/health`. Demo login: `admin@wsa.test` / `password`.
+
+**Linux/macOS/WSL:** run `./scripts/staging-bootstrap.sh` instead.
 
 ## Local development
 
