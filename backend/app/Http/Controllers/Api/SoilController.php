@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{Farm, FarmBlock, FarmField, SoilAnalysis, SoilNutrient, SoilRecommendation};
 use Illuminate\Http\JsonResponse;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 class SoilController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use PaginatesOrganizationRecords;
 
     private const MODULES = [
         'analyses' => [SoilAnalysis::class, ['farm_id'=>['nullable','integer','exists:farms,id'], 'field_id'=>['nullable','integer','exists:farm_fields,id'], 'block_id'=>['nullable','integer','exists:farm_blocks,id'], 'sample_reference'=>['required','string','max:64'], 'sampled_at'=>['required','date'], 'ph'=>['nullable','numeric','between:0,14'], 'ec'=>['nullable','numeric','min:0'], 'organic_matter_percent'=>['nullable','numeric','min:0','max:100'], 'moisture_percent'=>['nullable','numeric','min:0','max:100'], 'laboratory'=>['nullable','string'], 'notes'=>['nullable','string']], ['farm_id'=>Farm::class, 'field_id'=>FarmField::class, 'block_id'=>FarmBlock::class]],
@@ -39,7 +41,7 @@ class SoilController extends Controller
         $this->authorizePermission($request, 'soil.view');
         [$class] = $this->config($module);
 
-        return response()->json($class::where('organization_id', $this->organization($request))->latest()->get());
+        return $this->paginateQuery($request, $class::where('organization_id', $this->organization($request))->latest());
     }
 
     public function store(Request $request, string $module): JsonResponse

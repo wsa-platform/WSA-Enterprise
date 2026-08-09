@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{Farm, FarmBlock, FarmField, FarmRegion, GisMap, GpsCoordinate, Greenhouse, IrrigationZone};
 use Illuminate\Http\JsonResponse;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 class FarmController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use PaginatesOrganizationRecords;
 
     private const MODULES = [
         'farms' => [Farm::class, ['code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'owner_name'=>['nullable','string'], 'address'=>['nullable','string'], 'area_hectares'=>['numeric','min:0'], 'is_active'=>['boolean']], []],
@@ -55,7 +57,7 @@ class FarmController extends Controller
         $this->authorizePermission($request, 'farm.view');
         [$class] = $this->config($module);
 
-        return response()->json($class::where('organization_id', $this->organization($request))->latest()->get());
+        return $this->paginateQuery($request, $class::where('organization_id', $this->organization($request))->latest());
     }
 
     public function store(Request $request, string $module): JsonResponse

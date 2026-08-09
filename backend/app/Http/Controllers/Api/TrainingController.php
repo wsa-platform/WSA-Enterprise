@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{TrainingCertificate, TrainingCourse, TrainingEnrollment, TrainingLesson, TrainingObjective, TrainingProgress, TrainingQuestion, TrainingQuiz};
 use Illuminate\Http\JsonResponse;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 class TrainingController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use PaginatesOrganizationRecords;
 
     private const MODULES = [
         'courses' => [TrainingCourse::class, ['code'=>['required','string','max:32'], 'title'=>['required','string','max:255'], 'title_ar'=>['nullable','string','max:255'], 'description'=>['nullable','string'], 'description_ar'=>['nullable','string'], 'locale'=>['sometimes','string','max:8'], 'status'=>['sometimes','string','max:32'], 'sort_order'=>['sometimes','integer','min:0']], []],
@@ -40,7 +42,7 @@ class TrainingController extends Controller
             $query->where('status', $request->query('status'));
         }
 
-        return response()->json($query->get());
+        return $this->paginateQuery($request, $query);
     }
 
     public function store(Request $request, string $module): JsonResponse
@@ -74,12 +76,12 @@ class TrainingController extends Controller
     {
         $this->authorizePermission($request, 'training.view');
 
-        return response()->json(
+        return $this->paginateQuery(
+            $request,
             TrainingEnrollment::where('organization_id', $this->organization($request))
                 ->where('user_id', $request->user()->id)
                 ->with('course')
                 ->latest()
-                ->get()
         );
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{InventoryBalance, InventoryMovement, Product, PurchaseOrder, Supplier, Warehouse};
 use Illuminate\Http\JsonResponse;
@@ -12,12 +13,16 @@ use Illuminate\Support\Facades\DB;
 class OperationsController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use PaginatesOrganizationRecords;
 
     public function inventory(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'business.view');
 
-        return response()->json(InventoryBalance::where('organization_id', $this->organization($request))->with(['warehouse:id,name,code', 'product:id,name,sku'])->get());
+        return $this->paginateQuery(
+            $request,
+            InventoryBalance::where('organization_id', $this->organization($request))->with(['warehouse:id,name,code', 'product:id,name,sku'])
+        );
     }
 
     public function adjustInventory(Request $request): JsonResponse
@@ -40,7 +45,7 @@ class OperationsController extends Controller
     {
         $this->authorizePermission($request, 'business.view');
 
-        return response()->json(PurchaseOrder::where('organization_id', $this->organization($request))->with('items')->latest()->get());
+        return $this->paginateQuery($request, PurchaseOrder::where('organization_id', $this->organization($request))->with('items')->latest());
     }
 
     public function storePurchaseOrder(Request $request): JsonResponse

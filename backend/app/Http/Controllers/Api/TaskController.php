@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
@@ -10,22 +11,27 @@ use Illuminate\Validation\Rule;
 
 class TaskController extends Controller
 {
-    public function updateStatus(Request $request, Task $task): JsonResponse
+    use AuthorizesOrganizationAccess;
+
+    public function updateStatus(Request $request, int $task): JsonResponse
     {
-        abort_unless(
-            $request->user()->organizations()->whereKey($task->project->organization_id)->exists(),
-            403
-        );
+        $this->authorizePermission($request, 'platform.view');
+        $organizationId = $this->organization($request);
+
+        $record = Task::query()
+            ->whereKey($task)
+            ->whereHas('project', fn ($query) => $query->where('organization_id', $organizationId))
+            ->firstOrFail();
 
         $data = $request->validate([
             'status' => ['required', Rule::in(['todo', 'in_progress', 'blocked', 'done', 'cancelled'])],
         ]);
 
-        $task->update([
+        $record->update([
             'status' => $data['status'],
             'completed_at' => $data['status'] === 'done' ? now() : null,
         ]);
 
-        return response()->json($task->fresh(['project:id,name,code', 'assignee:id,name']));
+        return response()->json($record->fresh(['project:id,name,code', 'assignee:id,name']));
     }
 }

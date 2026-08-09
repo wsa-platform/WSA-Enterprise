@@ -14,6 +14,8 @@ class AuthController extends Controller
 {
     public function register(RegisterRequest $request): JsonResponse
     {
+        abort_unless(config('app.allow_registration'), 403, 'Registration is disabled.');
+
         $data = $request->validated();
 
         $user = User::create([
