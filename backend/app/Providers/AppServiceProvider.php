@@ -7,6 +7,7 @@ use App\Services\Ai\AiRequestValidator;
 use App\Services\Ai\AiResponseNormalizer;
 use App\Services\Ai\AiService;
 use App\Services\Ai\MockAiProvider;
+use App\Services\Audit\AuditService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
             $app->make(AiProviderInterface::class),
             $app->make(AiRequestValidator::class),
             $app->make(AiResponseNormalizer::class),
+            $app->make(AuditService::class),
         ));
     }
 

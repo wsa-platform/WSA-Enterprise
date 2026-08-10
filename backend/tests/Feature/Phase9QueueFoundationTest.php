@@ -27,8 +27,8 @@ class Phase9QueueFoundationTest extends TestCase
             'user_id' => $user->id,
             'request_type' => 'library_summary',
             'provider' => 'mock',
-            'status' => 'processing',
-            'input' => ['text' => 'Sample crop advisory note.'],
+            'status' => 'pending',
+            'input' => ['content' => 'Sample crop advisory note.'],
         ]);
 
         ProcessAiRequest::dispatch($record->id);
@@ -47,7 +47,7 @@ class Phase9QueueFoundationTest extends TestCase
             'request_type' => 'library_summary',
             'provider' => 'mock',
             'status' => 'processing',
-            'input' => ['text' => 'Sample crop advisory note.'],
+            'input' => ['content' => 'Sample crop advisory note.'],
         ]);
 
         (new ProcessAiRequest($record->id))->handle(app(\App\Services\Ai\AiService::class));
@@ -71,7 +71,7 @@ class Phase9QueueFoundationTest extends TestCase
             $user->id,
         );
 
-        $this->assertSame('processing', $record->status);
+        $this->assertSame('pending', $record->status);
         Queue::assertPushed(ProcessAiRequest::class, fn (ProcessAiRequest $job) => $job->aiRequestId === $record->id);
     }
 
@@ -85,8 +85,8 @@ class Phase9QueueFoundationTest extends TestCase
             'user_id' => $user->id,
             'request_type' => 'library_summary',
             'provider' => 'mock',
-            'status' => 'processing',
-            'input' => ['text' => 'Sample crop advisory note.'],
+            'status' => 'pending',
+            'input' => ['content' => 'Sample crop advisory note.'],
         ]);
 
         (new ProcessAiRequest($record->id))->failed(new \RuntimeException('Worker exhausted retries'));

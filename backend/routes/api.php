@@ -116,6 +116,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/provider', [AiController::class, 'provider']);
             Route::get('/requests', [AiController::class, 'index']);
             Route::post('/requests', [AiController::class, 'store']);
+            Route::get('/requests/{id}', [AiController::class, 'show'])->whereNumber('id');
         });
     });
 });

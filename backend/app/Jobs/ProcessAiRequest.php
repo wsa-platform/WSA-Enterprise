@@ -4,6 +4,8 @@ namespace App\Jobs;
 
 use App\Models\AiRequest;
 use App\Services\Ai\AiService;
+use App\Services\Audit\AuditService;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -13,9 +15,8 @@ use Throwable;
 
 /**
  * Processes a queued AI request record asynchronously.
- * Foundation for future async AI workloads; sync HTTP path remains default.
  */
-class ProcessAiRequest implements ShouldQueue
+class ProcessAiRequest implements ShouldBeUnique, ShouldQueue
 {
     use InteractsWithQueue;
     use Queueable;
@@ -32,11 +33,20 @@ class ProcessAiRequest implements ShouldQueue
         $this->onQueue(config('ai.queue', 'default'));
     }
 
+    public function uniqueId(): string
+    {
+        return (string) $this->aiRequestId;
+    }
+
     public function handle(AiService $aiService): void
     {
         $record = AiRequest::query()->find($this->aiRequestId);
 
-        if ($record === null || $record->status !== 'processing') {
+        if ($record === null) {
+            return;
+        }
+
+        if (in_array($record->status, ['completed', 'failed'], true)) {
             return;
         }
 
@@ -47,7 +57,7 @@ class ProcessAiRequest implements ShouldQueue
     {
         $record = AiRequest::query()->find($this->aiRequestId);
 
-        if ($record === null || $record->status !== 'processing') {
+        if ($record === null || in_array($record->status, ['completed', 'failed'], true)) {
             return;
         }
 
@@ -62,5 +72,17 @@ class ProcessAiRequest implements ShouldQueue
             'status' => 'failed',
             'error_message' => $exception?->getMessage() ?? 'Queue worker failed after retries.',
         ]);
+
+        app(AuditService::class)->record(
+            action: 'ai.request.failed',
+            organizationId: $record->organization_id,
+            userId: $record->user_id,
+            auditable: $record,
+            newValues: [
+                'request_type' => $record->request_type,
+                'error_message' => $record->error_message,
+                'source' => 'queue',
+            ],
+        );
     }
 }

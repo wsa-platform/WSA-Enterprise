@@ -17,6 +17,7 @@ tags:
   - name: Farms
   - name: Diagnosis
   - name: Audit
+  - name: AI
 components:
   securitySchemes:
     bearerAuth:
@@ -488,3 +489,80 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /roles:
+    get:
+      tags: [Users]
+      summary: List roles for organization
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Role list
+  /permissions:
+    get:
+      tags: [Users]
+      summary: List permissions for organization
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Permission list
+  /ai/provider:
+    get:
+      tags: [AI]
+      summary: AI provider metadata
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Provider info including async_dispatch flag
+  /ai/requests:
+    get:
+      tags: [AI]
+      summary: List AI requests for organization
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Paginated AI requests
+    post:
+      tags: [AI]
+      summary: Submit AI request (201 sync, 202 async)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [request_type, input]
+              properties:
+                request_type: { type: string }
+                input: { type: object }
+      responses:
+        '201':
+          description: Completed synchronously
+        '202':
+          description: Accepted (pending)
+  /ai/requests/{id}:
+    get:
+      tags: [AI]
+      summary: Show AI request status and output
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: AI request detail
+        '404':
+          $ref: '#/components/responses/NotFound'
