@@ -394,13 +394,15 @@ See `docs/deployment.md` for production checklist. **Production gaps:** TLS, sec
 
 **Resolved in Phase 9 gap closure:** Docker Compose includes a dedicated `queue` worker; port documentation aligned on **8081** (staging) and **5173** (Vite dev).
 
+**Phase 10 (production platform):** Isolated test database (`wsa_enterprise_test`), SPA nginx fallback, async AI lifecycle (`pending` → `processing` → `completed`/`failed`), expanded audit events, modular frontend/mobile API clients, OpenAPI CI validation.
+
 ---
 
 ## 20. Future evolution plan
 
 | Phase | Focus |
 |-------|-------|
-| **v1.1** | Enable async AI dispatch in controller; expand OpenAPI coverage |
+| **v1.1** | Async AI dispatch opt-in (`AI_ASYNC_DISPATCH`), polling endpoint, expanded audit |
 | **v1.2** | Global tenant scope trait; expand `Auditable` to commerce/inventory |
 | **v1.3** | Domain events for order/diagnosis completion; notification channels |
 | **v2.0** | `/api/v2` if breaking changes required; optional read replicas |
@@ -415,6 +417,7 @@ See `docs/deployment.md` for production checklist. **Production gaps:** TLS, sec
 | `docs/deployment.md` | Docker and production |
 | `docs/database.md` | Schema reference |
 | `docs/e2e-testing.md` | Test procedures |
+| `docs/testing.md` | Isolated PHPUnit, CI, staging smoke tests |
 | `docs/production-readiness.md` | Staging vs production gaps |
 | `docs/phase8.md` | Phase 8 delivery notes |
 | `docs/api-conventions.md` | HTTP API response and auth conventions |

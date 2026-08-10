@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, 'phase-7-*', 'phase-8', 'phase-8-*', 'phase-9-*']
+    branches: [main, 'phase-*']
   pull_request:
 
 jobs:
@@ -30,15 +30,19 @@ jobs:
           extensions: pdo_pgsql, redis
       - run: composer validate --strict
       - run: composer install --prefer-dist --no-progress
-      - run: cp .env.example .env
+      - run: cp .env.testing.example .env
       - run: php artisan key:generate
-      - run: php artisan test
+      - name: Create isolated test database
+        run: PGPASSWORD=secret psql -h 127.0.0.1 -U wsa -d wsa_enterprise -c "SELECT 1 FROM pg_database WHERE datname = 'wsa_enterprise_test'" | grep -q 1 || PGPASSWORD=secret psql -h 127.0.0.1 -U wsa -d wsa_enterprise -c "CREATE DATABASE wsa_enterprise_test;"
+      - run: php artisan test --no-ansi
         env:
+          APP_ENV: testing
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
-          DB_DATABASE: wsa_enterprise
+          DB_DATABASE: wsa_enterprise_test
           DB_USERNAME: wsa
           DB_PASSWORD: secret
+          FORBIDDEN_TEST_DATABASES: wsa_enterprise
 
   frontend:
     runs-on: ubuntu-latest
@@ -70,3 +74,13 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
+
+  openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install -g @redocly/cli
+      - run: redocly lint docs/openapi.yaml

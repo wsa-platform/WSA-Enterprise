@@ -37,6 +37,12 @@ The app is available at `http://localhost:8081`. Health check: `GET /api/v1/heal
 
 Queue worker logs: `docker compose logs -f queue`. Failed jobs: `docker compose exec backend php artisan queue:failed`.
 
+**Testing:** Never run `php artisan test` against the Docker staging database. See [docs/testing.md](docs/testing.md) for isolated test execution.
+
+## Phase 10 production platform
+
+Phase 10 adds isolated test databases, SPA routing fixes, production-ready async AI, expanded audit logging, multi-tenant security tests, modular frontend/mobile API clients, OpenAPI validation in CI, and production hardening documentation.
+
 **Linux/macOS/WSL:** run `./scripts/staging-bootstrap.sh` instead.
 
 ## Local development
