@@ -232,6 +232,12 @@ Run isolated tests locally:
 
 See [testing.md](./testing.md). **Never** run PHPUnit against the staging `wsa_enterprise` database.
 
+## Production deployment (Phase 12)
+
+For GHCR image publish, SSH deploy, and smoke verification see **[deploy-production.md](./deploy-production.md)**.
+
+TLS setup: **[tls-production.md](./tls-production.md)**. Docker prod override: **[docker-production.md](./docker-production.md)**.
+
 ## What this guide does not cover
 
 - Cloud-specific IAM, secrets managers, or Kubernetes manifests

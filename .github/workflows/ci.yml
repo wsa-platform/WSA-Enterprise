@@ -133,3 +133,4 @@ jobs:
           echo "DOMAIN=localhost.example.com" >> .env
           echo "CERTBOT_EMAIL=ci@example.com" >> .env
           docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.ghcr.yml config --quiet

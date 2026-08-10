@@ -1,0 +1,34 @@
+# GHCR image override (M12.2)
+#
+# Pull pre-built images from GitHub Container Registry instead of building locally.
+# Requires docker login to ghcr.io on the production host (see docs/deploy-production.md).
+#
+# Usage:
+#   IMAGE_TAG=sha-abc1234 docker compose \
+#     -f docker-compose.yml \
+#     -f docker-compose.prod.yml \
+#     -f docker-compose.ghcr.yml \
+#     pull
+#
+#   ./scripts/deploy-production.sh
+
+services:
+  backend:
+    image: ${GHCR_IMAGE_PREFIX:-ghcr.io/wsa-platform}/wsa-enterprise-backend:${IMAGE_TAG:-main}
+    pull_policy: always
+
+  frontend:
+    image: ${GHCR_IMAGE_PREFIX:-ghcr.io/wsa-platform}/wsa-enterprise-frontend:${IMAGE_TAG:-main}
+    pull_policy: always
+
+  nginx:
+    image: ${GHCR_IMAGE_PREFIX:-ghcr.io/wsa-platform}/wsa-enterprise-nginx:${IMAGE_TAG:-main}
+    pull_policy: always
+
+  queue:
+    image: ${GHCR_IMAGE_PREFIX:-ghcr.io/wsa-platform}/wsa-enterprise-backend:${IMAGE_TAG:-main}
+    pull_policy: always
+
+  scheduler:
+    image: ${GHCR_IMAGE_PREFIX:-ghcr.io/wsa-platform}/wsa-enterprise-backend:${IMAGE_TAG:-main}
+    pull_policy: always
