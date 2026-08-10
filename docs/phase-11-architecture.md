@@ -3,7 +3,7 @@
 **Project:** WSA-Enterprise — Enterprise Platform Expansion  
 **Baseline:** Phase 10 (merged to `main`)  
 **Version:** 11.0  
-**Status:** M1–M10 complete (see [phase-11-final-verification.md](phase-11-final-verification.md))
+**Status:** Phase 11 complete — M1–M11 (see [phase-11-final-verification.md](phase-11-final-verification.md))
 
 ---
 
@@ -32,7 +32,7 @@ Evolve the working Phase 10 foundation into a **production-grade, scalable, secu
 │                           CLIENTS                                        │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐       │
 │  │ React 19 Web     │  │ Flutter Mobile   │  │ API Clients      │       │
-│  │ (Enterprise UI)  │  │ (Field + AI)     │  │ (Future M2M)     │       │
+│  │ (Enterprise UI)  │  │ (Field + AI)     │  │ (M2M API Clients)│       │
 │  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘       │
 └───────────┼─────────────────────┼─────────────────────┼─────────────────┘
             │ Bearer + X-Org-Id   │                     │
@@ -46,8 +46,8 @@ Evolve the working Phase 10 foundation into a **production-grade, scalable, secu
 │                     LARAVEL 12 API (/api/v1)                             │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐        │
 │  │ Auth Layer  │ │ Tenant Layer│ │ Authz Layer │ │ API Layer   │        │
-│  │ Sanctum     │ │ OrgContext  │ │ Policies +  │ │ Controllers │        │
-│  │             │ │ Resolver    │ │ Permissions │ │ Resources   │        │
+│  │ Sanctum +   │ │ OrgContext  │ │ Policies +  │ │ Controllers │        │
+│  │ API Clients │ │ Resolver    │ │ Permissions │ │ Resources   │        │
 │  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘        │
 │  ┌─────────────────────────────────────────────────────────────┐        │
 │  │                     DOMAIN SERVICES                          │        │
@@ -105,7 +105,7 @@ All Phase 10 tables remain. No destructive migrations.
 | `usage_records` | Metered usage (AI tokens, requests) |
 | `entitlements` | Resolved feature access per org |
 | `notification_deliveries` | Notification dispatch tracking |
-| `api_clients` | Future M2M client registry (foundation) |
+| `api_clients` | Organization M2M client registry (M8 foundation, M10 auth) |
 
 ### 5.3 Indexing strategy
 

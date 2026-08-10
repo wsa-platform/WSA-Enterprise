@@ -41,7 +41,7 @@ Queue worker logs: `docker compose logs -f queue`. Failed jobs: `docker compose 
 
 ## Phase 11 enterprise expansion
 
-Phase 11 delivers multi-tenant RBAC, AI platform, enterprise dashboard, billing, notifications/audit, Flutter alignment, API/production hardening, final integration verification, and API client M2M authentication (M1–M10).
+Phase 11 delivers multi-tenant RBAC, AI platform, enterprise dashboard, billing, notifications/audit, Flutter alignment, API/production hardening, final integration verification, API client M2M authentication, and closure documentation (M1–M11). **Phase 11 is complete.**
 
 | Milestone | Status | Highlights |
 | --- | --- | --- |
@@ -55,10 +55,12 @@ Phase 11 delivers multi-tenant RBAC, AI platform, enterprise dashboard, billing,
 | M8 | Complete | OpenAPI expansion, analytics overview, API client registry, Docker healthchecks, CI security job |
 | M9 | Complete | Cross-module integration tests, OpenAPI parity, production readiness sign-off |
 | M10 | Complete | API client bearer authentication with scoped read endpoints |
+| M11 | Complete | M10 verification, doc refresh, final Phase 11 sign-off |
 
 Key documents:
 
-- [docs/phase-11-final-verification.md](docs/phase-11-final-verification.md) — **M9 final sign-off**
+- [docs/phase-11-final-verification.md](docs/phase-11-final-verification.md) — **Phase 11 final sign-off**
+- [docs/phase-11-m10-verification.md](docs/phase-11-m10-verification.md) — M10 API client auth verification
 - [docs/phase-11-roadmap.md](docs/phase-11-roadmap.md)
 - [docs/phase-11-architecture.md](docs/phase-11-architecture.md)
 - [docs/phase-11-verification-report.md](docs/phase-11-verification-report.md)

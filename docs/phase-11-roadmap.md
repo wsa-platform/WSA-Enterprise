@@ -1,8 +1,8 @@
 # Phase 11 — Roadmap
 
-**Branch:** `phase-11-enterprise-expansion`  
+**Branch:** `phase-11-enterprise-expansion` (merged)  
 **Baseline:** Phase 10 merged to `main`  
-**Status:** Milestone 1 complete (audit + architecture) — awaiting approval
+**Status:** **Phase 11 complete** — M1–M11 delivered (see [phase-11-final-verification.md](phase-11-final-verification.md))
 
 ---
 
@@ -20,6 +20,7 @@
 | M8 | API + testing + CI/CD + production hardening | OpenAPI, healthchecks, deploy docs | All |
 | M9 | Final integration + production readiness | Cross-module E2E, security review, final docs | M8 ✓ |
 | M10 | API client authentication (M2M) | Bearer credentials, scoped read access | M8 ✓, M9 ✓ |
+| M11 | Phase 11 closure | M10 verification, doc refresh, final sign-off | M10 ✓ |
 
 **Each milestone must:** compile, pass tests, avoid regressions, commit separately with clear message.
 
@@ -256,6 +257,31 @@
 
 ---
 
+## Milestone 11 — Phase 11 Closure ✅
+
+### Documentation
+
+- [x] M10 verification report (`docs/phase-11-m10-verification.md`)
+- [x] Phase 11 final verification and closure sign-off
+- [x] Architecture diagram refresh (M2M clients no longer "future")
+- [x] Roadmap status updated to complete
+- [x] README Phase 11 section points to final verification
+
+### Verification
+
+- [x] Backend full suite (151 tests)
+- [x] Security group (26 tests)
+- [x] OpenAPI validation
+- [x] Frontend lint, build, Vitest
+- [x] Docker Compose config (dev + prod override)
+- [x] Remaining risks and deferred items documented
+
+**No new product features.** Payment providers remain excluded.
+
+**Commit message example:** `Complete Phase 11 closure documentation and final verification.`
+
+---
+
 ## Database Changes Summary
 
 | Migration | Milestone | Tables/Columns |
@@ -332,4 +358,4 @@
 4. Team entity scope approved
 5. Milestone sequencing approved
 
-**After approval:** Begin M2 on `phase-11-enterprise-expansion` with first implementation commit.
+**Phase 11 complete (2026-08-10).** Post-Phase 11 work requires explicit scope approval. See deferred items in [phase-11-final-verification.md](phase-11-final-verification.md).
