@@ -11,7 +11,9 @@ WSA-Enterprise is a multi-client platform with a Laravel 12 API, React 19 web ap
 | `mobile` | Flutter | iOS and Android client |
 | `nginx` | Nginx | HTTP gateway for the Laravel API |
 
-PostgreSQL stores application data and Redis provides cache, sessions, and queues.
+PostgreSQL stores application data and Redis provides cache, sessions, and queues. Docker Compose includes a dedicated `queue` worker service.
+
+**Authoritative reference:** [WSA Enterprise Architecture v1.0](docs/architecture/WSA-Enterprise-Architecture-v1.md)
 
 ## Start with Docker
 
@@ -31,7 +33,15 @@ docker compose exec backend php artisan key:generate --force
 docker compose exec backend php artisan migrate --seed --force
 ```
 
-The app is available at `http://localhost:8080`. Health check: `GET /api/v1/health`. Demo login: `admin@wsa.test` / `password`.
+The app is available at `http://localhost:8081`. Health check: `GET /api/v1/health`. Demo login: `admin@wsa.test` / `password`.
+
+Queue worker logs: `docker compose logs -f queue`. Failed jobs: `docker compose exec backend php artisan queue:failed`.
+
+**Testing:** Never run `php artisan test` against the Docker staging database. See [docs/testing.md](docs/testing.md) for isolated test execution.
+
+## Phase 10 production platform
+
+Phase 10 adds isolated test databases, SPA routing fixes, production-ready async AI, expanded audit logging, multi-tenant security tests, modular frontend/mobile API clients, OpenAPI validation in CI, and production hardening documentation.
 
 **Linux/macOS/WSL:** run `./scripts/staging-bootstrap.sh` instead.
 

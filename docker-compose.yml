@@ -9,7 +9,7 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - ./backend:/var/www/html
       - backend_vendor:/var/www/html/vendor
@@ -52,6 +52,62 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [wsa]
+
+  queue:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      REDIS_HOST: redis
+      DB_HOST: postgres
+      QUEUE_CONNECTION: redis
+    command: >
+      php artisan queue:work redis
+      --queue=default
+      --sleep=3
+      --tries=3
+      --timeout=90
+      --max-time=3600
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/var/www/html
+      - backend_vendor:/var/www/html/vendor
+    restart: unless-stopped
+    networks: [wsa]
+
+  backend-test:
+    profiles: [test]
+    build: ./backend
+    environment:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: wsa_enterprise_test
+      DB_USERNAME: wsa
+      DB_PASSWORD: secret
+      FORBIDDEN_TEST_DATABASES: wsa_enterprise
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      AI_ASYNC_DISPATCH: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/var/www/html
+      - backend_vendor:/var/www/html/vendor
+    command: php artisan test --no-ansi
     networks: [wsa]
 
 volumes:

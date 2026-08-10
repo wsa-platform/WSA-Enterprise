@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\AccessController;
+use App\Http\Controllers\Api\AuditController;
 use App\Http\Controllers\Api\DirectoryController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\OperationsController;
@@ -43,6 +44,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/roles', [AccessController::class, 'storeRole']);
         Route::get('/permissions', [AccessController::class, 'permissions']);
         Route::post('/permissions', [AccessController::class, 'storePermission']);
+        Route::get('/audit-logs', [AuditController::class, 'index']);
         Route::prefix('directory')->group(function (): void {
             Route::get('/{module}', [DirectoryController::class, 'index']);
             Route::post('/{module}', [DirectoryController::class, 'store']);
@@ -114,6 +116,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/provider', [AiController::class, 'provider']);
             Route::get('/requests', [AiController::class, 'index']);
             Route::post('/requests', [AiController::class, 'store']);
+            Route::get('/requests/{id}', [AiController::class, 'show'])->whereNumber('id');
         });
     });
 });

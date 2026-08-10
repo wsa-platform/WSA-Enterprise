@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Audit\AuditService;
+use App\Services\Authorization\PermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -53,6 +55,15 @@ class AccessController extends Controller
         $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'email' => ['required', 'email', 'unique:users,email'], 'password' => ['required', 'min:8']]);
         $user = User::create([...$data, 'password' => Hash::make($data['password'])]);
         $user->organizations()->attach($organization, ['role' => 'member']);
+
+        app(AuditService::class)->record(
+            action: 'user.created',
+            organizationId: $organization,
+            userId: $request->user()->id,
+            auditable: $user,
+            newValues: ['email' => $user->email, 'name' => $user->name],
+            request: $request,
+        );
 
         return response()->json($user->only(['id', 'name', 'email']), 201);
     }
@@ -106,6 +117,17 @@ class AccessController extends Controller
         ]);
         $role = Role::where('organization_id', $organization)->findOrFail($data['role_id']);
         DB::table('role_user')->updateOrInsert(['role_id' => $role->id, 'user_id' => $user->id, 'organization_id' => $organization]);
+
+        app(PermissionService::class)->forget($user, $organization);
+
+        app(AuditService::class)->record(
+            action: 'role.assigned',
+            organizationId: $organization,
+            userId: $request->user()->id,
+            auditable: $user,
+            newValues: ['role_id' => $role->id, 'role_name' => $role->name],
+            request: $request,
+        );
 
         return response()->json([
             ...$user->only(['id', 'name', 'email']),

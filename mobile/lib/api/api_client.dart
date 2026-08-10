@@ -29,7 +29,7 @@ class ApiException implements Exception {
 class ApiClient {
   ApiClient({String? baseUrl})
       : baseUrl = baseUrl ??
-            const String.fromEnvironment('API_URL', defaultValue: 'http://localhost:8080/api/v1');
+            const String.fromEnvironment('API_URL', defaultValue: 'http://localhost:8081/api/v1');
 
   final String baseUrl;
   String? _token;
@@ -169,6 +169,10 @@ class ApiClient {
         'request_type': requestType,
         'input': input,
       });
+
+  Future<Map<String, dynamic>> fetchAiRequest(int id) => _getJson('/ai/requests/$id');
+
+  Future<Map<String, dynamic>> fetchHealth() => _getJson('/health');
 
   Future<void> _clearSession() async {
     _token = null;

@@ -14,7 +14,7 @@ This document records what was verified automatically, through API-level E2E tes
 | --- | --- | --- |
 | PHP / `php artisan test` | No | Verified via GitHub Actions backend job |
 | Flutter SDK / emulator | No | Verified via GitHub Actions mobile job |
-| Docker stack | No | Manual UI E2E against `:8080` not run in this session |
+| Docker stack | No | Manual UI E2E against `:8081` not run in this session |
 | Frontend `npm run build` | Yes | Verified locally |
 
 **Manual mobile/device E2E was not performed** in this environment because Flutter SDK and a running API stack were unavailable. API contract and workflow behavior are covered by automated backend tests and Flutter unit/widget tests.
@@ -57,11 +57,11 @@ This document records what was verified automatically, through API-level E2E tes
 
 ## Manual E2E procedure (for staging/demo)
 
-When Docker stack is running at `http://localhost:8080`:
+When Docker stack is running at `http://localhost:8081`:
 
 ### Web (React)
 
-1. Open `http://localhost:8080`, sign in `admin@wsa.test` / `password`
+1. Open `http://localhost:8081`, sign in `admin@wsa.test` / `password`
 2. Confirm org switcher loads organizations
 3. Create farm → verify list refresh
 4. Submit diagnosis case → verify requests tab
@@ -71,7 +71,7 @@ When Docker stack is running at `http://localhost:8080`:
 ### Mobile (Flutter)
 
 ```bash
-cd mobile && flutter run --dart-define=API_URL=http://localhost:8080/api/v1
+cd mobile && flutter run --dart-define=API_URL=http://localhost:8081/api/v1
 ```
 
 Repeat steps 1–6 on device/emulator.

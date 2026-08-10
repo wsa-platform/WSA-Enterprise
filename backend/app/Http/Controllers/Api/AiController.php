@@ -44,6 +44,19 @@ class AiController extends Controller
 
         $data = $request->validated();
 
+        if (config('ai.async_dispatch')) {
+            $record = $this->aiService->dispatchForProcessing(
+                $this->organization($request),
+                $data['request_type'],
+                $data['input'],
+                $request->user()->id,
+                $data['source_type'] ?? null,
+                $data['source_id'] ?? null,
+            );
+
+            return response()->json($this->sanitizeAiRequest($record), 202);
+        }
+
         $record = $this->aiService->run(
             $this->organization($request),
             $data['request_type'],
@@ -56,6 +69,15 @@ class AiController extends Controller
         return response()->json($this->sanitizeAiRequest($record), 201);
     }
 
+    public function show(Request $request, int $id): JsonResponse
+    {
+        $this->authorizePermission($request, 'ai.use');
+
+        $record = AiRequest::where('organization_id', $this->organization($request))->findOrFail($id);
+
+        return response()->json($this->sanitizeAiRequest($record));
+    }
+
     public function provider(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'ai.use');
@@ -64,6 +86,7 @@ class AiController extends Controller
             'provider' => $this->aiService->providerName(),
             'decision_support_notice' => 'AI outputs are agricultural decision support only and are not authoritative diagnoses.',
             'supported_request_types' => ['diagnosis', 'library_summary', 'library_qa', 'training_assistance'],
+            'async_dispatch' => (bool) config('ai.async_dispatch', false),
         ]);
     }
 

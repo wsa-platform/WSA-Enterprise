@@ -8,6 +8,10 @@ trait ResolvesOrganization
 {
     protected function organization(Request $request): int
     {
+        if ($request->attributes->has('organization_id')) {
+            return (int) $request->attributes->get('organization_id');
+        }
+
         $user = $request->user();
         $header = $request->header('X-Organization-Id');
 
