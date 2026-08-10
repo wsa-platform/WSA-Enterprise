@@ -170,6 +170,10 @@ class ApiClient {
         'input': input,
       });
 
+  Future<Map<String, dynamic>> fetchAiRequest(int id) => _getJson('/ai/requests/$id');
+
+  Future<Map<String, dynamic>> fetchHealth() => _getJson('/health');
+
   Future<void> _clearSession() async {
     _token = null;
     _organizationId = null;
