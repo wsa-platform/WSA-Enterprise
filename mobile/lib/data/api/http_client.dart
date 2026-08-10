@@ -94,7 +94,7 @@ class HttpClient {
     final exception = ApiException(message, statusCode: response.statusCode, errors: errors);
 
     if (response.statusCode == 401 && getToken?.call() != null) {
-      unawaited(onUnauthorized?.call());
+      onUnauthorized?.call();
     }
 
     return exception;
