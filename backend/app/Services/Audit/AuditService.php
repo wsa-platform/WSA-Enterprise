@@ -31,6 +31,14 @@ class AuditService
         ?array $newValues = null,
         ?Request $request = null,
     ): AuditLog {
+        $requestId = $request?->attributes->get('request_id');
+
+        if ($requestId !== null && is_array($newValues)) {
+            $newValues['request_id'] = $requestId;
+        } elseif ($requestId !== null && $newValues === null) {
+            $newValues = ['request_id' => $requestId];
+        }
+
         return AuditLog::create([
             'organization_id' => $organizationId,
             'user_id' => $userId,
@@ -41,6 +49,7 @@ class AuditService
             'new_values' => $this->sanitize($newValues),
             'ip_address' => $request?->ip(),
             'user_agent' => $request?->userAgent(),
+            'request_id' => is_string($requestId) ? $requestId : null,
         ]);
     }
 

@@ -136,7 +136,12 @@ class BillingController extends Controller
         ]);
 
         return response()->json(
-            $this->organizationSettingsService->updateForOrganization($organizationId, $data['settings'])
+            $this->organizationSettingsService->updateForOrganization(
+                $organizationId,
+                $data['settings'],
+                $request->user()->id,
+                $request,
+            )
         );
     }
 }

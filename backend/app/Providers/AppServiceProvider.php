@@ -17,6 +17,7 @@ use App\Services\Billing\EntitlementService;
 use App\Services\Billing\MockBillingProvider;
 use App\Services\Billing\OrganizationSettingsService;
 use App\Services\Billing\SubscriptionService;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -33,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(EntitlementService::class);
         $this->app->singleton(BillingUsageService::class);
         $this->app->singleton(OrganizationSettingsService::class);
+        $this->app->singleton(NotificationService::class);
 
         $this->app->bind(BillingProviderInterface::class, MockBillingProvider::class);
 
@@ -47,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
             $app->make(AuditService::class),
             $app->make(AiQuotaService::class),
             $app->make(AiUsageRecorder::class),
+            $app->make(NotificationService::class),
         ));
     }
 

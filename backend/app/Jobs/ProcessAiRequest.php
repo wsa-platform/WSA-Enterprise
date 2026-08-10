@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\AiRequest;
 use App\Services\Ai\AiService;
 use App\Services\Audit\AuditService;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -79,6 +80,14 @@ class ProcessAiRequest implements ShouldBeUnique, ShouldQueue
                 'error_message' => $record->error_message,
                 'source' => 'queue',
             ],
+        );
+
+        app(NotificationService::class)->notifyAiFailed(
+            $record->organization_id,
+            $record->user_id,
+            $record->id,
+            $record->request_type,
+            $record->error_message,
         );
     }
 }

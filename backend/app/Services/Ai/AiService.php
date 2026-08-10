@@ -6,6 +6,7 @@ use App\Exceptions\AiQuotaExceededException;
 use App\Jobs\ProcessAiRequest;
 use App\Models\AiRequest;
 use App\Services\Audit\AuditService;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -24,6 +25,7 @@ class AiService
         private AuditService $auditService,
         private AiQuotaService $quotaService,
         private AiUsageRecorder $usageRecorder,
+        private NotificationService $notificationService,
     ) {}
 
     public function providerName(?int $organizationId = null): string
@@ -196,6 +198,13 @@ class AiService
                     'request_type' => $locked->request_type,
                     'latency_ms' => $locked->latency_ms,
                 ]);
+
+                $this->notificationService->notifyAiCompleted(
+                    $locked->organization_id,
+                    $locked->user_id,
+                    $locked->id,
+                    $locked->request_type,
+                );
             } catch (\Throwable $exception) {
                 Log::warning('AI provider failed', [
                     'provider' => $provider->name(),
@@ -214,6 +223,14 @@ class AiService
                     'request_type' => $locked->request_type,
                     'error_message' => $exception->getMessage(),
                 ]);
+
+                $this->notificationService->notifyAiFailed(
+                    $locked->organization_id,
+                    $locked->user_id,
+                    $locked->id,
+                    $locked->request_type,
+                    $exception->getMessage(),
+                );
             }
 
             return $locked->fresh();
