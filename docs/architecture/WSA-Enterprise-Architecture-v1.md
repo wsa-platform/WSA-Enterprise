@@ -249,7 +249,16 @@ flowchart LR
 
 **Extensibility:** Register new providers in `AppServiceProvider`; configure via `AI_PROVIDER` env. No domain controller calls a vendor SDK directly.
 
-**Future (not v1.0):** Queue long-running AI jobs; webhook/poll completion.
+**Future (not v1.0):** Queue long-running AI jobs via `ProcessAiRequest` job (foundation in v1.0); webhook/poll completion.
+
+### Queue foundation (v1.0)
+
+| Component | Purpose |
+|-----------|---------|
+| `ProcessAiRequest` job | Async processing of `ai_requests` records |
+| `AiService::processRecord()` | Shared sync/async execution path |
+| `config/ai.php` | `AI_QUEUE`, `AI_QUEUE_TRIES`, timeout settings |
+| Redis + `jobs` table | Laravel queue infrastructure (worker not in default Compose) |
 
 ---
 
@@ -304,7 +313,10 @@ See `docs/database.md` for table inventory by phase.
 | Change audit (v1.0) | `audit_logs` table + `AuditService` |
 | Model audit | `Auditable` trait on selected models (e.g. `Role`) |
 | Access audit | Explicit logs for role assignment |
+| Auth audit (v1.0+) | `auth.login`, `auth.login_failed`, `auth.logout`, `auth.register` |
 | API | `GET /api/v1/audit-logs` (envelope response, `access.manage`) |
+
+Sensitive fields (`password`, `token`, etc.) are stripped before persistence.
 
 ---
 
@@ -388,7 +400,7 @@ See `docs/deployment.md` for production checklist. **Production gaps:** TLS, sec
 
 | Phase | Focus |
 |-------|-------|
-| **v1.1** | Queue AI requests; OpenAPI spec; frontend API module split |
+| **v1.1** | Enable async AI dispatch in controller; expand OpenAPI coverage |
 | **v1.2** | Global tenant scope trait; expand `Auditable` to commerce/inventory |
 | **v1.3** | Domain events for order/diagnosis completion; notification channels |
 | **v2.0** | `/api/v2` if breaking changes required; optional read replicas |
@@ -405,6 +417,8 @@ See `docs/deployment.md` for production checklist. **Production gaps:** TLS, sec
 | `docs/e2e-testing.md` | Test procedures |
 | `docs/production-readiness.md` | Staging vs production gaps |
 | `docs/phase8.md` | Phase 8 delivery notes |
+| `docs/api-conventions.md` | HTTP API response and auth conventions |
+| `docs/openapi.yaml` | OpenAPI 3.1 foundation for key endpoints |
 
 ---
 

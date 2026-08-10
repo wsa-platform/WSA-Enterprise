@@ -1,0 +1,222 @@
+openapi: 3.1.0
+info:
+  title: WSA Enterprise API
+  version: 1.0.0
+  description: |
+    REST API for WSA Enterprise — multi-tenant agricultural platform.
+    See docs/api-conventions.md for response formats and authentication.
+servers:
+  - url: http://localhost:8081/api/v1
+    description: Docker staging (Nginx gateway)
+tags:
+  - name: Auth
+  - name: Platform
+  - name: Projects
+  - name: Tasks
+  - name: Farms
+  - name: Diagnosis
+  - name: Audit
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum
+  parameters:
+    OrganizationId:
+      name: X-Organization-Id
+      in: header
+      required: false
+      schema:
+        type: integer
+      description: Active organization for tenant-scoped requests
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            email: { type: string, format: email }
+    Envelope:
+      type: object
+      properties:
+        data: {}
+        meta:
+          type: object
+paths:
+  /health:
+    get:
+      tags: [Platform]
+      summary: API health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate and receive bearer token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+                device_name: { type: string }
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke current bearer token
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204':
+          description: Logged out
+  /platform/organizations:
+    get:
+      tags: [Platform]
+      summary: List organizations for authenticated user
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Organization list
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List projects for active organization
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Project list
+        '403':
+          description: Forbidden
+  /tasks/{task}/status:
+    patch:
+      tags: [Tasks]
+      summary: Update task status
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: task
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string }
+      responses:
+        '200':
+          description: Updated
+        '404':
+          description: Not found (includes cross-tenant)
+  /farm/{module}:
+    get:
+      tags: [Farms]
+      summary: List farm module records
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: module
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Records
+    post:
+      tags: [Farms]
+      summary: Create farm module record
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: module
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '201':
+          description: Created
+  /diagnosis/requests:
+    get:
+      tags: [Diagnosis]
+      summary: List diagnosis requests
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Requests
+    post:
+      tags: [Diagnosis]
+      summary: Submit diagnosis request
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '201':
+          description: Created
+  /audit-logs:
+    get:
+      tags: [Audit]
+      summary: List audit logs for active organization
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: action
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Envelope response with audit entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
