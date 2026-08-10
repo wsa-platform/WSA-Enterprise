@@ -8,7 +8,10 @@ WSA-Enterprise is a multi-tenant agricultural platform. Security is enforced at 
 
 ## Authentication
 
-- **Mechanism:** Laravel Sanctum personal access tokens (Bearer)
+- **User mechanism:** Laravel Sanctum personal access tokens (`Authorization: Bearer {token}`)
+- **API client mechanism (M10):** Organization-registered clients via `Authorization: Bearer {client_id}:{client_secret}` or HTTP Basic
+- **API client scopes:** `analytics.read`, `ai.read`, `billing.read` mapped to permission checks
+- **API client allowlist:** GET `/analytics/overview`, `/ai/usage`, `/billing/usage` only
 - **Login/register throttle:** 20 requests/minute per IP
 - **Authenticated API throttle:** 120 requests/minute
 - **Registration:** Disabled by default (`ALLOW_REGISTRATION=false`)

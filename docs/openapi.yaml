@@ -29,6 +29,12 @@ components:
       type: http
       scheme: bearer
       bearerFormat: Sanctum
+    apiClientBearer:
+      type: http
+      scheme: bearer
+      description: |
+        Organization API client credentials encoded as `{client_id}:{client_secret}`.
+        Requires scopes matching the endpoint (e.g. `analytics.read`).
   parameters:
     OrganizationId:
       name: X-Organization-Id
@@ -690,7 +696,9 @@ paths:
     get:
       tags: [Billing]
       summary: Organization usage summary for current period
-      security: [{ bearerAuth: [] }]
+      security:
+        - bearerAuth: []
+        - apiClientBearer: []
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
       responses:
@@ -754,7 +762,9 @@ paths:
     get:
       tags: [Analytics]
       summary: Organization analytics overview (users, AI, billing, audit)
-      security: [{ bearerAuth: [] }]
+      security:
+        - bearerAuth: []
+        - apiClientBearer: []
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
       responses:
@@ -856,7 +866,9 @@ paths:
     get:
       tags: [AI]
       summary: AI usage and quota summary for organization
-      security: [{ bearerAuth: [] }]
+      security:
+        - bearerAuth: []
+        - apiClientBearer: []
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
       responses:

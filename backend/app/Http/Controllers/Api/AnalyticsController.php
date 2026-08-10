@@ -62,7 +62,13 @@ class AnalyticsController extends Controller
             'billing_usage' => $this->billingUsageService->summaryForOrganization($organizationId),
             'notifications' => [
                 'unread' => AppNotification::where('organization_id', $organizationId)
-                    ->where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', $request->user()->id))
+                    ->where(function ($query) use ($request): void {
+                        $query->whereNull('user_id');
+
+                        if ($request->user() !== null) {
+                            $query->orWhere('user_id', $request->user()->id);
+                        }
+                    })
                     ->whereNull('read_at')
                     ->count(),
             ],

@@ -84,7 +84,7 @@
 
 ## Known Limitations
 
-1. **API client bearer authentication** — Registry only; M2M auth is future work.
+1. **API client bearer authentication** — Implemented (M10); scoped read-only access to analytics, AI usage, and billing usage endpoints.
 2. **OpenAPI coverage** — Documents Phase 11 enterprise + core endpoints; legacy module CRUD routes intentionally omitted (parity test validates documented paths only).
 3. **Flutter** — CI-only when local SDK unavailable.
 4. **Runtime healthchecks** — Process-presence checks; job throughput not validated locally.

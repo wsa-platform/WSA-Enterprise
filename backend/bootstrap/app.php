@@ -20,10 +20,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        $middleware->alias([
+            'auth.principal' => \App\Http\Middleware\AuthenticateApiPrincipal::class,
+            'resolve.organization' => \App\Http\Middleware\ResolveOrganizationContext::class,
+            'api_client.routes' => \App\Http\Middleware\RestrictApiClientRoutes::class,
+        ]);
         $middleware->appendToGroup('api', [
             \App\Http\Middleware\AssignRequestId::class,
             \App\Http\Middleware\LogApiRequests::class,
-            \App\Http\Middleware\ResolveOrganizationContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -33,7 +33,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/auth/login', [AuthController::class, 'login']);
     });
 
-    Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function (): void {
+    Route::middleware(['auth.principal', 'resolve.organization', 'api_client.routes', 'throttle:120,1'])->group(function (): void {
         Route::get('/user', fn () => request()->user()?->only(['id', 'name', 'email']));
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/dashboard', DashboardController::class);

@@ -43,7 +43,7 @@ Manual device E2E is documented but not required for CI green.
 - `Phase11NotificationTest`, `Phase11AuditCoverageTest` — notifications + audit
 - `Phase11M8AnalyticsTest`, `Phase11M8ApiClientsTest` — analytics + API client registry
 - `Phase11M9IntegrationWorkflowTest` — cross-module Phase 11 integration workflow
-- `Phase11M9OpenApiRouteParityTest` — documented OpenAPI paths match routes
+- `Phase11M10ApiClientAuthTest` — API client bearer authentication and route restrictions
 
 ## Workflow covered (Phase 11 M9 integration)
 
