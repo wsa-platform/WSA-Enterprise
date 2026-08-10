@@ -26,6 +26,7 @@ const navSections: Array<{ title: string; items: NavItem[] }> = [
     title: 'Enterprise',
     items: [
       { to: '/organization', label: 'Organization', permission: 'platform.view' },
+      { to: '/billing', label: 'Billing', permission: 'billing.view' },
       { to: '/admin/users', label: 'Users', permission: 'access.manage' },
       { to: '/admin/teams', label: 'Teams', permission: 'access.manage' },
       { to: '/admin/roles', label: 'Roles & Permissions', permission: 'access.manage' },
@@ -81,6 +82,7 @@ function breadcrumbItems(pathname: string): BreadcrumbItem[] {
   const map: Record<string, BreadcrumbItem[]> = {
     '/': [{ label: 'Dashboard' }],
     '/organization': [{ label: 'Dashboard', to: '/' }, { label: 'Organization' }],
+    '/billing': [{ label: 'Dashboard', to: '/' }, { label: 'Billing' }],
     '/admin/users': [{ label: 'Dashboard', to: '/' }, { label: 'Users' }],
     '/admin/teams': [{ label: 'Dashboard', to: '/' }, { label: 'Teams' }],
     '/admin/roles': [{ label: 'Dashboard', to: '/' }, { label: 'Roles & Permissions' }],

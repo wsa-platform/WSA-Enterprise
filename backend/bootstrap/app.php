@@ -1,6 +1,8 @@
 <?php
 
 use App\Exceptions\AiQuotaExceededException;
+use App\Exceptions\PlanRestrictionException;
+use App\Exceptions\SubscriptionInactiveException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -34,6 +36,28 @@ return Application::configure(basePath: dirname(__DIR__))
                         'used' => $exception->used,
                     ],
                 ], 429);
+            }
+        });
+
+        $exceptions->render(function (SubscriptionInactiveException $exception, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => $exception->getMessage(),
+                    'subscription' => [
+                        'status' => $exception->status,
+                    ],
+                ], 403);
+            }
+        });
+
+        $exceptions->render(function (PlanRestrictionException $exception, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => $exception->getMessage(),
+                    'feature' => [
+                        'key' => $exception->featureKey,
+                    ],
+                ], 403);
             }
         });
 

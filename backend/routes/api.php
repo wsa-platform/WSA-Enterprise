@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\LibraryController;
 use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\PlatformController;
 use App\Http\Controllers\Api\TeamController;
+use App\Http\Controllers\Api\BillingController;
 
 Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
 
@@ -53,6 +54,17 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/teams/{team}/members', [TeamController::class, 'addMember'])->whereNumber('team');
         Route::delete('/teams/{team}/members/{user}', [TeamController::class, 'removeMember'])->whereNumber(['team', 'user']);
         Route::get('/audit-logs', [AuditController::class, 'index']);
+        Route::prefix('billing')->group(function (): void {
+            Route::get('/plans', [BillingController::class, 'plans']);
+            Route::get('/subscription', [BillingController::class, 'subscription']);
+            Route::get('/usage', [BillingController::class, 'usage']);
+            Route::get('/invoices', [BillingController::class, 'invoices']);
+            Route::post('/subscription/plan', [BillingController::class, 'assignPlan']);
+            Route::post('/subscription/cancel', [BillingController::class, 'cancel']);
+            Route::post('/subscription/reactivate', [BillingController::class, 'reactivate']);
+            Route::get('/settings', [BillingController::class, 'settings']);
+            Route::put('/settings', [BillingController::class, 'updateSettings']);
+        });
         Route::prefix('directory')->group(function (): void {
             Route::get('/{module}', [DirectoryController::class, 'index']);
             Route::post('/{module}', [DirectoryController::class, 'store']);

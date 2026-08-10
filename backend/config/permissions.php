@@ -18,4 +18,6 @@ return [
     'business.view',
     'business.manage',
     'access.manage',
+    'billing.view',
+    'billing.manage',
 ];

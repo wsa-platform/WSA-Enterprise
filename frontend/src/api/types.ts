@@ -150,3 +150,58 @@ export type AppNotification = {
   read_at?: string | null
   created_at: string
 }
+
+export type BillingPlan = {
+  id: number
+  slug: string
+  name: string
+  description?: string | null
+  is_active: boolean
+  features?: Array<{ feature_key: string; limit_value: number | null; limit_period: string }>
+}
+
+export type BillingSubscription = {
+  id: number
+  organization_id: number
+  plan_id: number
+  status: string
+  current_period_start?: string | null
+  current_period_end?: string | null
+  cancelled_at?: string | null
+  cancel_at_period_end?: boolean
+  plan?: BillingPlan
+}
+
+export type BillingSubscriptionResponse = {
+  subscription: BillingSubscription
+  entitlements: {
+    enabled: boolean
+    subscription_active: boolean
+    plan?: { slug: string; name: string } | null
+    features?: Record<string, { limit: number | null; period: string }>
+  }
+}
+
+export type BillingUsageSummary = {
+  period_start: string
+  metrics: Record<string, {
+    used: number
+    limit: number | null
+    remaining: number | null
+    usage_percent: number | null
+  }>
+  history: Array<{ period_start: string; quantity: number }>
+}
+
+export type BillingInvoice = {
+  id: number
+  organization_id: number
+  number: string
+  status: string
+  amount_cents: number
+  currency: string
+  period_start?: string | null
+  period_end?: string | null
+  due_at?: string | null
+  paid_at?: string | null
+}
