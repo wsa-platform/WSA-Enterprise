@@ -499,6 +499,10 @@ paths:
       responses:
         '200':
           description: Role list
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /permissions:
     get:
       tags: [Users]
@@ -509,6 +513,10 @@ paths:
       responses:
         '200':
           description: Permission list
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /ai/provider:
     get:
       tags: [AI]
@@ -519,6 +527,10 @@ paths:
       responses:
         '200':
           description: Provider info including async_dispatch flag
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /ai/requests:
     get:
       tags: [AI]
@@ -529,6 +541,10 @@ paths:
       responses:
         '200':
           description: Paginated AI requests
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [AI]
       summary: Submit AI request (201 sync, 202 async)
@@ -550,6 +566,12 @@ paths:
           description: Completed synchronously
         '202':
           description: Accepted (pending)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /ai/requests/{id}:
     get:
       tags: [AI]
@@ -564,5 +586,9 @@ paths:
       responses:
         '200':
           description: AI request detail
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'

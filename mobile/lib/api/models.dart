@@ -1,10 +1,3 @@
-class ApiModels {
-  const userFromJson = _userFromJson;
-  const organizationFromJson = _organizationFromJson;
-  const dashboardFromJson = _dashboardFromJson;
-  const aiRequestFromJson = _aiRequestFromJson;
-}
-
 class ApiUser {
   const ApiUser({required this.id, required this.name, required this.email});
   final int id;
@@ -41,25 +34,25 @@ class ApiAiRequest {
   final String? errorMessage;
 }
 
-ApiUser _userFromJson(Map<String, dynamic> json) => ApiUser(
+ApiUser userFromJson(Map<String, dynamic> json) => ApiUser(
   id: json['id'] as int,
   name: json['name'] as String,
   email: json['email'] as String,
 );
 
-ApiOrganization _organizationFromJson(Map<String, dynamic> json) => ApiOrganization(
+ApiOrganization organizationFromJson(Map<String, dynamic> json) => ApiOrganization(
   id: json['id'] as int,
   name: json['name'] as String,
   slug: json['slug'] as String,
   role: json['role'] as String?,
 );
 
-ApiDashboard _dashboardFromJson(Map<String, dynamic> json) => ApiDashboard(
+ApiDashboard dashboardFromJson(Map<String, dynamic> json) => ApiDashboard(
   organization: Map<String, dynamic>.from(json['organization'] as Map),
   metrics: Map<String, dynamic>.from(json['metrics'] as Map),
 );
 
-ApiAiRequest _aiRequestFromJson(Map<String, dynamic> json) => ApiAiRequest(
+ApiAiRequest aiRequestFromJson(Map<String, dynamic> json) => ApiAiRequest(
   id: json['id'] as int,
   status: json['status'] as String,
   requestType: json['request_type'] as String,

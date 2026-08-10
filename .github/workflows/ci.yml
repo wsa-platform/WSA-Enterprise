@@ -82,5 +82,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install -g @redocly/cli
-      - run: redocly lint docs/openapi.yaml
+      - run: npm install -g @apidevtools/swagger-cli
+      - run: swagger-cli validate docs/openapi.yaml
