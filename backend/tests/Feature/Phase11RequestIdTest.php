@@ -55,5 +55,8 @@ class Phase11RequestIdTest extends TestCase
             'action' => 'security.cross_tenant_denied',
             'user_id' => $admin->id,
         ]);
+
+        $log = \App\Models\AuditLog::where('action', 'security.cross_tenant_denied')->latest('id')->first();
+        $this->assertSame('cross-tenant-req', $log?->request_id);
     }
 }

@@ -11,6 +11,8 @@ class LogApiRequests
 {
     public function handle(Request $request, Closure $next): Response
     {
+        $started = microtime(true);
+
         /** @var Response $response */
         $response = $next($request);
 
@@ -20,6 +22,7 @@ class LogApiRequests
                 'method' => $request->method(),
                 'path' => $request->path(),
                 'status' => $response->getStatusCode(),
+                'duration_ms' => (int) ((microtime(true) - $started) * 1000),
                 'user_id' => $request->user()?->id,
                 'organization_id' => $request->attributes->get('organization_id') ?? $request->header('X-Organization-Id'),
             ]);

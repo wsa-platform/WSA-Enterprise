@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\Audit\AuditService;
+use App\Services\Notifications\NotificationService;
 use App\Services\Tenancy\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class ResolveOrganizationContext
     public function __construct(
         private TenantContext $tenant,
         private AuditService $audit,
+        private NotificationService $notifications,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -39,6 +41,16 @@ class ResolveOrganizationContext
                         ],
                         request: $request,
                     );
+
+                    $primaryOrganization = $user->organizations()->first();
+                    if ($primaryOrganization !== null) {
+                        $this->notifications->notifyCrossTenantAttempt(
+                            $primaryOrganization->id,
+                            $user->id,
+                            $organizationId,
+                            $request->attributes->get('request_id'),
+                        );
+                    }
 
                     abort(403, 'You do not have access to this organization.');
                 }
