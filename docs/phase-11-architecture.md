@@ -3,7 +3,7 @@
 **Project:** WSA-Enterprise — Enterprise Platform Expansion  
 **Baseline:** Phase 10 (merged to `main`)  
 **Version:** 11.0  
-**Status:** M1–M8 implemented on `main` (see [phase-11-verification-report.md](phase-11-verification-report.md))
+**Status:** M1–M9 complete on `main` (see [phase-11-final-verification.md](phase-11-final-verification.md))
 
 ---
 

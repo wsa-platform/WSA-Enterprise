@@ -1,6 +1,6 @@
 # E2E & Regression Testing
 
-**Last updated:** Phase 8 (2026-08-09)
+**Last updated:** Phase 11 M9 (2026-08-10)
 
 ## Strategy
 
@@ -35,20 +35,27 @@ Manual device E2E is documented but not required for CI green.
 - `Phase8SecurityTest` — registration gate, task IDOR, role scoping, pagination, profile
 - `Phase8ComprehensiveWorkflowTest` — full user journey including logout/token invalidation
 
-## Workflow covered (Phase 8 comprehensive)
+### Phase 11
+
+- `Phase11TenantScopeTest`, `Phase11RbacTest`, `Phase11IdorTest`, `Phase11PrivilegeEscalationTest` — security group
+- `Phase11AiPlatformTest`, `Phase11AiRateLimitTest` — AI quotas, cancellation, rate limits
+- `Phase11M5BillingTest` — billing plans, subscriptions, entitlements
+- `Phase11NotificationTest`, `Phase11AuditCoverageTest` — notifications + audit
+- `Phase11M8AnalyticsTest`, `Phase11M8ApiClientsTest` — analytics + API client registry
+- `Phase11M9IntegrationWorkflowTest` — cross-module Phase 11 integration workflow
+- `Phase11M9OpenApiRouteParityTest` — documented OpenAPI paths match routes
+
+## Workflow covered (Phase 11 M9 integration)
 
 ```
-Sign in (Sanctum actingAs)
-  → list organizations
-  → dashboard + workflow summary
-  → create/update farm
-  → crop types, soil analyses
-  → diagnosis request
-  → training course + enrollment
-  → library item + search
-  → AI library_qa request
-  → cross-tenant dashboard → 403
-  → logout → token invalidated → 401
+Authenticate (Sanctum token + X-Organization-Id)
+  → assign billing plan
+  → submit AI request (sync)
+  → verify in-app notification + audit entries
+  → analytics overview reflects AI, billing, notifications, audit counts
+  → register API client (hashed secret)
+  → billing subscription, notifications, audit logs, AI usage readable
+  → foreign organization analytics do not include foreign notification counts
 ```
 
 ## Running tests locally
