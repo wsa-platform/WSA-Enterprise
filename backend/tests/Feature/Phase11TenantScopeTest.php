@@ -16,6 +16,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
+/**
+ * @group security
+ */
 class Phase11TenantScopeTest extends TestCase
 {
     use RefreshDatabase;

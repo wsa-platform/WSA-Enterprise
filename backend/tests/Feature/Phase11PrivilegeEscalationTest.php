@@ -11,6 +11,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
+/**
+ * @group security
+ */
 class Phase11PrivilegeEscalationTest extends TestCase
 {
     use RefreshDatabase;

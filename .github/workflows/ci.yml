@@ -84,3 +84,48 @@ jobs:
           node-version: 22
       - run: npm install -g @apidevtools/swagger-cli
       - run: swagger-cli validate docs/openapi.yaml
+
+  security:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: wsa_enterprise
+          POSTGRES_USER: wsa
+          POSTGRES_PASSWORD: secret
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U wsa -d wsa_enterprise"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, redis
+      - run: composer install --prefer-dist --no-progress
+      - run: cp .env.testing.example .env
+      - run: php artisan key:generate
+      - name: Create isolated test database
+        run: PGPASSWORD=secret psql -h 127.0.0.1 -U wsa -d wsa_enterprise -c "SELECT 1 FROM pg_database WHERE datname = 'wsa_enterprise_test'" | grep -q 1 || PGPASSWORD=secret psql -h 127.0.0.1 -U wsa -d wsa_enterprise -c "CREATE DATABASE wsa_enterprise_test;"
+      - run: php artisan test --group=security --no-ansi
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: wsa_enterprise_test
+          DB_USERNAME: wsa
+          DB_PASSWORD: secret
+          FORBIDDEN_TEST_DATABASES: wsa_enterprise
+
+  docker-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp backend/.env.example backend/.env
+      - run: docker compose config --quiet
+      - run: docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet

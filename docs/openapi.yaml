@@ -19,6 +19,10 @@ tags:
   - name: Audit
   - name: AI
   - name: Billing
+  - name: Teams
+  - name: Notifications
+  - name: Analytics
+  - name: API Clients
 components:
   securitySchemes:
     bearerAuth:
@@ -735,3 +739,234 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /platform/workflow-summary:
+    get:
+      tags: [Platform]
+      summary: Workflow and operational summary for active organization
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Workflow metrics }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /analytics/overview:
+    get:
+      tags: [Analytics]
+      summary: Organization analytics overview (users, AI, billing, audit)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Scoped analytics snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization_id: { type: integer }
+                  generated_at: { type: string, format: date-time }
+                  users:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                  teams:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                  farms:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                  ai: { type: object }
+                  billing_usage: { type: object }
+                  notifications: { type: object }
+                  audit: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications for active organization
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Notification list }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /notifications/{notification}/read:
+    post:
+      tags: [Notifications]
+      summary: Mark notification as read
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: notification
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Updated notification }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /teams/{team}/members:
+    post:
+      tags: [Teams]
+      summary: Add member to team
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: team
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id]
+              properties:
+                user_id: { type: integer }
+      responses:
+        '200': { description: Member added }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /teams/{team}/members/{user}:
+    delete:
+      tags: [Teams]
+      summary: Remove member from team
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: team
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: user
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Removed }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /ai/usage:
+    get:
+      tags: [AI]
+      summary: AI usage and quota summary for organization
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Usage metrics and quota }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { description: Organization AI rate limit exceeded }
+  /ai/requests/{id}/cancel:
+    post:
+      tags: [AI]
+      summary: Cancel pending or processing AI request
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Cancelled request }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: Request not cancellable }
+        '429': { description: Organization AI rate limit exceeded }
+  /billing/subscription/plan:
+    post:
+      tags: [Billing]
+      summary: Assign billing plan to organization
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan_id]
+              properties:
+                plan_id: { type: integer }
+      responses:
+        '200': { description: Plan assigned }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /billing/subscription/cancel:
+    post:
+      tags: [Billing]
+      summary: Cancel organization subscription
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Subscription cancelled }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /billing/subscription/reactivate:
+    post:
+      tags: [Billing]
+      summary: Reactivate cancelled subscription
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Subscription reactivated }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api-clients:
+    get:
+      tags: [API Clients]
+      summary: List organization API clients (secrets never returned)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Paginated API clients }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [API Clients]
+      summary: Register API client (secret shown once)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                scopes:
+                  type: array
+                  items: { type: string }
+      responses:
+        '201':
+          description: Client created with one-time secret
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api-clients/{apiClient}/revoke:
+    post:
+      tags: [API Clients]
+      summary: Revoke API client credentials
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: apiClient
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Revoked client }
+        '404': { $ref: '#/components/responses/NotFound' }

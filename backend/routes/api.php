@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\PlatformController;
 use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\BillingController;
+use App\Http\Controllers\Api\AnalyticsController;
+use App\Http\Controllers\Api\ApiClientController;
 
 Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
 
@@ -39,6 +41,10 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/platform/me', [PlatformController::class, 'me']);
         Route::get('/platform/access-summary', [PlatformController::class, 'accessSummary']);
         Route::get('/platform/workflow-summary', [PlatformController::class, 'workflowSummary']);
+        Route::get('/analytics/overview', [AnalyticsController::class, 'overview']);
+        Route::get('/api-clients', [ApiClientController::class, 'index']);
+        Route::post('/api-clients', [ApiClientController::class, 'store']);
+        Route::post('/api-clients/{apiClient}/revoke', [ApiClientController::class, 'revoke'])->whereNumber('apiClient');
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->whereNumber('task');
         Route::get('/users', [AccessController::class, 'users']);
