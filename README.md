@@ -39,6 +39,16 @@ Queue worker logs: `docker compose logs -f queue`. Failed jobs: `docker compose 
 
 **Testing:** Never run `php artisan test` against the Docker staging database. See [docs/testing.md](docs/testing.md) for isolated test execution.
 
+## Phase 11 enterprise expansion
+
+Phase 11 planning documents (architecture audit, target architecture, roadmap) are on branch `phase-11-enterprise-expansion`:
+
+- [docs/phase-11-architecture-audit.md](docs/phase-11-architecture-audit.md)
+- [docs/phase-11-architecture.md](docs/phase-11-architecture.md)
+- [docs/phase-11-roadmap.md](docs/phase-11-roadmap.md)
+
+Supporting guides: [multi-tenancy](docs/multi-tenancy.md), [ai-platform](docs/ai-platform.md), [billing](docs/billing.md), [security](docs/security.md).
+
 ## Phase 10 production platform
 
 Phase 10 adds isolated test databases, SPA routing fixes, production-ready async AI, expanded audit logging, multi-tenant security tests, modular frontend/mobile API clients, OpenAPI validation in CI, and production hardening documentation.

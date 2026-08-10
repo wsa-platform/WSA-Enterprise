@@ -42,11 +42,7 @@ class ProcessAiRequest implements ShouldBeUnique, ShouldQueue
     {
         $record = AiRequest::query()->find($this->aiRequestId);
 
-        if ($record === null) {
-            return;
-        }
-
-        if (in_array($record->status, ['completed', 'failed'], true)) {
+        if ($record === null || $record->isTerminal()) {
             return;
         }
 
@@ -57,7 +53,7 @@ class ProcessAiRequest implements ShouldBeUnique, ShouldQueue
     {
         $record = AiRequest::query()->find($this->aiRequestId);
 
-        if ($record === null || in_array($record->status, ['completed', 'failed'], true)) {
+        if ($record === null || $record->isTerminal()) {
             return;
         }
 

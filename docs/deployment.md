@@ -1,6 +1,6 @@
 # WSA-Enterprise Deployment Guide
 
-**Last updated:** Phase 8 (2026-08-09)
+**Last updated:** Phase 11 (2026-08-10)
 
 ## Architecture
 
@@ -70,6 +70,8 @@ Do **not** add `localhost:8081` to `SANCTUM_STATEFUL_DOMAINS` when using bearer-
 
 The `queue` service runs `php artisan queue:work redis` against the Redis connection configured in `backend/.env` (`QUEUE_CONNECTION=redis`).
 
+The queue entrypoint waits for Redis readiness before starting workers (prevents crash-loops when Redis is unavailable).
+
 Inspect worker logs:
 
 ```bash
@@ -107,6 +109,22 @@ Copy `backend/.env.example` to `backend/.env` before starting Compose (`docker-c
 | `SANCTUM_TOKEN_EXPIRATION` | empty | Minutes; e.g. `43200` for 30 days |
 | `SESSION_ENCRYPT` | `false` | Set `true` in production |
 | `LOG_LEVEL` | `warning` | Reduce noise in production |
+
+### AI & async (Phase 10/11)
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `AI_PROVIDER` | `mock` | Use real provider only in production |
+| `AI_ASYNC_DISPATCH` | `false` | Set `true` only when queue worker is running |
+| `QUEUE_CONNECTION` | `redis` | Required for async AI |
+
+### Billing (Phase 11)
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `BILLING_ENABLED` | `false` | Enable entitlement enforcement |
+| `BILLING_PROVIDER` | empty | Future: `stripe` |
+| `DEFAULT_PLAN_SLUG` | `free` | Plan for new organizations |
 
 ### Frontend
 
@@ -160,6 +178,25 @@ Example proxy headers: `X-Forwarded-Proto`, `X-Forwarded-For`
 | `GET /up` | Laravel framework health |
 | `GET /api/v1/health` | Load balancer API probe |
 
+### Docker service health (Phase 11 target)
+
+| Service | Check |
+| --- | --- |
+| `postgres` | `pg_isready` (configured) |
+| `redis` | `redis-cli ping` (configured) |
+| `backend` | `GET /up` via nginx (planned) |
+| `queue` | Process running check (planned) |
+| `frontend` | HTTP 200 on `/` (planned) |
+| `nginx` | HTTP 200 on `/api/v1/health` (planned) |
+
+### Scheduler (Phase 11 target)
+
+Add a `scheduler` Compose service:
+
+```bash
+* * * * * php artisan schedule:run
+```
+
 ## Logging
 
 - Laravel logs: `storage/logs/laravel.log`
@@ -182,9 +219,18 @@ Example proxy headers: `X-Forwarded-Proto`, `X-Forwarded-For`
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on `main`, `phase-*`, and pull requests:
 
-- PHP 8.4, `composer validate`, `php artisan test` (PostgreSQL service)
+- PHP 8.4, isolated `wsa_enterprise_test` DB, `php artisan test`
 - `npm run lint`, `npm run build` (frontend)
 - `flutter analyze` + `flutter test` (mobile)
+- `swagger-cli validate docs/openapi.yaml`
+
+Run isolated tests locally:
+
+```powershell
+.\scripts\run-backend-tests.ps1
+```
+
+See [testing.md](./testing.md). **Never** run PHPUnit against the staging `wsa_enterprise` database.
 
 ## What this guide does not cover
 

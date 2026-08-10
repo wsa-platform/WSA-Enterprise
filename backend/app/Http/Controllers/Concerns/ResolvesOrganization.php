@@ -12,20 +12,12 @@ trait ResolvesOrganization
             return (int) $request->attributes->get('organization_id');
         }
 
-        $user = $request->user();
-        $header = $request->header('X-Organization-Id');
-
-        if ($header !== null && $header !== '') {
-            abort_unless(
-                $user->organizations()->where('organizations.id', (int) $header)->exists(),
-                403,
-                'You do not have access to this organization.'
-            );
-
-            return (int) $header;
+        $tenant = app(\App\Services\Tenancy\TenantContext::class);
+        if ($tenant->hasOrganization()) {
+            return $tenant->organizationId();
         }
 
-        return $user->organizations()->firstOrFail()->id;
+        return $request->user()->organizations()->firstOrFail()->id;
     }
 
     protected function organizationModel(Request $request)

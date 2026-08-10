@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Audit\AuditService;
+use App\Services\Tenancy\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,6 +13,11 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ResolveOrganizationContext
 {
+    public function __construct(
+        private TenantContext $tenant,
+        private AuditService $audit,
+    ) {}
+
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
@@ -19,15 +26,30 @@ class ResolveOrganizationContext
             $header = $request->header('X-Organization-Id');
 
             if ($header !== null && $header !== '') {
-                abort_unless(
-                    $user->organizations()->where('organizations.id', (int) $header)->exists(),
-                    403,
-                    'You do not have access to this organization.'
-                );
+                $organizationId = (int) $header;
 
-                $request->attributes->set('organization_id', (int) $header);
+                if (! $user->organizations()->where('organizations.id', $organizationId)->exists()) {
+                    $this->audit->record(
+                        action: 'security.cross_tenant_denied',
+                        organizationId: null,
+                        userId: $user->id,
+                        newValues: [
+                            'attempted_organization_id' => $organizationId,
+                            'request_id' => $request->attributes->get('request_id'),
+                        ],
+                        request: $request,
+                    );
+
+                    abort(403, 'You do not have access to this organization.');
+                }
+
+                $request->attributes->set('organization_id', $organizationId);
             } elseif ($user->organizations()->exists()) {
                 $request->attributes->set('organization_id', $user->organizations()->first()->id);
+            }
+
+            if ($request->attributes->has('organization_id')) {
+                $this->tenant->setOrganizationId((int) $request->attributes->get('organization_id'));
             }
         }
 
