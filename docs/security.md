@@ -1,6 +1,6 @@
 # WSA-Enterprise Security Model
 
-**Last updated:** Phase 8 (2026-08-09)
+**Last updated:** Phase 11 (2026-08-10)
 
 ## Overview
 
@@ -37,6 +37,22 @@ Cross-tenant header misuse returns **403 Forbidden**.
 
 Explicit roles assigned via Access API replace baseline when present.
 
+### Enterprise roles (Phase 11 target)
+
+| Role slug | Scope | Notes |
+| --- | --- | --- |
+| `owner` | Organization | Full control including billing |
+| `admin` | Organization | User/role management |
+| `manager` | Organization | Module manage permissions |
+| `member` | Organization | Default create/read baseline |
+| `viewer` | Organization | Read-only |
+
+System roles are seeded per organization. Pivot baselines (`admin`/`member`) remain for backward compatibility.
+
+### Entitlements (Phase 11)
+
+When `BILLING_ENABLED=true`, `EntitlementService` gates features by subscription plan. When disabled, all features allowed (current behavior).
+
 ### Policies & controllers
 
 - `AuthorizesOrganizationAccess` concern on module controllers
@@ -45,12 +61,16 @@ Explicit roles assigned via Access API replace baseline when present.
 
 ## Tenant isolation
 
+See [multi-tenancy.md](./multi-tenancy.md) for full tenant model.
+
 | Scenario | Expected response |
 | --- | --- |
 | Foreign `X-Organization-Id` header | 403 |
 | Foreign resource ID (scoped lookup) | 404 |
 | Foreign role assignment | 422 validation error |
 | Cross-org task update | 404 |
+
+Phase 11 adds `BelongsToOrganization` trait for automatic query scoping as defense-in-depth.
 
 ## IDOR & mass assignment
 
@@ -74,6 +94,23 @@ Explicit roles assigned via Access API replace baseline when present.
 
 Does **not** log request bodies, tokens, or passwords.
 
+Phase 11 adds `X-Request-Id` response header for request correlation.
+
+## Audit logging
+
+Sensitive fields redacted via `AuditService::SENSITIVE_KEYS` (passwords, tokens, secrets).
+
+Audited events include auth, user creation, role assignment, AI lifecycle. Phase 11 expands to org changes, team changes, billing changes, and security events.
+
+**Never store passwords, tokens, or secrets in audit log metadata.**
+
+## AI security
+
+- AI input hidden from API responses; persisted in DB — review retention for production
+- AI endpoints: 30 req/min throttle; requires `ai.use` permission
+- Async AI requires explicit `AI_ASYNC_DISPATCH=true` and running queue worker
+- See [ai-platform.md](./ai-platform.md)
+
 ## Production checklist
 
 - [ ] `APP_DEBUG=false`
@@ -83,7 +120,10 @@ Does **not** log request bodies, tokens, or passwords.
 - [ ] Restrict CORS to known frontend origins
 - [ ] Rotate demo/seeded credentials
 - [ ] Configure token expiration for mobile clients
+- [ ] Set `AI_ASYNC_DISPATCH` explicitly for each environment
 - [ ] Review rate limits under expected load
+- [ ] Enable `BILLING_ENABLED` only after entitlement testing
+- [ ] Never commit `.env` files
 
 ## Automated security tests
 
@@ -93,6 +133,11 @@ Does **not** log request bodies, tokens, or passwords.
 | `Phase7E2EWorkflowTest` | Cross-tenant 403 |
 | `Phase8SecurityTest` | Registration gate, task IDOR, role scoping, pagination, profile sanitization |
 | `Phase8ComprehensiveWorkflowTest` | Full workflow + logout invalidation |
+| `Phase10TenantSecurityTest` | Cross-tenant audit logs, AI requests |
+| `Phase10AsyncAiTest` | Async AI lifecycle, idempotency, tenant scope |
+| `Phase11TenantScopeTest` | Global tenant scope (planned) |
+| `Phase11RbacTest` | Enterprise role matrix (planned) |
+| `Phase11PrivilegeEscalationTest` | Privilege escalation prevention (planned) |
 
 ## Reporting vulnerabilities
 
