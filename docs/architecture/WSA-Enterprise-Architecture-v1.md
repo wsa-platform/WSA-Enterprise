@@ -385,14 +385,14 @@ See `docs/deployment.md` for production checklist. **Production gaps:** TLS, sec
 
 ## 19. Current limitations
 
-1. No application-level queue workers in default Docker Compose
-2. AI requests processed synchronously in HTTP cycle
-3. API responses mostly raw Eloquent JSON (envelope adoption incremental)
-4. No global Eloquent tenant scope (manual `organization_id` queries)
-5. Frontend API layer monolithic (`api.ts`); no generated OpenAPI client
-6. Flutter uses in-memory navigation (no deep links)
-7. Port documentation historically drifted (8080 vs 8081); Compose uses **8081**
-8. Update CRUD exists in API clients but not fully exposed in UI
+1. AI requests processed synchronously in HTTP cycle by default (`AI_ASYNC_DISPATCH=false`)
+2. API responses mostly raw Eloquent JSON (envelope adoption incremental)
+3. No global Eloquent tenant scope (manual `organization_id` queries)
+4. Frontend API layer monolithic (`api.ts`); no generated OpenAPI client
+5. Flutter uses in-memory navigation (no deep links)
+6. Update CRUD exists in API clients but not fully exposed in UI
+
+**Resolved in Phase 9 gap closure:** Docker Compose includes a dedicated `queue` worker; port documentation aligned on **8081** (staging) and **5173** (Vite dev).
 
 ---
 

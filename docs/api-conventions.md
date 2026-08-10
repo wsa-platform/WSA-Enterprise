@@ -105,6 +105,7 @@ Empty body for successful deletes and logout.
 |------|-------|
 | 200 | Successful GET/PUT/PATCH |
 | 201 | Successful POST (resource created) |
+| 202 | Accepted (async processing, e.g. AI when `AI_ASYNC_DISPATCH=true`) |
 | 204 | Successful DELETE/logout |
 | 401 | Unauthenticated |
 | 403 | Forbidden (permission or org membership) |
@@ -129,6 +130,13 @@ Empty body for successful deletes and logout.
 ## OpenAPI
 
 Machine-readable foundation: [`docs/openapi.yaml`](openapi.yaml)
+
+## Background jobs (Phase 9)
+
+- Default queue connection: `redis` (`QUEUE_CONNECTION=redis`)
+- Docker Compose runs a dedicated `queue` worker service
+- AI requests are synchronous by default; set `AI_ASYNC_DISPATCH=true` to return **202 Accepted** and process via `ProcessAiRequest`
+- Inspect failed jobs: `php artisan queue:failed` / `queue:retry`
 
 ## Audit logging
 
