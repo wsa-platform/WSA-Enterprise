@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:wsa_enterprise/api/api_client.dart';
+import 'package:wsa_enterprise/presentation/screens/notifications_screen.dart';
+import 'package:wsa_enterprise/presentation/screens/profile_screen.dart';
+import 'package:wsa_enterprise/presentation/screens/settings_screen.dart';
 import 'package:wsa_enterprise/screens/dashboard_screen.dart';
 import 'package:wsa_enterprise/screens/feature_screens.dart';
 import 'package:wsa_enterprise/screens/module_screens.dart';
@@ -15,6 +18,9 @@ enum AppModule {
   library,
   ai,
   business,
+  notifications,
+  profile,
+  settings,
 }
 
 class HomeScreen extends StatefulWidget {
@@ -66,6 +72,12 @@ class _HomeScreenState extends State<HomeScreen> {
         return 'AI Services';
       case AppModule.business:
         return 'Business';
+      case AppModule.notifications:
+        return 'Notifications';
+      case AppModule.profile:
+        return 'Profile';
+      case AppModule.settings:
+        return 'Settings';
     }
   }
 
@@ -90,6 +102,12 @@ class _HomeScreenState extends State<HomeScreen> {
         return AiScreen(key: key, client: widget.client);
       case AppModule.business:
         return BusinessScreen(key: key, client: widget.client);
+      case AppModule.notifications:
+        return NotificationsScreen(key: key, client: widget.client);
+      case AppModule.profile:
+        return ProfileScreen(key: key, client: widget.client);
+      case AppModule.settings:
+        return SettingsScreen(key: key, client: widget.client);
     }
   }
 
@@ -177,4 +195,7 @@ const _drawerItems = [
   _DrawerItem(AppModule.library, 'Library', Icons.menu_book_outlined),
   _DrawerItem(AppModule.ai, 'AI Services', Icons.psychology_outlined),
   _DrawerItem(AppModule.business, 'Business', Icons.storefront_outlined),
+  _DrawerItem(AppModule.notifications, 'Notifications', Icons.notifications_outlined),
+  _DrawerItem(AppModule.profile, 'Profile', Icons.account_circle_outlined),
+  _DrawerItem(AppModule.settings, 'Settings', Icons.settings_outlined),
 ];

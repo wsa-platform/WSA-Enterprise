@@ -17,6 +17,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('WSA Enterprise'), findsOneWidget);
     expect(find.text('Sign in'), findsOneWidget);
+    expect(find.text('admin@wsa.test'), findsNothing);
+    expect(find.text('password'), findsNothing);
   });
 
   testWidgets('AsyncState shows empty message', (WidgetTester tester) async {

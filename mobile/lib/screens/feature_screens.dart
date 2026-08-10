@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wsa_enterprise/api/api_client.dart';
+import 'package:wsa_enterprise/data/models/models.dart';
+import 'package:wsa_enterprise/domain/use_cases/poll_ai_request_use_case.dart';
 import 'package:wsa_enterprise/screens/module_screens.dart';
 import 'package:wsa_enterprise/widgets/async_state.dart';
 import 'package:wsa_enterprise/widgets/record_form.dart';
@@ -204,6 +206,8 @@ class _AiScreenState extends State<AiScreen> {
   String? error;
   bool loading = false;
   int reloadToken = 0;
+  ApiAiRequest? latestRequest;
+  String? pollMessage;
 
   @override
   void initState() {
@@ -226,11 +230,25 @@ class _AiScreenState extends State<AiScreen> {
   }
 
   Future<void> submitRequest(Map<String, String> values) async {
-    await widget.client.createAiRequest(
+    setState(() {
+      pollMessage = 'Submitting AI request…';
+      latestRequest = null;
+    });
+
+    final created = await widget.client.createAiRequest(
       requestType: 'library_qa',
       input: {'query': values['question'] ?? ''},
     );
-    setState(() => reloadToken++);
+
+    final poller = PollAiRequestUseCase(aiApi: widget.client.ai);
+    final completed = await poller.execute(created['id'] as int);
+
+    if (!mounted) return;
+    setState(() {
+      latestRequest = completed;
+      pollMessage = 'Latest request ${completed.status}.';
+      reloadToken++;
+    });
   }
 
   @override
@@ -252,10 +270,20 @@ class _AiScreenState extends State<AiScreen> {
           title: 'Ask the agricultural library',
           submitLabel: 'Submit AI request',
           fields: const [
-            FormFieldConfig(name: 'question', label: 'Question', required: true, initialValue: 'ما أفضل ممارسة للري؟'),
+            FormFieldConfig(name: 'question', label: 'Question', required: true),
           ],
           onSubmit: submitRequest,
         ),
+        if (pollMessage != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(pollMessage!, style: const TextStyle(fontSize: 12)),
+          ),
+        if (latestRequest != null)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text('Response status: ${latestRequest!.status}'),
+          ),
         Expanded(
           child: ModuleListScreen(
             key: ValueKey('ai-$reloadToken-${widget.client.organizationId}'),
