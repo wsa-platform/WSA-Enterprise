@@ -85,6 +85,31 @@ services:
     restart: unless-stopped
     networks: [wsa]
 
+  backend-test:
+    profiles: [test]
+    build: ./backend
+    environment:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: wsa_enterprise_test
+      DB_USERNAME: wsa
+      DB_PASSWORD: secret
+      FORBIDDEN_TEST_DATABASES: wsa_enterprise
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/var/www/html
+      - backend_vendor:/var/www/html/vendor
+    command: php artisan test --no-ansi
+    networks: [wsa]
+
 volumes:
   backend_vendor:
   postgres_data:
