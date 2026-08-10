@@ -67,7 +67,7 @@ class Phase9QueueFoundationTest extends TestCase
         $record = app(\App\Services\Ai\AiService::class)->dispatchForProcessing(
             $organization->id,
             'library_summary',
-            ['text' => 'Sample crop advisory note.'],
+            ['content' => 'Sample crop advisory note.'],
             $user->id,
         );
 
