@@ -28,7 +28,7 @@ export const getRoles = (token: string, organizationId?: number) =>
 export const getPermissions = (token: string, organizationId?: number) =>
   request<Permission[] | PaginatedResponse<Permission>>('/permissions', {}, token, organizationId)
 
-export const getAuditLogs = (
+export const getAuditLogs = async (
   token: string,
   organizationId?: number,
   query: Record<string, string | number> = {},
@@ -36,10 +36,26 @@ export const getAuditLogs = (
   const params = new URLSearchParams()
   Object.entries(query).forEach(([key, value]) => params.set(key, String(value)))
 
-  return request<EnvelopeResponse<AuditLogEntry[]> | PaginatedResponse<AuditLogEntry>>(
+  const payload = await request<
+    EnvelopeResponse<AuditLogEntry[]>
+    | PaginatedResponse<AuditLogEntry>
+    | { data: AuditLogEntry[]; meta: { current_page: number; last_page: number; total: number } }
+  >(
     `/audit-logs?${params.toString()}`,
     {},
     token,
     organizationId,
-  ).then(unwrapEnvelope)
+  )
+
+  if (payload && typeof payload === 'object' && 'meta' in payload && 'data' in payload) {
+    const meta = payload.meta as { current_page: number; last_page: number; total: number }
+    return {
+      data: payload.data as AuditLogEntry[],
+      current_page: meta.current_page,
+      last_page: meta.last_page,
+      total: meta.total,
+    } satisfies PaginatedResponse<AuditLogEntry>
+  }
+
+  return unwrapEnvelope(payload)
 }

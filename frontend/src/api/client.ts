@@ -3,12 +3,22 @@ import type { EnvelopeResponse, PaginatedResponse } from './types'
 export class ApiError extends Error {
   status: number
   errors?: Record<string, string[]>
+  requestId?: string
+  quota?: { limit: number; used: number }
 
-  constructor(message: string, status: number, errors?: Record<string, string[]>) {
+  constructor(
+    message: string,
+    status: number,
+    errors?: Record<string, string[]>,
+    requestId?: string,
+    quota?: { limit: number; used: number },
+  ) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.errors = errors
+    this.requestId = requestId
+    this.quota = quota
   }
 
   get isUnauthorized() {
@@ -17,6 +27,14 @@ export class ApiError extends Error {
 
   get isForbidden() {
     return this.status === 403
+  }
+
+  get isNotFound() {
+    return this.status === 404
+  }
+
+  get isRateLimited() {
+    return this.status === 429
   }
 }
 
@@ -56,7 +74,9 @@ export async function request<T>(
     const payload = await response.json().catch(() => null) as {
       message?: string
       errors?: Record<string, string[]>
+      quota?: { limit: number; used: number }
     } | null
+    const requestId = response.headers.get('X-Request-Id') ?? undefined
 
     if (response.status === 401 && token) {
       unauthorizedHandler?.()
@@ -70,10 +90,18 @@ export async function request<T>(
         details.join(' · ') || payload.message || 'Validation failed.',
         response.status,
         payload.errors,
+        requestId,
+        payload.quota,
       )
     }
 
-    throw new ApiError(payload?.message ?? 'Unable to complete the request.', response.status)
+    throw new ApiError(
+      payload?.message ?? 'Unable to complete the request.',
+      response.status,
+      undefined,
+      requestId,
+      payload?.quota,
+    )
   }
 
   if (response.status === 204) {

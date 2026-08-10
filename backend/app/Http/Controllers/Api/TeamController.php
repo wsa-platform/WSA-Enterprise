@@ -28,6 +28,14 @@ class TeamController extends Controller
         );
     }
 
+    public function show(Request $request, Team $team): JsonResponse
+    {
+        $this->authorizePermission($request, 'access.manage');
+        abort_unless($team->organization_id === $this->organization($request), 404);
+
+        return response()->json($team->load(['members:id,name,email']));
+    }
+
     public function store(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'access.manage');

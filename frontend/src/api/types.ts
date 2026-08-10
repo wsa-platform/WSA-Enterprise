@@ -56,6 +56,15 @@ export type AiProviderInfo = {
   decision_support_notice: string
   supported_request_types?: string[]
   async_dispatch?: boolean
+  quota?: AiQuotaSummary
+}
+
+export type AiQuotaSummary = {
+  enabled: boolean
+  limit: number | null
+  used: number
+  remaining: number | null
+  period_start: string
 }
 
 export type AiRequestRecord = {
@@ -64,10 +73,11 @@ export type AiRequestRecord = {
   user_id: number | null
   request_type: string
   provider: string
-  status: 'pending' | 'processing' | 'completed' | 'failed'
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
   latency_ms: number | null
   tokens_used: number | null
   error_message: string | null
+  cancelled_at?: string | null
   created_at: string
   updated_at: string
   output?: Record<string, unknown>
@@ -88,7 +98,55 @@ export type AuditLogEntry = {
   user?: User
 }
 
-export type Role = { id: number; name: string; description?: string | null }
+export type Role = { id: number; name: string; slug?: string | null; description?: string | null; permissions?: Permission[] }
 export type Permission = { id: number; name: string; description?: string | null }
 
 export type UserWithRoles = User & { roles?: Role[] }
+
+export type MeContext = {
+  user: User
+  organization_id: number
+  membership_role: string | null
+  roles: Role[]
+  permissions: string[]
+}
+
+export type AccessSummary = {
+  organization_id: number
+  users_count: number
+  teams_count: number | null
+  roles_count: number | null
+  audit_events_24h: number | null
+  ai_requests: {
+    today: number
+    pending: number
+    processing: number
+    completed: number
+    failed: number
+    cancelled: number
+  } | null
+  quota: AiQuotaSummary | null
+  system: { api: string; queue: string }
+  recent_audit?: AuditLogEntry[]
+  recent_ai?: AiRequestRecord[]
+}
+
+export type TeamSummary = {
+  id: number
+  name: string
+  slug: string
+  description?: string | null
+  members_count?: number
+}
+
+export type TeamDetail = TeamSummary & {
+  members: Array<User & { pivot?: { role?: string } }>
+}
+
+export type AppNotification = {
+  id: number
+  title: string
+  body?: string | null
+  read_at?: string | null
+  created_at: string
+}
