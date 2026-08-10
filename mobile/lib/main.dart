@@ -87,8 +87,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final email = TextEditingController(text: 'admin@wsa.test');
-  final password = TextEditingController(text: 'password');
+  final email = TextEditingController();
+  final password = TextEditingController();
   bool loading = false;
   String? error;
 
@@ -156,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
                 FilledButton(onPressed: loading ? null : signIn, child: Text(loading ? 'Signing in…' : 'Sign in')),
                 const SizedBox(height: 12),
-                const Text('Demo: admin@wsa.test / password', style: TextStyle(fontSize: 12)),
+                const Text('Staging demo credentials are documented in README.md.', style: TextStyle(fontSize: 12)),
               ],
             ),
           ),
