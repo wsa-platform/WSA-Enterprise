@@ -19,6 +19,7 @@
 | M7 | Notifications + audit + observability | Queue pipeline + audit expansion | M2, M3 |
 | M8 | API + testing + CI/CD + production hardening | OpenAPI, healthchecks, deploy docs | All |
 | M9 | Final integration + production readiness | Cross-module E2E, security review, final docs | M8 ✓ |
+| M10 | API client authentication (M2M) | Bearer credentials, scoped read access | M8 ✓, M9 ✓ |
 
 **Each milestone must:** compile, pass tests, avoid regressions, commit separately with clear message.
 
@@ -234,6 +235,24 @@
 - [x] Refresh `production-readiness.md` and `e2e-testing.md`
 
 **Commit message example:** `Complete Phase 11 final integration and production readiness verification.`
+
+---
+
+## Milestone 10 — API Client Authentication (M2M) ✅
+
+### Backend
+
+- [x] Bearer `{client_id}:{client_secret}` authentication for organization API clients
+- [x] HTTP Basic credentials supported for compatibility
+- [x] Scope-to-permission mapping (`analytics.read`, `ai.read`, `billing.read`)
+- [x] Allowlisted read-only endpoints for API clients
+- [x] Organization fixed to registered client; foreign `X-Organization-Id` rejected
+
+### Tests
+
+- [x] `Phase11M10ApiClientAuthTest` — auth, scopes, revocation, route restrictions, Sanctum regression
+
+**Commit message example:** `Add organization API client bearer authentication.`
 
 ---
 

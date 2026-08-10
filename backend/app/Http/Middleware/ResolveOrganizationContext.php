@@ -24,6 +24,14 @@ class ResolveOrganizationContext
     {
         $user = $request->user();
 
+        if ($request->attributes->get('auth_via') === 'api_client') {
+            if ($request->attributes->has('organization_id')) {
+                $this->tenant->setOrganizationId((int) $request->attributes->get('organization_id'));
+            }
+
+            return $next($request);
+        }
+
         if ($user !== null && ! $request->attributes->has('organization_id')) {
             $header = $request->header('X-Organization-Id');
 
