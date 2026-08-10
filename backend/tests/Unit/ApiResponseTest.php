@@ -35,4 +35,12 @@ class ApiResponseTest extends TestCase
         $this->assertSame(1, $payload['meta']['total']);
         $this->assertSame(1, $payload['meta']['current_page']);
     }
+
+    public function test_error_helpers_return_expected_status_codes(): void
+    {
+        $this->assertSame(401, ApiResponse::unauthorized()->getStatusCode());
+        $this->assertSame(403, ApiResponse::forbidden()->getStatusCode());
+        $this->assertSame(404, ApiResponse::notFound()->getStatusCode());
+        $this->assertSame(422, ApiResponse::validationError('Invalid', ['email' => ['Required']])->getStatusCode());
+    }
 }

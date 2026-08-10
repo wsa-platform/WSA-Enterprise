@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
+use App\Services\Audit\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,6 +15,8 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
+    public function __construct(private AuditService $auditService) {}
+
     public function register(RegisterRequest $request): JsonResponse
     {
         abort_unless(config('app.allow_registration'), 403, 'Registration is disabled.');
@@ -26,7 +29,15 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        return $this->authenticatedResponse($user, $data['device_name'] ?? 'web');
+        $this->auditService->record(
+            action: 'auth.register',
+            userId: $user->id,
+            auditable: $user,
+            newValues: ['email' => $user->email, 'name' => $user->name],
+            request: $request,
+        );
+
+        return $this->authenticatedResponse($user, $data['device_name'] ?? 'web', $request);
     }
 
     public function login(LoginRequest $request): JsonResponse
@@ -35,15 +46,40 @@ class AuthController extends Controller
         $user = User::where('email', $data['email'])->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
+            $this->auditService->record(
+                action: 'auth.login_failed',
+                newValues: ['email' => $data['email']],
+                request: $request,
+            );
+
             throw ValidationException::withMessages(['email' => ['The provided credentials are incorrect.']]);
         }
 
-        return $this->authenticatedResponse($user, $data['device_name'] ?? 'web');
+        $this->auditService->record(
+            action: 'auth.login',
+            userId: $user->id,
+            auditable: $user,
+            newValues: ['email' => $user->email, 'device_name' => $data['device_name'] ?? 'web'],
+            request: $request,
+        );
+
+        return $this->authenticatedResponse($user, $data['device_name'] ?? 'web', $request);
     }
 
     public function logout(Request $request): JsonResponse
     {
-        $token = $request->user()?->currentAccessToken();
+        $user = $request->user();
+
+        if ($user !== null) {
+            $this->auditService->record(
+                action: 'auth.logout',
+                userId: $user->id,
+                auditable: $user,
+                request: $request,
+            );
+        }
+
+        $token = $user?->currentAccessToken();
 
         if ($token instanceof PersonalAccessToken) {
             $token->delete();
@@ -54,7 +90,7 @@ class AuthController extends Controller
         return response()->json(status: 204);
     }
 
-    private function authenticatedResponse(User $user, string $deviceName): JsonResponse
+    private function authenticatedResponse(User $user, string $deviceName, Request $request): JsonResponse
     {
         return response()->json([
             'token' => $user->createToken($deviceName)->plainTextToken,

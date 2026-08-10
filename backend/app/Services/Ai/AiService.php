@@ -41,12 +41,22 @@ class AiService
             'input' => $validatedInput,
         ]);
 
+        return $this->processRecord($record);
+    }
+
+    /** Process an existing pending AI request (used by queued jobs). */
+    public function processRecord(AiRequest $record): AiRequest
+    {
+        if ($record->status !== 'processing') {
+            return $record;
+        }
+
         $started = microtime(true);
         $timeout = max(1, (int) config('ai.timeout', 30));
 
         try {
-            $output = $this->callWithTimeout($requestType, $validatedInput, $timeout);
-            $normalized = $this->normalizer->normalize($requestType, $output);
+            $output = $this->callWithTimeout($record->request_type, $record->input ?? [], $timeout);
+            $normalized = $this->normalizer->normalize($record->request_type, $output);
 
             $record->update([
                 'status' => 'completed',
@@ -57,8 +67,8 @@ class AiService
         } catch (\Throwable $exception) {
             Log::warning('AI provider failed', [
                 'provider' => $this->provider->name(),
-                'request_type' => $requestType,
-                'organization_id' => $organizationId,
+                'request_type' => $record->request_type,
+                'organization_id' => $record->organization_id,
                 'message' => $exception->getMessage(),
             ]);
 
