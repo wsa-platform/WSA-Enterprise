@@ -8,6 +8,7 @@
 **/dist/
 **/.dart_tool/
 **/build/
+certbot/
 
 # Editors and OS
 .idea/

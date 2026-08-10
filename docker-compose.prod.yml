@@ -1,37 +1,81 @@
-# Production-oriented Compose override
+# Production Compose override — single Docker host with TLS (M12.1)
 #
-# Usage (does not replace the default development workflow):
+# Prerequisites:
+#   1. Copy .env.example to .env and set DOMAIN, CERTBOT_EMAIL, POSTGRES_PASSWORD
+#   2. Copy backend/.env.example to backend/.env with production values (APP_URL=https://...)
+#   3. Run ./scripts/init-letsencrypt.sh once to obtain certificates
+#
+# Usage:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
-#
-# This file removes bind mounts, enables restart policies, and applies stricter
-# resource defaults suitable for staging/production-like deployments.
 
 services:
   backend:
     restart: unless-stopped
-    volumes: !override
-      - backend_vendor:/var/www/html/vendor
+    volumes: !override []
 
   queue:
     restart: unless-stopped
-    volumes: !override
-      - backend_vendor:/var/www/html/vendor
+    volumes: !override []
 
   scheduler:
     restart: unless-stopped
-    volumes: !override
-      - backend_vendor:/var/www/html/vendor
+    volumes: !override []
 
   frontend:
     restart: unless-stopped
+    build:
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://${DOMAIN}/api/v1}
 
   nginx:
     restart: unless-stopped
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.prod
+    ports: !override
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env for production TLS}
     volumes: !override
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot_conf:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSk -H \"Host: $$DOMAIN\" https://127.0.0.1/api/v1/health | grep -q ok"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
 
   postgres:
     restart: unless-stopped
+    ports: !override []
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wsa_enterprise}
+      POSTGRES_USER: ${POSTGRES_USER:-wsa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
 
   redis:
     restart: unless-stopped
+    ports: !override []
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: /bin/sh
+    command: >
+      -c "trap exit TERM;
+          while :; do
+            certbot renew --webroot -w /var/www/certbot --quiet;
+            sleep 12h & wait $${!};
+          done"
+    depends_on:
+      nginx:
+        condition: service_started
+
+volumes:
+  certbot_conf:
+  certbot_www:
