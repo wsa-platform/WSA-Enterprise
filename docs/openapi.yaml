@@ -895,9 +895,9 @@ paths:
           application/json:
             schema:
               type: object
-              required: [plan_id]
+              required: [plan_slug]
               properties:
-                plan_id: { type: integer }
+                plan_slug: { type: string, example: pro }
       responses:
         '200': { description: Plan assigned }
         '403': { $ref: '#/components/responses/Forbidden' }

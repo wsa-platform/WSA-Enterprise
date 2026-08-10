@@ -18,6 +18,7 @@
 | M6 | Billing + entitlements | Domain + read APIs | M2 |
 | M7 | Notifications + audit + observability | Queue pipeline + audit expansion | M2, M3 |
 | M8 | API + testing + CI/CD + production hardening | OpenAPI, healthchecks, deploy docs | All |
+| M9 | Final integration + production readiness | Cross-module E2E, security review, final docs | M8 ✓ |
 
 **Each milestone must:** compile, pass tests, avoid regressions, commit separately with clear message.
 
@@ -211,6 +212,28 @@
 - [ ] Final Phase 11 verification report
 
 **Commit message example:** `Harden CI/CD, expand OpenAPI, and add production healthchecks.`
+
+---
+
+## Milestone 9 — Final Integration + Production Readiness ✅
+
+### Integration
+
+- [x] Cross-module workflow test (auth → billing → AI → notifications → audit → analytics → API clients)
+- [x] Analytics foreign-org isolation regression
+- [x] Billing entitlement audit regression
+
+### API / OpenAPI
+
+- [x] OpenAPI ↔ route parity test for documented paths
+- [x] Align billing plan assignment schema (`plan_slug`)
+
+### Documentation
+
+- [x] `docs/phase-11-final-verification.md`
+- [x] Refresh `production-readiness.md` and `e2e-testing.md`
+
+**Commit message example:** `Complete Phase 11 final integration and production readiness verification.`
 
 ---
 

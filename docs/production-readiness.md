@@ -1,7 +1,6 @@
 # WSA-Enterprise Production Readiness Report
 
-**Date:** 2026-08-09  
-**Scope:** Phase 8 production hardening (branch `phase-8`, baseline Phase 7 E–F–G)
+**Last updated:** Phase 11 M9 (2026-08-10)
 
 ## Executive summary
 
@@ -15,7 +14,7 @@ WSA-Enterprise is suitable for **controlled demo/staging deployment** with the D
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Docker Compose | Ready | Postgres, Redis, Nginx, backend, frontend |
+| Docker Compose | Ready | Postgres, Redis, Nginx, backend, frontend, **queue**, **scheduler** |
 | Laravel `.env` | Review required | Copy `.env.example`; set `APP_ENV=production`, `APP_DEBUG=false`, strong `APP_KEY` |
 | Database | Ready | PostgreSQL 16; migrations + seeders for demo |
 | Redis | Ready | Cache/sessions/queues configured |
@@ -43,7 +42,7 @@ WSA-Enterprise is suitable for **controlled demo/staging deployment** with the D
 | API logging | Structured | Method/path/status/user/org — no bodies |
 | Authorization | PermissionService + policies | Pivot admin → `*`; explicit roles replace baseline |
 | Tenant isolation | `X-Organization-Id` + FK validation | Cross-tenant header → 403; tested |
-| AI endpoints | Throttled (`30/min`) | Mock provider by default |
+| AI endpoints | Throttled per organization | `ai-org` limiter; quota + billing gating |
 | CORS | Laravel default | Review `config/cors.php` for production origins |
 | Password hashing | bcrypt | Login response excludes hash |
 | API errors | JSON `{ message, errors? }` | No stack traces in API responses (Phase 6 handlers) |
@@ -94,7 +93,7 @@ Phase 6 added performance indexes on high-traffic tables (diagnosis, library, AI
 
 - [ ] Centralized log aggregation (CloudWatch, Datadog, etc.)
 - [ ] Alerting on 5xx rate and queue failures
-- [ ] Audit log for `access.manage` mutations (not implemented)
+- [x] Audit log for `access.manage` mutations (Phase 11 — `Phase11AuditCoverageTest`)
 
 ---
 
