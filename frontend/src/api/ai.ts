@@ -1,11 +1,22 @@
 import { request, requestWithRetry } from './client'
-import type { AiProviderInfo, AiRequestRecord, PaginatedResponse } from './types'
+import type { AiProviderInfo, AiQuotaSummary, AiRequestRecord, PaginatedResponse } from './types'
 
 export const getAiProvider = (token: string, organizationId?: number) =>
   request<AiProviderInfo>('/ai/provider', {}, token, organizationId)
 
-export const listAiRequests = (token: string, organizationId?: number) =>
-  request<PaginatedResponse<AiRequestRecord>>('/ai/requests', {}, token, organizationId)
+export const getAiUsage = (token: string, organizationId?: number) =>
+  request<AiQuotaSummary>('/ai/usage', {}, token, organizationId)
+
+export const listAiRequests = (
+  token: string,
+  organizationId?: number,
+  query: Record<string, string | number> = {},
+) => {
+  const params = new URLSearchParams()
+  Object.entries(query).forEach(([key, value]) => params.set(key, String(value)))
+  const suffix = params.toString() ? `?${params.toString()}` : ''
+  return request<PaginatedResponse<AiRequestRecord>>(`/ai/requests${suffix}`, {}, token, organizationId)
+}
 
 export const getAiRequest = (token: string, id: number, organizationId?: number) =>
   request<AiRequestRecord>(`/ai/requests/${id}`, {}, token, organizationId)
@@ -26,12 +37,12 @@ export async function pollAiRequest(
   token: string,
   id: number,
   organizationId?: number,
-  attempts = 10,
-  delayMs = 500,
+  attempts = 20,
+  delayMs = 750,
 ): Promise<AiRequestRecord> {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const record = await getAiRequest(token, id, organizationId)
-    if (record.status === 'completed' || record.status === 'failed') {
+    if (['completed', 'failed', 'cancelled'].includes(record.status)) {
       return record
     }
     await new Promise((resolve) => setTimeout(resolve, delayMs))
@@ -39,3 +50,6 @@ export async function pollAiRequest(
 
   return getAiRequest(token, id, organizationId)
 }
+
+export const cancelAiRequest = (token: string, id: number, organizationId?: number) =>
+  request<AiRequestRecord>(`/ai/requests/${id}/cancel`, { method: 'POST' }, token, organizationId)

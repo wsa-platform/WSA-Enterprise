@@ -1,23 +1,118 @@
-import type { ReactNode } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { useState, type ReactNode } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { usePermissions } from '../context/PermissionContext'
 import { logout } from '../api'
 import { OrgSwitcher } from './OrgSwitcher'
+import { Breadcrumbs, type BreadcrumbItem } from './PageHeader'
 
-const navItems = [
-  { to: '/', label: 'Dashboard', end: true },
-  { to: '/farms', label: 'Farms' },
-  { to: '/crops', label: 'Crops' },
-  { to: '/soil', label: 'Soil' },
-  { to: '/diagnosis', label: 'Diagnosis' },
-  { to: '/training', label: 'Training' },
-  { to: '/library', label: 'Library' },
-  { to: '/ai', label: 'AI Services' },
-  { to: '/business', label: 'Business' },
+type NavItem = {
+  to: string
+  label: string
+  end?: boolean
+  permission?: string
+  anyPermission?: string[]
+}
+
+const navSections: Array<{ title: string; items: NavItem[] }> = [
+  {
+    title: 'Overview',
+    items: [
+      { to: '/', label: 'Dashboard', end: true, permission: 'platform.view' },
+      { to: '/notifications', label: 'Notifications', permission: 'platform.view' },
+    ],
+  },
+  {
+    title: 'Enterprise',
+    items: [
+      { to: '/organization', label: 'Organization', permission: 'platform.view' },
+      { to: '/admin/users', label: 'Users', permission: 'access.manage' },
+      { to: '/admin/teams', label: 'Teams', permission: 'access.manage' },
+      { to: '/admin/roles', label: 'Roles & Permissions', permission: 'access.manage' },
+      { to: '/admin/audit', label: 'Audit Logs', permission: 'access.manage' },
+    ],
+  },
+  {
+    title: 'AI',
+    items: [
+      { to: '/ai/workspace', label: 'AI Workspace', permission: 'ai.use' },
+    ],
+  },
+  {
+    title: 'Modules',
+    items: [
+      { to: '/farms', label: 'Farms', permission: 'farm.view' },
+      { to: '/crops', label: 'Crops', permission: 'crop.view' },
+      { to: '/soil', label: 'Soil', permission: 'soil.view' },
+      { to: '/diagnosis', label: 'Diagnosis', permission: 'diagnosis.view' },
+      { to: '/training', label: 'Training', permission: 'training.view' },
+      { to: '/library', label: 'Library', permission: 'library.view' },
+      { to: '/business', label: 'Business', permission: 'business.view' },
+    ],
+  },
+  {
+    title: 'Account',
+    items: [
+      { to: '/settings', label: 'Settings', permission: 'platform.view' },
+    ],
+  },
 ]
 
-export function AppShell({ workspaceName, onRefresh }: { workspaceName: string; onRefresh?: () => void }) {
+function useVisibleNav() {
+  const { can, loading } = usePermissions()
+
+  if (loading) {
+    return navSections.map((section) => ({ ...section, items: section.items.filter((item) => !item.permission) }))
+  }
+
+  return navSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => {
+        if (item.anyPermission?.some((permission) => can(permission))) return true
+        if (!item.permission) return true
+        return can(item.permission)
+      }),
+    }))
+    .filter((section) => section.items.length > 0)
+}
+
+function breadcrumbItems(pathname: string): BreadcrumbItem[] {
+  const map: Record<string, BreadcrumbItem[]> = {
+    '/': [{ label: 'Dashboard' }],
+    '/organization': [{ label: 'Dashboard', to: '/' }, { label: 'Organization' }],
+    '/admin/users': [{ label: 'Dashboard', to: '/' }, { label: 'Users' }],
+    '/admin/teams': [{ label: 'Dashboard', to: '/' }, { label: 'Teams' }],
+    '/admin/roles': [{ label: 'Dashboard', to: '/' }, { label: 'Roles & Permissions' }],
+    '/admin/audit': [{ label: 'Dashboard', to: '/' }, { label: 'Audit Logs' }],
+    '/ai/workspace': [{ label: 'Dashboard', to: '/' }, { label: 'AI Workspace' }],
+    '/notifications': [{ label: 'Dashboard', to: '/' }, { label: 'Notifications' }],
+    '/settings': [{ label: 'Dashboard', to: '/' }, { label: 'Settings' }],
+  }
+
+  if (pathname.startsWith('/ai/requests/')) {
+    return [{ label: 'Dashboard', to: '/' }, { label: 'AI Workspace', to: '/ai/workspace' }, { label: 'Request detail' }]
+  }
+  if (pathname.startsWith('/admin/teams/')) {
+    return [{ label: 'Dashboard', to: '/' }, { label: 'Teams', to: '/admin/teams' }, { label: 'Team detail' }]
+  }
+
+  return map[pathname] ?? [{ label: 'Dashboard', to: '/' }, { label: pathname.replace('/', '') || 'Page' }]
+}
+
+export function AppShell({
+  workspaceName,
+  onRefresh,
+}: {
+  workspaceName: string
+  onRefresh?: () => void
+}) {
   const { user, token, clearSession } = useAuth()
+  const { context, loading: permissionsLoading } = usePermissions()
+  const location = useLocation()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const sections = useVisibleNav()
+  const roleLabel = context?.roles[0]?.name ?? context?.membership_role ?? 'Member'
 
   const handleLogout = async () => {
     if (token) await logout(token).catch(() => undefined)
@@ -26,28 +121,44 @@ export function AppShell({ workspaceName, onRefresh }: { workspaceName: string; 
 
   return (
     <div className="app-shell">
-      <aside>
+      <aside className={mobileOpen ? 'mobile-open' : undefined}>
         <div className="brand"><span>W</span> WSA</div>
-        <nav>
-          {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => isActive ? 'active' : undefined}>
-              {item.label}
-            </NavLink>
+        <nav aria-label="Primary">
+          {sections.map((section) => (
+            <div className="nav-section" key={section.title}>
+              <p className="nav-section-title">{section.title}</p>
+              {section.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) => isActive ? 'active' : undefined}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="account">
           <strong>{user?.name}</strong>
           <span>{workspaceName}</span>
+          <span className="role-chip">{permissionsLoading ? 'Loading role…' : roleLabel}</span>
           <button className="link-button" type="button" onClick={() => void handleLogout()}>Sign out</button>
         </div>
       </aside>
       <main className="dashboard">
-        <header>
+        <header className="shell-header">
           <div>
+            <Breadcrumbs items={breadcrumbItems(location.pathname)} />
             <p className="eyebrow">WORKSPACE</p>
             <h1>{workspaceName}</h1>
           </div>
           <div className="header-actions">
+            <button type="button" className="mobile-toggle" onClick={() => setMobileOpen((open) => !open)} aria-label="Toggle navigation">
+              Menu
+            </button>
             <OrgSwitcher />
             {onRefresh && <button className="refresh" type="button" onClick={onRefresh}>Refresh</button>}
           </div>
