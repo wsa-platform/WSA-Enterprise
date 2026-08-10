@@ -56,6 +56,15 @@ class AccessController extends Controller
         $user = User::create([...$data, 'password' => Hash::make($data['password'])]);
         $user->organizations()->attach($organization, ['role' => 'member']);
 
+        app(AuditService::class)->record(
+            action: 'user.created',
+            organizationId: $organization,
+            userId: $request->user()->id,
+            auditable: $user,
+            newValues: ['email' => $user->email, 'name' => $user->name],
+            request: $request,
+        );
+
         return response()->json($user->only(['id', 'name', 'email']), 201);
     }
 

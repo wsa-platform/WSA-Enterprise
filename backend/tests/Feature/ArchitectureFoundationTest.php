@@ -100,7 +100,7 @@ class ArchitectureFoundationTest extends TestCase
 
         Sanctum::actingAs($userA);
 
-        $response = $this->getJson('/api/v1/audit-logs', [
+        $response = $this->getJson('/api/v1/audit-logs?action=updated', [
             'X-Organization-Id' => (string) $organizationA->id,
         ]);
 
