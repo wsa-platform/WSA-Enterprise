@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Audit\AuditService;
+use App\Services\Authorization\PermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -106,6 +108,17 @@ class AccessController extends Controller
         ]);
         $role = Role::where('organization_id', $organization)->findOrFail($data['role_id']);
         DB::table('role_user')->updateOrInsert(['role_id' => $role->id, 'user_id' => $user->id, 'organization_id' => $organization]);
+
+        app(PermissionService::class)->forget($user, $organization);
+
+        app(AuditService::class)->record(
+            action: 'role.assigned',
+            organizationId: $organization,
+            userId: $request->user()->id,
+            auditable: $user,
+            newValues: ['role_id' => $role->id, 'role_name' => $role->name],
+            request: $request,
+        );
 
         return response()->json([
             ...$user->only(['id', 'name', 'email']),
