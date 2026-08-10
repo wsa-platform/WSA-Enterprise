@@ -83,6 +83,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(AgriculturalSeeder::class);
         $this->call(Phase5Seeder::class);
+        $this->call(BillingSeeder::class);
         $this->call(AccessSeeder::class);
     }
 }

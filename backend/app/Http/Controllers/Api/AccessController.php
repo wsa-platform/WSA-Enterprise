@@ -54,6 +54,7 @@ class AccessController extends Controller
     {
         $this->authorizePermission($request, 'access.manage');
         $organization = $this->organization($request);
+        app(\App\Services\Billing\EntitlementService::class)->assertUserCapacity($organization, $request->user()->id);
         $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'email' => ['required', 'email', 'unique:users,email'], 'password' => ['required', 'min:8']]);
         $user = User::create([...$data, 'password' => Hash::make($data['password'])]);
         $user->organizations()->attach($organization, ['role' => 'member']);

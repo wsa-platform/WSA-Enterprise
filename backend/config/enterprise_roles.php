@@ -11,6 +11,7 @@ return [
 
     'manager' => [
         'platform.view',
+        'billing.view',
         'farm.view', 'farm.manage',
         'crop.view', 'crop.manage',
         'soil.view', 'soil.manage',
@@ -23,6 +24,7 @@ return [
 
     'member' => [
         'platform.view',
+        'billing.view',
         'farm.view', 'farm.manage',
         'crop.view', 'crop.manage',
         'soil.view', 'soil.manage',

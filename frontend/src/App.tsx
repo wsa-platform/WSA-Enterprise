@@ -13,6 +13,7 @@ import { TrainingPage } from './pages/TrainingPage'
 import { LibraryPage } from './pages/LibraryPage'
 import { AiWorkspacePage } from './pages/AiWorkspacePage'
 import { AiRequestDetailPage } from './pages/AiRequestDetailPage'
+import { BillingPage } from './pages/BillingPage'
 import { OrganizationPage } from './pages/OrganizationPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { NotificationsPage } from './pages/NotificationsPage'
@@ -60,6 +61,7 @@ function AppRoutes() {
       <Route element={<ProtectedShell />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/organization" element={<OrganizationPage />} />
+        <Route path="/billing" element={<BillingPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/admin/users" element={<UsersPage />} />

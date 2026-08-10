@@ -1,25 +1,26 @@
 # Billing
 
-**Last updated:** Phase 11 (2026-08-10)  
-**Status:** Design — domain foundation; no payment provider integrated
+**Last updated:** Phase 11 M5 (2026-08-10)  
+**Status:** Foundation implemented — mock provider only; no live payment integration
 
 ## Overview
 
-Phase 11 introduces a **provider-independent billing domain** that models plans, subscriptions, usage, and entitlements. This enables feature gating and usage limits without coupling to Stripe or any specific payment processor.
+Phase 11 M5 introduces a **provider-independent billing domain** that models plans, subscriptions, usage, invoices, and entitlements. This enables feature gating and usage limits without coupling to Stripe or any specific payment processor.
 
-**Phase 11 scope:** Domain models, migrations, read APIs, entitlement checks.  
-**Out of scope:** Live payment processing, webhooks, invoicing.
+**M5 scope:** Domain models, migrations, REST APIs, entitlement checks, dashboard UI, mock provider.  
+**Out of scope:** Live payment processing, webhooks, Stripe credentials.
 
 ---
 
 ## Domain Model
 
 ```
-Plan
+Plan (global catalog)
   └── PlanFeature (feature_key, limit_value)
-        └── Subscription (organization_id, plan_id, status)
-              └── Entitlement (resolved feature access)
-                    └── UsageRecord (metered consumption)
+        └── BillingAccount (organization)
+              └── Subscription (organization_id, plan_id, status)
+                    └── BillingInvoice → BillingPayment
+                          └── UsageRecord (existing AI metering)
 ```
 
 ---
@@ -65,11 +66,12 @@ Resolved access for an organization (computed from subscription + plan features)
 ```php
 EntitlementService::canUseFeature($org, 'ai.requests'): bool
 EntitlementService::getLimit($org, 'ai.requests'): ?int
+EntitlementService::assertSubscriptionActive($org): void
 ```
 
 ### UsageRecord
 
-Metered consumption tracking.
+Metered consumption tracking (existing M3 infrastructure).
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -96,27 +98,33 @@ Metered consumption tracking.
 
 ```php
 interface BillingProviderInterface {
-    public function createSubscription(Organization $org, Plan $plan): SubscriptionResult;
-    public function cancelSubscription(Subscription $subscription): void;
-    public function handleWebhook(array $payload): WebhookResult;
+    public function syncSubscription(Subscription $subscription): Subscription;
+    public function createInvoice(BillingInvoice $invoice): BillingInvoice;
+    public function recordPayment(BillingPayment $payment): BillingPayment;
 }
 ```
 
-**Phase 11 implementation:** `NullBillingProvider` — all orgs get Free plan; no external calls.
+**M5 implementation:** `MockBillingProvider` — no external calls, no API keys.
 
 **Future:** `StripeBillingProvider` implements same interface.
 
 ---
 
-## API Endpoints (Planned)
+## API Endpoints
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/v1/billing/plans` | Plan catalog (public to authenticated users) |
-| GET | `/api/v1/billing/subscription` | Current org subscription |
-| GET | `/api/v1/billing/usage` | Usage summary for current period |
+| Method | Path | Permission | Purpose |
+|--------|------|------------|---------|
+| GET | `/api/v1/billing/plans` | `billing.view` | Plan catalog |
+| GET | `/api/v1/billing/subscription` | `billing.view` | Current org subscription |
+| GET | `/api/v1/billing/usage` | `billing.view` | Usage summary for current period |
+| GET | `/api/v1/billing/invoices` | `billing.view` | Paginated invoices |
+| POST | `/api/v1/billing/subscription/plan` | `billing.manage` | Assign/change plan |
+| POST | `/api/v1/billing/subscription/cancel` | `billing.manage` | Cancel subscription |
+| POST | `/api/v1/billing/subscription/reactivate` | `billing.manage` | Reactivate subscription |
+| GET | `/api/v1/billing/settings` | `billing.view` | Operational settings |
+| PUT | `/api/v1/billing/settings` | `billing.manage` | Update operational settings |
 
-All endpoints require authentication + org context. Billing management requires `access.manage` or Owner role.
+All endpoints require authentication + org context (`X-Organization-Id`).
 
 ---
 
@@ -124,10 +132,32 @@ All endpoints require authentication + org context. Billing management requires 
 
 | System | Integration |
 |--------|-------------|
-| **AI Platform** | `AiQuotaService` checks `ai.requests` entitlement before dispatch |
+| **AI Platform** | `AiQuotaService` checks plan `ai.requests` limit when billing enabled |
 | **Access** | `users.max` entitlement checked on user invite/create |
-| **Notifications** | `billing.quota_warning` when usage exceeds 80% of limit |
-| **Audit** | `billing.subscription.changed` events |
+| **Audit** | `billing.subscription.*` events on plan change and cancellation |
+| **Dashboard** | `/billing` route shows plan, usage, invoices, settings |
+
+---
+
+## Authorization Stack
+
+Feature access requires (in order):
+
+1. Valid tenant context
+2. RBAC permission (`billing.view` / `billing.manage` / feature-specific permissions)
+3. Active subscription (when `BILLING_ENABLED=true`)
+4. Plan feature allowance
+5. Quota not exceeded
+
+Error responses:
+
+| Condition | Status | Exception |
+|-----------|--------|-----------|
+| Not authenticated | 401 | — |
+| Missing permission | 403 | Authorization |
+| Inactive subscription | 403 | `SubscriptionInactiveException` |
+| Plan restriction | 403 | `PlanRestrictionException` |
+| Quota exceeded | 429 | `AiQuotaExceededException` |
 
 ---
 
@@ -136,21 +166,20 @@ All endpoints require authentication + org context. Billing management requires 
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `BILLING_ENABLED` | `false` | Enable entitlement enforcement |
-| `BILLING_PROVIDER` | `null` | Provider selection (future: `stripe`) |
+| `BILLING_PROVIDER` | `mock` | Provider selection (future: `stripe`) |
 | `DEFAULT_PLAN_SLUG` | `free` | Plan assigned to new orgs |
 
-When `BILLING_ENABLED=false`, all features are allowed (current behavior preserved).
+When `BILLING_ENABLED=false`, billing APIs remain available but entitlement enforcement is bypassed (existing behavior preserved).
 
 ---
 
 ## Migration Strategy
 
-1. Add billing tables (additive migration)
-2. Seed default plans
-3. Assign Free plan to all existing organizations
-4. Enable `BILLING_ENABLED=true` in staging for testing
-5. Wire AI quota enforcement
-6. Production: enable after validation
+1. Run billing migration (additive)
+2. Seed default plans via `BillingSeeder`
+3. Enable `BILLING_ENABLED=true` in staging for validation
+4. Assign subscriptions via API or seeder
+5. Production: enable after validation
 
 **No changes to existing tables except new FK references.**
 
@@ -158,6 +187,7 @@ When `BILLING_ENABLED=false`, all features are allowed (current behavior preserv
 
 ## Related Documents
 
+- [m5-enterprise-operations.md](./m5-enterprise-operations.md)
 - [phase-11-architecture.md](./phase-11-architecture.md)
 - [phase-11-roadmap.md](./phase-11-roadmap.md)
 - [ai-platform.md](./ai-platform.md)
