@@ -1,6 +1,6 @@
 # AI Platform
 
-**Last updated:** Phase 11 (2026-08-10)
+**Last updated:** Phase 11 Milestone 3 (2026-08-10)
 
 ## Overview
 
@@ -12,11 +12,12 @@ WSA-Enterprise provides **agricultural decision-support AI** through a provider-
 
 ```
 Client → POST /api/v1/ai/requests
-       → AiController
+       → AiController (RBAC: ai.use, quota check)
        → AiService
-         → AiProviderInterface (MockAiProvider | future providers)
-         → AiRequestValidator
-         → AiResponseNormalizer
+         → AiQuotaService (optional org limits)
+         → AiProviderResolver → AiProviderInterface
+         → AiRequestValidator / AiResponseNormalizer
+         → AiUsageRecorder → usage_records
          → AuditService
          → [async] ProcessAiRequest job → Redis queue → queue worker
 ```
@@ -27,15 +28,15 @@ Client → POST /api/v1/ai/requests
 
 | Status | Meaning |
 |--------|---------|
-| `pending` | Created; job queued (async) or about to process (sync) |
+| `pending` | Created; job queued (async) |
 | `processing` | Worker acquired lock; provider executing |
 | `completed` | Output persisted |
 | `failed` | Error captured in `error_message` |
-| `cancelled` | User/system cancelled before completion (Phase 11) |
+| `cancelled` | Cancelled while pending/processing (`cancelled_at` set) |
+
+Terminal states: `completed`, `failed`, `cancelled` — not reprocessed.
 
 ### Sync vs async
-
-Controlled by environment variable:
 
 ```env
 AI_ASYNC_DISPATCH=false   # default — returns 201 with completed result
@@ -47,11 +48,9 @@ AI_ASYNC_DISPATCH=true    # returns 202 with pending; requires queue worker
 | Sync | 201 Created | No |
 | Async | 202 Accepted | Yes |
 
-Poll async requests:
-
-```
-GET /api/v1/ai/requests/{id}
-```
+Poll: `GET /api/v1/ai/requests/{id}`  
+Cancel: `POST /api/v1/ai/requests/{id}/cancel` (pending/processing only)  
+Usage: `GET /api/v1/ai/usage`
 
 ---
 
@@ -64,30 +63,60 @@ GET /api/v1/ai/requests/{id}
 | `library_qa` | Q&A over library knowledge |
 | `training_assistance` | Training content assistance |
 
-Validate types via `AiRequestValidator`.
-
 ---
 
 ## Provider Abstraction
 
 ```php
 interface AiProviderInterface {
-    public function process(AiRequest $request): array;
+    public function complete(string $requestType, array $input): array;
     public function name(): string;
 }
 ```
 
-**Rules:**
+- Domain code uses `AiService` only — never vendor SDKs in controllers
+- `AiProviderResolver` selects provider from config + optional org override (`organization_settings.key = ai.provider`)
+- Default provider: `mock` (no external calls)
 
-- Domain code uses `AiService` only — never vendor SDKs directly
-- Provider binding in `AppServiceProvider` via config `AI_PROVIDER`
-- Phase 11 adds `AiProviderResolver` for org-level overrides
+---
 
-### Current providers
+## Quotas & Usage
 
-| Provider | Config value | Status |
-|----------|-------------|--------|
-| Mock | `mock` | Default — no external calls |
+```env
+AI_QUOTA_ENABLED=false              # default — unlimited (backward compatible)
+AI_QUOTA_REQUESTS_PER_PERIOD=1000   # when enabled
+AI_QUOTA_PERIOD=monthly             # monthly | daily
+```
+
+When `AI_QUOTA_ENABLED=true`:
+
+- Each accepted AI request records a `usage_records` row (`metric: ai.requests`)
+- Over-quota requests return **429** with `{ message, quota: { limit, used } }`
+- Audit event: `ai.quota.exceeded`
+
+`GET /api/v1/ai/usage` returns:
+
+```json
+{
+  "enabled": true,
+  "limit": 1000,
+  "used": 42,
+  "remaining": 958,
+  "period_start": "2026-08-01"
+}
+```
+
+---
+
+## Rate Limiting
+
+Per-organization throttle on all `/api/v1/ai/*` routes (`throttle:ai-org`):
+
+```env
+AI_RATE_LIMIT_PER_MINUTE=30
+```
+
+Rate limit key is organization ID — cannot be bypassed by changing user or request ID.
 
 ---
 
@@ -98,60 +127,42 @@ QUEUE_CONNECTION=redis
 REDIS_HOST=redis
 ```
 
-Docker Compose includes a dedicated `queue` service:
-
-```bash
-docker compose logs -f queue
-docker compose exec backend php artisan queue:failed
-```
-
-Queue worker entrypoint waits for Redis readiness before starting (prevents crash-loops).
-
 Job: `App\Jobs\ProcessAiRequest`
 
-- Implements `ShouldQueue`, `ShouldBeUnique`
-- Configurable tries/timeout via `config/ai.php`
-- Idempotent: terminal states not reprocessed
+- `ShouldBeUnique` — prevents duplicate concurrent jobs per request ID
 - Row-level DB lock during processing
+- Idempotent for terminal states
+- Skips `cancelled` requests
+- `failed()` handler marks record failed + audits
+
+Queue worker entrypoint waits for Redis before starting (Phase 10 fix).
+
+---
+
+## Audit Events
+
+| Action | Trigger |
+|--------|---------|
+| `ai.request.created` | Request record created |
+| `ai.request.dispatched` | Async job queued |
+| `ai.request.started` | Processing begins |
+| `ai.request.processing` | Status → processing (async path) |
+| `ai.request.completed` | Successful completion |
+| `ai.request.failed` | Provider or queue failure |
+| `ai.request.cancelled` | User cancellation |
+| `ai.quota.exceeded` | Quota limit hit |
+
+Secrets and provider credentials are never logged.
 
 ---
 
 ## Security
 
-- AI `input` is **hidden** from API responses (`sanitizeAiRequest`)
-- AI `input` is persisted in DB — review retention policy for production
-- AI endpoints throttled: 30 requests/minute
-- Requires `ai.use` permission
-- All requests scoped to active organization
-- Audit events: `ai.request.dispatched`, processing, completed, failed
-
----
-
-## Usage & Quotas (Phase 11)
-
-```
-AiService → AiQuotaService → EntitlementService (plan limits)
-         → AiUsageRecorder → usage_records table
-```
-
-- Over-quota requests return **429 Too Many Requests**
-- Usage summary: `GET /api/v1/ai/usage` (planned)
-- Token/request counts recorded per org per billing period
-
----
-
-## Client Integration
-
-### Web (`frontend/src/api/ai.ts`)
-
-- `createAiRequest()` — POST
-- `fetchAiRequest()` — GET poll
-- `pollAiRequest()` — helper with interval (wire in AI feature module)
-
-### Mobile (`mobile/lib/api/`)
-
-- Mirror web API methods
-- Phase 11: polling use case in domain layer
+- AI `input` hidden from API responses
+- Requires `ai.use` permission (viewer role excluded)
+- All requests scoped via `BelongsToOrganization` + tenant context
+- Cross-tenant access returns **404**
+- RBAC integrated with enterprise roles (M2)
 
 ---
 
@@ -159,15 +170,19 @@ AiService → AiQuotaService → EntitlementService (plan limits)
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `AI_PROVIDER` | `mock` | Provider selection |
-| `AI_TIMEOUT` | `30` | Provider timeout seconds |
-| `AI_ASYNC_DISPATCH` | `false` | Async mode toggle |
+| `AI_PROVIDER` | `mock` | Default provider |
+| `AI_TIMEOUT` | `30` | Provider timeout (seconds) |
+| `AI_ASYNC_DISPATCH` | `false` | Async mode |
+| `AI_RATE_LIMIT_PER_MINUTE` | `30` | Per-org rate limit |
+| `AI_QUOTA_ENABLED` | `false` | Enable usage quotas |
+| `AI_QUOTA_REQUESTS_PER_PERIOD` | `1000` | Quota limit |
+| `AI_QUOTA_PERIOD` | `monthly` | Quota period |
 | `QUEUE_CONNECTION` | `redis` | Queue driver |
 
 ---
 
 ## Related Documents
 
-- [phase-11-architecture.md](./phase-11-architecture.md)
-- [deployment.md](./deployment.md)
+- [multi-tenancy.md](./multi-tenancy.md)
 - [security.md](./security.md)
+- [deployment.md](./deployment.md)

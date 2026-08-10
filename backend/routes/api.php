@@ -119,9 +119,11 @@ Route::prefix('v1')->group(function (): void {
         });
         Route::prefix('ai')->middleware('throttle:ai-org')->group(function (): void {
             Route::get('/provider', [AiController::class, 'provider']);
+            Route::get('/usage', [AiController::class, 'usage']);
             Route::get('/requests', [AiController::class, 'index']);
             Route::post('/requests', [AiController::class, 'store']);
             Route::get('/requests/{id}', [AiController::class, 'show'])->whereNumber('id');
+            Route::post('/requests/{id}/cancel', [AiController::class, 'cancel'])->whereNumber('id');
         });
     });
 });

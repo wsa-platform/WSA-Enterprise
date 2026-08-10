@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\AiRequest;
-use App\Models\Team;
 use App\Models\User;
 
 class AiRequestPolicy extends OrganizationPermissionPolicy
@@ -19,6 +18,11 @@ class AiRequestPolicy extends OrganizationPermissionPolicy
     }
 
     public function view(User $user, AiRequest $request): bool
+    {
+        return $this->allows($user, $request->organization_id, 'ai.use');
+    }
+
+    public function cancel(User $user, AiRequest $request): bool
     {
         return $this->allows($user, $request->organization_id, 'ai.use');
     }

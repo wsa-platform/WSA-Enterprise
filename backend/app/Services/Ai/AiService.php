@@ -2,7 +2,7 @@
 
 namespace App\Services\Ai;
 
-use App\Contracts\AiProviderInterface;
+use App\Exceptions\AiQuotaExceededException;
 use App\Jobs\ProcessAiRequest;
 use App\Models\AiRequest;
 use App\Services\Audit\AuditService;
@@ -15,18 +15,20 @@ class AiService
     private const PROCESSABLE_STATUSES = ['pending', 'processing'];
 
     /** @var list<string> */
-    private const TERMINAL_STATUSES = ['completed', 'failed'];
+    private const TERMINAL_STATUSES = ['completed', 'failed', 'cancelled'];
 
     public function __construct(
-        private AiProviderInterface $provider,
+        private AiProviderResolver $providerResolver,
         private AiRequestValidator $validator,
         private AiResponseNormalizer $normalizer,
         private AuditService $auditService,
+        private AiQuotaService $quotaService,
+        private AiUsageRecorder $usageRecorder,
     ) {}
 
-    public function providerName(): string
+    public function providerName(?int $organizationId = null): string
     {
-        return $this->provider->name();
+        return $this->providerResolver->providerNameForOrganization($organizationId);
     }
 
     /** @param  array<string, mixed>  $input */
@@ -38,7 +40,10 @@ class AiService
         ?string $sourceType = null,
         ?int $sourceId = null,
     ): AiRequest {
+        $this->quotaService->assertCanDispatch($organizationId, $userId);
+
         $validatedInput = $this->validator->validate($requestType, $input);
+        $provider = $this->providerResolver->forOrganization($organizationId);
 
         $record = AiRequest::create([
             'organization_id' => $organizationId,
@@ -46,15 +51,21 @@ class AiService
             'request_type' => $requestType,
             'source_type' => $sourceType,
             'source_id' => $sourceId,
-            'provider' => $this->provider->name(),
+            'provider' => $provider->name(),
             'status' => 'processing',
             'input' => $validatedInput,
         ]);
+
+        $this->usageRecorder->recordRequest($organizationId, $record->id);
 
         $this->auditLifecycle($record, 'ai.request.created', [
             'request_type' => $record->request_type,
             'status' => $record->status,
             'async' => false,
+        ]);
+
+        $this->auditLifecycle($record, 'ai.request.started', [
+            'request_type' => $record->request_type,
         ]);
 
         return $this->processRecord($record);
@@ -73,7 +84,10 @@ class AiService
         ?string $sourceType = null,
         ?int $sourceId = null,
     ): AiRequest {
+        $this->quotaService->assertCanDispatch($organizationId, $userId);
+
         $validatedInput = $this->validator->validate($requestType, $input);
+        $provider = $this->providerResolver->forOrganization($organizationId);
 
         $record = AiRequest::create([
             'organization_id' => $organizationId,
@@ -81,9 +95,17 @@ class AiService
             'request_type' => $requestType,
             'source_type' => $sourceType,
             'source_id' => $sourceId,
-            'provider' => $this->provider->name(),
+            'provider' => $provider->name(),
             'status' => 'pending',
             'input' => $validatedInput,
+        ]);
+
+        $this->usageRecorder->recordRequest($organizationId, $record->id);
+
+        $this->auditLifecycle($record, 'ai.request.created', [
+            'request_type' => $record->request_type,
+            'status' => $record->status,
+            'async' => true,
         ]);
 
         $this->auditLifecycle($record, 'ai.request.dispatched', [
@@ -95,6 +117,34 @@ class AiService
         ProcessAiRequest::dispatch($record->id);
 
         return $record;
+    }
+
+    public function cancel(AiRequest $record, ?int $userId = null): AiRequest
+    {
+        return DB::transaction(function () use ($record, $userId): AiRequest {
+            /** @var AiRequest|null $locked */
+            $locked = AiRequest::query()->whereKey($record->id)->lockForUpdate()->first();
+
+            if ($locked === null) {
+                return $record;
+            }
+
+            if (in_array($locked->status, self::TERMINAL_STATUSES, true)) {
+                return $locked;
+            }
+
+            $locked->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+            ]);
+
+            $this->auditLifecycle($locked->fresh(), 'ai.request.cancelled', [
+                'request_type' => $locked->request_type,
+                'cancelled_by' => $userId,
+            ]);
+
+            return $locked->fresh();
+        });
     }
 
     /** Process an existing AI request (sync path or queued worker). Idempotent for terminal states. */
@@ -115,6 +165,9 @@ class AiService
             if ($locked->status === 'pending') {
                 $locked->update(['status' => 'processing']);
                 $locked->refresh();
+                $this->auditLifecycle($locked, 'ai.request.started', [
+                    'request_type' => $locked->request_type,
+                ]);
                 $this->auditLifecycle($locked, 'ai.request.processing', [
                     'request_type' => $locked->request_type,
                 ]);
@@ -124,11 +177,12 @@ class AiService
                 return $locked;
             }
 
+            $provider = $this->providerResolver->forOrganization($locked->organization_id);
             $started = microtime(true);
             $timeout = max(1, (int) config('ai.timeout', 30));
 
             try {
-                $output = $this->callWithTimeout($locked->request_type, $locked->input ?? [], $timeout);
+                $output = $this->callWithTimeout($provider, $locked->request_type, $locked->input ?? [], $timeout);
                 $normalized = $this->normalizer->normalize($locked->request_type, $output);
 
                 $locked->update([
@@ -144,7 +198,7 @@ class AiService
                 ]);
             } catch (\Throwable $exception) {
                 Log::warning('AI provider failed', [
-                    'provider' => $this->provider->name(),
+                    'provider' => $provider->name(),
                     'request_type' => $locked->request_type,
                     'organization_id' => $locked->organization_id,
                     'message' => $exception->getMessage(),
@@ -167,11 +221,11 @@ class AiService
     }
 
     /** @param  array<string, mixed>  $input */
-    private function callWithTimeout(string $requestType, array $input, int $timeoutSeconds): array
+    private function callWithTimeout(\App\Contracts\AiProviderInterface $provider, string $requestType, array $input, int $timeoutSeconds): array
     {
         $started = microtime(true);
 
-        $output = $this->provider->complete($requestType, $input);
+        $output = $provider->complete($requestType, $input);
 
         if ((microtime(true) - $started) > $timeoutSeconds) {
             throw new \RuntimeException('AI provider exceeded configured timeout.');
