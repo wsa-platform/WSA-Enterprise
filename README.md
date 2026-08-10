@@ -41,11 +41,40 @@ Queue worker logs: `docker compose logs -f queue`. Failed jobs: `docker compose 
 
 ## Phase 11 enterprise expansion
 
-Phase 11 planning documents (architecture audit, target architecture, roadmap) are on branch `phase-11-enterprise-expansion`:
+Phase 11 delivers multi-tenant RBAC, AI platform, enterprise dashboard, billing, notifications/audit, Flutter alignment, and API/production hardening (M1–M8).
 
-- [docs/phase-11-architecture-audit.md](docs/phase-11-architecture-audit.md)
-- [docs/phase-11-architecture.md](docs/phase-11-architecture.md)
+| Milestone | Status | Highlights |
+| --- | --- | --- |
+| M1 | Complete | Architecture audit and target design |
+| M2 | Complete | Tenant scoping, enterprise RBAC, security tests |
+| M3 | Complete | AI providers, quotas, async dispatch, usage API |
+| M4 | Complete | React enterprise dashboard modules |
+| M5 | Complete | Billing plans, subscriptions, entitlements |
+| M6 | Complete | Flutter layered architecture alignment |
+| M7 | Complete | Notifications pipeline, audit `request_id`, observability |
+| M8 | Complete | OpenAPI expansion, analytics overview, API client registry, Docker healthchecks, CI security job |
+
+Key documents:
+
 - [docs/phase-11-roadmap.md](docs/phase-11-roadmap.md)
+- [docs/phase-11-architecture.md](docs/phase-11-architecture.md)
+- [docs/phase-11-verification-report.md](docs/phase-11-verification-report.md)
+- [docs/openapi.yaml](docs/openapi.yaml) — validated in CI (`swagger-cli validate`)
+- [docs/docker-production.md](docs/docker-production.md) — production Compose override
+
+New M8 API endpoints:
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/v1/analytics/overview` | Organization-scoped analytics snapshot |
+| `GET/POST /api/v1/api-clients` | API client registry (hashed secrets) |
+| `POST /api/v1/api-clients/{id}/revoke` | Revoke API client |
+
+Docker services include `queue`, `scheduler`, and healthchecks on backend, frontend, nginx, postgres, and redis. Run isolated backend tests:
+
+```powershell
+docker compose --profile test run --rm backend-test
+```
 
 Supporting guides: [multi-tenancy](docs/multi-tenancy.md), [ai-platform](docs/ai-platform.md), [billing](docs/billing.md), [security](docs/security.md).
 

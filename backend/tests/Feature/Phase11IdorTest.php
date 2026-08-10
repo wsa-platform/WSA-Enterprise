@@ -9,6 +9,9 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * @group security
+ */
 class Phase11IdorTest extends TestCase
 {
     use RefreshDatabase;

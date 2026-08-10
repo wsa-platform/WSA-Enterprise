@@ -2,8 +2,8 @@
 
 **Project:** WSA-Enterprise — Enterprise Platform Expansion  
 **Baseline:** Phase 10 (merged to `main`)  
-**Version:** 11.0-draft  
-**Status:** Design — pending approval before implementation
+**Version:** 11.0  
+**Status:** M1–M8 implemented on `main` (see [phase-11-verification-report.md](phase-11-verification-report.md))
 
 ---
 
