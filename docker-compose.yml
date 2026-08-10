@@ -59,6 +59,32 @@ services:
       retries: 10
     networks: [wsa]
 
+  queue:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      REDIS_HOST: redis
+      DB_HOST: postgres
+    command: >
+      php artisan queue:work redis
+      --queue=default
+      --sleep=3
+      --tries=3
+      --timeout=90
+      --max-time=3600
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    volumes:
+      - ./backend:/var/www/html
+      - backend_vendor:/var/www/html/vendor
+    restart: unless-stopped
+    networks: [wsa]
+
 volumes:
   backend_vendor:
   postgres_data:

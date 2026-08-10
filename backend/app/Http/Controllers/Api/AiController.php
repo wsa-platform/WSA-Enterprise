@@ -44,6 +44,19 @@ class AiController extends Controller
 
         $data = $request->validated();
 
+        if (config('ai.async_dispatch')) {
+            $record = $this->aiService->dispatchForProcessing(
+                $this->organization($request),
+                $data['request_type'],
+                $data['input'],
+                $request->user()->id,
+                $data['source_type'] ?? null,
+                $data['source_id'] ?? null,
+            );
+
+            return response()->json($this->sanitizeAiRequest($record), 202);
+        }
+
         $record = $this->aiService->run(
             $this->organization($request),
             $data['request_type'],

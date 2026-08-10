@@ -8,6 +8,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Processes a queued AI request record asynchronously.
@@ -39,5 +41,26 @@ class ProcessAiRequest implements ShouldQueue
         }
 
         $aiService->processRecord($record);
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        $record = AiRequest::query()->find($this->aiRequestId);
+
+        if ($record === null || $record->status !== 'processing') {
+            return;
+        }
+
+        Log::error('ProcessAiRequest job failed after retries', [
+            'ai_request_id' => $this->aiRequestId,
+            'organization_id' => $record->organization_id,
+            'request_type' => $record->request_type,
+            'message' => $exception?->getMessage(),
+        ]);
+
+        $record->update([
+            'status' => 'failed',
+            'error_message' => $exception?->getMessage() ?? 'Queue worker failed after retries.',
+        ]);
     }
 }

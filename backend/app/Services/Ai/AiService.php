@@ -3,6 +3,7 @@
 namespace App\Services\Ai;
 
 use App\Contracts\AiProviderInterface;
+use App\Jobs\ProcessAiRequest;
 use App\Models\AiRequest;
 use Illuminate\Support\Facades\Log;
 
@@ -42,6 +43,38 @@ class AiService
         ]);
 
         return $this->processRecord($record);
+    }
+
+    /**
+     * Create a pending AI request and dispatch asynchronous processing.
+     * Used when AI_ASYNC_DISPATCH=true; default HTTP path remains synchronous.
+     *
+     * @param  array<string, mixed>  $input
+     */
+    public function dispatchForProcessing(
+        int $organizationId,
+        string $requestType,
+        array $input,
+        ?int $userId = null,
+        ?string $sourceType = null,
+        ?int $sourceId = null,
+    ): AiRequest {
+        $validatedInput = $this->validator->validate($requestType, $input);
+
+        $record = AiRequest::create([
+            'organization_id' => $organizationId,
+            'user_id' => $userId,
+            'request_type' => $requestType,
+            'source_type' => $sourceType,
+            'source_id' => $sourceId,
+            'provider' => $this->provider->name(),
+            'status' => 'processing',
+            'input' => $validatedInput,
+        ]);
+
+        ProcessAiRequest::dispatch($record->id);
+
+        return $record;
     }
 
     /** Process an existing pending AI request (used by queued jobs). */

@@ -56,4 +56,43 @@ class Phase9QueueFoundationTest extends TestCase
         $this->assertSame('completed', $record->status);
         $this->assertNotNull($record->output);
     }
+
+    public function test_ai_service_dispatch_for_processing_queues_job(): void
+    {
+        Queue::fake();
+
+        $organization = Organization::create(['name' => 'Tenant A', 'slug' => 'tenant-a']);
+        $user = User::create(['name' => 'Admin', 'email' => 'admin@wsa.test', 'password' => Hash::make('password')]);
+
+        $record = app(\App\Services\Ai\AiService::class)->dispatchForProcessing(
+            $organization->id,
+            'library_summary',
+            ['text' => 'Sample crop advisory note.'],
+            $user->id,
+        );
+
+        $this->assertSame('processing', $record->status);
+        Queue::assertPushed(ProcessAiRequest::class, fn (ProcessAiRequest $job) => $job->aiRequestId === $record->id);
+    }
+
+    public function test_process_ai_request_job_failed_marks_record(): void
+    {
+        $organization = Organization::create(['name' => 'Tenant A', 'slug' => 'tenant-a']);
+        $user = User::create(['name' => 'Admin', 'email' => 'admin@wsa.test', 'password' => Hash::make('password')]);
+
+        $record = AiRequest::create([
+            'organization_id' => $organization->id,
+            'user_id' => $user->id,
+            'request_type' => 'library_summary',
+            'provider' => 'mock',
+            'status' => 'processing',
+            'input' => ['text' => 'Sample crop advisory note.'],
+        ]);
+
+        (new ProcessAiRequest($record->id))->failed(new \RuntimeException('Worker exhausted retries'));
+
+        $record->refresh();
+        $this->assertSame('failed', $record->status);
+        $this->assertStringContainsString('Worker exhausted retries', (string) $record->error_message);
+    }
 }
