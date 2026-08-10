@@ -14,6 +14,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(\App\Services\Tenancy\TenantContext::class);
+
         $this->app->bind(AiProviderInterface::class, function (): AiProviderInterface {
             return match (config('ai.provider')) {
                 default => new MockAiProvider,

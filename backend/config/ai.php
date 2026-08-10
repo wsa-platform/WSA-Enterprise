@@ -6,4 +6,5 @@ return [
     'queue' => env('AI_QUEUE', 'default'),
     'queue_tries' => (int) env('AI_QUEUE_TRIES', 3),
     'async_dispatch' => filter_var(env('AI_ASYNC_DISPATCH', false), FILTER_VALIDATE_BOOL),
+    'rate_limit_per_minute' => (int) env('AI_RATE_LIMIT_PER_MINUTE', 30),
 ];

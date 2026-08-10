@@ -54,8 +54,10 @@ Web and mobile clients store the active org ID in:
 3. **Service layer** (Phase 11)
    - `TenantContext` service injects org ID into domain operations
 
-4. **Model layer** (Phase 11)
-   - `BelongsToOrganization` trait applies global scope and auto-sets org on create
+4. **Model layer** (Phase 11 — implemented)
+   - `BelongsToOrganization` trait applies `OrganizationScope` when `TenantContext` is set
+   - Applied to: Farm, AiRequest, Role, Permission, AuditLog, AppNotification, Team
+   - Additional models adopt the trait incrementally in later milestones
 
 ---
 
@@ -124,7 +126,7 @@ docker compose --profile test run --rm backend-test
 
 ---
 
-## Teams (Phase 11)
+## Teams (Phase 11 — implemented)
 
 Teams are **sub-groups within an organization**:
 
@@ -132,7 +134,13 @@ Teams are **sub-groups within an organization**:
 Organization → Team → team_user → User
 ```
 
-Teams do not create separate tenant boundaries. All team data remains org-scoped. Teams enable finer-grained access within an org (future).
+API endpoints (require `access.manage`):
+
+- `GET/POST /api/v1/teams`
+- `POST /api/v1/teams/{team}/members`
+- `DELETE /api/v1/teams/{team}/members/{user}`
+
+Teams do not create separate tenant boundaries. All team data remains org-scoped.
 
 ---
 

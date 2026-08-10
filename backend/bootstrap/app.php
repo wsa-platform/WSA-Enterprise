@@ -18,9 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         $middleware->appendToGroup('api', [
+            \App\Http\Middleware\AssignRequestId::class,
             \App\Http\Middleware\LogApiRequests::class,
-        ]);
-        $middleware->appendToGroup('api', [
             \App\Http\Middleware\ResolveOrganizationContext::class,
         ]);
     })

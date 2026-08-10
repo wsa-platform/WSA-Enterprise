@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\TrainingController;
 use App\Http\Controllers\Api\LibraryController;
 use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\PlatformController;
+use App\Http\Controllers\Api\TeamController;
 
 Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
 
@@ -44,6 +45,10 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/roles', [AccessController::class, 'storeRole']);
         Route::get('/permissions', [AccessController::class, 'permissions']);
         Route::post('/permissions', [AccessController::class, 'storePermission']);
+        Route::get('/teams', [TeamController::class, 'index']);
+        Route::post('/teams', [TeamController::class, 'store']);
+        Route::post('/teams/{team}/members', [TeamController::class, 'addMember'])->whereNumber('team');
+        Route::delete('/teams/{team}/members/{user}', [TeamController::class, 'removeMember'])->whereNumber(['team', 'user']);
         Route::get('/audit-logs', [AuditController::class, 'index']);
         Route::prefix('directory')->group(function (): void {
             Route::get('/{module}', [DirectoryController::class, 'index']);
@@ -112,7 +117,7 @@ Route::prefix('v1')->group(function (): void {
             Route::put('/{module}/{id}', [LibraryController::class, 'update']);
             Route::delete('/{module}/{id}', [LibraryController::class, 'destroy']);
         });
-        Route::prefix('ai')->middleware('throttle:30,1')->group(function (): void {
+        Route::prefix('ai')->middleware('throttle:ai-org')->group(function (): void {
             Route::get('/provider', [AiController::class, 'provider']);
             Route::get('/requests', [AiController::class, 'index']);
             Route::post('/requests', [AiController::class, 'store']);

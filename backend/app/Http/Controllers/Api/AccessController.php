@@ -9,6 +9,8 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Audit\AuditService;
+use App\Services\Authorization\EnterpriseRoleService;
+use App\Services\Authorization\PermissionCacheInvalidator;
 use App\Services\Authorization\PermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,7 +30,7 @@ class AccessController extends Controller
         $organizationModel = $request->user()->organizations()->findOrFail($organization);
 
         $transform = function (User $user) use ($organization): array {
-            $roles = $user->roles()->wherePivot('organization_id', $organization)->get(['roles.id', 'roles.name']);
+            $roles = $user->roles()->wherePivot('organization_id', $organization)->get(['roles.id', 'roles.name', 'roles.slug']);
 
             return [
                 ...$user->only(['id', 'name', 'email']),
@@ -56,6 +58,8 @@ class AccessController extends Controller
         $user = User::create([...$data, 'password' => Hash::make($data['password'])]);
         $user->organizations()->attach($organization, ['role' => 'member']);
 
+        app(PermissionCacheInvalidator::class)->forgetUser($user, $organization);
+
         app(AuditService::class)->record(
             action: 'user.created',
             organizationId: $organization,
@@ -74,7 +78,7 @@ class AccessController extends Controller
 
         return $this->paginateQuery(
             $request,
-            Role::where('organization_id', $this->organization($request))->with('permissions')->latest()
+            Role::query()->with('permissions')->latest()
         );
     }
 
@@ -82,9 +86,37 @@ class AccessController extends Controller
     {
         $this->authorizePermission($request, 'access.manage');
         $organization = $this->organization($request);
-        $data = $request->validate(['name' => ['required', 'string', 'max:100'], 'description' => ['nullable', 'string'], 'permission_ids' => ['array']]);
-        $role = Role::create(['organization_id' => $organization, ...$data]);
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'slug' => ['nullable', 'string', 'max:64', Rule::unique('roles', 'slug')->where('organization_id', $organization)],
+            'description' => ['nullable', 'string'],
+            'permission_ids' => ['array'],
+        ]);
+
+        abort_if(
+            isset($data['slug']) && in_array($data['slug'], config('enterprise_roles.privileged_slugs', []), true)
+            && ! app(EnterpriseRoleService::class)->canAssignRole($request->user(), $organization, new Role(['slug' => $data['slug']])),
+            403,
+            'You cannot create privileged enterprise roles.'
+        );
+
+        $role = Role::create([
+            'organization_id' => $organization,
+            'slug' => $data['slug'] ?? null,
+            ...collect($data)->only(['name', 'description'])->all(),
+        ]);
         $role->permissions()->sync(Permission::where('organization_id', $organization)->whereIn('id', $data['permission_ids'] ?? [])->pluck('id'));
+
+        app(PermissionCacheInvalidator::class)->forgetOrganization($organization);
+
+        app(AuditService::class)->record(
+            action: 'role.created',
+            organizationId: $organization,
+            userId: $request->user()->id,
+            auditable: $role,
+            newValues: ['name' => $role->name, 'slug' => $role->slug],
+            request: $request,
+        );
 
         return response()->json($role->load('permissions'), 201);
     }
@@ -95,16 +127,30 @@ class AccessController extends Controller
 
         return $this->paginateQuery(
             $request,
-            Permission::where('organization_id', $this->organization($request))->latest()
+            Permission::query()->latest()
         );
     }
 
     public function storePermission(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'access.manage');
+        $organization = $this->organization($request);
         $data = $request->validate(['name' => ['required', 'string', 'max:100'], 'description' => ['nullable', 'string']]);
 
-        return response()->json(Permission::create(['organization_id' => $this->organization($request), ...$data]), 201);
+        $permission = Permission::create(['organization_id' => $organization, ...$data]);
+
+        app(PermissionCacheInvalidator::class)->forgetOrganization($organization);
+
+        app(AuditService::class)->record(
+            action: 'permission.created',
+            organizationId: $organization,
+            userId: $request->user()->id,
+            auditable: $permission,
+            newValues: ['name' => $permission->name],
+            request: $request,
+        );
+
+        return response()->json($permission, 201);
     }
 
     public function assignRole(Request $request, User $user): JsonResponse
@@ -116,6 +162,13 @@ class AccessController extends Controller
             'role_id' => ['required', Rule::exists('roles', 'id')->where('organization_id', $organization)],
         ]);
         $role = Role::where('organization_id', $organization)->findOrFail($data['role_id']);
+
+        abort_unless(
+            app(EnterpriseRoleService::class)->canAssignRole($request->user(), $organization, $role),
+            403,
+            'You cannot assign this role.'
+        );
+
         DB::table('role_user')->updateOrInsert(['role_id' => $role->id, 'user_id' => $user->id, 'organization_id' => $organization]);
 
         app(PermissionService::class)->forget($user, $organization);
@@ -125,13 +178,13 @@ class AccessController extends Controller
             organizationId: $organization,
             userId: $request->user()->id,
             auditable: $user,
-            newValues: ['role_id' => $role->id, 'role_name' => $role->name],
+            newValues: ['role_id' => $role->id, 'role_name' => $role->name, 'role_slug' => $role->slug],
             request: $request,
         );
 
         return response()->json([
             ...$user->only(['id', 'name', 'email']),
-            'roles' => $user->roles()->wherePivot('organization_id', $organization)->get(['roles.id', 'roles.name']),
+            'roles' => $user->roles()->wherePivot('organization_id', $organization)->get(['roles.id', 'roles.name', 'roles.slug']),
         ]);
     }
 }
