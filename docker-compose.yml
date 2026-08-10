@@ -65,6 +65,7 @@ services:
     environment:
       REDIS_HOST: redis
       DB_HOST: postgres
+      QUEUE_CONNECTION: redis
     command: >
       php artisan queue:work redis
       --queue=default
@@ -77,8 +78,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      backend:
-        condition: service_started
     volumes:
       - ./backend:/var/www/html
       - backend_vendor:/var/www/html/vendor
@@ -101,6 +100,7 @@ services:
       CACHE_STORE: array
       SESSION_DRIVER: array
       QUEUE_CONNECTION: sync
+      AI_ASYNC_DISPATCH: "false"
     depends_on:
       postgres:
         condition: service_healthy
