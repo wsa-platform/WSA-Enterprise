@@ -35,6 +35,8 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/dashboard', DashboardController::class);
         Route::get('/platform/organizations', [PlatformController::class, 'organizations']);
+        Route::get('/platform/me', [PlatformController::class, 'me']);
+        Route::get('/platform/access-summary', [PlatformController::class, 'accessSummary']);
         Route::get('/platform/workflow-summary', [PlatformController::class, 'workflowSummary']);
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->whereNumber('task');
@@ -46,6 +48,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/permissions', [AccessController::class, 'permissions']);
         Route::post('/permissions', [AccessController::class, 'storePermission']);
         Route::get('/teams', [TeamController::class, 'index']);
+        Route::get('/teams/{team}', [TeamController::class, 'show'])->whereNumber('team');
         Route::post('/teams', [TeamController::class, 'store']);
         Route::post('/teams/{team}/members', [TeamController::class, 'addMember'])->whereNumber('team');
         Route::delete('/teams/{team}/members/{user}', [TeamController::class, 'removeMember'])->whereNumber(['team', 'user']);

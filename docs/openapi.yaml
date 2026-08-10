@@ -207,6 +207,34 @@ paths:
           description: Organization list
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /platform/me:
+    get:
+      tags: [Platform]
+      summary: Current user context and permissions for active organization
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: User, roles, and permissions
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /platform/access-summary:
+    get:
+      tags: [Platform]
+      summary: Enterprise dashboard summary metrics
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Organization, AI, audit, and system summary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /users:
     get:
       tags: [Users]
@@ -463,6 +491,45 @@ paths:
       responses:
         '200':
           description: Diagnosis request detail
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /teams:
+    get:
+      tags: [Teams]
+      summary: List organization teams
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Team list
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Teams]
+      summary: Create team
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '201':
+          description: Created
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /teams/{team}:
+    get:
+      tags: [Teams]
+      summary: Show team with members
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: team
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Team detail
         '404':
           $ref: '#/components/responses/NotFound'
   /audit-logs:
