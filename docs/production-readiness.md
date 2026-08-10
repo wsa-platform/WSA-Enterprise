@@ -161,7 +161,7 @@ Automated API workflow (`Phase7E2EWorkflowTest`):
 6. Cross-tenant dashboard → 403
 7. Unauthenticated dashboard → 401
 
-Manual E2E (web `:8080` or mobile with API URL):
+Manual E2E (web `:8081` or mobile with API URL):
 
 - Sign in → org selection → navigate all modules → create records → verify tenant scoping
 

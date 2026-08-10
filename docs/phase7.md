@@ -26,7 +26,7 @@ The Flutter app mirrors the React web workflow:
 
 ### API usage
 
-- Base URL: `API_URL` dart define (default `http://localhost:8080/api/v1`)
+- Base URL: `API_URL` dart define (default `http://localhost:8081/api/v1`)
 - Auth: Sanctum bearer token persisted in `SharedPreferences`
 - Tenant: `X-Organization-Id` header on all authenticated requests
 - CRUD: POST/PUT/DELETE on existing module paths (same contracts as web)
@@ -39,7 +39,7 @@ flutter create .
 flutter pub get
 flutter analyze
 flutter test
-flutter run --dart-define=API_URL=http://localhost:8080/api/v1
+flutter run --dart-define=API_URL=http://localhost:8081/api/v1
 ```
 
 ## Regression testing (Phase 7 F)

@@ -5,11 +5,11 @@
 ## Architecture
 
 ```
-[Browser / Mobile] → [HTTPS Reverse Proxy] → [Nginx :8080]
+[Browser / Mobile] → [HTTPS Reverse Proxy] → [Nginx :8081]
                                               ├── /api → Laravel (PHP-FPM)
                                               └── /    → React static (Vite build)
 [PostgreSQL 16] ← Laravel
-[Redis 7]       ← Cache, sessions, queues
+[Redis 7]       ← Cache, sessions, queues ← queue worker
 ```
 
 ## Docker Compose (local / staging)
@@ -20,7 +20,7 @@
 2. Enable **Use the WSL 2 based engine** (Settings → General).
 3. Enable integration with your default WSL distro (Settings → Resources → WSL Integration).
 4. Clone or open the repo. Prefer a WSL filesystem path (e.g. `~/WSA-Enterprise`) for faster bind mounts; Windows paths (`C:\Users\...`) also work but may be slower.
-5. Ensure ports **8080**, **5432**, and **6379** are free (or stop conflicting local Postgres/Redis services).
+5. Ensure ports **8081**, **5432**, and **6379** are free (or stop conflicting local Postgres/Redis services). Port 8080 is not used by this stack; Docker staging uses **8081** because some Windows hosts reserve 8080.
 
 Bootstrap:
 
@@ -48,12 +48,40 @@ docker compose exec backend php artisan migrate --seed --force
 | Service | Purpose |
 | --- | --- |
 | `postgres` | Primary database (health check: `pg_isready`) |
-| `redis` | Cache, sessions, queues |
+| `redis` | Cache, sessions, queues (health check: `redis-cli ping`) |
 | `backend` | Laravel API |
+| `queue` | Laravel queue worker (`queue:work redis`) |
 | `frontend` | React production build served via Nginx |
-| `nginx` | Reverse proxy on port 8080 |
+| `nginx` | Reverse proxy on port **8081** |
 
 Laravel health: `GET /up` (framework) and `GET /api/v1/health` (API).
+
+### Port strategy (local / staging)
+
+| Context | URL / port | Notes |
+| --- | --- | --- |
+| Docker gateway | `http://localhost:8081` | Nginx serves SPA + proxies `/api` |
+| Vite dev server | `http://localhost:5173` | Listed in `SANCTUM_STATEFUL_DOMAINS` for cookie-based dev |
+| Mobile default API | `http://localhost:8081/api/v1` | Override with `--dart-define=API_URL=...` |
+
+Do **not** add `localhost:8081` to `SANCTUM_STATEFUL_DOMAINS` when using bearer-token SPA auth through Nginx — it triggers CSRF mismatches.
+
+### Queue worker
+
+The `queue` service runs `php artisan queue:work redis` against the Redis connection configured in `backend/.env` (`QUEUE_CONNECTION=redis`).
+
+Inspect worker logs:
+
+```bash
+docker compose logs -f queue
+```
+
+Inspect failed jobs (inside backend container):
+
+```bash
+docker compose exec backend php artisan queue:failed
+docker compose exec backend php artisan queue:retry all
+```
 
 ## Environment variables
 
@@ -116,7 +144,7 @@ php artisan db:seed   # demo/staging only
 
 ## HTTPS / reverse proxy
 
-Docker Compose exposes HTTP on `:8080`. For production:
+Docker Compose exposes HTTP on `:8081`. For production:
 
 1. Place Nginx, Traefik, or cloud load balancer in front
 2. Terminate TLS at proxy
@@ -152,10 +180,10 @@ Example proxy headers: `X-Forwarded-Proto`, `X-Forwarded-For`
 
 ## CI validation
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on `main`, `phase-7-*`, and `phase-8-*`:
+GitHub Actions (`.github/workflows/ci.yml`) runs on `main`, `phase-*`, and pull requests:
 
-- `php artisan test` (PostgreSQL service)
-- `npm run build` (frontend)
+- PHP 8.4, `composer validate`, `php artisan test` (PostgreSQL service)
+- `npm run lint`, `npm run build` (frontend)
 - `flutter analyze` + `flutter test` (mobile)
 
 ## What this guide does not cover

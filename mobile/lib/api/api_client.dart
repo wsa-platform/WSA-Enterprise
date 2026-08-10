@@ -29,7 +29,7 @@ class ApiException implements Exception {
 class ApiClient {
   ApiClient({String? baseUrl})
       : baseUrl = baseUrl ??
-            const String.fromEnvironment('API_URL', defaultValue: 'http://localhost:8080/api/v1');
+            const String.fromEnvironment('API_URL', defaultValue: 'http://localhost:8081/api/v1');
 
   final String baseUrl;
   String? _token;

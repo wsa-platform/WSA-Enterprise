@@ -84,7 +84,7 @@ flutter test
 
 ```bash
 docker compose up -d --build
-# API at http://localhost:8080/api/v1/health
+# API at http://localhost:8081/api/v1/health
 ```
 
 ## CI triggers
