@@ -165,6 +165,7 @@ services:
     volumes:
       - ./backend:/var/www/html
       - ./docs:/var/www/docs:ro
+      - .:/var/www/repo:ro
       - backend_vendor:/var/www/html/vendor
     command: php artisan test --no-ansi
     networks: [wsa]

@@ -12,8 +12,8 @@
 | M12.1 | Production Docker + TLS | Prod Compose, nginx TLS, Certbot, TrustProxies | Complete |
 | M12.2 | Deployment automation | GHCR push, SSH deploy workflow, smoke checks | In progress |
 | M12.3 | Production secrets management | `.env.production.example`, secrets docs, no hardcoded passwords | Complete |
-| M12.4 | AI monitoring & health checks | Health probes, incidents, safe remediation, AI analyzer foundation | In progress |
-| M12.5 | Rollback and production verification | Rollback runbook, backup, M12 sign-off | Pending |
+| M12.4 | AI monitoring & health checks | Health probes, incidents, safe remediation, AI analyzer foundation | Complete |
+| M12.5 | Rollback and production verification | Backup, rollback runbook, verification scripts | In progress |
 
 **Exclusions:** Stripe/payment providers, unrelated product features, API expansion unless deploy-required.
 
@@ -74,6 +74,29 @@ See [phase-12-m12-1-verification.md](phase-12-m12-1-verification.md).
 - [x] OpenAPI paths for `/health`, `/health/live`, `/health/ready`
 
 **Commit message example:** `Add AI monitoring foundation with health probes and safe remediation.`
+
+---
+
+## M12.5 — Rollback & Production Verification
+
+### Scripts
+
+- [x] `scripts/backup-production.sh` — timestamped PostgreSQL backup (dry-run supported)
+- [x] `scripts/rollback-production.sh` — immutable GHCR tag rollback (no auto DB restore)
+- [x] `scripts/verify-production.sh` — HTTPS, health, container, Postgres/Redis checks
+
+### Documentation
+
+- [x] `docs/phase-12-m12-5-backup-and-rollback.md`
+- [x] `docs/phase-12-m12-5-rollback-runbook.md`
+
+### Tests
+
+- [x] `Phase12M125ProductionOpsTest` — config validation, rollback safety, secret non-disclosure
+
+**Verification:** Pending local/CI run before marking complete.
+
+**Commit message example:** `Add production backup, rollback, and verification scripts for M12.5.`
 
 ---
 
