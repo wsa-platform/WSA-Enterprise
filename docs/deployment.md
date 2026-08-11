@@ -1,6 +1,6 @@
 # WSA-Enterprise Deployment Guide
 
-**Last updated:** Phase 11 (2026-08-10)
+**Last updated:** Phase 13 (2026-08-11)
 
 ## Architecture
 
@@ -220,7 +220,7 @@ Add a `scheduler` Compose service:
 GitHub Actions (`.github/workflows/ci.yml`) runs on `main`, `phase-*`, and pull requests:
 
 - PHP 8.4, isolated `wsa_enterprise_test` DB, `php artisan test`
-- `npm run lint`, `npm run build` (frontend)
+- `npm run lint`, `npm run test`, `npm run build` (frontend)
 - `flutter analyze` + `flutter test` (mobile)
 - `swagger-cli validate docs/openapi.yaml`
 
@@ -241,6 +241,13 @@ For GHCR image publish, SSH deploy, smoke verification, backup, rollback, and pr
 - **[docker-production.md](./docker-production.md)** — production Compose override
 - **[phase-12-m12-5-backup-and-rollback.md](./phase-12-m12-5-backup-and-rollback.md)** — backup/restore (M12.5)
 - **[phase-12-final-verification.md](./phase-12-final-verification.md)** — Phase 12 closure sign-off
+
+## Operations (Phase 13 M13.1)
+
+- **[operations-monitoring.md](./operations-monitoring.md)** — health probes, scheduler heartbeat, incident flow, certbot hook
+- **[phase-13-roadmap.md](./phase-13-roadmap.md)** — Phase 13 milestone status
+
+Note: `backend/.github/workflows/` (if present) is legacy; authoritative CI is `.github/workflows/ci.yml` at the repository root.
 
 ## What this guide does not cover
 

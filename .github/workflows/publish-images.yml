@@ -41,6 +41,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
+          build-args: |
+            VITE_SHOW_DEMO_LOGIN=false
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}-frontend:${{ github.sha }}

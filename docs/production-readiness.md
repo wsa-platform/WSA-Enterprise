@@ -1,12 +1,14 @@
 # WSA-Enterprise Production Readiness Report
 
-**Last updated:** Phase 12 M12 closure (2026-08-11)
+**Last updated:** Phase 13 M13 closure (2026-08-11)
 
 ## Executive summary
 
 WSA-Enterprise is suitable for **controlled single-host production deployment** with the Docker stack, Let's Encrypt TLS, GHCR image publish, SSH deploy automation, health monitoring, and backup/rollback scripts documented in Phase 12.
 
 Phase 12 (M12.1–M12.5) adds production Docker + TLS, deployment automation, secrets templates, AI monitoring foundation with health probes, and backup/rollback/verification scripts. See [phase-12-final-verification.md](phase-12-final-verification.md).
+
+Phase 13 (M13.1–M13.4) closes M12.4 observability deferrals, adds scheduler heartbeat and ops runbook, wires frontend Vitest in CI, and hardens production web/mobile clients (no embedded demo credentials). See [phase-13-roadmap.md](phase-13-roadmap.md).
 
 **Phase 12 additions:** See [phase-12-roadmap.md](phase-12-roadmap.md), [deploy-production.md](deploy-production.md), [tls-production.md](tls-production.md).
 
@@ -52,14 +54,14 @@ Phase 12 (M12.1–M12.5) adds production Docker + TLS, deployment automation, se
 | Authorization | PermissionService + policies | Pivot admin → `*`; explicit roles replace baseline |
 | Tenant isolation | `X-Organization-Id` + FK validation | Cross-tenant header → 403; tested |
 | AI endpoints | Throttled per organization | `ai-org` limiter; quota + billing gating |
-| CORS | Laravel default | Review `config/cors.php` for production origins |
+| CORS | `config/cors.php` + `FRONTEND_URL` | Set comma-separated production origins in host `backend/.env` (M13.4) |
 | Password hashing | bcrypt | Login response excludes hash |
 | API errors | JSON `{ message, errors? }` | No stack traces in API responses (Phase 6 handlers) |
 | Access management | `access.manage` permission | Admin-only user/role endpoints |
 
 ### Findings
 
-- **Low:** Demo login pre-filled in web/mobile clients — acceptable for demo, remove for production builds.
+- **Low:** Demo login pre-filled in web/mobile clients — **addressed for production builds in M13.4** (`VITE_SHOW_DEMO_LOGIN=false`, Flutter `SHOW_DEMO_HINT` off by default). Local dev unchanged.
 - **Resolved (Phase 8):** Token expiry documented via `SANCTUM_TOKEN_EXPIRATION`; open registration disabled by default.
 - **Medium:** Rate limits are per-IP; consider authenticated user throttles for AI/diagnosis in high-traffic deployments.
 

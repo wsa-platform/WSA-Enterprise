@@ -15,6 +15,10 @@ tags:
   - name: Projects
   - name: Tasks
   - name: Farms
+  - name: Crops
+  - name: Soil
+  - name: Training
+  - name: Library
   - name: Diagnosis
   - name: Audit
   - name: AI
@@ -102,7 +106,7 @@ paths:
     get:
       tags: [Platform]
       summary: Legacy API health check (backward compatible)
-      description: "Returns `{status: ok}` when all readiness dependencies are healthy; otherwise 503 with degraded status."
+      description: "Returns `{status: ok}` when all readiness dependencies are healthy; otherwise 503 with degraded status. When APP_DEBUG is false, check messages are generic and omit internal exception details."
       responses:
         '200':
           description: OK
@@ -150,7 +154,7 @@ paths:
     get:
       tags: [Platform]
       summary: Readiness probe
-      description: Verifies database, cache, queue, storage, scheduler, and authentication dependencies.
+      description: Verifies database, cache, queue, storage, scheduler, and authentication dependencies. Failed check messages are sanitized when APP_DEBUG is false.
       responses:
         '200':
           description: Ready to serve traffic
@@ -516,6 +520,202 @@ paths:
           description: Deleted
         '404':
           $ref: '#/components/responses/NotFound'
+  /crop/{module}:
+    get:
+      tags: [Crops]
+      summary: List crop module records
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: module
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Records
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Crops]
+      summary: Create crop module record
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: module
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /crop/{module}/{id}:
+    put:
+      tags: [Crops]
+      summary: Update crop module record
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: module
+          in: path
+          required: true
+          schema: { type: string }
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Updated
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Crops]
+      summary: Delete crop module record
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: module
+          in: path
+          required: true
+          schema: { type: string }
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /soil/{module}:
+    get:
+      tags: [Soil]
+      summary: List soil module records
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: module
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Records
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Soil]
+      summary: Create soil module record
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: module
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /soil/{module}/{id}:
+    put:
+      tags: [Soil]
+      summary: Update soil module record
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: module
+          in: path
+          required: true
+          schema: { type: string }
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Updated
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Soil]
+      summary: Delete soil module record
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: module
+          in: path
+          required: true
+          schema: { type: string }
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /training/enrollments:
+    get:
+      tags: [Training]
+      summary: List training enrollments
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Enrollments
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Training]
+      summary: Enroll in training
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Enrolled
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /library/search:
+    get:
+      tags: [Library]
+      summary: Search library content
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Search results
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /diagnosis/requests:
     get:
       tags: [Diagnosis]

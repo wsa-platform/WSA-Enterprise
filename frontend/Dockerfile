@@ -1,7 +1,9 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 ARG VITE_API_URL=/api/v1
+ARG VITE_SHOW_DEMO_LOGIN=false
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SHOW_DEMO_LOGIN=$VITE_SHOW_DEMO_LOGIN
 COPY package*.json ./
 RUN npm install
 COPY . .

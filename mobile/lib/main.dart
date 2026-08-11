@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:wsa_enterprise/api/api_client.dart';
 import 'package:wsa_enterprise/screens/home_screen.dart';
 
+const bool _showDemoHint = bool.fromEnvironment('SHOW_DEMO_HINT', defaultValue: false);
+
 void main() => runApp(const WsaEnterpriseApp());
 
 class WsaEnterpriseApp extends StatelessWidget {
@@ -155,8 +157,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (error != null) ...[const SizedBox(height: 12), Text(error!, style: const TextStyle(color: Colors.red))],
                 const SizedBox(height: 20),
                 FilledButton(onPressed: loading ? null : signIn, child: Text(loading ? 'Signing in…' : 'Sign in')),
-                const SizedBox(height: 12),
-                const Text('Staging demo credentials are documented in README.md.', style: TextStyle(fontSize: 12)),
+                if (_showDemoHint) ...[
+                  const SizedBox(height: 12),
+                  const Text('Staging demo credentials are documented in README.md.', style: TextStyle(fontSize: 12)),
+                ],
               ],
             ),
           ),

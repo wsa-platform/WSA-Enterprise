@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { getOrganizations, login } from '../api'
+import { DEMO_HINT, getLoginDefaults, isDemoLoginEnabled } from '../config/loginDemo'
 import { useAuth } from '../context/AuthContext'
 
 export function LoginPage() {
@@ -8,8 +9,9 @@ export function LoginPage() {
   const location = useLocation()
   const expired = (location.state as { expired?: boolean } | null)?.expired === true
   const { setSession, setOrganizationId } = useAuth()
-  const [email, setEmail] = useState('admin@wsa.test')
-  const [password, setPassword] = useState('password')
+  const loginDefaults = getLoginDefaults()
+  const [email, setEmail] = useState(loginDefaults.email)
+  const [password, setPassword] = useState(loginDefaults.password)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -43,7 +45,7 @@ export function LoginPage() {
           {error && <p className="error">{error}</p>}
           <button disabled={loading} type="submit">{loading ? 'Signing in…' : 'Sign in'}</button>
         </form>
-        <p className="hint">Demo: admin@wsa.test / password</p>
+        {isDemoLoginEnabled() && <p className="hint">{DEMO_HINT}</p>}
       </section>
     </main>
   )
