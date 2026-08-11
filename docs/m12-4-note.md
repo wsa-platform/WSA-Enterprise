@@ -1,0 +1,1 @@
+M12.4 is limited to health endpoints, dependency readiness, Docker/NGINX health signals, and tests. External monitoring, alerting, rollback, and backup remain deferred.
