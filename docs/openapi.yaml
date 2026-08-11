@@ -101,7 +101,8 @@ paths:
   /health:
     get:
       tags: [Platform]
-      summary: API health check
+      summary: Legacy API health check (backward compatible)
+      description: "Returns `{status: ok}` when all readiness dependencies are healthy; otherwise 503 with degraded status."
       responses:
         '200':
           description: OK
@@ -113,6 +114,72 @@ paths:
                   status:
                     type: string
                     example: ok
+        '503':
+          description: One or more dependencies are unhealthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: degraded
+                  checks:
+                    type: object
+                    additionalProperties:
+                      type: object
+  /health/live:
+    get:
+      tags: [Platform]
+      summary: Liveness probe
+      description: Lightweight process liveness check without dependency verification.
+      responses:
+        '200':
+          description: Application process is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+  /health/ready:
+    get:
+      tags: [Platform]
+      summary: Readiness probe
+      description: Verifies database, cache, queue, storage, scheduler, and authentication dependencies.
+      responses:
+        '200':
+          description: Ready to serve traffic
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  checks:
+                    type: object
+                    additionalProperties:
+                      type: object
+        '503':
+          description: Not ready — one or more dependency checks failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: degraded
+                  checks:
+                    type: object
+                    additionalProperties:
+                      type: object
   /auth/login:
     post:
       tags: [Auth]

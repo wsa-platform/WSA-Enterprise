@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\AiMonitoringAnalyzerInterface;
 use App\Contracts\AiProviderInterface;
 use App\Contracts\BillingProviderInterface;
 use App\Services\Ai\AiProviderResolver;
@@ -17,6 +18,11 @@ use App\Services\Billing\EntitlementService;
 use App\Services\Billing\MockBillingProvider;
 use App\Services\Billing\OrganizationSettingsService;
 use App\Services\Billing\SubscriptionService;
+use App\Services\Monitoring\HealthCheckService;
+use App\Services\Monitoring\MonitoringEventService;
+use App\Services\Monitoring\RemediationService;
+use App\Services\Monitoring\SafeRemediationExecutor;
+use App\Services\Monitoring\StubAiMonitoringAnalyzer;
 use App\Services\Notifications\NotificationService;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -36,6 +42,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(BillingUsageService::class);
         $this->app->singleton(OrganizationSettingsService::class);
         $this->app->singleton(NotificationService::class);
+
+        $this->app->singleton(HealthCheckService::class);
+        $this->app->singleton(SafeRemediationExecutor::class);
+        $this->app->singleton(MonitoringEventService::class);
+        $this->app->singleton(RemediationService::class);
+        $this->app->bind(AiMonitoringAnalyzerInterface::class, StubAiMonitoringAnalyzer::class);
 
         $this->app->bind(BillingProviderInterface::class, MockBillingProvider::class);
 
