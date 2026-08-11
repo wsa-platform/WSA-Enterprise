@@ -2,6 +2,9 @@
 
 **Baseline:** Phase 11 complete (`main`)  
 **Target:** Single Docker host production deployment with Let's Encrypt TLS and GHCR
+**Status:** **COMPLETE** (2026-08-11)
+
+See [phase-12-final-verification.md](phase-12-final-verification.md) for authoritative closure sign-off.
 
 ---
 
@@ -10,10 +13,10 @@
 | # | Milestone | Scope | Status |
 |---|-----------|-------|--------|
 | M12.1 | Production Docker + TLS | Prod Compose, nginx TLS, Certbot, TrustProxies | Complete |
-| M12.2 | Deployment automation | GHCR push, SSH deploy workflow, smoke checks | In progress |
+| M12.2 | Deployment automation | GHCR push, SSH deploy workflow, smoke checks | Complete |
 | M12.3 | Production secrets management | `.env.production.example`, secrets docs, no hardcoded passwords | Complete |
 | M12.4 | AI monitoring & health checks | Health probes, incidents, safe remediation, AI analyzer foundation | Complete |
-| M12.5 | Rollback and production verification | Backup, rollback runbook, verification scripts | In progress |
+| M12.5 | Rollback and production verification | Backup, rollback runbook, verification scripts | Complete |
 
 **Exclusions:** Stripe/payment providers, unrelated product features, API expansion unless deploy-required.
 
@@ -23,11 +26,11 @@
 
 See [phase-12-m12-1-verification.md](phase-12-m12-1-verification.md).
 
-**Commit message example:** `Add production Docker Compose override and Let's Encrypt TLS.`
+**Merged:** PR #14 (`dec5049`)
 
 ---
 
-## M12.2 — Deployment Automation
+## M12.2 — Deployment Automation ✅
 
 ### CI/CD
 
@@ -43,15 +46,23 @@ See [phase-12-m12-1-verification.md](phase-12-m12-1-verification.md).
 - [x] CI prod+GHCR compose validation
 - [x] `docs/phase-12-m12-2-verification.md`
 
-**Deploy mechanism:** SSH to single Docker production host.  
-**Registry:** `ghcr.io/wsa-platform/wsa-enterprise-*`  
-**No secrets templates** (deferred to M12.3).
-
-**Commit message example:** `Add GHCR publish workflow and SSH production deployment automation.`
+**Merged:** PR #15 (`7c6061c`)
 
 ---
 
-## M12.4 — AI Monitoring & Health Checks
+## M12.3 — Production Secrets Management ✅
+
+- [x] `.env.production.example` — placeholders only
+- [x] `docs/production-secrets.md`
+- [x] Hardcoded passwords removed from env examples
+
+See [phase-12-m12-3-verification.md](phase-12-m12-3-verification.md).
+
+**Merged:** PR #17
+
+---
+
+## M12.4 — AI Monitoring & Health Checks ✅
 
 ### Health endpoints
 
@@ -73,11 +84,11 @@ See [phase-12-m12-1-verification.md](phase-12-m12-1-verification.md).
 - [x] `docs/phase-12-m12-4-verification.md`
 - [x] OpenAPI paths for `/health`, `/health/live`, `/health/ready`
 
-**Commit message example:** `Add AI monitoring foundation with health probes and safe remediation.`
+**Merged:** PR #18 (`1c8d316`)
 
 ---
 
-## M12.5 — Rollback & Production Verification
+## M12.5 — Rollback & Production Verification ✅
 
 ### Scripts
 
@@ -89,17 +100,23 @@ See [phase-12-m12-1-verification.md](phase-12-m12-1-verification.md).
 
 - [x] `docs/phase-12-m12-5-backup-and-rollback.md`
 - [x] `docs/phase-12-m12-5-rollback-runbook.md`
+- [x] `docs/phase-12-m12-5-verification.md`
 
 ### Tests
 
 - [x] `Phase12M125ProductionOpsTest` — config validation, rollback safety, secret non-disclosure
 
-**Verification:** Pending local/CI run before marking complete.
-
-**Commit message example:** `Add production backup, rollback, and verification scripts for M12.5.`
+**Merged:** PR #19 (`c42b981`). CI verified — 171 backend tests on merge run `31488373975`.
 
 ---
 
-## Approval
+## Phase 12 closure
 
-M12.3 begins only after M12.2 PR merge and explicit approval.
+| Item | Location |
+| --- | --- |
+| Final sign-off | [phase-12-final-verification.md](phase-12-final-verification.md) |
+| Production deploy guide | [deploy-production.md](deploy-production.md) |
+| TLS guide | [tls-production.md](tls-production.md) |
+| Backup / rollback | [phase-12-m12-5-backup-and-rollback.md](phase-12-m12-5-backup-and-rollback.md) |
+
+**Phase 12 complete.** Do not expand scope into product features without a new phase approval.

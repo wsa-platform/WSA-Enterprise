@@ -1,7 +1,9 @@
 # Phase 12 M12.2 — Deployment Automation
 
-**Date:** 2026-08-11  
-**Branch:** `phase-12-m12-2-deployment-automation`  
+**Date:** 2026-08-11
+**Branch:** `phase-12-m12-2-deployment-automation` (merged via PR #15)
+**Merge commit:** `e8beeec`
+**Feature commit:** `7c6061c`
 **Scope:** GHCR image publish, SSH production deploy, smoke verification
 
 ---
@@ -39,31 +41,60 @@
 | `PROD_DEPLOY_PATH` | Repo path on host |
 | `GHCR_PULL_TOKEN` | Pull packages on host during deploy |
 
+Enable required reviewers on the `production` environment before allowing deploys.
+
 ---
 
 ## Verification
 
-| Check | Result |
-| --- | --- |
-| Dev Compose config | PASS |
-| Prod + GHCR Compose config | PASS (CI docker-validate) |
-| Backend full suite | **PASS** | 153 tests, 643 assertions |
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Dev Compose config | **PASS** | CI docker-validate |
 | Prod + GHCR Compose config | **PASS** | CI docker-validate |
+| Backend full suite | **PASS** | CI backend job on PR #15 |
+| Publish workflow present | **PASS** | `publish-images.yml` |
+| Deploy workflow present | **PASS** | `deploy-production.yml` |
+| Smoke script HTTPS health check | **PASS** | `scripts/smoke-production.sh` |
+
+### CI evidence (PR #15)
+
+| Job | Result |
+| --- | --- |
+| backend | SUCCESS |
+| frontend | SUCCESS |
+| mobile | SUCCESS |
+| openapi | SUCCESS |
+| security | SUCCESS |
+| docker-validate | SUCCESS |
+
+CI run reference: `31436131051`.
 
 ---
 
-## Known limitations (M12.2)
+## Deploy mechanism
 
-1. Host `.env` files must exist before deploy — templates deferred to M12.3.
-2. First TLS bootstrap still requires `init-letsencrypt.sh` on host (M12.1).
-3. Rollback is manual tag redeploy — full runbook in M12.5.
+- **Target:** Single Docker production host via SSH.
+- **Registry:** `ghcr.io/wsa-platform/wsa-enterprise-*`
+- **Flow:** Publish on `main` push → manual `deploy-production.yml` dispatch → host runs `deploy-production.sh` → migrate → smoke.
+
+---
+
+## Known limitations
+
+1. First TLS bootstrap requires `./scripts/init-letsencrypt.sh` on host (M12.1).
+2. Host `.env` must exist before deploy — use `.env.production.example` (M12.3).
+3. Rollback and backup scripts provided in M12.5 — see [phase-12-m12-5-rollback-runbook.md](phase-12-m12-5-rollback-runbook.md).
 4. `deploy-stub.yml` superseded by `publish-images.yml`.
+5. Production host deploy not executed during closure — operator responsibility.
 
 ---
 
-## Out of scope
+## Production host verification
 
-- Secrets templates (M12.3)
-- Monitoring (M12.4)
-- Rollback automation (M12.5)
-- Stripe / payment providers
+**N/A — no production/staging host verification performed.**
+
+---
+
+## Acceptance status
+
+**M12.2: COMPLETE** — merged to `main` via PR #15. CI green; documentation and workflows verified.

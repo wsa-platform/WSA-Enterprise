@@ -1,6 +1,6 @@
 # E2E & Regression Testing
 
-**Last updated:** Phase 11 M9 (2026-08-10)
+**Last updated:** Phase 12 M12 closure (2026-08-11)
 
 ## Strategy
 
@@ -44,6 +44,19 @@ Manual device E2E is documented but not required for CI green.
 - `Phase11M8AnalyticsTest`, `Phase11M8ApiClientsTest` — analytics + API client registry
 - `Phase11M9IntegrationWorkflowTest` — cross-module Phase 11 integration workflow
 - `Phase11M10ApiClientAuthTest` — API client bearer authentication and route restrictions
+
+### Phase 12
+
+- `Phase12M121TrustedProxyTest` — forwarded proxy headers + HTTPS URL forcing (M12.1)
+- `Phase12M124HealthMonitoringTest` — liveness/readiness/legacy health, monitoring incidents, remediation allowlist (M12.4)
+- `Phase12M125ProductionOpsTest` — backup/rollback/verify script safety (M12.5)
+
+Production smoke scripts (operator, HTTPS host required):
+
+- `scripts/smoke-production.sh` — post-deploy health + `/up`
+- `scripts/verify-production.sh` — full production verification (11 checks)
+
+See [phase-12-final-verification.md](phase-12-final-verification.md).
 
 ## Workflow covered (Phase 11 M9 integration)
 
@@ -96,7 +109,7 @@ docker compose up -d --build
 
 ## CI triggers
 
-Push to `main`, `phase-7-*`, or `phase-8-*` branches runs full CI.
+Push to `main` or `phase-*` branches runs full CI (6 jobs: backend, frontend, mobile, openapi, security, docker-validate).
 
 ## Environment limitations
 

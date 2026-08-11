@@ -83,6 +83,37 @@ docker compose --profile test run --rm backend-test
 
 Supporting guides: [multi-tenancy](docs/multi-tenancy.md), [ai-platform](docs/ai-platform.md), [billing](docs/billing.md), [security](docs/security.md).
 
+## Phase 12 production deployment hardening
+
+Phase 12 delivers single-host production deployment with Let's Encrypt TLS, GHCR image publish, SSH deploy automation, production secrets templates, health monitoring foundation, and backup/rollback/verification scripts. **Phase 12 is complete.**
+
+| Milestone | Status | Highlights |
+| --- | --- | --- |
+| M12.1 | Complete | Prod Compose, nginx TLS, Certbot, TrustProxies |
+| M12.2 | Complete | GHCR publish, SSH deploy workflow, smoke checks |
+| M12.3 | Complete | `.env.production.example`, secrets guide |
+| M12.4 | Complete | Health probes (`/live`, `/ready`), monitoring incidents, safe remediation |
+| M12.5 | Complete | Backup, rollback, verify scripts + runbooks |
+
+Key documents:
+
+- [docs/phase-12-final-verification.md](docs/phase-12-final-verification.md) — **Phase 12 final sign-off**
+- [docs/phase-12-roadmap.md](docs/phase-12-roadmap.md)
+- [docs/deploy-production.md](docs/deploy-production.md) — GHCR + SSH deploy
+- [docs/tls-production.md](docs/tls-production.md) — Let's Encrypt TLS
+- [docs/production-secrets.md](docs/production-secrets.md) — secrets handling
+- [docs/phase-12-m12-4-monitoring-architecture.md](docs/phase-12-m12-4-monitoring-architecture.md)
+- [docs/phase-12-m12-5-rollback-runbook.md](docs/phase-12-m12-5-rollback-runbook.md)
+
+Production scripts:
+
+```bash
+./scripts/deploy-production.sh      # pull, up, migrate, smoke
+./scripts/verify-production.sh      # HTTPS + container + DB checks
+./scripts/backup-production.sh      # pg_dump backup (DRY_RUN=1 supported)
+./scripts/rollback-production.sh    # immutable tag rollback
+```
+
 ## Phase 10 production platform
 
 Phase 10 adds isolated test databases, SPA routing fixes, production-ready async AI, expanded audit logging, multi-tenant security tests, modular frontend/mobile API clients, OpenAPI validation in CI, and production hardening documentation.

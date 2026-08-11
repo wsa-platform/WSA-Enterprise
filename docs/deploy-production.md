@@ -107,13 +107,17 @@ The deploy script:
 
 ---
 
-## Rollback (manual, M12.5 expands)
+## Rollback (M12.5)
 
-Redeploy a previous immutable tag:
+Use the dedicated rollback script with an **immutable** GHCR tag (full git SHA or `sha-*`):
 
 ```bash
-IMAGE_TAG=<previous-git-sha> ./scripts/deploy-production.sh
+IMAGE_TAG=<previous-git-sha> ./scripts/rollback-production.sh
 ```
+
+See [phase-12-m12-5-rollback-runbook.md](phase-12-m12-5-rollback-runbook.md) and [phase-12-m12-5-backup-and-rollback.md](phase-12-m12-5-backup-and-rollback.md).
+
+Pre-rollback: run `./scripts/backup-production.sh`. Post-rollback: run `./scripts/verify-production.sh` and `./scripts/smoke-production.sh`.
 
 ---
 
@@ -128,11 +132,11 @@ IMAGE_TAG=<previous-git-sha> ./scripts/deploy-production.sh
 
 ---
 
-## Out of scope (M12.2)
+## Related Phase 12 docs
 
-- `.env.production.example` templates → M12.3
-- Monitoring runbook → M12.4
-- Automated rollback / backup → M12.5
-- Stripe / payment providers → excluded
+- Secrets templates: [production-secrets.md](production-secrets.md) (M12.3)
+- Monitoring & health: [phase-12-m12-4-monitoring-architecture.md](phase-12-m12-4-monitoring-architecture.md) (M12.4)
+- Backup / rollback / verify: [phase-12-m12-5-backup-and-rollback.md](phase-12-m12-5-backup-and-rollback.md) (M12.5)
+- Phase 12 closure: [phase-12-final-verification.md](phase-12-final-verification.md)
 
 See also [tls-production.md](tls-production.md), [docker-production.md](docker-production.md), [deployment.md](deployment.md).
