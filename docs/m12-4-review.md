@@ -1,0 +1,1 @@
+Review focus: health endpoint behavior, dependency readiness, backward compatibility, tests, and scope boundaries.
