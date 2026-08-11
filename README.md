@@ -114,6 +114,25 @@ Production scripts:
 ./scripts/rollback-production.sh    # immutable tag rollback
 ```
 
+## Phase 13 enterprise evolution
+
+Phase 13 evolves M12 production hardening toward enterprise operational readiness: observability ops closure, documentation refresh, frontend Vitest in CI, and production client hardening. **Tier 1 scope only** — no real AI/billing, browser E2E, or K8s.
+
+| Milestone | Status | Highlights |
+| --- | --- | --- |
+| M13.1 | Implementation complete | M12.4 deferrals closed, scheduler heartbeat, ops runbook, certbot hook |
+| M13.2 | Implementation complete | Architecture refresh, Phase 13 docs, incremental OpenAPI |
+| M13.3 | Implementation complete | Vitest in CI, expanded frontend tests |
+| M13.4 | Implementation complete | No demo credentials in prod builds, CORS docs |
+
+Key documents:
+
+- [docs/phase-13-roadmap.md](docs/phase-13-roadmap.md)
+- [docs/operations-monitoring.md](docs/operations-monitoring.md)
+- [docs/phase-13-final-verification.md](docs/phase-13-final-verification.md)
+
+Production frontend builds set `VITE_SHOW_DEMO_LOGIN=false` via Docker. Local dev retains demo login when the flag is unset.
+
 ## Phase 10 production platform
 
 Phase 10 adds isolated test databases, SPA routing fixes, production-ready async AI, expanded audit logging, multi-tenant security tests, modular frontend/mobile API clients, OpenAPI validation in CI, and production hardening documentation.

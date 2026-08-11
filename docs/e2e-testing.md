@@ -1,6 +1,6 @@
 # E2E & Regression Testing
 
-**Last updated:** Phase 12 M12 closure (2026-08-11)
+**Last updated:** Phase 13 M13 (2026-08-11)
 
 ## Strategy
 
@@ -9,7 +9,7 @@ WSA-Enterprise uses layered automated testing:
 | Layer | Tool | Scope |
 | --- | --- | --- |
 | Backend API | PHPUnit (`php artisan test`) | Auth, permissions, CRUD, tenant isolation, workflows |
-| Frontend | TypeScript build + oxlint | Compile-time correctness |
+| Frontend | Vitest + TypeScript build + oxlint | API client helpers, login demo gating, compile-time correctness |
 | Mobile | `flutter analyze` + `flutter test` | API client, widgets, unwrap logic |
 | CI | GitHub Actions | All layers on push/PR |
 
@@ -53,10 +53,18 @@ Manual device E2E is documented but not required for CI green.
 
 Production smoke scripts (operator, HTTPS host required):
 
-- `scripts/smoke-production.sh` — post-deploy health + `/up`
+- `scripts/smoke-production.sh` — post-deploy `/health/live`, `/health/ready`, legacy `/health`, `/up`
 - `scripts/verify-production.sh` — full production verification (11 checks)
 
 See [phase-12-final-verification.md](phase-12-final-verification.md).
+
+### Phase 13
+
+- `Phase13M131ObservabilityOpsTest` — M12.4 deferral closure, scheduler heartbeat, certbot hook (M13.1)
+- Frontend Vitest — `frontend/src/api/client.test.ts`, `frontend/src/config/loginDemo.test.ts` (M13.3 / M13.4)
+- CI frontend job runs `npm run test` after lint (M13.3)
+
+See [phase-13-roadmap.md](phase-13-roadmap.md).
 
 ## Workflow covered (Phase 11 M9 integration)
 
@@ -87,8 +95,9 @@ php artisan test
 ```bash
 cd frontend
 npm install
-npm run build
 npm run lint
+npm run test
+npm run build
 ```
 
 ### Mobile (requires Flutter SDK)
@@ -109,7 +118,7 @@ docker compose up -d --build
 
 ## CI triggers
 
-Push to `main` or `phase-*` branches runs full CI (6 jobs: backend, frontend, mobile, openapi, security, docker-validate).
+Push to `main` or `phase-*` branches runs full CI (6 jobs: backend, frontend, mobile, openapi, security, docker-validate). The frontend job runs lint, **Vitest**, and build.
 
 ## Environment limitations
 

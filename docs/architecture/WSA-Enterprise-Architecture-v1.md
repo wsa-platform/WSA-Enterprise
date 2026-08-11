@@ -265,9 +265,10 @@ flowchart LR
 ## 10. Database architecture
 
 - **Engine:** PostgreSQL 16 (SQLite in CI unit contexts)
-- **Migrations:** 21 files (20 domain + 1 audit v1.0); do not rewrite historical migrations
+- **Migrations:** 28 files (Phase 4–12 domain + enterprise + monitoring); do not rewrite historical migrations
 - **Indexing:** Phase 6 performance indexes on diagnosis, library, training, AI, farms
-- **Queues:** `jobs`, `failed_jobs`, `job_batches` tables present; workers not in default Compose
+- **Queues:** `jobs`, `failed_jobs`, `job_batches` tables; `queue` worker service in Docker Compose
+- **Monitoring:** `monitoring_events` table (Phase 12 M12.4)
 - **Tenant boundary:** `organization_id` FK on tenant tables; validate cross-FK in controllers
 
 See `docs/database.md` for table inventory by phase.
@@ -276,15 +277,14 @@ See `docs/database.md` for table inventory by phase.
 
 ## 11. Events, jobs, and queues
 
-| Capability | v1.0 status |
-|------------|-------------|
+| Capability | v1.0 / M12 status |
+|------------|-------------------|
 | Queue tables | Migrated |
 | Redis queue driver | Configured (`QUEUE_CONNECTION=redis`) |
-| Application jobs | Not yet extracted (AI runs synchronously) |
+| Docker `queue` service | Runs `php artisan queue:work` |
+| Docker `scheduler` service | Runs `php artisan schedule:work` (M13.1 heartbeat) |
+| `ProcessAiRequest` job | Async AI processing (Phase 10+) |
 | Domain events/listeners | Not yet introduced |
-| Scheduler | Not in Docker Compose |
-
-**Recommendation:** Introduce `ProcessAiRequest` job in a future phase without changing API contracts.
 
 ---
 
@@ -327,7 +327,7 @@ Documented in `docs/security.md`. Summary:
 - Sanctum tokens, bcrypt passwords, rate limits (20/min auth, 120/min API)
 - Tenant isolation + permission checks on every mutating endpoint
 - Registration lockdown, sanitized `/user` endpoint
-- CORS via Laravel defaults; same-origin in Docker staging
+- CORS via `config/cors.php` — production origins from comma-separated `FRONTEND_URL` (M13.4)
 - Phase 8 security test suite
 
 ---
@@ -336,8 +336,8 @@ Documented in `docs/security.md`. Summary:
 
 | Layer | Tooling | Scope |
 |-------|---------|-------|
-| Backend | PHPUnit 11 | Module, E2E workflow, security, regression, architecture |
-| Frontend | Vite build (CI) | TypeScript compile |
+| Backend | PHPUnit 11 | Module, E2E workflow, security, regression, Phase 11–13 ops |
+| Frontend | Vitest + Vite build (CI) | API client helpers, login demo gating, TypeScript compile |
 | Mobile | flutter analyze + test | API client, widget smoke |
 | E2E | API workflow tests | Phase 7/8 comprehensive tests |
 | Manual | `docs/e2e-testing.md` | Browser/mobile when available |
@@ -364,7 +364,7 @@ cd mobile && flutter analyze && flutter test
 
 Bootstrap: `scripts/staging-bootstrap.ps1` / `.sh`
 
-See `docs/deployment.md` for production checklist. **Production gaps:** TLS, secrets manager, queue workers, scheduler, healthchecks on all services.
+See `docs/deployment.md` for production checklist. **Production stack (M12–M13):** TLS via Certbot, `queue` + `scheduler` services, health probes, optional certbot nginx reload hook — see [operations-monitoring.md](operations-monitoring.md).
 
 ---
 
