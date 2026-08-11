@@ -27,6 +27,7 @@ tags:
   - name: Notifications
   - name: Analytics
   - name: API Clients
+  - name: Monitoring
 components:
   securitySchemes:
     bearerAuth:
@@ -388,6 +389,225 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /users/{user}:
+    get:
+      tags: [Users]
+      summary: Get organization member details
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: user
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: User with membership and roles
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Users]
+      summary: Update organization member
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: user
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                membership_role: { type: string, enum: [admin, member] }
+                is_active: { type: boolean }
+      responses:
+        '200':
+          description: Updated user
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Users]
+      summary: Remove user from organization
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: user
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: User removed
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /users/{user}/roles/{role}:
+    delete:
+      tags: [Users]
+      summary: Unassign role from user
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: user
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: role
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Role unassigned
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /organization:
+    get:
+      tags: [Platform]
+      summary: Current organization profile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Organization profile
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    patch:
+      tags: [Platform]
+      summary: Update organization profile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                slug: { type: string }
+      responses:
+        '200':
+          description: Updated organization
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /organization/settings:
+    get:
+      tags: [Platform]
+      summary: Organization settings (admin)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Settings map
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      tags: [Platform]
+      summary: Update organization settings (admin)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [settings]
+              properties:
+                settings: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Updated settings
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /monitoring/health:
+    get:
+      tags: [Monitoring]
+      summary: Administrator health overview
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Component health statuses
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /monitoring/incidents:
+    get:
+      tags: [Monitoring]
+      summary: List monitoring incidents
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: component
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Incident list
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /monitoring/incidents/{monitoringEvent}/resolve:
+    post:
+      tags: [Monitoring]
+      summary: Resolve monitoring incident
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: monitoringEvent
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note: { type: string, maxLength: 500 }
+      responses:
+        '200':
+          description: Incident resolved
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /projects:
     get:
       tags: [Projects]
@@ -848,6 +1068,86 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Users]
+      summary: Create role
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                slug: { type: string }
+                description: { type: string }
+                permission_ids: { type: array, items: { type: integer } }
+      responses:
+        '201':
+          description: Created role
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /roles/{role}:
+    get:
+      tags: [Users]
+      summary: Get role details
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: role
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Role with permissions
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Users]
+      summary: Update role
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: role
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                permission_ids: { type: array, items: { type: integer } }
+      responses:
+        '200':
+          description: Updated role
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Users]
+      summary: Delete role
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: role
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Role deleted
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /permissions:
     get:
       tags: [Users]
@@ -862,6 +1162,66 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Users]
+      summary: Create permission
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+      responses:
+        '201':
+          description: Created permission
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /permissions/{permission}:
+    patch:
+      tags: [Users]
+      summary: Update permission
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: permission
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+      responses:
+        '200':
+          description: Updated permission
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Users]
+      summary: Delete permission
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: permission
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Permission deleted
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /ai/provider:
     get:
       tags: [AI]

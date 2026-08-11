@@ -101,7 +101,40 @@ export type AuditLogEntry = {
 export type Role = { id: number; name: string; slug?: string | null; description?: string | null; permissions?: Permission[] }
 export type Permission = { id: number; name: string; description?: string | null }
 
-export type UserWithRoles = User & { roles?: Role[] }
+export type UserWithRoles = User & {
+  roles?: Role[]
+  membership_role?: string
+  is_active?: boolean
+}
+
+export type OrganizationProfile = {
+  id: number
+  name: string
+  slug: string
+  membership_role?: string
+  is_active?: boolean
+  members_count?: number
+  created_at?: string
+  updated_at?: string
+}
+
+export type MonitoringHealth = {
+  status: 'healthy' | 'degraded'
+  checked_at: string
+  components: Record<string, { status: 'healthy' | 'failed'; message?: string | null }>
+}
+
+export type MonitoringIncident = {
+  id: number
+  component: string
+  status: string
+  severity: string
+  lifecycle_stage: string
+  detected_at: string
+  resolved_at?: string | null
+  details?: Record<string, unknown> | null
+  analysis_summary?: string | null
+}
 
 export type MeContext = {
   user: User

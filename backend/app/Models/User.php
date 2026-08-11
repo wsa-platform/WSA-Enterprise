@@ -52,7 +52,7 @@ class User extends Authenticatable
 
     public function organizations(): BelongsToMany
     {
-        return $this->belongsToMany(Organization::class)->withPivot('role')->withTimestamps();
+        return $this->belongsToMany(Organization::class)->withPivot(['role', 'is_active'])->withTimestamps();
     }
 
     public function assignedTasks(): HasMany

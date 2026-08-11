@@ -31,6 +31,7 @@ const navSections: Array<{ title: string; items: NavItem[] }> = [
       { to: '/admin/teams', label: 'Teams', permission: 'access.manage' },
       { to: '/admin/roles', label: 'Roles & Permissions', permission: 'access.manage' },
       { to: '/admin/audit', label: 'Audit Logs', permission: 'access.manage' },
+      { to: '/admin/monitoring', label: 'Monitoring', permission: 'access.manage' },
     ],
   },
   {
@@ -87,6 +88,7 @@ function breadcrumbItems(pathname: string): BreadcrumbItem[] {
     '/admin/teams': [{ label: 'Dashboard', to: '/' }, { label: 'Teams' }],
     '/admin/roles': [{ label: 'Dashboard', to: '/' }, { label: 'Roles & Permissions' }],
     '/admin/audit': [{ label: 'Dashboard', to: '/' }, { label: 'Audit Logs' }],
+    '/admin/monitoring': [{ label: 'Dashboard', to: '/' }, { label: 'Monitoring' }],
     '/ai/workspace': [{ label: 'Dashboard', to: '/' }, { label: 'AI Workspace' }],
     '/notifications': [{ label: 'Dashboard', to: '/' }, { label: 'Notifications' }],
     '/settings': [{ label: 'Dashboard', to: '/' }, { label: 'Settings' }],

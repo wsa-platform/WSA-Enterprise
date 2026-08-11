@@ -55,6 +55,13 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['email' => ['The provided credentials are incorrect.']]);
         }
 
+        if (! $user->organizations()->wherePivot('is_active', true)->exists()
+            && $user->organizations()->exists()) {
+            throw ValidationException::withMessages([
+                'email' => ['Your account is inactive in all organizations. Contact an administrator.'],
+            ]);
+        }
+
         $this->auditService->record(
             action: 'auth.login',
             userId: $user->id,

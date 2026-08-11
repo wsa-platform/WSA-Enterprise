@@ -25,6 +25,8 @@ use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\ApiClientController;
 use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\OrganizationController;
+use App\Http\Controllers\Api\MonitoringController;
 
 Route::prefix('v1/health')->group(function (): void {
     Route::get('/live', [HealthController::class, 'live']);
@@ -46,6 +48,13 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/platform/me', [PlatformController::class, 'me']);
         Route::get('/platform/access-summary', [PlatformController::class, 'accessSummary']);
         Route::get('/platform/workflow-summary', [PlatformController::class, 'workflowSummary']);
+        Route::get('/organization', [OrganizationController::class, 'show']);
+        Route::patch('/organization', [OrganizationController::class, 'update']);
+        Route::get('/organization/settings', [OrganizationController::class, 'settings']);
+        Route::put('/organization/settings', [OrganizationController::class, 'updateSettings']);
+        Route::get('/monitoring/health', [MonitoringController::class, 'health']);
+        Route::get('/monitoring/incidents', [MonitoringController::class, 'incidents']);
+        Route::post('/monitoring/incidents/{monitoringEvent}/resolve', [MonitoringController::class, 'resolveIncident'])->whereNumber('monitoringEvent');
         Route::get('/analytics/overview', [AnalyticsController::class, 'overview']);
         Route::get('/api-clients', [ApiClientController::class, 'index']);
         Route::post('/api-clients', [ApiClientController::class, 'store']);
@@ -54,11 +63,20 @@ Route::prefix('v1')->group(function (): void {
         Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->whereNumber('task');
         Route::get('/users', [AccessController::class, 'users']);
         Route::post('/users', [AccessController::class, 'storeUser']);
-        Route::post('/users/{user}/roles', [AccessController::class, 'assignRole']);
+        Route::get('/users/{user}', [AccessController::class, 'showUser'])->whereNumber('user');
+        Route::patch('/users/{user}', [AccessController::class, 'updateUser'])->whereNumber('user');
+        Route::delete('/users/{user}', [AccessController::class, 'removeUser'])->whereNumber('user');
+        Route::post('/users/{user}/roles', [AccessController::class, 'assignRole'])->whereNumber('user');
+        Route::delete('/users/{user}/roles/{role}', [AccessController::class, 'unassignRole'])->whereNumber(['user', 'role']);
         Route::get('/roles', [AccessController::class, 'roles']);
         Route::post('/roles', [AccessController::class, 'storeRole']);
+        Route::get('/roles/{role}', [AccessController::class, 'showRole'])->whereNumber('role');
+        Route::patch('/roles/{role}', [AccessController::class, 'updateRole'])->whereNumber('role');
+        Route::delete('/roles/{role}', [AccessController::class, 'deleteRole'])->whereNumber('role');
         Route::get('/permissions', [AccessController::class, 'permissions']);
         Route::post('/permissions', [AccessController::class, 'storePermission']);
+        Route::patch('/permissions/{permission}', [AccessController::class, 'updatePermission'])->whereNumber('permission');
+        Route::delete('/permissions/{permission}', [AccessController::class, 'deletePermission'])->whereNumber('permission');
         Route::get('/teams', [TeamController::class, 'index']);
         Route::get('/teams/{team}', [TeamController::class, 'show'])->whereNumber('team');
         Route::post('/teams', [TeamController::class, 'store']);

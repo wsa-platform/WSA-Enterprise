@@ -22,6 +22,7 @@ import { TeamsPage } from './pages/admin/TeamsPage'
 import { TeamDetailPage } from './pages/admin/TeamDetailPage'
 import { RolesPage } from './pages/admin/RolesPage'
 import { AuditPage } from './pages/admin/AuditPage'
+import { MonitoringPage } from './pages/admin/MonitoringPage'
 import './App.css'
 
 function ProtectedShell() {
@@ -69,6 +70,7 @@ function AppRoutes() {
         <Route path="/admin/teams/:teamId" element={<TeamDetailPage />} />
         <Route path="/admin/roles" element={<RolesPage />} />
         <Route path="/admin/audit" element={<AuditPage />} />
+        <Route path="/admin/monitoring" element={<MonitoringPage />} />
         <Route path="/ai/workspace" element={<AiWorkspacePage />} />
         <Route path="/ai/requests/:requestId" element={<AiRequestDetailPage />} />
         <Route path="/ai" element={<Navigate to="/ai/workspace" replace />} />
