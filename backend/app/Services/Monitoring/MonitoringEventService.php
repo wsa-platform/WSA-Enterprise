@@ -32,6 +32,20 @@ class MonitoringEventService
                 continue;
             }
 
+            if (config('monitoring.deduplicate_open_incidents', true)) {
+                $existing = MonitoringEvent::query()
+                    ->where('component', (string) $component)
+                    ->where('status', MonitoringEvent::STATUS_OPEN)
+                    ->latest('detected_at')
+                    ->first();
+
+                if ($existing !== null) {
+                    $events[] = $existing;
+
+                    continue;
+                }
+            }
+
             $events[] = $this->detect(
                 component: (string) $component,
                 details: [

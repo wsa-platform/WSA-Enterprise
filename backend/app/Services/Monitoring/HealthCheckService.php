@@ -2,6 +2,7 @@
 
 namespace App\Services\Monitoring;
 
+use App\Support\HealthCheckMessages;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
@@ -90,7 +91,7 @@ class HealthCheckService
         } catch (\Throwable $exception) {
             return [
                 'healthy' => false,
-                'message' => $exception->getMessage(),
+                'message' => HealthCheckMessages::forFailure('database', $exception),
             ];
         }
     }
@@ -99,7 +100,7 @@ class HealthCheckService
     public function checkCache(): array
     {
         try {
-            $key = 'healthcheck:probe:'.Str::uuid()->toString();
+            $key = (string) config('monitoring.cache_probe_key', 'healthcheck:probe:write');
             Cache::put($key, 'ok', 10);
 
             if (Cache::get($key) !== 'ok') {
@@ -115,9 +116,18 @@ class HealthCheckService
         } catch (\Throwable $exception) {
             return [
                 'healthy' => false,
-                'message' => $exception->getMessage(),
+                'message' => HealthCheckMessages::forFailure('cache', $exception),
             ];
         }
+    }
+
+    public function clearCacheProbeKey(): bool
+    {
+        $key = (string) config('monitoring.cache_probe_key', 'healthcheck:probe:write');
+
+        Cache::forget($key);
+
+        return true;
     }
 
     /** @return array{healthy: bool, message?: string} */
@@ -136,7 +146,7 @@ class HealthCheckService
         } catch (\Throwable $exception) {
             return [
                 'healthy' => false,
-                'message' => $exception->getMessage(),
+                'message' => HealthCheckMessages::forFailure('queue', $exception),
             ];
         }
     }
@@ -162,7 +172,7 @@ class HealthCheckService
         } catch (\Throwable $exception) {
             return [
                 'healthy' => false,
-                'message' => $exception->getMessage(),
+                'message' => HealthCheckMessages::forFailure('storage', $exception),
             ];
         }
     }
@@ -205,7 +215,7 @@ class HealthCheckService
         } catch (\Throwable $exception) {
             return [
                 'healthy' => false,
-                'message' => $exception->getMessage(),
+                'message' => HealthCheckMessages::forFailure('authentication', $exception),
             ];
         }
     }

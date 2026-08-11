@@ -28,10 +28,13 @@ class SafeRemediationExecutor
 
     private function clearCacheProbeKeys(): RemediationResult
     {
-        // Safe, scoped cache cleanup for health probe keys only.
+        $cleared = app(HealthCheckService::class)->clearCacheProbeKey();
+
         return new RemediationResult(
-            success: true,
-            message: 'Health probe cache keys cleared (no-op for non-persistent drivers).',
+            success: $cleared,
+            message: $cleared
+                ? 'Health probe cache key cleared.'
+                : 'Health probe cache key could not be cleared.',
             allowed: true,
         );
     }

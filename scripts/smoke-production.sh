@@ -20,6 +20,17 @@ fi
 
 base="https://${DOMAIN}"
 
+echo "Smoke: GET ${base}/api/v1/health/live"
+live_body="$(curl -fsSk "${base}/api/v1/health/live")"
+echo "${live_body}" | grep -q '"status":"ok"'
+
+echo "Smoke: GET ${base}/api/v1/health/ready"
+ready_status="$(curl -fsSk -o /dev/null -w '%{http_code}' "${base}/api/v1/health/ready")"
+if [ "${ready_status}" != "200" ]; then
+  echo "Expected HTTP 200 from /api/v1/health/ready, got ${ready_status}"
+  exit 1
+fi
+
 echo "Smoke: GET ${base}/api/v1/health"
 health_body="$(curl -fsSk "${base}/api/v1/health")"
 echo "${health_body}" | grep -q '"status":"ok"'

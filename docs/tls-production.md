@@ -54,21 +54,21 @@ The script:
 
 ## Automatic renewal
 
-The `certbot` service in `docker-compose.prod.yml` runs:
+The `certbot` service in `docker-compose.prod.yml` runs renewal every 12 hours with a deploy hook mounted from `scripts/certbot-deploy-hook.sh`. Nginx serves `/.well-known/acme-challenge/` from the shared `certbot_www` volume.
 
-```text
-certbot renew --webroot -w /var/www/certbot
+After renewal, the deploy hook reloads nginx on the production host when Docker Compose is available:
+
+```bash
+./scripts/certbot-deploy-hook.sh
 ```
 
-every 12 hours. Nginx serves `/.well-known/acme-challenge/` from the shared `certbot_www` volume.
-
-After renewal, reload nginx manually if needed:
+Manual reload (always available):
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml exec nginx nginx -s reload
 ```
 
-Automatic post-renewal nginx reload is **not** implemented in Phase 12. The certbot sidecar runs `certbot renew` only; operators reload nginx after successful renewal when required.
+See [operations-monitoring.md](operations-monitoring.md) for hook behavior when Docker CLI is unavailable inside the Certbot container.
 
 ---
 
@@ -138,7 +138,6 @@ Expect JSON `{"status":"ok"}` from health and HTTP 200 from `/up`.
 
 - GHCR image push (M12.2) — see [deploy-production.md](deploy-production.md)
 - Secrets manager integration (M12.3) — see [production-secrets.md](production-secrets.md)
-- Automated post-renewal nginx reload hook — manual reload documented above
 - Rollback procedures (M12.5) — see [phase-12-m12-5-rollback-runbook.md](phase-12-m12-5-rollback-runbook.md)
 
 See also [docker-production.md](docker-production.md) and [deployment.md](deployment.md).
