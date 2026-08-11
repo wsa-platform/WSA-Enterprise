@@ -42,4 +42,17 @@ return [
         'scheduler' => true,
         'authentication' => true,
     ],
+
+    /*
+    | Fixed cache key used by health probe writes (M13.1). Remediation may clear it.
+    */
+    'cache_probe_key' => env('MONITORING_CACHE_PROBE_KEY', 'healthcheck:probe:write'),
+
+    /*
+    | Skip creating a new incident when an open incident exists for the same component.
+    */
+    'deduplicate_open_incidents' => filter_var(
+        env('MONITORING_DEDUPLICATE_OPEN_INCIDENTS', true),
+        FILTER_VALIDATE_BOOL
+    ),
 ];

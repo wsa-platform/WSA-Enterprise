@@ -107,11 +107,13 @@ curl -fsS https://<host>/api/v1/health
 
 ## Known deferred limitations (approved post-M12 hardening)
 
-1. `cache.clear_probe_keys` remediation action is currently a no-op in `SafeRemediationExecutor`.
-2. `SafeRemediationExecutor` is resolvable as a singleton — direct invocation bypasses `RemediationService` audit (no HTTP exposure).
-3. Public health endpoints may include raw exception messages in degraded responses.
-4. Repeated readiness failures do not deduplicate incidents.
-5. Certbot post-renewal nginx reload is **not** part of M12.4 — manual reload documented in [tls-production.md](tls-production.md).
+**M13.1 closure (Phase 13):** Items 1–4 below are addressed in M13.1. Item 5 (certbot reload) is addressed via deploy hook script — see [operations-monitoring.md](operations-monitoring.md) and [tls-production.md](tls-production.md).
+
+1. ~~`cache.clear_probe_keys` remediation action is currently a no-op~~ — **Closed in M13.1**
+2. ~~`SafeRemediationExecutor` is resolvable as a singleton~~ — **Closed in M13.1** (resolve via `RemediationService` only)
+3. ~~Public health endpoints may include raw exception messages~~ — **Closed in M13.1** (`HealthCheckMessages` when `APP_DEBUG=false`)
+4. ~~Repeated readiness failures do not deduplicate incidents~~ — **Closed in M13.1**
+5. ~~Certbot post-renewal nginx reload is **not** part of M12.4~~ — **Closed in M13.1** (deploy hook + host script)
 
 ---
 

@@ -44,9 +44,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(NotificationService::class);
 
         $this->app->singleton(HealthCheckService::class);
-        $this->app->singleton(SafeRemediationExecutor::class);
         $this->app->singleton(MonitoringEventService::class);
         $this->app->singleton(RemediationService::class);
+
+        $this->app->bind(SafeRemediationExecutor::class, fn (): never => throw new \RuntimeException(
+            'Resolve RemediationService for remediation actions.',
+        ));
+
+        $this->app->when(RemediationService::class)
+            ->needs(SafeRemediationExecutor::class)
+            ->give(fn ($app) => new SafeRemediationExecutor($app->make(HealthCheckService::class)));
         $this->app->bind(AiMonitoringAnalyzerInterface::class, StubAiMonitoringAnalyzer::class);
 
         $this->app->bind(BillingProviderInterface::class, MockBillingProvider::class);
