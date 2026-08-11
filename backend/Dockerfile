@@ -5,7 +5,7 @@ RUN composer install --no-interaction --no-scripts --prefer-dist
 
 FROM php:8.4-fpm-alpine
 WORKDIR /var/www/html
-RUN apk add --no-cache postgresql-dev libzip-dev oniguruma-dev $PHPIZE_DEPS \
+RUN apk add --no-cache postgresql-dev libzip-dev oniguruma-dev bash $PHPIZE_DEPS \
     && docker-php-ext-install pdo_pgsql zip bcmath opcache \
     && pecl install redis \
     && docker-php-ext-enable redis \
