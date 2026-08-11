@@ -114,7 +114,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/{module}', [SoilController::class, 'index']);
             Route::post('/{module}', [SoilController::class, 'store']);
             Route::put('/{module}/{id}', [SoilController::class, 'update']);
-            Route::delete('/{module}/{module}/{id}', [SoilController::class, 'destroy']);
+            Route::delete('/{module}/{id}', [SoilController::class, 'destroy']);
         });
         Route::prefix('diagnosis')->group(function (): void {
             Route::get('/requests', [DiagnosisRequestController::class, 'index']);
@@ -139,7 +139,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/{module}', [LibraryController::class, 'index']);
             Route::post('/{module}', [LibraryController::class, 'store']);
             Route::put('/{module}/{id}', [LibraryController::class, 'update']);
-            Route::delete('/{module}/{module}/{id}', [LibraryController::class, 'destroy']);
+            Route::delete('/{module}/{id}', [LibraryController::class, 'destroy']);
         });
         Route::prefix('ai')->middleware('throttle:ai-org')->group(function (): void {
             Route::get('/provider', [AiController::class, 'provider']);
