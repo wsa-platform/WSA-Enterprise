@@ -1,0 +1,1 @@
+M12.4 review is limited to health endpoints, dependency readiness, compatibility, and tests.
