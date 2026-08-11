@@ -1,0 +1,1 @@
+M12.4 review: health endpoints, dependency readiness, compatibility, and automated tests only.
