@@ -4,10 +4,14 @@ namespace App\Providers;
 
 use App\Models\AiRequest;
 use App\Models\Farm;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Team;
 use App\Policies\AiRequestPolicy;
 use App\Policies\BusinessPolicy;
 use App\Policies\FarmPolicy;
+use App\Policies\PermissionPolicy;
+use App\Policies\RolePolicy;
 use App\Policies\TeamPolicy;
 use App\Services\Authorization\PermissionService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -22,6 +26,8 @@ class AuthServiceProvider extends ServiceProvider
         Farm::class => FarmPolicy::class,
         AiRequest::class => AiRequestPolicy::class,
         Team::class => TeamPolicy::class,
+        Role::class => RolePolicy::class,
+        Permission::class => PermissionPolicy::class,
     ];
 
     public function boot(): void

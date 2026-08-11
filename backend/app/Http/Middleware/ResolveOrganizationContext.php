@@ -37,8 +37,9 @@ class ResolveOrganizationContext
 
             if ($header !== null && $header !== '') {
                 $organizationId = (int) $header;
+                $membership = $user->organizations()->where('organizations.id', $organizationId)->first();
 
-                if (! $user->organizations()->where('organizations.id', $organizationId)->exists()) {
+                if ($membership === null) {
                     $this->audit->record(
                         action: 'security.cross_tenant_denied',
                         organizationId: null,
@@ -63,7 +64,16 @@ class ResolveOrganizationContext
                     abort(403, 'You do not have access to this organization.');
                 }
 
+                if (($membership->pivot->is_active ?? true) === false) {
+                    abort(403, 'Your membership in this organization is inactive.');
+                }
+
                 $request->attributes->set('organization_id', $organizationId);
+            } elseif ($user->organizations()->wherePivot('is_active', true)->exists()) {
+                $request->attributes->set(
+                    'organization_id',
+                    $user->organizations()->wherePivot('is_active', true)->first()->id
+                );
             } elseif ($user->organizations()->exists()) {
                 $request->attributes->set('organization_id', $user->organizations()->first()->id);
             }

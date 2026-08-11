@@ -15,7 +15,7 @@ class Organization extends Model
 
     public function members(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
+        return $this->belongsToMany(User::class)->withPivot(['role', 'is_active'])->withTimestamps();
     }
 
     public function projects(): HasMany

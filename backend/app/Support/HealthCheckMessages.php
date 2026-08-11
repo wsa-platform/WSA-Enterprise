@@ -20,4 +20,23 @@ final class HealthCheckMessages
             default => 'Health check failed.',
         };
     }
+
+    public static function sanitize(string $message): string
+    {
+        $message = trim($message);
+
+        if ($message === '') {
+            return 'Health check failed.';
+        }
+
+        if (str_contains($message, 'SQLSTATE')
+            || str_contains($message, 'password')
+            || str_contains($message, 'Connection refused')
+            || str_contains($message, '/var/')
+            || str_contains($message, 'C:\\')) {
+            return 'Health check failed.';
+        }
+
+        return mb_strlen($message) > 200 ? mb_substr($message, 0, 200).'…' : $message;
+    }
 }

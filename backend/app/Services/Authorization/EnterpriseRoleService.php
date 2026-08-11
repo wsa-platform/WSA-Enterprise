@@ -92,4 +92,34 @@ class EnterpriseRoleService
             ]);
         }
     }
+
+    public function isSystemRole(Role $role): bool
+    {
+        return $role->slug !== null
+            && array_key_exists($role->slug, config('enterprise_roles.labels', []));
+    }
+
+    public function isCatalogPermission(string $name): bool
+    {
+        return in_array($name, config('permissions', []), true);
+    }
+
+    public function userIsOwner(User $user, int $organizationId): bool
+    {
+        return $this->userHasRoleSlug($user, $organizationId, 'owner');
+    }
+
+    public function countOwners(int $organizationId): int
+    {
+        return User::query()
+            ->whereHas('roles', function ($query) use ($organizationId): void {
+                $query->where('roles.organization_id', $organizationId)
+                    ->where('roles.slug', 'owner')
+                    ->where('role_user.organization_id', $organizationId);
+            })
+            ->whereHas('organizations', function ($query) use ($organizationId): void {
+                $query->where('organizations.id', $organizationId);
+            })
+            ->count();
+    }
 }
