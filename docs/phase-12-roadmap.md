@@ -11,8 +11,8 @@
 |---|-----------|-------|--------|
 | M12.1 | Production Docker + TLS | Prod Compose, nginx TLS, Certbot, TrustProxies | Complete |
 | M12.2 | Deployment automation | GHCR push, SSH deploy workflow, smoke checks | In progress |
-| M12.3 | Production secrets management | `.env.production.example`, secrets docs, no hardcoded passwords | Pending |
-| M12.4 | Monitoring and health checks | Logging defaults, runbook, probe spec | Pending |
+| M12.3 | Production secrets management | `.env.production.example`, secrets docs, no hardcoded passwords | Complete |
+| M12.4 | AI monitoring & health checks | Health probes, incidents, safe remediation, AI analyzer foundation | In progress |
 | M12.5 | Rollback and production verification | Rollback runbook, backup, M12 sign-off | Pending |
 
 **Exclusions:** Stripe/payment providers, unrelated product features, API expansion unless deploy-required.
@@ -48,6 +48,32 @@ See [phase-12-m12-1-verification.md](phase-12-m12-1-verification.md).
 **No secrets templates** (deferred to M12.3).
 
 **Commit message example:** `Add GHCR publish workflow and SSH production deployment automation.`
+
+---
+
+## M12.4 — AI Monitoring & Health Checks
+
+### Health endpoints
+
+- [x] `GET /api/v1/health/live` — liveness
+- [x] `GET /api/v1/health/ready` — readiness (DB, cache, queue, storage, scheduler, auth)
+- [x] `GET /api/v1/health` — backward-compatible legacy/smoke endpoint
+
+### Monitoring foundation
+
+- [x] `monitoring_events` table and `MonitoringEvent` model
+- [x] `HealthCheckService`, `MonitoringEventService`, `RemediationService`
+- [x] `AiMonitoringAnalyzerInterface` + stub analyzer
+- [x] Safe remediation allowlist (`config/monitoring.php`)
+- [x] Audit trail for detect / analyze / remediate / reject
+
+### Documentation
+
+- [x] `docs/phase-12-m12-4-monitoring-architecture.md`
+- [x] `docs/phase-12-m12-4-verification.md`
+- [x] OpenAPI paths for `/health`, `/health/live`, `/health/ready`
+
+**Commit message example:** `Add AI monitoring foundation with health probes and safe remediation.`
 
 ---
 

@@ -24,8 +24,13 @@ use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\ApiClientController;
+use App\Http\Controllers\Api\HealthController;
 
-Route::get('/v1/health', fn () => response()->json(['status' => 'ok']));
+Route::prefix('v1/health')->group(function (): void {
+    Route::get('/live', [HealthController::class, 'live']);
+    Route::get('/ready', [HealthController::class, 'ready']);
+    Route::get('/', [HealthController::class, 'legacy']);
+});
 
 Route::prefix('v1')->group(function (): void {
     Route::middleware('throttle:20,1')->group(function (): void {
