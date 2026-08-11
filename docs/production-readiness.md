@@ -1,12 +1,16 @@
 # WSA-Enterprise Production Readiness Report
 
-**Last updated:** Phase 11 M9 (2026-08-10)
+**Last updated:** Phase 12 M12 closure (2026-08-11)
 
 ## Executive summary
 
-WSA-Enterprise is suitable for **controlled demo/staging deployment** with the Docker stack documented in `README.md` and `docs/deployment.md`. Phase 8 adds security hardening, opt-in pagination, enterprise UX improvements (401/403 handling, delete confirmations), expanded regression tests, and deployment documentation. Several items remain before **unrestricted public production** deployment.
+WSA-Enterprise is suitable for **controlled single-host production deployment** with the Docker stack, Let's Encrypt TLS, GHCR image publish, SSH deploy automation, health monitoring, and backup/rollback scripts documented in Phase 12.
 
-**Phase 8 additions:** See `docs/phase8.md`, `docs/security.md`, `docs/e2e-testing.md`.
+Phase 12 (M12.1–M12.5) adds production Docker + TLS, deployment automation, secrets templates, AI monitoring foundation with health probes, and backup/rollback/verification scripts. See [phase-12-final-verification.md](phase-12-final-verification.md).
+
+**Phase 12 additions:** See [phase-12-roadmap.md](phase-12-roadmap.md), [deploy-production.md](deploy-production.md), [tls-production.md](tls-production.md).
+
+**Prior phases:** Phase 8 security hardening; Phase 11 enterprise features complete.
 
 ---
 
@@ -20,15 +24,20 @@ WSA-Enterprise is suitable for **controlled demo/staging deployment** with the D
 | Redis | Ready | Cache/sessions/queues configured |
 | Frontend build | Ready | Vite production build via CI |
 | Mobile API URL | Configurable | `--dart-define=API_URL=https://api.example.com/api/v1` |
-| HTTPS / TLS | **Not included** | Terminate TLS at load balancer or reverse proxy |
+| HTTPS / TLS | **Implemented (M12.1)** | Let's Encrypt via nginx + certbot; see [tls-production.md](tls-production.md) |
+| GHCR deploy | **Implemented (M12.2)** | See [deploy-production.md](deploy-production.md) |
+| Production backup/rollback | **Implemented (M12.5)** | `scripts/backup-production.sh`, `rollback-production.sh`, `verify-production.sh` |
+| Health monitoring | **Implemented (M12.4)** | `/health/live`, `/health/ready`, `monitoring_events` |
 | Horizontal scaling | **Not validated** | Single-node Docker assumed |
 
 ### Required before production
 
-- [ ] Set `APP_DEBUG=false` and unique secrets per environment
+- [ ] Set `APP_DEBUG=false` and unique secrets per environment (template: `.env.production.example`)
 - [ ] Configure real mail, queue workers, and scheduled tasks if notifications are enabled
-- [ ] Point mobile/web clients to HTTPS API URL
+- [ ] Point mobile/web clients to HTTPS API URL (`VITE_API_URL`)
 - [ ] Replace demo credentials and rotate seeded passwords
+- [ ] Run `./scripts/init-letsencrypt.sh` on production host (first TLS bootstrap)
+- [ ] Configure GitHub `production` environment secrets for deploy workflow
 
 ---
 
@@ -91,9 +100,10 @@ Phase 6 added performance indexes on high-traffic tables (diagnosis, library, AI
 
 **Required before production:**
 
-- [ ] Centralized log aggregation (CloudWatch, Datadog, etc.)
-- [ ] Alerting on 5xx rate and queue failures
+- [ ] Centralized log aggregation (CloudWatch, Datadog, etc.) — M12.4 provides incidents + audit hooks only
+- [ ] Alerting on 5xx rate and queue failures — operator-configured external tooling
 - [x] Audit log for `access.manage` mutations (Phase 11 — `Phase11AuditCoverageTest`)
+- [x] Health probes and monitoring incidents (Phase 12 M12.4)
 
 ---
 
@@ -137,14 +147,18 @@ Phase 6 added performance indexes on high-traffic tables (diagnosis, library, AI
 | Job | Command | Status |
 | --- | --- | --- |
 | backend | `php artisan test` (PostgreSQL service) | Required |
-| frontend | `npm run build` | Required |
+| frontend | `npm run lint`, `npm run build` | Required |
 | mobile | `flutter analyze`, `flutter test` | Required |
+| openapi | `swagger-cli validate docs/openapi.yaml` | Required |
+| security | `php artisan test --group=security` | Required |
+| docker-validate | prod + GHCR compose config | Required |
 
-**Recommendations:**
+**Phase 12 deploy workflows:**
 
-- Add deploy workflow (staging/production) with environment secrets
-- Cache Composer/npm/Flutter dependencies (partial caching exists for npm)
-- Optional: add `npm run lint` to frontend job
+| Workflow | Purpose |
+| --- | --- |
+| `publish-images.yml` | Build and push GHCR images on `main` |
+| `deploy-production.yml` | Manual SSH deploy to production host |
 
 ---
 
@@ -168,43 +182,38 @@ Manual E2E (web `:8081` or mobile with API URL):
 
 ## 10. Remaining items before real production
 
-### Blocking
+### Blocking (operator / host)
 
-1. Production secrets and `APP_DEBUG=false`
-2. HTTPS termination and CORS lockdown
-3. Remove/disable demo credentials in production builds
-4. Operational monitoring and backups for PostgreSQL
+1. Production host `.env` from `.env.production.example` with unique secrets
+2. First TLS bootstrap (`init-letsencrypt.sh`) and DNS configuration
+3. GitHub `production` environment secrets and required reviewers
+4. Remove/disable demo credentials in production builds
+5. Run backup/verify/smoke scripts on production host before go-live
 
 ### Non-blocking (recommended)
 
-1. Form Request coverage for all write endpoints
-2. Mobile integration tests with mocked HTTP
-3. Token expiry / refresh strategy for mobile
-4. Audit logging for access management
-5. E2E browser tests for React
-6. App store release pipelines for Flutter
+1. Centralized log aggregation and external alerting
+2. Form Request coverage for all write endpoints
+3. Mobile integration tests with mocked HTTP
+4. E2E browser tests for React
+5. Real AI provider and payment provider (explicitly excluded from M12)
 
 ---
 
 ## Conclusion
 
-WSA-Enterprise Phase 7 delivers a **tenant-safe, test-covered demo platform** ready for staging. Complete the blocking items above before customer-facing production deployment.
+WSA-Enterprise Phase 12 delivers a **production-hardened single-host Docker deployment** with TLS, GHCR deploy automation, health monitoring foundation, and backup/rollback procedures. Complete operator host setup and external observability before customer-facing production deployment.
 
 ---
 
-## Review sign-off (Phase 7 G)
+## Review sign-off (Phase 12 closure)
 
 | Review area | Result | Evidence |
 | --- | --- | --- |
-| Security | Pass with recommendations | Sanctum, throttling, permission checks, sanitized auth responses |
-| Authorization | Pass | PermissionService + policies; viewer/manage tests |
-| Tenant isolation | Pass | Cross-tenant header 403; FK validation; Phase7 tests |
-| Validation | Pass | Form requests + inline validation; 422 JSON errors |
-| Rate limiting | Pass | Auth 20/min, AI 30/min |
-| API errors | Pass | Phase 6 JSON exception handlers |
-| Database performance | Pass with monitoring note | Phase 6 indexes; org-scoped queries |
-| Logging | Partial | Laravel defaults; needs centralized aggregation for prod |
-| CI/CD | Pass | backend test + frontend build + flutter analyze/test |
-| React production build | Pass | `npm run build` verified |
-| Flutter readiness | Pass with store pipeline gap | CRUD + tests; no store signing yet |
-| Documentation | Pass | README, phase6, phase7, production-readiness |
+| TLS / HTTPS | Pass | M12.1 — [tls-production.md](tls-production.md) |
+| Deploy automation | Pass | M12.2 — [deploy-production.md](deploy-production.md) |
+| Secrets management | Pass | M12.3 — [production-secrets.md](production-secrets.md) |
+| Health monitoring | Pass | M12.4 — [phase-12-m12-4-verification.md](phase-12-m12-4-verification.md) |
+| Backup / rollback | Pass | M12.5 — [phase-12-m12-5-verification.md](phase-12-m12-5-verification.md) |
+| Phase 12 closure | Pass | [phase-12-final-verification.md](phase-12-final-verification.md) |
+| Production host exercised | N/A | No production/staging host verification performed |

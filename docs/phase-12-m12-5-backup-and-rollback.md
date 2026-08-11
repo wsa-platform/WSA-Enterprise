@@ -1,8 +1,9 @@
 # Phase 12 M12.5 — Production Backup & Restore
 
-**Status:** Implemented (pending verification)  
-**Branch:** `phase-12-m12-5-rollback-production-verification`  
+**Status:** Complete (merged PR #19)
+**Branch:** `phase-12-m12-5-rollback-production-verification`
 **Baseline:** M12.4 merged on `main`
+**Verification:** [phase-12-m12-5-verification.md](phase-12-m12-5-verification.md)
 
 ---
 

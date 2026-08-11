@@ -51,6 +51,6 @@ Full TLS guide: [tls-production.md](tls-production.md)
 - Set real secrets via `.env` and `backend/.env` (never commit).
 - Rebuild images after deploys (`--build`).
 - Scale queue workers by duplicating the `queue` service or using an orchestrator.
-- Phase 12 M12.2 adds GHCR pull override and SSH deploy automation; M12.3 adds secrets templates.
+- Phase 12 M12.2 adds GHCR pull override and SSH deploy automation ([deploy-production.md](deploy-production.md)); M12.3 adds secrets templates ([production-secrets.md](production-secrets.md)); M12.5 adds backup/rollback/verify scripts.
 
-See also [deployment.md](deployment.md), [deploy-production.md](deploy-production.md), [tls-production.md](tls-production.md), and [testing.md](testing.md).
+See also [deployment.md](deployment.md), [deploy-production.md](deploy-production.md), [tls-production.md](tls-production.md), [phase-12-final-verification.md](phase-12-final-verification.md), and [testing.md](testing.md).

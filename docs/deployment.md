@@ -234,9 +234,13 @@ See [testing.md](./testing.md). **Never** run PHPUnit against the staging `wsa_e
 
 ## Production deployment (Phase 12)
 
-For GHCR image publish, SSH deploy, and smoke verification see **[deploy-production.md](./deploy-production.md)**.
+For GHCR image publish, SSH deploy, smoke verification, backup, rollback, and production checks see:
 
-TLS setup: **[tls-production.md](./tls-production.md)**. Docker prod override: **[docker-production.md](./docker-production.md)**.
+- **[deploy-production.md](./deploy-production.md)** — deploy automation (M12.2)
+- **[tls-production.md](./tls-production.md)** — Let's Encrypt TLS (M12.1)
+- **[docker-production.md](./docker-production.md)** — production Compose override
+- **[phase-12-m12-5-backup-and-rollback.md](./phase-12-m12-5-backup-and-rollback.md)** — backup/restore (M12.5)
+- **[phase-12-final-verification.md](./phase-12-final-verification.md)** — Phase 12 closure sign-off
 
 ## What this guide does not cover
 
