@@ -43,7 +43,17 @@ RUN apk add --no-cache \
     && mkdir -p /run/nginx /var/lib/nginx/tmp
 
 COPY --from=vendor /app /var/www/html
-RUN chown -R www-data:www-data storage bootstrap/cache
+RUN mkdir -p \
+        storage/logs \
+        storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/views \
+        storage/framework/testing \
+        storage/app/public \
+        storage/app/private \
+        bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R ug+rwx storage bootstrap/cache
 
 COPY --from=frontend-build /app/dist /usr/share/nginx/html
 COPY nginx/render.conf.template /etc/nginx/templates/render.conf.template
