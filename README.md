@@ -133,6 +133,31 @@ Key documents:
 
 Production frontend builds set `VITE_SHOW_DEMO_LOGIN=false` via Docker. Local dev retains demo login when the flag is unset.
 
+## Phase 14 enterprise administration
+
+Phase 14 delivers enterprise administration foundation and monitoring admin (merged PR #23).
+
+| Area | Highlights |
+| --- | --- |
+| Organization | Profile + settings APIs, organization page |
+| Users/RBAC | Full admin CRUD, membership activation, roles/permissions guards |
+| Monitoring | Admin health/incidents/resolve (`access.manage`) |
+| Docs/tests | OpenAPI expansion, `Phase14M14EnterpriseAdminTest` |
+
+Key document: [docs/phase-14-m14-verification.md](docs/phase-14-m14-verification.md)
+
+## Phase 15 enterprise platform
+
+Phase 15 advances enterprise platform capabilities: invitations, session governance, monitoring read role, analytics/API client admin UI.
+
+| WP | Highlights |
+| --- | --- |
+| Identity | Organization user invitations (invite/accept/revoke) |
+| Security | `monitoring.view` permission, bearer session list/revoke |
+| Admin UI | Analytics overview, API clients registry, accept-invitation flow |
+
+Key documents: [docs/phase-15-roadmap.md](docs/phase-15-roadmap.md), [docs/phase-15-m15-verification.md](docs/phase-15-m15-verification.md)
+
 ## Phase 10 production platform
 
 Phase 10 adds isolated test databases, SPA routing fixes, production-ready async AI, expanded audit logging, multi-tenant security tests, modular frontend/mobile API clients, OpenAPI validation in CI, and production hardening documentation.

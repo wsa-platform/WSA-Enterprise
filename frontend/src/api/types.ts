@@ -238,3 +238,40 @@ export type BillingInvoice = {
   due_at?: string | null
   paid_at?: string | null
 }
+
+export type AnalyticsOverview = {
+  organization_id: number
+  generated_at: string
+  users: { total: number }
+  teams: { total: number }
+  farms: { total: number }
+  ai: {
+    requests_total: number
+    requests_today: number
+    by_status: Record<string, number>
+    quota: AiQuotaSummary
+  }
+  billing_usage: BillingUsageSummary
+  notifications: { unread: number }
+  audit: { events_24h: number }
+}
+
+export type ApiClientRecord = {
+  id: number
+  organization_id: number
+  name: string
+  client_id: string
+  scopes: string[]
+  revoked_at?: string | null
+  created_at: string
+}
+
+export type OrganizationInvitation = {
+  id: number
+  organization_id: number
+  email: string
+  role: string
+  expires_at: string
+  token?: string
+  accept_path?: string
+}

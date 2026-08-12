@@ -2,12 +2,16 @@ import { useMemo, useState } from 'react'
 import {
   assignRole,
   createUser,
+  getInvitations,
   getRoles,
   getUsers,
+  inviteUser,
   removeUser,
+  revokeInvitation,
   unassignRole,
   updateUser,
   unwrapModuleRows,
+  type OrganizationInvitation,
   type Role,
   type UserWithRoles,
 } from '../../api'
@@ -24,6 +28,8 @@ export function UsersPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [inviteForm, setInviteForm] = useState({ email: '', role: 'member' as 'admin' | 'member' })
+  const [lastInvite, setLastInvite] = useState<OrganizationInvitation | null>(null)
   const [message, setMessage] = useState('')
   const [assignTarget, setAssignTarget] = useState<UserWithRoles | null>(null)
   const [editTarget, setEditTarget] = useState<UserWithRoles | null>(null)
@@ -40,6 +46,11 @@ export function UsersPage() {
     return getRoles(token, organizationId ?? undefined)
   }, [token, organizationId])
 
+  const { data: invitationsPayload, reload: reloadInvitations } = useAsyncData(async () => {
+    if (!token) throw new Error('Not authenticated.')
+    return getInvitations(token, organizationId ?? undefined)
+  }, [token, organizationId])
+
   const users = useMemo(() => {
     const rows = unwrapModuleRows(usersPayload ?? [])
     const term = search.trim().toLowerCase()
@@ -53,6 +64,7 @@ export function UsersPage() {
   }
 
   const roles = unwrapModuleRows(rolesPayload ?? []) as Role[]
+  const invitations = unwrapModuleRows(invitationsPayload ?? []) as OrganizationInvitation[]
   const paginated = !Array.isArray(usersPayload)
   const pagination = paginated && usersPayload && !Array.isArray(usersPayload)
     ? { page: usersPayload.current_page, lastPage: usersPayload.last_page, total: usersPayload.total }
@@ -128,6 +140,32 @@ export function UsersPage() {
     }
   }
 
+  const handleInvite = async () => {
+    if (!token) return
+    setMessage('')
+    try {
+      const invitation = await inviteUser(token, inviteForm, organizationId ?? undefined)
+      setLastInvite(invitation)
+      setInviteForm({ email: '', role: 'member' })
+      setMessage('Invitation sent.')
+      await reloadInvitations()
+    } catch (requestError) {
+      setMessage(requestError instanceof Error ? requestError.message : 'Unable to send invitation.')
+    }
+  }
+
+  const handleRevokeInvite = async (invitation: OrganizationInvitation) => {
+    if (!token) return
+    setMessage('')
+    try {
+      await revokeInvitation(token, invitation.id, organizationId ?? undefined)
+      setMessage('Invitation revoked.')
+      await reloadInvitations()
+    } catch (requestError) {
+      setMessage(requestError instanceof Error ? requestError.message : 'Unable to revoke invitation.')
+    }
+  }
+
   return <>
     <PageHeader
       eyebrow="ENTERPRISE"
@@ -139,7 +177,47 @@ export function UsersPage() {
     {message && <p className="notice">{message}</p>}
 
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">CREATE</p><h2>Add user</h2></div></div>
+      <div className="panel-heading"><div><p className="eyebrow">INVITE</p><h2>Invite user</h2></div></div>
+      <form className="record-form" onSubmit={(event) => { event.preventDefault(); void handleInvite() }}>
+        <label>Email<input type="email" value={inviteForm.email} onChange={(event) => setInviteForm({ ...inviteForm, email: event.target.value })} required /></label>
+        <label>
+          Membership role
+          <select value={inviteForm.role} onChange={(event) => setInviteForm({ ...inviteForm, role: event.target.value as 'admin' | 'member' })}>
+            <option value="member">Member</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        <button type="submit">Send invitation</button>
+      </form>
+      {lastInvite?.token && (
+        <p className="muted">Accept link: /accept-invitation?token={lastInvite.token}</p>
+      )}
+    </section>
+
+    {invitations.length > 0 && (
+      <section className="panel">
+        <div className="panel-heading"><div><p className="eyebrow">PENDING</p><h2>Invitations</h2></div></div>
+        <DataTable
+          rows={invitations}
+          rowKey={(invitation) => invitation.id}
+          columns={[
+            { key: 'email', header: 'Email', render: (invitation) => invitation.email },
+            { key: 'role', header: 'Role', render: (invitation) => invitation.role },
+            { key: 'expires', header: 'Expires', render: (invitation) => new Date(invitation.expires_at).toLocaleString() },
+            {
+              key: 'actions',
+              header: 'Actions',
+              render: (invitation) => (
+                <button type="button" className="link-button inline danger" onClick={() => void handleRevokeInvite(invitation)}>Revoke</button>
+              ),
+            },
+          ]}
+        />
+      </section>
+    )}
+
+    <section className="panel">
+      <div className="panel-heading"><div><p className="eyebrow">CREATE</p><h2>Add user directly</h2></div></div>
       <form className="record-form" onSubmit={(event) => { event.preventDefault(); void handleCreate() }}>
         <label>Name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /></label>
         <label>Email<input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required /></label>

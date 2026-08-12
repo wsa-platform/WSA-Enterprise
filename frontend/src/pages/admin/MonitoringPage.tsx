@@ -30,9 +30,11 @@ export function MonitoringPage() {
     return getMonitoringIncidents(token, organizationId ?? undefined, { per_page: 25 })
   }, [token, organizationId])
 
-  if (!can('access.manage')) {
+  if (!can('monitoring.view') && !can('access.manage')) {
     return <ErrorBanner message="You do not have permission to view monitoring." />
   }
+
+  const canResolve = can('access.manage')
 
   const incidents = unwrapModuleRows(incidentsPayload ?? []) as MonitoringIncident[]
   const error = healthError || incidentsError
@@ -107,7 +109,7 @@ export function MonitoringPage() {
             {
               key: 'actions',
               header: 'Actions',
-              render: (incident) => incident.status === 'resolved' ? '—' : (
+              render: (incident) => incident.status === 'resolved' || !canResolve ? '—' : (
                 <button type="button" className="link-button inline" onClick={() => setResolveTarget(incident)}>Resolve</button>
               ),
             },

@@ -1,10 +1,25 @@
 import { PageHeader } from '../components/PageHeader'
+import { ErrorBanner } from '../components/UiPrimitives'
 import { useAuth } from '../context/AuthContext'
 import { usePermissions } from '../context/PermissionContext'
+import { useAsyncData } from '../hooks/useAsyncData'
+import { getAuthSessions, revokeAuthSession, type AuthSession } from '../api'
 
 export function SettingsPage() {
-  const { user } = useAuth()
+  const { token } = useAuth()
   const { can, context } = usePermissions()
+  const { user } = useAuth()
+
+  const { data: sessions, loading, error, reload } = useAsyncData(async () => {
+    if (!token) throw new Error('Not authenticated.')
+    return getAuthSessions(token)
+  }, [token])
+
+  const handleRevoke = async (session: AuthSession) => {
+    if (!token || session.is_current) return
+    await revokeAuthSession(token, session.id)
+    await reload()
+  }
 
   return <>
     <PageHeader eyebrow="ACCOUNT" title="Settings" description="Profile and workspace preferences." />
@@ -28,13 +43,26 @@ export function SettingsPage() {
     )}
 
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">SECURITY</p><h2>Session</h2></div></div>
-      <p className="muted">Use Sign out in the sidebar to end your session. Password changes are managed by organization administrators.</p>
-    </section>
-
-    <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">PREFERENCES</p><h2>UI preferences</h2></div></div>
-      <p className="muted">Theme and notification preferences will appear here when preference APIs are available.</p>
+      <div className="panel-heading"><div><p className="eyebrow">SECURITY</p><h2>Active sessions</h2></div></div>
+      {error && <ErrorBanner message={error} onRetry={reload} />}
+      {loading ? <p className="loading">Loading sessions…</p> : (
+        <div className="detail-grid">
+          {(sessions ?? []).map((session) => (
+            <div key={session.id}>
+              <span>{session.name}{session.is_current ? ' (current)' : ''}</span>
+              <strong>
+                {session.last_used_at ? new Date(session.last_used_at).toLocaleString() : 'Never used'}
+                {!session.is_current && (
+                  <button type="button" className="link-button inline" onClick={() => void handleRevoke(session)} style={{ marginLeft: '0.75rem' }}>
+                    Revoke
+                  </button>
+                )}
+              </strong>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="muted">Use Sign out in the sidebar to end your current session.</p>
     </section>
   </>
 }

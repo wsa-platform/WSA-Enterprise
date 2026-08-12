@@ -26,12 +26,14 @@ const navSections: Array<{ title: string; items: NavItem[] }> = [
     title: 'Enterprise',
     items: [
       { to: '/organization', label: 'Organization', permission: 'platform.view' },
+      { to: '/admin/analytics', label: 'Analytics', permission: 'platform.view' },
       { to: '/billing', label: 'Billing', permission: 'billing.view' },
       { to: '/admin/users', label: 'Users', permission: 'access.manage' },
       { to: '/admin/teams', label: 'Teams', permission: 'access.manage' },
       { to: '/admin/roles', label: 'Roles & Permissions', permission: 'access.manage' },
+      { to: '/admin/api-clients', label: 'API Clients', permission: 'access.manage' },
       { to: '/admin/audit', label: 'Audit Logs', permission: 'access.manage' },
-      { to: '/admin/monitoring', label: 'Monitoring', permission: 'access.manage' },
+      { to: '/admin/monitoring', label: 'Monitoring', anyPermission: ['monitoring.view', 'access.manage'] },
     ],
   },
   {

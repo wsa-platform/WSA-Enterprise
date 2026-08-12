@@ -23,6 +23,9 @@ import { TeamDetailPage } from './pages/admin/TeamDetailPage'
 import { RolesPage } from './pages/admin/RolesPage'
 import { AuditPage } from './pages/admin/AuditPage'
 import { MonitoringPage } from './pages/admin/MonitoringPage'
+import { AnalyticsPage } from './pages/admin/AnalyticsPage'
+import { ApiClientsPage } from './pages/admin/ApiClientsPage'
+import { AcceptInvitationPage } from './pages/AcceptInvitationPage'
 import './App.css'
 
 function ProtectedShell() {
@@ -59,6 +62,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={token ? <Navigate to="/" replace /> : <LoginPage />} />
+      <Route path="/accept-invitation" element={token ? <Navigate to="/" replace /> : <AcceptInvitationPage />} />
       <Route element={<ProtectedShell />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/organization" element={<OrganizationPage />} />
@@ -71,6 +75,8 @@ function AppRoutes() {
         <Route path="/admin/roles" element={<RolesPage />} />
         <Route path="/admin/audit" element={<AuditPage />} />
         <Route path="/admin/monitoring" element={<MonitoringPage />} />
+        <Route path="/admin/analytics" element={<AnalyticsPage />} />
+        <Route path="/admin/api-clients" element={<ApiClientsPage />} />
         <Route path="/ai/workspace" element={<AiWorkspacePage />} />
         <Route path="/ai/requests/:requestId" element={<AiRequestDetailPage />} />
         <Route path="/ai" element={<Navigate to="/ai/workspace" replace />} />
