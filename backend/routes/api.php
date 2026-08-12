@@ -32,6 +32,8 @@ use App\Http\Controllers\Api\JobsTalentController;
 use App\Http\Controllers\Api\JobsEmployerController;
 use App\Http\Controllers\Api\BeekeepingController;
 use App\Http\Controllers\Api\AiAssistantController;
+use App\Http\Controllers\Api\AiVisionController;
+use App\Http\Controllers\Api\MarketingController;
 
 Route::prefix('v1/health')->group(function (): void {
     Route::get('/live', [HealthController::class, 'live']);
@@ -181,7 +183,35 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/requests/{id}/cancel', [AiController::class, 'cancel'])->whereNumber('id');
             Route::get('/assistant/conversations', [AiAssistantController::class, 'index']);
             Route::post('/assistant/conversations', [AiAssistantController::class, 'store']);
+            Route::get('/assistant/conversations/{conversation}', [AiAssistantController::class, 'show'])->whereNumber('conversation');
             Route::post('/assistant/conversations/{conversation}/messages', [AiAssistantController::class, 'message'])->whereNumber('conversation');
+            Route::post('/assistant/conversations/{conversation}/archive', [AiAssistantController::class, 'archive'])->whereNumber('conversation');
+            Route::delete('/assistant/conversations/{conversation}', [AiAssistantController::class, 'destroy'])->whereNumber('conversation');
+            Route::post('/assistant/actions/execute', [AiAssistantController::class, 'executeAction']);
+            Route::post('/vision/uploads', [AiVisionController::class, 'upload']);
+            Route::get('/vision/uploads/{upload}', [AiVisionController::class, 'show'])->whereNumber('upload');
+        });
+        Route::prefix('marketing')->group(function (): void {
+            Route::get('/dashboard', [MarketingController::class, 'dashboard']);
+            Route::get('/campaigns', [MarketingController::class, 'campaigns']);
+            Route::post('/campaigns', [MarketingController::class, 'storeCampaign']);
+            Route::get('/campaigns/{campaign}', [MarketingController::class, 'showCampaign'])->whereNumber('campaign');
+            Route::patch('/campaigns/{campaign}', [MarketingController::class, 'updateCampaign'])->whereNumber('campaign');
+            Route::delete('/campaigns/{campaign}', [MarketingController::class, 'destroyCampaign'])->whereNumber('campaign');
+            Route::post('/campaigns/{campaign}/schedule', [MarketingController::class, 'scheduleCampaign'])->whereNumber('campaign');
+            Route::post('/campaigns/{campaign}/cancel', [MarketingController::class, 'cancelCampaign'])->whereNumber('campaign');
+            Route::get('/campaigns/{campaign}/preview', [MarketingController::class, 'previewCampaign'])->whereNumber('campaign');
+            Route::post('/campaigns/{campaign}/test-send', [MarketingController::class, 'testSendCampaign'])->whereNumber('campaign');
+            Route::post('/campaigns/{campaign}/process', [MarketingController::class, 'processCampaign'])->whereNumber('campaign');
+            Route::get('/segments', [MarketingController::class, 'segments']);
+            Route::post('/segments', [MarketingController::class, 'storeSegment']);
+            Route::get('/templates', [MarketingController::class, 'templates']);
+            Route::post('/templates', [MarketingController::class, 'storeTemplate']);
+            Route::get('/consents', [MarketingController::class, 'consents']);
+            Route::post('/consents', [MarketingController::class, 'storeConsent']);
+            Route::get('/suppressions', [MarketingController::class, 'suppressions']);
+            Route::post('/suppressions', [MarketingController::class, 'storeSuppression']);
+            Route::get('/deliveries', [MarketingController::class, 'deliveries']);
         });
         Route::prefix('jobs')->group(function (): void {
             Route::get('/talent/me', [JobsTalentController::class, 'showMine']);

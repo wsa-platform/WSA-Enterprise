@@ -29,4 +29,8 @@ return [
     'beekeeping.manage',
     'ai.assistant',
     'ai.vision',
+    'ai.actions.execute',
+    'marketing.view',
+    'marketing.manage',
+    'marketing.admin',
 ];
