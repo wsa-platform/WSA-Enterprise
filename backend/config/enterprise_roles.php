@@ -11,6 +11,7 @@ return [
 
     'manager' => [
         'platform.view',
+        'monitoring.view',
         'billing.view',
         'farm.view', 'farm.manage',
         'crop.view', 'crop.manage',

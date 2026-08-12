@@ -24,7 +24,7 @@ class MonitoringController extends Controller
 
     public function health(Request $request): JsonResponse
     {
-        $this->authorizePermission($request, 'access.manage');
+        $this->authorizeAnyPermission($request, ['monitoring.view', 'access.manage']);
 
         $checks = $this->healthChecks->runAllChecks();
         $healthy = $this->healthChecks->allChecksHealthy($checks);
@@ -48,7 +48,7 @@ class MonitoringController extends Controller
 
     public function incidents(Request $request): JsonResponse
     {
-        $this->authorizePermission($request, 'access.manage');
+        $this->authorizeAnyPermission($request, ['monitoring.view', 'access.manage']);
         $organizationId = $this->organization($request);
 
         $query = MonitoringEvent::query()

@@ -97,6 +97,60 @@ class AuthController extends Controller
         return response()->json(status: 204);
     }
 
+    public function sessions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null, 401);
+
+        $currentTokenId = $user->currentAccessToken()?->id;
+        if ($currentTokenId === null && ($bearer = $request->bearerToken())) {
+            $currentTokenId = PersonalAccessToken::findToken($bearer)?->id;
+        }
+
+        $sessions = $user->tokens()
+            ->orderByDesc('last_used_at')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn (PersonalAccessToken $token) => [
+                'id' => $token->id,
+                'name' => $token->name,
+                'last_used_at' => $token->last_used_at,
+                'created_at' => $token->created_at,
+                'is_current' => $token->id === $currentTokenId,
+            ])
+            ->values();
+
+        return response()->json($sessions);
+    }
+
+    public function revokeSession(Request $request, int $token): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null, 401);
+
+        $accessToken = $user->tokens()->whereKey($token)->first();
+        abort_unless($accessToken !== null, 404);
+
+        abort_if(
+            $accessToken->id === ($user->currentAccessToken()?->id
+                ?? PersonalAccessToken::findToken((string) $request->bearerToken())?->id),
+            422,
+            'Cannot revoke the active session. Use logout instead.'
+        );
+
+        $accessToken->delete();
+
+        $this->auditService->record(
+            action: 'auth.session_revoked',
+            userId: $user->id,
+            auditable: $user,
+            newValues: ['token_id' => $token, 'token_name' => $accessToken->name],
+            request: $request,
+        );
+
+        return response()->json(status: 204);
+    }
+
     private function authenticatedResponse(User $user, string $deviceName, Request $request): JsonResponse
     {
         return response()->json([

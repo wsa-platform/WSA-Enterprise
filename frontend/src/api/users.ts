@@ -1,5 +1,5 @@
 import { request, unwrapEnvelope } from './client'
-import type { AuditLogEntry, EnvelopeResponse, PaginatedResponse, Permission, Role, UserWithRoles } from './types'
+import type { AuditLogEntry, EnvelopeResponse, OrganizationInvitation, PaginatedResponse, Permission, Role, UserWithRoles } from './types'
 
 export const getUsers = (token: string, organizationId?: number) =>
   request<UserWithRoles[] | PaginatedResponse<UserWithRoles>>('/users', {}, token, organizationId)
@@ -135,3 +135,16 @@ export const SYSTEM_ROLE_SLUGS = ['owner', 'admin', 'manager', 'member', 'viewer
 export function isSystemRole(role: Role): boolean {
   return role.slug != null && SYSTEM_ROLE_SLUGS.includes(role.slug as typeof SYSTEM_ROLE_SLUGS[number])
 }
+
+export const getInvitations = (token: string, organizationId?: number) =>
+  request<OrganizationInvitation[] | PaginatedResponse<OrganizationInvitation>>('/invitations', {}, token, organizationId)
+
+export const inviteUser = (
+  token: string,
+  payload: { email: string; role?: 'admin' | 'member' },
+  organizationId?: number,
+) =>
+  request<OrganizationInvitation>('/invitations', { method: 'POST', body: JSON.stringify(payload) }, token, organizationId)
+
+export const revokeInvitation = (token: string, invitationId: number, organizationId?: number) =>
+  request<void>(`/invitations/${invitationId}`, { method: 'DELETE' }, token, organizationId)

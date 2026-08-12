@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\ApiClientController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\OrganizationController;
 use App\Http\Controllers\Api\MonitoringController;
+use App\Http\Controllers\Api\InvitationController;
 
 Route::prefix('v1/health')->group(function (): void {
     Route::get('/live', [HealthController::class, 'live']);
@@ -38,11 +39,17 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware('throttle:20,1')->group(function (): void {
         Route::post('/auth/register', [AuthController::class, 'register']);
         Route::post('/auth/login', [AuthController::class, 'login']);
+        Route::post('/auth/accept-invitation', [InvitationController::class, 'accept']);
     });
 
     Route::middleware(['auth.principal', 'resolve.organization', 'api_client.routes', 'throttle:120,1'])->group(function (): void {
         Route::get('/user', fn () => request()->user()?->only(['id', 'name', 'email']));
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::get('/auth/sessions', [AuthController::class, 'sessions']);
+        Route::delete('/auth/sessions/{token}', [AuthController::class, 'revokeSession'])->whereNumber('token');
+        Route::get('/invitations', [InvitationController::class, 'index']);
+        Route::post('/invitations', [InvitationController::class, 'store']);
+        Route::delete('/invitations/{invitation}', [InvitationController::class, 'destroy'])->whereNumber('invitation');
         Route::get('/dashboard', DashboardController::class);
         Route::get('/platform/organizations', [PlatformController::class, 'organizations']);
         Route::get('/platform/me', [PlatformController::class, 'me']);
