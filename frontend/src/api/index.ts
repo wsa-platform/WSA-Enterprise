@@ -12,6 +12,9 @@ export * from './users'
 export * from './teams'
 export * from './notifications'
 export * from './ai'
+export * from './jobs'
+export * from './beekeeping'
+export * from './assistant'
 export * from './modules'
 
 // Backward-compatible aliases used by existing pages.
