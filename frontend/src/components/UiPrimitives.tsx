@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { usePermission } from '../context/PermissionContext'
 
 export function StatusBadge({ status }: { status: string }) {
@@ -16,10 +17,12 @@ export function EmptyState({ title, description, action }: { title: string; desc
 }
 
 export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { t } = useTranslation()
+
   return (
     <div className="error banner" role="alert">
       {message}
-      {onRetry && <button type="button" className="link-button inline" onClick={onRetry}>Retry</button>}
+      {onRetry && <button type="button" className="link-button inline" onClick={onRetry}>{t('common.retry')}</button>}
     </div>
   )
 }
@@ -44,7 +47,8 @@ export function PermissionGate({
   fallback?: ReactNode
 }) {
   const { allowed, loading } = usePermission(permission)
-  if (loading) return <p className="loading">Checking access…</p>
+  const { t } = useTranslation()
+  if (loading) return <p className="loading">{t('errors.checkingAccess')}</p>
   if (!allowed) return fallback
   return children
 }

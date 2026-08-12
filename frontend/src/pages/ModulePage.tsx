@@ -1,19 +1,25 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ApiError, createModuleRecord, deleteModuleRecord, getModule, modulePaginationMeta, unwrapModuleRows } from '../api'
 import { ModuleTabs, Panel, RecordList } from '../components/AppShell'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { RecordForm } from '../components/RecordForm'
 import { useAuth } from '../context/AuthContext'
+import { translateApiError } from '../i18n/apiErrors'
+
+type ModuleTab = { labelKey: string; path: string }
+type CreateField = { name: string; labelKey: string; required?: boolean }
 
 type ModulePageProps = {
   eyebrow: string
   title: string
-  tabs: Array<{ label: string; path: string }>
+  tabs: ModuleTab[]
   defaultPath: string
-  createFields?: Array<{ name: string; label: string; required?: boolean }>
+  createFields?: CreateField[]
 }
 
 export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: ModulePageProps) {
+  const { t } = useTranslation()
   const { token, organizationId } = useAuth()
   const [activePath, setActivePath] = useState(defaultPath)
   const [rows, setRows] = useState<unknown[]>([])
@@ -23,6 +29,13 @@ export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: 
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [pendingDelete, setPendingDelete] = useState<Record<string, unknown> | null>(null)
+
+  const translatedTabs = tabs.map(({ labelKey, path }) => ({ label: t(labelKey), path }))
+  const translatedCreateFields = createFields?.map(({ name, labelKey, required }) => ({
+    name,
+    label: t(labelKey),
+    required,
+  }))
 
   const load = async (path = activePath) => {
     if (!token) return
@@ -36,9 +49,9 @@ export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: 
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.isForbidden) {
         setForbidden(true)
-        setError('You do not have permission to view these records in the selected organization.')
+        setError(t('modules.forbiddenMessage'))
       } else {
-        setError(requestError instanceof Error ? requestError.message : 'Unable to load records.')
+        setError(translateApiError(requestError) || t('modules.loadFailed'))
       }
       setRows([])
       setPagination(null)
@@ -55,10 +68,10 @@ export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: 
     if (!token) return
     try {
       await createModuleRecord(token, activePath, values, organizationId ?? undefined)
-      setMessage('Record created successfully.')
+      setMessage(t('modules.recordCreated'))
       await load()
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to create record.')
+      setError(translateApiError(requestError) || t('modules.recordCreateFailed'))
     }
   }
 
@@ -67,36 +80,36 @@ export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: 
     const basePath = activePath.split('?')[0]
     try {
       await deleteModuleRecord(token, basePath, record.id, organizationId ?? undefined)
-      setMessage('Record deleted.')
+      setMessage(t('modules.recordDeleted'))
       setPendingDelete(null)
       await load()
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to delete record.')
+      setError(translateApiError(requestError) || t('modules.recordDeleteFailed'))
     }
   }
 
   return (
     <Panel eyebrow={eyebrow} title={title}>
-      <ModuleTabs tabs={tabs} activePath={activePath} onSelect={setActivePath} />
-      {createFields && !forbidden && (
+      <ModuleTabs tabs={translatedTabs} activePath={activePath} onSelect={setActivePath} />
+      {translatedCreateFields && !forbidden && (
         <RecordForm
-          title="Create record"
-          fields={createFields}
-          submitLabel="Create"
+          title={t('modules.createRecord')}
+          fields={translatedCreateFields}
+          submitLabel={t('common.create')}
           onSubmit={createRecord}
         />
       )}
       {message && <p className="notice">{message}</p>}
-      {forbidden && <p className="banner forbidden">Access denied for this organization.</p>}
+      {forbidden && <p className="banner forbidden">{t('modules.accessDenied')}</p>}
       {error && <p className="error">{error}</p>}
-      {loading ? <p className="loading">Loading records…</p> : (
+      {loading ? <p className="loading">{t('modules.loadingRecords')}</p> : (
         <>
           {pagination && (
             <p className="muted pagination-meta">
-              Showing page {pagination.currentPage} of {pagination.lastPage} ({pagination.total} total)
+              {t('modules.showingPage', { current: pagination.currentPage, last: pagination.lastPage, total: pagination.total })}
             </p>
           )}
-          <RecordList rows={rows} emptyLabel={forbidden ? 'Records unavailable.' : 'No records found.'} />
+          <RecordList rows={rows} emptyLabel={forbidden ? t('modules.recordsUnavailable') : t('modules.noRecords')} />
           {rows.length > 0 && createFields && !forbidden && (
             <div className="module-results">
               {rows.slice(0, 8).map((row, index) => {
@@ -104,7 +117,7 @@ export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: 
                 if (typeof record.id !== 'number') return null
                 return (
                   <button key={index} type="button" className="link-button danger-link" onClick={() => setPendingDelete(record)}>
-                    Delete #{String(record.id)}
+                    {t('modules.deleteRecordLabel', { id: record.id })}
                   </button>
                 )
               })}
@@ -114,9 +127,9 @@ export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: 
       )}
       <ConfirmDialog
         open={pendingDelete !== null}
-        title="Delete record"
-        message="This action cannot be undone. Delete this record?"
-        confirmLabel="Delete"
+        title={t('modules.deleteRecord')}
+        message={t('modules.deleteRecordConfirm')}
+        confirmLabel={t('common.delete')}
         onCancel={() => setPendingDelete(null)}
         onConfirm={() => pendingDelete && void removeRecord(pendingDelete)}
       />
@@ -124,41 +137,41 @@ export function ModulePage({ eyebrow, title, tabs, defaultPath, createFields }: 
   )
 }
 
-export const farmTabs = [
-  { label: 'Farms', path: '/farm/farms' },
-  { label: 'Regions', path: '/farm/regions' },
-  { label: 'Fields', path: '/farm/fields' },
-  { label: 'Blocks', path: '/farm/blocks' },
-  { label: 'Greenhouses', path: '/farm/greenhouses' },
-  { label: 'Irrigation', path: '/farm/irrigation-zones' },
+export const farmTabs: ModuleTab[] = [
+  { labelKey: 'nav.farms', path: '/farm/farms' },
+  { labelKey: 'modules.regions', path: '/farm/regions' },
+  { labelKey: 'modules.fields', path: '/farm/fields' },
+  { labelKey: 'modules.blocks', path: '/farm/blocks' },
+  { labelKey: 'modules.greenhouses', path: '/farm/greenhouses' },
+  { labelKey: 'modules.irrigation', path: '/farm/irrigation-zones' },
 ]
 
-export const cropTabs = [
-  { label: 'Crop types', path: '/crop/types' },
-  { label: 'Varieties', path: '/crop/varieties' },
-  { label: 'Seasons', path: '/crop/seasons' },
-  { label: 'Growth stages', path: '/crop/growth-stages' },
-  { label: 'Harvests', path: '/crop/harvests' },
-  { label: 'Yields', path: '/crop/yields' },
+export const cropTabs: ModuleTab[] = [
+  { labelKey: 'modules.cropTypes', path: '/crop/types' },
+  { labelKey: 'modules.varieties', path: '/crop/varieties' },
+  { labelKey: 'modules.seasons', path: '/crop/seasons' },
+  { labelKey: 'modules.growthStages', path: '/crop/growth-stages' },
+  { labelKey: 'modules.harvests', path: '/crop/harvests' },
+  { labelKey: 'modules.yields', path: '/crop/yields' },
 ]
 
-export const soilTabs = [
-  { label: 'Analyses', path: '/soil/analyses' },
-  { label: 'Nutrients', path: '/soil/nutrients' },
-  { label: 'Recommendations', path: '/soil/recommendations' },
+export const soilTabs: ModuleTab[] = [
+  { labelKey: 'modules.analyses', path: '/soil/analyses' },
+  { labelKey: 'modules.nutrients', path: '/soil/nutrients' },
+  { labelKey: 'modules.recommendations', path: '/soil/recommendations' },
 ]
 
-export const farmCreateFields = [
-  { name: 'code', label: 'Code', required: true },
-  { name: 'name', label: 'Name', required: true },
+export const farmCreateFields: CreateField[] = [
+  { name: 'code', labelKey: 'common.code', required: true },
+  { name: 'name', labelKey: 'common.name', required: true },
 ]
 
-export const cropCreateFields = [
-  { name: 'code', label: 'Code', required: true },
-  { name: 'name', label: 'Name', required: true },
+export const cropCreateFields: CreateField[] = [
+  { name: 'code', labelKey: 'common.code', required: true },
+  { name: 'name', labelKey: 'common.name', required: true },
 ]
 
-export const soilCreateFields = [
-  { name: 'sample_reference', label: 'Sample reference', required: true },
-  { name: 'sampled_at', label: 'Sampled at (YYYY-MM-DD)', required: true },
+export const soilCreateFields: CreateField[] = [
+  { name: 'sample_reference', labelKey: 'modules.sampleReference', required: true },
+  { name: 'sampled_at', labelKey: 'modules.sampledAt', required: true },
 ]

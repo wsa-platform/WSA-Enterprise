@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { addTeamMember, getTeam, getUsers, removeTeamMember, type UserWithRoles } from '../../api'
 import { unwrapModuleRows } from '../../api/client'
@@ -9,8 +10,11 @@ import { EmptyState, ErrorBanner } from '../../components/UiPrimitives'
 import { useAuth } from '../../context/AuthContext'
 import { usePermissions } from '../../context/PermissionContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { translateApiError } from '../../i18n/apiErrors'
+import i18n from '../../i18n/config'
 
 export function TeamDetailPage() {
+  const { t } = useTranslation()
   const { teamId } = useParams()
   const id = Number(teamId)
   const { token, organizationId } = useAuth()
@@ -20,17 +24,17 @@ export function TeamDetailPage() {
   const [message, setMessage] = useState('')
 
   const { data: team, loading, error, reload } = useAsyncData(async () => {
-    if (!token || !id) throw new Error('Invalid team.')
+    if (!token || !id) throw new Error(i18n.t('teams.invalidTeam'))
     return getTeam(token, id, organizationId ?? undefined)
   }, [token, organizationId, id])
 
   const { data: usersPayload } = useAsyncData(async () => {
-    if (!token) throw new Error('Not authenticated.')
+    if (!token) throw new Error(i18n.t('errors.notAuthenticated'))
     return getUsers(token, organizationId ?? undefined)
   }, [token, organizationId])
 
   if (!can('access.manage')) {
-    return <ErrorBanner message="You do not have permission to manage teams." />
+    return <ErrorBanner message={t('teams.noPermission')} />
   }
 
   const users = unwrapModuleRows(usersPayload ?? []) as UserWithRoles[]
@@ -41,10 +45,10 @@ export function TeamDetailPage() {
     try {
       await addTeamMember(token, id, Number(selectedUserId), organizationId ?? undefined)
       setSelectedUserId('')
-      setMessage('Member added.')
+      setMessage(t('teams.memberAdded'))
       await reload()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to add member.')
+      setMessage(translateApiError(requestError) || t('teams.addMemberFailed'))
     }
   }
 
@@ -54,44 +58,44 @@ export function TeamDetailPage() {
     try {
       await removeTeamMember(token, id, removeUserId, organizationId ?? undefined)
       setRemoveUserId(null)
-      setMessage('Member removed.')
+      setMessage(t('teams.memberRemoved'))
       await reload()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to remove member.')
+      setMessage(translateApiError(requestError) || t('teams.removeMemberFailed'))
     }
   }
 
-  if (loading && !team) return <p className="loading">Loading team…</p>
+  if (loading && !team) return <p className="loading">{t('teams.loadingTeam')}</p>
   if (error) return <ErrorBanner message={error} onRetry={reload} />
   if (!team) return null
 
   return <>
     <PageHeader
-      eyebrow="ENTERPRISE"
+      eyebrow={t('common.enterprise')}
       title={team.name}
-      description={team.description ?? 'Organization team'}
-      breadcrumbs={[{ label: 'Dashboard', to: '/' }, { label: 'Teams', to: '/admin/teams' }, { label: team.name }]}
+      description={team.description ?? t('teams.orgTeam')}
+      breadcrumbs={[{ label: t('nav.dashboard'), to: '/' }, { label: t('nav.teams'), to: '/admin/teams' }, { label: team.name }]}
     />
 
     {message && <p className="notice">{message}</p>}
 
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">MEMBERS</p><h2>Team members</h2></div></div>
+      <div className="panel-heading"><div><p className="eyebrow">{t('common.members')}</p><h2>{t('teams.teamMembers')}</h2></div></div>
       {team.members.length === 0 ? (
-        <EmptyState title="No members" description="Add organization users to this team." />
+        <EmptyState title={t('teams.noMembersTitle')} description={t('teams.noMembersDescription')} />
       ) : (
         <DataTable
           rows={team.members}
           rowKey={(member) => member.id}
           columns={[
-            { key: 'name', header: 'Name', render: (member) => member.name },
-            { key: 'email', header: 'Email', render: (member) => member.email },
-            { key: 'role', header: 'Team role', render: (member) => member.pivot?.role ?? 'member' },
+            { key: 'name', header: t('common.name'), render: (member) => member.name },
+            { key: 'email', header: t('common.email'), render: (member) => member.email },
+            { key: 'role', header: t('teams.teamRole'), render: (member) => member.pivot?.role ?? t('common.member') },
             {
               key: 'actions',
-              header: 'Actions',
+              header: t('common.actions'),
               render: (member) => (
-                <button type="button" className="link-button inline danger-link" onClick={() => setRemoveUserId(member.id)}>Remove</button>
+                <button type="button" className="link-button inline danger-link" onClick={() => setRemoveUserId(member.id)}>{t('common.remove')}</button>
               ),
             },
           ]}
@@ -100,23 +104,23 @@ export function TeamDetailPage() {
     </section>
 
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">ADD</p><h2>Add member</h2></div></div>
+      <div className="panel-heading"><div><p className="eyebrow">{t('common.add')}</p><h2>{t('teams.addMember')}</h2></div></div>
       <label>
-        Organization user
+        {t('teams.orgUser')}
         <select value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value ? Number(event.target.value) : '')}>
-          <option value="">Select user</option>
+          <option value="">{t('teams.selectUser')}</option>
           {users.map((user) => <option key={user.id} value={user.id}>{user.name} ({user.email})</option>)}
         </select>
       </label>
-      <button type="button" onClick={() => void handleAdd()}>Add member</button>
-      <p className="muted"><Link to="/admin/teams">Back to teams</Link></p>
+      <button type="button" onClick={() => void handleAdd()}>{t('teams.addMember')}</button>
+      <p className="muted"><Link to="/admin/teams">{t('teams.backToTeams')}</Link></p>
     </section>
 
     <ConfirmDialog
       open={removeUserId !== null}
-      title="Remove team member"
-      message="This removes the user from the team. It does not delete the user from the organization."
-      confirmLabel="Remove member"
+      title={t('teams.removeTeamMember')}
+      message={t('teams.removeTeamMemberMessage')}
+      confirmLabel={t('teams.removeMember')}
       onCancel={() => setRemoveUserId(null)}
       onConfirm={() => void handleRemove()}
     />

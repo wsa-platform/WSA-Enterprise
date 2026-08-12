@@ -32,6 +32,7 @@ describe('buildHeaders', () => {
   it('includes auth and organization headers when provided', () => {
     expect(buildHeaders('token-1', 42, { name: 'Farm' })).toEqual({
       Accept: 'application/json',
+      'Accept-Language': 'en',
       Authorization: 'Bearer token-1',
       'Content-Type': 'application/json',
       'X-Organization-Id': '42',
@@ -41,6 +42,7 @@ describe('buildHeaders', () => {
   it('omits content type when there is no request body', () => {
     expect(buildHeaders(undefined, undefined, undefined)).toEqual({
       Accept: 'application/json',
+      'Accept-Language': 'en',
     })
   })
 })

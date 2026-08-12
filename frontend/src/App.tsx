@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { PermissionProvider } from './context/PermissionContext'
 import { setUnauthorizedHandler } from './api'
@@ -56,6 +57,21 @@ function SessionGuard({ children }: { children: ReactNode }) {
   return children
 }
 
+function FarmsPage() {
+  const { t } = useTranslation()
+  return <ModulePage eyebrow={t('modules.agriculture')} title={t('nav.farms')} tabs={farmTabs} defaultPath="/farm/farms" createFields={farmCreateFields} />
+}
+
+function CropsPage() {
+  const { t } = useTranslation()
+  return <ModulePage eyebrow={t('modules.agriculture')} title={t('nav.crops')} tabs={cropTabs} defaultPath="/crop/types" createFields={cropCreateFields} />
+}
+
+function SoilPage() {
+  const { t } = useTranslation()
+  return <ModulePage eyebrow={t('modules.agriculture')} title={t('nav.soil')} tabs={soilTabs} defaultPath="/soil/analyses" createFields={soilCreateFields} />
+}
+
 function AppRoutes() {
   const { token } = useAuth()
 
@@ -80,9 +96,9 @@ function AppRoutes() {
         <Route path="/ai/workspace" element={<AiWorkspacePage />} />
         <Route path="/ai/requests/:requestId" element={<AiRequestDetailPage />} />
         <Route path="/ai" element={<Navigate to="/ai/workspace" replace />} />
-        <Route path="/farms" element={<ModulePage eyebrow="AGRICULTURE" title="Farms" tabs={farmTabs} defaultPath="/farm/farms" createFields={farmCreateFields} />} />
-        <Route path="/crops" element={<ModulePage eyebrow="AGRICULTURE" title="Crops" tabs={cropTabs} defaultPath="/crop/types" createFields={cropCreateFields} />} />
-        <Route path="/soil" element={<ModulePage eyebrow="AGRICULTURE" title="Soil" tabs={soilTabs} defaultPath="/soil/analyses" createFields={soilCreateFields} />} />
+        <Route path="/farms" element={<FarmsPage />} />
+        <Route path="/crops" element={<CropsPage />} />
+        <Route path="/soil" element={<SoilPage />} />
         <Route path="/business" element={<BusinessPage />} />
         <Route path="/diagnosis" element={<DiagnosisPage />} />
         <Route path="/training" element={<TrainingPage />} />

@@ -1,24 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createModuleRecord, getModule, searchLibrary, unwrapModuleRows } from '../api'
 import { ModuleTabs, Panel, RecordList } from '../components/AppShell'
 import { RecordForm } from '../components/RecordForm'
 import { useAuth } from '../context/AuthContext'
-
-const libraryTabs = [
-  { label: 'Published items', path: '/library/items?publication_status=published' },
-  { label: 'Categories', path: '/library/categories' },
-  { label: 'Tags', path: '/library/tags' },
-  { label: 'Search', path: '/library/search' },
-]
-
-const itemFields = [
-  { name: 'slug', label: 'Slug', required: true },
-  { name: 'title', label: 'Title', required: true },
-  { name: 'title_ar', label: 'Arabic title' },
-  { name: 'summary', label: 'Summary' },
-]
+import { translateApiError } from '../i18n/apiErrors'
 
 export function LibraryPage() {
+  const { t } = useTranslation()
   const { token, organizationId } = useAuth()
   const [activePath, setActivePath] = useState('/library/items?publication_status=published')
   const [rows, setRows] = useState<unknown[]>([])
@@ -26,6 +15,20 @@ export function LibraryPage() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
+
+  const libraryTabs = [
+    { label: t('modules.publishedItems'), path: '/library/items?publication_status=published' },
+    { label: t('modules.categories'), path: '/library/categories' },
+    { label: t('modules.tags'), path: '/library/tags' },
+    { label: t('common.search'), path: '/library/search' },
+  ]
+
+  const itemFields = [
+    { name: 'slug', label: t('common.slug'), required: true },
+    { name: 'title', label: t('common.title'), required: true },
+    { name: 'title_ar', label: t('modules.arabicTitle') },
+    { name: 'summary', label: t('modules.summary') },
+  ]
 
   const load = async (path = activePath) => {
     if (!token) return
@@ -38,7 +41,7 @@ export function LibraryPage() {
         setRows(unwrapModuleRows(await getModule(token, path, organizationId ?? undefined)))
       }
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to load library records.')
+      setError(translateApiError(requestError) || t('modules.libraryLoadFailed'))
     } finally {
       setLoading(false)
     }
@@ -54,25 +57,25 @@ export function LibraryPage() {
       ...values,
       publication_status: 'published',
     }, organizationId ?? undefined)
-    setMessage('Library item created.')
+    setMessage(t('modules.libraryItemCreated'))
     await load('/library/items?publication_status=published')
   }
 
   return (
-    <Panel eyebrow="KNOWLEDGE" title="Agricultural library">
+    <Panel eyebrow={t('modules.knowledge')} title={t('modules.libraryTitle')}>
       <ModuleTabs tabs={libraryTabs} activePath={activePath} onSelect={setActivePath} />
       {activePath.startsWith('/library/items') && (
-        <RecordForm title="Create library item" fields={itemFields} submitLabel="Publish item" onSubmit={createItem} />
+        <RecordForm title={t('modules.createLibraryItem')} fields={itemFields} submitLabel={t('modules.publishItem')} onSubmit={createItem} />
       )}
       {activePath === '/library/search' && (
         <div className="search-bar">
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ابحث في المكتبة الزراعية" aria-label="Library search" dir="auto" />
-          <button type="button" onClick={() => void load('/library/search')}>Search</button>
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('modules.librarySearchPlaceholder')} aria-label={t('modules.librarySearchAria')} dir="auto" />
+          <button type="button" onClick={() => void load('/library/search')}>{t('common.search')}</button>
         </div>
       )}
       {message && <p className="notice">{message}</p>}
       {error && <p className="error">{error}</p>}
-      {loading ? <p className="loading">Loading library records…</p> : <RecordList rows={rows} emptyLabel="No library records found." />}
+      {loading ? <p className="loading">{t('modules.loadingLibrary')}</p> : <RecordList rows={rows} emptyLabel={t('modules.noLibraryRecords')} />}
     </Panel>
   )
 }

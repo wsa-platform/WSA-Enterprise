@@ -1,10 +1,13 @@
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { getOrganizations, login } from '../api'
 import { DEMO_HINT, getLoginDefaults, isDemoLoginEnabled } from '../config/loginDemo'
 import { useAuth } from '../context/AuthContext'
+import { translateApiError } from '../i18n/apiErrors'
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const expired = (location.state as { expired?: boolean } | null)?.expired === true
@@ -26,7 +29,7 @@ export function LoginPage() {
       if (organizations[0]) setOrganizationId(organizations[0].id)
       navigate('/')
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Sign in failed.')
+      setError(translateApiError(requestError) || t('auth.signInFailed'))
     } finally {
       setLoading(false)
     }
@@ -35,15 +38,15 @@ export function LoginPage() {
   return (
     <main className="login-shell">
       <section className="login-card">
-        <p className="eyebrow">WSA ENTERPRISE</p>
-        <h1>Integrated agricultural platform.</h1>
-        <p className="muted" dir="auto">Sign in to access farms, diagnosis, training, library, and AI services.</p>
-        {expired && <p className="banner">Your session has expired. Please sign in again.</p>}
+        <p className="eyebrow">{t('auth.brand')}</p>
+        <h1>{t('auth.loginTitle')}</h1>
+        <p className="muted" dir="auto">{t('auth.loginSubtitle')}</p>
+        {expired && <p className="banner">{t('auth.sessionExpired')}</p>}
         <form onSubmit={handleLogin}>
-          <label>Email<input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required /></label>
-          <label>Password<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" required /></label>
+          <label>{t('common.email')}<input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required /></label>
+          <label>{t('common.password')}<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" required /></label>
           {error && <p className="error">{error}</p>}
-          <button disabled={loading} type="submit">{loading ? 'Signing in…' : 'Sign in'}</button>
+          <button disabled={loading} type="submit">{loading ? t('auth.signingIn') : t('common.signIn')}</button>
         </form>
         {isDemoLoginEnabled() && <p className="hint">{DEMO_HINT}</p>}
       </section>

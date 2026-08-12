@@ -46,4 +46,26 @@ button { border: 0; border-radius: 8px; background: #6d28d9; color: #fff; cursor
 .permission-tags { display: flex; flex-wrap: wrap; gap: 8px; } .permission-tag { padding: 6px 10px; border-radius: 999px; background: #ede9fe; color: #5b21b6; font-size: 12px; font-family: ui-monospace, monospace; }
 .search-input { min-width: 220px; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font: inherit; }
 .quota-line { margin-top: 14px; color: #475569; font-size: 13px; } .audit-detail { margin: 0; padding: 16px; border-radius: 8px; background: #0f172a; color: #e2e8f0; overflow: auto; font: 12px/1.5 ui-monospace, monospace; }
-.link-button.inline { display: inline; padding: 0; margin-left: 8px; }
+.link-button.inline { display: inline; padding: 0; margin-inline-start: 8px; }
+.language-selector select { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; font: inherit; font-size: 13px; background: #fff; min-width: 120px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+html[dir="rtl"] .app-shell { direction: rtl; }
+html[dir="rtl"] aside { text-align: right; }
+html[dir="rtl"] nav a.active { box-shadow: inset -3px 0 0 #8b5cf6; }
+html[dir="rtl"] .link-button { text-align: right; }
+html[dir="rtl"] .data-table th, html[dir="rtl"] .data-table td { text-align: right; }
+html[dir="rtl"] .confirm-actions { flex-direction: row-reverse; }
+html[dir="rtl"] .shell-header, html[dir="rtl"] .page-header, html[dir="rtl"] .panel-heading { flex-direction: row-reverse; }
+html[dir="rtl"] .header-actions { flex-direction: row-reverse; }
+html[dir="rtl"] .pagination-bar, html[dir="rtl"] .pagination-actions { flex-direction: row-reverse; }
+html[dir="rtl"] .breadcrumbs { flex-direction: row-reverse; }
+html[dir="rtl"] .activity-row { direction: rtl; }
+html[dir="rtl"] .project-card p strong { float: left; }
+html[dir="rtl"] .quick-actions { flex-direction: row-reverse; }
+html[dir="rtl"] .module-tabs { flex-direction: row-reverse; }
+html[dir="rtl"] .search-bar { flex-direction: row-reverse; }
+html[dir="rtl"] .task-row { direction: rtl; }
+html[dir="rtl"] .detail-grid { direction: rtl; }
+html[dir="rtl"] .metrics { direction: rtl; }
+html[dir="rtl"] .report-grid { direction: rtl; }

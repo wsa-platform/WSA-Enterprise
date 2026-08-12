@@ -34,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->appendToGroup('api', [
             \App\Http\Middleware\AssignRequestId::class,
+            \App\Http\Middleware\SetLocaleFromHeader::class,
             \App\Http\Middleware\LogApiRequests::class,
         ]);
     })

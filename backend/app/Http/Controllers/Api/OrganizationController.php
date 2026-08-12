@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\SetLocaleFromHeader;
 use App\Models\Organization;
 use App\Services\Audit\AuditService;
 use App\Services\Billing\OrganizationSettingsService;
@@ -11,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class OrganizationController extends Controller
 {
@@ -91,6 +93,13 @@ class OrganizationController extends Controller
         $data = $request->validate([
             'settings' => ['required', 'array'],
         ]);
+
+        $locale = $data['settings']['operations.locale'] ?? null;
+        if ($locale !== null && ! in_array($locale, SetLocaleFromHeader::SUPPORTED_LOCALES, true)) {
+            throw ValidationException::withMessages([
+                'settings.operations.locale' => ['The selected locale is not supported.'],
+            ]);
+        }
 
         return response()->json(
             $this->organizationSettingsService->updateForOrganization(

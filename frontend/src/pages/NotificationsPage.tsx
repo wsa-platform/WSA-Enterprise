@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getNotifications, markNotificationRead, type AppNotification, type PaginatedResponse } from '../api'
 import { DataTable, PaginationBar } from '../components/DataTable'
 import { PageHeader } from '../components/PageHeader'
@@ -6,20 +7,23 @@ import { EmptyState, ErrorBanner } from '../components/UiPrimitives'
 import { useAuth } from '../context/AuthContext'
 import { usePermissions } from '../context/PermissionContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { translateApiError } from '../i18n/apiErrors'
+import i18n from '../i18n/config'
 
 export function NotificationsPage() {
+  const { t } = useTranslation()
   const { token, organizationId } = useAuth()
   const { can } = usePermissions()
   const [page, setPage] = useState(1)
   const [message, setMessage] = useState('')
 
   const { data, loading, error, reload } = useAsyncData(async () => {
-    if (!token) throw new Error('Not authenticated.')
+    if (!token) throw new Error(i18n.t('errors.notAuthenticated'))
     return getNotifications(token, organizationId ?? undefined, page)
   }, [token, organizationId, page])
 
   if (!can('platform.view')) {
-    return <ErrorBanner message="You do not have permission to view notifications." />
+    return <ErrorBanner message={t('notifications.noPermission')} />
   }
 
   const payload = data as PaginatedResponse<AppNotification> | AppNotification[] | null
@@ -33,36 +37,36 @@ export function NotificationsPage() {
     setMessage('')
     try {
       await markNotificationRead(token, notification.id, organizationId ?? undefined)
-      setMessage('Notification marked as read.')
+      setMessage(t('notifications.markedRead'))
       await reload()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to mark notification as read.')
+      setMessage(translateApiError(requestError) || t('notifications.markReadFailed'))
     }
   }
 
   return <>
-    <PageHeader eyebrow="PLATFORM" title="Notifications" description="Organization and personal notifications." />
+    <PageHeader eyebrow={t('common.platform')} title={t('notifications.title')} description={t('notifications.personalDescription')} />
     {error && <ErrorBanner message={error} onRetry={reload} />}
     {message && <p className="notice">{message}</p>}
 
     <section className="panel">
-      {loading ? <p className="loading">Loading notifications…</p> : rows.length === 0 ? (
-        <EmptyState title="No notifications" description="You are all caught up." />
+      {loading ? <p className="loading">{t('notifications.loading')}</p> : rows.length === 0 ? (
+        <EmptyState title={t('notifications.emptyTitle')} description={t('notifications.emptyDescription')} />
       ) : (
         <>
           <DataTable
             rows={rows}
             rowKey={(notification) => notification.id}
             columns={[
-              { key: 'title', header: 'Title', render: (notification) => notification.title },
-              { key: 'body', header: 'Message', render: (notification) => notification.body ?? '—' },
-              { key: 'read', header: 'Status', render: (notification) => notification.read_at ? 'Read' : 'Unread' },
-              { key: 'created', header: 'Created', render: (notification) => new Date(notification.created_at).toLocaleString() },
+              { key: 'title', header: t('common.title'), render: (notification) => notification.title },
+              { key: 'body', header: t('common.message'), render: (notification) => notification.body ?? '—' },
+              { key: 'read', header: t('common.status'), render: (notification) => notification.read_at ? t('common.read') : t('common.unread') },
+              { key: 'created', header: t('common.created'), render: (notification) => new Date(notification.created_at).toLocaleString() },
               {
                 key: 'actions',
                 header: '',
                 render: (notification) => !notification.read_at
-                  ? <button type="button" className="link-button inline" onClick={() => void handleRead(notification)}>Mark read</button>
+                  ? <button type="button" className="link-button inline" onClick={() => void handleRead(notification)}>{t('notifications.markRead')}</button>
                   : '—',
               },
             ]}

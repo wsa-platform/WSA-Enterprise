@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
+import { translateApiError } from '../i18n/apiErrors'
 
 type Field = {
   name: string
@@ -16,10 +18,12 @@ type RecordFormProps = {
   onSubmit: (values: Record<string, string>) => Promise<void>
 }
 
-export function RecordForm({ title, fields, initial = {}, submitLabel = 'Save', onSubmit }: RecordFormProps) {
+export function RecordForm({ title, fields, initial = {}, submitLabel, onSubmit }: RecordFormProps) {
+  const { t } = useTranslation()
   const [values, setValues] = useState<Record<string, string>>(initial)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const resolvedSubmitLabel = submitLabel ?? t('common.save')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -28,7 +32,7 @@ export function RecordForm({ title, fields, initial = {}, submitLabel = 'Save', 
     try {
       await onSubmit(values)
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to save record.')
+      setError(translateApiError(requestError) || t('modules.saveRecordFailed'))
     } finally {
       setLoading(false)
     }
@@ -50,7 +54,7 @@ export function RecordForm({ title, fields, initial = {}, submitLabel = 'Save', 
         </label>
       ))}
       {error && <p className="error">{error}</p>}
-      <button type="submit" disabled={loading}>{loading ? 'Saving…' : submitLabel}</button>
+      <button type="submit" disabled={loading}>{loading ? t('common.saving') : resolvedSubmitLabel}</button>
     </form>
   )
 }
