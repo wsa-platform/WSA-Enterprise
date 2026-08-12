@@ -28,6 +28,10 @@ use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\OrganizationController;
 use App\Http\Controllers\Api\MonitoringController;
 use App\Http\Controllers\Api\InvitationController;
+use App\Http\Controllers\Api\JobsTalentController;
+use App\Http\Controllers\Api\JobsEmployerController;
+use App\Http\Controllers\Api\BeekeepingController;
+use App\Http\Controllers\Api\AiAssistantController;
 
 Route::prefix('v1/health')->group(function (): void {
     Route::get('/live', [HealthController::class, 'live']);
@@ -175,6 +179,36 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/requests', [AiController::class, 'store']);
             Route::get('/requests/{id}', [AiController::class, 'show'])->whereNumber('id');
             Route::post('/requests/{id}/cancel', [AiController::class, 'cancel'])->whereNumber('id');
+            Route::get('/assistant/conversations', [AiAssistantController::class, 'index']);
+            Route::post('/assistant/conversations', [AiAssistantController::class, 'store']);
+            Route::post('/assistant/conversations/{conversation}/messages', [AiAssistantController::class, 'message'])->whereNumber('conversation');
+        });
+        Route::prefix('jobs')->group(function (): void {
+            Route::get('/talent/me', [JobsTalentController::class, 'showMine']);
+            Route::put('/talent/me', [JobsTalentController::class, 'upsert']);
+            Route::post('/talent/me/cv', [JobsTalentController::class, 'uploadCv']);
+            Route::post('/talent/me/cv/parse', [JobsTalentController::class, 'parseCv']);
+            Route::get('/candidates', [JobsEmployerController::class, 'search']);
+            Route::post('/candidates/match', [JobsEmployerController::class, 'match']);
+            Route::get('/candidates/{talentProfile}', [JobsEmployerController::class, 'show'])->whereNumber('talentProfile');
+            Route::post('/candidates/{talentProfile}/contact-requests', [JobsEmployerController::class, 'requestContact'])->whereNumber('talentProfile');
+            Route::post('/contact-requests/{contactRequestId}/pay', [JobsEmployerController::class, 'payContact'])->whereNumber('contactRequestId');
+            Route::post('/contact-requests/{contactRequestId}/hire', [JobsEmployerController::class, 'markHired'])->whereNumber('contactRequestId');
+            Route::post('/reports', [JobsEmployerController::class, 'report']);
+        });
+        Route::prefix('beekeeping')->group(function (): void {
+            Route::get('/profile', [BeekeepingController::class, 'profile']);
+            Route::put('/profile', [BeekeepingController::class, 'upsertProfile']);
+            Route::get('/apiaries', [BeekeepingController::class, 'apiaries']);
+            Route::post('/apiaries', [BeekeepingController::class, 'storeApiary']);
+            Route::get('/apiaries/{apiary}/hives', [BeekeepingController::class, 'hives'])->whereNumber('apiary');
+            Route::post('/apiaries/{apiary}/hives', [BeekeepingController::class, 'storeHive'])->whereNumber('apiary');
+            Route::post('/hives/{hive}/inspections', [BeekeepingController::class, 'storeInspection'])->whereNumber('hive');
+            Route::get('/calendar/tasks', [BeekeepingController::class, 'calendar']);
+            Route::post('/calendar/tasks', [BeekeepingController::class, 'storeCalendarTask']);
+            Route::get('/pollination/plants', [BeekeepingController::class, 'plants']);
+            Route::post('/pollination/plants', [BeekeepingController::class, 'storePlant']);
+            Route::get('/knowledge/topics', [BeekeepingController::class, 'knowledgeTopics']);
         });
     });
 });

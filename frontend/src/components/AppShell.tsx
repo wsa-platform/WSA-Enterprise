@@ -42,6 +42,16 @@ const navSections: Array<{ titleKey: string; items: NavItem[] }> = [
     titleKey: 'nav.ai',
     items: [
       { to: '/ai/workspace', labelKey: 'nav.aiWorkspace', permission: 'ai.use' },
+      { to: '/ai/assistant', labelKey: 'nav.aiAssistant', anyPermission: ['ai.use', 'ai.assistant'] },
+      { to: '/ai/vision', labelKey: 'nav.aiVision', anyPermission: ['ai.use', 'ai.vision'] },
+    ],
+  },
+  {
+    titleKey: 'nav.ecosystem',
+    items: [
+      { to: '/jobs', labelKey: 'nav.jobs', permission: 'jobs.view' },
+      { to: '/jobs/talent', labelKey: 'nav.talentProfile', anyPermission: ['jobs.talent.register', 'jobs.talent.manage'] },
+      { to: '/beekeeping', labelKey: 'nav.beekeeping', permission: 'beekeeping.view' },
     ],
   },
   {
@@ -99,6 +109,11 @@ function useBreadcrumbItems(pathname: string): BreadcrumbItem[] {
     '/admin/analytics': [dashboard, { label: t('nav.analytics') }],
     '/admin/api-clients': [dashboard, { label: t('nav.apiClients') }],
     '/ai/workspace': [dashboard, { label: t('nav.aiWorkspace') }],
+    '/ai/assistant': [dashboard, { label: t('nav.aiAssistant') }],
+    '/ai/vision': [dashboard, { label: t('nav.aiVision') }],
+    '/jobs': [dashboard, { label: t('nav.jobs') }],
+    '/jobs/talent': [dashboard, { label: t('nav.jobs'), to: '/jobs' }, { label: t('nav.talentProfile') }],
+    '/beekeeping': [dashboard, { label: t('nav.beekeeping') }],
     '/notifications': [dashboard, { label: t('nav.notifications') }],
     '/settings': [dashboard, { label: t('nav.settings') }],
   }

@@ -20,7 +20,11 @@ return [
         'training.view', 'training.manage',
         'library.view', 'library.manage',
         'ai.use',
+        'ai.assistant',
+        'ai.vision',
         'business.view', 'business.manage',
+        'jobs.view', 'jobs.manage',
+        'beekeeping.view', 'beekeeping.manage',
     ],
 
     'member' => [
@@ -33,6 +37,10 @@ return [
         'training.view', 'training.manage',
         'library.view', 'library.manage',
         'ai.use',
+        'ai.assistant',
+        'jobs.talent.register',
+        'jobs.talent.manage',
+        'beekeeping.view',
         'business.view',
     ],
 
@@ -45,6 +53,8 @@ return [
         'training.view',
         'library.view',
         'business.view',
+        'jobs.view',
+        'beekeeping.view',
     ],
 
     'labels' => [

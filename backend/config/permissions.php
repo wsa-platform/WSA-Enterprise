@@ -21,4 +21,12 @@ return [
     'monitoring.view',
     'billing.view',
     'billing.manage',
+    'jobs.view',
+    'jobs.manage',
+    'jobs.talent.register',
+    'jobs.talent.manage',
+    'beekeeping.view',
+    'beekeeping.manage',
+    'ai.assistant',
+    'ai.vision',
 ];

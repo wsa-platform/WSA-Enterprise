@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Services\Jobs;
+
+use App\Models\JobTalentContact;
+use App\Models\JobTalentProfile;
+use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\Request;
+
+class JobTalentProfileService
+{
+    /** @param  array<string, mixed>  $data */
+    public function registerOrUpdate(User $user, array $data, ?array $contact = null): JobTalentProfile
+    {
+        $profile = JobTalentProfile::updateOrCreate(
+            ['user_id' => $user->id],
+            collect($data)->only([
+                'professional_name', 'specialization', 'biography', 'country', 'region', 'city',
+                'skills', 'experience', 'education', 'certificates', 'languages', 'disciplines',
+                'work_preferences', 'availability', 'employment_status', 'is_public',
+            ])->all(),
+        );
+
+        if ($contact !== null) {
+            JobTalentContact::updateOrCreate(
+                ['talent_profile_id' => $profile->id],
+                collect($contact)->only(['email', 'phone', 'whatsapp', 'other_channels'])->all(),
+            );
+        }
+
+        return $profile->fresh(['contact']);
+    }
+
+    public function storeCv(JobTalentProfile $profile, string $path): JobTalentProfile
+    {
+        $profile->update([
+            'cv_path' => $path,
+            'cv_parse_status' => 'pending',
+        ]);
+
+        return $profile->fresh();
+    }
+
+    /** @param  array<string, mixed>  $filters */
+    public function searchPublic(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = JobTalentProfile::query()
+            ->where('is_public', true)
+            ->where('employment_status', JobTalentProfile::STATUS_AVAILABLE);
+
+        if ($country = $filters['country'] ?? null) {
+            $query->where('country', $country);
+        }
+        if ($region = $filters['region'] ?? null) {
+            $query->where('region', $region);
+        }
+        if ($city = $filters['city'] ?? null) {
+            $query->where('city', $city);
+        }
+        if ($specialization = $filters['specialization'] ?? null) {
+            $query->where('specialization', 'ilike', '%'.$specialization.'%');
+        }
+        if ($discipline = $filters['discipline'] ?? null) {
+            $query->whereJsonContains('disciplines', $discipline);
+        }
+        if ($skill = $filters['skill'] ?? null) {
+            $query->whereJsonContains('skills', $skill);
+        }
+        if ($employmentStatus = $filters['employment_status'] ?? null) {
+            $query->where('employment_status', $employmentStatus);
+        }
+
+        return $query->orderByDesc('updated_at')->paginate($perPage);
+    }
+}

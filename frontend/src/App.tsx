@@ -27,6 +27,11 @@ import { MonitoringPage } from './pages/admin/MonitoringPage'
 import { AnalyticsPage } from './pages/admin/AnalyticsPage'
 import { ApiClientsPage } from './pages/admin/ApiClientsPage'
 import { AcceptInvitationPage } from './pages/AcceptInvitationPage'
+import { JobsMarketplacePage } from './pages/jobs/JobsMarketplacePage'
+import { TalentProfilePage } from './pages/jobs/TalentProfilePage'
+import { BeekeepingDashboardPage } from './pages/beekeeping/BeekeepingDashboardPage'
+import { AiAssistantPage } from './pages/ai/AiAssistantPage'
+import { AiVisionPage } from './pages/ai/AiVisionPage'
 import './App.css'
 
 function ProtectedShell() {
@@ -94,8 +99,13 @@ function AppRoutes() {
         <Route path="/admin/analytics" element={<AnalyticsPage />} />
         <Route path="/admin/api-clients" element={<ApiClientsPage />} />
         <Route path="/ai/workspace" element={<AiWorkspacePage />} />
+        <Route path="/ai/assistant" element={<AiAssistantPage />} />
+        <Route path="/ai/vision" element={<AiVisionPage />} />
         <Route path="/ai/requests/:requestId" element={<AiRequestDetailPage />} />
         <Route path="/ai" element={<Navigate to="/ai/workspace" replace />} />
+        <Route path="/jobs" element={<JobsMarketplacePage />} />
+        <Route path="/jobs/talent" element={<TalentProfilePage />} />
+        <Route path="/beekeeping" element={<BeekeepingDashboardPage />} />
         <Route path="/farms" element={<FarmsPage />} />
         <Route path="/crops" element={<CropsPage />} />
         <Route path="/soil" element={<SoilPage />} />
