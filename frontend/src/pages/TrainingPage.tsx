@@ -1,28 +1,31 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createModuleRecord, getModule, unwrapModuleRows } from '../api'
 import { ModuleTabs, Panel, RecordList } from '../components/AppShell'
 import { RecordForm } from '../components/RecordForm'
 import { useAuth } from '../context/AuthContext'
-
-const trainingTabs = [
-  { label: 'Courses', path: '/training/courses' },
-  { label: 'Lessons', path: '/training/lessons' },
-  { label: 'My enrollments', path: '/training/enrollments' },
-]
-
-const courseFields = [
-  { name: 'code', label: 'Code', required: true },
-  { name: 'title', label: 'Title', required: true },
-  { name: 'title_ar', label: 'Arabic title' },
-]
+import { translateApiError } from '../i18n/apiErrors'
 
 export function TrainingPage() {
+  const { t } = useTranslation()
   const { token, organizationId } = useAuth()
   const [activePath, setActivePath] = useState('/training/courses')
   const [rows, setRows] = useState<unknown[]>([])
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
+
+  const trainingTabs = [
+    { label: t('modules.courses'), path: '/training/courses' },
+    { label: t('modules.lessons'), path: '/training/lessons' },
+    { label: t('modules.myEnrollments'), path: '/training/enrollments' },
+  ]
+
+  const courseFields = [
+    { name: 'code', label: t('common.code'), required: true },
+    { name: 'title', label: t('common.title'), required: true },
+    { name: 'title_ar', label: t('modules.arabicTitle') },
+  ]
 
   const load = async (path = activePath) => {
     if (!token) return
@@ -31,7 +34,7 @@ export function TrainingPage() {
     try {
       setRows(unwrapModuleRows(await getModule(token, path, organizationId ?? undefined)))
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to load training records.')
+      setError(translateApiError(requestError) || t('modules.trainingLoadFailed'))
     } finally {
       setLoading(false)
     }
@@ -44,19 +47,19 @@ export function TrainingPage() {
   const createCourse = async (values: Record<string, string>) => {
     if (!token) return
     await createModuleRecord(token, '/training/courses', values, organizationId ?? undefined)
-    setMessage('Training course created.')
+    setMessage(t('modules.trainingCourseCreated'))
     await load('/training/courses')
   }
 
   return (
-    <Panel eyebrow="EDUCATION" title="Training & courses">
+    <Panel eyebrow={t('modules.education')} title={t('modules.trainingTitle')}>
       <ModuleTabs tabs={trainingTabs} activePath={activePath} onSelect={setActivePath} />
       {activePath === '/training/courses' && (
-        <RecordForm title="Create course" fields={courseFields} submitLabel="Create course" onSubmit={createCourse} />
+        <RecordForm title={t('modules.createCourse')} fields={courseFields} submitLabel={t('modules.createCourseButton')} onSubmit={createCourse} />
       )}
       {message && <p className="notice">{message}</p>}
       {error && <p className="error">{error}</p>}
-      {loading ? <p className="loading">Loading training records…</p> : <RecordList rows={rows} emptyLabel="No training records found." />}
+      {loading ? <p className="loading">{t('modules.loadingTraining')}</p> : <RecordList rows={rows} emptyLabel={t('modules.noTrainingRecords')} />}
     </Panel>
   )
 }

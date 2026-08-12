@@ -1,9 +1,12 @@
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { acceptInvitation } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { translateApiError } from '../i18n/apiErrors'
 
 export function AcceptInvitationPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const tokenParam = params.get('token') ?? ''
@@ -16,7 +19,7 @@ export function AcceptInvitationPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!tokenParam) {
-      setError('Invitation token is missing.')
+      setError(t('auth.tokenMissing'))
       return
     }
 
@@ -32,7 +35,7 @@ export function AcceptInvitationPage() {
       setOrganizationId(result.organization.id)
       navigate('/')
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to accept invitation.')
+      setError(translateApiError(requestError) || t('auth.acceptFailed'))
     } finally {
       setLoading(false)
     }
@@ -41,14 +44,14 @@ export function AcceptInvitationPage() {
   return (
     <main className="login-shell">
       <section className="login-card">
-        <p className="eyebrow">WSA ENTERPRISE</p>
-        <h1>Accept invitation</h1>
-        <p className="muted">Complete your account to join the organization workspace.</p>
+        <p className="eyebrow">{t('auth.brand')}</p>
+        <h1>{t('auth.acceptInvitation')}</h1>
+        <p className="muted">{t('auth.acceptSubtitle')}</p>
         <form onSubmit={handleSubmit}>
-          <label>Name<input value={name} onChange={(event) => setName(event.target.value)} placeholder="Required for new accounts" /></label>
-          <label>Password<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" required minLength={8} /></label>
+          <label>{t('common.name')}<input value={name} onChange={(event) => setName(event.target.value)} placeholder={t('auth.namePlaceholder')} /></label>
+          <label>{t('common.password')}<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" required minLength={8} /></label>
           {error && <p className="error">{error}</p>}
-          <button disabled={loading || !tokenParam} type="submit">{loading ? 'Joining…' : 'Accept invitation'}</button>
+          <button disabled={loading || !tokenParam} type="submit">{loading ? t('auth.joining') : t('auth.acceptInvitation')}</button>
         </form>
       </section>
     </main>

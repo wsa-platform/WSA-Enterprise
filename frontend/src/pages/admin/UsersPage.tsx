@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   assignRole,
   createUser,
@@ -21,8 +22,11 @@ import { EmptyState, ErrorBanner, StatusBadge } from '../../components/UiPrimiti
 import { useAuth } from '../../context/AuthContext'
 import { usePermissions } from '../../context/PermissionContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { translateApiError } from '../../i18n/apiErrors'
+import i18n from '../../i18n/config'
 
 export function UsersPage() {
+  const { t } = useTranslation()
   const { token, organizationId, user: currentUser } = useAuth()
   const { can } = usePermissions()
   const [search, setSearch] = useState('')
@@ -37,17 +41,17 @@ export function UsersPage() {
   const [selectedRoleId, setSelectedRoleId] = useState<number | ''>('')
 
   const { data: usersPayload, loading, error, reload } = useAsyncData(async () => {
-    if (!token) throw new Error('Not authenticated.')
+    if (!token) throw new Error(i18n.t('errors.notAuthenticated'))
     return getUsers(token, organizationId ?? undefined)
   }, [token, organizationId, page])
 
   const { data: rolesPayload } = useAsyncData(async () => {
-    if (!token) throw new Error('Not authenticated.')
+    if (!token) throw new Error(i18n.t('errors.notAuthenticated'))
     return getRoles(token, organizationId ?? undefined)
   }, [token, organizationId])
 
   const { data: invitationsPayload, reload: reloadInvitations } = useAsyncData(async () => {
-    if (!token) throw new Error('Not authenticated.')
+    if (!token) throw new Error(i18n.t('errors.notAuthenticated'))
     return getInvitations(token, organizationId ?? undefined)
   }, [token, organizationId])
 
@@ -60,7 +64,7 @@ export function UsersPage() {
   }, [usersPayload, search])
 
   if (!can('access.manage')) {
-    return <ErrorBanner message="You do not have permission to manage users." />
+    return <ErrorBanner message={t('users.noPermission')} />
   }
 
   const roles = unwrapModuleRows(rolesPayload ?? []) as Role[]
@@ -76,10 +80,10 @@ export function UsersPage() {
     try {
       await createUser(token, form, organizationId ?? undefined)
       setForm({ name: '', email: '', password: '' })
-      setMessage('User created successfully.')
+      setMessage(t('users.created'))
       await reload()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to create user.')
+      setMessage(translateApiError(requestError) || t('users.createFailed'))
     }
   }
 
@@ -90,10 +94,10 @@ export function UsersPage() {
       await assignRole(token, assignTarget.id, Number(selectedRoleId), organizationId ?? undefined)
       setAssignTarget(null)
       setSelectedRoleId('')
-      setMessage('Role assigned successfully.')
+      setMessage(t('users.assigned'))
       await reload()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to assign role.')
+      setMessage(translateApiError(requestError) || t('users.assignFailed'))
     }
   }
 
@@ -108,10 +112,10 @@ export function UsersPage() {
         is_active: editTarget.is_active !== false,
       }, organizationId ?? undefined)
       setEditTarget(null)
-      setMessage('User updated successfully.')
+      setMessage(t('users.updated'))
       await reload()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to update user.')
+      setMessage(translateApiError(requestError) || t('users.updateFailed'))
     }
   }
 
@@ -121,10 +125,10 @@ export function UsersPage() {
     try {
       await removeUser(token, confirmRemove.id, organizationId ?? undefined)
       setConfirmRemove(null)
-      setMessage('User removed from organization.')
+      setMessage(t('users.removed'))
       await reload()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to remove user.')
+      setMessage(translateApiError(requestError) || t('users.removeFailed'))
     }
   }
 
@@ -133,10 +137,10 @@ export function UsersPage() {
     setMessage('')
     try {
       await unassignRole(token, user.id, role.id, organizationId ?? undefined)
-      setMessage(`Role "${role.name}" unassigned.`)
+      setMessage(t('users.unassigned', { name: role.name }))
       await reload()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to unassign role.')
+      setMessage(translateApiError(requestError) || t('users.unassignFailed'))
     }
   }
 
@@ -147,10 +151,10 @@ export function UsersPage() {
       const invitation = await inviteUser(token, inviteForm, organizationId ?? undefined)
       setLastInvite(invitation)
       setInviteForm({ email: '', role: 'member' })
-      setMessage('Invitation sent.')
+      setMessage(t('users.invitationSent'))
       await reloadInvitations()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to send invitation.')
+      setMessage(translateApiError(requestError) || t('users.inviteFailed'))
     }
   }
 
@@ -159,56 +163,56 @@ export function UsersPage() {
     setMessage('')
     try {
       await revokeInvitation(token, invitation.id, organizationId ?? undefined)
-      setMessage('Invitation revoked.')
+      setMessage(t('users.invitationRevoked'))
       await reloadInvitations()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to revoke invitation.')
+      setMessage(translateApiError(requestError) || t('users.revokeFailed'))
     }
   }
 
   return <>
     <PageHeader
-      eyebrow="ENTERPRISE"
-      title="User management"
-      description="Manage organization members, roles, and access."
+      eyebrow={t('common.enterprise')}
+      title={t('users.title')}
+      description={t('users.description')}
     />
 
     {error && <ErrorBanner message={error} onRetry={reload} />}
     {message && <p className="notice">{message}</p>}
 
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">INVITE</p><h2>Invite user</h2></div></div>
+      <div className="panel-heading"><div><p className="eyebrow">{t('common.invite')}</p><h2>{t('users.invite')}</h2></div></div>
       <form className="record-form" onSubmit={(event) => { event.preventDefault(); void handleInvite() }}>
-        <label>Email<input type="email" value={inviteForm.email} onChange={(event) => setInviteForm({ ...inviteForm, email: event.target.value })} required /></label>
+        <label>{t('common.email')}<input type="email" value={inviteForm.email} onChange={(event) => setInviteForm({ ...inviteForm, email: event.target.value })} required /></label>
         <label>
-          Membership role
+          {t('users.membershipRole')}
           <select value={inviteForm.role} onChange={(event) => setInviteForm({ ...inviteForm, role: event.target.value as 'admin' | 'member' })}>
-            <option value="member">Member</option>
-            <option value="admin">Admin</option>
+            <option value="member">{t('common.member')}</option>
+            <option value="admin">{t('common.admin')}</option>
           </select>
         </label>
-        <button type="submit">Send invitation</button>
+        <button type="submit">{t('users.sendInvitation')}</button>
       </form>
       {lastInvite?.token && (
-        <p className="muted">Accept link: /accept-invitation?token={lastInvite.token}</p>
+        <p className="muted">{t('users.acceptLink', { token: lastInvite.token })}</p>
       )}
     </section>
 
     {invitations.length > 0 && (
       <section className="panel">
-        <div className="panel-heading"><div><p className="eyebrow">PENDING</p><h2>Invitations</h2></div></div>
+        <div className="panel-heading"><div><p className="eyebrow">{t('common.pending')}</p><h2>{t('users.pendingInvitations')}</h2></div></div>
         <DataTable
           rows={invitations}
           rowKey={(invitation) => invitation.id}
           columns={[
-            { key: 'email', header: 'Email', render: (invitation) => invitation.email },
-            { key: 'role', header: 'Role', render: (invitation) => invitation.role },
-            { key: 'expires', header: 'Expires', render: (invitation) => new Date(invitation.expires_at).toLocaleString() },
+            { key: 'email', header: t('common.email'), render: (invitation) => invitation.email },
+            { key: 'role', header: t('common.role'), render: (invitation) => invitation.role },
+            { key: 'expires', header: t('common.expires'), render: (invitation) => new Date(invitation.expires_at).toLocaleString() },
             {
               key: 'actions',
-              header: 'Actions',
+              header: t('common.actions'),
               render: (invitation) => (
-                <button type="button" className="link-button inline danger" onClick={() => void handleRevokeInvite(invitation)}>Revoke</button>
+                <button type="button" className="link-button inline danger" onClick={() => void handleRevokeInvite(invitation)}>{t('common.revoke')}</button>
               ),
             },
           ]}
@@ -217,43 +221,43 @@ export function UsersPage() {
     )}
 
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">CREATE</p><h2>Add user directly</h2></div></div>
+      <div className="panel-heading"><div><p className="eyebrow">{t('common.createSection')}</p><h2>{t('users.addDirectly')}</h2></div></div>
       <form className="record-form" onSubmit={(event) => { event.preventDefault(); void handleCreate() }}>
-        <label>Name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /></label>
-        <label>Email<input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required /></label>
-        <label>Password<input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required minLength={8} /></label>
-        <button type="submit">Create user</button>
+        <label>{t('common.name')}<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /></label>
+        <label>{t('common.email')}<input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required /></label>
+        <label>{t('common.password')}<input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required minLength={8} /></label>
+        <button type="submit">{t('users.createUser')}</button>
       </form>
     </section>
 
     <section className="panel">
       <div className="panel-heading">
-        <div><p className="eyebrow">DIRECTORY</p><h2>Users</h2></div>
-        <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search users" aria-label="Search users" />
+        <div><p className="eyebrow">{t('common.directory')}</p><h2>{t('users.directory')}</h2></div>
+        <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('users.searchPlaceholder')} aria-label={t('users.searchAria')} />
       </div>
-      {loading ? <p className="loading">Loading users…</p> : users.length === 0 ? (
-        <EmptyState title="No users found" description="Create a user or adjust your search." />
+      {loading ? <p className="loading">{t('users.loadingUsers')}</p> : users.length === 0 ? (
+        <EmptyState title={t('users.emptyTitle')} description={t('users.emptyDescription')} />
       ) : (
         <>
           <DataTable
             rows={users}
             rowKey={(user) => user.id}
             columns={[
-              { key: 'name', header: 'Name', render: (user) => user.name },
-              { key: 'email', header: 'Email', render: (user) => user.email },
-              { key: 'status', header: 'Status', render: (user) => (
+              { key: 'name', header: t('common.name'), render: (user) => user.name },
+              { key: 'email', header: t('common.email'), render: (user) => user.email },
+              { key: 'status', header: t('common.status'), render: (user) => (
                 <StatusBadge status={user.is_active === false ? 'inactive' : 'active'} />
               ) },
-              { key: 'roles', header: 'Roles', render: (user) => user.roles?.map((role) => role.name).join(', ') || 'Member' },
+              { key: 'roles', header: t('users.roles'), render: (user) => user.roles?.map((role) => role.name).join(', ') || t('common.member') },
               {
                 key: 'actions',
-                header: 'Actions',
+                header: t('common.actions'),
                 render: (user) => (
                   <div className="inline-actions">
-                    <button type="button" className="link-button inline" onClick={() => setEditTarget({ ...user })}>Edit</button>
-                    <button type="button" className="link-button inline" onClick={() => setAssignTarget(user)}>Assign role</button>
+                    <button type="button" className="link-button inline" onClick={() => setEditTarget({ ...user })}>{t('common.edit')}</button>
+                    <button type="button" className="link-button inline" onClick={() => setAssignTarget(user)}>{t('users.assignRole')}</button>
                     {user.id !== currentUser?.id && (
-                      <button type="button" className="link-button inline danger" onClick={() => setConfirmRemove(user)}>Remove</button>
+                      <button type="button" className="link-button inline danger" onClick={() => setConfirmRemove(user)}>{t('common.remove')}</button>
                     )}
                   </div>
                 ),
@@ -274,11 +278,11 @@ export function UsersPage() {
 
     {assignTarget && (
       <section className="panel">
-        <div className="panel-heading"><div><p className="eyebrow">ASSIGN</p><h2>{assignTarget.name}</h2></div></div>
+        <div className="panel-heading"><div><p className="eyebrow">{t('common.assign')}</p><h2>{assignTarget.name}</h2></div></div>
         <label>
-          Role
+          {t('common.role')}
           <select value={selectedRoleId} onChange={(event) => setSelectedRoleId(event.target.value ? Number(event.target.value) : '')}>
-            <option value="">Select role</option>
+            <option value="">{t('users.selectRole')}</option>
             {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
           </select>
         </label>
@@ -286,32 +290,32 @@ export function UsersPage() {
           <div className="inline-actions">
             {assignTarget.roles.map((role) => (
               <button key={role.id} type="button" className="refresh" onClick={() => void handleUnassign(assignTarget, role)}>
-                Unassign {role.name}
+                {t('users.unassign', { name: role.name })}
               </button>
             ))}
           </div>
         )}
         <div className="confirm-actions">
-          <button type="button" className="refresh" onClick={() => setAssignTarget(null)}>Cancel</button>
-          <button type="button" onClick={() => void handleAssign()}>Assign role</button>
+          <button type="button" className="refresh" onClick={() => setAssignTarget(null)}>{t('common.cancel')}</button>
+          <button type="button" onClick={() => void handleAssign()}>{t('users.assignRole')}</button>
         </div>
       </section>
     )}
 
     {editTarget && (
       <section className="panel">
-        <div className="panel-heading"><div><p className="eyebrow">EDIT</p><h2>{editTarget.name}</h2></div></div>
+        <div className="panel-heading"><div><p className="eyebrow">{t('common.edit')}</p><h2>{editTarget.name}</h2></div></div>
         <form className="record-form" onSubmit={(event) => { event.preventDefault(); void handleUpdate() }}>
-          <label>Name<input value={editTarget.name} onChange={(event) => setEditTarget({ ...editTarget, name: event.target.value })} required /></label>
-          <label>Email<input type="email" value={editTarget.email} onChange={(event) => setEditTarget({ ...editTarget, email: event.target.value })} required /></label>
+          <label>{t('common.name')}<input value={editTarget.name} onChange={(event) => setEditTarget({ ...editTarget, name: event.target.value })} required /></label>
+          <label>{t('common.email')}<input type="email" value={editTarget.email} onChange={(event) => setEditTarget({ ...editTarget, email: event.target.value })} required /></label>
           <label>
-            Membership role
+            {t('users.membershipRole')}
             <select
               value={editTarget.membership_role ?? 'member'}
               onChange={(event) => setEditTarget({ ...editTarget, membership_role: event.target.value })}
             >
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
+              <option value="member">{t('common.member')}</option>
+              <option value="admin">{t('common.admin')}</option>
             </select>
           </label>
           <label className="checkbox-label">
@@ -321,11 +325,11 @@ export function UsersPage() {
               onChange={(event) => setEditTarget({ ...editTarget, is_active: event.target.checked })}
               disabled={editTarget.id === currentUser?.id}
             />
-            Active in organization
+            {t('users.activeInOrg')}
           </label>
           <div className="confirm-actions">
-            <button type="button" className="refresh" onClick={() => setEditTarget(null)}>Cancel</button>
-            <button type="submit">Save changes</button>
+            <button type="button" className="refresh" onClick={() => setEditTarget(null)}>{t('common.cancel')}</button>
+            <button type="submit">{t('users.saveChanges')}</button>
           </div>
         </form>
       </section>
@@ -333,11 +337,11 @@ export function UsersPage() {
 
     {confirmRemove && (
       <section className="panel">
-        <div className="panel-heading"><div><p className="eyebrow">CONFIRM</p><h2>Remove {confirmRemove.name}?</h2></div></div>
-        <p>This removes the user from the organization. Their global account is preserved.</p>
+        <div className="panel-heading"><div><p className="eyebrow">{t('common.confirmEyebrow')}</p><h2>{t('users.confirmRemoveTitle', { name: confirmRemove.name })}</h2></div></div>
+        <p>{t('users.confirmRemoveMessage')}</p>
         <div className="confirm-actions">
-          <button type="button" className="refresh" onClick={() => setConfirmRemove(null)}>Cancel</button>
-          <button type="button" className="danger" onClick={() => void handleRemove()}>Remove user</button>
+          <button type="button" className="refresh" onClick={() => setConfirmRemove(null)}>{t('common.cancel')}</button>
+          <button type="button" className="danger" onClick={() => void handleRemove()}>{t('users.removeUser')}</button>
         </div>
       </section>
     )}

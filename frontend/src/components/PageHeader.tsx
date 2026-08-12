@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 export type BreadcrumbItem = { label: string; to?: string }
 
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
+  const { t } = useTranslation()
   return (
-    <nav className="breadcrumbs" aria-label="Breadcrumb">
+    <nav className="breadcrumbs" aria-label={t('common.breadcrumb')}>
       {items.map((item, index) => (
         <span key={`${item.label}-${index}`}>
           {index > 0 && <span className="breadcrumb-sep">/</span>}

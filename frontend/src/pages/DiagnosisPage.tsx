@@ -1,16 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createDiagnosisRequest, getModule, unwrapModuleRows } from '../api'
 import { ModuleTabs, Panel, RecordList } from '../components/AppShell'
 import { useAuth } from '../context/AuthContext'
-
-const diagnosisTabs = [
-  { label: 'Requests', path: '/diagnosis/requests' },
-  { label: 'Categories', path: '/diagnosis/categories' },
-  { label: 'Symptoms', path: '/diagnosis/symptoms' },
-  { label: 'Diseases', path: '/diagnosis/diseases' },
-]
+import { translateApiError } from '../i18n/apiErrors'
 
 export function DiagnosisPage() {
+  const { t } = useTranslation()
   const { token, organizationId } = useAuth()
   const [activePath, setActivePath] = useState('/diagnosis/requests')
   const [rows, setRows] = useState<unknown[]>([])
@@ -19,6 +15,13 @@ export function DiagnosisPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
+  const diagnosisTabs = [
+    { label: t('modules.requests'), path: '/diagnosis/requests' },
+    { label: t('modules.categories'), path: '/diagnosis/categories' },
+    { label: t('modules.symptoms'), path: '/diagnosis/symptoms' },
+    { label: t('modules.diseases'), path: '/diagnosis/diseases' },
+  ]
+
   const load = async (path = activePath) => {
     if (!token) return
     setLoading(true)
@@ -26,7 +29,7 @@ export function DiagnosisPage() {
     try {
       setRows(unwrapModuleRows(await getModule(token, path, organizationId ?? undefined)))
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to load diagnosis records.')
+      setError(translateApiError(requestError) || t('modules.diagnosisLoadFailed'))
     } finally {
       setLoading(false)
     }
@@ -45,27 +48,27 @@ export function DiagnosisPage() {
         reference: `DX-WEB-${Date.now()}`,
         notes,
       }, organizationId ?? undefined)
-      setMessage('Diagnosis request submitted. Results are decision support only.')
+      setMessage(t('modules.diagnosisSubmitted'))
       await load('/diagnosis/requests')
       setActivePath('/diagnosis/requests')
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to submit diagnosis request.')
+      setError(translateApiError(requestError) || t('modules.diagnosisSubmitFailed'))
     }
   }
 
   return (
-    <Panel eyebrow="DECISION SUPPORT" title="Disease diagnosis">
-      <p className="notice">Diagnosis outputs are agricultural decision support only and are not authoritative scientific diagnoses.</p>
+    <Panel eyebrow={t('modules.decisionSupport')} title={t('modules.diagnosisTitle')}>
+      <p className="notice">{t('modules.diagnosisNotice')}</p>
       <ModuleTabs tabs={diagnosisTabs} activePath={activePath} onSelect={setActivePath} />
       {activePath === '/diagnosis/requests' && (
         <div className="search-bar">
-          <input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="وصف الأعراض / Symptom notes" aria-label="Diagnosis notes" dir="auto" />
-          <button type="button" onClick={() => void submitRequest()}>Submit case</button>
+          <input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={t('modules.diagnosisNotesPlaceholder')} aria-label={t('modules.diagnosisNotesAria')} dir="auto" />
+          <button type="button" onClick={() => void submitRequest()}>{t('modules.submitCase')}</button>
         </div>
       )}
       {message && <p className="notice">{message}</p>}
       {error && <p className="error">{error}</p>}
-      {loading ? <p className="loading">Loading diagnosis records…</p> : <RecordList rows={rows} emptyLabel="No diagnosis records yet." />}
+      {loading ? <p className="loading">{t('modules.loadingDiagnosis')}</p> : <RecordList rows={rows} emptyLabel={t('modules.noDiagnosisRecords')} />}
     </Panel>
   )
 }

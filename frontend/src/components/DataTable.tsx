@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type Column<T> = {
   key: string
@@ -9,7 +10,7 @@ type Column<T> = {
 export function DataTable<T>({
   columns,
   rows,
-  emptyLabel = 'No records found.',
+  emptyLabel,
   rowKey,
 }: {
   columns: Column<T>[]
@@ -17,8 +18,11 @@ export function DataTable<T>({
   emptyLabel?: string
   rowKey: (row: T) => string | number
 }) {
+  const { t } = useTranslation()
+  const label = emptyLabel ?? t('common.noRecords')
+
   if (rows.length === 0) {
-    return <p className="muted">{emptyLabel}</p>
+    return <p className="muted">{label}</p>
   }
 
   return (
@@ -52,12 +56,14 @@ export function PaginationBar({
   total: number
   onPageChange: (page: number) => void
 }) {
+  const { t } = useTranslation()
+
   return (
     <div className="pagination-bar">
-      <span>{total} total · page {page} of {lastPage}</span>
+      <span>{t('common.pageOf', { total, page, lastPage })}</span>
       <div className="pagination-actions">
-        <button type="button" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>Previous</button>
-        <button type="button" disabled={page >= lastPage} onClick={() => onPageChange(page + 1)}>Next</button>
+        <button type="button" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>{t('common.previous')}</button>
+        <button type="button" disabled={page >= lastPage} onClick={() => onPageChange(page + 1)}>{t('common.next')}</button>
       </div>
     </div>
   )

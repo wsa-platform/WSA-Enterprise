@@ -1,3 +1,4 @@
+import { getCurrentLanguage } from '../i18n/config'
 import type { EnvelopeResponse, PaginatedResponse } from './types'
 
 export class ApiError extends Error {
@@ -49,6 +50,7 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
 export function buildHeaders(token?: string, organizationId?: number, body?: unknown) {
   return {
     Accept: 'application/json',
+    'Accept-Language': getCurrentLanguage(),
     ...(body ? { 'Content-Type': 'application/json' } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(organizationId ? { 'X-Organization-Id': String(organizationId) } : {}),

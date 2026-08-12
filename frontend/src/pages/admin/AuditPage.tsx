@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getAuditLogs, type AuditLogEntry } from '../../api'
 import { DataTable, PaginationBar } from '../../components/DataTable'
 import { PageHeader } from '../../components/PageHeader'
@@ -6,8 +7,10 @@ import { EmptyState, ErrorBanner } from '../../components/UiPrimitives'
 import { useAuth } from '../../context/AuthContext'
 import { usePermissions } from '../../context/PermissionContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import i18n from '../../i18n/config'
 
 export function AuditPage() {
+  const { t } = useTranslation()
   const { token, organizationId } = useAuth()
   const { can } = usePermissions()
   const [action, setAction] = useState('')
@@ -15,14 +18,14 @@ export function AuditPage() {
   const [selected, setSelected] = useState<AuditLogEntry | null>(null)
 
   const { data, loading, error, reload } = useAsyncData(async () => {
-    if (!token) throw new Error('Not authenticated.')
+    if (!token) throw new Error(i18n.t('errors.notAuthenticated'))
     const query: Record<string, string | number> = { page, per_page: 15 }
     if (action.trim()) query.action = action.trim()
     return getAuditLogs(token, organizationId ?? undefined, query)
   }, [token, organizationId, page, action])
 
   if (!can('access.manage')) {
-    return <ErrorBanner message="You do not have permission to view audit logs." />
+    return <ErrorBanner message={t('audit.noPermission')} />
   }
 
   const rows = Array.isArray(data) ? data : data?.data ?? []
@@ -31,38 +34,38 @@ export function AuditPage() {
     : null
 
   return <>
-    <PageHeader eyebrow="ENTERPRISE" title="Audit logs" description="Security and lifecycle events for your organization." />
+    <PageHeader eyebrow={t('common.enterprise')} title={t('audit.title')} description={t('audit.securityDescription')} />
 
     {error && <ErrorBanner message={error} onRetry={reload} />}
 
     <section className="panel">
       <div className="panel-heading">
-        <div><p className="eyebrow">FILTER</p><h2>Audit events</h2></div>
+        <div><p className="eyebrow">{t('common.filter')}</p><h2>{t('audit.auditEvents')}</h2></div>
         <input
           className="search-input"
           value={action}
           onChange={(event) => { setAction(event.target.value); setPage(1) }}
-          placeholder="Filter by action (e.g. ai.request.created)"
-          aria-label="Filter audit logs by action"
+          placeholder={t('audit.filterPlaceholder')}
+          aria-label={t('audit.filterAria')}
         />
       </div>
 
-      {loading ? <p className="loading">Loading audit logs…</p> : rows.length === 0 ? (
-        <EmptyState title="No audit events" description="Try a different action filter." />
+      {loading ? <p className="loading">{t('audit.loading')}</p> : rows.length === 0 ? (
+        <EmptyState title={t('audit.emptyTitle')} description={t('audit.emptyFilterDescription')} />
       ) : (
         <>
           <DataTable
             rows={rows}
             rowKey={(entry) => entry.id}
             columns={[
-              { key: 'action', header: 'Action', render: (entry) => entry.action },
-              { key: 'actor', header: 'Actor', render: (entry) => entry.user?.name ?? 'System' },
-              { key: 'target', header: 'Target', render: (entry) => entry.auditable_type ? `${entry.auditable_type}#${entry.auditable_id}` : '—' },
-              { key: 'time', header: 'Timestamp', render: (entry) => new Date(entry.created_at).toLocaleString() },
+              { key: 'action', header: t('audit.action'), render: (entry) => entry.action },
+              { key: 'actor', header: t('audit.actor'), render: (entry) => entry.user?.name ?? t('common.system') },
+              { key: 'target', header: t('audit.target'), render: (entry) => entry.auditable_type ? `${entry.auditable_type}#${entry.auditable_id}` : '—' },
+              { key: 'time', header: t('audit.timestamp'), render: (entry) => new Date(entry.created_at).toLocaleString() },
               {
                 key: 'detail',
                 header: '',
-                render: (entry) => <button type="button" className="link-button inline" onClick={() => setSelected(entry)}>Details</button>,
+                render: (entry) => <button type="button" className="link-button inline" onClick={() => setSelected(entry)}>{t('audit.details')}</button>,
               },
             ]}
           />
@@ -80,9 +83,9 @@ export function AuditPage() {
 
     {selected && (
       <section className="panel">
-        <div className="panel-heading"><div><p className="eyebrow">DETAIL</p><h2>{selected.action}</h2></div></div>
+        <div className="panel-heading"><div><p className="eyebrow">{t('common.detail')}</p><h2>{selected.action}</h2></div></div>
         <pre className="audit-detail">{JSON.stringify(sanitizeAudit(selected), null, 2)}</pre>
-        <button type="button" className="refresh" onClick={() => setSelected(null)}>Close</button>
+        <button type="button" className="refresh" onClick={() => setSelected(null)}>{t('common.close')}</button>
       </section>
     )}
   </>

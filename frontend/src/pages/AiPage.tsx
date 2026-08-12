@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createAiRequest, getAiProvider, getModule, unwrapModuleRows } from '../api'
 import type { AiProviderInfo } from '../api'
 import { ModuleTabs, Panel, RecordList } from '../components/AppShell'
 import { useAuth } from '../context/AuthContext'
-
-const aiTabs = [
-  { label: 'Request log', path: '/ai/requests' },
-]
+import { translateApiError } from '../i18n/apiErrors'
 
 export function AiPage() {
+  const { t } = useTranslation()
   const { token, organizationId } = useAuth()
   const [provider, setProvider] = useState<AiProviderInfo | null>(null)
   const [rows, setRows] = useState<unknown[]>([])
@@ -16,6 +15,10 @@ export function AiPage() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
+
+  const aiTabs = [
+    { label: t('ai.requestLog'), path: '/ai/requests' },
+  ]
 
   const load = async () => {
     if (!token) return
@@ -29,7 +32,7 @@ export function AiPage() {
       setProvider(providerInfo)
       setRows(unwrapModuleRows(requests))
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to load AI services.')
+      setError(translateApiError(requestError) || t('ai.loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -48,24 +51,24 @@ export function AiPage() {
         request_type: 'library_qa',
         input: { query },
       }, organizationId ?? undefined)
-      setMessage('Mock provider returned a decision-support response.')
+      setMessage(t('ai.mockResponse'))
       await load()
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to run AI request.')
+      setError(translateApiError(requestError) || t('ai.runFailed'))
     }
   }
 
   return (
-    <Panel eyebrow="AI FOUNDATION" title="AI services">
-      {provider && <p className="notice">{provider.decision_support_notice} Provider: <strong>{provider.provider}</strong></p>}
+    <Panel eyebrow={t('ai.foundation')} title={t('ai.servicesTitle')}>
+      {provider && <p className="notice">{provider.decision_support_notice} {t('ai.providerLabel', { name: provider.provider })}</p>}
       <ModuleTabs tabs={aiTabs} activePath="/ai/requests" onSelect={() => undefined} />
       <div className="search-bar">
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Ask the library assistant" aria-label="AI query" dir="auto" />
-        <button type="button" onClick={() => void runLibraryQa()}>Run library Q&amp;A</button>
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('ai.askPlaceholder')} aria-label={t('ai.queryAria')} dir="auto" />
+        <button type="button" onClick={() => void runLibraryQa()}>{t('ai.runLibraryQa')}</button>
       </div>
       {message && <p className="notice">{message}</p>}
       {error && <p className="error">{error}</p>}
-      {loading ? <p className="loading">Loading AI request log…</p> : <RecordList rows={rows} emptyLabel="No AI requests yet." />}
+      {loading ? <p className="loading">{t('ai.loadingLog')}</p> : <RecordList rows={rows} emptyLabel={t('ai.noRequestsYet')} />}
     </Panel>
   )
 }

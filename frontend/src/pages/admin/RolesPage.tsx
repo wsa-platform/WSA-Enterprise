@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   createPermission,
   createRole,
@@ -18,8 +19,11 @@ import { EmptyState, ErrorBanner } from '../../components/UiPrimitives'
 import { useAuth } from '../../context/AuthContext'
 import { usePermissions } from '../../context/PermissionContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { translateApiError } from '../../i18n/apiErrors'
+import i18n from '../../i18n/config'
 
 export function RolesPage() {
+  const { t } = useTranslation()
   const { token, organizationId } = useAuth()
   const { can, context } = usePermissions()
   const [message, setMessage] = useState('')
@@ -30,17 +34,17 @@ export function RolesPage() {
   const [confirmDeletePermission, setConfirmDeletePermission] = useState<Permission | null>(null)
 
   const { data: rolesPayload, loading: rolesLoading, error: rolesError, reload: reloadRoles } = useAsyncData(async () => {
-    if (!token) throw new Error('Not authenticated.')
+    if (!token) throw new Error(i18n.t('errors.notAuthenticated'))
     return getRoles(token, organizationId ?? undefined)
   }, [token, organizationId])
 
   const { data: permissionsPayload, loading: permissionsLoading, error: permissionsError, reload: reloadPermissions } = useAsyncData(async () => {
-    if (!token) throw new Error('Not authenticated.')
+    if (!token) throw new Error(i18n.t('errors.notAuthenticated'))
     return getPermissions(token, organizationId ?? undefined)
   }, [token, organizationId])
 
   if (!can('access.manage')) {
-    return <ErrorBanner message="You do not have permission to view roles and permissions." />
+    return <ErrorBanner message={t('roles.noPermission')} />
   }
 
   const roles = unwrapModuleRows(rolesPayload ?? []) as Role[]
@@ -58,10 +62,10 @@ export function RolesPage() {
     try {
       await createRole(token, roleForm, organizationId ?? undefined)
       setRoleForm({ name: '', description: '', permission_ids: [] })
-      setMessage('Role created successfully.')
+      setMessage(t('roles.roleCreated'))
       await reloadRoles()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to create role.')
+      setMessage(translateApiError(requestError) || t('roles.roleCreateFailed'))
     }
   }
 
@@ -71,10 +75,10 @@ export function RolesPage() {
     try {
       await createPermission(token, permissionForm, organizationId ?? undefined)
       setPermissionForm({ name: '', description: '' })
-      setMessage('Permission created successfully.')
+      setMessage(t('roles.permissionCreated'))
       await reloadPermissions()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to create permission.')
+      setMessage(translateApiError(requestError) || t('roles.permissionCreateFailed'))
     }
   }
 
@@ -88,10 +92,10 @@ export function RolesPage() {
         permission_ids: editRole.permissions?.map((item) => item.id) ?? [],
       }, organizationId ?? undefined)
       setEditRole(null)
-      setMessage('Role updated successfully.')
+      setMessage(t('roles.roleUpdated'))
       await reloadRoles()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to update role.')
+      setMessage(translateApiError(requestError) || t('roles.roleUpdateFailed'))
     }
   }
 
@@ -101,10 +105,10 @@ export function RolesPage() {
     try {
       await deleteRole(token, confirmDeleteRole.id, organizationId ?? undefined)
       setConfirmDeleteRole(null)
-      setMessage('Role deleted.')
+      setMessage(t('roles.roleDeleted'))
       await reloadRoles()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to delete role.')
+      setMessage(translateApiError(requestError) || t('roles.roleDeleteFailed'))
     }
   }
 
@@ -114,25 +118,25 @@ export function RolesPage() {
     try {
       await deletePermission(token, confirmDeletePermission.id, organizationId ?? undefined)
       setConfirmDeletePermission(null)
-      setMessage('Permission deleted.')
+      setMessage(t('roles.permissionDeleted'))
       await reloadPermissions()
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : 'Unable to delete permission.')
+      setMessage(translateApiError(requestError) || t('roles.permissionDeleteFailed'))
     }
   }
 
   return <>
     <PageHeader
-      eyebrow="ENTERPRISE"
-      title="Roles & permissions"
-      description="Frontend checks are UX-only. Backend authorization remains authoritative."
+      eyebrow={t('common.enterprise')}
+      title={t('roles.title')}
+      description={t('roles.descriptionUx')}
     />
 
     {error && <ErrorBanner message={error} onRetry={() => { void reloadRoles(); void reloadPermissions() }} />}
     {message && <p className="notice">{message}</p>}
 
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">YOUR ACCESS</p><h2>Current permissions</h2></div></div>
+      <div className="panel-heading"><div><p className="eyebrow">{t('common.yourAccess')}</p><h2>{t('roles.currentPermissions')}</h2></div></div>
       <p className="permission-tags">
         {(context?.permissions ?? []).map((permission) => (
           <span className="permission-tag" key={permission}>{permission}</span>
@@ -141,12 +145,12 @@ export function RolesPage() {
     </section>
 
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">CREATE</p><h2>New role</h2></div></div>
+      <div className="panel-heading"><div><p className="eyebrow">{t('common.createSection')}</p><h2>{t('roles.newRole')}</h2></div></div>
       <form className="record-form" onSubmit={(event) => { event.preventDefault(); void handleCreateRole() }}>
-        <label>Name<input value={roleForm.name} onChange={(event) => setRoleForm({ ...roleForm, name: event.target.value })} required /></label>
-        <label>Description<input value={roleForm.description} onChange={(event) => setRoleForm({ ...roleForm, description: event.target.value })} /></label>
+        <label>{t('common.name')}<input value={roleForm.name} onChange={(event) => setRoleForm({ ...roleForm, name: event.target.value })} required /></label>
+        <label>{t('common.description')}<input value={roleForm.description} onChange={(event) => setRoleForm({ ...roleForm, description: event.target.value })} /></label>
         <fieldset>
-          <legend>Permissions</legend>
+          <legend>{t('roles.permissionIds')}</legend>
           {permissions.map((permission) => (
             <label className="checkbox-label" key={permission.id}>
               <input
@@ -161,31 +165,31 @@ export function RolesPage() {
             </label>
           ))}
         </fieldset>
-        <button type="submit">Create role</button>
+        <button type="submit">{t('roles.createRole')}</button>
       </form>
     </section>
 
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">ROLES</p><h2>Organization roles</h2></div></div>
-      {rolesLoading ? <p className="loading">Loading roles…</p> : roles.length === 0 ? (
-        <EmptyState title="No roles" description="Create a custom role or wait for enterprise seeding." />
+      <div className="panel-heading"><div><p className="eyebrow">{t('roles.rolesSection')}</p><h2>{t('roles.orgRoles')}</h2></div></div>
+      {rolesLoading ? <p className="loading">{t('roles.loadingRoles')}</p> : roles.length === 0 ? (
+        <EmptyState title={t('roles.emptyRolesTitle')} description={t('roles.emptyRolesDescription')} />
       ) : (
         <DataTable
           rows={roles}
           rowKey={(role) => role.id}
           columns={[
-            { key: 'name', header: 'Name', render: (role) => role.name },
-            { key: 'slug', header: 'Slug', render: (role) => role.slug ?? '—' },
-            { key: 'permissions', header: 'Permissions', render: (role) => role.permissions?.map((item) => item.name).join(', ') || '—' },
+            { key: 'name', header: t('common.name'), render: (role) => role.name },
+            { key: 'slug', header: t('common.slug'), render: (role) => role.slug ?? '—' },
+            { key: 'permissions', header: t('roles.permissionIds'), render: (role) => role.permissions?.map((item) => item.name).join(', ') || '—' },
             {
               key: 'actions',
-              header: 'Actions',
+              header: t('common.actions'),
               render: (role) => isSystemRole(role) ? (
-                <span className="muted">System role</span>
+                <span className="muted">{t('roles.systemRole')}</span>
               ) : (
                 <div className="inline-actions">
-                  <button type="button" className="link-button inline" onClick={() => setEditRole({ ...role, permissions: role.permissions ?? [] })}>Edit</button>
-                  <button type="button" className="link-button inline danger" onClick={() => setConfirmDeleteRole(role)}>Delete</button>
+                  <button type="button" className="link-button inline" onClick={() => setEditRole({ ...role, permissions: role.permissions ?? [] })}>{t('common.edit')}</button>
+                  <button type="button" className="link-button inline danger" onClick={() => setConfirmDeleteRole(role)}>{t('common.delete')}</button>
                 </div>
               ),
             },
@@ -195,34 +199,34 @@ export function RolesPage() {
     </section>
 
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">CREATE</p><h2>New permission</h2></div></div>
+      <div className="panel-heading"><div><p className="eyebrow">{t('common.createSection')}</p><h2>{t('roles.newPermission')}</h2></div></div>
       <form className="record-form" onSubmit={(event) => { event.preventDefault(); void handleCreatePermission() }}>
-        <label>Name<input value={permissionForm.name} onChange={(event) => setPermissionForm({ ...permissionForm, name: event.target.value })} required /></label>
-        <label>Description<input value={permissionForm.description} onChange={(event) => setPermissionForm({ ...permissionForm, description: event.target.value })} /></label>
-        <button type="submit">Create permission</button>
+        <label>{t('common.name')}<input value={permissionForm.name} onChange={(event) => setPermissionForm({ ...permissionForm, name: event.target.value })} required /></label>
+        <label>{t('common.description')}<input value={permissionForm.description} onChange={(event) => setPermissionForm({ ...permissionForm, description: event.target.value })} /></label>
+        <button type="submit">{t('roles.createPermission')}</button>
       </form>
     </section>
 
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">PERMISSIONS</p><h2>Permission catalog</h2></div></div>
-      {permissionsLoading ? <p className="loading">Loading permissions…</p> : permissions.length === 0 ? (
-        <EmptyState title="No permissions" description="Permissions are seeded when the organization is provisioned." />
+      <div className="panel-heading"><div><p className="eyebrow">{t('roles.permissionsSection')}</p><h2>{t('roles.permissionCatalog')}</h2></div></div>
+      {permissionsLoading ? <p className="loading">{t('roles.loadingPermissions')}</p> : permissions.length === 0 ? (
+        <EmptyState title={t('roles.emptyPermissionsTitle')} description={t('roles.emptyPermissionsDescription')} />
       ) : (
         <DataTable
           rows={permissions}
           rowKey={(permission) => permission.id}
           columns={[
-            { key: 'name', header: 'Permission', render: (permission) => permission.name },
-            { key: 'description', header: 'Description', render: (permission) => permission.description ?? '—' },
+            { key: 'name', header: t('common.permission'), render: (permission) => permission.name },
+            { key: 'description', header: t('common.description'), render: (permission) => permission.description ?? '—' },
             {
               key: 'actions',
-              header: 'Actions',
+              header: t('common.actions'),
               render: (permission) => {
                 const isCatalog = ['platform.view', 'access.manage', 'billing.view'].includes(permission.name)
                 return isCatalog ? (
-                  <span className="muted">Catalog</span>
+                  <span className="muted">{t('common.catalog')}</span>
                 ) : (
-                  <button type="button" className="link-button inline danger" onClick={() => setConfirmDeletePermission(permission)}>Delete</button>
+                  <button type="button" className="link-button inline danger" onClick={() => setConfirmDeletePermission(permission)}>{t('common.delete')}</button>
                 )
               },
             },
@@ -233,12 +237,12 @@ export function RolesPage() {
 
     {editRole && (
       <section className="panel">
-        <div className="panel-heading"><div><p className="eyebrow">EDIT</p><h2>{editRole.name}</h2></div></div>
+        <div className="panel-heading"><div><p className="eyebrow">{t('common.edit')}</p><h2>{editRole.name}</h2></div></div>
         <form className="record-form" onSubmit={(event) => { event.preventDefault(); void handleUpdateRole() }}>
-          <label>Name<input value={editRole.name} onChange={(event) => setEditRole({ ...editRole, name: event.target.value })} required /></label>
-          <label>Description<input value={editRole.description ?? ''} onChange={(event) => setEditRole({ ...editRole, description: event.target.value })} /></label>
+          <label>{t('common.name')}<input value={editRole.name} onChange={(event) => setEditRole({ ...editRole, name: event.target.value })} required /></label>
+          <label>{t('common.description')}<input value={editRole.description ?? ''} onChange={(event) => setEditRole({ ...editRole, description: event.target.value })} /></label>
           <fieldset>
-            <legend>Permissions</legend>
+            <legend>{t('roles.permissionIds')}</legend>
             {permissions.map((permission) => (
               <label className="checkbox-label" key={permission.id}>
                 <input
@@ -256,8 +260,8 @@ export function RolesPage() {
             ))}
           </fieldset>
           <div className="confirm-actions">
-            <button type="button" className="refresh" onClick={() => setEditRole(null)}>Cancel</button>
-            <button type="submit">Save role</button>
+            <button type="button" className="refresh" onClick={() => setEditRole(null)}>{t('common.cancel')}</button>
+            <button type="submit">{t('roles.saveRole')}</button>
           </div>
         </form>
       </section>
@@ -265,22 +269,22 @@ export function RolesPage() {
 
     {confirmDeleteRole && (
       <section className="panel">
-        <div className="panel-heading"><div><p className="eyebrow">CONFIRM</p><h2>Delete role {confirmDeleteRole.name}?</h2></div></div>
-        <p>This action cannot be undone. Roles assigned to users cannot be deleted.</p>
+        <div className="panel-heading"><div><p className="eyebrow">{t('common.confirmEyebrow')}</p><h2>{t('roles.confirmDeleteRoleTitle', { name: confirmDeleteRole.name })}</h2></div></div>
+        <p>{t('roles.deleteRoleBlocked')}</p>
         <div className="confirm-actions">
-          <button type="button" className="refresh" onClick={() => setConfirmDeleteRole(null)}>Cancel</button>
-          <button type="button" className="danger" onClick={() => void handleDeleteRole()}>Delete role</button>
+          <button type="button" className="refresh" onClick={() => setConfirmDeleteRole(null)}>{t('common.cancel')}</button>
+          <button type="button" className="danger" onClick={() => void handleDeleteRole()}>{t('roles.deleteRole')}</button>
         </div>
       </section>
     )}
 
     {confirmDeletePermission && (
       <section className="panel">
-        <div className="panel-heading"><div><p className="eyebrow">CONFIRM</p><h2>Delete permission {confirmDeletePermission.name}?</h2></div></div>
-        <p>Permissions assigned to roles cannot be deleted.</p>
+        <div className="panel-heading"><div><p className="eyebrow">{t('common.confirmEyebrow')}</p><h2>{t('roles.confirmDeletePermissionTitle', { name: confirmDeletePermission.name })}</h2></div></div>
+        <p>{t('roles.deletePermissionBlocked')}</p>
         <div className="confirm-actions">
-          <button type="button" className="refresh" onClick={() => setConfirmDeletePermission(null)}>Cancel</button>
-          <button type="button" className="danger" onClick={() => void handleDeletePermission()}>Delete permission</button>
+          <button type="button" className="refresh" onClick={() => setConfirmDeletePermission(null)}>{t('common.cancel')}</button>
+          <button type="button" className="danger" onClick={() => void handleDeletePermission()}>{t('roles.deletePermission')}</button>
         </div>
       </section>
     )}
