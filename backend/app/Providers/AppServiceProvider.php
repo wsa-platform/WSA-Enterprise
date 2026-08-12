@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Contracts\AiMonitoringAnalyzerInterface;
 use App\Contracts\AiProviderInterface;
 use App\Contracts\BillingProviderInterface;
+use App\Contracts\JobsPaymentProviderInterface;
 use App\Services\Ai\AiProviderResolver;
 use App\Services\Ai\AiQuotaService;
 use App\Services\Ai\AiRequestValidator;
@@ -16,6 +17,7 @@ use App\Services\Audit\AuditService;
 use App\Services\Billing\BillingUsageService;
 use App\Services\Billing\EntitlementService;
 use App\Services\Billing\MockBillingProvider;
+use App\Services\Jobs\MockJobsPaymentProvider;
 use App\Services\Billing\OrganizationSettingsService;
 use App\Services\Billing\SubscriptionService;
 use App\Services\Monitoring\HealthCheckService;
@@ -57,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(AiMonitoringAnalyzerInterface::class, StubAiMonitoringAnalyzer::class);
 
         $this->app->bind(BillingProviderInterface::class, MockBillingProvider::class);
+        $this->app->bind(JobsPaymentProviderInterface::class, MockJobsPaymentProvider::class);
 
         $this->app->bind(AiProviderInterface::class, fn () => app(AiProviderResolver::class)->forOrganization(null));
 

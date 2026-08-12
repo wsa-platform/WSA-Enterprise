@@ -46,6 +46,37 @@ class MockAiProvider implements AiProviderInterface
                     'Complete the quiz to confirm understanding.',
                 ],
             ],
+            'cv_parse' => [
+                'status' => 'completed',
+                'confidence' => 0.55,
+                'message' => 'CV parsing provider not configured. Structured extraction unavailable.',
+                'skills' => $input['suggested_skills'] ?? [],
+                'experience' => $input['suggested_experience'] ?? [],
+                'education' => $input['suggested_education'] ?? [],
+                'specialization' => $input['suggested_specialization'] ?? null,
+            ],
+            'job_match' => [
+                'matches' => collect($input['candidates'] ?? [])->take($input['limit'] ?? 10)->values()->map(fn (array $candidate, int $index) => [
+                    'talent_profile_id' => $candidate['id'] ?? null,
+                    'score' => max(10, 90 - ($index * 8)),
+                    'confidence' => 0.5,
+                    'explanation' => 'Mock match based on available profile metadata. Configure a real provider for explainable matching.',
+                ])->all(),
+            ],
+            'assistant' => [
+                'reply' => 'WSA assistant foundation response. Configure an AI provider for domain-aware answers.',
+                'confidence' => 0.4,
+                'domain' => $input['domain'] ?? 'platform',
+                'requires_more_information' => true,
+            ],
+            'vision_analysis' => [
+                'status' => 'completed',
+                'confidence' => 0.35,
+                'summary' => 'Vision analysis provider not configured. This is not a diagnostic conclusion.',
+                'recommendation' => 'Provide additional images or escalate to a human expert.',
+                'requires_more_information' => true,
+                'escalate_to_expert' => true,
+            ],
             default => [
                 'message' => 'Mock AI response for '.$requestType,
             ],
