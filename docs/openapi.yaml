@@ -28,6 +28,9 @@ tags:
   - name: Analytics
   - name: API Clients
   - name: Monitoring
+  - name: Jobs
+  - name: Beekeeping
+  - name: AI Assistant
 components:
   securitySchemes:
     bearerAuth:
@@ -1622,6 +1625,391 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { description: Request not cancellable }
         '429': { description: Organization AI rate limit exceeded }
+  /ai/assistant/conversations:
+    get:
+      tags: [AI Assistant]
+      summary: List assistant conversations for current user
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Paginated conversations }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [AI Assistant]
+      summary: Start assistant conversation with first message
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain, message]
+              properties:
+                domain: { type: string }
+                title: { type: string }
+                message: { type: string }
+      responses:
+        '201': { description: Assistant reply with conversation metadata }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /ai/assistant/conversations/{conversation}/messages:
+    post:
+      tags: [AI Assistant]
+      summary: Send message to existing assistant conversation
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: conversation
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message: { type: string }
+      responses:
+        '200': { description: Assistant reply }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /jobs/talent/me:
+    get:
+      tags: [Jobs]
+      summary: Show current user talent profile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Talent profile or null }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    put:
+      tags: [Jobs]
+      summary: Register or update talent profile (free)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [professional_name]
+              properties:
+                professional_name: { type: string }
+                specialization: { type: string }
+                biography: { type: string }
+                country: { type: string }
+                region: { type: string }
+                city: { type: string }
+                skills: { type: array, items: { type: string } }
+                is_public: { type: boolean }
+                contact: { type: object }
+      responses:
+        '200': { description: Updated profile }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /jobs/talent/me/cv:
+    post:
+      tags: [Jobs]
+      summary: Upload talent CV (pdf/doc/docx/txt)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [cv]
+              properties:
+                cv: { type: string, format: binary }
+      responses:
+        '200': { description: Profile with stored CV path }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /jobs/talent/me/cv/parse:
+    post:
+      tags: [Jobs]
+      summary: Parse uploaded CV via AI
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Parse result }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /jobs/candidates:
+    get:
+      tags: [Jobs]
+      summary: Search public talent candidates
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: country
+          in: query
+          schema: { type: string }
+        - name: specialization
+          in: query
+          schema: { type: string }
+        - name: skill
+          in: query
+          schema: { type: string }
+      responses:
+        '200': { description: Paginated public profiles }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /jobs/candidates/{talentProfile}:
+    get:
+      tags: [Jobs]
+      summary: Show public talent profile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: talentProfile
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Public profile }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /jobs/candidates/{talentProfile}/contact-requests:
+    post:
+      tags: [Jobs]
+      summary: Request employer contact exchange
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: talentProfile
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employer_contact]
+              properties:
+                employer_contact: { type: object }
+                job_reference: { type: string }
+                notes: { type: string }
+                idempotency_key: { type: string }
+      responses:
+        '201': { description: Contact request created }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /jobs/contact-requests/{contactRequestId}/pay:
+    post:
+      tags: [Jobs]
+      summary: Initiate payment for contact exchange
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: contactRequestId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idempotency_key]
+              properties:
+                idempotency_key: { type: string }
+      responses:
+        '200': { description: Payment transaction and exchange payload }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /beekeeping/profile:
+    get:
+      tags: [Beekeeping]
+      summary: Show beekeeper profile for current user
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Profile or null }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    put:
+      tags: [Beekeeping]
+      summary: Create or update beekeeper profile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [display_name]
+              properties:
+                display_name: { type: string }
+                country: { type: string }
+                location: { type: string }
+                hive_count: { type: integer }
+                notes: { type: string }
+      responses:
+        '200': { description: Updated profile }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /beekeeping/apiaries:
+    get:
+      tags: [Beekeeping]
+      summary: List organization apiaries
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Paginated apiaries }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Beekeeping]
+      summary: Create apiary
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [beekeeper_profile_id, name]
+              properties:
+                beekeeper_profile_id: { type: integer }
+                name: { type: string }
+                location: { type: string }
+      responses:
+        '201': { description: Apiary created }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /beekeeping/apiaries/{apiary}/hives:
+    get:
+      tags: [Beekeeping]
+      summary: List hives in apiary
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: apiary
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Paginated hives }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Beekeeping]
+      summary: Create hive in apiary
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: apiary
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string }
+                colony_status: { type: string }
+      responses:
+        '201': { description: Hive created }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /beekeeping/calendar/tasks:
+    get:
+      tags: [Beekeeping]
+      summary: List beekeeping calendar tasks
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Paginated tasks }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Beekeeping]
+      summary: Create calendar task
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [task_type, title]
+              properties:
+                task_type: { type: string }
+                title: { type: string }
+                scheduled_for: { type: string, format: date }
+      responses:
+        '201': { description: Task created }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /beekeeping/pollination/plants:
+    get:
+      tags: [Beekeeping]
+      summary: List pollination plants
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Paginated plants }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Beekeeping]
+      summary: Register pollination plant
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [species_name]
+              properties:
+                species_name: { type: string }
+                common_name: { type: string }
+                pollination_relevance: { type: integer, minimum: 1, maximum: 10 }
+      responses:
+        '201': { description: Plant created }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /beekeeping/knowledge/topics:
+    get:
+      tags: [Beekeeping]
+      summary: List beekeeping knowledge topics
+      description: Extensible knowledge-domain foundation for future RAG/AI integration. Titles and summaries use i18n keys.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: category
+          in: query
+          schema: { type: string }
+      responses:
+        '200': { description: Paginated knowledge topics }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /billing/subscription/plan:
     post:
       tags: [Billing]
