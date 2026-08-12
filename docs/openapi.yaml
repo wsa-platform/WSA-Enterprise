@@ -31,6 +31,7 @@ tags:
   - name: Jobs
   - name: Beekeeping
   - name: AI Assistant
+  - name: Marketing
 components:
   securitySchemes:
     bearerAuth:
@@ -1684,6 +1685,447 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /ai/assistant/conversations/{conversation}:
+    get:
+      tags: [AI Assistant]
+      summary: Show assistant conversation with messages
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: conversation
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Conversation with message thread }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [AI Assistant]
+      summary: Delete assistant conversation
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: conversation
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Conversation deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /ai/assistant/conversations/{conversation}/archive:
+    post:
+      tags: [AI Assistant]
+      summary: Archive assistant conversation
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: conversation
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Archived conversation }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /ai/assistant/actions/execute:
+    post:
+      tags: [AI Assistant]
+      summary: Execute a registered assistant action
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action_type]
+              properties:
+                action_type: { type: string }
+                payload: { type: object, additionalProperties: true }
+                confirmed: { type: boolean }
+      responses:
+        '200': { description: Action accepted or completed }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /ai/vision/uploads:
+    post:
+      tags: [AI]
+      summary: Upload image for vision analysis
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '201': { description: Stored upload metadata }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { description: Organization AI rate limit exceeded }
+  /ai/vision/uploads/{upload}:
+    get:
+      tags: [AI]
+      summary: Show vision upload metadata
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: upload
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Upload metadata }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /marketing/dashboard:
+    get:
+      tags: [Marketing]
+      summary: Marketing dashboard metrics
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Campaign and delivery statistics }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /marketing/campaigns:
+    get:
+      tags: [Marketing]
+      summary: List marketing campaigns
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Paginated campaigns }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Marketing]
+      summary: Create draft marketing campaign
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, channel]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                channel: { type: string, enum: [sms, email, whatsapp] }
+                audience_segment_id: { type: integer, nullable: true }
+                template_id: { type: integer, nullable: true }
+                content: { type: object, additionalProperties: true }
+                scheduled_at: { type: string, format: date-time, nullable: true }
+      responses:
+        '201': { description: Campaign created }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /marketing/campaigns/{campaign}:
+    get:
+      tags: [Marketing]
+      summary: Show marketing campaign
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: campaign
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: 'Campaign with segment, template, deliveries' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Marketing]
+      summary: Update draft marketing campaign
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: campaign
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                channel: { type: string, enum: [sms, email, whatsapp] }
+                audience_segment_id: { type: integer, nullable: true }
+                template_id: { type: integer, nullable: true }
+                content: { type: object, additionalProperties: true }
+                scheduled_at: { type: string, format: date-time, nullable: true }
+      responses:
+        '200': { description: Updated campaign }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Marketing]
+      summary: Delete draft marketing campaign
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: campaign
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Campaign deleted }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /marketing/campaigns/{campaign}/schedule:
+    post:
+      tags: [Marketing]
+      summary: Schedule marketing campaign
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: campaign
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Scheduled campaign }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /marketing/campaigns/{campaign}/cancel:
+    post:
+      tags: [Marketing]
+      summary: Cancel marketing campaign
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: campaign
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Cancelled campaign }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /marketing/campaigns/{campaign}/preview:
+    get:
+      tags: [Marketing]
+      summary: Preview rendered campaign content
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: campaign
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: locale
+          in: query
+          schema: { type: string, default: en }
+      responses:
+        '200': { description: Rendered subject and body }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /marketing/campaigns/{campaign}/test-send:
+    post:
+      tags: [Marketing]
+      summary: Send test delivery for campaign
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: campaign
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                locale: { type: string, default: en }
+      responses:
+        '201': { description: Test delivery record }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /marketing/campaigns/{campaign}/process:
+    post:
+      tags: [Marketing]
+      summary: Process campaign deliveries
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: campaign
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Campaign processing result }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /marketing/segments:
+    get:
+      tags: [Marketing]
+      summary: List audience segments
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Paginated segments }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Marketing]
+      summary: Create audience segment
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                criteria: { type: object, additionalProperties: true }
+      responses:
+        '201': { description: Segment created }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /marketing/templates:
+    get:
+      tags: [Marketing]
+      summary: List message templates
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Paginated templates }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Marketing]
+      summary: Create message template
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug, name, channel, translations]
+              properties:
+                slug: { type: string }
+                name: { type: string }
+                channel: { type: string, enum: [sms, email, whatsapp] }
+                translations: { type: object, additionalProperties: true }
+      responses:
+        '201': { description: Template created }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /marketing/consents:
+    get:
+      tags: [Marketing]
+      summary: List marketing consents
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Paginated consents }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Marketing]
+      summary: Record marketing consent
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, opted_in]
+              properties:
+                channel: { type: string, enum: [sms, email, whatsapp] }
+                user_id: { type: integer }
+                email: { type: string, format: email }
+                phone: { type: string }
+                opted_in: { type: boolean }
+                source: { type: string }
+      responses:
+        '201': { description: Consent recorded }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /marketing/suppressions:
+    get:
+      tags: [Marketing]
+      summary: List marketing suppressions
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Paginated suppressions }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Marketing]
+      summary: Add marketing suppression
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, identifier]
+              properties:
+                channel: { type: string, enum: [sms, email, whatsapp] }
+                identifier: { type: string }
+                reason: { type: string }
+      responses:
+        '201': { description: Suppression created }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /marketing/deliveries:
+    get:
+      tags: [Marketing]
+      summary: List marketing deliveries
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: campaign_id
+          in: query
+          schema: { type: integer }
+      responses:
+        '200': { description: Paginated deliveries }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /jobs/talent/me:
     get:
       tags: [Jobs]

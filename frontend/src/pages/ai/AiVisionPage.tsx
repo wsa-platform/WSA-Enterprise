@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createAiRequest, pollAiRequest, type AiRequestRecord } from '../../api'
+import { uploadVisionImage } from '../../api/assistant'
 import { PageHeader } from '../../components/PageHeader'
 import { ErrorBanner, StatusBadge } from '../../components/UiPrimitives'
 import { useAuth } from '../../context/AuthContext'
@@ -20,6 +21,7 @@ export function AiVisionPage() {
   const { t } = useTranslation()
   const { token, organizationId } = useAuth()
   const { can } = usePermissions()
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [preview, setPreview] = useState('')
   const [prompt, setPrompt] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -35,20 +37,24 @@ export function AiVisionPage() {
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
+    setSelectedFile(file)
     setPreview(await readFileAsDataUrl(file))
     setResult(null)
   }
 
   const analyzeImage = async () => {
-    if (!token || !preview) return
+    if (!token || !selectedFile) return
     setSubmitting(true)
     setNotice('')
     setResult(null)
     try {
+      setNotice(t('aiVision.uploading'))
+      const upload = await uploadVisionImage(token, selectedFile, organizationId ?? undefined)
+
       const created = await createAiRequest(token, {
         request_type: 'vision_analysis',
         input: {
-          image_url: preview,
+          image_path: upload.storage_path,
           prompt: prompt || undefined,
         },
       }, organizationId ?? undefined)
@@ -88,7 +94,7 @@ export function AiVisionPage() {
           {t('aiVision.prompt')}
           <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} rows={3} placeholder={t('aiVision.promptPlaceholder')} dir="auto" />
         </label>
-        <button type="button" disabled={submitting || !preview} onClick={() => void analyzeImage()}>
+        <button type="button" disabled={submitting || !selectedFile} onClick={() => void analyzeImage()}>
           {submitting ? t('aiVision.submitting') : t('aiVision.submit')}
         </button>
       </div>

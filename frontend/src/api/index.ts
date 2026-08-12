@@ -15,6 +15,7 @@ export * from './ai'
 export * from './jobs'
 export * from './beekeeping'
 export * from './assistant'
+export * from './marketing'
 export * from './modules'
 
 // Backward-compatible aliases used by existing pages.

@@ -32,6 +32,12 @@ import { TalentProfilePage } from './pages/jobs/TalentProfilePage'
 import { BeekeepingDashboardPage } from './pages/beekeeping/BeekeepingDashboardPage'
 import { AiAssistantPage } from './pages/ai/AiAssistantPage'
 import { AiVisionPage } from './pages/ai/AiVisionPage'
+import { MarketingDashboardPage } from './pages/marketing/MarketingDashboardPage'
+import { CampaignsPage } from './pages/marketing/CampaignsPage'
+import { CampaignEditorPage } from './pages/marketing/CampaignEditorPage'
+import { TemplatesPage } from './pages/marketing/TemplatesPage'
+import { SegmentsPage } from './pages/marketing/SegmentsPage'
+import { ConsentPage } from './pages/marketing/ConsentPage'
 import './App.css'
 
 function ProtectedShell() {
@@ -103,6 +109,12 @@ function AppRoutes() {
         <Route path="/ai/vision" element={<AiVisionPage />} />
         <Route path="/ai/requests/:requestId" element={<AiRequestDetailPage />} />
         <Route path="/ai" element={<Navigate to="/ai/workspace" replace />} />
+        <Route path="/marketing" element={<MarketingDashboardPage />} />
+        <Route path="/marketing/campaigns" element={<CampaignsPage />} />
+        <Route path="/marketing/campaigns/:campaignId" element={<CampaignEditorPage />} />
+        <Route path="/marketing/templates" element={<TemplatesPage />} />
+        <Route path="/marketing/segments" element={<SegmentsPage />} />
+        <Route path="/marketing/consent" element={<ConsentPage />} />
         <Route path="/jobs" element={<JobsMarketplacePage />} />
         <Route path="/jobs/talent" element={<TalentProfilePage />} />
         <Route path="/beekeeping" element={<BeekeepingDashboardPage />} />

@@ -55,6 +55,16 @@ const navSections: Array<{ titleKey: string; items: NavItem[] }> = [
     ],
   },
   {
+    titleKey: 'nav.marketing',
+    items: [
+      { to: '/marketing', labelKey: 'nav.marketingDashboard', permission: 'marketing.admin' },
+      { to: '/marketing/campaigns', labelKey: 'nav.marketingCampaigns', permission: 'marketing.view' },
+      { to: '/marketing/templates', labelKey: 'nav.marketingTemplates', permission: 'marketing.view' },
+      { to: '/marketing/segments', labelKey: 'nav.marketingSegments', permission: 'marketing.view' },
+      { to: '/marketing/consent', labelKey: 'nav.marketingConsent', permission: 'marketing.view' },
+    ],
+  },
+  {
     titleKey: 'nav.modules',
     items: [
       { to: '/farms', labelKey: 'nav.farms', permission: 'farm.view' },
@@ -114,6 +124,11 @@ function useBreadcrumbItems(pathname: string): BreadcrumbItem[] {
     '/jobs': [dashboard, { label: t('nav.jobs') }],
     '/jobs/talent': [dashboard, { label: t('nav.jobs'), to: '/jobs' }, { label: t('nav.talentProfile') }],
     '/beekeeping': [dashboard, { label: t('nav.beekeeping') }],
+    '/marketing': [dashboard, { label: t('nav.marketingDashboard') }],
+    '/marketing/campaigns': [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingCampaigns') }],
+    '/marketing/templates': [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingTemplates') }],
+    '/marketing/segments': [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingSegments') }],
+    '/marketing/consent': [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingConsent') }],
     '/notifications': [dashboard, { label: t('nav.notifications') }],
     '/settings': [dashboard, { label: t('nav.settings') }],
   }
@@ -123,6 +138,9 @@ function useBreadcrumbItems(pathname: string): BreadcrumbItem[] {
   }
   if (pathname.startsWith('/admin/teams/')) {
     return [dashboard, { label: t('nav.teams'), to: '/admin/teams' }, { label: t('nav.teamDetail') }]
+  }
+  if (pathname.startsWith('/marketing/campaigns/')) {
+    return [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingCampaigns'), to: '/marketing/campaigns' }, { label: t('nav.marketingCampaignDetail') }]
   }
 
   return map[pathname] ?? [dashboard, { label: pathname.replace('/', '') || t('nav.page') }]

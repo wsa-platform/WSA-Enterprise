@@ -48,9 +48,14 @@ class AiController extends Controller
 
     public function store(StoreAiRequestRequest $request): JsonResponse
     {
-        $this->authorizePermission($request, 'ai.use');
-
         $data = $request->validated();
+
+        if ($data['request_type'] === 'vision_analysis') {
+            $this->authorizeAnyPermission($request, ['ai.use', 'ai.vision']);
+        } else {
+            $this->authorizePermission($request, 'ai.use');
+        }
+
         $organizationId = $this->organization($request);
 
         if (config('ai.async_dispatch')) {
@@ -118,7 +123,7 @@ class AiController extends Controller
         return response()->json([
             'provider' => $this->aiService->providerName($organizationId),
             'decision_support_notice' => 'AI outputs are agricultural decision support only and are not authoritative diagnoses.',
-            'supported_request_types' => ['diagnosis', 'library_summary', 'library_qa', 'training_assistance'],
+            'supported_request_types' => ['diagnosis', 'library_summary', 'library_qa', 'training_assistance', 'assistant', 'vision_analysis', 'cv_parse', 'job_match'],
             'async_dispatch' => (bool) config('ai.async_dispatch', false),
             'quota' => $this->quotaService->summaryForOrganization($organizationId),
         ]);
