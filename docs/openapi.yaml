@@ -1851,7 +1851,7 @@ paths:
           required: true
           schema: { type: integer }
       responses:
-        '200': { description: Campaign with segment, template, deliveries }
+        '200': { description: 'Campaign with segment, template, deliveries' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
