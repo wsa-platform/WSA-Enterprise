@@ -1,0 +1,13 @@
+.git
+.github
+**/node_modules
+**/vendor
+backend/storage/logs
+backend/storage/framework/cache
+backend/storage/framework/sessions
+backend/storage/framework/views
+backend/.env
+backend/.env.*
+frontend/dist
+*-output.txt
+docker-ps-out.txt
