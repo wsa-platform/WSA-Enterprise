@@ -1,5 +1,7 @@
 <?php
 
+require __DIR__.'/_deployment.php';
+
 return [
 
     /*
@@ -13,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('QUEUE_CONNECTION', 'database'),
+    'default' => wsa_default_queue_connection(),
 
     /*
     |--------------------------------------------------------------------------

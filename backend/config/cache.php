@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Str;
 
+require __DIR__.'/_deployment.php';
+
 return [
 
     /*
@@ -15,7 +17,7 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => wsa_default_cache_store(),
 
     /*
     |--------------------------------------------------------------------------

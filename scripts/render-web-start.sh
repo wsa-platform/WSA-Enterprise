@@ -33,6 +33,11 @@ run_artisan() {
     su -s /bin/sh www-data -c "php artisan $*"
 }
 
+# Apply pending migrations before caching config (idempotent; safe for redeploys).
+if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
+    run_artisan migrate --force --no-ansi
+fi
+
 if [ "${APP_ENV:-production}" = "production" ]; then
     run_artisan config:cache --no-ansi
     run_artisan route:cache --no-ansi

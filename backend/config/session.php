@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Str;
 
+require __DIR__.'/_deployment.php';
+
 return [
 
     /*
@@ -18,7 +20,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => wsa_default_session_driver(),
 
     /*
     |--------------------------------------------------------------------------
