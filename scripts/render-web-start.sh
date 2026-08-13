@@ -12,6 +12,10 @@ fi
 
 cd /var/www/html
 
+# libpq resolves optional client cert paths from HOME/.postgresql; never use /root as www-data.
+export HOME=/var/www/html
+unset PGSSLCERT PGSSLKEY PGSSLROOTCERT
+
 # Storage paths are excluded from the Docker build context; create them at runtime.
 mkdir -p \
     storage/logs \
@@ -21,7 +25,8 @@ mkdir -p \
     storage/framework/testing \
     storage/app/public \
     storage/app/private \
-    bootstrap/cache
+    bootstrap/cache \
+    .postgresql
 
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R ug+rwx storage bootstrap/cache
@@ -29,9 +34,9 @@ chmod -R ug+rwx storage bootstrap/cache
 mkdir -p /run/nginx /var/lib/nginx/tmp /var/log/nginx
 envsubst '${PORT}' < /etc/nginx/templates/render.conf.template > /etc/nginx/http.d/default.conf
 
-# Preserve Render-injected environment variables when dropping to www-data.
+# Preserve Render env vars but force a www-data-safe HOME for PostgreSQL/libpq.
 run_artisan() {
-    su -m -s /bin/sh www-data -c "php artisan $*"
+    su -m -s /bin/sh www-data -c "HOME=/var/www/html PGSSLCERT= PGSSLKEY= PGSSLROOTCERT= php artisan $*"
 }
 
 # Apply pending migrations before caching config (idempotent; safe for redeploys).

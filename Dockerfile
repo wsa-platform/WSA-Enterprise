@@ -42,6 +42,8 @@ RUN apk add --no-cache \
     && apk del $PHPIZE_DEPS \
     && mkdir -p /run/nginx /var/lib/nginx/tmp
 
+ENV HOME=/var/www/html
+
 COPY --from=vendor /app /var/www/html
 RUN mkdir -p \
         storage/logs \
@@ -52,10 +54,12 @@ RUN mkdir -p \
         storage/app/public \
         storage/app/private \
         bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
+        /var/www/html/.postgresql \
+    && chown -R www-data:www-data storage bootstrap/cache /var/www/html/.postgresql \
     && chmod -R ug+rwx storage bootstrap/cache
 
 COPY --from=frontend-build /app/dist /usr/share/nginx/html
+COPY docker/render-php-fpm.conf /usr/local/etc/php-fpm.d/zz-render.conf
 COPY nginx/render.conf.template /etc/nginx/templates/render.conf.template
 COPY scripts/render-web-start.sh /usr/local/bin/render-web-start.sh
 RUN sed -i 's/\r$//' /usr/local/bin/render-web-start.sh \
