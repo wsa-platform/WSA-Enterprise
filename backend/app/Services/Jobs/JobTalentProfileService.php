@@ -5,22 +5,28 @@ namespace App\Services\Jobs;
 use App\Models\JobTalentContact;
 use App\Models\JobTalentProfile;
 use App\Models\User;
+use App\Services\Ownership\UserGlobalOwnershipAuthorizer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 
 class JobTalentProfileService
 {
+    public function __construct(private UserGlobalOwnershipAuthorizer $ownership) {}
+
     /** @param  array<string, mixed>  $data */
     public function registerOrUpdate(User $user, array $data, ?array $contact = null): JobTalentProfile
     {
-        $profile = JobTalentProfile::updateOrCreate(
+        $profile = JobTalentProfile::unguarded(fn () => JobTalentProfile::updateOrCreate(
             ['user_id' => $user->id],
-            collect($data)->only([
-                'professional_name', 'specialization', 'biography', 'country', 'region', 'city',
-                'skills', 'experience', 'education', 'certificates', 'languages', 'disciplines',
-                'work_preferences', 'availability', 'employment_status', 'is_public',
-            ])->all(),
-        );
+            $this->ownership->assignOwnerFromSession(
+                collect($data)->only([
+                    'professional_name', 'specialization', 'biography', 'country', 'region', 'city',
+                    'skills', 'experience', 'education', 'certificates', 'languages', 'disciplines',
+                    'work_preferences', 'availability', 'employment_status', 'is_public',
+                ])->all(),
+                $user,
+            ),
+        ));
 
         if ($contact !== null) {
             JobTalentContact::updateOrCreate(

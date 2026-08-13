@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\ManagesUserOwnedModules;
 use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{CropHarvest, CropSeason, CropType, CropVariety, CropYield, Farm, FarmBlock, FarmField, GrowthStage};
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 class CropController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use ManagesUserOwnedModules;
     use PaginatesOrganizationRecords;
 
     private const MODULES = [
@@ -22,6 +24,16 @@ class CropController extends Controller
         'harvests' => [CropHarvest::class, ['season_id'=>['nullable','integer','exists:crop_seasons,id'], 'crop_type_id'=>['required','integer','exists:crop_types,id'], 'variety_id'=>['nullable','integer','exists:crop_varieties,id'], 'field_id'=>['nullable','integer','exists:farm_fields,id'], 'block_id'=>['nullable','integer','exists:farm_blocks,id'], 'harvested_at'=>['required','date'], 'quantity'=>['required','numeric','gt:0'], 'unit'=>['sometimes','string','max:16'], 'quality_score'=>['nullable','numeric','between:0,100'], 'notes'=>['nullable','string']], ['season_id'=>CropSeason::class, 'crop_type_id'=>CropType::class, 'variety_id'=>CropVariety::class, 'field_id'=>FarmField::class, 'block_id'=>FarmBlock::class]],
         'yields' => [CropYield::class, ['season_id'=>['nullable','integer','exists:crop_seasons,id'], 'crop_type_id'=>['required','integer','exists:crop_types,id'], 'field_id'=>['nullable','integer','exists:farm_fields,id'], 'block_id'=>['nullable','integer','exists:farm_blocks,id'], 'area_hectares'=>['numeric','min:0'], 'expected_quantity'=>['nullable','numeric','min:0'], 'actual_quantity'=>['sometimes','numeric','min:0'], 'unit'=>['sometimes','string','max:16'], 'reported_at'=>['required','date'], 'notes'=>['nullable','string']], ['season_id'=>CropSeason::class, 'crop_type_id'=>CropType::class, 'field_id'=>FarmField::class, 'block_id'=>FarmBlock::class]],
     ];
+
+    protected function moduleManagePermission(Request $request, string $module): string
+    {
+        return 'crop.manage';
+    }
+
+    protected function moduleViewPermission(Request $request, string $module): string
+    {
+        return 'crop.view';
+    }
 
     private function config(string $module): array
     {
@@ -34,6 +46,7 @@ class CropController extends Controller
     {
         [, $rules, $relations] = $this->config($module);
         $data = $request->validate($rules);
+        $data = $this->ownership()->stripOwnerKeys($data);
         OrganizationScopeValidator::assert($this->organization($request), $data, $relations);
 
         return $data;
@@ -41,39 +54,29 @@ class CropController extends Controller
 
     public function index(Request $request, string $module): JsonResponse
     {
-        $this->authorizePermission($request, 'crop.view');
         [$class] = $this->config($module);
 
-        return $this->paginateQuery($request, $class::where('organization_id', $this->organization($request))->latest());
+        return $this->ownedIndex($request, $module, $class);
     }
 
     public function store(Request $request, string $module): JsonResponse
     {
-        $this->authorizePermission($request, 'crop.manage');
         [$class] = $this->config($module);
 
-        return response()->json($class::create([
-            'organization_id' => $this->organization($request),
-            ...$this->validatedPayload($request, $module),
-        ]), 201);
+        return $this->ownedStore($request, $module, $class, $this->validatedPayload($request, $module));
     }
 
     public function update(Request $request, string $module, int $id): JsonResponse
     {
-        $this->authorizePermission($request, 'crop.manage');
         [$class] = $this->config($module);
-        $record = $class::where('organization_id', $this->organization($request))->findOrFail($id);
-        $record->update($this->validatedPayload($request, $module));
 
-        return response()->json($record);
+        return $this->ownedUpdate($request, $module, $class, $id, $this->validatedPayload($request, $module));
     }
 
     public function destroy(Request $request, string $module, int $id): JsonResponse
     {
-        $this->authorizePermission($request, 'crop.manage');
         [$class] = $this->config($module);
-        $class::where('organization_id', $this->organization($request))->findOrFail($id)->delete();
 
-        return response()->json(status: 204);
+        return $this->ownedDestroy($request, $module, $class, $id);
     }
 }

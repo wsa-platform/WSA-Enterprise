@@ -6,6 +6,8 @@ import { PermissionProvider } from './context/PermissionContext'
 import { setUnauthorizedHandler } from './api'
 import { AppShell } from './components/AppShell'
 import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
+import { PublicBrowsePage } from './pages/PublicBrowsePage'
 import { DashboardPage, useDashboardTitle } from './pages/DashboardPage'
 import { ModulePage, cropCreateFields, cropTabs, farmCreateFields, farmTabs, soilCreateFields, soilTabs } from './pages/ModulePage'
 import { BusinessPage } from './pages/BusinessPage'
@@ -89,6 +91,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={token ? <Navigate to="/" replace /> : <LoginPage />} />
+      <Route path="/register" element={token ? <Navigate to="/" replace /> : <RegisterPage />} />
+      <Route path="/browse" element={token ? <Navigate to="/" replace /> : <PublicBrowsePage />} />
       <Route path="/accept-invitation" element={token ? <Navigate to="/" replace /> : <AcceptInvitationPage />} />
       <Route element={<ProtectedShell />}>
         <Route path="/" element={<DashboardPage />} />

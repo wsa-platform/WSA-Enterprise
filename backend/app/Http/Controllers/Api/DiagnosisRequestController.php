@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\ScopesOwnedServices;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Diagnosis\StoreDiagnosisRequestRequest;
 use App\Models\{CropType, DiagnosisDisease, DiagnosisRequest, DiagnosisSubject, FarmBlock, FarmField};
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
 class DiagnosisRequestController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use ScopesOwnedServices;
 
     public function __construct(
         private DiagnosisWorkflowService $workflow,
@@ -24,9 +26,10 @@ class DiagnosisRequestController extends Controller
     {
         $this->authorizePermission($request, 'diagnosis.view');
 
-        $query = DiagnosisRequest::where('organization_id', $this->organization($request))
-            ->with(['results.recommendations', 'user:id,name'])
-            ->latest();
+        $query = $this->scopedOwnedQuery(
+            $request,
+            DiagnosisRequest::query()->with(['results.recommendations', 'user:id,name']),
+        )->latest();
 
         if ($status = $request->query('status')) {
             $query->where('status', $status);
@@ -42,9 +45,12 @@ class DiagnosisRequestController extends Controller
     {
         $this->authorizePermission($request, 'diagnosis.view');
 
-        $record = DiagnosisRequest::where('organization_id', $this->organization($request))
-            ->with(['results.recommendations'])
-            ->findOrFail($id);
+        $record = $this->scopedOwnedQuery(
+            $request,
+            DiagnosisRequest::query()->with(['results.recommendations']),
+        )->findOrFail($id);
+
+        $this->ownership()->assertOwnedByUser($request->user(), $record, $this->organization($request));
 
         return response()->json($this->presentRequest($record));
     }
@@ -54,7 +60,9 @@ class DiagnosisRequestController extends Controller
         $this->authorizePermission($request, 'diagnosis.manage');
 
         $organizationId = $this->organization($request);
-        $data = $this->media->validateAndSanitize($request->validated(), 'image_disk', 'image_path');
+        $data = $this->ownership()->stripOwnerKeys(
+            $this->media->validateAndSanitize($request->validated(), 'image_disk', 'image_path'),
+        );
 
         OrganizationScopeValidator::assert($organizationId, $data, [
             'field_id' => FarmField::class,

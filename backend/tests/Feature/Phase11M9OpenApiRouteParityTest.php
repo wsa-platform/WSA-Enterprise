@@ -16,7 +16,7 @@ class Phase11M9OpenApiRouteParityTest extends TestCase
 
     public function test_documented_openapi_paths_match_registered_routes(): void
     {
-        $specPath = env('OPENAPI_SPEC_PATH', dirname(base_path()).'/docs/openapi.yaml');
+        $specPath = $this->openApiSpecPath();
         $this->assertFileExists($specPath);
 
         $content = file_get_contents($specPath);
@@ -57,7 +57,7 @@ class Phase11M9OpenApiRouteParityTest extends TestCase
 
     public function test_phase11_enterprise_routes_are_documented_in_openapi(): void
     {
-        $specPath = env('OPENAPI_SPEC_PATH', dirname(base_path()).'/docs/openapi.yaml');
+        $specPath = $this->openApiSpecPath();
         $content = file_get_contents($specPath);
 
         $required = [

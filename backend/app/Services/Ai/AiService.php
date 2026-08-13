@@ -50,6 +50,7 @@ class AiService
         $record = AiRequest::create([
             'organization_id' => $organizationId,
             'user_id' => $userId,
+            'owner_user_id' => $userId,
             'request_type' => $requestType,
             'source_type' => $sourceType,
             'source_id' => $sourceId,
@@ -94,6 +95,7 @@ class AiService
         $record = AiRequest::create([
             'organization_id' => $organizationId,
             'user_id' => $userId,
+            'owner_user_id' => $userId,
             'request_type' => $requestType,
             'source_type' => $sourceType,
             'source_id' => $sourceId,

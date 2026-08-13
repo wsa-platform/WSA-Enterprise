@@ -161,7 +161,23 @@
     "namePlaceholder": "Required for new accounts",
     "joining": "Joining…",
     "tokenMissing": "Invitation token is missing.",
-    "acceptFailed": "Unable to accept invitation."
+    "acceptFailed": "Unable to accept invitation.",
+    "registerTitle": "Create your service owner account",
+    "registerSubtitle": "Register to manage your own farms, crops, soil diagnosis, training, and other agricultural services.",
+    "confirmPassword": "Confirm password",
+    "createAccount": "Create account",
+    "registering": "Creating account…",
+    "registerFailed": "Registration failed.",
+    "needAccount": "Need an account?",
+    "alreadyHaveAccount": "Already have an account?"
+  },
+  "public": {
+    "browseTitle": "Explore WSA Enterprise services",
+    "browseSubtitle": "Browse the public service catalog. Sign in or register to create and manage your own services.",
+    "requiresSignIn": "(sign in required)",
+    "openAccess": "(public preview)",
+    "protectedHint": "Creating farms, diagnosis requests, AI tools, and business records requires a service-owner account.",
+    "catalogError": "Unable to load the public service catalog."
   },
   "dashboard": {
     "title": "Dashboard",

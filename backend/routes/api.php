@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\BeekeepingController;
 use App\Http\Controllers\Api\AiAssistantController;
 use App\Http\Controllers\Api\AiVisionController;
 use App\Http\Controllers\Api\MarketingController;
+use App\Http\Controllers\Api\PublicPlatformController;
 
 Route::prefix('v1/health')->group(function (): void {
     Route::get('/live', [HealthController::class, 'live']);
@@ -42,6 +43,12 @@ Route::prefix('v1/health')->group(function (): void {
 });
 
 Route::prefix('v1')->group(function (): void {
+    Route::prefix('public')->middleware('throttle:60,1')->group(function (): void {
+        Route::get('/services', [PublicPlatformController::class, 'serviceCatalog']);
+        Route::get('/library/items', [PublicPlatformController::class, 'publishedLibraryItems']);
+        Route::get('/training/courses', [PublicPlatformController::class, 'publishedTrainingCourses']);
+    });
+
     Route::middleware('throttle:20,1')->group(function (): void {
         Route::post('/auth/register', [AuthController::class, 'register']);
         Route::post('/auth/login', [AuthController::class, 'login']);
@@ -234,6 +241,12 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/apiaries/{apiary}/hives', [BeekeepingController::class, 'hives'])->whereNumber('apiary');
             Route::post('/apiaries/{apiary}/hives', [BeekeepingController::class, 'storeHive'])->whereNumber('apiary');
             Route::post('/hives/{hive}/inspections', [BeekeepingController::class, 'storeInspection'])->whereNumber('hive');
+            Route::get('/hives/{hive}/treatments', [BeekeepingController::class, 'treatments'])->whereNumber('hive');
+            Route::post('/hives/{hive}/treatments', [BeekeepingController::class, 'storeTreatment'])->whereNumber('hive');
+            Route::get('/hives/{hive}/feedings', [BeekeepingController::class, 'feedings'])->whereNumber('hive');
+            Route::post('/hives/{hive}/feedings', [BeekeepingController::class, 'storeFeeding'])->whereNumber('hive');
+            Route::get('/hives/{hive}/production-records', [BeekeepingController::class, 'productionRecords'])->whereNumber('hive');
+            Route::post('/hives/{hive}/production-records', [BeekeepingController::class, 'storeProductionRecord'])->whereNumber('hive');
             Route::get('/calendar/tasks', [BeekeepingController::class, 'calendar']);
             Route::post('/calendar/tasks', [BeekeepingController::class, 'storeCalendarTask']);
             Route::get('/pollination/plants', [BeekeepingController::class, 'plants']);

@@ -24,6 +24,7 @@ class AiAssistantService
         return AiConversation::create([
             'organization_id' => $organizationId,
             'user_id' => $user->id,
+            'owner_user_id' => $user->id,
             'domain' => $domain,
             'title' => $title,
             'context' => $context,

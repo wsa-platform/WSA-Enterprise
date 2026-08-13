@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getOrganizations, login } from '../api'
 import { DEMO_HINT, getLoginDefaults, isDemoLoginEnabled } from '../config/loginDemo'
 import { useAuth } from '../context/AuthContext'
@@ -48,6 +48,12 @@ export function LoginPage() {
           {error && <p className="error">{error}</p>}
           <button disabled={loading} type="submit">{loading ? t('auth.signingIn') : t('common.signIn')}</button>
         </form>
+        <p className="hint">
+          {t('auth.needAccount')} <Link to="/register">{t('auth.createAccount')}</Link>
+        </p>
+        <p className="hint">
+          <Link to="/browse">{t('public.browseTitle')}</Link>
+        </p>
         {isDemoLoginEnabled() && <p className="hint">{DEMO_HINT}</p>}
       </section>
     </main>

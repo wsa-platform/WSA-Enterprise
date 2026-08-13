@@ -10,6 +10,7 @@ use App\Models\JobTalentProfile;
 use App\Services\Jobs\JobContactExchangeService;
 use App\Services\Jobs\JobMatchingService;
 use App\Services\Jobs\JobTalentProfileService;
+use App\Services\Ownership\ServiceOwnershipAuthorizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -105,6 +106,7 @@ class JobsEmployerController extends Controller
         $contactRequest = JobContactRequest::withoutGlobalScopes()
             ->where('organization_id', $this->organization($request))
             ->findOrFail($contactRequestId);
+        $this->assertContactRequestAccess($request, $contactRequest);
 
         $transaction = $this->exchangeService->initiatePayment($contactRequest, $data['idempotency_key'], $request);
 
@@ -121,6 +123,7 @@ class JobsEmployerController extends Controller
             ->where('organization_id', $this->organization($request))
             ->with('transaction')
             ->findOrFail($contactRequestId);
+        $this->assertContactRequestAccess($request, $contactRequest);
 
         $record = $this->exchangeService->markHired(
             $contactRequest,
@@ -149,5 +152,23 @@ class JobsEmployerController extends Controller
         ]);
 
         return response()->json($report, 201);
+    }
+
+    private function assertContactRequestAccess(Request $request, JobContactRequest $contactRequest): void
+    {
+        abort_unless($contactRequest->organization_id === $this->organization($request), 404);
+
+        $user = $request->user();
+        $organizationId = $this->organization($request);
+
+        if (app(ServiceOwnershipAuthorizer::class)->canSupervise($user, $organizationId)) {
+            return;
+        }
+
+        abort_unless(
+            (int) $contactRequest->requested_by_user_id === $user->id,
+            403,
+            'You can only manage contact requests that you created.',
+        );
     }
 }

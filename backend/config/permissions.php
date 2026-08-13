@@ -2,6 +2,7 @@
 
 return [
     'platform.view',
+    'services.supervise',
     'farm.view',
     'farm.manage',
     'crop.view',

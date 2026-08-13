@@ -8,6 +8,7 @@ use App\Http\Requests\Ai\StoreAiRequestRequest;
 use App\Models\AiRequest;
 use App\Services\Ai\AiQuotaService;
 use App\Services\Ai\AiService;
+use App\Services\Ownership\ServiceOwnershipAuthorizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,13 +25,18 @@ class AiController extends Controller
     {
         $this->authorizePermission($request, 'ai.use');
 
-        $query = AiRequest::query()
-            ->select([
-                'id', 'organization_id', 'user_id', 'request_type', 'source_type',
-                'source_id', 'provider', 'status', 'latency_ms', 'tokens_used',
-                'error_message', 'cancelled_at', 'created_at', 'updated_at',
-            ])
-            ->latest();
+        $organizationId = $this->organization($request);
+        $query = app(ServiceOwnershipAuthorizer::class)->scopeAccessibleServices(
+            AiRequest::query()
+                ->where('organization_id', $organizationId)
+                ->select([
+                    'id', 'organization_id', 'user_id', 'owner_user_id', 'request_type', 'source_type',
+                    'source_id', 'provider', 'status', 'latency_ms', 'tokens_used',
+                    'error_message', 'cancelled_at', 'created_at', 'updated_at',
+                ]),
+            $request->user(),
+            $organizationId,
+        )->latest();
 
         if ($type = $request->query('request_type')) {
             $query->where('request_type', $type);
@@ -87,7 +93,7 @@ class AiController extends Controller
     {
         $this->authorizePermission($request, 'ai.use');
 
-        $record = AiRequest::query()->findOrFail($id);
+        $record = $this->findAccessibleAiRequest($request, $id);
 
         return response()->json($this->sanitizeAiRequest($record));
     }
@@ -96,7 +102,7 @@ class AiController extends Controller
     {
         $this->authorizePermission($request, 'ai.use');
 
-        $record = AiRequest::query()->findOrFail($id);
+        $record = $this->findAccessibleAiRequest($request, $id);
 
         abort_unless($record->isCancellable(), 422, 'This AI request cannot be cancelled.');
 
@@ -132,6 +138,24 @@ class AiController extends Controller
     private function sanitizeAiRequest(AiRequest $record): AiRequest
     {
         $record->makeHidden(['input']);
+
+        return $record;
+    }
+
+    private function findAccessibleAiRequest(Request $request, int $id): AiRequest
+    {
+        $organizationId = $this->organization($request);
+        $record = app(ServiceOwnershipAuthorizer::class)->scopeAccessibleServices(
+            AiRequest::query()->where('organization_id', $organizationId),
+            $request->user(),
+            $organizationId,
+        )->findOrFail($id);
+
+        app(ServiceOwnershipAuthorizer::class)->assertOwnedByUser(
+            $request->user(),
+            $record,
+            $organizationId,
+        );
 
         return $record;
     }

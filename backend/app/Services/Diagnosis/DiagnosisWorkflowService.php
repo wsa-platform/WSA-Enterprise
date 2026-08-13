@@ -5,20 +5,27 @@ namespace App\Services\Diagnosis;
 use App\Models\DiagnosisRecommendation;
 use App\Models\DiagnosisRequest;
 use App\Models\DiagnosisResult;
+use App\Models\User;
 use App\Services\Ai\AiService;
+use App\Services\Ownership\ServiceOwnershipAuthorizer;
 use Illuminate\Support\Facades\DB;
 
 class DiagnosisWorkflowService
 {
-    public function __construct(private AiService $aiService) {}
+    public function __construct(
+        private AiService $aiService,
+        private ServiceOwnershipAuthorizer $ownership,
+    ) {}
 
     /** @param  array<string, mixed>  $data */
     public function submit(int $organizationId, int $userId, array $data): DiagnosisRequest
     {
-        return DB::transaction(function () use ($organizationId, $userId, $data) {
-            $request = DiagnosisRequest::create([
+        $owner = User::findOrFail($userId);
+
+        return DB::transaction(function () use ($organizationId, $owner, $data) {
+            $request = $this->ownership->createOwnedModel(DiagnosisRequest::class, [
                 'organization_id' => $organizationId,
-                'user_id' => $userId,
+                'user_id' => $owner->id,
                 'field_id' => $data['field_id'] ?? null,
                 'block_id' => $data['block_id'] ?? null,
                 'crop_type_id' => $data['crop_type_id'] ?? null,
@@ -29,7 +36,7 @@ class DiagnosisWorkflowService
                 'image_disk' => $data['image_disk'] ?? null,
                 'image_path' => $data['image_path'] ?? null,
                 'symptom_ids' => $data['symptom_ids'] ?? null,
-            ]);
+            ], $owner);
 
             $aiRequest = $this->aiService->run(
                 $organizationId,
@@ -40,7 +47,7 @@ class DiagnosisWorkflowService
                     'symptom_ids' => $request->symptom_ids,
                     'image_path' => $request->image_path,
                 ],
-                $userId,
+                $owner->id,
                 DiagnosisRequest::class,
                 $request->id,
             );
@@ -53,7 +60,7 @@ class DiagnosisWorkflowService
 
             $output = $aiRequest->output ?? [];
 
-            $result = DiagnosisResult::create([
+            $result = $this->ownership->createOwnedModel(DiagnosisResult::class, [
                 'organization_id' => $organizationId,
                 'diagnosis_request_id' => $request->id,
                 'disease_id' => $data['disease_id'] ?? null,
@@ -65,10 +72,10 @@ class DiagnosisWorkflowService
                 'provider' => $aiRequest->provider,
                 'is_decision_support' => true,
                 'raw_response' => $output,
-            ]);
+            ], $owner);
 
             foreach ($output['recommendations'] ?? [] as $recommendation) {
-                DiagnosisRecommendation::create([
+                $this->ownership->createOwnedModel(DiagnosisRecommendation::class, [
                     'organization_id' => $organizationId,
                     'diagnosis_result_id' => $result->id,
                     'title' => $recommendation['title'],
@@ -76,7 +83,7 @@ class DiagnosisWorkflowService
                     'category' => $recommendation['category'] ?? null,
                     'priority' => $recommendation['priority'] ?? 'medium',
                     'status' => 'open',
-                ]);
+                ], $owner);
             }
 
             $request->update(['status' => 'completed']);

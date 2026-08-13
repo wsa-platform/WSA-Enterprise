@@ -6,14 +6,15 @@ use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\AiRequest;
-use App\Models\ApiClient;
 use App\Models\AppNotification;
 use App\Models\AuditLog;
 use App\Models\Farm;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\Ai\AiQuotaService;
+use App\Services\Authorization\PermissionService;
 use App\Services\Billing\BillingUsageService;
+use App\Services\Ownership\ServiceOwnershipAuthorizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -30,22 +31,37 @@ class AnalyticsController extends Controller
     {
         $this->authorizePermission($request, 'platform.view');
         $organizationId = $this->organization($request);
+        $authorizer = app(ServiceOwnershipAuthorizer::class);
+        $user = $request->user();
+        $orgWide = $user === null || $authorizer->canSupervise($user, $organizationId);
 
+        $farmBase = Farm::query()->where('organization_id', $organizationId);
         $aiBase = AiRequest::query()->where('organization_id', $organizationId);
+
+        if (! $orgWide) {
+            $farmBase = $authorizer->scopeAccessibleServices($farmBase, $user, $organizationId);
+            $aiBase = $authorizer->scopeAccessibleServices($aiBase, $user, $organizationId);
+        }
+
+        $canViewOrgAudit = $user !== null && (
+            $authorizer->canSupervise($user, $organizationId)
+            || app(PermissionService::class)->userCan($user, $organizationId, 'access.manage')
+        );
 
         return response()->json([
             'organization_id' => $organizationId,
             'generated_at' => now()->toIso8601String(),
-            'users' => [
+            'scope' => $orgWide ? 'organization' : 'owned',
+            'users' => $orgWide ? [
                 'total' => User::query()
                     ->whereHas('organizations', fn ($query) => $query->whereKey($organizationId))
                     ->count(),
-            ],
-            'teams' => [
+            ] : null,
+            'teams' => $orgWide ? [
                 'total' => Team::where('organization_id', $organizationId)->count(),
-            ],
+            ] : null,
             'farms' => [
-                'total' => Farm::where('organization_id', $organizationId)->count(),
+                'total' => (clone $farmBase)->count(),
             ],
             'ai' => [
                 'requests_total' => (clone $aiBase)->count(),
@@ -72,11 +88,11 @@ class AnalyticsController extends Controller
                     ->whereNull('read_at')
                     ->count(),
             ],
-            'audit' => [
+            'audit' => $canViewOrgAudit ? [
                 'events_24h' => AuditLog::where('organization_id', $organizationId)
                     ->where('created_at', '>=', now()->subDay())
                     ->count(),
-            ],
+            ] : null,
         ]);
     }
 }

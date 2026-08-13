@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\ManagesUserOwnedModules;
 use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{TrainingCertificate, TrainingCourse, TrainingEnrollment, TrainingLesson, TrainingObjective, TrainingProgress, TrainingQuestion, TrainingQuiz};
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 class TrainingController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use ManagesUserOwnedModules;
     use PaginatesOrganizationRecords;
 
     private const MODULES = [
@@ -22,12 +24,23 @@ class TrainingController extends Controller
         'questions' => [TrainingQuestion::class, ['quiz_id'=>['required','integer','exists:training_quizzes,id'], 'question'=>['required','string','max:255'], 'question_ar'=>['nullable','string','max:255'], 'question_type'=>['sometimes','string','max:32'], 'options'=>['nullable','array'], 'correct_answer'=>['required','string','max:255'], 'sort_order'=>['sometimes','integer','min:0']], ['quiz_id'=>TrainingQuiz::class]],
     ];
 
+    protected function moduleManagePermission(Request $request, string $module): string
+    {
+        return 'training.manage';
+    }
+
+    protected function moduleViewPermission(Request $request, string $module): string
+    {
+        return 'training.view';
+    }
+
     private function config(string $module): array { abort_unless(isset(self::MODULES[$module]), 404); return self::MODULES[$module]; }
 
     private function validatedPayload(Request $request, string $module): array
     {
         [, $rules, $relations] = $this->config($module);
         $data = $request->validate($rules);
+        $data = $this->ownership()->stripOwnerKeys($data);
         OrganizationScopeValidator::assert($this->organization($request), $data, $relations);
 
         return $data;
@@ -35,9 +48,14 @@ class TrainingController extends Controller
 
     public function index(Request $request, string $module): JsonResponse
     {
-        $this->authorizePermission($request, 'training.view');
+        $this->authorizePermission($request, $this->moduleViewPermission($request, $module));
         [$class] = $this->config($module);
-        $query = $class::where('organization_id', $this->organization($request))->latest();
+        $query = $this->ownership()->scopeAccessibleServices(
+            $class::query()->where('organization_id', $this->organization($request)),
+            $request->user(),
+            $this->organization($request),
+        )->latest();
+
         if ($module === 'courses' && $request->query('status')) {
             $query->where('status', $request->query('status'));
         }
@@ -47,29 +65,23 @@ class TrainingController extends Controller
 
     public function store(Request $request, string $module): JsonResponse
     {
-        $this->authorizePermission($request, 'training.manage');
         [$class] = $this->config($module);
 
-        return response()->json($class::create(['organization_id'=>$this->organization($request), ...$this->validatedPayload($request, $module)]), 201);
+        return $this->ownedStore($request, $module, $class, $this->validatedPayload($request, $module));
     }
 
     public function update(Request $request, string $module, int $id): JsonResponse
     {
-        $this->authorizePermission($request, 'training.manage');
         [$class] = $this->config($module);
-        $record = $class::where('organization_id', $this->organization($request))->findOrFail($id);
-        $record->update($this->validatedPayload($request, $module));
 
-        return response()->json($record);
+        return $this->ownedUpdate($request, $module, $class, $id, $this->validatedPayload($request, $module));
     }
 
     public function destroy(Request $request, string $module, int $id): JsonResponse
     {
-        $this->authorizePermission($request, 'training.manage');
         [$class] = $this->config($module);
-        $class::where('organization_id', $this->organization($request))->findOrFail($id)->delete();
 
-        return response()->json(status: 204);
+        return $this->ownedDestroy($request, $module, $class, $id);
     }
 
     public function enrollments(Request $request): JsonResponse
@@ -78,10 +90,11 @@ class TrainingController extends Controller
 
         return $this->paginateQuery(
             $request,
-            TrainingEnrollment::where('organization_id', $this->organization($request))
-                ->where('user_id', $request->user()->id)
-                ->with('course')
-                ->latest()
+            $this->ownership()->scopeAccessibleServices(
+                TrainingEnrollment::query()->where('organization_id', $this->organization($request)),
+                $request->user(),
+                $this->organization($request),
+            )->with('course')->latest()
         );
     }
 
@@ -94,7 +107,12 @@ class TrainingController extends Controller
 
         $enrollment = TrainingEnrollment::firstOrCreate(
             ['user_id' => $request->user()->id, 'course_id' => $data['course_id']],
-            ['organization_id' => $organizationId, 'status' => 'active', 'enrolled_at' => now()]
+            [
+                'organization_id' => $organizationId,
+                'owner_user_id' => $request->user()->id,
+                'status' => 'active',
+                'enrolled_at' => now(),
+            ]
         );
 
         return response()->json($enrollment->load('course'), 201);
@@ -110,9 +128,11 @@ class TrainingController extends Controller
             'score' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
-        $enrollment = TrainingEnrollment::where('organization_id', $organizationId)
-            ->where('user_id', $request->user()->id)
-            ->findOrFail($data['enrollment_id']);
+        $enrollment = $this->ownership()->scopeAccessibleServices(
+            TrainingEnrollment::query()->where('organization_id', $organizationId),
+            $request->user(),
+            $organizationId,
+        )->findOrFail($data['enrollment_id']);
 
         OrganizationScopeValidator::assert($organizationId, $data, ['lesson_id' => TrainingLesson::class]);
 
@@ -121,6 +141,7 @@ class TrainingController extends Controller
             [
                 'organization_id' => $organizationId,
                 'user_id' => $request->user()->id,
+                'owner_user_id' => $request->user()->id,
                 'status' => 'completed',
                 'score' => $data['score'] ?? null,
                 'completed_at' => now(),
@@ -137,6 +158,7 @@ class TrainingController extends Controller
                 [
                     'organization_id' => $organizationId,
                     'user_id' => $request->user()->id,
+                    'owner_user_id' => $request->user()->id,
                     'certificate_code' => 'CERT-'.$enrollment->id.'-'.now()->format('Ymd'),
                     'issued_at' => now(),
                     'metadata' => ['course_id' => $enrollment->course_id],

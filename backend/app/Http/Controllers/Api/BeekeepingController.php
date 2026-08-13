@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\ScopesOwnedServices;
 use App\Http\Controllers\Controller;
 use App\Models\Apiary;
 use App\Models\BeeCalendarTask;
 use App\Models\BeekeeperProfile;
-use App\Models\Hive;
-use App\Models\HiveInspection;
 use App\Models\BeeKnowledgeTopic;
+use App\Models\Hive;
+use App\Models\HiveFeeding;
+use App\Models\HiveInspection;
+use App\Models\HiveProductionRecord;
+use App\Models\HiveTreatment;
 use App\Models\PollinationPlant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,6 +21,7 @@ use Illuminate\Http\Request;
 class BeekeepingController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use ScopesOwnedServices;
 
     public function profile(Request $request): JsonResponse
     {
@@ -46,13 +51,16 @@ class BeekeepingController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $profile = BeekeeperProfile::updateOrCreate(
+        $profile = BeekeeperProfile::unguarded(fn () => BeekeeperProfile::updateOrCreate(
             [
                 'organization_id' => $this->organization($request),
                 'user_id' => $request->user()->id,
             ],
-            $data,
-        );
+            [
+                ...$this->ownership()->stripOwnerKeys($data),
+                'owner_user_id' => $request->user()->id,
+            ],
+        ));
 
         return response()->json($profile);
     }
@@ -62,7 +70,7 @@ class BeekeepingController extends Controller
         $this->authorizePermission($request, 'beekeeping.view');
 
         return response()->json(
-            Apiary::query()->where('organization_id', $this->organization($request))->withCount('hives')->paginate(20)
+            $this->scopedOwnedQuery($request, Apiary::query())->withCount('hives')->paginate(20)
         );
     }
 
@@ -80,10 +88,16 @@ class BeekeepingController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $apiary = Apiary::create([
-            ...$data,
+        $profile = BeekeeperProfile::query()
+            ->where('organization_id', $this->organization($request))
+            ->whereKey($data['beekeeper_profile_id'])
+            ->firstOrFail();
+        $this->assertOwnedRecord($request, $profile, 'beekeeping.manage');
+
+        $apiary = Apiary::unguarded(fn () => Apiary::create([
+            ...$this->assignOwnedPayload($request, $data),
             'organization_id' => $this->organization($request),
-        ]);
+        ]));
 
         return response()->json($apiary, 201);
     }
@@ -92,14 +106,18 @@ class BeekeepingController extends Controller
     {
         $this->authorizePermission($request, 'beekeeping.view');
         abort_unless($apiary->organization_id === $this->organization($request), 404);
+        $this->assertOwnedRecord($request, $apiary, 'beekeeping.view');
 
-        return response()->json($apiary->hives()->paginate(50));
+        return response()->json(
+            $this->scopedOwnedQuery($request, $apiary->hives()->getQuery())->paginate(50)
+        );
     }
 
     public function storeHive(Request $request, Apiary $apiary): JsonResponse
     {
         $this->authorizePermission($request, 'beekeeping.manage');
         abort_unless($apiary->organization_id === $this->organization($request), 404);
+        $this->assertOwnedRecord($request, $apiary, 'beekeeping.manage');
 
         $data = $request->validate([
             'code' => ['required', 'string', 'max:64'],
@@ -109,11 +127,11 @@ class BeekeepingController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $hive = Hive::create([
-            ...$data,
+        $hive = Hive::unguarded(fn () => Hive::create([
+            ...$this->assignOwnedPayload($request, $data),
             'organization_id' => $this->organization($request),
             'apiary_id' => $apiary->id,
-        ]);
+        ]));
 
         return response()->json($hive, 201);
     }
@@ -122,6 +140,7 @@ class BeekeepingController extends Controller
     {
         $this->authorizePermission($request, 'beekeeping.manage');
         abort_unless($hive->organization_id === $this->organization($request), 404);
+        $this->assertOwnedRecord($request, $hive, 'beekeeping.manage');
 
         $data = $request->validate([
             'inspected_at' => ['required', 'date'],
@@ -130,14 +149,114 @@ class BeekeepingController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $inspection = HiveInspection::create([
-            ...$data,
+        $inspection = HiveInspection::unguarded(fn () => HiveInspection::create([
+            ...$this->assignOwnedPayload($request, $data),
             'organization_id' => $this->organization($request),
             'hive_id' => $hive->id,
             'inspector_user_id' => $request->user()->id,
-        ]);
+        ]));
 
         return response()->json($inspection, 201);
+    }
+
+    public function treatments(Request $request, Hive $hive): JsonResponse
+    {
+        $this->authorizePermission($request, 'beekeeping.view');
+        abort_unless($hive->organization_id === $this->organization($request), 404);
+        $this->assertOwnedRecord($request, $hive, 'beekeeping.view');
+
+        return response()->json(
+            $this->scopedOwnedQuery($request, $hive->treatments()->getQuery())->latest('applied_at')->paginate(30)
+        );
+    }
+
+    public function storeTreatment(Request $request, Hive $hive): JsonResponse
+    {
+        $this->authorizePermission($request, 'beekeeping.manage');
+        abort_unless($hive->organization_id === $this->organization($request), 404);
+        $this->assertOwnedRecord($request, $hive, 'beekeeping.manage');
+
+        $data = $request->validate([
+            'treatment_type' => ['required', 'string', 'max:255'],
+            'applied_at' => ['required', 'date'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $treatment = HiveTreatment::unguarded(fn () => HiveTreatment::create([
+            ...$this->assignOwnedPayload($request, $data),
+            'organization_id' => $this->organization($request),
+            'hive_id' => $hive->id,
+        ]));
+
+        return response()->json($treatment, 201);
+    }
+
+    public function feedings(Request $request, Hive $hive): JsonResponse
+    {
+        $this->authorizePermission($request, 'beekeeping.view');
+        abort_unless($hive->organization_id === $this->organization($request), 404);
+        $this->assertOwnedRecord($request, $hive, 'beekeeping.view');
+
+        return response()->json(
+            $this->scopedOwnedQuery($request, $hive->feedings()->getQuery())->latest('fed_at')->paginate(30)
+        );
+    }
+
+    public function storeFeeding(Request $request, Hive $hive): JsonResponse
+    {
+        $this->authorizePermission($request, 'beekeeping.manage');
+        abort_unless($hive->organization_id === $this->organization($request), 404);
+        $this->assertOwnedRecord($request, $hive, 'beekeeping.manage');
+
+        $data = $request->validate([
+            'feed_type' => ['required', 'string', 'max:255'],
+            'quantity' => ['nullable', 'numeric', 'min:0'],
+            'unit' => ['nullable', 'string', 'max:16'],
+            'fed_at' => ['required', 'date'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $feeding = HiveFeeding::unguarded(fn () => HiveFeeding::create([
+            ...$this->assignOwnedPayload($request, $data),
+            'organization_id' => $this->organization($request),
+            'hive_id' => $hive->id,
+        ]));
+
+        return response()->json($feeding, 201);
+    }
+
+    public function productionRecords(Request $request, Hive $hive): JsonResponse
+    {
+        $this->authorizePermission($request, 'beekeeping.view');
+        abort_unless($hive->organization_id === $this->organization($request), 404);
+        $this->assertOwnedRecord($request, $hive, 'beekeeping.view');
+
+        return response()->json(
+            $this->scopedOwnedQuery($request, $hive->productionRecords()->getQuery())->latest('recorded_at')->paginate(30)
+        );
+    }
+
+    public function storeProductionRecord(Request $request, Hive $hive): JsonResponse
+    {
+        $this->authorizePermission($request, 'beekeeping.manage');
+        abort_unless($hive->organization_id === $this->organization($request), 404);
+        $this->assertOwnedRecord($request, $hive, 'beekeeping.manage');
+
+        $data = $request->validate([
+            'product_type' => ['required', 'string', 'max:255'],
+            'quantity' => ['required', 'numeric', 'gt:0'],
+            'unit' => ['sometimes', 'string', 'max:16'],
+            'recorded_at' => ['required', 'date'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $record = HiveProductionRecord::unguarded(fn () => HiveProductionRecord::create([
+            ...$this->assignOwnedPayload($request, $data),
+            'organization_id' => $this->organization($request),
+            'hive_id' => $hive->id,
+        ]));
+
+        return response()->json($record, 201);
     }
 
     public function calendar(Request $request): JsonResponse
@@ -145,8 +264,7 @@ class BeekeepingController extends Controller
         $this->authorizePermission($request, 'beekeeping.view');
 
         return response()->json(
-            BeeCalendarTask::query()
-                ->where('organization_id', $this->organization($request))
+            $this->scopedOwnedQuery($request, BeeCalendarTask::query())
                 ->orderBy('scheduled_for')
                 ->paginate(30)
         );
@@ -167,10 +285,24 @@ class BeekeepingController extends Controller
             'context' => ['nullable', 'array'],
         ]);
 
-        $task = BeeCalendarTask::create([
-            ...$data,
+        if ($apiaryId = $data['apiary_id'] ?? null) {
+            $apiary = Apiary::query()
+                ->where('organization_id', $this->organization($request))
+                ->findOrFail($apiaryId);
+            $this->assertOwnedRecord($request, $apiary, 'beekeeping.manage');
+        }
+
+        if ($hiveId = $data['hive_id'] ?? null) {
+            $hive = Hive::query()
+                ->where('organization_id', $this->organization($request))
+                ->findOrFail($hiveId);
+            $this->assertOwnedRecord($request, $hive, 'beekeeping.manage');
+        }
+
+        $task = BeeCalendarTask::unguarded(fn () => BeeCalendarTask::create([
+            ...$this->assignOwnedPayload($request, $data),
             'organization_id' => $this->organization($request),
-        ]);
+        ]));
 
         return response()->json($task, 201);
     }
@@ -180,7 +312,7 @@ class BeekeepingController extends Controller
         $this->authorizePermission($request, 'beekeeping.view');
 
         return response()->json(
-            PollinationPlant::query()->where('organization_id', $this->organization($request))->paginate(30)
+            $this->scopedOwnedQuery($request, PollinationPlant::query())->paginate(30)
         );
     }
 
@@ -200,10 +332,10 @@ class BeekeepingController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $plant = PollinationPlant::create([
-            ...$data,
+        $plant = PollinationPlant::unguarded(fn () => PollinationPlant::create([
+            ...$this->assignOwnedPayload($request, $data),
             'organization_id' => $this->organization($request),
-        ]);
+        ]));
 
         return response()->json($plant, 201);
     }

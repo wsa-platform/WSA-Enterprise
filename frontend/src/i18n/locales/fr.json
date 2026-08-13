@@ -161,7 +161,23 @@
     "namePlaceholder": "Requis pour les nouveaux comptes",
     "joining": "Adhésion en cours…",
     "tokenMissing": "Le jeton d'invitation est manquant.",
-    "acceptFailed": "Impossible d'accepter l'invitation."
+    "acceptFailed": "Impossible d'accepter l'invitation.",
+    "registerTitle": "Créez votre compte propriétaire de services",
+    "registerSubtitle": "Inscrivez-vous pour gérer vos fermes, cultures, sols, formations et autres services agricoles.",
+    "confirmPassword": "Confirmer le mot de passe",
+    "createAccount": "Créer un compte",
+    "registering": "Création du compte…",
+    "registerFailed": "Échec de l'inscription.",
+    "needAccount": "Besoin d'un compte ?",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?"
+  },
+  "public": {
+    "browseTitle": "Explorez les services WSA Enterprise",
+    "browseSubtitle": "Parcourez le catalogue public de services. Connectez-vous ou inscrivez-vous pour créer et gérer vos propres services.",
+    "requiresSignIn": "(connexion requise)",
+    "openAccess": "(aperçu public)",
+    "protectedHint": "La création de fermes, de demandes de diagnostic, d'outils IA et d'enregistrements commerciaux nécessite un compte propriétaire de services.",
+    "catalogError": "Impossible de charger le catalogue public de services."
   },
   "dashboard": {
     "title": "Tableau de bord",

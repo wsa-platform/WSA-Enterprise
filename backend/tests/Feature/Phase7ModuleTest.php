@@ -43,7 +43,7 @@ class Phase7ModuleTest extends TestCase
         $viewer->roles()->attach($viewerRole->id, ['organization_id' => $organization->id]);
         Sanctum::actingAs($viewer);
 
-        Farm::create(['organization_id' => $organization->id, 'code' => 'F1', 'name' => 'Farm']);
+        Farm::create(['organization_id' => $organization->id, 'owner_user_id' => $viewer->id, 'code' => 'F1', 'name' => 'Farm']);
 
         $this->getJson('/api/v1/farm/farms')->assertOk()->assertJsonCount(1);
         $this->postJson('/api/v1/farm/farms', ['code' => 'F2', 'name' => 'Blocked'])->assertForbidden();

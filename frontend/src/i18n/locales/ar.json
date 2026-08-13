@@ -161,7 +161,23 @@
     "namePlaceholder": "مطلوب للحسابات الجديدة",
     "joining": "جارٍ الانضمام…",
     "tokenMissing": "رمز الدعوة مفقود.",
-    "acceptFailed": "تعذّر قبول الدعوة."
+    "acceptFailed": "تعذّر قبول الدعوة.",
+    "registerTitle": "إنشاء حساب مالك الخدمة",
+    "registerSubtitle": "سجّل لإدارة مزارعك ومحاصيلك وتشخيص التربة والتدريب وخدماتك الزراعية الأخرى.",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "createAccount": "إنشاء حساب",
+    "registering": "جارٍ إنشاء الحساب…",
+    "registerFailed": "فشل التسجيل.",
+    "needAccount": "تحتاج إلى حساب؟",
+    "alreadyHaveAccount": "لديك حساب بالفعل؟"
+  },
+  "public": {
+    "browseTitle": "استكشف خدمات WSA Enterprise",
+    "browseSubtitle": "تصفّح دليل الخدمات العام. سجّل الدخول أو أنشئ حسابًا لإنشاء خدماتك وإدارتها.",
+    "requiresSignIn": "(يتطلب تسجيل الدخول)",
+    "openAccess": "(معاينة عامة)",
+    "protectedHint": "إنشاء المزارع وطلبات التشخيص وأدوات الذكاء الاصطناعي وسجلات الأعمال يتطلب حساب مالك خدمة.",
+    "catalogError": "تعذّر تحميل دليل الخدمات العام."
   },
   "dashboard": {
     "title": "لوحة التحكم",

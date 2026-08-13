@@ -26,7 +26,7 @@ class Phase11M8OpenApiContractTest extends TestCase
 
     public function test_openapi_spec_contains_phase11_paths(): void
     {
-        $specPath = env('OPENAPI_SPEC_PATH', dirname(base_path()).'/docs/openapi.yaml');
+        $specPath = $this->openApiSpecPath();
         $this->assertFileExists($specPath, 'OpenAPI spec missing at docs/openapi.yaml');
 
         $content = file_get_contents($specPath);

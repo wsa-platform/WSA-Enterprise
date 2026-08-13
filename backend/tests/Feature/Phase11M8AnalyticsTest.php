@@ -32,8 +32,11 @@ class Phase11M8AnalyticsTest extends TestCase
     {
         $orgA = Organization::first();
         $orgB = Organization::create(['name' => 'Analytics Org B', 'slug' => 'analytics-org-b']);
+        EnterpriseRoleService::seedForOrganization($orgB->id);
         $admin = User::where('email', 'admin@wsa.test')->first();
-        $admin->organizations()->syncWithoutDetaching([$orgB->id]);
+        $admin->organizations()->syncWithoutDetaching([
+            $orgB->id => ['role' => 'admin', 'is_active' => true],
+        ]);
 
         Farm::create(['organization_id' => $orgA->id, 'code' => 'A-F1', 'name' => 'Farm A']);
         Farm::create(['organization_id' => $orgB->id, 'code' => 'B-F1', 'name' => 'Farm B']);
@@ -71,6 +74,7 @@ class Phase11M8AnalyticsTest extends TestCase
 
         $responseA->assertOk()
             ->assertJsonPath('organization_id', $orgA->id)
+            ->assertJsonPath('scope', 'organization')
             ->assertJsonPath('farms.total', $farmsBeforeA)
             ->assertJsonPath('ai.requests_total', $aiBeforeA + 1);
 
@@ -81,6 +85,7 @@ class Phase11M8AnalyticsTest extends TestCase
 
         $responseB->assertOk()
             ->assertJsonPath('organization_id', $orgB->id)
+            ->assertJsonPath('scope', 'organization')
             ->assertJsonPath('farms.total', $farmsBeforeB)
             ->assertJsonPath('ai.requests_total', $aiBeforeB + 1);
     }

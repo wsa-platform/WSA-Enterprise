@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\ManagesUserOwnedModules;
 use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{Branch, Category, Customer, Product, Supplier, Warehouse};
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 class CatalogController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use ManagesUserOwnedModules;
     use PaginatesOrganizationRecords;
 
     private const MODULES = [
@@ -22,12 +24,23 @@ class CatalogController extends Controller
         'warehouses' => [Warehouse::class, ['branch_id'=>['nullable','integer','exists:branches,id'], 'code'=>['required','string','max:32'], 'name'=>['required','string','max:255'], 'address'=>['nullable','string'], 'is_active'=>['boolean']], ['branch_id'=>Branch::class]],
     ];
 
+    protected function moduleManagePermission(Request $request, string $module): string
+    {
+        return 'business.manage';
+    }
+
+    protected function moduleViewPermission(Request $request, string $module): string
+    {
+        return 'business.view';
+    }
+
     private function config(string $module): array { abort_unless(isset(self::MODULES[$module]), 404); return self::MODULES[$module]; }
 
     private function validatedPayload(Request $request, string $module): array
     {
         [, $rules, $relations] = $this->config($module);
         $data = $request->validate($rules);
+        $data = $this->ownership()->stripOwnerKeys($data);
         OrganizationScopeValidator::assert($this->organization($request), $data, $relations);
 
         return $data;
@@ -35,36 +48,29 @@ class CatalogController extends Controller
 
     public function index(Request $request, string $module): JsonResponse
     {
-        $this->authorizePermission($request, 'business.view');
         [$class] = $this->config($module);
 
-        return $this->paginateQuery($request, $class::where('organization_id', $this->organization($request))->latest());
+        return $this->ownedIndex($request, $module, $class);
     }
 
     public function store(Request $request, string $module): JsonResponse
     {
-        $this->authorizePermission($request, 'business.manage');
         [$class] = $this->config($module);
 
-        return response()->json($class::create(['organization_id'=>$this->organization($request), ...$this->validatedPayload($request, $module)]), 201);
+        return $this->ownedStore($request, $module, $class, $this->validatedPayload($request, $module));
     }
 
     public function update(Request $request, string $module, int $id): JsonResponse
     {
-        $this->authorizePermission($request, 'business.manage');
         [$class] = $this->config($module);
-        $record = $class::where('organization_id', $this->organization($request))->findOrFail($id);
-        $record->update($this->validatedPayload($request, $module));
 
-        return response()->json($record);
+        return $this->ownedUpdate($request, $module, $class, $id, $this->validatedPayload($request, $module));
     }
 
     public function destroy(Request $request, string $module, int $id): JsonResponse
     {
-        $this->authorizePermission($request, 'business.manage');
         [$class] = $this->config($module);
-        $class::where('organization_id', $this->organization($request))->findOrFail($id)->delete();
 
-        return response()->json(status: 204);
+        return $this->ownedDestroy($request, $module, $class, $id);
     }
 }

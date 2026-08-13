@@ -161,7 +161,23 @@
     "namePlaceholder": "Yeni hesaplar için gerekli",
     "joining": "Katılınıyor…",
     "tokenMissing": "Davet jetonu eksik.",
-    "acceptFailed": "Davet kabul edilemedi."
+    "acceptFailed": "Davet kabul edilemedi.",
+    "registerTitle": "Hizmet sahibi hesabınızı oluşturun",
+    "registerSubtitle": "Çiftlik, ürün, toprak, eğitim ve diğer tarımsal hizmetlerinizi yönetmek için kaydolun.",
+    "confirmPassword": "Parolayı onayla",
+    "createAccount": "Hesap oluştur",
+    "registering": "Hesap oluşturuluyor…",
+    "registerFailed": "Kayıt başarısız.",
+    "needAccount": "Hesaba mı ihtiyacınız var?",
+    "alreadyHaveAccount": "Zaten hesabınız var mı?"
+  },
+  "public": {
+    "browseTitle": "WSA Enterprise hizmetlerini keşfedin",
+    "browseSubtitle": "Herkese açık hizmet kataloğuna göz atın. Kendi hizmetlerinizi oluşturmak ve yönetmek için giriş yapın veya kaydolun.",
+    "requiresSignIn": "(giriş gerekli)",
+    "openAccess": "(herkese açık önizleme)",
+    "protectedHint": "Çiftlik, teşhis talebi, yapay zeka araçları ve iş kayıtları oluşturmak için bir hizmet sahibi hesabı gerekir.",
+    "catalogError": "Herkese açık hizmet kataloğu yüklenemedi."
   },
   "dashboard": {
     "title": "Kontrol paneli",

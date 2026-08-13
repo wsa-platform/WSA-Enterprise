@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\ScopesOwnedServices;
 use App\Http\Controllers\Controller;
 use App\Models\AiVisionUpload;
 use App\Services\Ai\AiVisionUploadService;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 class AiVisionController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use ScopesOwnedServices;
 
     public function __construct(private AiVisionUploadService $uploadService) {}
 
@@ -37,11 +39,8 @@ class AiVisionController extends Controller
     public function show(Request $request, AiVisionUpload $upload): JsonResponse
     {
         $this->authorizeAnyPermission($request, ['ai.use', 'ai.vision']);
-        abort_unless(
-            $upload->organization_id === $this->organization($request)
-            && $upload->user_id === $request->user()->id,
-            404,
-        );
+        abort_unless($upload->organization_id === $this->organization($request), 404);
+        $this->ownership()->assertOwnedByUser($request->user(), $upload, $this->organization($request));
 
         return response()->json($upload->only(['id', 'mime_type', 'size_bytes', 'metadata', 'created_at']));
     }

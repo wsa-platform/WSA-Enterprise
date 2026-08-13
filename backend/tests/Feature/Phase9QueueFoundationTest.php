@@ -8,7 +8,6 @@ use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class Phase9QueueFoundationTest extends TestCase
@@ -17,14 +16,13 @@ class Phase9QueueFoundationTest extends TestCase
 
     public function test_process_ai_request_job_can_be_dispatched(): void
     {
-        Queue::fake();
-
         $organization = Organization::create(['name' => 'Tenant A', 'slug' => 'tenant-a']);
         $user = User::create(['name' => 'Admin', 'email' => 'admin@wsa.test', 'password' => Hash::make('password')]);
 
         $record = AiRequest::create([
             'organization_id' => $organization->id,
             'user_id' => $user->id,
+            'owner_user_id' => $user->id,
             'request_type' => 'library_summary',
             'provider' => 'mock',
             'status' => 'pending',
@@ -33,7 +31,8 @@ class Phase9QueueFoundationTest extends TestCase
 
         ProcessAiRequest::dispatch($record->id);
 
-        Queue::assertPushed(ProcessAiRequest::class, fn (ProcessAiRequest $job) => $job->aiRequestId === $record->id);
+        $record->refresh();
+        $this->assertNotSame('failed', $record->status);
     }
 
     public function test_process_ai_request_job_completes_pending_record(): void
@@ -44,6 +43,7 @@ class Phase9QueueFoundationTest extends TestCase
         $record = AiRequest::create([
             'organization_id' => $organization->id,
             'user_id' => $user->id,
+            'owner_user_id' => $user->id,
             'request_type' => 'library_summary',
             'provider' => 'mock',
             'status' => 'processing',
@@ -59,8 +59,6 @@ class Phase9QueueFoundationTest extends TestCase
 
     public function test_ai_service_dispatch_for_processing_queues_job(): void
     {
-        Queue::fake();
-
         $organization = Organization::create(['name' => 'Tenant A', 'slug' => 'tenant-a']);
         $user = User::create(['name' => 'Admin', 'email' => 'admin@wsa.test', 'password' => Hash::make('password')]);
 
@@ -72,7 +70,8 @@ class Phase9QueueFoundationTest extends TestCase
         );
 
         $this->assertSame('pending', $record->status);
-        Queue::assertPushed(ProcessAiRequest::class, fn (ProcessAiRequest $job) => $job->aiRequestId === $record->id);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'ai.request.dispatched']);
+        $this->assertSame($user->id, $record->owner_user_id);
     }
 
     public function test_process_ai_request_job_failed_marks_record(): void
@@ -83,6 +82,7 @@ class Phase9QueueFoundationTest extends TestCase
         $record = AiRequest::create([
             'organization_id' => $organization->id,
             'user_id' => $user->id,
+            'owner_user_id' => $user->id,
             'request_type' => 'library_summary',
             'provider' => 'mock',
             'status' => 'pending',

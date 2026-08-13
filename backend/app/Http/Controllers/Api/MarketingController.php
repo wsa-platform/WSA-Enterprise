@@ -12,6 +12,9 @@ use App\Models\MarketingSuppression;
 use App\Models\MarketingTemplate;
 use App\Services\Marketing\MarketingCampaignService;
 use App\Services\Marketing\MarketingConsentService;
+use App\Services\Ownership\ServiceOwnershipAuthorizer;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +27,32 @@ class MarketingController extends Controller
         private MarketingCampaignService $campaignService,
         private MarketingConsentService $consentService,
     ) {}
+
+    private function ownership(): ServiceOwnershipAuthorizer
+    {
+        return app(ServiceOwnershipAuthorizer::class);
+    }
+
+    /** @param  Builder<Model>  $query */
+    private function scopedOwnedQuery(Request $request, Builder $query): Builder
+    {
+        return $this->ownership()->scopeAccessibleServices(
+            $query->where('organization_id', $this->organization($request)),
+            $request->user(),
+            $this->organization($request),
+        );
+    }
+
+    private function assertOwnedCampaign(Request $request, MarketingCampaign $campaign, string $permission): void
+    {
+        abort_unless($campaign->organization_id === $this->organization($request), 404);
+        $this->ownership()->authorizeManage(
+            $request->user(),
+            $campaign,
+            $this->organization($request),
+            $permission,
+        );
+    }
 
     public function dashboard(Request $request): JsonResponse
     {
@@ -50,8 +79,7 @@ class MarketingController extends Controller
         $this->authorizePermission($request, 'marketing.view');
 
         return response()->json(
-            MarketingCampaign::query()
-                ->where('organization_id', $this->organization($request))
+            $this->scopedOwnedQuery($request, MarketingCampaign::query())
                 ->with(['segment', 'template'])
                 ->latest()
                 ->paginate(20)
@@ -70,6 +98,10 @@ class MarketingController extends Controller
             'content' => ['nullable', 'array'],
             'scheduled_at' => ['nullable', 'date'],
         ]);
+        OrganizationScopeValidator::assert($this->organization($request), $data, [
+            'audience_segment_id' => MarketingAudienceSegment::class,
+            'template_id' => MarketingTemplate::class,
+        ]);
 
         $campaign = $this->campaignService->create(
             $this->organization($request),
@@ -83,15 +115,14 @@ class MarketingController extends Controller
     public function showCampaign(Request $request, MarketingCampaign $campaign): JsonResponse
     {
         $this->authorizePermission($request, 'marketing.view');
-        abort_unless($campaign->organization_id === $this->organization($request), 404);
+        $this->assertOwnedCampaign($request, $campaign, 'marketing.view');
 
         return response()->json($campaign->load(['segment', 'template', 'deliveries']));
     }
 
     public function updateCampaign(Request $request, MarketingCampaign $campaign): JsonResponse
     {
-        $this->authorizePermission($request, 'marketing.manage');
-        abort_unless($campaign->organization_id === $this->organization($request), 404);
+        $this->assertOwnedCampaign($request, $campaign, 'marketing.manage');
 
         if ($campaign->status !== 'draft') {
             abort(422, 'Only draft campaigns can be updated.');
@@ -106,16 +137,19 @@ class MarketingController extends Controller
             'content' => ['nullable', 'array'],
             'scheduled_at' => ['nullable', 'date'],
         ]);
+        OrganizationScopeValidator::assert($this->organization($request), $data, [
+            'audience_segment_id' => MarketingAudienceSegment::class,
+            'template_id' => MarketingTemplate::class,
+        ]);
 
-        $campaign->update($data);
+        $campaign->update($this->ownership()->stripOwnerKeys($data));
 
         return response()->json($campaign->fresh()->load(['segment', 'template']));
     }
 
     public function destroyCampaign(Request $request, MarketingCampaign $campaign): JsonResponse
     {
-        $this->authorizePermission($request, 'marketing.manage');
-        abort_unless($campaign->organization_id === $this->organization($request), 404);
+        $this->assertOwnedCampaign($request, $campaign, 'marketing.manage');
         abort_unless($campaign->status === 'draft', 422, 'Only draft campaigns can be deleted.');
 
         $campaign->delete();
@@ -125,24 +159,21 @@ class MarketingController extends Controller
 
     public function scheduleCampaign(Request $request, MarketingCampaign $campaign): JsonResponse
     {
-        $this->authorizePermission($request, 'marketing.manage');
-        abort_unless($campaign->organization_id === $this->organization($request), 404);
+        $this->assertOwnedCampaign($request, $campaign, 'marketing.manage');
 
         return response()->json($this->campaignService->schedule($campaign, $request));
     }
 
     public function cancelCampaign(Request $request, MarketingCampaign $campaign): JsonResponse
     {
-        $this->authorizePermission($request, 'marketing.manage');
-        abort_unless($campaign->organization_id === $this->organization($request), 404);
+        $this->assertOwnedCampaign($request, $campaign, 'marketing.manage');
 
         return response()->json($this->campaignService->cancel($campaign, $request));
     }
 
     public function previewCampaign(Request $request, MarketingCampaign $campaign): JsonResponse
     {
-        $this->authorizePermission($request, 'marketing.view');
-        abort_unless($campaign->organization_id === $this->organization($request), 404);
+        $this->assertOwnedCampaign($request, $campaign, 'marketing.view');
         $locale = $request->query('locale', 'en');
 
         return response()->json($this->campaignService->preview($campaign, $locale));
@@ -150,8 +181,7 @@ class MarketingController extends Controller
 
     public function testSendCampaign(Request $request, MarketingCampaign $campaign): JsonResponse
     {
-        $this->authorizePermission($request, 'marketing.manage');
-        abort_unless($campaign->organization_id === $this->organization($request), 404);
+        $this->assertOwnedCampaign($request, $campaign, 'marketing.manage');
         $locale = $request->input('locale', 'en');
 
         return response()->json(
@@ -162,8 +192,7 @@ class MarketingController extends Controller
 
     public function processCampaign(Request $request, MarketingCampaign $campaign): JsonResponse
     {
-        $this->authorizePermission($request, 'marketing.manage');
-        abort_unless($campaign->organization_id === $this->organization($request), 404);
+        $this->assertOwnedCampaign($request, $campaign, 'marketing.manage');
 
         return response()->json($this->campaignService->process($campaign, $request));
     }
@@ -173,7 +202,7 @@ class MarketingController extends Controller
         $this->authorizePermission($request, 'marketing.view');
 
         return response()->json(
-            MarketingAudienceSegment::where('organization_id', $this->organization($request))->paginate(20)
+            $this->scopedOwnedQuery($request, MarketingAudienceSegment::query())->paginate(20)
         );
     }
 
@@ -186,11 +215,11 @@ class MarketingController extends Controller
             'criteria' => ['nullable', 'array'],
         ]);
 
-        $segment = MarketingAudienceSegment::create([
-            ...$data,
+        $segment = MarketingAudienceSegment::unguarded(fn () => MarketingAudienceSegment::create([
+            ...$this->ownership()->assignOwnerFromSession($data, $request->user()),
             'organization_id' => $this->organization($request),
             'created_by_user_id' => $request->user()->id,
-        ]);
+        ]));
 
         return response()->json($segment, 201);
     }
@@ -200,7 +229,7 @@ class MarketingController extends Controller
         $this->authorizePermission($request, 'marketing.view');
 
         return response()->json(
-            MarketingTemplate::where('organization_id', $this->organization($request))->paginate(20)
+            $this->scopedOwnedQuery($request, MarketingTemplate::query())->paginate(20)
         );
     }
 
@@ -214,18 +243,18 @@ class MarketingController extends Controller
             'translations' => ['required', 'array'],
         ]);
 
-        $template = MarketingTemplate::create([
-            ...$data,
+        $template = MarketingTemplate::unguarded(fn () => MarketingTemplate::create([
+            ...$this->ownership()->assignOwnerFromSession($data, $request->user()),
             'organization_id' => $this->organization($request),
             'created_by_user_id' => $request->user()->id,
-        ]);
+        ]));
 
         return response()->json($template, 201);
     }
 
     public function consents(Request $request): JsonResponse
     {
-        $this->authorizePermission($request, 'marketing.view');
+        $this->authorizeAnyPermission($request, ['marketing.admin', 'marketing.manage']);
 
         return response()->json(
             MarketingConsent::where('organization_id', $this->organization($request))->paginate(30)
@@ -290,7 +319,7 @@ class MarketingController extends Controller
     {
         $this->authorizePermission($request, 'marketing.view');
 
-        $query = MarketingDelivery::where('organization_id', $this->organization($request))->latest();
+        $query = $this->scopedOwnedQuery($request, MarketingDelivery::query())->latest();
         if ($campaignId = $request->query('campaign_id')) {
             $query->where('campaign_id', $campaignId);
         }

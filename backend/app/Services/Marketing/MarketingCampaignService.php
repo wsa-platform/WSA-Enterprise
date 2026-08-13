@@ -23,7 +23,7 @@ class MarketingCampaignService
     public function create(int $organizationId, User $user, array $data): MarketingCampaign
     {
         return MarketingCampaign::create([
-            ...$data,
+            ...app(\App\Services\Ownership\ServiceOwnershipAuthorizer::class)->assignOwnerFromSession($data, $user),
             'organization_id' => $organizationId,
             'created_by_user_id' => $user->id,
             'status' => 'draft',
@@ -105,6 +105,7 @@ class MarketingCampaignService
                     $failed++;
                     MarketingDelivery::create([
                         'organization_id' => $campaign->organization_id,
+                        'owner_user_id' => $campaign->owner_user_id,
                         'campaign_id' => $campaign->id,
                         'recipient_type' => $recipient['type'],
                         'recipient_id' => $recipient['user_id'],
@@ -156,6 +157,7 @@ class MarketingCampaignService
     ): MarketingDelivery {
         $delivery = MarketingDelivery::create([
             'organization_id' => $campaign->organization_id,
+            'owner_user_id' => $campaign->owner_user_id,
             'campaign_id' => $campaign->id,
             'recipient_type' => $isTest ? 'test' : 'user',
             'recipient_id' => $recipientId,

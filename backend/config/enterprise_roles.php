@@ -11,6 +11,7 @@ return [
 
     'manager' => [
         'platform.view',
+        'services.supervise',
         'monitoring.view',
         'billing.view',
         'farm.view', 'farm.manage',
@@ -45,7 +46,7 @@ return [
         'jobs.talent.register',
         'jobs.talent.manage',
         'beekeeping.view',
-        'business.view',
+        'business.view', 'business.manage',
     ],
 
     'viewer' => [

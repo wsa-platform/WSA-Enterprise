@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\JobTalentProfile;
 use App\Services\Jobs\JobCvParseService;
 use App\Services\Jobs\JobTalentProfileService;
+use App\Services\Ownership\UserGlobalOwnershipAuthorizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,14 +18,17 @@ class JobsTalentController extends Controller
     public function __construct(
         private JobTalentProfileService $profileService,
         private JobCvParseService $cvParseService,
+        private UserGlobalOwnershipAuthorizer $ownership,
     ) {}
 
     public function showMine(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'jobs.talent.manage');
-        $profile = JobTalentProfile::with('contact')->where('user_id', $request->user()->id)->first();
+        $profile = $this->ownership
+            ->scopeOwnedByUser(JobTalentProfile::with('contact'), $request->user())
+            ->first();
 
-        return response()->json($profile);
+        return response()->json($profile ?? []);
     }
 
     public function upsert(Request $request): JsonResponse
@@ -66,7 +70,9 @@ class JobsTalentController extends Controller
     public function uploadCv(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'jobs.talent.manage');
-        $profile = JobTalentProfile::where('user_id', $request->user()->id)->firstOrFail();
+        $profile = $this->ownership
+            ->scopeOwnedByUser(JobTalentProfile::query(), $request->user())
+            ->firstOrFail();
         $request->validate(['cv' => ['required', 'file', 'mimes:pdf,doc,docx,txt', 'max:5120']]);
 
         $path = $request->file('cv')->store('job-cvs/'.$profile->id, 'local');
@@ -78,7 +84,9 @@ class JobsTalentController extends Controller
     public function parseCv(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'jobs.talent.manage');
-        $profile = JobTalentProfile::where('user_id', $request->user()->id)->firstOrFail();
+        $profile = $this->ownership
+            ->scopeOwnedByUser(JobTalentProfile::query(), $request->user())
+            ->firstOrFail();
 
         return response()->json(
             $this->cvParseService->parse($profile, $this->organization($request), $request->user()->id)

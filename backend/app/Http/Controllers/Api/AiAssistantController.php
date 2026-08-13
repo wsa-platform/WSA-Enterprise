@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\ScopesOwnedServices;
 use App\Http\Controllers\Controller;
 use App\Models\AiConversation;
 use App\Services\Ai\AiActionRegistry;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 class AiAssistantController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use ScopesOwnedServices;
 
     public function __construct(
         private AiAssistantService $assistantService,
@@ -23,10 +25,7 @@ class AiAssistantController extends Controller
     {
         $this->authorizeAnyPermission($request, ['ai.use', 'ai.assistant']);
 
-        $query = AiConversation::query()
-            ->where('organization_id', $this->organization($request))
-            ->where('user_id', $request->user()->id)
-            ->latest();
+        $query = $this->scopedOwnedQuery($request, AiConversation::query())->latest();
 
         if ($request->boolean('archived')) {
             $query->whereNotNull('archived_at');
@@ -132,6 +131,6 @@ class AiAssistantController extends Controller
     private function assertConversationAccess(Request $request, AiConversation $conversation): void
     {
         abort_unless($conversation->organization_id === $this->organization($request), 404);
-        abort_unless($conversation->user_id === $request->user()->id, 403);
+        $this->ownership()->assertOwnedByUser($request->user(), $conversation, $this->organization($request));
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\ManagesUserOwnedModules;
 use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{Farm, FarmBlock, FarmField, FarmRegion, GisMap, GpsCoordinate, Greenhouse, IrrigationZone};
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 class FarmController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use ManagesUserOwnedModules;
     use PaginatesOrganizationRecords;
 
     private const MODULES = [
@@ -27,6 +29,16 @@ class FarmController extends Controller
 
     private const COORDINATEABLE = [Farm::class, FarmField::class, FarmBlock::class, Greenhouse::class];
 
+    protected function moduleManagePermission(Request $request, string $module): string
+    {
+        return 'farm.manage';
+    }
+
+    protected function moduleViewPermission(Request $request, string $module): string
+    {
+        return 'farm.view';
+    }
+
     private function config(string $module): array
     {
         abort_unless(isset(self::MODULES[$module]), 404);
@@ -39,6 +51,7 @@ class FarmController extends Controller
         [$class, $rules, $relations] = $this->config($module);
         $organizationId = $this->organization($request);
         $data = $request->validate($rules);
+        $data = $this->ownership()->stripOwnerKeys($data);
 
         OrganizationScopeValidator::assert($organizationId, $data, $relations);
 
@@ -54,39 +67,29 @@ class FarmController extends Controller
 
     public function index(Request $request, string $module): JsonResponse
     {
-        $this->authorizePermission($request, 'farm.view');
         [$class] = $this->config($module);
 
-        return $this->paginateQuery($request, $class::where('organization_id', $this->organization($request))->latest());
+        return $this->ownedIndex($request, $module, $class);
     }
 
     public function store(Request $request, string $module): JsonResponse
     {
-        $this->authorizePermission($request, 'farm.manage');
         [$class] = $this->config($module);
 
-        return response()->json($class::create([
-            'organization_id' => $this->organization($request),
-            ...$this->validatedPayload($request, $module),
-        ]), 201);
+        return $this->ownedStore($request, $module, $class, $this->validatedPayload($request, $module));
     }
 
     public function update(Request $request, string $module, int $id): JsonResponse
     {
-        $this->authorizePermission($request, 'farm.manage');
         [$class] = $this->config($module);
-        $record = $class::where('organization_id', $this->organization($request))->findOrFail($id);
-        $record->update($this->validatedPayload($request, $module));
 
-        return response()->json($record);
+        return $this->ownedUpdate($request, $module, $class, $id, $this->validatedPayload($request, $module));
     }
 
     public function destroy(Request $request, string $module, int $id): JsonResponse
     {
-        $this->authorizePermission($request, 'farm.manage');
         [$class] = $this->config($module);
-        $class::where('organization_id', $this->organization($request))->findOrFail($id)->delete();
 
-        return response()->json(status: 204);
+        return $this->ownedDestroy($request, $module, $class, $id);
     }
 }

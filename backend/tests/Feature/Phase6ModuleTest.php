@@ -61,8 +61,8 @@ class Phase6ModuleTest extends TestCase
         $organizationB = Organization::create(['name' => 'Tenant B', 'slug' => 'tenant-b']);
         $organizationB->members()->attach($user->id, ['role' => 'member']);
 
-        Farm::create(['organization_id' => $organizationA->id, 'code' => 'FA', 'name' => 'Farm A']);
-        Farm::create(['organization_id' => $organizationB->id, 'code' => 'FB', 'name' => 'Farm B']);
+        Farm::create(['organization_id' => $organizationA->id, 'owner_user_id' => $user->id, 'code' => 'FA', 'name' => 'Farm A']);
+        Farm::create(['organization_id' => $organizationB->id, 'owner_user_id' => $user->id, 'code' => 'FB', 'name' => 'Farm B']);
 
         $this->withHeader('X-Organization-Id', (string) $organizationB->id)
             ->getJson('/api/v1/farm/farms')
@@ -85,6 +85,7 @@ class Phase6ModuleTest extends TestCase
 
         $foreignRequest = DiagnosisRequest::create([
             'organization_id' => $organizationB->id,
+            'owner_user_id' => $foreignUser->id,
             'user_id' => $foreignUser->id,
             'reference' => 'DX-FOREIGN',
             'status' => 'completed',

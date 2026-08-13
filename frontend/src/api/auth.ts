@@ -8,6 +8,22 @@ export async function login(email: string, password: string) {
   })
 }
 
+export async function register(payload: {
+  name: string
+  email: string
+  password: string
+  password_confirmation: string
+}) {
+  return request<{
+    token: string
+    user: User
+    organization: { id: number; name: string; slug: string }
+  }>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ ...payload, device_name: 'wsa-web-dashboard' }),
+  })
+}
+
 export const logout = (token: string) => request<void>('/auth/logout', { method: 'POST' }, token)
 
 export const getCurrentUser = (token: string) => request<User>('/user', {}, token)

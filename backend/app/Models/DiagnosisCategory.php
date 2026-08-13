@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOwner;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DiagnosisCategory extends Model
 {
-    protected $fillable = ['organization_id', 'code', 'name', 'name_ar', 'description', 'is_active'];
+    use BelongsToOwner;
+
+    protected $fillable = ['organization_id', 'owner_user_id', 'code', 'name', 'name_ar', 'description', 'is_active'];
 
     protected function casts(): array
     {

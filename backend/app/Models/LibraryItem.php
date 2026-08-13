@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOwner;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class LibraryItem extends Model
 {
+    use BelongsToOwner;
+
     protected $fillable = [
-        'organization_id', 'category_id', 'crop_type_id', 'slug', 'title', 'title_ar',
+        'organization_id', 'owner_user_id', 'category_id', 'crop_type_id', 'slug', 'title', 'title_ar',
         'summary', 'summary_ar', 'content', 'content_ar', 'item_type', 'author', 'source',
         'locale', 'publication_status', 'published_at', 'file_disk', 'file_path', 'metadata',
     ];

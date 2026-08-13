@@ -33,6 +33,7 @@ class AiVisionUploadService
         $upload = AiVisionUpload::create([
             'organization_id' => $organizationId,
             'user_id' => $user->id,
+            'owner_user_id' => $user->id,
             'storage_path' => $path,
             'mime_type' => (string) $file->getMimeType(),
             'size_bytes' => $file->getSize(),

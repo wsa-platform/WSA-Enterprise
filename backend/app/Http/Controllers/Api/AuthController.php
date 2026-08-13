@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use App\Services\Audit\AuditService;
+use App\Services\Ownership\ServiceOwnerRegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,29 +16,35 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
-    public function __construct(private AuditService $auditService) {}
+    public function __construct(
+        private AuditService $auditService,
+        private ServiceOwnerRegistrationService $serviceOwnerRegistration,
+    ) {}
 
     public function register(RegisterRequest $request): JsonResponse
     {
         abort_unless(config('app.allow_registration'), 403, 'Registration is disabled.');
 
         $data = $request->validated();
-
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
+        $registration = $this->serviceOwnerRegistration->register($data);
+        $user = $registration['user'];
 
         $this->auditService->record(
             action: 'auth.register',
             userId: $user->id,
             auditable: $user,
-            newValues: ['email' => $user->email, 'name' => $user->name],
+            newValues: [
+                'email' => $user->email,
+                'name' => $user->name,
+                'organization_id' => $registration['organization']->id,
+            ],
             request: $request,
         );
 
-        return $this->authenticatedResponse($user, $data['device_name'] ?? 'web', $request);
+        return response()->json([
+            ...$this->authenticatedPayload($user, $data['device_name'] ?? 'web'),
+            'organization' => $registration['organization']->only(['id', 'name', 'slug']),
+        ], 201);
     }
 
     public function login(LoginRequest $request): JsonResponse
@@ -153,9 +160,15 @@ class AuthController extends Controller
 
     private function authenticatedResponse(User $user, string $deviceName, Request $request): JsonResponse
     {
-        return response()->json([
+        return response()->json($this->authenticatedPayload($user, $deviceName));
+    }
+
+    /** @return array{token: string, user: array<string, mixed>} */
+    private function authenticatedPayload(User $user, string $deviceName): array
+    {
+        return [
             'token' => $user->createToken($deviceName)->plainTextToken,
             'user' => $user->only(['id', 'name', 'email']),
-        ]);
+        ];
     }
 }

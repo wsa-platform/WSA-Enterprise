@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
+use App\Models\Concerns\BelongsToOwner;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,9 +13,11 @@ class AiConversation extends Model
 {
     use BelongsToOrganization;
     use SoftDeletes;
+    use BelongsToOwner;
 
     protected $fillable = [
         'organization_id',
+        'owner_user_id',
         'user_id',
         'domain',
         'title',

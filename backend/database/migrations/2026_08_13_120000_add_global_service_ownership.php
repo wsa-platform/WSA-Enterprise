@@ -1,0 +1,39 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        foreach (config('service_ownership.service_tables', []) as $table) {
+            if (! Schema::hasTable($table) || Schema::hasColumn($table, 'owner_user_id')) {
+                continue;
+            }
+
+            Schema::table($table, function (Blueprint $blueprint): void {
+                $blueprint->foreignId('owner_user_id')
+                    ->nullable()
+                    ->after('organization_id')
+                    ->constrained('users')
+                    ->nullOnDelete();
+                $blueprint->index(['organization_id', 'owner_user_id']);
+            });
+        }
+    }
+
+    public function down(): void
+    {
+        foreach (config('service_ownership.service_tables', []) as $table) {
+            if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'owner_user_id')) {
+                continue;
+            }
+
+            Schema::table($table, function (Blueprint $blueprint): void {
+                $blueprint->dropConstrainedForeignId('owner_user_id');
+            });
+        }
+    }
+};

@@ -14,6 +14,7 @@ use App\Models\Team;
 use App\Models\TrainingCourse;
 use App\Models\TrainingEnrollment;
 use App\Services\Ai\AiQuotaService;
+use App\Services\Ownership\ServiceOwnershipAuthorizer;
 use App\Services\Authorization\PermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,14 +43,22 @@ class PlatformController extends Controller
     {
         $this->authorizePermission($request, 'platform.view');
         $organizationId = $this->organization($request);
+        $user = $request->user();
+        $authorizer = app(ServiceOwnershipAuthorizer::class);
+        $scoped = fn (string $modelClass) => $authorizer->scopeAccessibleServices(
+            $modelClass::query()->where('organization_id', $organizationId),
+            $user,
+            $organizationId,
+        );
 
         return response()->json([
             'organization_id' => $organizationId,
-            'farms' => Farm::where('organization_id', $organizationId)->count(),
-            'diagnosis_requests' => DiagnosisRequest::where('organization_id', $organizationId)->count(),
-            'training_courses' => TrainingCourse::where('organization_id', $organizationId)->where('status', 'published')->count(),
-            'library_items' => LibraryItem::where('organization_id', $organizationId)->where('publication_status', 'published')->count(),
-            'active_enrollments' => TrainingEnrollment::where('organization_id', $organizationId)->where('status', 'active')->count(),
+            'scope' => $authorizer->canSupervise($user, $organizationId) ? 'organization' : 'owned',
+            'farms' => (clone $scoped(Farm::class))->count(),
+            'diagnosis_requests' => (clone $scoped(DiagnosisRequest::class))->count(),
+            'training_courses' => (clone $scoped(TrainingCourse::class))->where('status', 'published')->count(),
+            'library_items' => (clone $scoped(LibraryItem::class))->where('publication_status', 'published')->count(),
+            'active_enrollments' => (clone $scoped(TrainingEnrollment::class))->where('status', 'active')->count(),
         ]);
     }
 
@@ -77,10 +86,16 @@ class PlatformController extends Controller
     {
         $this->authorizePermission($request, 'platform.view');
         $organizationId = $this->organization($request);
+        $user = $request->user();
+        $authorizer = app(ServiceOwnershipAuthorizer::class);
         $organization = $request->user()->organizations()->findOrFail($organizationId);
         $today = now()->toDateString();
 
-        $aiBase = AiRequest::query()->where('organization_id', $organizationId);
+        $aiBase = $authorizer->scopeAccessibleServices(
+            AiRequest::query()->where('organization_id', $organizationId),
+            $user,
+            $organizationId,
+        );
         $canManageAccess = app(PermissionService::class)->userCan($request->user(), $organizationId, 'access.manage');
         $canUseAi = app(PermissionService::class)->userCan($request->user(), $organizationId, 'ai.use');
 

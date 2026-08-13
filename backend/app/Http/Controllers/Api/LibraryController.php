@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Concerns\ManagesUserOwnedModules;
 use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{CropType, LibraryCategory, LibraryItem, LibraryTag};
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 class LibraryController extends Controller
 {
     use AuthorizesOrganizationAccess;
+    use ManagesUserOwnedModules;
     use PaginatesOrganizationRecords;
 
     private const MODULES = [
@@ -23,12 +25,23 @@ class LibraryController extends Controller
 
     public function __construct(private MediaReferenceService $media) {}
 
+    protected function moduleManagePermission(Request $request, string $module): string
+    {
+        return 'library.manage';
+    }
+
+    protected function moduleViewPermission(Request $request, string $module): string
+    {
+        return 'library.view';
+    }
+
     private function config(string $module): array { abort_unless(isset(self::MODULES[$module]), 404); return self::MODULES[$module]; }
 
     private function validatedPayload(Request $request, string $module): array
     {
         [, $rules, $relations] = $this->config($module);
         $data = $request->validate($rules);
+        $data = $this->ownership()->stripOwnerKeys($data);
         OrganizationScopeValidator::assert($this->organization($request), $data, $relations);
 
         if ($module === 'items') {
@@ -40,24 +53,30 @@ class LibraryController extends Controller
 
     public function index(Request $request, string $module): JsonResponse
     {
-        $this->authorizePermission($request, 'library.view');
         [$class] = $this->config($module);
-        $query = $class::where('organization_id', $this->organization($request))->latest();
-        if ($module === 'items') {
-            if ($status = $request->query('publication_status')) {
-                $query->where('publication_status', $status);
-            }
-            if ($categoryId = $request->query('category_id')) {
-                $query->where('category_id', $categoryId);
-            }
-            if ($cropTypeId = $request->query('crop_type_id')) {
-                $query->where('crop_type_id', $cropTypeId);
-            }
 
-            $query->with(['tags', 'category:id,name,name_ar', 'cropType:id,code,name']);
-
-            return $this->paginateQuery($request, $query);
+        if ($module !== 'items') {
+            return $this->ownedIndex($request, $module, $class);
         }
+
+        $this->authorizePermission($request, $this->moduleViewPermission($request, $module));
+        $query = $this->ownership()->scopeAccessibleServices(
+            $class::query()->where('organization_id', $this->organization($request)),
+            $request->user(),
+            $this->organization($request),
+        )->latest();
+
+        if ($status = $request->query('publication_status')) {
+            $query->where('publication_status', $status);
+        }
+        if ($categoryId = $request->query('category_id')) {
+            $query->where('category_id', $categoryId);
+        }
+        if ($cropTypeId = $request->query('crop_type_id')) {
+            $query->where('crop_type_id', $cropTypeId);
+        }
+
+        $query->with(['tags', 'category:id,name,name_ar', 'cropType:id,code,name']);
 
         return $this->paginateQuery($request, $query);
     }
@@ -77,9 +96,12 @@ class LibraryController extends Controller
         $term = $validated['q'];
         $likeOperator = LibraryItem::query()->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
 
-        $query = LibraryItem::where('organization_id', $organizationId)
-            ->where('publication_status', 'published')
-            ->where(function ($builder) use ($term, $likeOperator) {
+        $query = $this->ownership()->scopeAccessibleServices(
+            LibraryItem::where('organization_id', $organizationId)
+                ->where('publication_status', 'published'),
+            $request->user(),
+            $organizationId,
+        )->where(function ($builder) use ($term, $likeOperator) {
                 $builder->where('title', $likeOperator, "%{$term}%")
                     ->orWhere('title_ar', $likeOperator, "%{$term}%")
                     ->orWhere('summary', $likeOperator, "%{$term}%")
@@ -119,15 +141,20 @@ class LibraryController extends Controller
 
     public function store(Request $request, string $module): JsonResponse
     {
-        $this->authorizePermission($request, 'library.manage');
         [$class] = $this->config($module);
         $payload = $this->validatedPayload($request, $module);
         $tagIds = $payload['tag_ids'] ?? null;
         unset($payload['tag_ids']);
 
-        $record = $class::create(['organization_id'=>$this->organization($request), ...$payload]);
+        $this->authorizePermission($request, $this->moduleManagePermission($request, $module));
+
+        $record = $class::unguarded(fn () => $class::create([
+            'organization_id' => $this->organization($request),
+            ...$this->ownership()->assignOwnerFromSession($payload, $request->user()),
+        ]));
 
         if ($module === 'items' && $tagIds) {
+            OrganizationScopeValidator::assertLibraryTagIds($this->organization($request), $tagIds);
             $record->tags()->sync($tagIds);
             $record->load('tags');
         }
@@ -137,15 +164,15 @@ class LibraryController extends Controller
 
     public function update(Request $request, string $module, int $id): JsonResponse
     {
-        $this->authorizePermission($request, 'library.manage');
         [$class] = $this->config($module);
-        $record = $class::where('organization_id', $this->organization($request))->findOrFail($id);
+        $record = $this->findOwnedModuleRecord($request, $module, $class, $id);
         $payload = $this->validatedPayload($request, $module);
         $tagIds = $payload['tag_ids'] ?? null;
         unset($payload['tag_ids']);
-        $record->update($payload);
+        $record->update($this->ownership()->stripOwnerKeys($payload));
 
         if ($module === 'items' && is_array($tagIds)) {
+            OrganizationScopeValidator::assertLibraryTagIds($this->organization($request), $tagIds);
             $record->tags()->sync($tagIds);
         }
 
@@ -154,11 +181,9 @@ class LibraryController extends Controller
 
     public function destroy(Request $request, string $module, int $id): JsonResponse
     {
-        $this->authorizePermission($request, 'library.manage');
         [$class] = $this->config($module);
-        $class::where('organization_id', $this->organization($request))->findOrFail($id)->delete();
 
-        return response()->json(status: 204);
+        return $this->ownedDestroy($request, $module, $class, $id);
     }
 
     private function presentItem(object $record, string $module): object

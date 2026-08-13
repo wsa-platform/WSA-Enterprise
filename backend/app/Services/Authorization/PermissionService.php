@@ -21,7 +21,7 @@ class PermissionService
             'training.view', 'training.manage',
             'library.view', 'library.manage',
             'ai.use',
-            'business.view',
+            'business.view', 'business.manage',
         ],
     ];
 
