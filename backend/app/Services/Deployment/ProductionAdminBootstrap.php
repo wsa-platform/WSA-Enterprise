@@ -5,6 +5,7 @@ namespace App\Services\Deployment;
 use App\Models\Organization;
 use App\Models\User;
 use App\Services\Authorization\EnterpriseRoleService;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -14,14 +15,21 @@ class ProductionAdminBootstrap
 
     public function shouldRun(): bool
     {
-        if (! config('deployment.admin.enabled')) {
+        if (! $this->bootstrapEnabled()) {
             return false;
         }
 
-        $email = (string) config('deployment.admin.email');
-        $password = (string) config('deployment.admin.password');
+        return $this->adminEmail() !== '' && $this->adminPassword() !== '';
+    }
 
-        return $email !== '' && $password !== '';
+    public function adminEmail(): string
+    {
+        return (string) (env('ADMIN_EMAIL') ?: config('deployment.admin.email', 'admin@wsa.test'));
+    }
+
+    public function adminPassword(): string
+    {
+        return (string) (env('ADMIN_PASSWORD') ?? '');
     }
 
     /**
@@ -35,8 +43,8 @@ class ProductionAdminBootstrap
             ]);
         }
 
-        $email = (string) config('deployment.admin.email');
-        $password = (string) config('deployment.admin.password');
+        $email = $this->adminEmail();
+        $password = $this->adminPassword();
         $minLength = (int) config('deployment.admin.minimum_password_length', 12);
 
         Validator::make(
@@ -53,7 +61,7 @@ class ProductionAdminBootstrap
             ['email' => $email],
             [
                 'name' => (string) config('deployment.admin.name'),
-                'password' => $password,
+                'password' => Hash::make($password),
             ],
         );
 
@@ -73,5 +81,21 @@ class ProductionAdminBootstrap
             'organization_slug' => $organization->slug,
             'created' => ! $existing,
         ];
+    }
+
+    public function adminExists(): bool
+    {
+        $email = $this->adminEmail();
+
+        return $email !== '' && User::query()->where('email', $email)->exists();
+    }
+
+    private function bootstrapEnabled(): bool
+    {
+        if (env('ADMIN_BOOTSTRAP_ENABLED') !== null) {
+            return filter_var(env('ADMIN_BOOTSTRAP_ENABLED'), FILTER_VALIDATE_BOOL);
+        }
+
+        return (bool) config('deployment.admin.enabled', env('APP_ENV') === 'production');
     }
 }

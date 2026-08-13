@@ -18,15 +18,25 @@ class ProductionAdminBootstrapTest extends TestCase
     {
         parent::setUp();
 
+        putenv('ADMIN_PASSWORD=bootstrap-password-12');
+        putenv('ADMIN_EMAIL=bootstrap-admin@wsa.test');
+
         config([
             'deployment.admin.enabled' => true,
             'deployment.admin.email' => 'bootstrap-admin@wsa.test',
-            'deployment.admin.password' => 'bootstrap-password-12',
             'deployment.admin.name' => 'Bootstrap Admin',
             'deployment.admin.organization_name' => 'Bootstrap Org',
             'deployment.admin.organization_slug' => 'bootstrap-org',
             'deployment.admin.minimum_password_length' => 12,
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        putenv('ADMIN_PASSWORD');
+        putenv('ADMIN_EMAIL');
+
+        parent::tearDown();
     }
 
     public function test_bootstrap_creates_admin_with_hashed_password_and_organization(): void
@@ -52,7 +62,9 @@ class ProductionAdminBootstrapTest extends TestCase
     {
         app(ProductionAdminBootstrap::class)->run();
 
-        config(['deployment.admin.password' => 'updated-password-99']);
+        config(['deployment.admin.password' => null]);
+        putenv('ADMIN_PASSWORD=updated-password-99');
+
         $result = app(ProductionAdminBootstrap::class)->run();
 
         $this->assertFalse($result['created']);
@@ -63,12 +75,33 @@ class ProductionAdminBootstrapTest extends TestCase
     public function test_bootstrap_skips_when_password_is_not_configured(): void
     {
         config(['deployment.admin.password' => null]);
+        putenv('ADMIN_PASSWORD');
 
         $this->assertFalse(app(ProductionAdminBootstrap::class)->shouldRun());
 
         Artisan::call('deploy:bootstrap-admin');
         $this->assertStringContainsString('skipped', Artisan::output());
         $this->assertSame(0, User::count());
+    }
+
+    public function test_verify_admin_command_reports_missing_user(): void
+    {
+        putenv('ADMIN_EMAIL=missing-admin@wsa.test');
+
+        $exitCode = Artisan::call('deploy:verify-admin');
+
+        $this->assertSame(1, $exitCode);
+        $this->assertStringContainsString('No user found', Artisan::output());
+    }
+
+    public function test_verify_admin_command_succeeds_after_bootstrap(): void
+    {
+        app(ProductionAdminBootstrap::class)->run();
+
+        $exitCode = Artisan::call('deploy:verify-admin');
+
+        $this->assertSame(0, $exitCode);
+        $this->assertStringContainsString('exists', Artisan::output());
     }
 
     public function test_login_succeeds_after_admin_bootstrap(): void

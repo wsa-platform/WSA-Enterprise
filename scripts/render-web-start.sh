@@ -29,8 +29,9 @@ chmod -R ug+rwx storage bootstrap/cache
 mkdir -p /run/nginx /var/lib/nginx/tmp /var/log/nginx
 envsubst '${PORT}' < /etc/nginx/templates/render.conf.template > /etc/nginx/http.d/default.conf
 
+# Preserve Render-injected environment variables when dropping to www-data.
 run_artisan() {
-    su -s /bin/sh www-data -c "php artisan $*"
+    su -m -s /bin/sh www-data -c "php artisan $*"
 }
 
 # Apply pending migrations before caching config (idempotent; safe for redeploys).
@@ -40,7 +41,11 @@ fi
 
 # Bootstrap production admin when credentials are supplied via Render env vars.
 if [ -n "${ADMIN_PASSWORD:-}" ]; then
+    echo "Running production admin bootstrap for ${ADMIN_EMAIL:-admin@wsa.test}."
     run_artisan deploy:bootstrap-admin --no-ansi
+    run_artisan deploy:verify-admin --no-ansi
+else
+    echo "ADMIN_PASSWORD not set; skipping production admin bootstrap." >&2
 fi
 
 if [ "${APP_ENV:-production}" = "production" ]; then
