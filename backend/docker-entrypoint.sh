@@ -7,6 +7,27 @@ if [ -f .env ] && { [ -z "${APP_KEY}" ] || [ "${APP_KEY}" = "" ]; }; then
     php artisan key:generate --force --no-interaction
 fi
 
+# Run database migrations before the application starts so required Laravel
+# tables (including cache/cache_locks) exist on a fresh Render database.
+# Retry briefly because the PostgreSQL service may still be starting.
+run_migrations() {
+    attempt=0
+    max_attempts=30
+    while [ "$attempt" -lt "$max_attempts" ]; do
+        if php artisan migrate --force --no-interaction; then
+            echo "Database migrations completed successfully."
+            return 0
+        fi
+        attempt=$((attempt + 1))
+        echo "Waiting for PostgreSQL/migrations ($attempt/$max_attempts)..."
+        sleep 2
+    done
+    echo "Database migrations failed after $max_attempts attempts."
+    return 1
+}
+
+run_migrations
+
 # Queue workers require Redis; wait during startup to avoid crash-loops when
 # Redis is still starting or temporarily unavailable on the Docker network.
 wait_for_redis() {
