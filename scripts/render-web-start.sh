@@ -38,6 +38,11 @@ if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
     run_artisan migrate --force --no-ansi
 fi
 
+# Bootstrap production admin when credentials are supplied via Render env vars.
+if [ -n "${ADMIN_PASSWORD:-}" ]; then
+    run_artisan deploy:bootstrap-admin --no-ansi
+fi
+
 if [ "${APP_ENV:-production}" = "production" ]; then
     run_artisan config:cache --no-ansi
     run_artisan route:cache --no-ansi
