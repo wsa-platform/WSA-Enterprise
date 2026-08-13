@@ -20,7 +20,7 @@ const navSections: Array<{ titleKey: string; items: NavItem[] }> = [
   {
     titleKey: 'nav.overview',
     items: [
-      { to: '/', labelKey: 'nav.dashboard', end: true, permission: 'platform.view' },
+      { to: '/dashboard', labelKey: 'nav.dashboard', end: true, permission: 'platform.view' },
       { to: '/notifications', labelKey: 'nav.notifications', permission: 'platform.view' },
     ],
   },

@@ -781,12 +781,30 @@
     "loadingPlants": "Loading plants…",
     "noPlants": "No pollination plants yet.",
     "knowledge": {
-      "honeyBees": { "title": "Honey bees", "summary": "Colony biology and seasonal behavior fundamentals." },
-      "varroa": { "title": "Varroa mites", "summary": "Monitoring and integrated pest management overview." },
-      "broodDiseases": { "title": "Brood diseases", "summary": "Decision-support overview; not a veterinary diagnosis." },
-      "nutrition": { "title": "Nutrition and feeding", "summary": "Seasonal feeding considerations for colony health." },
-      "pollination": { "title": "Pollination", "summary": "Linking flowering plants, colonies, and pollination services." },
-      "queenRearing": { "title": "Queen rearing", "summary": "Foundational queen management and breeding concepts." }
+      "honeyBees": {
+        "title": "Honey bees",
+        "summary": "Colony biology and seasonal behavior fundamentals."
+      },
+      "varroa": {
+        "title": "Varroa mites",
+        "summary": "Monitoring and integrated pest management overview."
+      },
+      "broodDiseases": {
+        "title": "Brood diseases",
+        "summary": "Decision-support overview; not a veterinary diagnosis."
+      },
+      "nutrition": {
+        "title": "Nutrition and feeding",
+        "summary": "Seasonal feeding considerations for colony health."
+      },
+      "pollination": {
+        "title": "Pollination",
+        "summary": "Linking flowering plants, colonies, and pollination services."
+      },
+      "queenRearing": {
+        "title": "Queen rearing",
+        "summary": "Foundational queen management and breeding concepts."
+      }
     }
   },
   "aiAssistant": {
@@ -945,5 +963,535 @@
     "required": "This field is required.",
     "email": "Enter a valid email address.",
     "minLength": "Must be at least {{count}} characters."
+  },
+  "website": {
+    "brand": "WSA Enterprise",
+    "nav": {
+      "home": "Home",
+      "login": "Sign in",
+      "register": "Register",
+      "language": "Language",
+      "primary": "Primary navigation"
+    },
+    "hero": {
+      "title": "Integrated agricultural platform for modern farming",
+      "subtitle": "Explore crops, training, beekeeping, jobs, and commerce — all in one professional ecosystem built for growers and agricultural businesses.",
+      "explore": "Explore services",
+      "getStarted": "Get started",
+      "dashboard": "Open dashboard",
+      "imageAlt": "Wide green agricultural field at sunrise"
+    },
+    "sections": {
+      "title": "Explore our services",
+      "subtitle": "Choose a category to browse public information and discover platform capabilities.",
+      "explore": "Explore",
+      "fieldCrops": {
+        "title": "Field Crops",
+        "description": "Wheat, corn, grains, and large-scale field farming with planning, monitoring, and crop health support.",
+        "imageAlt": "Golden wheat field under a clear sky"
+      },
+      "vegetables": {
+        "title": "Vegetables",
+        "description": "Fresh vegetables, greenhouses, and sustainable vegetable production from farm to market.",
+        "imageAlt": "Tomatoes and fresh vegetables on a vegetable farm"
+      },
+      "fruitTrees": {
+        "title": "Fruit Trees",
+        "description": "Orchards, seasonal fruit production, pruning, nutrition, and harvest management.",
+        "imageAlt": "Fruit orchard with trees in rows"
+      },
+      "medicinalPlants": {
+        "title": "Medicinal Plants",
+        "description": "Herbal gardens, cultivation, identification, plant health, and botanical uses.",
+        "imageAlt": "Medicinal herbs and aromatic plants in a garden"
+      },
+      "beekeeping": {
+        "title": "Honey Bees",
+        "description": "Beekeeping, apiary and hive management, colony health, and honey and hive products.",
+        "imageAlt": "Honey bee on a flower near a beehive"
+      },
+      "training": {
+        "title": "Lectures & Training",
+        "description": "Agricultural lectures, courses, training programs, and educational content.",
+        "imageAlt": "Farmers learning in an agricultural training session"
+      },
+      "jobs": {
+        "title": "Jobs",
+        "description": "Agricultural employment opportunities, talent profiles, and professional careers.",
+        "imageAlt": "Agricultural professionals working in a green field"
+      },
+      "store": {
+        "title": "Store",
+        "description": "Agricultural products, supplies, equipment, inputs, and farm goods.",
+        "imageAlt": "Fresh produce and farming supplies at a market"
+      },
+      "fieldCrops.features.planning": {
+        "title": "Crop planning",
+        "body": "Plan sowing, irrigation, and harvest cycles for grain and field crops."
+      },
+      "fieldCrops.features.monitoring": {
+        "title": "Crop monitoring",
+        "body": "Track crop development, field operations, and production records."
+      },
+      "fieldCrops.features.diseasePests": {
+        "title": "Disease & pest information",
+        "body": "Access guidance on field crop diseases, pests, and crop health risks."
+      },
+      "fieldCrops.features.recommendations": {
+        "title": "Agricultural recommendations",
+        "body": "Practical recommendations for healthier field crop production."
+      },
+      "vegetables.features.production": {
+        "title": "Vegetable production",
+        "body": "Manage seasonal vegetable production and harvest schedules."
+      },
+      "vegetables.features.management": {
+        "title": "Crop management",
+        "body": "Organize varieties, rotations, and daily vegetable farm operations."
+      },
+      "vegetables.features.diseasePests": {
+        "title": "Diseases & pests",
+        "body": "Information on common vegetable crop diseases and pest pressures."
+      },
+      "vegetables.features.recommendations": {
+        "title": "Agricultural recommendations",
+        "body": "Guidance for improving vegetable crop quality and yield."
+      },
+      "fruitTrees.features.cultivation": {
+        "title": "Fruit tree cultivation",
+        "body": "Best practices for establishing and maintaining productive fruit trees."
+      },
+      "fruitTrees.features.orchards": {
+        "title": "Orchard management",
+        "body": "Organize blocks, varieties, and seasonal orchard tasks."
+      },
+      "fruitTrees.features.diseasePests": {
+        "title": "Diseases & pests",
+        "body": "Orchard disease and pest awareness for citrus, apple, olive, and more."
+      },
+      "fruitTrees.features.nutrition": {
+        "title": "Nutrition & pruning",
+        "body": "Support tree vigor through nutrition planning and pruning guidance."
+      },
+      "medicinalPlants.features.cultivation": {
+        "title": "Cultivation",
+        "body": "Grow medicinal and aromatic plants with traceable production practices."
+      },
+      "medicinalPlants.features.identification": {
+        "title": "Identification",
+        "body": "Recognize medicinal species and document botanical characteristics."
+      },
+      "medicinalPlants.features.health": {
+        "title": "Plant health",
+        "body": "Monitor diseases, pests, and vitality in herbal plots."
+      },
+      "medicinalPlants.features.uses": {
+        "title": "Uses",
+        "body": "Explore traditional and commercial uses of medicinal plants."
+      },
+      "beekeeping.features.apiaries": {
+        "title": "Beekeeping & apiaries",
+        "body": "Manage apiaries, locations, and colony records."
+      },
+      "beekeeping.features.hiveManagement": {
+        "title": "Hive management",
+        "body": "Track inspections, brood health, and seasonal hive care."
+      },
+      "beekeeping.features.diseases": {
+        "title": "Bee diseases",
+        "body": "Information on colony diseases, brood issues, and Varroa management."
+      },
+      "beekeeping.features.products": {
+        "title": "Hive products",
+        "body": "Honey, royal jelly, propolis, bee venom, and related production."
+      },
+      "training.features.lectures": {
+        "title": "Agricultural lectures",
+        "body": "Expert-led lectures on modern farming topics."
+      },
+      "training.features.courses": {
+        "title": "Courses",
+        "body": "Structured courses for growers and agricultural professionals."
+      },
+      "training.features.programs": {
+        "title": "Training programs",
+        "body": "Field and classroom programs for practical skill building."
+      },
+      "training.features.education": {
+        "title": "Educational content",
+        "body": "Learning resources including beekeeping and crop education."
+      },
+      "jobs.features.listings": {
+        "title": "Job listings",
+        "body": "Browse agricultural employment opportunities on the platform."
+      },
+      "jobs.features.employers": {
+        "title": "Employer opportunities",
+        "body": "Connect farms and agribusinesses with qualified talent."
+      },
+      "jobs.features.talent": {
+        "title": "Talent profiles",
+        "body": "Agricultural professionals showcase skills and experience."
+      },
+      "jobs.features.careers": {
+        "title": "Professional careers",
+        "body": "Discover roles for engineers, farm managers, and field specialists."
+      },
+      "store.features.products": {
+        "title": "Agricultural products",
+        "body": "Browse products available through the platform store."
+      },
+      "store.features.supplies": {
+        "title": "Farm supplies",
+        "body": "Inputs and supplies for daily agricultural operations."
+      },
+      "store.features.equipment": {
+        "title": "Equipment",
+        "body": "Tools and equipment for farms and agribusinesses."
+      },
+      "store.features.inputs": {
+        "title": "Production inputs",
+        "body": "Seeds, nutrients, and other production inputs."
+      },
+      "ornamentalPlants": {
+        "title": "Ornamental Plants",
+        "description": "Indoor and outdoor ornamental plants, flowering species, garden shrubs, and decorative greenery.",
+        "imageAlt": "Colorful ornamental flowers and garden plants"
+      },
+      "hydroponicAquaculture": {
+        "title": "Hydroponic & Aquaculture",
+        "description": "Modern hydroponic cultivation and aquaculture — sustainable water-based agricultural systems.",
+        "imageAlt": "Hydroponic plants growing in a modern greenhouse with water systems"
+      },
+      "smallProjects": {
+        "title": "Small Projects",
+        "description": "Home farming, small greenhouses, beekeeping projects, and entrepreneurial agricultural ideas.",
+        "imageAlt": "Small greenhouse and home agricultural project"
+      },
+      "ornamentalPlants.features.indoor": {
+        "title": "Indoor ornamental plants",
+        "body": "Decorative houseplants and interior greenery."
+      },
+      "ornamentalPlants.features.outdoor": {
+        "title": "Outdoor ornamental plants",
+        "body": "Garden beds, patios, and landscape ornamentals."
+      },
+      "ornamentalPlants.features.flowering": {
+        "title": "Flowering plants",
+        "body": "Seasonal blooms and colorful garden flowers."
+      },
+      "ornamentalPlants.features.garden": {
+        "title": "Garden plants",
+        "body": "Shrubs, decorative plants, and garden design collections."
+      },
+      "hydroponicAquaculture.features.hydroponic": {
+        "title": "Hydroponic cultivation",
+        "body": "Soilless growing systems for modern crop production."
+      },
+      "hydroponicAquaculture.features.aquaculture": {
+        "title": "Aquaculture",
+        "body": "Fish farming and integrated water-based agriculture."
+      },
+      "hydroponicAquaculture.features.sustainable": {
+        "title": "Sustainability",
+        "body": "Efficient water use and eco-friendly production methods."
+      },
+      "hydroponicAquaculture.features.modern": {
+        "title": "Modern agriculture",
+        "body": "Technology-driven growing for urban and commercial farms."
+      },
+      "smallProjects.features.homeFarming": {
+        "title": "Home farming",
+        "body": "Start small-scale food production at home."
+      },
+      "smallProjects.features.greenhouse": {
+        "title": "Small greenhouses",
+        "body": "Compact protected cultivation project ideas."
+      },
+      "smallProjects.features.beekeeping": {
+        "title": "Beekeeping projects",
+        "body": "Small apiary and hive starter projects."
+      },
+      "smallProjects.features.business": {
+        "title": "Small agribusiness",
+        "body": "Feasibility guidance for micro agricultural ventures."
+      }
+    },
+    "aiPlantInspection": {
+      "title": "AI Plant Inspection",
+      "description": "Upload a photo of an affected plant and receive AI-assisted disease, pest, and plant-health analysis with agricultural recommendations.",
+      "sectionHeading": "AI Plant Inspection",
+      "examplesLabel": "Examples for this category",
+      "sampleNote": "Sign in to submit plant images. Anonymous image upload is not available.",
+      "openService": "Open plant inspection",
+      "field-crops": {
+        "examples": [
+          "Upload an image of an affected wheat plant",
+          "Upload an image of corn disease",
+          "Grain and cereal crop disease detection",
+          "Pest identification and plant health assessment"
+        ]
+      },
+      "vegetables": {
+        "examples": [
+          "Tomato disease image inspection",
+          "Cucumber disease inspection",
+          "Pepper and potato disease inspection",
+          "Other vegetable crop diagnosis"
+        ]
+      },
+      "fruit-trees": {
+        "examples": [
+          "Citrus disease inspection",
+          "Apple, peach, and pomegranate disease inspection",
+          "Olive and orchard disease inspection",
+          "Fruit tree pest and health assessment"
+        ]
+      },
+      "medicinal-plants": {
+        "examples": [
+          "Medicinal plant image inspection",
+          "Herbal crop disease detection",
+          "Pest identification in botanical plots",
+          "Plant health assessment for medicinal species"
+        ]
+      },
+      "ornamental-plants": {
+        "examples": [
+          "Ornamental plant disease image inspection",
+          "Flowering plant health assessment",
+          "Garden shrub pest identification",
+          "Decorative plant care recommendations"
+        ]
+      }
+    },
+    "highlights": {
+      "fieldCrops": {
+        "management": {
+          "title": "Field crop management",
+          "body": "Organize farms, seasons, and field crop operations in one workspace."
+        },
+        "production": {
+          "title": "Production information",
+          "body": "Track yields, varieties, and production milestones for field crops."
+        }
+      },
+      "vegetables": {
+        "crops": {
+          "title": "Vegetable crops",
+          "body": "Specialized content for high-value vegetable production."
+        },
+        "greenhouse": {
+          "title": "Greenhouse production",
+          "body": "Support for protected vegetable cultivation environments."
+        }
+      },
+      "fruitTrees": {
+        "pruning": {
+          "title": "Pruning guidance",
+          "body": "Seasonal pruning practices for productive orchards."
+        },
+        "recommendations": {
+          "title": "Agricultural recommendations",
+          "body": "Orchard care recommendations for healthier fruit production."
+        }
+      },
+      "medicinalPlants": {
+        "diseasePests": {
+          "title": "Diseases & pests",
+          "body": "Awareness and guidance for medicinal plant health challenges."
+        },
+        "quality": {
+          "title": "Botanical quality",
+          "body": "Document growing conditions and harvest standards."
+        }
+      },
+      "beekeeping": {
+        "honey": {
+          "title": "Honey production",
+          "body": "Log harvests, yields, and honey product quality."
+        },
+        "training": {
+          "title": "Beekeeping education",
+          "body": "Educational content for apiary and hive management."
+        }
+      },
+      "training": {
+        "beekeeping": {
+          "title": "Beekeeping education",
+          "body": "Courses and lectures focused on beekeeping skills."
+        },
+        "agriculture": {
+          "title": "Agricultural education",
+          "body": "Broad agricultural training for farms and professionals."
+        }
+      },
+      "jobs": {
+        "opportunities": {
+          "title": "Employment opportunities",
+          "body": "Discover open agricultural roles across the platform."
+        },
+        "professionals": {
+          "title": "Professional opportunities",
+          "body": "Career paths for agricultural engineers, managers, and workers."
+        }
+      },
+      "store": {
+        "catalog": {
+          "title": "Product catalog",
+          "body": "Explore agricultural products listed on the platform."
+        },
+        "organic": {
+          "title": "Natural products",
+          "body": "Organic and natural goods from trusted producers."
+        }
+      },
+      "ornamentalPlants": {
+        "shrubs": {
+          "title": "Ornamental shrubs",
+          "body": "Decorative shrubs for gardens and landscapes."
+        },
+        "decorative": {
+          "title": "Decorative plants",
+          "body": "Curated ornamental collections for homes and gardens."
+        }
+      },
+      "hydroponicAquaculture": {
+        "water": {
+          "title": "Water-based systems",
+          "body": "Integrated hydroponic and aquaculture approaches."
+        },
+        "greenTech": {
+          "title": "Green technology",
+          "body": "Modern sustainable agricultural innovation."
+        }
+      },
+      "smallProjects": {
+        "ideas": {
+          "title": "Project ideas",
+          "body": "Inspiration for small agricultural and food projects."
+        },
+        "feasibility": {
+          "title": "Feasibility guidance",
+          "body": "Practical planning for small-scale ventures."
+        }
+      }
+    },
+    "services": {
+      "heading": "Platform services",
+      "highlights": "Featured capabilities",
+      "plantInspection": "Plant inspection",
+      "plantInspectionDesc": "Upload plant images for crop diagnosis, disease detection, pest identification, and agricultural recommendations.",
+      "farmRecords": "Farm records",
+      "farmRecordsDesc": "Manage farms, blocks, fields, and operational geography.",
+      "cropPlanning": "Crop planning",
+      "cropPlanningDesc": "Organize crop types, varieties, seasons, and yields.",
+      "libraryGuides": "Knowledge library",
+      "libraryGuidesDesc": "Browse published knowledge base articles.",
+      "beekeeping": "Beekeeping",
+      "beekeepingDesc": "Full beekeeping module for apiaries and hive operations.",
+      "training": "Training courses",
+      "trainingDesc": "Structured agricultural courses with lessons and quizzes.",
+      "lectures": "Expert lectures",
+      "lecturesDesc": "Educational sessions from agricultural professionals.",
+      "jobsMarketplace": "Jobs marketplace",
+      "jobsMarketplaceDesc": "Marketplace for agricultural employment opportunities.",
+      "talentProfiles": "Talent profiles",
+      "talentProfilesDesc": "Create and manage professional agricultural profiles.",
+      "recruitment": "Recruitment",
+      "recruitmentDesc": "Connect employers with qualified farm and agri talent.",
+      "storeCatalog": "Store catalog",
+      "storeCatalogDesc": "Commerce module for products, orders, and inventory.",
+      "orders": "Orders & sales",
+      "ordersDesc": "Manage customer orders and sales workflows.",
+      "inventory": "Inventory",
+      "inventoryDesc": "Track stock levels and warehouse movements.",
+      "genericDesc": "Explore this capability after signing in to your workspace."
+    },
+    "access": {
+      "public": "Public preview",
+      "signInRequired": "Sign in required",
+      "paid": "Paid service",
+      "subscribeNow": "Subscribe now",
+      "openWorkspace": "Open in workspace"
+    },
+    "browse": {
+      "title": "Published content",
+      "unavailable": "Unable to load published content at this time.",
+      "orgHint": "Configure VITE_PUBLIC_ORG_SLUG to browse published training and library content from a specific organization."
+    },
+    "breadcrumb": "Breadcrumb",
+    "footer": {
+      "tagline": "Professional agricultural platform for farms, training, commerce, and growth.",
+      "about": "About us",
+      "privacy": "Privacy policy",
+      "terms": "Terms & conditions",
+      "contact": "Contact us",
+      "navigation": "Footer navigation",
+      "rights": "© WSA Enterprise. All rights reserved.",
+      "sections": "Main Sections",
+      "account": "Account"
+    },
+    "cta": {
+      "joinTitle": "Ready to grow with WSA Enterprise?",
+      "joinBody": "Create a free account to manage your farms, crops, training, and business operations.",
+      "workspaceTitle": "Continue in your workspace",
+      "workspaceBody": "Access your dashboard, modules, and owned services."
+    },
+    "info": {
+      "about": {
+        "title": "About us",
+        "p1": "WSA Enterprise is an integrated agricultural platform designed for modern farms, cooperatives, trainers, and agribusiness operators.",
+        "p2": "Our mission is to connect field operations, knowledge, commerce, and talent in one secure, professional ecosystem.",
+        "p3": "Browse public services without an account, then register to create and manage your own agricultural workspace."
+      },
+      "privacy": {
+        "title": "Privacy policy",
+        "p1": "We respect your privacy and protect personal data according to applicable regulations and platform security standards.",
+        "p2": "Account information, farm records, and service data are accessible only to authorized users within your organization scope.",
+        "p3": "Contact your platform administrator for detailed privacy documentation specific to your deployment."
+      },
+      "terms": {
+        "title": "Terms & conditions",
+        "p1": "Use of WSA Enterprise is subject to your organization's service agreement and applicable local laws.",
+        "p2": "Paid features require an active subscription. Public browsing does not grant access to protected or paid functionality.",
+        "p3": "By registering, you agree to use the platform responsibly and in accordance with agricultural and business regulations."
+      },
+      "contact": {
+        "title": "Contact us",
+        "p1": "For platform support, partnership inquiries, or deployment questions, please reach out through your organization's designated contact channel.",
+        "p2": "If you already have an account, sign in to access in-app notifications and organization settings.",
+        "p3": "New visitors can register to create a personal agricultural workspace and explore available modules."
+      }
+    },
+    "auth": {
+      "googleSoon": "Continue with Google (coming soon)",
+      "phoneSoon": "Continue with phone (coming soon)",
+      "orEmail": "Or continue with email"
+    },
+    "newsletter": {
+      "title": "Subscribe to our newsletter",
+      "description": "Receive agricultural news, new articles, farming tips, platform updates, and store highlights.",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "your@email.com",
+      "subscribe": "Subscribe",
+      "success": "Thank you! Your subscription request has been received.",
+      "hint": "Newsletter only — not a paid subscription."
+    },
+    "quickLinks": {
+      "title": "Quick Links",
+      "sections": "Main Sections",
+      "info": "Information"
+    },
+    "featured": {
+      "title": "Featured content & services",
+      "subtitle": "Discover highlighted areas of the WSA Enterprise agricultural platform.",
+      "store": "Green Garden Store",
+      "storeDesc": "Browse agricultural products, supplies, and natural farm goods.",
+      "ornamental": "Ornamental Plants & Garden",
+      "ornamentalDesc": "Indoor and outdoor ornamental plants, flowers, and garden collections.",
+      "training": "Training & Education",
+      "trainingDesc": "Courses, lectures, and agricultural learning programs."
+    }
   }
 }

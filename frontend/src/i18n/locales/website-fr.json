@@ -1,0 +1,530 @@
+{
+  "brand": "WSA Enterprise",
+  "nav": {
+    "home": "Accueil",
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "language": "Langue",
+    "primary": "Navigation principale"
+  },
+  "hero": {
+    "title": "Plateforme agricole intégrée pour l'agriculture moderne",
+    "subtitle": "Explorez les cultures, la formation, l'apiculture, l'emploi et le commerce — le tout dans un écosystème professionnel conçu pour les producteurs et les entreprises agricoles.",
+    "explore": "Explorer les services",
+    "getStarted": "Commencer",
+    "dashboard": "Ouvrir le tableau de bord",
+    "imageAlt": "Vaste champ agricole vert au lever du soleil"
+  },
+  "sections": {
+    "title": "Explorez nos services",
+    "subtitle": "Choisissez une catégorie pour parcourir les informations publiques et découvrir les capacités de la plateforme.",
+    "explore": "Explorer",
+    "fieldCrops": {
+      "title": "Grandes cultures",
+      "description": "Blé, maïs, céréales et agriculture de plein champ avec planification, suivi et soutien à la santé des cultures.",
+      "imageAlt": "Champ de blé doré sous un ciel clair"
+    },
+    "vegetables": {
+      "title": "Légumes",
+      "description": "Légumes frais, serres et production durable de légumes de la ferme au marché.",
+      "imageAlt": "Tomates et légumes frais dans une exploitation maraîchère"
+    },
+    "fruitTrees": {
+      "title": "Arbres fruitiers",
+      "description": "Vergers, production fruitière saisonnière, taille, nutrition et gestion des récoltes.",
+      "imageAlt": "Verger avec des arbres alignés en rangées"
+    },
+    "medicinalPlants": {
+      "title": "Plantes médicinales",
+      "description": "Jardins d'herbes, culture, identification, santé des plantes et usages botaniques.",
+      "imageAlt": "Herbes médicinales et plantes aromatiques dans un jardin"
+    },
+    "beekeeping": {
+      "title": "Abeilles à miel",
+      "description": "Apiculture, gestion des ruchers et des ruches, santé des colonies et produits de la ruche.",
+      "imageAlt": "Abeille à miel sur une fleur près d'une ruche"
+    },
+    "training": {
+      "title": "Conférences et formation",
+      "description": "Conférences agricoles, cours, programmes de formation et contenu éducatif.",
+      "imageAlt": "Agriculteurs en formation lors d'une session agricole"
+    },
+    "jobs": {
+      "title": "Emploi",
+      "description": "Opportunités d'emploi agricole, profils de talents et carrières professionnelles.",
+      "imageAlt": "Professionnels agricoles travaillant dans un champ vert"
+    },
+    "store": {
+      "title": "Boutique",
+      "description": "Produits agricoles, fournitures, équipements, intrants et biens de ferme.",
+      "imageAlt": "Produits frais et fournitures agricoles sur un marché"
+    },
+    "fieldCrops.features.planning": {
+      "title": "Planification des cultures",
+      "body": "Planifiez les cycles de semis, d'irrigation et de récolte pour les céréales et grandes cultures."
+    },
+    "fieldCrops.features.monitoring": {
+      "title": "Suivi des cultures",
+      "body": "Suivez le développement des cultures, les opérations de terrain et les registres de production."
+    },
+    "fieldCrops.features.diseasePests": {
+      "title": "Informations maladies et ravageurs",
+      "body": "Accédez à des conseils sur les maladies, ravageurs et risques sanitaires des grandes cultures."
+    },
+    "fieldCrops.features.recommendations": {
+      "title": "Recommandations agricoles",
+      "body": "Recommandations pratiques pour une production de grandes cultures plus saine."
+    },
+    "vegetables.features.production": {
+      "title": "Production maraîchère",
+      "body": "Gérez la production saisonnière de légumes et les calendriers de récolte."
+    },
+    "vegetables.features.management": {
+      "title": "Gestion des cultures",
+      "body": "Organisez les variétés, les rotations et les opérations quotidiennes de l'exploitation maraîchère."
+    },
+    "vegetables.features.diseasePests": {
+      "title": "Maladies et ravageurs",
+      "body": "Informations sur les maladies courantes et les pressions de ravageurs des cultures légumières."
+    },
+    "vegetables.features.recommendations": {
+      "title": "Recommandations agricoles",
+      "body": "Conseils pour améliorer la qualité et le rendement des cultures légumières."
+    },
+    "fruitTrees.features.cultivation": {
+      "title": "Culture des arbres fruitiers",
+      "body": "Meilleures pratiques pour établir et entretenir des arbres fruitiers productifs."
+    },
+    "fruitTrees.features.orchards": {
+      "title": "Gestion des vergers",
+      "body": "Organisez les blocs, variétés et tâches saisonnières du verger."
+    },
+    "fruitTrees.features.diseasePests": {
+      "title": "Maladies et ravageurs",
+      "body": "Sensibilisation aux maladies et ravageurs des vergers : agrumes, pommiers, oliviers et plus."
+    },
+    "fruitTrees.features.nutrition": {
+      "title": "Nutrition et taille",
+      "body": "Soutenez la vigueur des arbres grâce à la planification nutritionnelle et aux conseils de taille."
+    },
+    "medicinalPlants.features.cultivation": {
+      "title": "Culture",
+      "body": "Cultivez des plantes médicinales et aromatiques avec des pratiques de production traçables."
+    },
+    "medicinalPlants.features.identification": {
+      "title": "Identification",
+      "body": "Reconnaissez les espèces médicinales et documentez leurs caractéristiques botaniques."
+    },
+    "medicinalPlants.features.health": {
+      "title": "Santé des plantes",
+      "body": "Surveillez les maladies, ravageurs et la vitalité dans les parcelles d'herbes."
+    },
+    "medicinalPlants.features.uses": {
+      "title": "Usages",
+      "body": "Explorez les usages traditionnels et commerciaux des plantes médicinales."
+    },
+    "beekeeping.features.apiaries": {
+      "title": "Apiculture et ruchers",
+      "body": "Gérez les ruchers, emplacements et registres des colonies."
+    },
+    "beekeeping.features.hiveManagement": {
+      "title": "Gestion des ruches",
+      "body": "Suivez les inspections, la santé du couvain et les soins saisonniers des ruches."
+    },
+    "beekeeping.features.diseases": {
+      "title": "Maladies des abeilles",
+      "body": "Informations sur les maladies des colonies, problèmes de couvain et gestion du varroa."
+    },
+    "beekeeping.features.products": {
+      "title": "Produits de la ruche",
+      "body": "Miel, gelée royale, propolis, venin d'abeille et production associée."
+    },
+    "training.features.lectures": {
+      "title": "Conférences agricoles",
+      "body": "Conférences animées par des experts sur l'agriculture moderne."
+    },
+    "training.features.courses": {
+      "title": "Cours",
+      "body": "Cours structurés pour producteurs et professionnels agricoles."
+    },
+    "training.features.programs": {
+      "title": "Programmes de formation",
+      "body": "Programmes sur le terrain et en salle pour développer des compétences pratiques."
+    },
+    "training.features.education": {
+      "title": "Contenu éducatif",
+      "body": "Ressources d'apprentissage incluant l'apiculture et la formation aux cultures."
+    },
+    "jobs.features.listings": {
+      "title": "Offres d'emploi",
+      "body": "Parcourez les opportunités d'emploi agricole sur la plateforme."
+    },
+    "jobs.features.employers": {
+      "title": "Opportunités pour employeurs",
+      "body": "Connectez fermes et entreprises agricoles avec des talents qualifiés."
+    },
+    "jobs.features.talent": {
+      "title": "Profils de talents",
+      "body": "Les professionnels agricoles présentent leurs compétences et leur expérience."
+    },
+    "jobs.features.careers": {
+      "title": "Carrières professionnelles",
+      "body": "Découvrez des postes pour ingénieurs, gestionnaires de ferme et spécialistes de terrain."
+    },
+    "store.features.products": {
+      "title": "Produits agricoles",
+      "body": "Parcourez les produits disponibles dans la boutique de la plateforme."
+    },
+    "store.features.supplies": {
+      "title": "Fournitures agricoles",
+      "body": "Intrants et fournitures pour les opérations agricoles quotidiennes."
+    },
+    "store.features.equipment": {
+      "title": "Équipement",
+      "body": "Outils et équipements pour fermes et entreprises agricoles."
+    },
+    "store.features.inputs": {
+      "title": "Intrants de production",
+      "body": "Semences, nutriments et autres intrants de production."
+    },
+    "ornamentalPlants": {
+      "title": "Plantes ornementales",
+      "description": "Plantes d’intérieur et d’extérieur, floraisons, arbustes et végétaux décoratifs.",
+      "imageAlt": "Fleurs ornementales colorées"
+    },
+    "hydroponicAquaculture": {
+      "title": "Hydroponie et aquaculture",
+      "description": "Culture hydroponique et aquaculture — agriculture durable basée sur l’eau.",
+      "imageAlt": "Plantes hydroponiques en serre moderne"
+    },
+    "smallProjects": {
+      "title": "Petits projets",
+      "description": "Micro-fermes, petites serres, apiculture et idées entrepreneuriales agricoles.",
+      "imageAlt": "Petit projet agricole et serre"
+    },
+    "ornamentalPlants.features.indoor": {
+      "title": "Plantes d’intérieur",
+      "body": "Végétaux décoratifs pour la maison."
+    },
+    "ornamentalPlants.features.outdoor": {
+      "title": "Plantes d’extérieur",
+      "body": "Massifs, terrasses et ornements paysagers."
+    },
+    "ornamentalPlants.features.flowering": {
+      "title": "Plantes fleuries",
+      "body": "Floraisons saisonnières et couleurs de jardin."
+    },
+    "ornamentalPlants.features.garden": {
+      "title": "Plantes de jardin",
+      "body": "Arbustes et collections décoratives."
+    },
+    "hydroponicAquaculture.features.hydroponic": {
+      "title": "Hydroponie",
+      "body": "Systèmes sans sol pour la production moderne."
+    },
+    "hydroponicAquaculture.features.aquaculture": {
+      "title": "Aquaculture",
+      "body": "Pisciculture et agriculture intégrée."
+    },
+    "hydroponicAquaculture.features.sustainable": {
+      "title": "Durabilité",
+      "body": "Eau efficiente et production écologique."
+    },
+    "hydroponicAquaculture.features.modern": {
+      "title": "Agriculture moderne",
+      "body": "Culture technologique urbaine et commerciale."
+    },
+    "smallProjects.features.homeFarming": {
+      "title": "Micro-ferme",
+      "body": "Production alimentaire à petite échelle."
+    },
+    "smallProjects.features.greenhouse": {
+      "title": "Petites serres",
+      "body": "Idées de culture protégée compacte."
+    },
+    "smallProjects.features.beekeeping": {
+      "title": "Projets apicoles",
+      "body": "Démarrer un petit rucher."
+    },
+    "smallProjects.features.business": {
+      "title": "Micro-agro-entreprise",
+      "body": "Conseils de faisabilité pour petits projets."
+    }
+  },
+  "aiPlantInspection": {
+    "title": "Inspection des plantes par IA",
+    "description": "Téléversez une photo d'une plante affectée et recevez une analyse assistée par IA des maladies, ravageurs et santé végétale avec des recommandations agricoles.",
+    "sectionHeading": "Inspection des plantes par IA",
+    "examplesLabel": "Exemples pour cette catégorie",
+    "sampleNote": "Connectez-vous pour soumettre des images de plantes. Le téléversement anonyme n'est pas disponible.",
+    "openService": "Ouvrir l'inspection des plantes",
+    "field-crops": {
+      "examples": [
+        "Téléversez une image d'un plant de blé affecté",
+        "Téléversez une image de maladie du maïs",
+        "Détection de maladies des céréales et grandes cultures",
+        "Identification des ravageurs et évaluation de la santé des plantes"
+      ]
+    },
+    "vegetables": {
+      "examples": [
+        "Inspection d'image de maladie de la tomate",
+        "Inspection de maladie du concombre",
+        "Inspection de maladie du poivron et de la pomme de terre",
+        "Diagnostic d'autres cultures légumières"
+      ]
+    },
+    "fruit-trees": {
+      "examples": [
+        "Inspection de maladie des agrumes",
+        "Inspection de maladie du pommier, pêcher et grenadier",
+        "Inspection de maladie de l'olivier et du verger",
+        "Évaluation des ravageurs et de la santé des arbres fruitiers"
+      ]
+    },
+    "medicinal-plants": {
+      "examples": [
+        "Inspection d'image de plante médicinale",
+        "Détection de maladies des cultures herbacées",
+        "Identification des ravageurs dans les parcelles botaniques",
+        "Évaluation de la santé des espèces médicinales"
+      ]
+    },
+    "ornamental-plants": {
+      "examples": [
+        "Inspection d’images de maladies ornementales",
+        "Évaluation de plantes fleuries",
+        "Identification de ravageurs sur arbustes",
+        "Recommandations pour plantes décoratives"
+      ]
+    }
+  },
+  "highlights": {
+    "fieldCrops": {
+      "management": {
+        "title": "Gestion des grandes cultures",
+        "body": "Organisez fermes, saisons et opérations de grandes cultures dans un seul espace de travail."
+      },
+      "production": {
+        "title": "Informations de production",
+        "body": "Suivez rendements, variétés et jalons de production pour les grandes cultures."
+      }
+    },
+    "vegetables": {
+      "crops": {
+        "title": "Cultures légumières",
+        "body": "Contenu spécialisé pour la production de légumes à haute valeur."
+      },
+      "greenhouse": {
+        "title": "Production sous serre",
+        "body": "Soutien pour les environnements de culture protégée de légumes."
+      }
+    },
+    "fruitTrees": {
+      "pruning": {
+        "title": "Conseils de taille",
+        "body": "Pratiques de taille saisonnières pour des vergers productifs."
+      },
+      "recommendations": {
+        "title": "Recommandations agricoles",
+        "body": "Recommandations d'entretien des vergers pour une production fruitière plus saine."
+      }
+    },
+    "medicinalPlants": {
+      "diseasePests": {
+        "title": "Maladies et ravageurs",
+        "body": "Sensibilisation et conseils pour les défis sanitaires des plantes médicinales."
+      },
+      "quality": {
+        "title": "Qualité botanique",
+        "body": "Documentez les conditions de culture et les normes de récolte."
+      }
+    },
+    "beekeeping": {
+      "honey": {
+        "title": "Production de miel",
+        "body": "Enregistrez récoltes, rendements et qualité des produits de miel."
+      },
+      "training": {
+        "title": "Formation apicole",
+        "body": "Contenu éducatif pour la gestion des ruchers et des ruches."
+      }
+    },
+    "training": {
+      "beekeeping": {
+        "title": "Formation apicole",
+        "body": "Cours et conférences axés sur les compétences apicoles."
+      },
+      "agriculture": {
+        "title": "Formation agricole",
+        "body": "Formation agricole générale pour fermes et professionnels."
+      }
+    },
+    "jobs": {
+      "opportunities": {
+        "title": "Opportunités d'emploi",
+        "body": "Découvrez les postes agricoles ouverts sur la plateforme."
+      },
+      "professionals": {
+        "title": "Opportunités professionnelles",
+        "body": "Parcours de carrière pour ingénieurs agricoles, gestionnaires et ouvriers."
+      }
+    },
+    "store": {
+      "catalog": {
+        "title": "Catalogue de produits",
+        "body": "Explorez les produits agricoles répertoriés sur la plateforme."
+      },
+      "organic": {
+        "title": "Produits naturels",
+        "body": "Produits biologiques et naturels de producteurs de confiance."
+      }
+    },
+    "ornamentalPlants": {
+      "shrubs": {
+        "title": "Arbustes ornementaux",
+        "body": "Arbustes décoratifs pour jardins."
+      },
+      "decorative": {
+        "title": "Plantes décoratives",
+        "body": "Collections ornementales pour maisons et jardins."
+      }
+    },
+    "hydroponicAquaculture": {
+      "water": {
+        "title": "Systèmes aquatiques",
+        "body": "Approches hydroponiques et aquacoles intégrées."
+      },
+      "greenTech": {
+        "title": "Technologie verte",
+        "body": "Innovation agricole durable."
+      }
+    },
+    "smallProjects": {
+      "ideas": {
+        "title": "Idées de projets",
+        "body": "Inspiration pour petits projets agricoles."
+      },
+      "feasibility": {
+        "title": "Faisabilité",
+        "body": "Planification pratique à petite échelle."
+      }
+    }
+  },
+  "services": {
+    "heading": "Services de la plateforme",
+    "highlights": "Capacités en vedette",
+    "plantInspection": "Inspection des plantes",
+    "plantInspectionDesc": "Téléversez des images de plantes pour le diagnostic des cultures, la détection de maladies, l'identification des ravageurs et les recommandations agricoles.",
+    "farmRecords": "Registres de ferme",
+    "farmRecordsDesc": "Gérez fermes, blocs, parcelles et géographie opérationnelle.",
+    "cropPlanning": "Planification des cultures",
+    "cropPlanningDesc": "Organisez types de cultures, variétés, saisons et rendements.",
+    "libraryGuides": "Bibliothèque de connaissances",
+    "libraryGuidesDesc": "Parcourez les articles publiés de la base de connaissances.",
+    "beekeeping": "Apiculture",
+    "beekeepingDesc": "Module apicole complet pour ruchers et opérations de ruches.",
+    "training": "Cours de formation",
+    "trainingDesc": "Cours agricoles structurés avec leçons et quiz.",
+    "lectures": "Conférences d'experts",
+    "lecturesDesc": "Sessions éducatives animées par des professionnels agricoles.",
+    "jobsMarketplace": "Marché de l'emploi",
+    "jobsMarketplaceDesc": "Place de marché pour les opportunités d'emploi agricole.",
+    "talentProfiles": "Profils de talents",
+    "talentProfilesDesc": "Créez et gérez des profils professionnels agricoles.",
+    "recruitment": "Recrutement",
+    "recruitmentDesc": "Connectez employeurs et talents qualifiés agricoles.",
+    "storeCatalog": "Catalogue boutique",
+    "storeCatalogDesc": "Module commercial pour produits, commandes et inventaire.",
+    "orders": "Commandes et ventes",
+    "ordersDesc": "Gérez les commandes clients et les flux de vente.",
+    "inventory": "Inventaire",
+    "inventoryDesc": "Suivez les niveaux de stock et les mouvements d'entrepôt.",
+    "genericDesc": "Explorez cette fonctionnalité après vous être connecté à votre espace de travail."
+  },
+  "access": {
+    "public": "Aperçu public",
+    "signInRequired": "Connexion requise",
+    "paid": "Service payant",
+    "subscribeNow": "S'abonner maintenant",
+    "openWorkspace": "Ouvrir dans l'espace de travail"
+  },
+  "browse": {
+    "title": "Contenu publié",
+    "unavailable": "Impossible de charger le contenu publié pour le moment.",
+    "orgHint": "Configurez VITE_PUBLIC_ORG_SLUG pour parcourir le contenu de formation et de bibliothèque publié d'une organisation spécifique."
+  },
+  "breadcrumb": "Fil d'Ariane",
+  "footer": {
+    "tagline": "Plateforme agricole professionnelle pour fermes, formation, commerce et croissance.",
+    "about": "À propos",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions générales",
+    "contact": "Nous contacter",
+    "navigation": "Navigation du pied de page",
+    "rights": "© WSA Enterprise. Tous droits réservés.",
+    "sections": "Sections principales",
+    "account": "Compte"
+  },
+  "cta": {
+    "joinTitle": "Prêt à grandir avec WSA Enterprise ?",
+    "joinBody": "Créez un compte gratuit pour gérer vos fermes, cultures, formations et opérations commerciales.",
+    "workspaceTitle": "Continuer dans votre espace de travail",
+    "workspaceBody": "Accédez à votre tableau de bord, modules et services activés."
+  },
+  "info": {
+    "about": {
+      "title": "À propos",
+      "p1": "WSA Enterprise est une plateforme agricole intégrée conçue pour les fermes modernes, coopératives, formateurs et opérateurs agroalimentaires.",
+      "p2": "Notre mission est de connecter opérations de terrain, connaissances, commerce et talents dans un écosystème sécurisé et professionnel.",
+      "p3": "Parcourez les services publics sans compte, puis inscrivez-vous pour créer et gérer votre propre espace de travail agricole."
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "p1": "Nous respectons votre vie privée et protégeons les données personnelles conformément aux réglementations applicables et aux normes de sécurité de la plateforme.",
+      "p2": "Les informations de compte, registres de ferme et données de service ne sont accessibles qu'aux utilisateurs autorisés dans le périmètre de votre organisation.",
+      "p3": "Contactez votre administrateur de plateforme pour la documentation détaillée sur la confidentialité propre à votre déploiement."
+    },
+    "terms": {
+      "title": "Conditions générales",
+      "p1": "L'utilisation de WSA Enterprise est soumise au contrat de service de votre organisation et aux lois locales applicables.",
+      "p2": "Les fonctionnalités payantes nécessitent un abonnement actif. La navigation publique n'accorde pas l'accès aux fonctionnalités protégées ou payantes.",
+      "p3": "En vous inscrivant, vous acceptez d'utiliser la plateforme de manière responsable et conformément aux réglementations agricoles et commerciales."
+    },
+    "contact": {
+      "title": "Nous contacter",
+      "p1": "Pour le support plateforme, les demandes de partenariat ou les questions de déploiement, veuillez contacter le canal désigné par votre organisation.",
+      "p2": "Si vous avez déjà un compte, connectez-vous pour accéder aux notifications in-app et aux paramètres de l'organisation.",
+      "p3": "Les nouveaux visiteurs peuvent s'inscrire pour créer un espace de travail agricole personnel et explorer les modules disponibles."
+    }
+  },
+  "auth": {
+    "googleSoon": "Continuer avec Google (bientôt disponible)",
+    "phoneSoon": "Continuer avec le téléphone (bientôt disponible)",
+    "orEmail": "Ou continuer avec l'e-mail"
+  },
+  "newsletter": {
+    "title": "Abonnez-vous à notre newsletter",
+    "description": "Actualités agricoles, nouveaux articles, conseils, mises à jour et nouveautés boutique.",
+    "emailLabel": "Adresse e-mail",
+    "emailPlaceholder": "your@email.com",
+    "subscribe": "S'abonner",
+    "success": "Merci ! Votre demande d’abonnement a été reçue.",
+    "hint": "Newsletter uniquement — pas un abonnement payant."
+  },
+  "quickLinks": {
+    "title": "Liens rapides",
+    "sections": "Sections principales",
+    "info": "Informations"
+  },
+  "featured": {
+    "title": "Contenus et services en vedette",
+    "subtitle": "Découvrez les points forts de la plateforme WSA Enterprise.",
+    "store": "Green Garden Store",
+    "storeDesc": "Produits agricoles, fournitures et biens naturels.",
+    "ornamental": "Plantes ornementales",
+    "ornamentalDesc": "Plantes d’intérieur et d’extérieur, fleurs et jardins.",
+    "training": "Formation",
+    "trainingDesc": "Cours, conférences et programmes agricoles."
+  }
+}

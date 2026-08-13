@@ -781,12 +781,30 @@
     "loadingPlants": "Bitkiler yükleniyor…",
     "noPlants": "Henüz tozlaşma bitkisi yok.",
     "knowledge": {
-      "honeyBees": { "title": "Bal arıları", "summary": "Koloni biyolojisi ve mevsimsel davranış temelleri." },
-      "varroa": { "title": "Varroa akarları", "summary": "İzleme ve entegre zararlı yönetimi özeti." },
-      "broodDiseases": { "title": "Yavru hastalıkları", "summary": "Karar desteği özeti; veteriner teşhisi değildir." },
-      "nutrition": { "title": "Beslenme ve yemleme", "summary": "Koloni sağlığı için mevsimsel yemleme hususları." },
-      "pollination": { "title": "Tozlaşma", "summary": "Çiçekli bitkiler, koloniler ve tozlaşma hizmetleri arasındaki bağ." },
-      "queenRearing": { "title": "Ana arı yetiştirme", "summary": "Ana arı yönetimi ve yetiştirme temel kavramları." }
+      "honeyBees": {
+        "title": "Bal arıları",
+        "summary": "Koloni biyolojisi ve mevsimsel davranış temelleri."
+      },
+      "varroa": {
+        "title": "Varroa akarları",
+        "summary": "İzleme ve entegre zararlı yönetimi özeti."
+      },
+      "broodDiseases": {
+        "title": "Yavru hastalıkları",
+        "summary": "Karar desteği özeti; veteriner teşhisi değildir."
+      },
+      "nutrition": {
+        "title": "Beslenme ve yemleme",
+        "summary": "Koloni sağlığı için mevsimsel yemleme hususları."
+      },
+      "pollination": {
+        "title": "Tozlaşma",
+        "summary": "Çiçekli bitkiler, koloniler ve tozlaşma hizmetleri arasındaki bağ."
+      },
+      "queenRearing": {
+        "title": "Ana arı yetiştirme",
+        "summary": "Ana arı yönetimi ve yetiştirme temel kavramları."
+      }
     }
   },
   "aiAssistant": {
@@ -945,5 +963,535 @@
     "required": "Bu alan zorunludur.",
     "email": "Geçerli bir e-posta adresi girin.",
     "minLength": "En az {{count}} karakter olmalıdır."
+  },
+  "website": {
+    "brand": "WSA Enterprise",
+    "nav": {
+      "home": "Ana Sayfa",
+      "login": "Giriş yap",
+      "register": "Kayıt ol",
+      "language": "Dil",
+      "primary": "Ana gezinme"
+    },
+    "hero": {
+      "title": "Modern tarım için entegre tarımsal platform",
+      "subtitle": "Ürünler, eğitim, arıcılık, iş ilanları ve ticareti keşfedin — üreticiler ve tarımsal işletmeler için tasarlanmış tek bir profesyonel ekosistemde.",
+      "explore": "Hizmetleri keşfet",
+      "getStarted": "Başlayın",
+      "dashboard": "Panoyu aç",
+      "imageAlt": "Gün doğumunda geniş yeşil tarla"
+    },
+    "sections": {
+      "title": "Hizmetlerimizi keşfedin",
+      "subtitle": "Genel bilgileri incelemek ve platform yeteneklerini keşfetmek için bir kategori seçin.",
+      "explore": "Keşfet",
+      "fieldCrops": {
+        "title": "Tarla Bitkileri",
+        "description": "Buğday, mısır, tahıllar ve planlama, izleme ve bitki sağlığı desteğiyle geniş ölçekli tarla tarımı.",
+        "imageAlt": "Açık gökyüzü altında altın buğday tarlası"
+      },
+      "vegetables": {
+        "title": "Sebzeler",
+        "description": "Taze sebzeler, seralar ve çiftlikten pazara sürdürülebilir sebze üretimi.",
+        "imageAlt": "Sebze çiftliğinde domates ve taze sebzeler"
+      },
+      "fruitTrees": {
+        "title": "Meyve Ağaçları",
+        "description": "Meyve bahçeleri, mevsimlik meyve üretimi, budama, besleme ve hasat yönetimi.",
+        "imageAlt": "Sıralar halinde ağaçların bulunduğu meyve bahçesi"
+      },
+      "medicinalPlants": {
+        "title": "Tıbbi Bitkiler",
+        "description": "Bitki bahçeleri, yetiştirme, tanımlama, bitki sağlığı ve botanik kullanımlar.",
+        "imageAlt": "Bahçede tıbbi otlar ve aromatik bitkiler"
+      },
+      "beekeeping": {
+        "title": "Bal Arıları",
+        "description": "Arıcılık, arılık ve kovan yönetimi, koloni sağlığı ile bal ve kovan ürünleri.",
+        "imageAlt": "Kovan yakınında bir çiçek üzerinde bal arısı"
+      },
+      "training": {
+        "title": "Konferanslar ve Eğitim",
+        "description": "Tarımsal konferanslar, kurslar, eğitim programları ve eğitim içeriği.",
+        "imageAlt": "Tarımsal eğitim oturumunda öğrenen çiftçiler"
+      },
+      "jobs": {
+        "title": "İş İlanları",
+        "description": "Tarımsal istihdam fırsatları, yetenek profilleri ve profesyonel kariyerler.",
+        "imageAlt": "Yeşil bir tarlada çalışan tarım profesyonelleri"
+      },
+      "store": {
+        "title": "Mağaza",
+        "description": "Tarımsal ürünler, malzemeler, ekipman, girdiler ve çiftlik malları.",
+        "imageAlt": "Pazarda taze ürünler ve tarım malzemeleri"
+      },
+      "fieldCrops.features.planning": {
+        "title": "Ürün planlaması",
+        "body": "Tahıl ve tarla bitkileri için ekim, sulama ve hasat döngülerini planlayın."
+      },
+      "fieldCrops.features.monitoring": {
+        "title": "Ürün izleme",
+        "body": "Bitki gelişimini, tarla operasyonlarını ve üretim kayıtlarını takip edin."
+      },
+      "fieldCrops.features.diseasePests": {
+        "title": "Hastalık ve zararlı bilgisi",
+        "body": "Tarla bitkisi hastalıkları, zararlılar ve bitki sağlığı riskleri hakkında rehberliğe erişin."
+      },
+      "fieldCrops.features.recommendations": {
+        "title": "Tarımsal öneriler",
+        "body": "Daha sağlıklı tarla bitkisi üretimi için pratik öneriler."
+      },
+      "vegetables.features.production": {
+        "title": "Sebze üretimi",
+        "body": "Mevsimlik sebze üretimini ve hasat programlarını yönetin."
+      },
+      "vegetables.features.management": {
+        "title": "Ürün yönetimi",
+        "body": "Çeşitleri, rotasyonları ve günlük sebze çiftliği operasyonlarını düzenleyin."
+      },
+      "vegetables.features.diseasePests": {
+        "title": "Hastalıklar ve zararlılar",
+        "body": "Yaygın sebze bitkisi hastalıkları ve zararlı baskıları hakkında bilgiler."
+      },
+      "vegetables.features.recommendations": {
+        "title": "Tarımsal öneriler",
+        "body": "Sebze bitkisi kalitesini ve verimini artırmak için rehberlik."
+      },
+      "fruitTrees.features.cultivation": {
+        "title": "Meyve ağacı yetiştiriciliği",
+        "body": "Verimli meyve ağaçları kurmak ve sürdürmek için en iyi uygulamalar."
+      },
+      "fruitTrees.features.orchards": {
+        "title": "Bahçe yönetimi",
+        "body": "Blokları, çeşitleri ve mevsimlik bahçe görevlerini düzenleyin."
+      },
+      "fruitTrees.features.diseasePests": {
+        "title": "Hastalıklar ve zararlılar",
+        "body": "Narenciye, elma, zeytin ve daha fazlası için bahçe hastalığı ve zararlı farkındalığı."
+      },
+      "fruitTrees.features.nutrition": {
+        "title": "Besleme ve budama",
+        "body": "Besleme planlaması ve budama rehberliği ile ağaç canlılığını destekleyin."
+      },
+      "medicinalPlants.features.cultivation": {
+        "title": "Yetiştiricilik",
+        "body": "Tıbbi ve aromatik bitkileri izlenebilir üretim uygulamalarıyla yetiştirin."
+      },
+      "medicinalPlants.features.identification": {
+        "title": "Tanımlama",
+        "body": "Tıbbi türleri tanıyın ve botanik özelliklerini belgeleyin."
+      },
+      "medicinalPlants.features.health": {
+        "title": "Bitki sağlığı",
+        "body": "Bitki parsellerinde hastalıkları, zararlıları ve canlılığı izleyin."
+      },
+      "medicinalPlants.features.uses": {
+        "title": "Kullanımlar",
+        "body": "Tıbbi bitkilerin geleneksel ve ticari kullanımlarını keşfedin."
+      },
+      "beekeeping.features.apiaries": {
+        "title": "Arıcılık ve arılıklar",
+        "body": "Arılıkları, konumları ve koloni kayıtlarını yönetin."
+      },
+      "beekeeping.features.hiveManagement": {
+        "title": "Kovan yönetimi",
+        "body": "Muayeneleri, yavru sağlığını ve mevsimlik kovan bakımını takip edin."
+      },
+      "beekeeping.features.diseases": {
+        "title": "Arı hastalıkları",
+        "body": "Koloni hastalıkları, yavru sorunları ve Varroa yönetimi hakkında bilgiler."
+      },
+      "beekeeping.features.products": {
+        "title": "Kovan ürünleri",
+        "body": "Bal, arı sütü, propolis, arı zehiri ve ilgili üretim."
+      },
+      "training.features.lectures": {
+        "title": "Tarımsal konferanslar",
+        "body": "Modern tarım konularında uzman liderliğindeki konferanslar."
+      },
+      "training.features.courses": {
+        "title": "Kurslar",
+        "body": "Üreticiler ve tarım profesyonelleri için yapılandırılmış kurslar."
+      },
+      "training.features.programs": {
+        "title": "Eğitim programları",
+        "body": "Pratik beceri geliştirme için saha ve sınıf programları."
+      },
+      "training.features.education": {
+        "title": "Eğitim içeriği",
+        "body": "Arıcılık ve ürün eğitimi dahil öğrenme kaynakları."
+      },
+      "jobs.features.listings": {
+        "title": "İş ilanları",
+        "body": "Platformdaki tarımsal istihdam fırsatlarına göz atın."
+      },
+      "jobs.features.employers": {
+        "title": "İşveren fırsatları",
+        "body": "Çiftlikleri ve tarımsal işletmeleri nitelikli yeteneklerle buluşturun."
+      },
+      "jobs.features.talent": {
+        "title": "Yetenek profilleri",
+        "body": "Tarım profesyonelleri becerilerini ve deneyimlerini sergiler."
+      },
+      "jobs.features.careers": {
+        "title": "Profesyonel kariyerler",
+        "body": "Mühendisler, çiftlik yöneticileri ve saha uzmanları için roller keşfedin."
+      },
+      "store.features.products": {
+        "title": "Tarımsal ürünler",
+        "body": "Platform mağazasında mevcut ürünlere göz atın."
+      },
+      "store.features.supplies": {
+        "title": "Çiftlik malzemeleri",
+        "body": "Günlük tarımsal operasyonlar için girdiler ve malzemeler."
+      },
+      "store.features.equipment": {
+        "title": "Ekipman",
+        "body": "Çiftlikler ve tarımsal işletmeler için araçlar ve ekipman."
+      },
+      "store.features.inputs": {
+        "title": "Üretim girdileri",
+        "body": "Tohum, besin maddeleri ve diğer üretim girdileri."
+      },
+      "ornamentalPlants": {
+        "title": "Süs bitkileri",
+        "description": "İç ve dış mekan süs bitkileri, çiçekli türler, çalılar ve dekoratif bitkiler.",
+        "imageAlt": "Renkli süs çiçekleri ve bahçe bitkileri"
+      },
+      "hydroponicAquaculture": {
+        "title": "Hidroponik ve su ürünleri",
+        "description": "Modern hidroponik yetiştirme ve aquaculture — sürdürülebilir su tabanlı tarım.",
+        "imageAlt": "Modern serada hidroponik bitkiler"
+      },
+      "smallProjects": {
+        "title": "Küçük projeler",
+        "description": "Ev tarımı, küçük seralar, arıcılık projeleri ve girişim fikirleri.",
+        "imageAlt": "Küçük tarım projesi ve sera"
+      },
+      "ornamentalPlants.features.indoor": {
+        "title": "İç mekan süs bitkileri",
+        "body": "Ev bitkileri ve iç mekan yeşillik."
+      },
+      "ornamentalPlants.features.outdoor": {
+        "title": "Dış mekan süs bitkileri",
+        "body": "Bahçe yatakları ve peyzaj bitkileri."
+      },
+      "ornamentalPlants.features.flowering": {
+        "title": "Çiçekli bitkiler",
+        "body": "Mevsimlik çiçekler ve renkli bahçeler."
+      },
+      "ornamentalPlants.features.garden": {
+        "title": "Bahçe bitkileri",
+        "body": "Çalılar ve dekoratif koleksiyonlar."
+      },
+      "hydroponicAquaculture.features.hydroponic": {
+        "title": "Hidroponik",
+        "body": "Topraksız modern üretim sistemleri."
+      },
+      "hydroponicAquaculture.features.aquaculture": {
+        "title": "Su ürünleri",
+        "body": "Balık yetiştiriciliği ve entegre tarım."
+      },
+      "hydroponicAquaculture.features.sustainable": {
+        "title": "Sürdürülebilirlik",
+        "body": "Verimli su kullanımı ve ekolojik üretim."
+      },
+      "hydroponicAquaculture.features.modern": {
+        "title": "Modern tarım",
+        "body": "Kentsel ve ticari teknoloji tabanlı üretim."
+      },
+      "smallProjects.features.homeFarming": {
+        "title": "Ev tarımı",
+        "body": "Evde küçük ölçekli gıda üretimi."
+      },
+      "smallProjects.features.greenhouse": {
+        "title": "Küçük seralar",
+        "body": "Kompakt korunmuş yetiştirme fikirleri."
+      },
+      "smallProjects.features.beekeeping": {
+        "title": "Arıcılık projeleri",
+        "body": "Küçük arılık başlangıç projeleri."
+      },
+      "smallProjects.features.business": {
+        "title": "Küçük agribusiness",
+        "body": "Mikro tarım girişimleri için fizibilite."
+      }
+    },
+    "aiPlantInspection": {
+      "title": "Yapay Zeka Bitki Denetimi",
+      "description": "Etkilenen bir bitkinin fotoğrafını yükleyin ve tarımsal önerilerle birlikte yapay zeka destekli hastalık, zararlı ve bitki sağlığı analizi alın.",
+      "sectionHeading": "Yapay Zeka Bitki Denetimi",
+      "examplesLabel": "Bu kategori için örnekler",
+      "sampleNote": "Bitki görüntüleri göndermek için giriş yapın. Anonim görüntü yükleme mevcut değildir.",
+      "openService": "Bitki denetimini aç",
+      "field-crops": {
+        "examples": [
+          "Etkilenen bir buğday bitkisinin görüntüsünü yükleyin",
+          "Mısır hastalığı görüntüsü yükleyin",
+          "Tahıl ve hububat bitkisi hastalık tespiti",
+          "Zararlı tanımlama ve bitki sağlığı değerlendirmesi"
+        ]
+      },
+      "vegetables": {
+        "examples": [
+          "Domates hastalığı görüntü denetimi",
+          "Salatalık hastalığı denetimi",
+          "Biber ve patates hastalığı denetimi",
+          "Diğer sebze bitkisi teşhisi"
+        ]
+      },
+      "fruit-trees": {
+        "examples": [
+          "Narenciye hastalığı denetimi",
+          "Elma, şeftali ve nar hastalığı denetimi",
+          "Zeytin ve bahçe hastalığı denetimi",
+          "Meyve ağacı zararlı ve sağlık değerlendirmesi"
+        ]
+      },
+      "medicinal-plants": {
+        "examples": [
+          "Tıbbi bitki görüntü denetimi",
+          "Bitkisel ürün hastalık tespiti",
+          "Botanik parsellerde zararlı tanımlama",
+          "Tıbbi türler için bitki sağlığı değerlendirmesi"
+        ]
+      },
+      "ornamental-plants": {
+        "examples": [
+          "Süs bitkisi hastalık görüntü incelemesi",
+          "Çiçekli bitki sağlık değerlendirmesi",
+          "Çalı zararlısı tespiti",
+          "Dekoratif bitki bakım önerileri"
+        ]
+      }
+    },
+    "highlights": {
+      "fieldCrops": {
+        "management": {
+          "title": "Tarla bitkisi yönetimi",
+          "body": "Çiftlikleri, mevsimleri ve tarla bitkisi operasyonlarını tek bir çalışma alanında düzenleyin."
+        },
+        "production": {
+          "title": "Üretim bilgisi",
+          "body": "Tarla bitkileri için verimleri, çeşitleri ve üretim kilometre taşlarını takip edin."
+        }
+      },
+      "vegetables": {
+        "crops": {
+          "title": "Sebze bitkileri",
+          "body": "Yüksek değerli sebze üretimi için özel içerik."
+        },
+        "greenhouse": {
+          "title": "Sera üretimi",
+          "body": "Korumalı sebze yetiştirme ortamları için destek."
+        }
+      },
+      "fruitTrees": {
+        "pruning": {
+          "title": "Budama rehberliği",
+          "body": "Verimli bahçeler için mevsimlik budama uygulamaları."
+        },
+        "recommendations": {
+          "title": "Tarımsal öneriler",
+          "body": "Daha sağlıklı meyve üretimi için bahçe bakım önerileri."
+        }
+      },
+      "medicinalPlants": {
+        "diseasePests": {
+          "title": "Hastalıklar ve zararlılar",
+          "body": "Tıbbi bitki sağlığı zorlukları için farkındalık ve rehberlik."
+        },
+        "quality": {
+          "title": "Botanik kalite",
+          "body": "Yetiştirme koşullarını ve hasat standartlarını belgeleyin."
+        }
+      },
+      "beekeeping": {
+        "honey": {
+          "title": "Bal üretimi",
+          "body": "Hasatları, verimleri ve bal ürün kalitesini kaydedin."
+        },
+        "training": {
+          "title": "Arıcılık eğitimi",
+          "body": "Arılık ve kovan yönetimi için eğitim içeriği."
+        }
+      },
+      "training": {
+        "beekeeping": {
+          "title": "Arıcılık eğitimi",
+          "body": "Arıcılık becerilerine odaklanan kurslar ve konferanslar."
+        },
+        "agriculture": {
+          "title": "Tarımsal eğitim",
+          "body": "Çiftlikler ve profesyoneller için geniş tarımsal eğitim."
+        }
+      },
+      "jobs": {
+        "opportunities": {
+          "title": "İstihdam fırsatları",
+          "body": "Platform genelinde açık tarımsal roller keşfedin."
+        },
+        "professionals": {
+          "title": "Profesyonel fırsatlar",
+          "body": "Tarım mühendisleri, yöneticiler ve işçiler için kariyer yolları."
+        }
+      },
+      "store": {
+        "catalog": {
+          "title": "Ürün kataloğu",
+          "body": "Platformda listelenen tarımsal ürünleri keşfedin."
+        },
+        "organic": {
+          "title": "Doğal ürünler",
+          "body": "Güvenilir üreticilerden organik ve doğal mallar."
+        }
+      },
+      "ornamentalPlants": {
+        "shrubs": {
+          "title": "Süs çalıları",
+          "body": "Bahçeler için dekoratif çalılar."
+        },
+        "decorative": {
+          "title": "Dekoratif bitkiler",
+          "body": "Ev ve bahçe süs koleksiyonları."
+        }
+      },
+      "hydroponicAquaculture": {
+        "water": {
+          "title": "Su tabanlı sistemler",
+          "body": "Entegre hidroponik ve aquaculture."
+        },
+        "greenTech": {
+          "title": "Yeşil teknoloji",
+          "body": "Modern sürdürülebilir tarım inovasyonu."
+        }
+      },
+      "smallProjects": {
+        "ideas": {
+          "title": "Proje fikirleri",
+          "body": "Küçük tarım projeleri için ilham."
+        },
+        "feasibility": {
+          "title": "Fizibilite",
+          "body": "Küçük ölçekli planlama rehberi."
+        }
+      }
+    },
+    "services": {
+      "heading": "Platform hizmetleri",
+      "highlights": "Öne çıkan yetenekler",
+      "plantInspection": "Bitki denetimi",
+      "plantInspectionDesc": "Ürün teşhisi, hastalık tespiti, zararlı tanımlama ve tarımsal öneriler için bitki görüntüleri yükleyin.",
+      "farmRecords": "Çiftlik kayıtları",
+      "farmRecordsDesc": "Çiftlikleri, blokları, tarlaları ve operasyonel coğrafyayı yönetin.",
+      "cropPlanning": "Ürün planlaması",
+      "cropPlanningDesc": "Ürün türlerini, çeşitleri, mevsimleri ve verimleri düzenleyin.",
+      "libraryGuides": "Bilgi kütüphanesi",
+      "libraryGuidesDesc": "Yayınlanmış bilgi tabanı makalelerine göz atın.",
+      "beekeeping": "Arıcılık",
+      "beekeepingDesc": "Arılıklar ve kovan operasyonları için tam arıcılık modülü.",
+      "training": "Eğitim kursları",
+      "trainingDesc": "Dersler ve quizlerle yapılandırılmış tarımsal kurslar.",
+      "lectures": "Uzman konferansları",
+      "lecturesDesc": "Tarım profesyonellerinden eğitim oturumları.",
+      "jobsMarketplace": "İş pazarı",
+      "jobsMarketplaceDesc": "Tarımsal istihdam fırsatları için pazar yeri.",
+      "talentProfiles": "Yetenek profilleri",
+      "talentProfilesDesc": "Profesyonel tarımsal profiller oluşturun ve yönetin.",
+      "recruitment": "İşe alım",
+      "recruitmentDesc": "İşverenleri nitelikli çiftlik ve tarım yetenekleriyle buluşturun.",
+      "storeCatalog": "Mağaza kataloğu",
+      "storeCatalogDesc": "Ürünler, siparişler ve envanter için ticaret modülü.",
+      "orders": "Siparişler ve satışlar",
+      "ordersDesc": "Müşteri siparişlerini ve satış iş akışlarını yönetin.",
+      "inventory": "Envanter",
+      "inventoryDesc": "Stok seviyelerini ve depo hareketlerini takip edin.",
+      "genericDesc": "Çalışma alanınıza giriş yaptıktan sonra bu yeteneği keşfedin."
+    },
+    "access": {
+      "public": "Genel önizleme",
+      "signInRequired": "Giriş gerekli",
+      "paid": "Ücretli hizmet",
+      "subscribeNow": "Şimdi abone ol",
+      "openWorkspace": "Çalışma alanında aç"
+    },
+    "browse": {
+      "title": "Yayınlanan içerik",
+      "unavailable": "Yayınlanan içerik şu anda yüklenemiyor.",
+      "orgHint": "Belirli bir kuruluştan yayınlanan eğitim ve kütüphane içeriğine göz atmak için VITE_PUBLIC_ORG_SLUG değerini yapılandırın."
+    },
+    "breadcrumb": "Gezinti yolu",
+    "footer": {
+      "tagline": "Çiftlikler, eğitim, ticaret ve büyüme için profesyonel tarımsal platform.",
+      "about": "Hakkımızda",
+      "privacy": "Gizlilik politikası",
+      "terms": "Şartlar ve koşullar",
+      "contact": "Bize ulaşın",
+      "navigation": "Alt bilgi gezinmesi",
+      "rights": "© WSA Enterprise. Tüm hakları saklıdır.",
+      "sections": "Ana bölümler",
+      "account": "Hesap"
+    },
+    "cta": {
+      "joinTitle": "WSA Enterprise ile büyümeye hazır mısınız?",
+      "joinBody": "Çiftliklerinizi, ürünlerinizi, eğitiminizi ve iş operasyonlarınızı yönetmek için ücretsiz bir hesap oluşturun.",
+      "workspaceTitle": "Çalışma alanınızda devam edin",
+      "workspaceBody": "Panonuza, modüllerinize ve sahip olduğunuz hizmetlere erişin."
+    },
+    "info": {
+      "about": {
+        "title": "Hakkımızda",
+        "p1": "WSA Enterprise, modern çiftlikler, kooperatifler, eğitmenler ve tarımsal işletme operatörleri için tasarlanmış entegre bir tarımsal platformdur.",
+        "p2": "Misyonumuz, saha operasyonlarını, bilgiyi, ticareti ve yeteneği tek bir güvenli ve profesyonel ekosistemde birleştirmektir.",
+        "p3": "Hesap olmadan genel hizmetlere göz atın, ardından kendi tarımsal çalışma alanınızı oluşturmak ve yönetmek için kayıt olun."
+      },
+      "privacy": {
+        "title": "Gizlilik politikası",
+        "p1": "Gizliliğinize saygı duyuyor ve kişisel verileri geçerli düzenlemelere ve platform güvenlik standartlarına göre koruyoruz.",
+        "p2": "Hesap bilgileri, çiftlik kayıtları ve hizmet verileri yalnızca kuruluş kapsamınızdaki yetkili kullanıcılar tarafından erişilebilir.",
+        "p3": "Dağıtımınıza özel ayrıntılı gizlilik belgeleri için platform yöneticinize başvurun."
+      },
+      "terms": {
+        "title": "Şartlar ve koşullar",
+        "p1": "WSA Enterprise kullanımı, kuruluşunuzun hizmet sözleşmesine ve geçerli yerel yasalara tabidir.",
+        "p2": "Ücretli özellikler aktif bir abonelik gerektirir. Genel gezinme, korumalı veya ücretli işlevlere erişim sağlamaz.",
+        "p3": "Kayıt olarak platformu sorumlu bir şekilde ve tarımsal ile ticari düzenlemelere uygun olarak kullanmayı kabul edersiniz."
+      },
+      "contact": {
+        "title": "Bize ulaşın",
+        "p1": "Platform desteği, ortaklık soruları veya dağıtım konuları için lütfen kuruluşunuzun belirlenmiş iletişim kanalı aracılığıyla ulaşın.",
+        "p2": "Zaten bir hesabınız varsa, uygulama içi bildirimlere ve kuruluş ayarlarına erişmek için giriş yapın.",
+        "p3": "Yeni ziyaretçiler kişisel bir tarımsal çalışma alanı oluşturmak ve mevcut modülleri keşfetmek için kayıt olabilir."
+      }
+    },
+    "auth": {
+      "googleSoon": "Google ile devam et (yakında)",
+      "phoneSoon": "Telefon ile devam et (yakında)",
+      "orEmail": "Veya e-posta ile devam et"
+    },
+    "newsletter": {
+      "title": "Bültenimize abone olun",
+      "description": "Tarım haberleri, yeni makaleler, ipuçları, platform güncellemeleri ve mağaza yenilikleri.",
+      "emailLabel": "E-posta adresi",
+      "emailPlaceholder": "your@email.com",
+      "subscribe": "Abone ol",
+      "success": "Teşekkürler! Abonelik talebiniz alındı.",
+      "hint": "Yalnızca bülten — ücretli abonelik değildir."
+    },
+    "quickLinks": {
+      "title": "Hızlı bağlantılar",
+      "sections": "Ana bölümler",
+      "info": "Bilgi"
+    },
+    "featured": {
+      "title": "Öne çıkan içerik ve hizmetler",
+      "subtitle": "WSA Enterprise tarımsal platformunun öne çıkan alanlarını keşfedin.",
+      "store": "Green Garden Store",
+      "storeDesc": "Tarımsal ürünler, malzemeler ve doğal ürünler.",
+      "ornamental": "Süs bitkileri",
+      "ornamentalDesc": "İç ve dış mekan süs bitkileri, çiçekler ve bahçe koleksiyonları.",
+      "training": "Eğitim",
+      "trainingDesc": "Kurslar, dersler ve tarımsal öğrenme programları."
+    }
   }
 }

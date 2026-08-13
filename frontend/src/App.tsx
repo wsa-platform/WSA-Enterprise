@@ -7,7 +7,9 @@ import { setUnauthorizedHandler } from './api'
 import { AppShell } from './components/AppShell'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
-import { PublicBrowsePage } from './pages/PublicBrowsePage'
+import { HomePage } from './pages/public/HomePage'
+import { SectionPage } from './pages/public/SectionPage'
+import { InfoPage } from './pages/public/InfoPage'
 import { DashboardPage, useDashboardTitle } from './pages/DashboardPage'
 import { ModulePage, cropCreateFields, cropTabs, farmCreateFields, farmTabs, soilCreateFields, soilTabs } from './pages/ModulePage'
 import { BusinessPage } from './pages/BusinessPage'
@@ -40,7 +42,6 @@ import { CampaignEditorPage } from './pages/marketing/CampaignEditorPage'
 import { TemplatesPage } from './pages/marketing/TemplatesPage'
 import { SegmentsPage } from './pages/marketing/SegmentsPage'
 import { ConsentPage } from './pages/marketing/ConsentPage'
-import './App.css'
 
 function ProtectedShell() {
   const { token, organizationId } = useAuth()
@@ -90,12 +91,18 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={token ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route path="/register" element={token ? <Navigate to="/" replace /> : <RegisterPage />} />
-      <Route path="/browse" element={token ? <Navigate to="/" replace /> : <PublicBrowsePage />} />
-      <Route path="/accept-invitation" element={token ? <Navigate to="/" replace /> : <AcceptInvitationPage />} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="/sections/:sectionId" element={<SectionPage />} />
+      <Route path="/about" element={<InfoPage page="about" />} />
+      <Route path="/privacy" element={<InfoPage page="privacy" />} />
+      <Route path="/terms" element={<InfoPage page="terms" />} />
+      <Route path="/contact" element={<InfoPage page="contact" />} />
+      <Route path="/login" element={token ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      <Route path="/register" element={token ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
+      <Route path="/browse" element={<Navigate to="/" replace />} />
+      <Route path="/accept-invitation" element={token ? <Navigate to="/dashboard" replace /> : <AcceptInvitationPage />} />
       <Route element={<ProtectedShell />}>
-        <Route path="/" element={<DashboardPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/organization" element={<OrganizationPage />} />
         <Route path="/billing" element={<BillingPage />} />
         <Route path="/settings" element={<SettingsPage />} />

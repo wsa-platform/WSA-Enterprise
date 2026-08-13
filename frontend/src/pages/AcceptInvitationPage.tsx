@@ -33,7 +33,7 @@ export function AcceptInvitationPage() {
       })
       setSession(result.token, result.user)
       setOrganizationId(result.organization.id)
-      navigate('/')
+      navigate('/dashboard')
     } catch (requestError) {
       setError(translateApiError(requestError) || t('auth.acceptFailed'))
     } finally {
