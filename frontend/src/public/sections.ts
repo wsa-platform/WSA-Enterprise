@@ -30,7 +30,6 @@ export type PublicSectionConfig = {
   imageAltKey: string
   featureKeys: string[]
   highlightKeys: string[]
-  plantInspection?: PlantInspectionContext
   catalogModule?: 'training' | 'library' | 'jobs' | 'business'
 }
 
@@ -44,7 +43,6 @@ export const PUBLIC_SECTIONS: PublicSectionConfig[] = [
     icon: '🌾',
     image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1400&q=80',
     imageAltKey: 'website.sections.fieldCrops.imageAlt',
-    plantInspection: 'field-crops',
     featureKeys: [
       'website.sections.fieldCrops.features.planning',
       'website.sections.fieldCrops.features.monitoring',
@@ -65,7 +63,6 @@ export const PUBLIC_SECTIONS: PublicSectionConfig[] = [
     icon: '🥬',
     image: 'https://images.unsplash.com/photo-1592419044706-3975720a8749?auto=format&fit=crop&w=1400&q=80',
     imageAltKey: 'website.sections.vegetables.imageAlt',
-    plantInspection: 'vegetables',
     featureKeys: [
       'website.sections.vegetables.features.production',
       'website.sections.vegetables.features.management',
@@ -86,7 +83,6 @@ export const PUBLIC_SECTIONS: PublicSectionConfig[] = [
     icon: '🍎',
     image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1400&q=80',
     imageAltKey: 'website.sections.fruitTrees.imageAlt',
-    plantInspection: 'fruit-trees',
     featureKeys: [
       'website.sections.fruitTrees.features.cultivation',
       'website.sections.fruitTrees.features.orchards',
@@ -107,7 +103,6 @@ export const PUBLIC_SECTIONS: PublicSectionConfig[] = [
     icon: '🌿',
     image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1400&q=80',
     imageAltKey: 'website.sections.medicinalPlants.imageAlt',
-    plantInspection: 'medicinal-plants',
     featureKeys: [
       'website.sections.medicinalPlants.features.cultivation',
       'website.sections.medicinalPlants.features.identification',
@@ -128,7 +123,6 @@ export const PUBLIC_SECTIONS: PublicSectionConfig[] = [
     icon: '🌸',
     image: 'https://images.unsplash.com/photo-1455582916367-25f75bfc6710?auto=format&fit=crop&w=1400&q=80',
     imageAltKey: 'website.sections.ornamentalPlants.imageAlt',
-    plantInspection: 'ornamental-plants',
     featureKeys: [
       'website.sections.ornamentalPlants.features.indoor',
       'website.sections.ornamentalPlants.features.outdoor',

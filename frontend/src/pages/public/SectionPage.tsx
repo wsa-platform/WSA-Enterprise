@@ -2,7 +2,6 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { AiPlantInspectionCard } from '../../public/AiPlantInspectionCard'
 import { PublicLayout } from '../../public/PublicLayout'
 import {
   getSectionById,
@@ -129,13 +128,6 @@ export function SectionPage() {
           ))}
         </div>
 
-        {section.plantInspection && (
-          <>
-            <h2 className="public-services-heading">{t('website.aiPlantInspection.sectionHeading')}</h2>
-            <AiPlantInspectionCard context={section.plantInspection} authenticated={Boolean(token)} />
-          </>
-        )}
-
         {section.highlightKeys.length > 0 && (
           <>
             <h2 className="public-services-heading">{t('website.services.highlights')}</h2>
@@ -169,11 +161,6 @@ export function SectionPage() {
                     {!token && requiresAuth && (
                       <Link to="/login" className="gs-btn gs-btn-primary">
                         {t('website.nav.login')}
-                      </Link>
-                    )}
-                    {token && requiresAuth && (
-                      <Link to="/dashboard" className="gs-btn gs-btn-primary">
-                        {t('website.access.openWorkspace')}
                       </Link>
                     )}
                   </article>
