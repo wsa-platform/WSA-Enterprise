@@ -1,6 +1,8 @@
 /// Arabic UI strings — RTL admin app only.
 abstract final class Ar {
   static const appTitle = 'إدارة WSA';
+  static const appTitleShort = 'WSA';
+  static const navMenu = 'القائمة';
   static const loginTitle = 'تسجيل الدخول';
   static const loginSubtitle = 'لوحة إدارة المؤسسة الزراعية';
   static const email = 'البريد الإلكتروني';
@@ -18,6 +20,11 @@ abstract final class Ar {
   static const comingSoon = 'قريباً';
   static const selectOrganization = 'اختر المؤسسة';
   static const unknownError = 'تعذّر إكمال الطلب.';
+  static const dashboardSignedInAs = 'المستخدم الحالي';
+  static const dashboardOrganization = 'المؤسسة النشطة';
+  static const dashboardRole = 'الدور';
+  static const dashboardLoadFailed = 'تعذّر تحميل بيانات لوحة التحكم. تحقق من الاتصال وحاول مجدداً.';
+  static const dashboardPartialFailure = 'تعذّر تحميل بعض البيانات. قد تكون القيم المعروضة غير مكتملة.';
 
   static const navDashboard = 'الرئيسية';
   static const navOrganizations = 'المؤسسات';

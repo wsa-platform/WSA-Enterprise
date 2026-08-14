@@ -76,6 +76,59 @@ void main() {
       expect(permissionGuard(auth, state), isNull);
     });
   });
+
+  group('routePermissionGuard', () {
+    late ApiClient client;
+
+    setUp(() {
+      client = ApiClient.inMemory();
+    });
+
+    test('redirects hidden routes to dashboard', () {
+      client.setPermissionsForTest(['access.manage']);
+
+      final state = _FakeGoRouterState(AppRoutes.agriculture);
+
+      expect(routePermissionGuard(client, state), AppRoutes.dashboard);
+    });
+
+    test('allows visible routes', () {
+      client.setPermissionsForTest(['access.manage']);
+
+      final state = _FakeGoRouterState(AppRoutes.users);
+
+      expect(routePermissionGuard(client, state), isNull);
+    });
+
+    test('redirects to access denied when dashboard is hidden', () {
+      client.setPermissionsForTest(['farm.view']);
+
+      final state = _FakeGoRouterState(AppRoutes.users);
+
+      expect(routePermissionGuard(client, state), AppRoutes.accessDenied);
+    });
+  });
+
+  group('logout protection', () {
+    late ApiClient client;
+    late AuthController auth;
+
+    setUp(() {
+      client = ApiClient.inMemory();
+      auth = AuthController(client);
+      auth.status = AuthStatus.authenticated;
+      auth.permissionsLoaded = true;
+      client.setPermissionsForTest(['access.manage']);
+    });
+
+    test('blocks protected routes after logout', () async {
+      await auth.logout();
+
+      final state = _FakeGoRouterState(AppRoutes.dashboard);
+      expect(authGuard(auth, state), AppRoutes.login);
+      expect(auth.isAuthenticated, isFalse);
+    });
+  });
 }
 
 class _FakeGoRouterState extends Fake implements GoRouterState {

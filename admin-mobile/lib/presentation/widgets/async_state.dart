@@ -21,7 +21,7 @@ class AsyncState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (loading && empty) {
+    if (loading) {
       return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

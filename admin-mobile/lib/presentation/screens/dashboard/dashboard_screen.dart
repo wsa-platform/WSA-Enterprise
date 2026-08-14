@@ -9,6 +9,9 @@ class DashboardScreen extends StatefulWidget {
 
   final ApiClient client;
 
+  @visibleForTesting
+  static Future<DashboardMetrics> Function(ApiClient client)? debugLoader;
+
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -16,6 +19,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _loading = true;
   String? _error;
+  bool _partialFailure = false;
   late DashboardMetrics _metrics;
 
   @override
@@ -29,13 +33,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _partialFailure = false;
     });
 
     try {
-      final metrics = await DashboardMetrics.load(widget.client);
+      final loader = DashboardScreen.debugLoader ?? DashboardMetrics.load;
+      final metrics = await loader(widget.client);
       if (!mounted) return;
+      if (metrics.allSourcesFailed) {
+        setState(() {
+          _error = Ar.dashboardLoadFailed;
+          _loading = false;
+        });
+        return;
+      }
       setState(() {
         _metrics = metrics;
+        _partialFailure = metrics.hasPartialFailures;
         _loading = false;
       });
     } on ApiException catch (error) {
@@ -53,11 +67,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Map<String, dynamic>? get _currentOrganization {
+    final orgId = widget.client.organizationId;
+    if (orgId == null) return null;
+    for (final org in widget.client.organizations) {
+      if (org['id'] == orgId) return org;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isEmpty = !_loading && _error == null && _metrics.isEmpty;
+    final user = widget.client.user;
+    final userName = user?['name']?.toString() ?? '';
+    final userEmail = user?['email']?.toString() ?? '';
+    final organization = _currentOrganization;
+    final orgName = organization?['name']?.toString() ?? Ar.notAvailable;
+    final orgRole = organization?['role']?.toString();
+
     return AsyncState(
       loading: _loading,
       error: _error,
+      empty: isEmpty,
       onRetry: _load,
       child: RefreshIndicator(
         onRefresh: _load,
@@ -78,6 +110,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   label: const Text(Ar.refresh),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            if (_partialFailure)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Material(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, color: Colors.amber.shade800),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            Ar.dashboardPartialFailure,
+                            style: TextStyle(color: Colors.amber.shade900),
+                          ),
+                        ),
+                        TextButton(onPressed: _load, child: const Text(Ar.retry)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (userName.isNotEmpty || userEmail.isNotEmpty) ...[
+                      Text(
+                        Ar.dashboardSignedInAs,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.black54),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        userName.isNotEmpty ? userName : userEmail,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      if (userEmail.isNotEmpty && userName.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(userEmail, style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                      const SizedBox(height: 12),
+                    ],
+                    Text(
+                      Ar.dashboardOrganization,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.black54),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      orgName,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    if (orgRole != null && orgRole.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        '${Ar.dashboardRole}: $orgRole',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             LayoutBuilder(
@@ -194,7 +293,11 @@ class DashboardMetrics {
     required this.systemHealth,
     this.systemHealthSubtitle,
     required this.alerts,
+    this.allSourcesFailed = false,
+    this.hasPartialFailures = false,
   });
+
+  static const sourceCount = 6;
 
   final String organizations;
   final String activeUsers;
@@ -210,6 +313,20 @@ class DashboardMetrics {
   final String systemHealth;
   final String? systemHealthSubtitle;
   final String alerts;
+  final bool allSourcesFailed;
+  final bool hasPartialFailures;
+
+  bool get isEmpty =>
+      organizations == Ar.notAvailable &&
+      activeUsers == Ar.notAvailable &&
+      farms == Ar.notAvailable &&
+      crops == Ar.notAvailable &&
+      courses == Ar.notAvailable &&
+      products == Ar.notAvailable &&
+      campaigns == Ar.notAvailable &&
+      aiUsage == Ar.notAvailable &&
+      recentActivity == Ar.notAvailable &&
+      alerts == Ar.notAvailable;
 
   factory DashboardMetrics.empty() => DashboardMetrics(
         organizations: Ar.notAvailable,
@@ -226,7 +343,7 @@ class DashboardMetrics {
       );
 
   static Future<DashboardMetrics> load(ApiClient client) async {
-    final results = await Future.wait<Object?>([
+    final results = await Future.wait<_FetchResult<Object?>>([
       _safe(() => client.platform.organizations()),
       _safe(() => client.platform.accessSummary()),
       _safe(() => client.platform.workflowSummary()),
@@ -235,12 +352,16 @@ class DashboardMetrics {
       _safe(() => client.platform.monitoringHealth()),
     ]);
 
-    final orgRows = results[0] as List<dynamic>?;
-    final access = results[1] as Map<String, dynamic>?;
-    final workflow = results[2] as Map<String, dynamic>?;
-    final analytics = results[3] as Map<String, dynamic>?;
-    final marketing = results[4] as Map<String, dynamic>?;
-    final monitoring = results[5] as Map<String, dynamic>?;
+    final failedCount = results.where((result) => result.failed).length;
+    final allFailed = failedCount == sourceCount;
+    final partialFailures = failedCount > 0 && !allFailed;
+
+    final orgRows = results[0].value as List<dynamic>?;
+    final access = results[1].value as Map<String, dynamic>?;
+    final workflow = results[2].value as Map<String, dynamic>?;
+    final analytics = results[3].value as Map<String, dynamic>?;
+    final marketing = results[4].value as Map<String, dynamic>?;
+    final monitoring = results[5].value as Map<String, dynamic>?;
 
     final aiRequests = access?['ai_requests'] as Map<String, dynamic>?;
     final recentAudit = access?['recent_audit'] as List<dynamic>?;
@@ -279,14 +400,23 @@ class DashboardMetrics {
       alerts: notifications?['unread']?.toString() ??
           marketing?['failed_deliveries']?.toString() ??
           Ar.notAvailable,
+      allSourcesFailed: allFailed,
+      hasPartialFailures: partialFailures,
     );
   }
 
-  static Future<T?> _safe<T>(Future<T> Function() action) async {
+  static Future<_FetchResult<T>> _safe<T>(Future<T> Function() action) async {
     try {
-      return await action();
+      return _FetchResult(value: await action(), failed: false);
     } catch (_) {
-      return null;
+      return const _FetchResult(value: null, failed: true);
     }
   }
+}
+
+class _FetchResult<T> {
+  const _FetchResult({required this.value, required this.failed});
+
+  final T? value;
+  final bool failed;
 }

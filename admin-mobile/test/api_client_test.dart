@@ -84,6 +84,16 @@ void main() {
       client.setPermissionsForTest(['platform.view']);
       expect(client.hasAdminAccess, isFalse);
     });
+
+    test('checks single and multiple permissions', () {
+      final client = ApiClient.inMemory();
+      client.setPermissionsForTest(['platform.view', 'farm.view']);
+
+      expect(client.hasPermission('platform.view'), isTrue);
+      expect(client.hasPermission('access.manage'), isFalse);
+      expect(client.hasAnyPermission(['access.manage', 'farm.view']), isTrue);
+      expect(client.hasAnyPermission(['access.manage', 'ai.use']), isFalse);
+    });
   });
 
   group('InMemoryTokenStorage', () {

@@ -52,6 +52,11 @@ class ApiClient {
   bool get hasAdminAccess =>
       _permissions.any((permission) => AppConfig.adminPermissions.contains(permission));
 
+  bool hasPermission(String permission) => _permissions.contains(permission);
+
+  bool hasAnyPermission(Iterable<String> permissions) =>
+      permissions.any(hasPermission);
+
   void Function()? onUnauthorized;
 
   Future<void> restoreSession() async {
@@ -168,6 +173,19 @@ class ApiClient {
   /// Test helper for setting permissions without network calls.
   void setPermissionsForTest(List<String> permissions) {
     _permissions = List<String>.from(permissions);
+  }
+
+  /// Test helper for setting user profile without network calls.
+  void setUserForTest(Map<String, dynamic> user) {
+    _user = Map<String, dynamic>.from(user);
+  }
+
+  /// Test helper for setting organizations without network calls.
+  void setOrganizationsForTest(List<Map<String, dynamic>> organizations, {int? organizationId}) {
+    _organizations = organizations
+        .map((organization) => Map<String, dynamic>.from(organization))
+        .toList();
+    _organizationId = organizationId ?? (_organizations.isNotEmpty ? _organizations.first['id'] as int? : null);
   }
 
   /// Test helper — not used in production bootstrap.

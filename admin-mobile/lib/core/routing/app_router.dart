@@ -18,7 +18,9 @@ GoRouter createAppRouter({
     initialLocation: AppRoutes.dashboard,
     refreshListenable: auth,
     redirect: (context, state) {
-      return authGuard(auth, state) ?? permissionGuard(auth, state);
+      return authGuard(auth, state) ??
+          permissionGuard(auth, state) ??
+          routePermissionGuard(client, state);
     },
     routes: [
       GoRoute(

@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:wsa_admin/core/auth/auth_controller.dart';
 import 'package:wsa_admin/core/routing/routes.dart';
+import 'package:wsa_admin/data/api/api_client.dart';
+import 'package:wsa_admin/presentation/widgets/sidebar_nav.dart';
 
 /// Redirects unauthenticated users to login.
 String? authGuard(AuthController auth, GoRouterState state) {
@@ -42,4 +44,19 @@ String? permissionGuard(AuthController auth, GoRouterState state) {
   }
 
   return null;
+}
+
+/// Redirects users away from routes hidden by RBAC navigation rules.
+String? routePermissionGuard(ApiClient client, GoRouterState state) {
+  final location = state.matchedLocation;
+  if (location == AppRoutes.login || location == AppRoutes.accessDenied) {
+    return null;
+  }
+
+  final visiblePaths = SidebarNav.visibleDestinations(client).map((item) => item.path).toSet();
+  if (visiblePaths.contains(location)) {
+    return null;
+  }
+
+  return visiblePaths.contains(AppRoutes.dashboard) ? AppRoutes.dashboard : AppRoutes.accessDenied;
 }
