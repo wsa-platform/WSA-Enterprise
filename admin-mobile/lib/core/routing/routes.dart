@@ -1,0 +1,19 @@
+abstract final class AppRoutes {
+  static const login = '/login';
+  static const accessDenied = '/access-denied';
+  static const dashboard = '/';
+  static const organizations = '/organizations';
+  static const users = '/users';
+  static const roles = '/roles';
+  static const agriculture = '/agriculture';
+  static const content = '/content';
+  static const store = '/store';
+  static const marketing = '/marketing';
+  static const communications = '/communications';
+  static const ai = '/ai';
+  static const reports = '/reports';
+  static const notifications = '/notifications';
+  static const audit = '/audit';
+  static const monitoring = '/monitoring';
+  static const settings = '/settings';
+}
