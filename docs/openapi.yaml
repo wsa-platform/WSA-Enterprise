@@ -32,6 +32,7 @@ tags:
   - name: Beekeeping
   - name: AI Assistant
   - name: Marketing
+  - name: Marketplace
 components:
   securitySchemes:
     bearerAuth:
@@ -106,6 +107,117 @@ components:
         data: {}
         meta:
           type: object
+    MarketplacePublicListing:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        seller_type: { type: string, enum: [local, international] }
+        price: { type: string, nullable: true }
+        currency: { type: string, nullable: true }
+        country: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        export_ready: { type: boolean }
+        export_destination: { type: string, nullable: true }
+        contact_access_price: { type: string, nullable: true }
+        contact_access_currency: { type: string, nullable: true }
+        published_at: { type: string, format: date-time, nullable: true }
+        category:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            slug: { type: string }
+            name: { type: string }
+            name_ar: { type: string, nullable: true }
+        seller:
+          type: object
+          properties:
+            display_name: { type: string, nullable: true }
+            country: { type: string, nullable: true }
+            city: { type: string, nullable: true }
+            seller_type: { type: string }
+            verified: { type: boolean }
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              path: { type: string }
+              alt_text: { type: string, nullable: true }
+              sort_order: { type: integer }
+        contact_access_required: { type: boolean }
+        contact:
+          type: object
+          properties:
+            seller_email: { type: string, nullable: true }
+            seller_phone: { type: string, nullable: true }
+            seller_display_name: { type: string, nullable: true }
+    MarketplaceOwnerListing:
+      allOf:
+        - $ref: '#/components/schemas/MarketplacePublicListing'
+        - type: object
+          properties:
+            status: { type: string, enum: [draft, pending_review, published, rejected, suspended] }
+            seller_email: { type: string, nullable: true }
+            seller_phone: { type: string, nullable: true }
+            export_metadata: { type: object, nullable: true, additionalProperties: true }
+            organization_id: { type: integer, nullable: true }
+            created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
+    MarketplaceListingWrite:
+      type: object
+      properties:
+        title: { type: string, maxLength: 255 }
+        description: { type: string, nullable: true }
+        category_id: { type: integer, nullable: true }
+        seller_type: { type: string, enum: [local, international] }
+        price: { type: number, minimum: 0, nullable: true }
+        currency: { type: string, minLength: 3, maxLength: 3, nullable: true }
+        country: { type: string, maxLength: 100, nullable: true }
+        city: { type: string, maxLength: 100, nullable: true }
+        seller_display_name: { type: string, maxLength: 255, nullable: true }
+        seller_email: { type: string, format: email, nullable: true }
+        seller_phone: { type: string, maxLength: 50, nullable: true }
+        export_ready: { type: boolean }
+        export_destination: { type: string, maxLength: 255, nullable: true }
+        export_metadata: { type: object, nullable: true, additionalProperties: true }
+        contact_access_price: { type: number, minimum: 0, nullable: true }
+    MarketplaceCategory:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        name: { type: string }
+        name_ar: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        is_active: { type: boolean }
+        sort_order: { type: integer }
+    MarketplaceContactAccessOrder:
+      type: object
+      properties:
+        id: { type: integer }
+        buyer_user_id: { type: integer }
+        seller_user_id: { type: integer }
+        listing_id: { type: integer }
+        amount: { type: string, nullable: true }
+        currency: { type: string, nullable: true }
+        payment_status: { type: string, enum: [pending, paid, failed] }
+        payment_provider: { type: string, nullable: true }
+        payment_reference: { type: string, nullable: true }
+        idempotency_key: { type: string, nullable: true }
+    MarketplacePaginatedListings:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketplacePublicListing'
+        current_page: { type: integer }
+        last_page: { type: integer }
+        total: { type: integer }
 paths:
   /health:
     get:
@@ -2540,3 +2652,502 @@ paths:
       responses:
         '200': { description: Revoked client }
         '404': { $ref: '#/components/responses/NotFound' }
+  /public/market/listings:
+    get:
+      tags: [Marketplace]
+      summary: List published marketplace listings (public)
+      description: Seller email and phone are never included. Supports the React public catalog.
+      parameters:
+        - name: category_id
+          in: query
+          schema: { type: integer }
+        - name: country
+          in: query
+          schema: { type: string }
+        - name: seller_type
+          in: query
+          schema: { type: string, enum: [local, international] }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: Paginated published listings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplacePaginatedListings'
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /public/market/listings/{listing}:
+    get:
+      tags: [Marketplace]
+      summary: Show a published marketplace listing (public)
+      parameters:
+        - name: listing
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Public listing without seller contact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplacePublicListing'
+        '404': { $ref: '#/components/responses/NotFound' }
+  /public/market/categories:
+    get:
+      tags: [Marketplace]
+      summary: List active marketplace categories (public)
+      responses:
+        '200':
+          description: Active categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MarketplaceCategory'
+  /market/listings:
+    get:
+      tags: [Marketplace]
+      summary: List published marketplace listings
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: category_id
+          in: query
+          schema: { type: integer }
+        - name: country
+          in: query
+          schema: { type: string }
+        - name: seller_type
+          in: query
+          schema: { type: string, enum: [local, international] }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: Paginated published listings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplacePaginatedListings'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    post:
+      tags: [Marketplace]
+      summary: Create a draft marketplace listing
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MarketplaceListingWrite'
+                - type: object
+                  required: [title]
+      responses:
+        '201':
+          description: Draft listing created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceOwnerListing'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /market/listings/{listing}:
+    get:
+      tags: [Marketplace]
+      summary: Show a published listing, including contact when entitled
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: listing
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Public listing; contact is present only after paid access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplacePublicListing'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Marketplace]
+      summary: Update own draft or rejected listing
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: listing
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceListingWrite'
+      responses:
+        '200':
+          description: Updated owner listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceOwnerListing'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Marketplace]
+      summary: Delete own listing
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: listing
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Listing deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /market/listings/{listing}/submit:
+    post:
+      tags: [Marketplace]
+      summary: Submit own listing for review
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: listing
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Listing pending review
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceOwnerListing'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /market/listings/{listing}/request-contact-access:
+    post:
+      tags: [Marketplace]
+      summary: Create a contact-access order for a published listing
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: listing
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idempotency_key: { type: string, maxLength: 64 }
+      responses:
+        '201':
+          description: Pending contact-access order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceContactAccessOrder'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /market/contact-access-orders/{order}/pay:
+    post:
+      tags: [Marketplace]
+      summary: Pay a contact-access order (mock provider by default)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: order
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idempotency_key]
+              properties:
+                idempotency_key: { type: string, maxLength: 64 }
+      responses:
+        '200':
+          description: Payment result; contact is returned when paid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    $ref: '#/components/schemas/MarketplaceContactAccessOrder'
+                  contact:
+                    type: object
+                    nullable: true
+                    properties:
+                      seller_email: { type: string, nullable: true }
+                      seller_phone: { type: string, nullable: true }
+                      seller_display_name: { type: string, nullable: true }
+                  entitlement: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /market/categories:
+    get:
+      tags: [Marketplace]
+      summary: List active marketplace categories
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Active categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MarketplaceCategory'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /market/my-listings:
+    get:
+      tags: [Marketplace]
+      summary: List the authenticated seller listings
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: Paginated owner listings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MarketplaceOwnerListing'
+                  current_page: { type: integer }
+                  last_page: { type: integer }
+                  total: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /market/my-entitlements:
+    get:
+      tags: [Marketplace]
+      summary: List paid contact-access entitlements
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: Paginated entitlements with contact when granted
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /admin/market/listings:
+    get:
+      tags: [Marketplace]
+      summary: Admin list of marketplace listings
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, pending_review, published, rejected, suspended] }
+        - name: seller_type
+          in: query
+          schema: { type: string, enum: [local, international] }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: Paginated listings for review
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/market/listings/{listing}/approve:
+    post:
+      tags: [Marketplace]
+      summary: Approve a listing pending review
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: listing
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Published listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceOwnerListing'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /admin/market/listings/{listing}/reject:
+    post:
+      tags: [Marketplace]
+      summary: Reject a listing pending review
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: listing
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Rejected listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceOwnerListing'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /admin/market/listings/{listing}/suspend:
+    post:
+      tags: [Marketplace]
+      summary: Suspend a published listing
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: listing
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Suspended listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceOwnerListing'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /admin/market/categories:
+    get:
+      tags: [Marketplace]
+      summary: Admin list of marketplace categories
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: All categories
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Marketplace]
+      summary: Create a marketplace category
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug, name]
+              properties:
+                slug: { type: string, maxLength: 100 }
+                name: { type: string, maxLength: 255 }
+                name_ar: { type: string, maxLength: 255 }
+                description: { type: string }
+                is_active: { type: boolean }
+                sort_order: { type: integer, minimum: 0 }
+      responses:
+        '201':
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceCategory'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
