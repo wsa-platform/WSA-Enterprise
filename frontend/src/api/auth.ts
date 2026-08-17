@@ -51,3 +51,41 @@ export const acceptInvitation = (payload: {
     '/auth/accept-invitation',
     { method: 'POST', body: JSON.stringify({ ...payload, device_name: payload.device_name ?? 'wsa-web-dashboard' }) },
   )
+
+export const getGoogleRedirect = () =>
+  request<{ url: string; state: string } | { error: string }>('/auth/google/redirect')
+
+export const completeGoogleCallback = (code: string, state: string) =>
+  request<{ token: string; user: User; created?: boolean }>('/auth/google/callback', {
+    method: 'POST',
+    body: JSON.stringify({ code, state, device_name: 'wsa-web-dashboard' }),
+  })
+
+export const sendPhoneOtp = (phone: string) =>
+  request<{ sent?: boolean; message?: string }>('/auth/phone/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  })
+
+export const verifyPhoneOtp = (payload: { phone: string; code: string; name?: string }) =>
+  request<{ token: string; user: User }>('/auth/phone/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ ...payload, device_name: 'wsa-web-dashboard' }),
+  })
+
+export const forgotPassword = (email: string) =>
+  request<{ message: string }>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+
+export const resetPassword = (payload: {
+  token: string
+  email: string
+  password: string
+  password_confirmation: string
+}) =>
+  request<{ message: string }>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })

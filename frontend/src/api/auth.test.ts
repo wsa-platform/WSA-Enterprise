@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { register } from './auth'
+import { register, forgotPassword, getGoogleRedirect } from './auth'
 
 describe('register', () => {
   beforeEach(() => {
@@ -36,6 +36,42 @@ describe('register', () => {
       email: 'owner@wsa.test',
       device_name: 'wsa-web-dashboard',
     })
+  })
+})
+
+describe('password reset and google redirect', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('posts forgot-password to the auth endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ message: 'ok' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await forgotPassword('owner@wsa.test')
+
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(String(url)).toContain('/auth/forgot-password')
+    expect(init?.method).toBe('POST')
+    expect(JSON.parse(String(init?.body))).toEqual({ email: 'owner@wsa.test' })
+  })
+
+  it('loads the google redirect URL', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ url: 'https://accounts.google.com/o', state: 'abc' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const result = await getGoogleRedirect()
+
+    expect('url' in result && result.url).toContain('accounts.google.com')
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/auth/google/redirect')
   })
 })
 

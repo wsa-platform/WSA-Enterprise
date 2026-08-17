@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -30,6 +30,14 @@ import { AuditPage } from './pages/admin/AuditPage'
 import { MonitoringPage } from './pages/admin/MonitoringPage'
 import { AnalyticsPage } from './pages/admin/AnalyticsPage'
 import { ApiClientsPage } from './pages/admin/ApiClientsPage'
+import { MarketplaceListingPage } from './pages/marketplace/MarketplaceListingPage'
+import { MarketplacePage } from './pages/marketplace/MarketplacePage'
+import { MyListingsPage } from './pages/marketplace/MyListingsPage'
+import { ListingEditorPage } from './pages/marketplace/ListingEditorPage'
+import { CommunicationsPage } from './pages/communications/CommunicationsPage'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { OAuthCallbackPage } from './pages/OAuthCallbackPage'
 import { AcceptInvitationPage } from './pages/AcceptInvitationPage'
 import { JobsMarketplacePage } from './pages/jobs/JobsMarketplacePage'
 import { TalentProfilePage } from './pages/jobs/TalentProfilePage'
@@ -43,11 +51,24 @@ import { TemplatesPage } from './pages/marketing/TemplatesPage'
 import { SegmentsPage } from './pages/marketing/SegmentsPage'
 import { ConsentPage } from './pages/marketing/ConsentPage'
 
+function safeReturnPath(value: string | null | undefined): string {
+  return value && value.startsWith('/') && !value.startsWith('//') ? value : '/dashboard'
+}
+
+function AuthenticatedRedirect() {
+  const [params] = useSearchParams()
+  return <Navigate to={safeReturnPath(params.get('next'))} replace />
+}
+
 function ProtectedShell() {
   const { token, organizationId } = useAuth()
+  const location = useLocation()
   const workspaceName = useDashboardTitle(token, organizationId)
 
-  if (!token) return <Navigate to="/login" replace />
+  if (!token) {
+    const next = `${location.pathname}${location.search}`
+    return <Navigate to={`/login?next=${encodeURIComponent(safeReturnPath(next))}`} replace />
+  }
 
   return (
     <PermissionProvider>
@@ -59,14 +80,16 @@ function ProtectedShell() {
 function SessionGuard({ children }: { children: ReactNode }) {
   const { clearSession } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
       clearSession()
-      navigate('/login', { replace: true, state: { expired: true } })
+      const next = `${location.pathname}${location.search}`
+      navigate(`/login?next=${encodeURIComponent(safeReturnPath(next))}`, { replace: true, state: { expired: true } })
     })
     return () => setUnauthorizedHandler(null)
-  }, [clearSession, navigate])
+  }, [clearSession, navigate, location.pathname, location.search])
 
   return children
 }
@@ -97,8 +120,13 @@ function AppRoutes() {
       <Route path="/privacy" element={<InfoPage page="privacy" />} />
       <Route path="/terms" element={<InfoPage page="terms" />} />
       <Route path="/contact" element={<InfoPage page="contact" />} />
-      <Route path="/login" element={token ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
-      <Route path="/register" element={token ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
+      <Route path="/market" element={<MarketplacePage />} />
+      <Route path="/market/:id" element={<MarketplaceListingPage />} />
+      <Route path="/login" element={token ? <AuthenticatedRedirect /> : <LoginPage />} />
+      <Route path="/register" element={token ? <AuthenticatedRedirect /> : <RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/auth/callback" element={<OAuthCallbackPage />} />
       <Route path="/browse" element={<Navigate to="/" replace />} />
       <Route path="/accept-invitation" element={token ? <Navigate to="/dashboard" replace /> : <AcceptInvitationPage />} />
       <Route element={<ProtectedShell />}>
@@ -128,6 +156,10 @@ function AppRoutes() {
         <Route path="/marketing/consent" element={<ConsentPage />} />
         <Route path="/jobs" element={<JobsMarketplacePage />} />
         <Route path="/jobs/talent" element={<TalentProfilePage />} />
+        <Route path="/seller/listings" element={<MyListingsPage />} />
+        <Route path="/seller/listings/new" element={<ListingEditorPage />} />
+        <Route path="/seller/listings/:listingId" element={<ListingEditorPage />} />
+        <Route path="/communications" element={<CommunicationsPage />} />
         <Route path="/beekeeping" element={<BeekeepingDashboardPage />} />
         <Route path="/farms" element={<FarmsPage />} />
         <Route path="/crops" element={<CropsPage />} />

@@ -1,24 +1,41 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { getOrganizations, login } from '../api'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { getGoogleRedirect, getOrganizations, login, sendPhoneOtp, verifyPhoneOtp } from '../api'
 import { DEMO_HINT, getLoginDefaults, isDemoLoginEnabled } from '../config/loginDemo'
 import { useAuth } from '../context/AuthContext'
 import { translateApiError } from '../i18n/apiErrors'
 import { PublicLanguageMenu } from '../public/PublicLanguageMenu'
 import '../public/publicSite.css'
 
+function safeNext(value: string | null): string {
+  return value && value.startsWith('/') && !value.startsWith('//') ? value : '/dashboard'
+}
+
 export function LoginPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
+  const [params] = useSearchParams()
   const expired = (location.state as { expired?: boolean } | null)?.expired === true
+  const nextPath = safeNext(params.get('next'))
   const { setSession, setOrganizationId } = useAuth()
   const loginDefaults = getLoginDefaults()
   const [email, setEmail] = useState(loginDefaults.email)
   const [password, setPassword] = useState(loginDefaults.password)
+  const [phone, setPhone] = useState('')
+  const [otp, setOtp] = useState('')
+  const [phoneName, setPhoneName] = useState('')
+  const [phoneStep, setPhoneStep] = useState<'idle' | 'code'>('idle')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const finishLogin = async (token: string, user: { id: number; name: string; email: string }) => {
+    setSession(token, user)
+    const organizations = await getOrganizations(token)
+    if (organizations[0]) setOrganizationId(organizations[0].id)
+    navigate(nextPath)
+  }
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -26,10 +43,56 @@ export function LoginPage() {
     setError('')
     try {
       const authenticated = await login(email, password)
-      setSession(authenticated.token, authenticated.user)
-      const organizations = await getOrganizations(authenticated.token)
-      if (organizations[0]) setOrganizationId(organizations[0].id)
-      navigate('/dashboard')
+      await finishLogin(authenticated.token, authenticated.user)
+    } catch (requestError) {
+      setError(translateApiError(requestError) || t('auth.signInFailed'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogle = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const result = await getGoogleRedirect()
+      if ('error' in result || !('url' in result)) {
+        setError(t('website.auth.unavailable'))
+        return
+      }
+      sessionStorage.setItem('wsa.auth.next', nextPath)
+      window.location.assign(result.url)
+    } catch (requestError) {
+      setError(translateApiError(requestError) || t('website.auth.unavailable'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSendOtp = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      await sendPhoneOtp(phone.trim())
+      setPhoneStep('code')
+    } catch (requestError) {
+      setError(translateApiError(requestError) || t('website.auth.unavailable'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setLoading(true)
+    setError('')
+    try {
+      const authenticated = await verifyPhoneOtp({
+        phone: phone.trim(),
+        code: otp.trim(),
+        name: phoneName.trim() || undefined,
+      })
+      await finishLogin(authenticated.token, authenticated.user)
     } catch (requestError) {
       setError(translateApiError(requestError) || t('auth.signInFailed'))
     } finally {
@@ -61,20 +124,32 @@ export function LoginPage() {
           <p className="muted" dir="auto">{t('auth.loginSubtitle')}</p>
           {expired && <p className="banner">{t('auth.sessionExpired')}</p>}
           <div className="public-auth-providers">
-            <button type="button" className="public-auth-provider" disabled aria-disabled="true">
-              {t('website.auth.googleSoon')}
+            <button type="button" className="public-auth-provider" disabled={loading} onClick={() => void handleGoogle()}>
+              {t('website.auth.google')}
             </button>
-            <button type="button" className="public-auth-provider" disabled aria-disabled="true">
-              {t('website.auth.phoneSoon')}
+            <button type="button" className="public-auth-provider" disabled={loading} onClick={() => setPhoneStep(phoneStep === 'idle' ? 'code' : 'idle')}>
+              {t('website.auth.phone')}
             </button>
           </div>
+          {phoneStep !== 'idle' && (
+            <form onSubmit={(event) => void handleVerifyOtp(event)}>
+              <label>{t('auth.phoneLabel')}<input value={phone} onChange={(event) => setPhone(event.target.value)} required autoComplete="tel" /></label>
+              <label>{t('auth.otpLabel')}<input value={otp} onChange={(event) => setOtp(event.target.value)} autoComplete="one-time-code" /></label>
+              <label>{t('auth.phoneName')}<input value={phoneName} onChange={(event) => setPhoneName(event.target.value)} autoComplete="name" /></label>
+              <button type="button" disabled={loading || !phone.trim()} onClick={() => void handleSendOtp()}>{t('auth.phoneSend')}</button>
+              <button disabled={loading || !otp.trim()} type="submit">{t('auth.phoneVerify')}</button>
+            </form>
+          )}
           <p className="public-auth-divider">{t('website.auth.orEmail')}</p>
-          <form onSubmit={handleLogin}>
+          <form onSubmit={(event) => void handleLogin(event)}>
             <label>{t('common.email')}<input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required autoComplete="email" /></label>
             <label>{t('common.password')}<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" required autoComplete="current-password" /></label>
             {error && <p className="error" role="alert">{error}</p>}
             <button disabled={loading} type="submit">{loading ? t('auth.signingIn') : t('common.signIn')}</button>
           </form>
+          <p className="hint">
+            <Link to="/forgot-password">{t('auth.forgotPassword')}</Link>
+          </p>
           <p className="hint">
             {t('auth.needAccount')} <Link to="/register">{t('auth.createAccount')}</Link>
           </p>

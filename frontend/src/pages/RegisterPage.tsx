@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
-import { register } from '../api'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { getGoogleRedirect, register } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { translateApiError } from '../i18n/apiErrors'
 import { PublicLanguageMenu } from '../public/PublicLanguageMenu'
@@ -10,6 +10,11 @@ import '../public/publicSite.css'
 export function RegisterPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const requestedNext = params.get('next')
+  const nextPath = requestedNext && requestedNext.startsWith('/') && !requestedNext.startsWith('//')
+    ? requestedNext
+    : '/dashboard'
   const { setSession, setOrganizationId } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -17,6 +22,24 @@ export function RegisterPage() {
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const handleGoogle = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const result = await getGoogleRedirect()
+      if ('error' in result || !('url' in result)) {
+        setError(t('website.auth.unavailable'))
+        return
+      }
+      sessionStorage.setItem('wsa.auth.next', nextPath)
+      window.location.assign(result.url)
+    } catch (requestError) {
+      setError(translateApiError(requestError) || t('website.auth.unavailable'))
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -34,7 +57,7 @@ export function RegisterPage() {
       if (result.organization) {
         setOrganizationId(result.organization.id)
       }
-      navigate('/dashboard')
+      navigate(nextPath)
     } catch (requestError) {
       setError(translateApiError(requestError) || t('auth.registerFailed'))
     } finally {
@@ -65,11 +88,8 @@ export function RegisterPage() {
           <h1>{t('auth.registerTitle')}</h1>
           <p className="muted">{t('auth.registerSubtitle')}</p>
           <div className="public-auth-providers">
-            <button type="button" className="public-auth-provider" disabled aria-disabled="true">
-              {t('website.auth.googleSoon')}
-            </button>
-            <button type="button" className="public-auth-provider" disabled aria-disabled="true">
-              {t('website.auth.phoneSoon')}
+            <button type="button" className="public-auth-provider" disabled={loading} onClick={() => void handleGoogle()}>
+              {t('website.auth.google')}
             </button>
           </div>
           <p className="public-auth-divider">{t('website.auth.orEmail')}</p>

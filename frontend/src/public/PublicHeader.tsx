@@ -36,8 +36,14 @@ export function PublicHeader() {
           className={`gs-nav ${menuOpen ? 'open' : ''}`}
           aria-label={t('website.nav.primary')}
         >
+          <NavLink to="/market" onClick={() => setMenuOpen(false)}>
+            {t('website.nav.market')}
+          </NavLink>
           <NavLink to="/" end onClick={() => setMenuOpen(false)}>
             {t('website.nav.home')}
+          </NavLink>
+          <NavLink to="/seller/listings" onClick={() => setMenuOpen(false)}>
+            {t('website.nav.sell')}
           </NavLink>
         </nav>
 

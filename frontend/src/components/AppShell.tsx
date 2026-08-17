@@ -51,6 +51,8 @@ const navSections: Array<{ titleKey: string; items: NavItem[] }> = [
     items: [
       { to: '/jobs', labelKey: 'nav.jobs', permission: 'jobs.view' },
       { to: '/jobs/talent', labelKey: 'nav.talentProfile', anyPermission: ['jobs.talent.register', 'jobs.talent.manage'] },
+      { to: '/seller/listings', labelKey: 'nav.myListings', anyPermission: ['market.view', 'market.create', 'market.manage_own'] },
+      { to: '/communications', labelKey: 'nav.communications', permission: 'platform.view' },
       { to: '/beekeeping', labelKey: 'nav.beekeeping', permission: 'beekeeping.view' },
     ],
   },
@@ -123,6 +125,8 @@ function useBreadcrumbItems(pathname: string): BreadcrumbItem[] {
     '/ai/vision': [dashboard, { label: t('nav.aiVision') }],
     '/jobs': [dashboard, { label: t('nav.jobs') }],
     '/jobs/talent': [dashboard, { label: t('nav.jobs'), to: '/jobs' }, { label: t('nav.talentProfile') }],
+    '/seller/listings': [dashboard, { label: t('nav.myListings') }],
+    '/communications': [dashboard, { label: t('nav.communications') }],
     '/beekeeping': [dashboard, { label: t('nav.beekeeping') }],
     '/marketing': [dashboard, { label: t('nav.marketingDashboard') }],
     '/marketing/campaigns': [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingCampaigns') }],
@@ -138,6 +142,9 @@ function useBreadcrumbItems(pathname: string): BreadcrumbItem[] {
   }
   if (pathname.startsWith('/admin/teams/')) {
     return [dashboard, { label: t('nav.teams'), to: '/admin/teams' }, { label: t('nav.teamDetail') }]
+  }
+  if (pathname.startsWith('/seller/listings/')) {
+    return [dashboard, { label: t('nav.myListings'), to: '/seller/listings' }, { label: t('market.editListing') }]
   }
   if (pathname.startsWith('/marketing/campaigns/')) {
     return [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingCampaigns'), to: '/marketing/campaigns' }, { label: t('nav.marketingCampaignDetail') }]
