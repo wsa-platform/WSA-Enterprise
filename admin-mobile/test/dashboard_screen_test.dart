@@ -47,13 +47,13 @@ void main() {
             activeUsers: Ar.notAvailable,
             farms: Ar.notAvailable,
             crops: Ar.notAvailable,
-            courses: Ar.notAvailable,
             products: Ar.notAvailable,
-            campaigns: Ar.notAvailable,
-            aiUsage: Ar.notAvailable,
-            recentActivity: Ar.notAvailable,
+            communications: Ar.notAvailable,
+            reports: Ar.notAvailable,
             systemHealth: Ar.systemUnknown,
             alerts: Ar.notAvailable,
+            jobSeekers: Ar.notAvailable,
+            marketplace: Ar.notAvailable,
           );
 
       await tester.pumpWidget(buildScreen());
@@ -81,13 +81,13 @@ void main() {
             activeUsers: Ar.notAvailable,
             farms: Ar.notAvailable,
             crops: Ar.notAvailable,
-            courses: Ar.notAvailable,
             products: Ar.notAvailable,
-            campaigns: Ar.notAvailable,
-            aiUsage: Ar.notAvailable,
-            recentActivity: Ar.notAvailable,
+            communications: Ar.notAvailable,
+            reports: Ar.notAvailable,
             systemHealth: Ar.systemUnknown,
             alerts: Ar.notAvailable,
+            jobSeekers: Ar.notAvailable,
+            marketplace: Ar.notAvailable,
           );
 
       await tester.pumpWidget(buildScreen());
@@ -111,13 +111,13 @@ void main() {
         activeUsers: Ar.notAvailable,
         farms: Ar.notAvailable,
         crops: Ar.notAvailable,
-        courses: Ar.notAvailable,
         products: Ar.notAvailable,
-        campaigns: Ar.notAvailable,
-        aiUsage: Ar.notAvailable,
-        recentActivity: Ar.notAvailable,
+        communications: Ar.notAvailable,
+        reports: Ar.notAvailable,
         systemHealth: Ar.systemUnknown,
         alerts: Ar.notAvailable,
+        jobSeekers: Ar.notAvailable,
+        marketplace: Ar.notAvailable,
       );
 
       expect(metrics.isEmpty, isFalse);
