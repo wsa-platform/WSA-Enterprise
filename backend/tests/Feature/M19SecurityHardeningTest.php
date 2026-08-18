@@ -10,7 +10,6 @@ use App\Models\Farm;
 use App\Models\LibraryItem;
 use App\Models\MarketingAudienceSegment;
 use App\Models\Organization;
-use App\Models\Product;
 use App\Models\Role;
 use App\Models\SalesOrder;
 use App\Models\SoilAnalysis;
@@ -22,11 +21,10 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
-/**
- * @group security
- */
+#[Group('security')]
 class M19SecurityHardeningTest extends TestCase
 {
     use RefreshDatabase;

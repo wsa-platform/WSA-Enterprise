@@ -69,6 +69,51 @@ class DeploymentDefaultsTest extends TestCase
         ];
     }
 
+    public function test_production_cors_uses_configured_origins_only(): void
+    {
+        $this->withEnv([
+            'APP_ENV' => 'production',
+            'CORS_ALLOWED_ORIGINS' => 'https://app.example.com',
+            'FRONTEND_URL' => 'https://app.example.com',
+        ], function (): void {
+            $origins = wsa_cors_allowed_origins();
+
+            $this->assertSame(['https://app.example.com'], $origins);
+            $this->assertNotContains('http://localhost:5173', $origins);
+            $this->assertNotContains('*', $origins);
+        });
+    }
+
+    public function test_production_cors_does_not_inherit_localhost_defaults(): void
+    {
+        $this->withEnv([
+            'APP_ENV' => 'production',
+            'CORS_ALLOWED_ORIGINS' => null,
+            'FRONTEND_URL' => null,
+        ], function (): void {
+            $origins = wsa_cors_allowed_origins();
+
+            $this->assertSame([], $origins);
+            $this->assertNotContains('http://localhost:8081', $origins);
+            $this->assertNotContains('http://127.0.0.1:8080', $origins);
+        });
+    }
+
+    public function test_local_cors_preserves_development_origins(): void
+    {
+        $this->withEnv([
+            'APP_ENV' => 'local',
+            'CORS_ALLOWED_ORIGINS' => '',
+            'FRONTEND_URL' => 'http://localhost:5173',
+        ], function (): void {
+            $origins = wsa_cors_allowed_origins();
+
+            $this->assertContains('http://localhost:5173', $origins);
+            $this->assertContains('http://localhost:8081', $origins);
+            $this->assertNotContains('*', $origins);
+        });
+    }
+
     /**
      * @param  array<string, mixed>  $values
      */

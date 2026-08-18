@@ -12,11 +12,10 @@ use App\Services\Authorization\PermissionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
-/**
- * @group security
- */
+#[Group('security')]
 class ServiceOwnershipArchitectureTest extends TestCase
 {
     use RefreshDatabase;

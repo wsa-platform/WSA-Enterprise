@@ -1,6 +1,6 @@
 # WSA-Enterprise Security Model
 
-**Last updated:** Phase 11 (2026-08-10)
+**Last updated:** M19 security hardening (2026-08-18)
 
 ## Overview
 
@@ -79,6 +79,17 @@ See [multi-tenancy.md](./multi-tenancy.md) for full tenant model.
 
 Phase 11 adds `BelongsToOrganization` trait for automatic query scoping when `TenantContext` is active (defense-in-depth).
 
+## Service ownership (M19)
+
+Owned agricultural, marketing, AI, and related records use `owner_user_id` plus `ServiceOwnershipAuthorizer`:
+
+- Members see and mutate only records they own.
+- Supervisors (`services.supervise`, typically the `manager` role) see organization-wide owned services.
+- Cross-organization access still requires membership in `X-Organization-Id`; mismatch returns **403**.
+- Foreign resource IDs under the correct organization typically return **404** (or **403** where the existing policy already used forbidden).
+
+Marketplace seller/admin APIs and communications message owner-scope are not part of the committed M19 runtime; they remain with the uncommitted marketplace/communications work.
+
 ## IDOR & mass assignment
 
 - Route model binding replaced with explicit org-scoped queries where needed (e.g. tasks)
@@ -87,7 +98,7 @@ Phase 11 adds `BelongsToOrganization` trait for automatic query scoping when `Te
 
 ## Transport & headers
 
-- **CORS:** Configure `config/cors.php` for production origins
+- **CORS:** `wsa_cors_allowed_origins()` in `backend/config/_deployment.php`. Production uses only `CORS_ALLOWED_ORIGINS` and `FRONTEND_URL` (no hardcoded localhost, no `*`). Local/testing also allow common localhost ports for development. `supports_credentials` remains false for token APIs.
 - **CSRF:** Relevant for stateful Sanctum SPA mode; API token mode uses Bearer auth
 - **HTTPS:** Required in production; terminate at reverse proxy
 
@@ -140,7 +151,7 @@ Audited events include auth, user creation, role assignment, AI lifecycle. Phase
 - [ ] Strong unique `APP_KEY`
 - [ ] `SESSION_ENCRYPT=true` if using cookie sessions
 - [ ] `ALLOW_REGISTRATION=false` unless intentionally open
-- [ ] Restrict CORS to known frontend origins
+- [ ] Restrict CORS to known frontend origins (`FRONTEND_URL` / `CORS_ALLOWED_ORIGINS`; never `*` for authenticated APIs)
 - [ ] Rotate demo/seeded credentials
 - [ ] Configure token expiration for mobile clients
 - [ ] Set `AI_ASYNC_DISPATCH` explicitly for each environment
@@ -166,6 +177,9 @@ Audited events include auth, user creation, role assignment, AI lifecycle. Phase
 | `Phase11RequestIdTest` | X-Request-Id header + cross-tenant audit |
 | `Phase11AiRateLimitTest` | Per-organization AI throttling |
 | `EnterpriseRoleServiceTest` | Role assignment rules (unit) |
+| `M19SecurityHardeningTest` | Service ownership, org-boundary public catalogs, IDOR, unauthorized and header mismatch |
+| `ServiceOwnershipArchitectureTest` | Owner column, supervise permission, owned-service query scope |
+| `DeploymentDefaultsTest` | Production cache/session defaults and production CORS origins |
 
 ## Reporting vulnerabilities
 

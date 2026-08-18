@@ -1,6 +1,6 @@
 # WSA-Enterprise Production Readiness Report
 
-**Last updated:** Phase 13 M13 closure (2026-08-11)
+**Last updated:** M19 security hardening (2026-08-18)
 
 ## Executive summary
 
@@ -9,6 +9,8 @@ WSA-Enterprise is suitable for **controlled single-host production deployment** 
 Phase 12 (M12.1–M12.5) adds production Docker + TLS, deployment automation, secrets templates, AI monitoring foundation with health probes, and backup/rollback/verification scripts. See [phase-12-final-verification.md](phase-12-final-verification.md).
 
 Phase 13 (M13.1–M13.4) closes M12.4 observability deferrals, adds scheduler heartbeat and ops runbook, wires frontend Vitest in CI, and hardens production web/mobile clients (no embedded demo credentials). See [phase-13-roadmap.md](phase-13-roadmap.md).
+
+M19 adds production-safe CORS (configurable origins only; no localhost inheritance in production) and service-ownership isolation for committed owned-service APIs. See [security.md](security.md).
 
 **Phase 12 additions:** See [phase-12-roadmap.md](phase-12-roadmap.md), [deploy-production.md](deploy-production.md), [tls-production.md](tls-production.md).
 
@@ -53,8 +55,9 @@ Phase 13 (M13.1–M13.4) closes M12.4 observability deferrals, adds scheduler he
 | API logging | Structured | Method/path/status/user/org — no bodies |
 | Authorization | PermissionService + policies | Pivot admin → `*`; explicit roles replace baseline |
 | Tenant isolation | `X-Organization-Id` + FK validation | Cross-tenant header → 403; tested |
+| Service ownership | `owner_user_id` + `services.supervise` | Members see owned records; supervisors see organization-wide (M19) |
 | AI endpoints | Throttled per organization | `ai-org` limiter; quota + billing gating |
-| CORS | `config/cors.php` + `FRONTEND_URL` | Set comma-separated production origins in host `backend/.env` (M13.4) |
+| CORS | `FRONTEND_URL` + optional `CORS_ALLOWED_ORIGINS` | Production never auto-includes localhost and never uses `*`. Local/testing keep localhost ports. |
 | Password hashing | bcrypt | Login response excludes hash |
 | API errors | JSON `{ message, errors? }` | No stack traces in API responses (Phase 6 handlers) |
 | Access management | `access.manage` permission | Admin-only user/role endpoints |
