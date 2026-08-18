@@ -34,6 +34,9 @@ return [
     'marketing.view',
     'marketing.manage',
     'marketing.admin',
+    'jobs.status',
+    'jobs.notes',
+    'jobs.private_data',
     'market.view',
     'market.create',
     'market.manage_own',
@@ -44,5 +47,6 @@ return [
     'market.categories',
     'market.transactions',
     'market.seller_private_data',
+    'reports.recruitment',
     'reports.marketplace',
 ];

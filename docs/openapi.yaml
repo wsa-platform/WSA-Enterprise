@@ -29,6 +29,7 @@ tags:
   - name: API Clients
   - name: Monitoring
   - name: Jobs
+  - name: Recruitment
   - name: Beekeeping
   - name: AI Assistant
   - name: Marketing
@@ -2511,6 +2512,256 @@ paths:
         '200': { description: Payment transaction and exchange payload }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /job-seekers:
+    get:
+      tags: [Recruitment]
+      summary: Search job-seeker recruitment profiles
+      description: Recruiter CRM list is platform-global (user-owned profiles, same model as M17 talent). Email, phone, cv_path, desired_salary, and salary_currency require `jobs.private_data`. Vacancy search and matching remain on `/jobs/candidates`.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: status
+          in: query
+          schema: { type: string, enum: [new, under_review, qualified, interview, accepted, rejected, hired] }
+        - name: country
+          in: query
+          schema: { type: string }
+        - name: specialization
+          in: query
+          schema: { type: string }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: is_active
+          in: query
+          schema: { type: boolean }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Paginated job-seeker profiles }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /job-seekers/me:
+    get:
+      tags: [Recruitment]
+      summary: Show the authenticated user's job-seeker profile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Owner profile including private contact fields }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Recruitment]
+      summary: Create or update the authenticated user's job-seeker profile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [full_name]
+              properties:
+                full_name: { type: string, maxLength: 255 }
+                email: { type: string, format: email }
+                phone: { type: string, maxLength: 50 }
+                specialization: { type: string }
+                biography: { type: string }
+                country: { type: string }
+                region: { type: string }
+                city: { type: string }
+                skills: { type: array, items: { type: string } }
+                experience: { type: array, items: { type: object, properties: { title: { type: string }, company: { type: string }, years: { type: number }, description: { type: string } } } }
+                education: { type: array, items: { type: object, properties: { institution: { type: string }, degree: { type: string }, field: { type: string }, year: { type: integer } } } }
+                certifications: { type: array, items: { type: object, properties: { name: { type: string }, issuer: { type: string }, year: { type: integer } } } }
+                languages: { type: array, items: { type: string } }
+                cv_path: { type: string, description: Owner-only CV metadata path. File upload remains on `/jobs/talent/me/cv`. Not returned on recruiter list/show without `jobs.private_data`. }
+                desired_salary: { type: number, description: Private compensation field. Returned on owner `/me` and recruiter show/list only with `jobs.private_data`. }
+                salary_currency: { type: string, minLength: 3, maxLength: 3, description: Private compensation currency. Omitted without `jobs.private_data`. }
+                availability_date: { type: string, format: date }
+      responses:
+        '200': { description: Profile updated }
+        '201': { description: Profile created }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Recruitment]
+      summary: Deactivate the authenticated user's job-seeker profile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Profile deactivated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /job-seekers/{jobSeeker}:
+    get:
+      tags: [Recruitment]
+      summary: Show a job-seeker profile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: jobSeeker
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: 'Profile. Email, phone, cv_path, and desired_salary omitted without jobs.private_data.' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Recruitment]
+      summary: Update recruiter-managed profile fields
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: jobSeeker
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name: { type: string }
+                specialization: { type: string }
+                biography: { type: string }
+                country: { type: string }
+                region: { type: string }
+                city: { type: string }
+                skills: { type: array, items: { type: string } }
+                experience: { type: array }
+                education: { type: array }
+                certifications: { type: array }
+                languages: { type: array }
+                cv_path: { type: string }
+                desired_salary: { type: number, description: Private compensation. Visible on the response only with `jobs.private_data`. }
+                salary_currency: { type: string }
+                availability_date: { type: string, format: date }
+                is_active: { type: boolean }
+                email: { type: string, format: email }
+                phone: { type: string }
+      responses:
+        '200': { description: Updated profile }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /job-seekers/{jobSeeker}/status:
+    patch:
+      tags: [Recruitment]
+      summary: Advance recruitment application status
+      description: Lifecycle is profile-scoped (new → under_review → qualified/interview → accepted/rejected → hired). Separate job-vacancy applications are not part of this API.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: jobSeeker
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [new, under_review, qualified, interview, accepted, rejected, hired] }
+                notes: { type: string }
+      responses:
+        '200': { description: Status updated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /job-seekers/{jobSeeker}/notes:
+    get:
+      tags: [Recruitment]
+      summary: List recruiter notes for a candidate
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: jobSeeker
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200': { description: Paginated recruiter notes }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Recruitment]
+      summary: Add a recruiter note
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: jobSeeker
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: { type: string }
+                is_private: { type: boolean, default: true }
+      responses:
+        '201': { description: Note created }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /job-seekers/{jobSeeker}/history:
+    get:
+      tags: [Recruitment]
+      summary: List recruitment status history
+      description: Status values are visible with `jobs.view`. Recruiter `notes` on history rows require `jobs.notes`.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: jobSeeker
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200': { description: Paginated status history }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /reports/recruitment:
+    get:
+      tags: [Recruitment]
+      summary: Recruitment pipeline report
+      description: Platform-global aggregate counts only. Does not include email, phone, cv_path, or desired_salary.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: days
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 365, default: 30 }
+      responses:
+        '200': { description: Pipeline summary and status counts }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /beekeeping/profile:
     get:
       tags: [Beekeeping]

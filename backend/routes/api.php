@@ -36,6 +36,8 @@ use App\Http\Controllers\Api\AiAssistantController;
 use App\Http\Controllers\Api\AiVisionController;
 use App\Http\Controllers\Api\MarketingController;
 use App\Http\Controllers\Api\CommunicationsController;
+use App\Http\Controllers\Api\JobSeekerController;
+use App\Http\Controllers\Api\JobSeekerProfileController;
 use App\Http\Controllers\Api\PublicPlatformController;
 use App\Http\Controllers\Api\MarketplacePublicController;
 use App\Http\Controllers\Api\MarketplaceListingController;
@@ -150,6 +152,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/invoices', [CommerceController::class, 'invoices']);
         Route::post('/invoices', [CommerceController::class, 'storeInvoice']);
         Route::get('/reports/summary', [CommerceController::class, 'report']);
+        Route::get('/reports/recruitment', [JobSeekerController::class, 'report']);
         Route::get('/reports/marketplace', [MarketplaceAdminController::class, 'report']);
         Route::get('/communications/inbox', [CommunicationsController::class, 'inbox']);
         Route::get('/communications/contacts/search', [CommunicationsController::class, 'searchContacts']);
@@ -255,6 +258,19 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/suppressions', [MarketingController::class, 'suppressions']);
             Route::post('/suppressions', [MarketingController::class, 'storeSuppression']);
             Route::get('/deliveries', [MarketingController::class, 'deliveries']);
+        });
+        Route::prefix('job-seekers')->group(function (): void {
+            // M21 recruitment CRM. Profiles are user-global; vacancy/matching stays on /jobs/*.
+            Route::get('/', [JobSeekerController::class, 'index']);
+            Route::get('/me', [JobSeekerProfileController::class, 'showMine']);
+            Route::put('/me', [JobSeekerProfileController::class, 'upsertMine']);
+            Route::delete('/me', [JobSeekerProfileController::class, 'destroyMine']);
+            Route::get('/{jobSeeker}', [JobSeekerController::class, 'show'])->whereNumber('jobSeeker');
+            Route::patch('/{jobSeeker}', [JobSeekerController::class, 'update'])->whereNumber('jobSeeker');
+            Route::patch('/{jobSeeker}/status', [JobSeekerController::class, 'updateStatus'])->whereNumber('jobSeeker');
+            Route::post('/{jobSeeker}/notes', [JobSeekerController::class, 'storeNote'])->whereNumber('jobSeeker');
+            Route::get('/{jobSeeker}/notes', [JobSeekerController::class, 'notes'])->whereNumber('jobSeeker');
+            Route::get('/{jobSeeker}/history', [JobSeekerController::class, 'history'])->whereNumber('jobSeeker');
         });
         Route::prefix('market')->group(function (): void {
             Route::get('/listings', [MarketplacePublicController::class, 'listings']);

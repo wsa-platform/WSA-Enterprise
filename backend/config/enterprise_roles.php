@@ -27,8 +27,9 @@ return [
         'marketing.view',
         'marketing.manage',
         'business.view', 'business.manage',
-        'jobs.view', 'jobs.manage',
+        'jobs.view', 'jobs.manage', 'jobs.status', 'jobs.notes', 'jobs.private_data',
         'market.view', 'market.review', 'market.approve', 'market.suspend', 'market.categories', 'market.transactions', 'market.seller_private_data', 'reports.marketplace',
+        'reports.recruitment',
         'beekeeping.view', 'beekeeping.manage',
     ],
 

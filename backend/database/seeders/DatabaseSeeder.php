@@ -85,6 +85,7 @@ class DatabaseSeeder extends Seeder
         $this->call(Phase5Seeder::class);
         $this->call(BillingSeeder::class);
         $this->call(AccessSeeder::class);
+        $this->call(JobSeekerSeeder::class);
         $this->call(MarketplaceSeeder::class);
     }
 }

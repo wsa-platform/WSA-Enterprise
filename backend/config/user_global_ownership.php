@@ -22,6 +22,7 @@ return [
 
     'user_owned_models' => [
         'job_talent_profiles' => \App\Models\JobTalentProfile::class,
+        'job_seeker_profiles' => \App\Models\JobSeekerProfile::class,
     ],
 
 ];

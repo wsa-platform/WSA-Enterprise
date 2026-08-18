@@ -1,0 +1,197 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
+use App\Http\Controllers\Controller;
+use App\Models\JobSeekerProfile;
+use App\Services\Authorization\PermissionService;
+use App\Services\Ownership\UserGlobalOwnershipAuthorizer;
+use App\Services\Recruitment\JobSeekerService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+
+class JobSeekerController extends Controller
+{
+    use AuthorizesOrganizationAccess;
+
+    public function __construct(
+        private JobSeekerService $service,
+        private UserGlobalOwnershipAuthorizer $ownership,
+    ) {}
+
+    public function index(Request $request): JsonResponse
+    {
+        $this->authorizePermission($request, 'jobs.view');
+        $filters = $request->validate([
+            'status' => ['nullable', 'string', Rule::in(JobSeekerProfile::STATUSES)],
+            'country' => ['nullable', 'string', 'max:100'],
+            'specialization' => ['nullable', 'string', 'max:255'],
+            'search' => ['nullable', 'string', 'max:255'],
+            'is_active' => ['nullable'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $includePrivate = $this->canViewPrivate($request);
+        $paginator = $this->service->search($filters, $filters['per_page'] ?? 15, $includePrivate);
+
+        return response()->json([
+            'data' => collect($paginator->items())->map(
+                fn (JobSeekerProfile $p) => array_merge(
+                    $p->toAdminArray($includePrivate),
+                    ['user' => $p->user?->only($includePrivate ? ['id', 'name', 'email'] : ['id', 'name'])]
+                )
+            )->values(),
+            'current_page' => $paginator->currentPage(),
+            'last_page' => $paginator->lastPage(),
+            'total' => $paginator->total(),
+        ]);
+    }
+
+    public function show(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
+    {
+        $this->authorizePermission($request, 'jobs.view');
+        $includePrivate = $this->canViewPrivate($request);
+
+        return response()->json(array_merge(
+            $jobSeeker->toAdminArray($includePrivate),
+            ['user' => $jobSeeker->user?->only($includePrivate ? ['id', 'name', 'email'] : ['id', 'name'])]
+        ));
+    }
+
+    public function update(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
+    {
+        $this->authorizePermission($request, 'jobs.manage');
+        $data = $this->ownership->stripOwnerKeys($request->validate(array_merge([
+            'full_name' => ['sometimes', 'string', 'max:255'],
+            'specialization' => ['nullable', 'string', 'max:255'],
+            'biography' => ['nullable', 'string'],
+            'country' => ['nullable', 'string', 'max:100'],
+            'region' => ['nullable', 'string', 'max:100'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'cv_path' => ['nullable', 'string', 'max:2048'],
+            'desired_salary' => ['nullable', 'numeric', 'min:0'],
+            'salary_currency' => ['nullable', 'string', 'size:3'],
+            'availability_date' => ['nullable', 'date'],
+            'is_active' => ['sometimes', 'boolean'],
+        ], JobSeekerProfile::nestedPayloadRules())));
+        unset($data['recruitment_status'], $data['user_id']);
+        $data = JobSeekerProfile::sanitizeNested($data);
+
+        if ($this->canViewPrivate($request)) {
+            $data = array_merge($data, $request->validate([
+                'email' => ['nullable', 'email'],
+                'phone' => ['nullable', 'string', 'max:50'],
+            ]));
+        }
+
+        $jobSeeker->update($data);
+
+        return response()->json($jobSeeker->fresh()->toAdminArray($this->canViewPrivate($request)));
+    }
+
+    public function updateStatus(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
+    {
+        $this->authorizePermission($request, 'jobs.status');
+        $data = $request->validate([
+            'status' => ['required', 'string', Rule::in(JobSeekerProfile::STATUSES)],
+            'notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $profile = $this->service->updateStatus(
+            $jobSeeker,
+            $data['status'],
+            $request->user(),
+            $data['notes'] ?? null,
+            $this->organization($request),
+            $request,
+        );
+
+        return response()->json($profile->toAdminArray($this->canViewPrivate($request)));
+    }
+
+    public function notes(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
+    {
+        $this->authorizePermission($request, 'jobs.notes');
+
+        $notes = $jobSeeker->recruiterNotes()
+            ->with('author:id,name')
+            ->latest()
+            ->paginate(min(max((int) $request->query('per_page', 25), 1), 100));
+
+        return response()->json([
+            'data' => $notes->items(),
+            'current_page' => $notes->currentPage(),
+            'last_page' => $notes->lastPage(),
+            'total' => $notes->total(),
+        ]);
+    }
+
+    public function storeNote(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
+    {
+        $this->authorizePermission($request, 'jobs.notes');
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:5000'],
+            'is_private' => ['sometimes', 'boolean'],
+        ]);
+
+        $note = $this->service->addNote(
+            $jobSeeker,
+            $request->user(),
+            $data['body'],
+            $data['is_private'] ?? true,
+            $this->organization($request),
+            $request,
+        );
+
+        return response()->json($note, 201);
+    }
+
+    public function history(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
+    {
+        $this->authorizePermission($request, 'jobs.view');
+
+        $includeNotes = app(PermissionService::class)->userCan(
+            $request->user(),
+            $this->organization($request),
+            'jobs.notes',
+        );
+
+        $history = $jobSeeker->statusHistory()
+            ->with('changedBy:id,name')
+            ->latest()
+            ->paginate(min(max((int) $request->query('per_page', 25), 1), 100));
+
+        return response()->json([
+            'data' => collect($history->items())->map(function ($row) use ($includeNotes) {
+                $item = $row->toArray();
+                if (! $includeNotes) {
+                    unset($item['notes']);
+                }
+
+                return $item;
+            })->values(),
+            'current_page' => $history->currentPage(),
+            'last_page' => $history->lastPage(),
+            'total' => $history->total(),
+        ]);
+    }
+
+    public function report(Request $request): JsonResponse
+    {
+        $this->authorizePermission($request, 'reports.recruitment');
+        $days = min(max((int) $request->query('days', 30), 1), 365);
+
+        return response()->json($this->service->report($days));
+    }
+
+    private function canViewPrivate(Request $request): bool
+    {
+        return app(PermissionService::class)->userCan(
+            $request->user(),
+            $this->organization($request),
+            'jobs.private_data',
+        );
+    }
+}
