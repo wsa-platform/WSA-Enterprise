@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AuthExtensionController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TaskController;
@@ -34,7 +35,11 @@ use App\Http\Controllers\Api\BeekeepingController;
 use App\Http\Controllers\Api\AiAssistantController;
 use App\Http\Controllers\Api\AiVisionController;
 use App\Http\Controllers\Api\MarketingController;
+use App\Http\Controllers\Api\CommunicationsController;
 use App\Http\Controllers\Api\PublicPlatformController;
+use App\Http\Controllers\Api\MarketplacePublicController;
+use App\Http\Controllers\Api\MarketplaceListingController;
+use App\Http\Controllers\Api\MarketplaceAdminController;
 
 Route::prefix('v1/health')->group(function (): void {
     Route::get('/live', [HealthController::class, 'live']);
@@ -47,12 +52,21 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/services', [PublicPlatformController::class, 'serviceCatalog']);
         Route::get('/library/items', [PublicPlatformController::class, 'publishedLibraryItems']);
         Route::get('/training/courses', [PublicPlatformController::class, 'publishedTrainingCourses']);
+        Route::get('/market/listings', [MarketplacePublicController::class, 'listings']);
+        Route::get('/market/listings/{listing}', [MarketplacePublicController::class, 'show'])->whereNumber('listing');
+        Route::get('/market/categories', [MarketplacePublicController::class, 'categories']);
     });
 
     Route::middleware('throttle:20,1')->group(function (): void {
         Route::post('/auth/register', [AuthController::class, 'register']);
         Route::post('/auth/login', [AuthController::class, 'login']);
         Route::post('/auth/accept-invitation', [InvitationController::class, 'accept']);
+        Route::post('/auth/forgot-password', [AuthExtensionController::class, 'forgotPassword'])->middleware('throttle:5,1');
+        Route::post('/auth/reset-password', [AuthExtensionController::class, 'resetPassword'])->middleware('throttle:5,1');
+        Route::get('/auth/google/redirect', [AuthExtensionController::class, 'googleRedirect']);
+        Route::post('/auth/google/callback', [AuthExtensionController::class, 'googleCallback']);
+        Route::post('/auth/phone/send-otp', [AuthExtensionController::class, 'sendPhoneOtp'])->middleware('throttle:3,1');
+        Route::post('/auth/phone/verify-otp', [AuthExtensionController::class, 'verifyPhoneOtp'])->middleware('throttle:10,1');
     });
 
     Route::middleware(['auth.principal', 'resolve.organization', 'api_client.routes', 'throttle:120,1'])->group(function (): void {
@@ -136,6 +150,28 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/invoices', [CommerceController::class, 'invoices']);
         Route::post('/invoices', [CommerceController::class, 'storeInvoice']);
         Route::get('/reports/summary', [CommerceController::class, 'report']);
+        Route::get('/reports/marketplace', [MarketplaceAdminController::class, 'report']);
+        Route::get('/communications/inbox', [CommunicationsController::class, 'inbox']);
+        Route::get('/communications/contacts/search', [CommunicationsController::class, 'searchContacts']);
+        Route::get('/communications/contacts', [CommunicationsController::class, 'contacts']);
+        Route::post('/communications/contacts', [CommunicationsController::class, 'storeContact']);
+        Route::patch('/communications/contacts/{contact}', [CommunicationsController::class, 'updateContact'])->whereNumber('contact');
+        Route::delete('/communications/contacts/{contact}', [CommunicationsController::class, 'destroyContact'])->whereNumber('contact');
+        Route::get('/communications/drafts', [CommunicationsController::class, 'drafts']);
+        Route::get('/communications/messages', [CommunicationsController::class, 'messages']);
+        Route::get('/communications/messages/{message}', [CommunicationsController::class, 'showMessage'])->whereNumber('message');
+        Route::post('/communications/messages', [CommunicationsController::class, 'compose']);
+        Route::patch('/communications/messages/{message}', [CommunicationsController::class, 'updateMessage'])->whereNumber('message');
+        Route::delete('/communications/messages/{message}', [CommunicationsController::class, 'destroyMessage'])->whereNumber('message');
+        Route::post('/communications/messages/{message}/send', [CommunicationsController::class, 'send'])->whereNumber('message');
+        Route::get('/communications/providers', [CommunicationsController::class, 'providers']);
+        Route::get('/communications/mailing-lists', [CommunicationsController::class, 'mailingLists']);
+        Route::post('/communications/mailing-lists', [CommunicationsController::class, 'storeMailingList']);
+        Route::patch('/communications/mailing-lists/{mailingList}', [CommunicationsController::class, 'updateMailingList'])->whereNumber('mailingList');
+        Route::delete('/communications/mailing-lists/{mailingList}', [CommunicationsController::class, 'destroyMailingList'])->whereNumber('mailingList');
+        Route::get('/communications/mailing-lists/{mailingList}/members', [CommunicationsController::class, 'mailingListMembers'])->whereNumber('mailingList');
+        Route::post('/communications/mailing-lists/{mailingList}/members', [CommunicationsController::class, 'addMailingListMembers'])->whereNumber('mailingList');
+        Route::delete('/communications/mailing-lists/{mailingList}/members/{member}', [CommunicationsController::class, 'removeMailingListMember'])->whereNumber(['mailingList', 'member']);
         Route::get('/notifications', [CommerceController::class, 'notifications']);
         Route::post('/notifications/{notification}/read', [CommerceController::class, 'readNotification']);
         Route::prefix('farm')->group(function (): void {
@@ -219,6 +255,27 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/suppressions', [MarketingController::class, 'suppressions']);
             Route::post('/suppressions', [MarketingController::class, 'storeSuppression']);
             Route::get('/deliveries', [MarketingController::class, 'deliveries']);
+        });
+        Route::prefix('market')->group(function (): void {
+            Route::get('/listings', [MarketplacePublicController::class, 'listings']);
+            Route::get('/listings/{listing}', [MarketplacePublicController::class, 'show'])->whereNumber('listing');
+            Route::get('/categories', [MarketplacePublicController::class, 'categories']);
+            Route::get('/my-listings', [MarketplaceListingController::class, 'myListings']);
+            Route::post('/listings', [MarketplaceListingController::class, 'store']);
+            Route::patch('/listings/{listing}', [MarketplaceListingController::class, 'update'])->whereNumber('listing');
+            Route::delete('/listings/{listing}', [MarketplaceListingController::class, 'destroy'])->whereNumber('listing');
+            Route::post('/listings/{listing}/submit', [MarketplaceListingController::class, 'submit'])->whereNumber('listing');
+            Route::post('/listings/{listing}/request-contact-access', [MarketplaceListingController::class, 'requestContactAccess'])->whereNumber('listing');
+            Route::post('/contact-access-orders/{order}/pay', [MarketplaceListingController::class, 'payContactAccess'])->whereNumber('order');
+            Route::get('/my-entitlements', [MarketplaceListingController::class, 'myEntitlements']);
+        });
+        Route::prefix('admin/market')->group(function (): void {
+            Route::get('/listings', [MarketplaceAdminController::class, 'listings']);
+            Route::post('/listings/{listing}/approve', [MarketplaceAdminController::class, 'approve'])->whereNumber('listing');
+            Route::post('/listings/{listing}/reject', [MarketplaceAdminController::class, 'reject'])->whereNumber('listing');
+            Route::post('/listings/{listing}/suspend', [MarketplaceAdminController::class, 'suspend'])->whereNumber('listing');
+            Route::get('/categories', [MarketplaceAdminController::class, 'categories']);
+            Route::post('/categories', [MarketplaceAdminController::class, 'storeCategory']);
         });
         Route::prefix('jobs')->group(function (): void {
             Route::get('/talent/me', [JobsTalentController::class, 'showMine']);

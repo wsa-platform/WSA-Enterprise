@@ -169,6 +169,7 @@ class MarketplaceTest extends TestCase
             '/admin/market/listings/{listing}/reject',
             '/admin/market/listings/{listing}/suspend',
             '/admin/market/categories',
+            '/reports/marketplace',
         ];
 
         foreach ($required as $path) {

@@ -33,6 +33,7 @@ tags:
   - name: AI Assistant
   - name: Marketing
   - name: Marketplace
+  - name: Communications
 components:
   securitySchemes:
     bearerAuth:
@@ -354,6 +355,127 @@ paths:
           description: Registration disabled
         '422':
           $ref: '#/components/responses/ValidationError'
+  /auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Request a password reset email if the address exists
+      description: Always returns 200 to avoid account enumeration. Used by the Phase 3 React forgot-password page.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200': { description: Generic acknowledgement }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { description: Rate limit exceeded }
+  /auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Reset password with emailed token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, email, password, password_confirmation]
+              properties:
+                token: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, format: password, minLength: 8 }
+                password_confirmation: { type: string, format: password }
+      responses:
+        '200': { description: Password reset }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { description: Rate limit exceeded }
+  /auth/google/redirect:
+    get:
+      tags: [Auth]
+      summary: Start Google OAuth and return the authorization URL
+      responses:
+        '200':
+          description: Redirect URL and state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+                  state: { type: string }
+        '503': { description: Google OAuth is not connected }
+  /auth/google/callback:
+    post:
+      tags: [Auth]
+      summary: Exchange Google OAuth code for a Sanctum token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, state]
+              properties:
+                code: { type: string }
+                state: { type: string }
+                device_name: { type: string }
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { description: Google OAuth is not connected }
+  /auth/phone/send-otp:
+    post:
+      tags: [Auth]
+      summary: Send a phone login OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone: { type: string, maxLength: 32 }
+      responses:
+        '200': { description: OTP queued or sent }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { description: Rate limit exceeded }
+        '503': { description: SMS provider is not connected }
+  /auth/phone/verify-otp:
+    post:
+      tags: [Auth]
+      summary: Verify phone OTP and issue a Sanctum token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, code]
+              properties:
+                phone: { type: string }
+                code: { type: string }
+                name: { type: string }
+                device_name: { type: string }
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '403': { description: Registration disabled for new phone users }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { description: Rate limit exceeded }
   /auth/logout:
     post:
       tags: [Auth]
@@ -3148,6 +3270,239 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarketplaceCategory'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /reports/marketplace:
+    get:
+      tags: [Marketplace]
+      summary: Organization marketplace report
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: days
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 365, default: 30 }
+      responses:
+        '200': { description: Marketplace listing and contact-order summary }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /communications/inbox:
+    get:
+      tags: [Communications]
+      summary: Combined communications inbox
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - name: source
+          in: query
+          schema: { type: string }
+      responses:
+        '200': { description: Inbox page }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /communications/contacts:
+    get:
+      tags: [Communications]
+      summary: List organization contacts
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Contacts }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Communications]
+      summary: Create a contact
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '201': { description: Contact created }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /communications/contacts/search:
+    get:
+      tags: [Communications]
+      summary: Search organization contacts
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        '200': { description: Matching contacts }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /communications/contacts/{contact}:
+    patch:
+      tags: [Communications]
+      summary: Update a contact
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: contact
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Updated contact }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Communications]
+      summary: Delete a contact
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: contact
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /communications/drafts:
+    get:
+      tags: [Communications]
+      summary: List own draft messages (supervisors see organization drafts)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Drafts }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /communications/messages:
+    get:
+      tags: [Communications]
+      summary: List messages owned by the caller (supervisors see the organization)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        '200': { description: Messages }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Communications]
+      summary: Compose a draft or preview recipients
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Preview }
+        '201': { description: Draft created }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /communications/messages/{message}:
+    get:
+      tags: [Communications]
+      summary: Show a message
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: message
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Message }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Communications]
+      summary: Update a draft message
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: message
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Updated message }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Communications]
+      summary: Delete a draft message
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: message
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /communications/messages/{message}/send:
+    post:
+      tags: [Communications]
+      summary: Send a draft message
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: message
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Send result }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /communications/providers:
+    get:
+      tags: [Communications]
+      summary: List connected communications providers
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Providers }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /communications/mailing-lists:
+    get:
+      tags: [Communications]
+      summary: List mailing lists
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Mailing lists }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Communications]
+      summary: Create a mailing list
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '201': { description: Created }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }

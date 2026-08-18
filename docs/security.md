@@ -1,6 +1,6 @@
 # WSA-Enterprise Security Model
 
-**Last updated:** M19 security hardening (2026-08-18)
+**Last updated:** M20 marketplace, communications, and auth API landing (2026-08-18)
 
 ## Overview
 
@@ -88,7 +88,13 @@ Owned agricultural, marketing, AI, and related records use `owner_user_id` plus 
 - Cross-organization access still requires membership in `X-Organization-Id`; mismatch returns **403**.
 - Foreign resource IDs under the correct organization typically return **404** (or **403** where the existing policy already used forbidden).
 
-Marketplace seller/admin APIs and communications message owner-scope are not part of the committed M19 runtime; they remain with the uncommitted marketplace/communications work.
+Marketplace seller/admin APIs and communications messages are organization-scoped at runtime (M20):
+
+- Seller `GET /market/my-listings` and write paths bind to `X-Organization-Id`. Non-supervisors also filter to their own `seller_user_id`. Cross-org listing IDs return **404**.
+- Admin listing search requires organization context and cannot run as a global query.
+- Public **published** catalog remains globally browseable; drafts are not exposed.
+- Communications messages are limited to the creator unless the caller has `services.supervise`. Cross-org IDs return **404**.
+- Phase 3 auth extensions (`/auth/google/*`, `/auth/phone/*`, forgot/reset password) are documented in OpenAPI. Forgot-password does not reveal whether an email exists. Google/phone return **503** when the provider is disconnected.
 
 ## IDOR & mass assignment
 
@@ -177,9 +183,12 @@ Audited events include auth, user creation, role assignment, AI lifecycle. Phase
 | `Phase11RequestIdTest` | X-Request-Id header + cross-tenant audit |
 | `Phase11AiRateLimitTest` | Per-organization AI throttling |
 | `EnterpriseRoleServiceTest` | Role assignment rules (unit) |
-| `M19SecurityHardeningTest` | Service ownership, org-boundary public catalogs, IDOR, unauthorized and header mismatch |
+| `M19SecurityHardeningTest` | Service ownership, org-boundary public catalogs, IDOR, marketplace/communications isolation, unauthorized and header mismatch |
 | `ServiceOwnershipArchitectureTest` | Owner column, supervise permission, owned-service query scope |
 | `DeploymentDefaultsTest` | Production cache/session defaults and production CORS origins |
+| `MarketplaceTest` | Public catalog contact hiding, seller submit, admin approve, OpenAPI marketplace paths |
+| `CommunicationsCenterTest` | Compose/draft/send, contacts, OpenAPI communications paths |
+| `AuthExtensionTest` | Google redirect, phone OTP disconnected, forgot/reset password, OpenAPI auth paths |
 
 ## Reporting vulnerabilities
 

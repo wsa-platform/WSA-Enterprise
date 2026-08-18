@@ -28,6 +28,7 @@ return [
         'marketing.manage',
         'business.view', 'business.manage',
         'jobs.view', 'jobs.manage',
+        'market.view', 'market.review', 'market.approve', 'market.suspend', 'market.categories', 'market.transactions', 'market.seller_private_data', 'reports.marketplace',
         'beekeeping.view', 'beekeeping.manage',
     ],
 
@@ -45,6 +46,7 @@ return [
         'marketing.view',
         'jobs.talent.register',
         'jobs.talent.manage',
+        'market.view', 'market.create', 'market.manage_own',
         'beekeeping.view',
         'business.view', 'business.manage',
     ],

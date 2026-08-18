@@ -6,6 +6,7 @@ use App\Contracts\AiMonitoringAnalyzerInterface;
 use App\Contracts\AiProviderInterface;
 use App\Contracts\BillingProviderInterface;
 use App\Contracts\JobsPaymentProviderInterface;
+use App\Contracts\MarketplacePaymentProviderInterface;
 use App\Contracts\Marketing\EmailProviderInterface;
 use App\Contracts\Marketing\SmsProviderInterface;
 use App\Contracts\Marketing\WhatsAppProviderInterface;
@@ -21,6 +22,7 @@ use App\Services\Billing\BillingUsageService;
 use App\Services\Billing\EntitlementService;
 use App\Services\Billing\MockBillingProvider;
 use App\Services\Jobs\MockJobsPaymentProvider;
+use App\Services\Marketplace\MockMarketplacePaymentProvider;
 use App\Services\Marketing\MockEmailProvider;
 use App\Services\Marketing\MockSmsProvider;
 use App\Services\Marketing\MockWhatsAppProvider;
@@ -66,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(BillingProviderInterface::class, MockBillingProvider::class);
         $this->app->bind(JobsPaymentProviderInterface::class, MockJobsPaymentProvider::class);
+        $this->app->bind(MarketplacePaymentProviderInterface::class, MockMarketplacePaymentProvider::class);
         $this->app->bind(SmsProviderInterface::class, MockSmsProvider::class);
         $this->app->bind(EmailProviderInterface::class, MockEmailProvider::class);
         $this->app->bind(WhatsAppProviderInterface::class, MockWhatsAppProvider::class);

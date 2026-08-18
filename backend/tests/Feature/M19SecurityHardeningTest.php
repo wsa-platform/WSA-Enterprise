@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\AiConversation;
 use App\Models\AiVisionUpload;
+use App\Models\CommunicationMessage;
 use App\Models\CropType;
 use App\Models\Customer;
 use App\Models\Farm;
 use App\Models\LibraryItem;
 use App\Models\MarketingAudienceSegment;
+use App\Models\MarketplaceListing;
 use App\Models\Organization;
 use App\Models\Role;
 use App\Models\SalesOrder;
@@ -468,5 +470,190 @@ class M19SecurityHardeningTest extends TestCase
             ->assertOk()
             ->assertJsonPath('scope', 'organization')
             ->assertJsonPath('farms.total', Farm::where('organization_id', $orgA->id)->count());
+    }
+
+    public function test_marketplace_my_listings_are_isolated_across_organizations(): void
+    {
+        $orgA = $this->createOrganization('mkt-iso-a');
+        $orgB = $this->createOrganization('mkt-iso-b');
+        $seller = $this->memberUser($orgA, 'mkt-seller@wsa.test');
+        $this->joinOrganization($seller, $orgB);
+
+        $listingA = $this->createListing($orgA, $seller, 'Org A Listing');
+        $listingB = $this->createListing($orgB, $seller, 'Org B Listing');
+
+        $this->getJson('/api/v1/market/my-listings', $this->headers($seller, $orgA))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $listingA->id)
+            ->assertJsonMissing(['title' => 'Org B Listing']);
+
+        $this->patchJson('/api/v1/market/listings/'.$listingB->id, [
+            'title' => 'Stolen',
+        ], $this->headers($seller, $orgA))
+            ->assertNotFound();
+
+        $this->getJson('/api/v1/market/my-listings', $this->headers($seller, $orgB))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $listingB->id);
+    }
+
+    public function test_marketplace_admin_search_cannot_read_foreign_organization_listings(): void
+    {
+        $orgA = $this->createOrganization('mkt-admin-a');
+        $orgB = $this->createOrganization('mkt-admin-b');
+        $seller = $this->memberUser($orgB, 'mkt-admin-seller@wsa.test');
+        $manager = User::create([
+            'name' => 'Market Manager',
+            'email' => 'mkt-admin-mgr@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $this->attachRole($manager, $orgA, 'manager');
+
+        $this->createListing($orgA, $this->memberUser($orgA, 'mkt-admin-local@wsa.test'), 'Org A Admin Listing');
+        $foreign = $this->createListing($orgB, $seller, 'Org B Admin Listing');
+
+        $this->getJson('/api/v1/admin/market/listings', $this->headers($manager, $orgA))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.title', 'Org A Admin Listing')
+            ->assertJsonMissing(['title' => 'Org B Admin Listing']);
+
+        $this->postJson('/api/v1/admin/market/listings/'.$foreign->id.'/approve', [], $this->headers($manager, $orgA))
+            ->assertNotFound();
+    }
+
+    public function test_marketplace_rejects_unauthorized_and_mismatched_organization_context(): void
+    {
+        $orgA = $this->createOrganization('mkt-ctx-a');
+        $orgB = $this->createOrganization('mkt-ctx-b');
+        $seller = $this->memberUser($orgA, 'mkt-ctx-seller@wsa.test');
+        $viewer = User::create([
+            'name' => 'Viewer',
+            'email' => 'mkt-ctx-viewer@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $this->attachRole($viewer, $orgA, 'viewer');
+        $this->createListing($orgA, $seller, 'Context Listing');
+
+        $this->getJson('/api/v1/market/my-listings', $this->headers($viewer, $orgA))
+            ->assertForbidden();
+
+        $this->getJson('/api/v1/market/my-listings', $this->headers($seller, $orgB))
+            ->assertForbidden();
+
+        $this->getJson('/api/v1/market/my-listings', [
+            'Authorization' => 'Bearer '.$seller->createToken('m19-security')->plainTextToken,
+            'X-Organization-Id' => '999999',
+        ])->assertForbidden();
+    }
+
+    public function test_marketplace_missing_organization_header_does_not_leak_other_org_listings(): void
+    {
+        $orgA = $this->createOrganization('mkt-missing-a');
+        $orgB = $this->createOrganization('mkt-missing-b');
+        $seller = $this->memberUser($orgA, 'mkt-missing@wsa.test');
+        $this->joinOrganization($seller, $orgB);
+        $this->createListing($orgA, $seller, 'Visible First Org');
+        $this->createListing($orgB, $seller, 'Hidden Without Header');
+
+        $this->getJson('/api/v1/market/my-listings', [
+            'Authorization' => 'Bearer '.$seller->createToken('m19-security')->plainTextToken,
+        ])
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.title', 'Visible First Org')
+            ->assertJsonMissing(['title' => 'Hidden Without Header']);
+    }
+
+    public function test_communications_are_isolated_across_organizations_and_owners(): void
+    {
+        $orgA = $this->createOrganization('comms-iso-a');
+        $orgB = $this->createOrganization('comms-iso-b');
+        $ownerA = $this->memberUser($orgA, 'comms-a@wsa.test');
+        $ownerB = $this->memberUser($orgA, 'comms-b@wsa.test');
+        $foreign = $this->memberUser($orgB, 'comms-foreign@wsa.test');
+        $supervisor = User::create([
+            'name' => 'Comms Manager',
+            'email' => 'comms-mgr@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $this->attachRole($supervisor, $orgA, 'manager');
+
+        $messageA = $this->createMessage($orgA, $ownerA, 'Owner A Draft');
+        $messageB = $this->createMessage($orgA, $ownerB, 'Owner B Draft');
+        $foreignMessage = $this->createMessage($orgB, $foreign, 'Org B Draft');
+
+        $this->getJson('/api/v1/communications/messages', $this->headers($ownerA, $orgA))
+            ->assertOk()
+            ->assertJsonFragment(['subject' => 'Owner A Draft'])
+            ->assertJsonMissing(['subject' => 'Owner B Draft'])
+            ->assertJsonMissing(['subject' => 'Org B Draft']);
+
+        $this->getJson('/api/v1/communications/messages/'.$messageA->id, $this->headers($ownerA, $orgA))
+            ->assertOk()
+            ->assertJsonPath('subject', 'Owner A Draft');
+
+        $this->getJson('/api/v1/communications/messages/'.$messageA->id, $this->headers($ownerB, $orgA))
+            ->assertForbidden();
+
+        $this->patchJson('/api/v1/communications/messages/'.$messageA->id, [
+            'subject' => 'Stolen',
+        ], $this->headers($ownerB, $orgA))
+            ->assertForbidden();
+
+        $this->getJson('/api/v1/communications/messages/'.$foreignMessage->id, $this->headers($ownerA, $orgA))
+            ->assertNotFound();
+
+        $this->getJson('/api/v1/communications/messages', $this->headers($supervisor, $orgA))
+            ->assertOk()
+            ->assertJsonFragment(['subject' => 'Owner A Draft'])
+            ->assertJsonFragment(['subject' => 'Owner B Draft'])
+            ->assertJsonMissing(['subject' => 'Org B Draft']);
+
+        $this->getJson('/api/v1/communications/messages/'.$messageB->id, $this->headers($supervisor, $orgA))
+            ->assertOk();
+
+        $this->getJson('/api/v1/communications/messages', $this->headers($ownerA, $orgB))
+            ->assertForbidden();
+    }
+
+    private function joinOrganization(User $user, Organization $organization, string $slug = 'member'): void
+    {
+        $organization->members()->syncWithoutDetaching([
+            $user->id => ['role' => 'member', 'is_active' => true],
+        ]);
+
+        $role = Role::withoutGlobalScopes()
+            ->where('organization_id', $organization->id)
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        $user->roles()->syncWithoutDetaching([$role->id => ['organization_id' => $organization->id]]);
+        app(PermissionService::class)->forget($user, $organization->id);
+    }
+
+    private function createListing(Organization $organization, User $seller, string $title): MarketplaceListing
+    {
+        return MarketplaceListing::create([
+            'seller_user_id' => $seller->id,
+            'organization_id' => $organization->id,
+            'title' => $title,
+            'seller_display_name' => $seller->name,
+            'status' => MarketplaceListing::STATUS_DRAFT,
+        ]);
+    }
+
+    private function createMessage(Organization $organization, User $creator, string $subject): CommunicationMessage
+    {
+        return CommunicationMessage::create([
+            'organization_id' => $organization->id,
+            'created_by_user_id' => $creator->id,
+            'subject' => $subject,
+            'body' => 'Body',
+            'channel' => 'email',
+            'status' => 'draft',
+        ]);
     }
 }

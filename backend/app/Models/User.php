@@ -64,4 +64,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class)->withPivot('organization_id');
     }
+
+    public function identities(): HasMany
+    {
+        return $this->hasMany(UserIdentity::class);
+    }
 }
