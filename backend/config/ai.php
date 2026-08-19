@@ -8,6 +8,7 @@ return [
     | AI_RETRY_TIMES, AI_RETRY_SLEEP_MS
     | AI_RETRIEVAL_ENABLED, AI_RETRIEVAL_MAX_RESULTS, AI_RETRIEVAL_MAX_CONTEXT_CHARACTERS
     | Grounded answers (AI-06) reuse those retrieval limits; citations are server-controlled.
+    | AI-07 adds user-visible disclosure for empty/failed knowledge retrieval.
     | Existing keys: AI_QUEUE, AI_QUEUE_TRIES, AI_ASYNC_DISPATCH,
     | AI_RATE_LIMIT_PER_MINUTE, AI_QUOTA_ENABLED, AI_QUOTA_REQUESTS_PER_PERIOD, AI_QUOTA_PERIOD
     |

@@ -220,6 +220,7 @@ class AiService
                     $provider->model(),
                 );
                 $normalized = $this->groundedAnswerPolicy()->applyToOutput($normalized, $decision);
+                $normalized = $this->disclosurePolicy()->apply($normalized, $decision, $locked->request_type);
 
                 $locked->update([
                     'status' => 'completed',
@@ -310,6 +311,11 @@ class AiService
     private function groundedAnswerPolicy(): AiGroundedAnswerPolicy
     {
         return app(AiGroundedAnswerPolicy::class);
+    }
+
+    private function disclosurePolicy(): AiGroundedAnswerDisclosurePolicy
+    {
+        return app(AiGroundedAnswerDisclosurePolicy::class);
     }
 
     /** @param  array<string, mixed>|null  $newValues */

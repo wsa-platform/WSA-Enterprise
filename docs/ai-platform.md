@@ -1,6 +1,6 @@
 # AI Platform
 
-**Last updated:** AI-06 grounded answers (2026-08-19)
+**Last updated:** AI-07 grounded answer disclosure (2026-08-19)
 
 ## Overview
 
@@ -184,7 +184,7 @@ Retrieval failure is logged through `AiErrorSanitizer` and does not fail the AI 
 `AiGroundedAnswerPolicy` sits above AI-05 retrieval and around response normalization:
 
 ```
-authorization → AI-05 retrieval → grounded-answer policy → provider → normalize → citation integrity → AI-04 usage → response
+authorization → AI-05 retrieval → AI-06 grounded-answer policy → provider → normalize → citation integrity → AI-07 disclosure → AI-04 usage → response
 ```
 
 | Retrieval outcome | `output.grounded` | `output.sources` | Provider |
@@ -199,6 +199,30 @@ Citation rules:
 - Provider/model text cannot create trusted source objects or URLs.
 - No citation URLs are invented.
 - AI-04 `ai_usage_records` remain the usage persistence layer; persistence failures stay non-fatal.
+
+---
+
+## Grounded answer disclosure (AI-07)
+
+`AiGroundedAnswerDisclosurePolicy` rewrites user-visible answer text after AI-06. The provider does not decide grounding and does not emit trusted citations.
+
+Knowledge request types (`library_summary`, `library_qa`, `assistant`) use retrieval metadata already produced by AI-05/AI-06. Other request types are treated as general requests and do not receive a knowledge-base warning. There is no classifier or second model.
+
+| `grounding_state` | User-visible text | Citations |
+|-------------------|-------------------|-----------|
+| `grounded` | Unchanged provider answer; no warning | Existing normalized `sources` |
+| `empty_retrieval` | Concise disclosure that no matching internal source was found, then the general answer | `[]` |
+| `retrieval_failed` | Concise disclosure that internal knowledge was unavailable, then the general answer | `[]` |
+| `general_request` | Unchanged answer; no knowledge-base warning | AI-06 sources if any |
+
+Disclosure rules:
+
+- Applied once; duplicate disclosure text is not prepended again.
+- Retrieved content remains **UNTRUSTED RETRIEVED KNOWLEDGE** and cannot suppress disclosure or change `grounded` / `grounding_state`.
+- Client fields such as `grounded`, `grounding_state`, `sources`, and `retrieved_context` are ignored.
+- No URLs or source IDs are invented. Empty retrieval and retrieval failure never fabricate citations.
+- Retrieval failure stays non-fatal and never exposes exceptions, SQL, stack traces, API keys, or Authorization headers.
+- Additive response fields: `grounding_state`, `disclosure_applied`, `disclosure_code`. Existing `grounded` and `sources` remain.
 
 ---
 

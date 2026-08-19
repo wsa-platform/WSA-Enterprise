@@ -342,7 +342,7 @@ class Ai03OpenAiProviderTest extends TestCase
 
         $this->assertSame('completed', $created->json('status'));
         $this->assertSame('openai', $created->json('provider'));
-        $this->assertSame('Org override answer', $created->json('output.summary'));
+        $this->assertStringContainsString('Org override answer', (string) $created->json('output.summary'));
         Http::assertSentCount(1);
     }
 

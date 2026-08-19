@@ -19,7 +19,9 @@ class AiRequestValidator
         'provider', 'model', 'api_key', 'apiKey', 'secret', 'token',
         'retrieved_context', 'retrieved_sources', 'retrieved_knowledge',
         'sources', 'citations', 'source_id', 'source_type', 'reference',
-        'grounded', 'trusted_knowledge',
+        'grounded', 'grounding_state', 'disclosure_applied', 'disclosure_code',
+        'retrieval_success', 'retrieval_failure', 'retrieval_failed',
+        'trusted_knowledge',
     ];
 
     /** @return array<string, mixed> */
