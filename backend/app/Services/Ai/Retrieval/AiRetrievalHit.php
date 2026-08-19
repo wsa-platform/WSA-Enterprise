@@ -2,6 +2,8 @@
 
 namespace App\Services\Ai\Retrieval;
 
+use DateTimeInterface;
+
 final class AiRetrievalHit
 {
     /**
@@ -14,6 +16,8 @@ final class AiRetrievalHit
         public readonly string $content,
         public readonly float $score,
         public readonly array $metadata = [],
+        public readonly ?int $organizationId = null,
+        public readonly ?DateTimeInterface $updatedAt = null,
     ) {}
 
     /** @return array<string, mixed> */

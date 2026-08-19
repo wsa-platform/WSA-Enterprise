@@ -6,12 +6,17 @@ use App\Models\BeeKnowledgeTopic;
 
 class BeeKnowledgeTopicKnowledgeSource implements KnowledgeSourceInterface
 {
+    public function __construct(
+        private KnowledgeIndexer $indexer,
+        private KnowledgeRanker $ranker,
+    ) {}
+
     public function sourceType(): string
     {
         return 'bee_knowledge_topics';
     }
 
-    public function search(int $organizationId, array $keywords, int $limit): array
+    public function search(int $organizationId, array $keywords, int $limit, string $query = ''): array
     {
         unset($organizationId);
 
@@ -29,7 +34,8 @@ class BeeKnowledgeTopicKnowledgeSource implements KnowledgeSourceInterface
                     $builder->orWhere('slug', $like, $pattern)
                         ->orWhere('category', $like, $pattern)
                         ->orWhere('title_key', $like, $pattern)
-                        ->orWhere('summary_key', $like, $pattern);
+                        ->orWhere('summary_key', $like, $pattern)
+                        ->orWhere('body', $like, $pattern);
                     if ($like === 'ilike') {
                         $builder->orWhereRaw('coalesce(tags::text, \'\') ilike ?', [$pattern]);
                     } else {
@@ -38,40 +44,28 @@ class BeeKnowledgeTopicKnowledgeSource implements KnowledgeSourceInterface
                 }
             })
             ->limit($limit)
-            ->get(['id', 'slug', 'category', 'title_key', 'summary_key', 'tags', 'metadata']);
+            ->get(['id', 'slug', 'category', 'title_key', 'summary_key', 'body', 'tags', 'metadata', 'is_active', 'updated_at']);
 
         $hits = [];
         foreach ($topics as $topic) {
-            $tags = is_array($topic->tags) ? implode(' ', $topic->tags) : '';
-            $haystacks = [
-                'title' => (string) $topic->slug.' '.(string) $topic->title_key,
-                'summary' => (string) $topic->summary_key.' '.(string) $topic->category,
-                'content' => $tags,
-            ];
-            $score = KeywordKnowledgeRetriever::score($keywords, $haystacks);
+            $document = $this->indexer->fromBeeTopic($topic);
+            if (! $document->visible) {
+                continue;
+            }
+            $score = $this->ranker->score($query, $keywords, $document);
             if ($score <= 0) {
                 continue;
             }
 
-            $metadata = is_array($topic->metadata) ? $topic->metadata : [];
-            $snippet = trim(implode(' ', array_filter([
-                (string) $topic->slug,
-                (string) $topic->category,
-                $tags,
-                (string) $topic->title_key,
-                (string) $topic->summary_key,
-            ])));
-
             $hits[] = new AiRetrievalHit(
-                sourceType: $this->sourceType(),
-                sourceId: (int) $topic->id,
-                title: (string) $topic->slug,
-                content: $snippet,
+                sourceType: $document->sourceType,
+                sourceId: $document->sourceId,
+                title: $document->title,
+                content: $this->indexer->excerpt($document),
                 score: $score,
-                metadata: [
-                    'category' => $topic->category,
-                    'rag_ready' => (bool) ($metadata['rag_ready'] ?? false),
-                ],
+                metadata: $document->metadata,
+                organizationId: $document->organizationId,
+                updatedAt: $document->updatedAt,
             );
         }
 

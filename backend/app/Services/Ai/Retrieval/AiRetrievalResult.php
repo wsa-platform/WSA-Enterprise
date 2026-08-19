@@ -4,10 +4,14 @@ namespace App\Services\Ai\Retrieval;
 
 final class AiRetrievalResult
 {
-    /** @param  list<AiRetrievalHit>  $hits */
+    /**
+     * @param  list<AiRetrievalHit>  $hits
+     * @param  array<string, mixed>  $telemetry
+     */
     public function __construct(
         public readonly array $hits,
         public readonly string $context,
+        public readonly array $telemetry = [],
     ) {}
 
     public function isEmpty(): bool
@@ -21,8 +25,15 @@ final class AiRetrievalResult
         return array_map(static fn (AiRetrievalHit $hit) => $hit->toCitation(), $this->hits);
     }
 
-    public static function empty(): self
+    /** @param  array<string, mixed>  $telemetry */
+    public static function empty(array $telemetry = []): self
     {
-        return new self([], '');
+        return new self([], '', array_merge([
+            'candidate_count' => 0,
+            'returned_count' => 0,
+            'retrieval_duration_ms' => 0,
+            'source_types' => [],
+            'retrieval_status' => 'empty',
+        ], $telemetry));
     }
 }

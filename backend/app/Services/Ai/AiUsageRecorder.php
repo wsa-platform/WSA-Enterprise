@@ -49,6 +49,57 @@ class AiUsageRecorder
         }
     }
 
+    public function recordRetrievalTelemetry(AiRequest $request, array $telemetry): void
+    {
+        $safe = $this->sanitizeRetrieval($telemetry);
+        if ($safe === null) {
+            return;
+        }
+
+        try {
+            AiUsageRecord::withoutGlobalScopes()
+                ->where('ai_request_id', $request->id)
+                ->update(['retrieval' => $safe]);
+        } catch (\Throwable $exception) {
+            Log::warning('AI retrieval telemetry failed', [
+                'ai_request_id' => $request->id,
+                'organization_id' => $request->organization_id,
+                'message' => AiErrorSanitizer::logMessage($exception),
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $telemetry
+     * @return array<string, mixed>|null
+     */
+    private function sanitizeRetrieval(array $telemetry): ?array
+    {
+        if ($telemetry === []) {
+            return null;
+        }
+
+        $status = (string) ($telemetry['retrieval_status'] ?? 'empty');
+        if (! in_array($status, ['ok', 'empty', 'failed', 'disabled'], true)) {
+            $status = 'empty';
+        }
+
+        $sourceTypes = [];
+        foreach ($telemetry['source_types'] ?? [] as $type) {
+            if (is_string($type) && in_array($type, ['library_items', 'bee_knowledge_topics'], true)) {
+                $sourceTypes[$type] = $type;
+            }
+        }
+
+        return [
+            'candidate_count' => max(0, (int) ($telemetry['candidate_count'] ?? 0)),
+            'returned_count' => max(0, (int) ($telemetry['returned_count'] ?? 0)),
+            'retrieval_duration_ms' => max(0, (int) ($telemetry['retrieval_duration_ms'] ?? 0)),
+            'source_types' => array_values($sourceTypes),
+            'retrieval_status' => $status,
+        ];
+    }
+
     public function countRequestsForPeriod(int $organizationId): int
     {
         return (int) UsageRecord::withoutGlobalScopes()

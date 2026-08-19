@@ -11,6 +11,7 @@ class BeeKnowledgeTopic extends Model
         'category',
         'title_key',
         'summary_key',
+        'body',
         'tags',
         'metadata',
         'is_active',

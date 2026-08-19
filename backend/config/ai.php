@@ -6,7 +6,7 @@ return [
     | AI_PROVIDER, AI_MODEL, AI_TIMEOUT, AI_FALLBACK_PROVIDER
     | OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL, OPENAI_TIMEOUT, OPENAI_CONNECT_TIMEOUT
     | AI_RETRY_TIMES, AI_RETRY_SLEEP_MS
-    | AI_RETRIEVAL_ENABLED, AI_RETRIEVAL_MAX_RESULTS, AI_RETRIEVAL_MAX_CONTEXT_CHARACTERS
+    | AI_RETRIEVAL_ENABLED, AI_RETRIEVAL_MAX_RESULTS, AI_RETRIEVAL_MAX_CONTEXT_CHARACTERS, AI_RETRIEVAL_CANDIDATE_LIMIT
     | Grounded answers (AI-06) reuse those retrieval limits; citations are server-controlled.
     | AI-07 adds user-visible disclosure for empty/failed knowledge retrieval.
     | Existing keys: AI_QUEUE, AI_QUEUE_TRIES, AI_ASYNC_DISPATCH,
@@ -52,6 +52,7 @@ return [
         'max_results' => (int) env('AI_RETRIEVAL_MAX_RESULTS', 5),
         'max_context_characters' => (int) env('AI_RETRIEVAL_MAX_CONTEXT_CHARACTERS', 4000),
         'candidate_limit' => (int) env('AI_RETRIEVAL_CANDIDATE_LIMIT', 40),
+        'max_excerpt_characters' => (int) env('AI_RETRIEVAL_MAX_EXCERPT_CHARACTERS', 400),
     ],
     'queue' => env('AI_QUEUE', 'default'),
     'queue_tries' => (int) env('AI_QUEUE_TRIES', 3),

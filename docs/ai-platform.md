@@ -1,6 +1,6 @@
 # AI Platform
 
-**Last updated:** AI-07 grounded answer disclosure (2026-08-19)
+**Last updated:** AI-08 knowledge retrieval expansion (2026-08-19)
 
 ## Overview
 
@@ -226,6 +226,25 @@ Disclosure rules:
 
 ---
 
+## Knowledge retrieval expansion (AI-08)
+
+Keyword retrieval remains the baseline (no vector database). AI-08 adds rich bodies, deterministic ranking, bounded freshness, in-memory indexing, and safe usage telemetry.
+
+Sources:
+
+- `library_items.content` / `content_ar` — existing long-form bodies; published, current organization only
+- `bee_knowledge_topics.body` — nullable long-form field; active catalog topics only; `rag_ready` stays metadata
+
+`KnowledgeIndexer` + `KnowledgeTextNormalizer` clean text, derive searchable tokens, and excerpt bodies. Nothing is stored as prompts or provider responses.
+
+Ranking (deterministic): exact title > title phrase/token > summary > body, plus multi-term title coverage. Freshness is a secondary 0–2 point signal from `updated_at` (missing timestamps score 0) and cannot outrank a title token. Ties break by `source_type`, then `source_id`.
+
+Limits stay server-side: `max_results`, `max_context_characters`, `candidate_limit`, `max_excerpt_characters`. Clients cannot override them.
+
+Observability is stored on `ai_usage_records.retrieval` as aggregates only (`candidate_count`, `returned_count`, `retrieval_duration_ms`, `source_types`, `retrieval_status`). Telemetry failures never break the AI response.
+
+---
+
 ## Configuration Reference
 
 | Variable | Default | Purpose |
@@ -241,6 +260,8 @@ Disclosure rules:
 | `AI_RETRIEVAL_ENABLED` | `true` | Keyword retrieval over existing knowledge |
 | `AI_RETRIEVAL_MAX_RESULTS` | `5` | Max citations/context hits |
 | `AI_RETRIEVAL_MAX_CONTEXT_CHARACTERS` | `4000` | Max grounded context size |
+| `AI_RETRIEVAL_CANDIDATE_LIMIT` | `40` | Max candidates before final ranking |
+| `AI_RETRIEVAL_MAX_EXCERPT_CHARACTERS` | `400` | Max characters per retrieved body excerpt |
 
 ---
 

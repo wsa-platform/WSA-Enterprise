@@ -6,12 +6,17 @@ use App\Models\LibraryItem;
 
 class LibraryItemKnowledgeSource implements KnowledgeSourceInterface
 {
+    public function __construct(
+        private KnowledgeIndexer $indexer,
+        private KnowledgeRanker $ranker,
+    ) {}
+
     public function sourceType(): string
     {
         return 'library_items';
     }
 
-    public function search(int $organizationId, array $keywords, int $limit): array
+    public function search(int $organizationId, array $keywords, int $limit, string $query = ''): array
     {
         if ($keywords === [] || $limit < 1) {
             return [];
@@ -35,28 +40,31 @@ class LibraryItemKnowledgeSource implements KnowledgeSourceInterface
                 }
             })
             ->limit($limit)
-            ->get(['id', 'title', 'title_ar', 'summary', 'summary_ar', 'content', 'content_ar', 'slug']);
+            ->get([
+                'id', 'organization_id', 'slug', 'title', 'title_ar', 'summary', 'summary_ar',
+                'content', 'content_ar', 'publication_status', 'updated_at',
+            ]);
 
         $hits = [];
         foreach ($items as $item) {
-            $haystacks = [
-                'title' => (string) $item->title.' '.(string) $item->title_ar,
-                'summary' => (string) $item->summary.' '.(string) $item->summary_ar,
-                'content' => (string) $item->content.' '.(string) $item->content_ar.' '.(string) $item->slug,
-            ];
-            $score = KeywordKnowledgeRetriever::score($keywords, $haystacks);
+            $document = $this->indexer->fromLibraryItem($item);
+            if (! $document->visible) {
+                continue;
+            }
+            $score = $this->ranker->score($query, $keywords, $document);
             if ($score <= 0) {
                 continue;
             }
 
-            $snippet = trim((string) ($item->summary ?: $item->summary_ar ?: $item->content ?: $item->content_ar));
             $hits[] = new AiRetrievalHit(
-                sourceType: $this->sourceType(),
-                sourceId: (int) $item->id,
-                title: (string) ($item->title ?: $item->title_ar ?: $item->slug),
-                content: $snippet,
+                sourceType: $document->sourceType,
+                sourceId: $document->sourceId,
+                title: $document->title,
+                content: $this->indexer->excerpt($document),
                 score: $score,
-                metadata: ['slug' => $item->slug],
+                metadata: $document->metadata,
+                organizationId: $document->organizationId,
+                updatedAt: $document->updatedAt,
             );
         }
 

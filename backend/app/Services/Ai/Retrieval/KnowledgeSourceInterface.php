@@ -10,5 +10,5 @@ interface KnowledgeSourceInterface
      * @param  list<string>  $keywords
      * @return list<AiRetrievalHit>
      */
-    public function search(int $organizationId, array $keywords, int $limit): array;
+    public function search(int $organizationId, array $keywords, int $limit, string $query = ''): array;
 }

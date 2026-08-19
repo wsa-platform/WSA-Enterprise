@@ -20,7 +20,13 @@ class AiGroundedAnswerPolicy
     public function prepare(int $organizationId, array $input): AiGroundedAnswerDecision
     {
         if (! config('ai.retrieval.enabled', true)) {
-            return AiGroundedAnswerDecision::ungrounded($input);
+            return AiGroundedAnswerDecision::ungrounded($input, telemetry: [
+                'candidate_count' => 0,
+                'returned_count' => 0,
+                'retrieval_duration_ms' => 0,
+                'source_types' => [],
+                'retrieval_status' => 'disabled',
+            ]);
         }
 
         try {
@@ -31,12 +37,18 @@ class AiGroundedAnswerPolicy
                 'message' => AiErrorSanitizer::logMessage($exception),
             ]);
 
-            return AiGroundedAnswerDecision::ungrounded($input, retrievalFailed: true);
+            return AiGroundedAnswerDecision::ungrounded($input, retrievalFailed: true, telemetry: [
+                'candidate_count' => 0,
+                'returned_count' => 0,
+                'retrieval_duration_ms' => 0,
+                'source_types' => [],
+                'retrieval_status' => 'failed',
+            ]);
         }
 
         $citations = $this->usableCitations($result);
         if ($citations === []) {
-            return AiGroundedAnswerDecision::ungrounded($input);
+            return AiGroundedAnswerDecision::ungrounded($input, telemetry: $result->telemetry);
         }
 
         $context = $this->boundedContext($result->context);
@@ -49,6 +61,7 @@ class AiGroundedAnswerPolicy
             citations: $citations,
             retrievedContext: $context,
             providerInput: $input,
+            retrievalTelemetry: $result->telemetry,
         );
     }
 

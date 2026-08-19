@@ -169,8 +169,9 @@ class AiService
     {
         $errorCategory = null;
         $resolvedModel = null;
+        $retrievalTelemetry = [];
 
-        $processed = DB::transaction(function () use ($record, &$errorCategory, &$resolvedModel): AiRequest {
+        $processed = DB::transaction(function () use ($record, &$errorCategory, &$resolvedModel, &$retrievalTelemetry): AiRequest {
             /** @var AiRequest|null $locked */
             $locked = AiRequest::query()->whereKey($record->id)->lockForUpdate()->first();
 
@@ -209,6 +210,7 @@ class AiService
                     $locked->organization_id,
                     $locked->input ?? [],
                 );
+                $retrievalTelemetry = $decision->retrievalTelemetry;
                 $output = $this->callWithTimeout($provider, $locked->request_type, $decision->providerInput, $timeout);
                 if (! is_array($output)) {
                     throw new \RuntimeException('AI provider returned a malformed response.');
@@ -276,17 +278,30 @@ class AiService
             return $locked->fresh();
         });
 
-        $this->persistUsageSafely($processed, $errorCategory, $resolvedModel);
+        $this->persistUsageSafely($processed, $errorCategory, $resolvedModel, $retrievalTelemetry);
 
         return $processed;
     }
 
-    private function persistUsageSafely(AiRequest $record, ?string $errorCategory = null, ?string $model = null): void
+    /**
+     * @param  array<string, mixed>  $retrievalTelemetry
+     */
+    private function persistUsageSafely(AiRequest $record, ?string $errorCategory = null, ?string $model = null, array $retrievalTelemetry = []): void
     {
         try {
             $this->usageRecorder->recordOutcome($record, $errorCategory, $model);
         } catch (\Throwable $exception) {
             Log::warning('AI usage persistence failed', [
+                'ai_request_id' => $record->id,
+                'organization_id' => $record->organization_id,
+                'message' => AiErrorSanitizer::logMessage($exception),
+            ]);
+        }
+
+        try {
+            $this->usageRecorder->recordRetrievalTelemetry($record, $retrievalTelemetry);
+        } catch (\Throwable $exception) {
+            Log::warning('AI retrieval telemetry failed', [
                 'ai_request_id' => $record->id,
                 'organization_id' => $record->organization_id,
                 'message' => AiErrorSanitizer::logMessage($exception),

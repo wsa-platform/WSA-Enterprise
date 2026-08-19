@@ -17,13 +17,18 @@ class KeywordKnowledgeRetriever implements AiKnowledgeRetrieverInterface
     public function __construct(
         private LibraryItemKnowledgeSource $libraryItems,
         private BeeKnowledgeTopicKnowledgeSource $beeKnowledgeTopics,
+        private KnowledgeRanker $ranker,
+        private KnowledgeTextNormalizer $normalizer,
     ) {}
 
     public function retrieve(int $organizationId, string $query): AiRetrievalResult
     {
+        $started = (int) round(microtime(true) * 1000);
         $keywords = $this->keywords($query);
         if ($keywords === []) {
-            return AiRetrievalResult::empty();
+            return AiRetrievalResult::empty([
+                'retrieval_duration_ms' => max(0, ((int) round(microtime(true) * 1000)) - $started),
+            ]);
         }
 
         $candidateLimit = max(1, (int) config('ai.retrieval.candidate_limit', 40));
@@ -31,23 +36,32 @@ class KeywordKnowledgeRetriever implements AiKnowledgeRetrieverInterface
         $maxChars = max(1, (int) config('ai.retrieval.max_context_characters', 4000));
 
         $hits = array_merge(
-            $this->libraryItems->search($organizationId, $keywords, $candidateLimit),
-            $this->beeKnowledgeTopics->search($organizationId, $keywords, $candidateLimit),
+            $this->libraryItems->search($organizationId, $keywords, $candidateLimit, $query),
+            $this->beeKnowledgeTopics->search($organizationId, $keywords, $candidateLimit, $query),
         );
+        $candidateCount = count($hits);
+        $hits = array_slice($this->ranker->sort($hits), 0, $maxResults);
+        $sourceTypes = array_values(array_unique(array_map(
+            static fn (AiRetrievalHit $hit): string => $hit->sourceType,
+            $hits,
+        )));
 
-        usort($hits, static fn (AiRetrievalHit $left, AiRetrievalHit $right): int => $right->score <=> $left->score);
-        $hits = array_slice($hits, 0, $maxResults);
-
-        return new AiRetrievalResult($hits, $this->boundedContext($hits, $maxChars));
+        return new AiRetrievalResult($hits, $this->boundedContext($hits, $maxChars), [
+            'candidate_count' => $candidateCount,
+            'returned_count' => count($hits),
+            'retrieval_duration_ms' => max(0, ((int) round(microtime(true) * 1000)) - $started),
+            'source_types' => $sourceTypes,
+            'retrieval_status' => $hits === [] ? 'empty' : 'ok',
+        ]);
     }
 
     /** @return list<string> */
     public function keywords(string $query): array
     {
-        $parts = preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower(trim($query))) ?: [];
+        $parts = $this->normalizer->tokens($query);
         $keywords = [];
         foreach ($parts as $part) {
-            if ($part === '' || mb_strlen($part) < 3 || in_array($part, self::STOPWORDS, true)) {
+            if (in_array($part, self::STOPWORDS, true)) {
                 continue;
             }
             $keywords[$part] = $part;
@@ -62,20 +76,19 @@ class KeywordKnowledgeRetriever implements AiKnowledgeRetrieverInterface
      */
     public static function score(array $keywords, array $haystacks): float
     {
-        $score = 0.0;
-        foreach ($keywords as $keyword) {
-            if ($keyword !== '' && mb_stripos($haystacks['title'], $keyword) !== false) {
-                $score += 3.0;
-            }
-            if ($keyword !== '' && mb_stripos($haystacks['summary'], $keyword) !== false) {
-                $score += 2.0;
-            }
-            if ($keyword !== '' && mb_stripos($haystacks['content'], $keyword) !== false) {
-                $score += 1.0;
-            }
-        }
+        $document = new AiKnowledgeDocument(
+            sourceType: 'library_items',
+            sourceId: 0,
+            organizationId: null,
+            title: (string) ($haystacks['title'] ?? ''),
+            summary: (string) ($haystacks['summary'] ?? ''),
+            body: (string) ($haystacks['content'] ?? ''),
+            searchableText: '',
+            updatedAt: null,
+            visible: true,
+        );
 
-        return $score;
+        return (new KnowledgeRanker(new KnowledgeTextNormalizer()))->score('', $keywords, $document);
     }
 
     public static function escapeLike(string $value): string
@@ -98,8 +111,9 @@ class KeywordKnowledgeRetriever implements AiKnowledgeRetrieverInterface
 
         foreach ($hits as $hit) {
             $excerpt = trim($hit->content);
-            if (mb_strlen($excerpt) > 400) {
-                $excerpt = mb_substr($excerpt, 0, 400);
+            $maxExcerpt = max(1, (int) config('ai.retrieval.max_excerpt_characters', 400));
+            if (mb_strlen($excerpt) > $maxExcerpt) {
+                $excerpt = mb_substr($excerpt, 0, $maxExcerpt);
             }
             $block = "\n[".$hit->sourceType.':'.$hit->sourceId.'] '.$hit->title."\n".$excerpt."\n";
             if ($used + strlen($block) > $maxChars) {

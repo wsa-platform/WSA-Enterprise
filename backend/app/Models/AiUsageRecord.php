@@ -21,6 +21,7 @@ class AiUsageRecord extends Model
         'latency_ms',
         'status',
         'error_category',
+        'retrieval',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class AiUsageRecord extends Model
         return [
             'tokens_used' => 'integer',
             'latency_ms' => 'integer',
+            'retrieval' => 'array',
         ];
     }
 
