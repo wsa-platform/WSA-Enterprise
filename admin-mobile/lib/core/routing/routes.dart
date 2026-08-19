@@ -16,4 +16,6 @@ abstract final class AppRoutes {
   static const audit = '/audit';
   static const monitoring = '/monitoring';
   static const settings = '/settings';
+  static const jobSeekers = '/job-seekers';
+  static const marketplace = '/marketplace';
 }

@@ -5,6 +5,8 @@ import 'package:wsa_admin/config/app_config.dart';
 import 'package:wsa_admin/data/api/api_exception.dart';
 import 'package:wsa_admin/data/api/auth_api.dart';
 import 'package:wsa_admin/data/api/http_client.dart';
+import 'package:wsa_admin/data/api/admin_modules_api.dart';
+import 'package:wsa_admin/data/api/modules_api.dart';
 import 'package:wsa_admin/data/api/platform_api.dart';
 import 'package:wsa_admin/data/storage/in_memory_token_storage.dart';
 import 'package:wsa_admin/data/storage/secure_token_storage.dart';
@@ -28,6 +30,8 @@ class ApiClient {
         );
     auth = AuthApi(_http);
     platform = PlatformApi(_http);
+    modules = ModulesApi(_http);
+    adminModules = AdminModulesApi(_http);
   }
 
   final String baseUrl;
@@ -36,6 +40,8 @@ class ApiClient {
   late final HttpClient _http;
   late final AuthApi auth;
   late final PlatformApi platform;
+  late final ModulesApi modules;
+  late final AdminModulesApi adminModules;
 
   String? _token;
   int? _organizationId;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wsa_admin/core/routing/routes.dart';
 import 'package:wsa_admin/data/api/api_client.dart';
-import 'package:wsa_admin/l10n/strings.dart';
+import 'package:wsa_admin/l10n/m22_strings.dart';
 
 enum SidebarNavMode { desktop, tablet, drawer, bottomNav }
 
@@ -20,18 +20,13 @@ class SidebarNav extends StatelessWidget {
   final ValueChanged<int> onDestinationSelected;
   final SidebarNavMode mode;
 
-  static const _allDestinations = <NavDestination>[
+  /// Primary Phase 6 navigation — 8 main sections.
+  static const _primaryDestinations = <NavDestination>[
     NavDestination(
       path: AppRoutes.dashboard,
       label: Ar.navDashboard,
       icon: Icons.dashboard_outlined,
       anyPermissions: ['platform.view', 'access.manage', 'services.supervise'],
-    ),
-    NavDestination(
-      path: AppRoutes.organizations,
-      label: Ar.navOrganizations,
-      icon: Icons.business_outlined,
-      anyPermissions: ['platform.view', 'access.manage'],
     ),
     NavDestination(
       path: AppRoutes.users,
@@ -40,34 +35,10 @@ class SidebarNav extends StatelessWidget {
       permission: 'access.manage',
     ),
     NavDestination(
-      path: AppRoutes.roles,
-      label: Ar.navRoles,
-      icon: Icons.admin_panel_settings_outlined,
-      permission: 'access.manage',
-    ),
-    NavDestination(
-      path: AppRoutes.agriculture,
-      label: Ar.navAgriculture,
-      icon: Icons.agriculture_outlined,
-      anyPermissions: ['farm.view', 'crop.view', 'soil.view', 'diagnosis.view'],
-    ),
-    NavDestination(
-      path: AppRoutes.content,
-      label: Ar.navContent,
-      icon: Icons.article_outlined,
-      anyPermissions: ['training.view', 'library.view'],
-    ),
-    NavDestination(
-      path: AppRoutes.store,
-      label: Ar.navStore,
-      icon: Icons.storefront_outlined,
-      anyPermissions: ['business.view', 'platform.view'],
-    ),
-    NavDestination(
-      path: AppRoutes.marketing,
-      label: Ar.navMarketing,
-      icon: Icons.campaign_outlined,
-      anyPermissions: ['marketing.view', 'marketing.manage', 'marketing.admin'],
+      path: AppRoutes.organizations,
+      label: Ar.navOrganizations,
+      icon: Icons.business_outlined,
+      anyPermissions: ['platform.view', 'access.manage'],
     ),
     NavDestination(
       path: AppRoutes.communications,
@@ -76,16 +47,68 @@ class SidebarNav extends StatelessWidget {
       anyPermissions: ['platform.view', 'marketing.view'],
     ),
     NavDestination(
-      path: AppRoutes.ai,
-      label: Ar.navAi,
-      icon: Icons.smart_toy_outlined,
-      anyPermissions: ['ai.use', 'ai.assistant', 'ai.vision'],
+      path: AppRoutes.store,
+      label: Ar.navProducts,
+      icon: Icons.inventory_2_outlined,
+      anyPermissions: ['business.view', 'platform.view'],
+    ),
+    NavDestination(
+      path: AppRoutes.agriculture,
+      label: Ar.navAgriculture,
+      icon: Icons.agriculture_outlined,
+      anyPermissions: ['farm.view', 'crop.view', 'soil.view', 'diagnosis.view'],
+    ),
+    NavDestination(
+      path: AppRoutes.jobSeekers,
+      label: Ar.navJobSeekers,
+      icon: Icons.work_outline,
+      anyPermissions: ['jobs.view', 'jobs.manage', 'jobs.status'],
+    ),
+    NavDestination(
+      path: AppRoutes.marketplace,
+      label: Ar.navMarketplace,
+      icon: Icons.storefront_outlined,
+      anyPermissions: ['market.review', 'market.approve', 'market.manage_all'],
     ),
     NavDestination(
       path: AppRoutes.reports,
       label: Ar.navReports,
       icon: Icons.analytics_outlined,
       permission: 'platform.view',
+    ),
+    NavDestination(
+      path: AppRoutes.settings,
+      label: Ar.navSettings,
+      icon: Icons.settings_outlined,
+      permission: 'platform.view',
+    ),
+  ];
+
+  /// Secondary routes preserved for RBAC — shown below a section divider.
+  static const _secondaryDestinations = <NavDestination>[
+    NavDestination(
+      path: AppRoutes.roles,
+      label: Ar.navRoles,
+      icon: Icons.admin_panel_settings_outlined,
+      permission: 'access.manage',
+    ),
+    NavDestination(
+      path: AppRoutes.content,
+      label: Ar.navContent,
+      icon: Icons.article_outlined,
+      anyPermissions: ['training.view', 'library.view'],
+    ),
+    NavDestination(
+      path: AppRoutes.marketing,
+      label: Ar.navMarketing,
+      icon: Icons.campaign_outlined,
+      anyPermissions: ['marketing.view', 'marketing.manage', 'marketing.admin'],
+    ),
+    NavDestination(
+      path: AppRoutes.ai,
+      label: Ar.navAi,
+      icon: Icons.smart_toy_outlined,
+      anyPermissions: ['ai.use', 'ai.assistant', 'ai.vision'],
     ),
     NavDestination(
       path: AppRoutes.notifications,
@@ -105,24 +128,28 @@ class SidebarNav extends StatelessWidget {
       icon: Icons.monitor_heart_outlined,
       anyPermissions: ['monitoring.view', 'access.manage', 'services.supervise'],
     ),
-    NavDestination(
-      path: AppRoutes.settings,
-      label: Ar.navSettings,
-      icon: Icons.settings_outlined,
-      permission: 'platform.view',
-    ),
   ];
 
   static const bottomNavPaths = [
     AppRoutes.dashboard,
     AppRoutes.users,
-    AppRoutes.reports,
-    AppRoutes.notifications,
+    AppRoutes.organizations,
+    AppRoutes.communications,
     AppRoutes.settings,
   ];
 
   static List<NavDestination> visibleDestinations(ApiClient client) {
-    return _allDestinations.where((item) => item.isVisible(client)).toList(growable: false);
+    final primary = _primaryDestinations.where((item) => item.isVisible(client)).toList(growable: false);
+    final secondary = _secondaryDestinations.where((item) => item.isVisible(client)).toList(growable: false);
+    return [...primary, ...secondary];
+  }
+
+  static List<NavDestination> primaryDestinations(ApiClient client) {
+    return _primaryDestinations.where((item) => item.isVisible(client)).toList(growable: false);
+  }
+
+  static List<NavDestination> secondaryDestinations(ApiClient client) {
+    return _secondaryDestinations.where((item) => item.isVisible(client)).toList(growable: false);
   }
 
   static List<NavDestination> bottomDestinations(ApiClient client) {
@@ -158,12 +185,15 @@ class SidebarNav extends StatelessWidget {
     return destinations[index].path;
   }
 
-  List<NavDestination> get _destinations => visibleDestinations(client);
+  List<NavDestination> get _primary => primaryDestinations(client);
+  List<NavDestination> get _secondary => secondaryDestinations(client);
+
+  int _globalIndex(NavDestination destination) {
+    return visibleDestinations(client).indexWhere((item) => item.path == destination.path);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final destinations = _destinations;
-
     switch (mode) {
       case SidebarNavMode.desktop:
         return SizedBox(
@@ -180,24 +210,40 @@ class SidebarNav extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
-                for (var index = 0; index < destinations.length; index++)
+                for (final destination in _primary)
                   _SidebarTile(
-                    destination: destinations[index],
-                    selected: selectedIndex == index,
-                    onTap: () => onDestinationSelected(index),
+                    destination: destination,
+                    selected: selectedIndex == _globalIndex(destination),
+                    onTap: () => onDestinationSelected(_globalIndex(destination)),
                   ),
+                if (_secondary.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 8),
+                    child: Text(
+                      Ar.navAdvanced,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.black54),
+                    ),
+                  ),
+                  for (final destination in _secondary)
+                    _SidebarTile(
+                      destination: destination,
+                      selected: selectedIndex == _globalIndex(destination),
+                      onTap: () => onDestinationSelected(_globalIndex(destination)),
+                    ),
+                ],
               ],
             ),
           ),
         );
       case SidebarNavMode.tablet:
+        final all = [..._primary, ..._secondary];
         return NavigationRail(
           extended: false,
-          selectedIndex: selectedIndex,
+          selectedIndex: selectedIndex.clamp(0, all.isEmpty ? 0 : all.length - 1),
           onDestinationSelected: onDestinationSelected,
           labelType: NavigationRailLabelType.selected,
           destinations: [
-            for (final item in destinations)
+            for (final item in all)
               NavigationRailDestination(
                 icon: Icon(item.icon),
                 label: Text(item.label),
@@ -218,13 +264,26 @@ class SidebarNav extends StatelessWidget {
                 ),
               ),
             ),
-            for (var index = 0; index < destinations.length; index++)
+            for (final destination in _primary)
               ListTile(
-                leading: Icon(destinations[index].icon),
-                title: Text(destinations[index].label),
-                selected: selectedIndex == index,
-                onTap: () => onDestinationSelected(index),
+                leading: Icon(destination.icon),
+                title: Text(destination.label),
+                selected: selectedIndex == _globalIndex(destination),
+                onTap: () => onDestinationSelected(_globalIndex(destination)),
               ),
+            if (_secondary.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 4),
+                child: Text(Ar.navAdvanced, style: Theme.of(context).textTheme.labelMedium),
+              ),
+              for (final destination in _secondary)
+                ListTile(
+                  leading: Icon(destination.icon),
+                  title: Text(destination.label),
+                  selected: selectedIndex == _globalIndex(destination),
+                  onTap: () => onDestinationSelected(_globalIndex(destination)),
+                ),
+            ],
           ],
         );
       case SidebarNavMode.bottomNav:
@@ -235,7 +294,7 @@ class SidebarNav extends StatelessWidget {
         );
         return NavigationBar(
           selectedIndex: bottomIndex,
-          onDestinationSelected: (index) => onDestinationSelected(index),
+          onDestinationSelected: onDestinationSelected,
           destinations: [
             for (final item in bottomItems)
               NavigationDestination(
@@ -297,6 +356,7 @@ class _SidebarTile extends StatelessWidget {
         selected: selected,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         selectedTileColor: colorScheme.primaryContainer,
+        minVerticalPadding: 12,
         onTap: onTap,
       ),
     );

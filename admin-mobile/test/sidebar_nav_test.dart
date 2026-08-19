@@ -45,8 +45,20 @@ void main() {
       final paths = SidebarNav.bottomDestinations(client).map((item) => item.path).toList();
 
       expect(paths, contains(AppRoutes.dashboard));
+      expect(paths, contains(AppRoutes.users));
+      expect(paths, contains(AppRoutes.organizations));
+      expect(paths, contains(AppRoutes.communications));
       expect(paths, contains(AppRoutes.settings));
       expect(paths.length, lessThanOrEqualTo(SidebarNav.bottomNavPaths.length));
+    });
+
+    test('shows job seekers for jobs.view', () {
+      client.setPermissionsForTest(['jobs.view']);
+
+      final paths = SidebarNav.visibleDestinations(client).map((item) => item.path).toList();
+
+      expect(paths, contains(AppRoutes.jobSeekers));
+      expect(paths, isNot(contains(AppRoutes.users)));
     });
   });
 }

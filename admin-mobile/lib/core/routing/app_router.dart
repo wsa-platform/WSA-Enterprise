@@ -7,6 +7,7 @@ import 'package:wsa_admin/presentation/screens/access_denied_screen.dart';
 import 'package:wsa_admin/presentation/screens/dashboard/dashboard_screen.dart';
 import 'package:wsa_admin/presentation/screens/login_screen.dart';
 import 'package:wsa_admin/presentation/screens/placeholders/placeholder_screen.dart';
+import 'package:wsa_admin/presentation/screens/job_seekers/job_seekers_screen.dart';
 import 'package:wsa_admin/presentation/screens/shell/admin_shell.dart';
 import 'package:wsa_admin/presentation/screens/splash_screen.dart';
 
@@ -93,6 +94,10 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.monitoring,
             builder: (context, state) => const PlaceholderScreen(titleKey: 'monitoring'),
+          ),
+          GoRoute(
+            path: AppRoutes.jobSeekers,
+            builder: (context, state) => JobSeekersScreen(client: client),
           ),
           GoRoute(
             path: AppRoutes.settings,
