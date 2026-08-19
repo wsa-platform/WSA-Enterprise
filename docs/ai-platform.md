@@ -1,6 +1,6 @@
 # AI Platform
 
-**Last updated:** Phase 11 Milestone 3 (2026-08-10)
+**Last updated:** AI-06 grounded answers (2026-08-19)
 
 ## Overview
 
@@ -163,6 +163,42 @@ Secrets and provider credentials are never logged.
 - All requests scoped via `BelongsToOrganization` + tenant context
 - Cross-tenant access returns **404**
 - RBAC integrated with enterprise roles (M2)
+- Client payloads cannot inject `sources`, `citations`, `retrieved_context`, or related trusted-knowledge fields
+
+---
+
+## Knowledge retrieval (AI-05)
+
+Keyword retrieval searches existing `library_items` (published, current organization only) and active `bee_knowledge_topics`. There is no vector database.
+
+Limits (`max_results`, `max_context_characters`, `candidate_limit`) bound database reads and provider context. Retrieved excerpts are labeled **UNTRUSTED RETRIEVED KNOWLEDGE** and must not override system/safety instructions.
+
+`rag_ready` on bee knowledge topics is a readiness flag only — not a retriever.
+
+Retrieval failure is logged through `AiErrorSanitizer` and does not fail the AI request.
+
+---
+
+## Grounded answers and citations (AI-06)
+
+`AiGroundedAnswerPolicy` sits above AI-05 retrieval and around response normalization:
+
+```
+authorization → AI-05 retrieval → grounded-answer policy → provider → normalize → citation integrity → AI-04 usage → response
+```
+
+| Retrieval outcome | `output.grounded` | `output.sources` | Provider |
+|-------------------|-------------------|------------------|----------|
+| Usable sources | `true` | Server-controlled citations from retrieval (`source_type`, `source_id`, `title`, `reference`) | Receives bounded untrusted context |
+| Empty result | `false` | `[]` | Continues normally; no fabricated citations |
+| Retrieval failure | `false` | `[]` | Continues normally; no fabricated context |
+
+Citation rules:
+
+- Structured sources come only from trusted server-side retrieval.
+- Provider/model text cannot create trusted source objects or URLs.
+- No citation URLs are invented.
+- AI-04 `ai_usage_records` remain the usage persistence layer; persistence failures stay non-fatal.
 
 ---
 
@@ -178,6 +214,9 @@ Secrets and provider credentials are never logged.
 | `AI_QUOTA_REQUESTS_PER_PERIOD` | `1000` | Quota limit |
 | `AI_QUOTA_PERIOD` | `monthly` | Quota period |
 | `QUEUE_CONNECTION` | `redis` | Queue driver |
+| `AI_RETRIEVAL_ENABLED` | `true` | Keyword retrieval over existing knowledge |
+| `AI_RETRIEVAL_MAX_RESULTS` | `5` | Max citations/context hits |
+| `AI_RETRIEVAL_MAX_CONTEXT_CHARACTERS` | `4000` | Max grounded context size |
 
 ---
 

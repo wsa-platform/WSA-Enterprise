@@ -17,7 +17,9 @@ class AiRequestValidator
 
     private const CLIENT_FORBIDDEN_KEYS = [
         'provider', 'model', 'api_key', 'apiKey', 'secret', 'token',
-        'retrieved_context', 'retrieved_sources', 'sources',
+        'retrieved_context', 'retrieved_sources', 'retrieved_knowledge',
+        'sources', 'citations', 'source_id', 'source_type', 'reference',
+        'grounded', 'trusted_knowledge',
     ];
 
     /** @return array<string, mixed> */
@@ -49,8 +51,15 @@ class AiRequestValidator
     /** @param  array<string, mixed>  $input */
     private function stripClientProviderOverrides(array $input): array
     {
-        foreach (self::CLIENT_FORBIDDEN_KEYS as $key) {
-            unset($input[$key]);
+        foreach ($input as $key => $value) {
+            if (in_array($key, self::CLIENT_FORBIDDEN_KEYS, true)) {
+                unset($input[$key]);
+                continue;
+            }
+
+            if (is_array($value)) {
+                $input[$key] = $this->stripClientProviderOverrides($value);
+            }
         }
 
         return $input;
