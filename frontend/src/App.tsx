@@ -52,14 +52,16 @@ import { CampaignEditorPage } from './pages/marketing/CampaignEditorPage'
 import { TemplatesPage } from './pages/marketing/TemplatesPage'
 import { SegmentsPage } from './pages/marketing/SegmentsPage'
 import { ConsentPage } from './pages/marketing/ConsentPage'
-
-function safeReturnPath(value: string | null | undefined): string {
-  return value && value.startsWith('/') && !value.startsWith('//') ? value : '/dashboard'
-}
+import { loginPathForProtectedRoute, safeReturnPath, unknownRouteFallback } from './navigation/routeGuards'
 
 function AuthenticatedRedirect() {
   const [params] = useSearchParams()
   return <Navigate to={safeReturnPath(params.get('next'))} replace />
+}
+
+function UnknownRouteFallback() {
+  const { token } = useAuth()
+  return <Navigate to={unknownRouteFallback(Boolean(token))} replace />
 }
 
 function ProtectedShell() {
@@ -69,7 +71,7 @@ function ProtectedShell() {
 
   if (!token) {
     const next = `${location.pathname}${location.search}`
-    return <Navigate to={`/login?next=${encodeURIComponent(safeReturnPath(next))}`} replace />
+    return <Navigate to={loginPathForProtectedRoute(next)} replace />
   }
 
   return (
@@ -88,7 +90,7 @@ function SessionGuard({ children }: { children: ReactNode }) {
     setUnauthorizedHandler(() => {
       clearSession()
       const next = `${location.pathname}${location.search}`
-      navigate(`/login?next=${encodeURIComponent(safeReturnPath(next))}`, { replace: true, state: { expired: true } })
+      navigate(loginPathForProtectedRoute(next), { replace: true, state: { expired: true } })
     })
     return () => setUnauthorizedHandler(null)
   }, [clearSession, navigate, location.pathname, location.search])
@@ -181,7 +183,7 @@ function AppRoutes() {
         <Route path="/training" element={<TrainingPage />} />
         <Route path="/library" element={<LibraryPage />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<UnknownRouteFallback />} />
     </Routes>
   )
 }

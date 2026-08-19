@@ -65,6 +65,13 @@ export function MarketplaceListingPage() {
       <section className="gs-section">
         <div className="gs-container">
           <Link to="/market">← {t('market.backToMarket')}</Link>
+          {token && (
+            <p className="gs-internal-links">
+              <Link to="/dashboard">{t('nav.home')}</Link>
+              {' · '}
+              <Link to="/account/products">{t('nav.myProducts')}</Link>
+            </p>
+          )}
           {loading && <p>{t('common.loading')}</p>}
           {error && <p role="alert">{error}</p>}
           {listing && (

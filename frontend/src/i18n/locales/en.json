@@ -148,10 +148,14 @@
     "loadingRole": "Loading role…",
     "primary": "Primary navigation",
     "toggleNav": "Toggle navigation",
+    "closeNav": "Close navigation",
     "myListings": "My listings",
     "myAccount": "My account",
     "profile": "Profile",
     "myProducts": "My products",
+    "addProduct": "Add product",
+    "productMarket": "Product marketplace",
+    "home": "Home",
     "communications": "Communications",
     "market": "Marketplace"
   },
@@ -227,6 +231,7 @@
     "editorDescription": "Save a draft, then submit it for publication review.",
     "backToListings": "Back to listings",
     "noPermissionView": "You do not have permission to view marketplace listings.",
+    "noPermissionCreate": "You do not have permission to add a product.",
     "confirmDelete": "Delete this listing?",
     "deleted": "Listing deleted.",
     "submitted": "Listing submitted for review.",
@@ -257,7 +262,11 @@
     "publishProduct": "Submit for review",
     "deleteProduct": "Delete product",
     "confirmHide": "Hide this product from the public marketplace?",
-    "hidden": "Product hidden from the marketplace."
+    "hidden": "Product hidden from the marketplace.",
+    "viewPublicListing": "View in marketplace",
+    "category": "Category",
+    "noneCategory": "No category",
+    "publishedReadOnly": "Published products must be hidden before they can be edited."
   },
   "accountPage": {
     "description": "Manage your profile and your own marketplace products.",
@@ -269,7 +278,13 @@
     "nameUpdated": "Profile updated.",
     "updateFailed": "Unable to update your profile.",
     "saveProfile": "Save profile",
-    "emailReadOnly": "Email cannot be changed here."
+    "emailReadOnly": "Email cannot be changed here.",
+    "addProduct": "Add product",
+    "addProductDescription": "Create a new marketplace listing.",
+    "productMarket": "Product marketplace",
+    "productMarketDescription": "Browse published products in the public marketplace.",
+    "loadingProfile": "Loading profile…",
+    "noProfile": "Your profile is not available yet. Sign in again if this continues."
   },
   "communications": {
     "noPermission": "You do not have permission to view communications.",
@@ -333,6 +348,11 @@
     "startAiRequest": "Start AI request",
     "viewAuditLogs": "View audit logs",
     "orgSettings": "Organization settings",
+    "openAccount": "My account",
+    "myProducts": "My products",
+    "addProduct": "Add product",
+    "productMarket": "Product marketplace",
+    "unavailable": "Dashboard data is unavailable.",
     "projects": "Projects",
     "tasksComplete": "{{completed}} of {{total}} tasks complete",
     "notAuthenticated": "Not authenticated."

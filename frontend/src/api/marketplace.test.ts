@@ -162,13 +162,13 @@ describe('marketplace API', () => {
       }),
     )
 
-    const created = await createListing('token-1', { title: 'Olives', seller_type: 'local' }, 4)
+    const created = await createListing('token-1', { title: 'Olives', seller_type: 'local', category_id: 3 }, 4)
 
     expect(created.id).toBe(11)
     const [url, init] = fetchMock.mock.calls[0]
     expect(String(url)).toContain('/market/listings')
     expect(init?.method).toBe('POST')
-    expect(JSON.parse(String(init?.body))).toMatchObject({ title: 'Olives', seller_type: 'local' })
+    expect(JSON.parse(String(init?.body))).toMatchObject({ title: 'Olives', seller_type: 'local', category_id: 3 })
   })
 
   it('loads an owned listing by id', async () => {

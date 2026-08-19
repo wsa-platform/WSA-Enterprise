@@ -9,11 +9,12 @@ import { useAuth } from '../../context/AuthContext'
 import { usePermissions } from '../../context/PermissionContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { translateApiError } from '../../i18n/apiErrors'
+import { internalPaths, publicPaths } from '../../navigation/paths'
 
 export function MyListingsPage() {
   const { t } = useTranslation()
   const { token, organizationId } = useAuth()
-  const { can } = usePermissions()
+  const { can, loading: permissionsLoading } = usePermissions()
   const [page, setPage] = useState(1)
   const [notice, setNotice] = useState('')
   const canCreate = can('market.create')
@@ -23,6 +24,10 @@ export function MyListingsPage() {
     if (!token || !can('market.view')) return null
     return fetchMyListings(token, organizationId ?? undefined, page)
   }, [token, organizationId, page, can])
+
+  if (permissionsLoading) {
+    return <p className="loading">{t('errors.checkingAccess')}</p>
+  }
 
   if (!can('market.view')) {
     return <ErrorBanner message={t('market.noPermissionView')} />
@@ -55,19 +60,28 @@ export function MyListingsPage() {
       eyebrow={t('nav.myAccount')}
       title={t('accountPage.myProducts')}
       description={t('accountPage.myProductsDescription')}
-      actions={canCreate ? (
-        <Link className="refresh" to="/account/products/new">{t('market.addProduct')}</Link>
-      ) : undefined}
+      actions={(
+        <span className="header-actions">
+          <Link className="link-button" to={publicPaths.market}>{t('nav.productMarket')}</Link>
+          {canCreate && (
+            <Link className="refresh" to={internalPaths.newProduct}>{t('market.addProduct')}</Link>
+          )}
+        </span>
+      )}
     />
 
     {error && <ErrorBanner message={error} onRetry={reload} />}
-    {notice && <p className="notice">{notice}</p>}
+    {notice && <p className={`notice ${notice === t('market.actionFailed') ? '' : 'success'}`.trim()}>{notice}</p>}
 
     <section className="panel">
       {loading ? (
         <p className="loading">{t('market.loadingListings')}</p>
       ) : (payload?.data.length ?? 0) === 0 ? (
-        <EmptyState title={t('market.noListings')} description={t('market.noListingsDescription')} />
+        <EmptyState
+          title={t('market.noListings')}
+          description={t('market.noListingsDescription')}
+          action={canCreate ? <Link className="refresh" to={internalPaths.newProduct}>{t('market.addProduct')}</Link> : undefined}
+        />
       ) : (
         <>
           <DataTable<OwnerListing>
@@ -78,7 +92,7 @@ export function MyListingsPage() {
                 key: 'title',
                 header: t('common.title'),
                 render: (row) => canManage
-                  ? <Link to={`/account/products/${row.id}`} dir="auto">{row.title}</Link>
+                  ? <Link to={internalPaths.editProduct(row.id)} dir="auto">{row.title}</Link>
                   : <span dir="auto">{row.title}</span>,
               },
               { key: 'status', header: t('common.status'), render: (row) => <StatusBadge status={row.status ?? 'draft'} /> },
@@ -94,9 +108,12 @@ export function MyListingsPage() {
                       </button>
                     )}
                     {row.status === 'published' && (
-                      <button type="button" className="link-button" onClick={() => void runAction(row, 'hide')}>
-                        {t('market.hideProduct')}
-                      </button>
+                      <>
+                        <Link className="link-button" to={publicPaths.listing(row.id)}>{t('market.viewPublicListing')}</Link>
+                        <button type="button" className="link-button" onClick={() => void runAction(row, 'hide')}>
+                          {t('market.hideProduct')}
+                        </button>
+                      </>
                     )}
                     <button type="button" className="link-button" onClick={() => void runAction(row, 'delete')}>
                       {t('market.deleteProduct')}

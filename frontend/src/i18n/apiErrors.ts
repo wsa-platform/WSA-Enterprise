@@ -17,3 +17,10 @@ export function translateApiError(error: unknown): string {
 
   return error.message || i18n.t('errors.generic')
 }
+
+export function apiFieldErrorMessages(error: unknown): string[] {
+  if (!(error instanceof Error) || error.name !== 'ApiError') return []
+  const apiError = error as ApiError
+  if (!apiError.errors) return []
+  return Object.values(apiError.errors).flat()
+}

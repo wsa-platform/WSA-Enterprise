@@ -4,21 +4,24 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   createListing,
   fetchMyListing,
+  fetchPublicCategories,
   submitListing,
   updateListing,
   type OwnerListing,
+  type PublicMarketCategory,
 } from '../../api/marketplace'
 import { PageHeader } from '../../components/PageHeader'
-import { ErrorBanner, StatusBadge } from '../../components/UiPrimitives'
+import { EmptyState, ErrorBanner, StatusBadge } from '../../components/UiPrimitives'
 import { useAuth } from '../../context/AuthContext'
 import { usePermissions } from '../../context/PermissionContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { translateApiError } from '../../i18n/apiErrors'
+import { apiFieldErrorMessages, translateApiError } from '../../i18n/apiErrors'
+import { internalPaths, publicPaths } from '../../navigation/paths'
 
 export function ListingEditorPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { token, organizationId, user } = useAuth()
-  const { can } = usePermissions()
+  const { can, loading: permissionsLoading } = usePermissions()
   const navigate = useNavigate()
   const { listingId } = useParams()
   const numericId = listingId ? Number(listingId) : NaN
@@ -34,14 +37,20 @@ export function ListingEditorPage() {
   const [city, setCity] = useState('')
   const [sellerEmail, setSellerEmail] = useState(user?.email ?? '')
   const [sellerPhone, setSellerPhone] = useState('')
+  const [categoryId, setCategoryId] = useState<number | null>(null)
   const [notice, setNotice] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [listing, setListing] = useState<OwnerListing | null>(null)
+  const [categories, setCategories] = useState<PublicMarketCategory[]>([])
 
   const { loading, error, reload } = useAsyncData(async () => {
-    if (!token || isNew || !numericId) return null
-    const match = await fetchMyListing(token, numericId, organizationId ?? undefined)
-    setListing(match)
+    const [categoryRes, match] = await Promise.all([
+      fetchPublicCategories().catch(() => ({ data: [] as PublicMarketCategory[] })),
+      !token || isNew || !numericId ? Promise.resolve(null) : fetchMyListing(token, numericId, organizationId ?? undefined),
+    ])
+    setCategories(Array.isArray(categoryRes) ? categoryRes : categoryRes.data ?? [])
+    if (match) setListing(match)
     return match
   }, [token, organizationId, numericId, isNew])
 
@@ -56,10 +65,19 @@ export function ListingEditorPage() {
     setCity(listing.city ?? '')
     setSellerEmail(listing.seller_email ?? '')
     setSellerPhone(listing.seller_phone ?? '')
+    setCategoryId(listing.category?.id ?? null)
   }, [listing])
+
+  if (permissionsLoading) {
+    return <p className="loading">{t('errors.checkingAccess')}</p>
+  }
 
   if (!can('market.view')) {
     return <ErrorBanner message={t('market.noPermissionView')} />
+  }
+
+  if (isNew && !can('market.create')) {
+    return <ErrorBanner message={t('market.noPermissionCreate')} />
   }
 
   const payload = () => ({
@@ -73,12 +91,14 @@ export function ListingEditorPage() {
     city: city || undefined,
     seller_email: sellerEmail || undefined,
     seller_phone: sellerPhone || undefined,
+    category_id: categoryId,
   })
 
   const save = async (alsoSubmit = false) => {
     if (!token || !canManage || !title.trim()) return
     setSubmitting(true)
     setNotice('')
+    setFieldErrors([])
     try {
       let saved: OwnerListing
       if (isNew) {
@@ -94,8 +114,9 @@ export function ListingEditorPage() {
         saved = await submitListing(token, saved.id, organizationId ?? undefined)
         setNotice(t('market.submitted'))
       }
-      navigate(alsoSubmit ? '/account/products' : `/account/products/${saved.id}`, { replace: true })
+      navigate(alsoSubmit ? internalPaths.products : internalPaths.editProduct(saved.id), { replace: true })
     } catch (requestError) {
+      setFieldErrors(apiFieldErrorMessages(requestError))
       setNotice(translateApiError(requestError) || t('market.saveFailed'))
     } finally {
       setSubmitting(false)
@@ -103,17 +124,45 @@ export function ListingEditorPage() {
   }
 
   const editable = isNew || listing?.status === 'draft' || listing?.status === 'rejected' || listing?.status === 'unpublished'
+  const categoryLabel = (category: PublicMarketCategory) => (
+    i18n.language.startsWith('ar') && category.name_ar ? category.name_ar : category.name ?? category.slug ?? String(category.id)
+  )
+
+  if (!isNew && !loading && !listing) {
+    return (
+      <>
+        <PageHeader
+          eyebrow={t('nav.myAccount')}
+          title={t('market.editProduct')}
+          actions={<Link className="link-button" to={internalPaths.products}>{t('market.backToListings')}</Link>}
+        />
+        {error ? <ErrorBanner message={error} onRetry={reload} /> : <EmptyState title={t('errors.notFound')} description={t('market.loadingListing')} />}
+      </>
+    )
+  }
 
   return <>
     <PageHeader
       eyebrow={t('nav.myAccount')}
       title={isNew ? t('market.addProduct') : t('market.editProduct')}
       description={t('market.editorDescription')}
-      actions={<Link className="link-button" to="/account/products">{t('market.backToListings')}</Link>}
+      actions={(
+        <span className="header-actions">
+          <Link className="link-button" to={internalPaths.products}>{t('market.backToListings')}</Link>
+          {listing?.status === 'published' && (
+            <Link className="link-button" to={publicPaths.listing(listing.id)}>{t('market.viewPublicListing')}</Link>
+          )}
+        </span>
+      )}
     />
 
     {error && <ErrorBanner message={error} onRetry={reload} />}
-    {notice && <p className="notice">{notice}</p>}
+    {fieldErrors.length > 0 && (
+      <ul className="field-errors">
+        {fieldErrors.map((message) => <li key={message}>{message}</li>)}
+      </ul>
+    )}
+    {notice && <p className={`notice ${notice === t('market.saveFailed') ? '' : 'success'}`.trim()}>{notice}</p>}
 
     {loading && !isNew ? (
       <p className="loading">{t('market.loadingListing')}</p>
@@ -131,6 +180,19 @@ export function ListingEditorPage() {
           <label>
             {t('common.description')}
             <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} disabled={!canManage || !editable} dir="auto" />
+          </label>
+          <label>
+            {t('market.category')}
+            <select
+              value={categoryId ?? ''}
+              onChange={(event) => setCategoryId(event.target.value ? Number(event.target.value) : null)}
+              disabled={!canManage || !editable}
+            >
+              <option value="">{t('market.noneCategory')}</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>{categoryLabel(category)}</option>
+              ))}
+            </select>
           </label>
           <label>
             {t('market.sellerType')}
@@ -173,6 +235,9 @@ export function ListingEditorPage() {
               {t('market.publishProduct')}
             </button>
           </div>
+        )}
+        {canManage && !editable && listing && (
+          <p className="muted">{t('market.publishedReadOnly')}</p>
         )}
       </section>
     )}

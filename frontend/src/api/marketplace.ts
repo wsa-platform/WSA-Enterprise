@@ -94,6 +94,7 @@ export type MarketplaceListingWrite = {
   seller_email?: string
   seller_phone?: string
   contact_access_price?: number | null
+  category_id?: number | null
 }
 
 export async function fetchMyListings(token: string, organizationId?: number, page = 1, perPage = 15) {

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { getAccessSummary, getDashboard, getWorkflowSummary, type Dashboard } from '../api'
 import { Panel } from '../components/AppShell'
 import { PageHeader } from '../components/PageHeader'
-import { ErrorBanner, SkeletonGrid, StatusBadge } from '../components/UiPrimitives'
+import { ErrorBanner, EmptyState, SkeletonGrid, StatusBadge } from '../components/UiPrimitives'
 import { usePermissions } from '../context/PermissionContext'
 import { useAuth } from '../context/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
@@ -40,7 +40,9 @@ export function DashboardPage() {
 
   if (loading && !dashboard) return <SkeletonGrid count={4} />
   if (error) return <ErrorBanner message={error} onRetry={reloadAll} />
-  if (!dashboard || !summary || !access) return null
+  if (!dashboard || !summary || !access) {
+    return <EmptyState title={t('dashboard.unavailable')} description={t('dashboard.notAuthenticated')} />
+  }
 
   return <>
     <PageHeader
@@ -138,6 +140,14 @@ export function DashboardPage() {
         {can('ai.use') && <Link to="/ai/workspace">{t('dashboard.startAiRequest')}</Link>}
         {can('access.manage') && <Link to="/admin/audit">{t('dashboard.viewAuditLogs')}</Link>}
         {can('platform.view') && <Link to="/organization">{t('dashboard.orgSettings')}</Link>}
+        <Link to="/account">{t('dashboard.openAccount')}</Link>
+        {(can('market.view') || can('market.create') || can('market.manage_own')) && (
+          <Link to="/account/products">{t('dashboard.myProducts')}</Link>
+        )}
+        {can('market.create') && (
+          <Link to="/account/products/new">{t('dashboard.addProduct')}</Link>
+        )}
+        <Link to="/market">{t('dashboard.productMarket')}</Link>
       </div>
     </Panel>
 

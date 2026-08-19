@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink } from 'react-router-dom'
+import { PUBLIC_TOP_NAV_ITEMS } from '../navigation/paths'
 import { PublicLanguageMenu } from './PublicLanguageMenu'
 
 /** Header — adapted from garden-store/components/Header.tsx */
@@ -36,9 +37,11 @@ export function PublicHeader() {
           className={`gs-nav ${menuOpen ? 'open' : ''}`}
           aria-label={t('website.nav.primary')}
         >
-          <NavLink to="/" end onClick={() => setMenuOpen(false)}>
-            {t('website.nav.home')}
-          </NavLink>
+          {PUBLIC_TOP_NAV_ITEMS.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setMenuOpen(false)}>
+              {t(item.labelKey)}
+            </NavLink>
+          ))}
         </nav>
 
         <div className="gs-header-actions">

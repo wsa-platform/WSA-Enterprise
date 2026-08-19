@@ -148,10 +148,14 @@
     "loadingRole": "Chargement du rôle…",
     "primary": "Navigation principale",
     "toggleNav": "Basculer la navigation",
+    "closeNav": "Fermer la navigation",
     "myListings": "Mes annonces",
     "myAccount": "Mon compte",
     "profile": "Profil",
     "myProducts": "Mes produits",
+    "addProduct": "Ajouter un produit",
+    "productMarket": "Marché des produits",
+    "home": "Accueil",
     "communications": "Communications",
     "market": "Place de marché"
   },
@@ -227,6 +231,7 @@
     "editorDescription": "Enregistrez un brouillon, puis soumettez-le pour publication.",
     "backToListings": "Retour aux annonces",
     "noPermissionView": "Vous n'avez pas l'autorisation de voir les annonces.",
+    "noPermissionCreate": "Vous n'avez pas l'autorisation d'ajouter un produit.",
     "confirmDelete": "Supprimer cette annonce ?",
     "deleted": "Annonce supprimée.",
     "submitted": "Annonce soumise pour examen.",
@@ -257,7 +262,11 @@
     "publishProduct": "Soumettre pour examen",
     "deleteProduct": "Supprimer le produit",
     "confirmHide": "Masquer ce produit du marché public ?",
-    "hidden": "Produit masqué du marché."
+    "hidden": "Produit masqué du marché.",
+    "viewPublicListing": "Voir sur le marché",
+    "category": "Catégorie",
+    "noneCategory": "Aucune catégorie",
+    "publishedReadOnly": "Les produits publiés doivent être masqués avant d’être modifiés."
   },
   "accountPage": {
     "description": "Gérez votre profil et vos produits sur le marché.",
@@ -269,7 +278,13 @@
     "nameUpdated": "Profil mis à jour.",
     "updateFailed": "Impossible de mettre à jour le profil.",
     "saveProfile": "Enregistrer le profil",
-    "emailReadOnly": "L’e-mail ne peut pas être modifié ici."
+    "emailReadOnly": "L’e-mail ne peut pas être modifié ici.",
+    "addProduct": "Ajouter un produit",
+    "addProductDescription": "Créez une nouvelle annonce sur le marché.",
+    "productMarket": "Marché des produits",
+    "productMarketDescription": "Parcourez les produits publiés sur le marché public.",
+    "loadingProfile": "Chargement du profil…",
+    "noProfile": "Votre profil n’est pas encore disponible. Reconnectez-vous si cela continue."
   },
   "communications": {
     "noPermission": "Vous n'avez pas l'autorisation de voir les communications.",
@@ -333,6 +348,11 @@
     "startAiRequest": "Démarrer une demande IA",
     "viewAuditLogs": "Voir les journaux d'audit",
     "orgSettings": "Paramètres de l'organisation",
+    "openAccount": "Mon compte",
+    "myProducts": "Mes produits",
+    "addProduct": "Ajouter un produit",
+    "productMarket": "Marché des produits",
+    "unavailable": "Les données du tableau de bord sont indisponibles.",
     "projects": "Projets",
     "tasksComplete": "{{completed}} sur {{total}} tâches terminées",
     "notAuthenticated": "Non authentifié."

@@ -148,10 +148,14 @@
     "loadingRole": "جارٍ تحميل الدور…",
     "primary": "التنقل الرئيسي",
     "toggleNav": "تبديل التنقل",
+    "closeNav": "إغلاق التنقل",
     "myListings": "إعلاناتي",
     "myAccount": "حسابي",
     "profile": "الملف الشخصي",
     "myProducts": "منتجاتي",
+    "addProduct": "إضافة منتج",
+    "productMarket": "سوق المنتجات",
+    "home": "الرئيسية",
     "communications": "الاتصالات",
     "market": "السوق"
   },
@@ -227,6 +231,7 @@
     "editorDescription": "احفظ مسودة ثم قدّمها لمراجعة النشر.",
     "backToListings": "العودة إلى الإعلانات",
     "noPermissionView": "ليست لديك صلاحية عرض إعلانات السوق.",
+    "noPermissionCreate": "ليست لديك صلاحية إضافة منتج.",
     "confirmDelete": "حذف هذا الإعلان؟",
     "deleted": "تم حذف الإعلان.",
     "submitted": "تم تقديم الإعلان للمراجعة.",
@@ -257,7 +262,11 @@
     "publishProduct": "نشر المنتج",
     "deleteProduct": "حذف المنتج",
     "confirmHide": "إخفاء هذا المنتج من السوق العام؟",
-    "hidden": "تم إخفاء المنتج عن السوق."
+    "hidden": "تم إخفاء المنتج عن السوق.",
+    "viewPublicListing": "عرض في السوق",
+    "category": "التصنيف",
+    "noneCategory": "بدون تصنيف",
+    "publishedReadOnly": "يجب إخفاء المنتج المنشور قبل تعديله."
   },
   "accountPage": {
     "description": "أدِر ملفك الشخصي ومنتجاتك في السوق.",
@@ -269,7 +278,13 @@
     "nameUpdated": "تم تحديث الملف الشخصي.",
     "updateFailed": "تعذّر تحديث الملف الشخصي.",
     "saveProfile": "حفظ الملف الشخصي",
-    "emailReadOnly": "لا يمكن تغيير البريد الإلكتروني من هنا."
+    "emailReadOnly": "لا يمكن تغيير البريد الإلكتروني من هنا.",
+    "addProduct": "إضافة منتج",
+    "addProductDescription": "أنشئ إعلان سوق جديد.",
+    "productMarket": "سوق المنتجات",
+    "productMarketDescription": "تصفح المنتجات المنشورة في السوق العام.",
+    "loadingProfile": "جارٍ تحميل الملف الشخصي…",
+    "noProfile": "الملف الشخصي غير متاح حالياً. سجّل الدخول مرة أخرى إذا استمر ذلك."
   },
   "communications": {
     "noPermission": "ليست لديك صلاحية عرض الاتصالات.",
@@ -333,6 +348,11 @@
     "startAiRequest": "بدء طلب ذكاء اصطناعي",
     "viewAuditLogs": "عرض سجلات التدقيق",
     "orgSettings": "إعدادات المؤسسة",
+    "openAccount": "حسابي",
+    "myProducts": "منتجاتي",
+    "addProduct": "إضافة منتج",
+    "productMarket": "سوق المنتجات",
+    "unavailable": "بيانات لوحة التحكم غير متاحة.",
     "projects": "المشاريع",
     "tasksComplete": "{{completed}} من {{total}} مهام مكتملة",
     "notAuthenticated": "غير مصادق."

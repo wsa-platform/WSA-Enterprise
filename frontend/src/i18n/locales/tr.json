@@ -148,10 +148,14 @@
     "loadingRole": "Rol yükleniyor…",
     "primary": "Ana gezinme",
     "toggleNav": "Gezinmeyi aç/kapat",
+    "closeNav": "Gezinmeyi kapat",
     "myListings": "İlanlarım",
     "myAccount": "Hesabım",
     "profile": "Profil",
     "myProducts": "Ürünlerim",
+    "addProduct": "Ürün ekle",
+    "productMarket": "Ürün pazarı",
+    "home": "Ana sayfa",
     "communications": "İletişim",
     "market": "Pazar yeri"
   },
@@ -227,6 +231,7 @@
     "editorDescription": "Taslak kaydedin, ardından yayın incelemesine gönderin.",
     "backToListings": "İlanlara dön",
     "noPermissionView": "Pazar ilanlarını görüntüleme izniniz yok.",
+    "noPermissionCreate": "Ürün ekleme izniniz yok.",
     "confirmDelete": "Bu ilan silinsin mi?",
     "deleted": "İlan silindi.",
     "submitted": "İlan incelemeye gönderildi.",
@@ -257,7 +262,11 @@
     "publishProduct": "İncelemeye gönder",
     "deleteProduct": "Ürünü sil",
     "confirmHide": "Bu ürün herkese açık pazardan gizlensin mi?",
-    "hidden": "Ürün pazardan gizlendi."
+    "hidden": "Ürün pazardan gizlendi.",
+    "viewPublicListing": "Pazarda görüntüle",
+    "category": "Kategori",
+    "noneCategory": "Kategori yok",
+    "publishedReadOnly": "Yayınlanan ürünler düzenlenmeden önce gizlenmelidir."
   },
   "accountPage": {
     "description": "Profilinizi ve pazar ürünlerinizi yönetin.",
@@ -269,7 +278,13 @@
     "nameUpdated": "Profil güncellendi.",
     "updateFailed": "Profil güncellenemedi.",
     "saveProfile": "Profili kaydet",
-    "emailReadOnly": "E-posta buradan değiştirilemez."
+    "emailReadOnly": "E-posta buradan değiştirilemez.",
+    "addProduct": "Ürün ekle",
+    "addProductDescription": "Yeni bir pazar ilanı oluşturun.",
+    "productMarket": "Ürün pazarı",
+    "productMarketDescription": "Yayınlanan ürünleri genel pazarda görüntüleyin.",
+    "loadingProfile": "Profil yükleniyor…",
+    "noProfile": "Profiliniz henüz kullanılamıyor. Bu devam ederse tekrar giriş yapın."
   },
   "communications": {
     "noPermission": "İletişimleri görüntüleme izniniz yok.",
@@ -333,6 +348,11 @@
     "startAiRequest": "YZ isteği başlat",
     "viewAuditLogs": "Denetim günlüklerini görüntüle",
     "orgSettings": "Organizasyon ayarları",
+    "openAccount": "Hesabım",
+    "myProducts": "Ürünlerim",
+    "addProduct": "Ürün ekle",
+    "productMarket": "Ürün pazarı",
+    "unavailable": "Kontrol paneli verileri kullanılamıyor.",
     "projects": "Projeler",
     "tasksComplete": "{{total}} görevden {{completed}} tamamlandı",
     "notAuthenticated": "Kimlik doğrulanmadı."
