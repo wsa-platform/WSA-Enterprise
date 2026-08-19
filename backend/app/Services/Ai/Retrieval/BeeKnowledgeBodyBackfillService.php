@@ -6,7 +6,10 @@ use App\Models\BeeKnowledgeTopic;
 
 class BeeKnowledgeBodyBackfillService
 {
-    public function __construct(private KnowledgeTextNormalizer $normalizer) {}
+    public function __construct(
+        private KnowledgeTextNormalizer $normalizer,
+        private KnowledgeSemanticIndexSync $semanticIndex,
+    ) {}
 
     public function backfillMissingBodies(?int $limit = null): BeeKnowledgeBackfillResult
     {
@@ -52,6 +55,7 @@ class BeeKnowledgeBodyBackfillService
 
         $topic->body = $body;
         $topic->save();
+        $this->semanticIndex->syncBeeTopic($topic);
 
         return 'updated';
     }

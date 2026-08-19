@@ -1,9 +1,13 @@
 <?php
 
+use App\Providers\AiRetrievalServiceProvider;
 use App\Providers\AppServiceProvider;
+use App\Providers\AuthServiceProvider;
+use App\Providers\ServiceOwnershipProvider;
 
 return [
     AppServiceProvider::class,
-    App\Providers\AuthServiceProvider::class,
-    App\Providers\ServiceOwnershipProvider::class,
+    AiRetrievalServiceProvider::class,
+    AuthServiceProvider::class,
+    ServiceOwnershipProvider::class,
 ];

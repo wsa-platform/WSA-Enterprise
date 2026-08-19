@@ -1,6 +1,6 @@
 # AI Platform
 
-**Last updated:** AI-09 knowledge ingestion and retrieval operations (2026-08-19)
+**Last updated:** AI-10 hybrid knowledge retrieval foundation (2026-08-20)
 
 ## Overview
 
@@ -317,6 +317,61 @@ Repeating the same payload for the same source identity does not create duplicat
 
 ---
 
+## Hybrid knowledge retrieval foundation (AI-10)
+
+AI-10 adds a **replaceable hybrid retrieval foundation** on top of AI-08/AI-09. Default behavior is unchanged: `AI_RETRIEVAL_STRATEGY=keyword`. The OpenAI HTTP adapter stays unaware of retrieval internals. AI-06 grounding, AI-07 disclosure, and AI-04 usage accounting are unchanged.
+
+The AI-10 semantic implementation is a **deterministic lexical approximation** (normalized token overlap, weighted title/summary/body similarity). It is **not** neural embedding quality and does not use a vector database. A later milestone may plug in a real embedding/vector backend behind `KnowledgeSemanticIndexInterface` after operational requirements are met.
+
+```
+AiService
+  -> KnowledgeRetrievalRouter (strategy: keyword | semantic | hybrid)
+       -> KeywordKnowledgeRetriever (AI-08, unchanged algorithm)
+       -> DeterministicLexicalSemanticIndex (replaceable)
+       -> HybridKnowledgeRetrievalStrategy (bounded weighted mix)
+  -> bounded context
+  -> provider
+  -> AI-06 grounding
+  -> AI-07 disclosure
+  -> AI-04 usage + retrieval telemetry
+```
+
+### Strategies
+
+| Strategy | Behavior |
+|----------|----------|
+| `keyword` (default) | Existing AI-08 keyword retrieval |
+| `semantic` | Deterministic lexical similarity over published/active documents |
+| `hybrid` | `keyword_score * keyword_weight + semantic_score * semantic_weight + freshness_score * freshness_weight` |
+
+Invalid strategy values fall back to keyword. Weights are clamped so freshness and weak lexical similarity cannot outrank an exact title match (`semantic_weight` max 0.5, `freshness_weight` max 1.0). Freshness uses AI-09 `KnowledgeFreshnessService.rankingScore` (0–2), not a second algorithm.
+
+### Fallback
+
+If semantic retrieval is disabled or throws:
+
+- the AI request continues
+- keyword retrieval is used
+- telemetry `retrieval_status=fallback` with `fallback_reason` (`semantic_unavailable`, `semantic_error`, or `invalid_strategy`)
+
+### Index lifecycle
+
+Ingestion and Bee body backfill call `KnowledgeSemanticIndexSync`. Create/update/publish indexes the document; unpublish/remove drops it from the in-memory semantic overlay. If indexing fails, the knowledge row is left intact, the failure is logged, and keyword retrieval still works.
+
+### Telemetry
+
+Additive fields on `ai_usage_records.retrieval`: `retrieval_strategy`, `keyword_candidate_count`, `semantic_candidate_count`, optional `hybrid_result_count`, `fallback_reason`, `requested_strategy`. Existing AI-09 aggregates remain. Scoring breakdowns stay on hit metadata and are **not** copied into user-facing citations.
+
+### Quality summary
+
+`KnowledgeRetrievalQualityService` is tenant-scoped backend/domain output for a future operator API: keyword/semantic/hybrid counts, fallback/empty/error counts, average returned count, strategy and source-type distributions. No admin UI in AI-10.
+
+### Isolation and trust
+
+Every strategy uses the same tenant and publication filters as AI-08. Semantic similarity cannot promote unpublished or foreign-tenant documents, and cannot turn model/client URLs into trusted citations.
+
+---
+
 ## Configuration Reference
 
 | Variable | Default | Purpose |
@@ -336,6 +391,11 @@ Repeating the same payload for the same source identity does not create duplicat
 | `AI_RETRIEVAL_MAX_EXCERPT_CHARACTERS` | `400` | Max characters per retrieved body excerpt |
 | `AI_RETRIEVAL_FRESHNESS_STALE_AFTER_DAYS` | `90` | Operational stale threshold (ranking still uses AI-08 0–2 signal) |
 | `AI_RETRIEVAL_OPERATIONS_MAX_RESULTS` | `50` | Max hits returned by retrieval operations |
+| `AI_RETRIEVAL_STRATEGY` | `keyword` | `keyword`, `semantic`, or `hybrid` (invalid values fall back to keyword) |
+| `AI_RETRIEVAL_SEMANTIC_ENABLED` | `true` | Enable the replaceable semantic index (strategy default remains keyword) |
+| `AI_RETRIEVAL_KEYWORD_WEIGHT` | `1.0` | Hybrid keyword weight (clamped 0–2) |
+| `AI_RETRIEVAL_SEMANTIC_WEIGHT` | `0.25` | Hybrid semantic weight (clamped 0–0.5) |
+| `AI_RETRIEVAL_FRESHNESS_WEIGHT` | `0.05` | Extra hybrid freshness weight (clamped 0–1; AI-08 ranker still includes 0–2) |
 
 ---
 

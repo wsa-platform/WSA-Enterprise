@@ -11,6 +11,7 @@ class KnowledgeIngestionService
     public function __construct(
         private KnowledgeIngestionValidator $validator,
         private KnowledgeTextNormalizer $normalizer,
+        private KnowledgeSemanticIndexSync $semanticIndex,
     ) {}
 
     /**
@@ -104,6 +105,7 @@ class KnowledgeIngestionService
         }
 
         $item->save();
+        $this->semanticIndex->syncLibraryItem($item);
 
         return $this->result($existed ? 'updated' : 'created', 'library_items', (int) $item->id, (string) $item->slug, $item);
     }
@@ -116,6 +118,7 @@ class KnowledgeIngestionService
         }
 
         $topic->save();
+        $this->semanticIndex->syncBeeTopic($topic);
 
         return $this->result($existed ? 'updated' : 'created', 'bee_knowledge_topics', (int) $topic->id, (string) $topic->slug, $topic);
     }

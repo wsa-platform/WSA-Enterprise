@@ -2,14 +2,14 @@
 
 namespace App\Services\Ai;
 
+use App\Contracts\AiKnowledgeRetrieverInterface;
 use App\Services\Ai\Retrieval\AiRetrievalHit;
 use App\Services\Ai\Retrieval\AiRetrievalResult;
-use App\Services\Ai\Retrieval\KeywordKnowledgeRetriever;
 use Illuminate\Support\Facades\Log;
 
 class AiGroundedAnswerPolicy
 {
-    public function __construct(private KeywordKnowledgeRetriever $retriever) {}
+    public function __construct(private AiKnowledgeRetrieverInterface $retriever) {}
 
     /**
      * Retrieve existing knowledge and prepare provider input.

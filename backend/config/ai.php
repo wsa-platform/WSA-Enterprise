@@ -8,6 +8,7 @@ return [
     | AI_RETRY_TIMES, AI_RETRY_SLEEP_MS
     | AI_RETRIEVAL_ENABLED, AI_RETRIEVAL_MAX_RESULTS, AI_RETRIEVAL_MAX_CONTEXT_CHARACTERS, AI_RETRIEVAL_CANDIDATE_LIMIT
     | AI_RETRIEVAL_MAX_EXCERPT_CHARACTERS, AI_RETRIEVAL_FRESHNESS_STALE_AFTER_DAYS, AI_RETRIEVAL_OPERATIONS_MAX_RESULTS
+    | AI_RETRIEVAL_STRATEGY, AI_RETRIEVAL_SEMANTIC_ENABLED, AI_RETRIEVAL_KEYWORD_WEIGHT, AI_RETRIEVAL_SEMANTIC_WEIGHT, AI_RETRIEVAL_FRESHNESS_WEIGHT
     | Grounded answers (AI-06) reuse those retrieval limits; citations are server-controlled.
     | AI-07 adds user-visible disclosure for empty/failed knowledge retrieval.
     | Existing keys: AI_QUEUE, AI_QUEUE_TRIES, AI_ASYNC_DISPATCH,
@@ -56,6 +57,11 @@ return [
         'max_excerpt_characters' => (int) env('AI_RETRIEVAL_MAX_EXCERPT_CHARACTERS', 400),
         'freshness_stale_after_days' => (int) env('AI_RETRIEVAL_FRESHNESS_STALE_AFTER_DAYS', 90),
         'operations_max_results' => (int) env('AI_RETRIEVAL_OPERATIONS_MAX_RESULTS', 50),
+        'strategy' => env('AI_RETRIEVAL_STRATEGY', 'keyword'),
+        'semantic_enabled' => filter_var(env('AI_RETRIEVAL_SEMANTIC_ENABLED', true), FILTER_VALIDATE_BOOL),
+        'keyword_weight' => (float) env('AI_RETRIEVAL_KEYWORD_WEIGHT', 1.0),
+        'semantic_weight' => (float) env('AI_RETRIEVAL_SEMANTIC_WEIGHT', 0.25),
+        'freshness_weight' => (float) env('AI_RETRIEVAL_FRESHNESS_WEIGHT', 0.05),
     ],
     'queue' => env('AI_QUEUE', 'default'),
     'queue_tries' => (int) env('AI_QUEUE_TRIES', 3),

@@ -80,7 +80,7 @@ class AiUsageRecorder
         }
 
         $status = (string) ($telemetry['retrieval_status'] ?? 'empty');
-        if (! in_array($status, ['ok', 'empty', 'failed', 'disabled'], true)) {
+        if (! in_array($status, ['ok', 'empty', 'failed', 'disabled', 'fallback'], true)) {
             $status = 'empty';
         }
 
@@ -98,14 +98,43 @@ class AiUsageRecorder
             }
         }
 
-        return [
+        $strategy = (string) ($telemetry['retrieval_strategy'] ?? 'keyword');
+        if (! in_array($strategy, ['keyword', 'semantic', 'hybrid'], true)) {
+            $strategy = 'keyword';
+        }
+
+        $reason = (string) ($telemetry['fallback_reason'] ?? '');
+        if (! in_array($reason, ['semantic_unavailable', 'semantic_error', 'invalid_strategy'], true)) {
+            $reason = '';
+        }
+
+        $requested = (string) ($telemetry['requested_strategy'] ?? '');
+        if (! in_array($requested, ['keyword', 'semantic', 'hybrid'], true)) {
+            $requested = '';
+        }
+
+        $safe = [
             'candidate_count' => max(0, (int) ($telemetry['candidate_count'] ?? 0)),
             'returned_count' => max(0, (int) ($telemetry['returned_count'] ?? 0)),
             'retrieval_duration_ms' => max(0, (int) ($telemetry['retrieval_duration_ms'] ?? 0)),
             'source_types' => array_values($sourceTypes),
             'freshness_distribution' => $freshness,
             'retrieval_status' => $status,
+            'retrieval_strategy' => $strategy,
+            'keyword_candidate_count' => max(0, (int) ($telemetry['keyword_candidate_count'] ?? 0)),
+            'semantic_candidate_count' => max(0, (int) ($telemetry['semantic_candidate_count'] ?? 0)),
         ];
+        if (array_key_exists('hybrid_result_count', $telemetry)) {
+            $safe['hybrid_result_count'] = max(0, (int) $telemetry['hybrid_result_count']);
+        }
+        if ($reason !== '') {
+            $safe['fallback_reason'] = $reason;
+        }
+        if ($requested !== '') {
+            $safe['requested_strategy'] = $requested;
+        }
+
+        return $safe;
     }
 
     public function countRequestsForPeriod(int $organizationId): int
