@@ -21,6 +21,8 @@ class MarketplaceListing extends Model
 
     public const STATUS_SUSPENDED = 'suspended';
 
+    public const STATUS_UNPUBLISHED = 'unpublished';
+
     public const SELLER_LOCAL = 'local';
 
     public const SELLER_INTERNATIONAL = 'international';

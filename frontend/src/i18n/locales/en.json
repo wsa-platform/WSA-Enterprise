@@ -149,6 +149,9 @@
     "primary": "Primary navigation",
     "toggleNav": "Toggle navigation",
     "myListings": "My listings",
+    "myAccount": "My account",
+    "profile": "Profile",
+    "myProducts": "My products",
     "communications": "Communications",
     "market": "Marketplace"
   },
@@ -247,7 +250,26 @@
     "country": "Country",
     "sellerEmail": "Seller email",
     "sellerPhone": "Seller phone",
-    "saveAndSubmit": "Save and submit"
+    "saveAndSubmit": "Save and submit",
+    "addProduct": "Add product",
+    "editProduct": "Edit product",
+    "hideProduct": "Hide product",
+    "publishProduct": "Submit for review",
+    "deleteProduct": "Delete product",
+    "confirmHide": "Hide this product from the public marketplace?",
+    "hidden": "Product hidden from the marketplace."
+  },
+  "accountPage": {
+    "description": "Manage your profile and your own marketplace products.",
+    "profile": "Profile",
+    "profileDescription": "Update your display name.",
+    "myProducts": "My products",
+    "myProductsDescription": "Add, edit, hide, or delete your marketplace listings.",
+    "backToAccount": "Back to account",
+    "nameUpdated": "Profile updated.",
+    "updateFailed": "Unable to update your profile.",
+    "saveProfile": "Save profile",
+    "emailReadOnly": "Email cannot be changed here."
   },
   "communications": {
     "noPermission": "You do not have permission to view communications.",

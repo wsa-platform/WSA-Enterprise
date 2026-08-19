@@ -149,6 +149,9 @@
     "primary": "التنقل الرئيسي",
     "toggleNav": "تبديل التنقل",
     "myListings": "إعلاناتي",
+    "myAccount": "حسابي",
+    "profile": "الملف الشخصي",
+    "myProducts": "منتجاتي",
     "communications": "الاتصالات",
     "market": "السوق"
   },
@@ -247,7 +250,26 @@
     "country": "الدولة",
     "sellerEmail": "بريد البائع",
     "sellerPhone": "هاتف البائع",
-    "saveAndSubmit": "حفظ وتقديم"
+    "saveAndSubmit": "حفظ وتقديم",
+    "addProduct": "إضافة منتج",
+    "editProduct": "تعديل المنتج",
+    "hideProduct": "إخفاء المنتج",
+    "publishProduct": "نشر المنتج",
+    "deleteProduct": "حذف المنتج",
+    "confirmHide": "إخفاء هذا المنتج من السوق العام؟",
+    "hidden": "تم إخفاء المنتج عن السوق."
+  },
+  "accountPage": {
+    "description": "أدِر ملفك الشخصي ومنتجاتك في السوق.",
+    "profile": "الملف الشخصي",
+    "profileDescription": "حدّث اسم العرض الخاص بك.",
+    "myProducts": "منتجاتي",
+    "myProductsDescription": "أضف منتجاتك أو عدّلها أو أخفها أو احذفها.",
+    "backToAccount": "العودة إلى حسابي",
+    "nameUpdated": "تم تحديث الملف الشخصي.",
+    "updateFailed": "تعذّر تحديث الملف الشخصي.",
+    "saveProfile": "حفظ الملف الشخصي",
+    "emailReadOnly": "لا يمكن تغيير البريد الإلكتروني من هنا."
   },
   "communications": {
     "noPermission": "ليست لديك صلاحية عرض الاتصالات.",

@@ -101,7 +101,11 @@ class MarketplaceService
 
     public function submitForReview(MarketplaceListing $listing, User $actor, ?int $organizationId, ?Request $request = null): MarketplaceListing
     {
-        abort_unless(in_array($listing->status, [MarketplaceListing::STATUS_DRAFT, MarketplaceListing::STATUS_REJECTED], true), 422);
+        abort_unless(in_array($listing->status, [
+            MarketplaceListing::STATUS_DRAFT,
+            MarketplaceListing::STATUS_REJECTED,
+            MarketplaceListing::STATUS_UNPUBLISHED,
+        ], true), 422);
         abort_unless($listing->seller_user_id === $actor->id, 403);
 
         $listing->update(['status' => MarketplaceListing::STATUS_PENDING_REVIEW]);
@@ -126,6 +130,31 @@ class MarketplaceService
                 ['listing_id' => $listing->id],
             );
         }
+
+        return $listing->fresh(['category', 'images']);
+    }
+
+    public function unpublish(MarketplaceListing $listing, User $actor, ?int $organizationId, ?Request $request = null): MarketplaceListing
+    {
+        abort_unless($listing->status === MarketplaceListing::STATUS_PUBLISHED, 422);
+        abort_unless($listing->seller_user_id === $actor->id
+            || app(\App\Services\Authorization\PermissionService::class)->userCan($actor, $organizationId, 'market.manage_all')
+            || app(\App\Services\Ownership\ServiceOwnershipAuthorizer::class)->canSupervise($actor, $organizationId), 403);
+
+        $listing->update([
+            'status' => MarketplaceListing::STATUS_UNPUBLISHED,
+        ]);
+        $this->recordStatusChange($listing, MarketplaceListing::STATUS_UNPUBLISHED, $actor->id, 'Unpublished by owner');
+
+        $this->audit->record(
+            'marketplace.listing_unpublished',
+            $organizationId,
+            $actor->id,
+            $listing,
+            ['status' => MarketplaceListing::STATUS_PUBLISHED],
+            ['status' => MarketplaceListing::STATUS_UNPUBLISHED],
+            $request,
+        );
 
         return $listing->fresh(['category', 'images']);
     }

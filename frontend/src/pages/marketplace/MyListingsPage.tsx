@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { deleteListing, fetchMyListings, submitListing, type OwnerListing } from '../../api/marketplace'
+import { deleteListing, fetchMyListings, submitListing, unpublishListing, type OwnerListing } from '../../api/marketplace'
 import { DataTable, PaginationBar } from '../../components/DataTable'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState, ErrorBanner, StatusBadge } from '../../components/UiPrimitives'
@@ -28,7 +28,7 @@ export function MyListingsPage() {
     return <ErrorBanner message={t('market.noPermissionView')} />
   }
 
-  const runAction = async (listing: OwnerListing, action: 'submit' | 'delete') => {
+  const runAction = async (listing: OwnerListing, action: 'submit' | 'delete' | 'hide') => {
     if (!token) return
     setNotice('')
     try {
@@ -36,6 +36,10 @@ export function MyListingsPage() {
         if (!window.confirm(t('market.confirmDelete'))) return
         await deleteListing(token, listing.id, organizationId ?? undefined)
         setNotice(t('market.deleted'))
+      } else if (action === 'hide') {
+        if (!window.confirm(t('market.confirmHide'))) return
+        await unpublishListing(token, listing.id, organizationId ?? undefined)
+        setNotice(t('market.hidden'))
       } else {
         await submitListing(token, listing.id, organizationId ?? undefined)
         setNotice(t('market.submitted'))
@@ -48,11 +52,11 @@ export function MyListingsPage() {
 
   return <>
     <PageHeader
-      eyebrow={t('nav.market')}
-      title={t('market.myListingsTitle')}
-      description={t('market.myListingsDescription')}
+      eyebrow={t('nav.myAccount')}
+      title={t('accountPage.myProducts')}
+      description={t('accountPage.myProductsDescription')}
       actions={canCreate ? (
-        <Link className="refresh" to="/seller/listings/new">{t('market.newListing')}</Link>
+        <Link className="refresh" to="/account/products/new">{t('market.addProduct')}</Link>
       ) : undefined}
     />
 
@@ -74,7 +78,7 @@ export function MyListingsPage() {
                 key: 'title',
                 header: t('common.title'),
                 render: (row) => canManage
-                  ? <Link to={`/seller/listings/${row.id}`} dir="auto">{row.title}</Link>
+                  ? <Link to={`/account/products/${row.id}`} dir="auto">{row.title}</Link>
                   : <span dir="auto">{row.title}</span>,
               },
               { key: 'status', header: t('common.status'), render: (row) => <StatusBadge status={row.status ?? 'draft'} /> },
@@ -84,13 +88,18 @@ export function MyListingsPage() {
                 header: t('common.actions'),
                 render: (row) => canManage ? (
                   <span className="table-actions">
-                    {(row.status === 'draft' || row.status === 'rejected') && (
+                    {(row.status === 'draft' || row.status === 'rejected' || row.status === 'unpublished') && (
                       <button type="button" className="link-button" onClick={() => void runAction(row, 'submit')}>
-                        {t('market.submit')}
+                        {t('market.publishProduct')}
+                      </button>
+                    )}
+                    {row.status === 'published' && (
+                      <button type="button" className="link-button" onClick={() => void runAction(row, 'hide')}>
+                        {t('market.hideProduct')}
                       </button>
                     )}
                     <button type="button" className="link-button" onClick={() => void runAction(row, 'delete')}>
-                      {t('common.delete')}
+                      {t('market.deleteProduct')}
                     </button>
                   </span>
                 ) : '—',

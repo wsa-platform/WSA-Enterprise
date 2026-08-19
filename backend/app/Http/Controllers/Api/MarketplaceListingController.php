@@ -69,10 +69,34 @@ class MarketplaceListingController extends Controller
     public function update(Request $request, MarketplaceListing $listing): JsonResponse
     {
         $this->assertOwnListing($request, $listing);
-        abort_unless(in_array($listing->status, [MarketplaceListing::STATUS_DRAFT, MarketplaceListing::STATUS_REJECTED], true), 422);
+        abort_unless(in_array($listing->status, [
+            MarketplaceListing::STATUS_DRAFT,
+            MarketplaceListing::STATUS_REJECTED,
+            MarketplaceListing::STATUS_UNPUBLISHED,
+        ], true), 422);
 
         $data = $this->validatedListingData($request, partial: true);
         $listing = $this->marketplace->updateListing($listing, $data, $request->user());
+
+        return response()->json($listing->toOwnerArray());
+    }
+
+    public function showMine(Request $request, MarketplaceListing $listing): JsonResponse
+    {
+        $this->assertOwnListing($request, $listing);
+
+        return response()->json($listing->load(['category', 'images'])->toOwnerArray());
+    }
+
+    public function unpublish(Request $request, MarketplaceListing $listing): JsonResponse
+    {
+        $this->assertOwnListing($request, $listing);
+        $listing = $this->marketplace->unpublish(
+            $listing,
+            $request->user(),
+            $this->organization($request),
+            $request,
+        );
 
         return response()->json($listing->toOwnerArray());
     }

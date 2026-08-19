@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   createListing,
+  fetchMyListing,
   fetchMyListings,
   fetchPublicCategories,
   fetchPublicListing,
   fetchPublicListings,
   payContactAccess,
   requestContactAccess,
+  unpublishListing,
 } from './marketplace'
 import { fetchPublicListings as fetchPublicListingsFromBarrel } from './index'
 
@@ -167,5 +169,37 @@ describe('marketplace API', () => {
     expect(String(url)).toContain('/market/listings')
     expect(init?.method).toBe('POST')
     expect(JSON.parse(String(init?.body))).toMatchObject({ title: 'Olives', seller_type: 'local' })
+  })
+
+  it('loads an owned listing by id', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ id: 9, title: 'Honey', status: 'draft' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const result = await fetchMyListing('token-1', 9, 4)
+
+    expect(result.title).toBe('Honey')
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(String(url)).toContain('/market/my-listings/9')
+    expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer token-1')
+  })
+
+  it('unpublishes an owned listing', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ id: 9, title: 'Honey', status: 'unpublished' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const result = await unpublishListing('token-1', 9, 4)
+
+    expect(result.status).toBe('unpublished')
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(String(url)).toContain('/market/listings/9/unpublish')
+    expect(init?.method).toBe('POST')
   })
 })

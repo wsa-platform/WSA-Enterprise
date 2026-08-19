@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -34,6 +34,8 @@ import { MarketplaceListingPage } from './pages/marketplace/MarketplaceListingPa
 import { MarketplacePage } from './pages/marketplace/MarketplacePage'
 import { MyListingsPage } from './pages/marketplace/MyListingsPage'
 import { ListingEditorPage } from './pages/marketplace/ListingEditorPage'
+import { AccountHomePage } from './pages/account/AccountHomePage'
+import { AccountProfilePage } from './pages/account/AccountProfilePage'
 import { CommunicationsPage } from './pages/communications/CommunicationsPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
@@ -109,6 +111,11 @@ function SoilPage() {
   return <ModulePage eyebrow={t('modules.agriculture')} title={t('nav.soil')} tabs={soilTabs} defaultPath="/soil/analyses" createFields={soilCreateFields} />
 }
 
+function SellerListingRedirect() {
+  const { listingId } = useParams()
+  return <Navigate to={`/account/products/${listingId ?? ''}`} replace />
+}
+
 function AppRoutes() {
   const { token } = useAuth()
 
@@ -134,6 +141,11 @@ function AppRoutes() {
         <Route path="/organization" element={<OrganizationPage />} />
         <Route path="/billing" element={<BillingPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/account" element={<AccountHomePage />} />
+        <Route path="/account/profile" element={<AccountProfilePage />} />
+        <Route path="/account/products" element={<MyListingsPage />} />
+        <Route path="/account/products/new" element={<ListingEditorPage />} />
+        <Route path="/account/products/:listingId" element={<ListingEditorPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/admin/users" element={<UsersPage />} />
         <Route path="/admin/teams" element={<TeamsPage />} />
@@ -156,9 +168,9 @@ function AppRoutes() {
         <Route path="/marketing/consent" element={<ConsentPage />} />
         <Route path="/jobs" element={<JobsMarketplacePage />} />
         <Route path="/jobs/talent" element={<TalentProfilePage />} />
-        <Route path="/seller/listings" element={<MyListingsPage />} />
-        <Route path="/seller/listings/new" element={<ListingEditorPage />} />
-        <Route path="/seller/listings/:listingId" element={<ListingEditorPage />} />
+        <Route path="/seller/listings" element={<Navigate to="/account/products" replace />} />
+        <Route path="/seller/listings/new" element={<Navigate to="/account/products/new" replace />} />
+        <Route path="/seller/listings/:listingId" element={<SellerListingRedirect />} />
         <Route path="/communications" element={<CommunicationsPage />} />
         <Route path="/beekeeping" element={<BeekeepingDashboardPage />} />
         <Route path="/farms" element={<FarmsPage />} />

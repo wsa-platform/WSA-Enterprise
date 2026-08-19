@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { register, forgotPassword, getGoogleRedirect } from './auth'
+import { register, forgotPassword, getGoogleRedirect, updateAccountProfile } from './auth'
 
 describe('register', () => {
   beforeEach(() => {
@@ -97,5 +97,29 @@ describe('public services catalog', () => {
     expect(catalog.platform).toBe('WSA Enterprise')
     expect(catalog.service_modules).toHaveLength(1)
     expect(fetchMock).toHaveBeenCalledOnce()
+  })
+})
+
+describe('updateAccountProfile', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('patches only the authenticated user name', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ id: 1, name: 'Updated', email: 'owner@wsa.test' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const result = await updateAccountProfile('token-1', { name: 'Updated' })
+
+    expect(result.name).toBe('Updated')
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(String(url)).toContain('/account/profile')
+    expect(init?.method).toBe('PATCH')
+    expect(JSON.parse(String(init?.body))).toEqual({ name: 'Updated' })
+    expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer token-1')
   })
 })

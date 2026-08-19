@@ -149,6 +149,9 @@
     "primary": "Navigation principale",
     "toggleNav": "Basculer la navigation",
     "myListings": "Mes annonces",
+    "myAccount": "Mon compte",
+    "profile": "Profil",
+    "myProducts": "Mes produits",
     "communications": "Communications",
     "market": "Place de marché"
   },
@@ -247,7 +250,26 @@
     "country": "Pays",
     "sellerEmail": "E-mail du vendeur",
     "sellerPhone": "Téléphone du vendeur",
-    "saveAndSubmit": "Enregistrer et soumettre"
+    "saveAndSubmit": "Enregistrer et soumettre",
+    "addProduct": "Ajouter un produit",
+    "editProduct": "Modifier le produit",
+    "hideProduct": "Masquer le produit",
+    "publishProduct": "Soumettre pour examen",
+    "deleteProduct": "Supprimer le produit",
+    "confirmHide": "Masquer ce produit du marché public ?",
+    "hidden": "Produit masqué du marché."
+  },
+  "accountPage": {
+    "description": "Gérez votre profil et vos produits sur le marché.",
+    "profile": "Profil",
+    "profileDescription": "Mettez à jour votre nom d’affichage.",
+    "myProducts": "Mes produits",
+    "myProductsDescription": "Ajoutez, modifiez, masquez ou supprimez vos annonces.",
+    "backToAccount": "Retour au compte",
+    "nameUpdated": "Profil mis à jour.",
+    "updateFailed": "Impossible de mettre à jour le profil.",
+    "saveProfile": "Enregistrer le profil",
+    "emailReadOnly": "L’e-mail ne peut pas être modifié ici."
   },
   "communications": {
     "noPermission": "Vous n'avez pas l'autorisation de voir les communications.",

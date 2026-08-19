@@ -105,6 +105,10 @@ export async function fetchMyListings(token: string, organizationId?: number, pa
   )
 }
 
+export async function fetchMyListing(token: string, listingId: number, organizationId?: number) {
+  return request<OwnerListing>(`/market/my-listings/${listingId}`, {}, token, organizationId)
+}
+
 export async function createListing(
   token: string,
   payload: MarketplaceListingWrite,
@@ -144,6 +148,15 @@ export async function deleteListing(token: string, listingId: number, organizati
 export async function submitListing(token: string, listingId: number, organizationId?: number) {
   return request<OwnerListing>(
     `/market/listings/${listingId}/submit`,
+    { method: 'POST' },
+    token,
+    organizationId,
+  )
+}
+
+export async function unpublishListing(token: string, listingId: number, organizationId?: number) {
+  return request<OwnerListing>(
+    `/market/listings/${listingId}/unpublish`,
     { method: 'POST' },
     token,
     organizationId,

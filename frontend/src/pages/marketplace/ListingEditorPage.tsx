@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   createListing,
-  fetchMyListings,
+  fetchMyListing,
   submitListing,
   updateListing,
   type OwnerListing,
@@ -17,7 +17,7 @@ import { translateApiError } from '../../i18n/apiErrors'
 
 export function ListingEditorPage() {
   const { t } = useTranslation()
-  const { token, organizationId } = useAuth()
+  const { token, organizationId, user } = useAuth()
   const { can } = usePermissions()
   const navigate = useNavigate()
   const { listingId } = useParams()
@@ -32,7 +32,7 @@ export function ListingEditorPage() {
   const [currency, setCurrency] = useState('SAR')
   const [country, setCountry] = useState('')
   const [city, setCity] = useState('')
-  const [sellerEmail, setSellerEmail] = useState('')
+  const [sellerEmail, setSellerEmail] = useState(user?.email ?? '')
   const [sellerPhone, setSellerPhone] = useState('')
   const [notice, setNotice] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -40,8 +40,7 @@ export function ListingEditorPage() {
 
   const { loading, error, reload } = useAsyncData(async () => {
     if (!token || isNew || !numericId) return null
-    const payload = await fetchMyListings(token, organizationId ?? undefined, 1, 100)
-    const match = payload.data.find((row) => row.id === numericId) ?? null
+    const match = await fetchMyListing(token, numericId, organizationId ?? undefined)
     setListing(match)
     return match
   }, [token, organizationId, numericId, isNew])
@@ -67,6 +66,7 @@ export function ListingEditorPage() {
     title: title.trim(),
     description: description || undefined,
     seller_type: sellerType,
+    seller_display_name: user?.name,
     price: price ? Number(price) : null,
     currency: currency || undefined,
     country: country || undefined,
@@ -94,7 +94,7 @@ export function ListingEditorPage() {
         saved = await submitListing(token, saved.id, organizationId ?? undefined)
         setNotice(t('market.submitted'))
       }
-      navigate(alsoSubmit ? '/seller/listings' : `/seller/listings/${saved.id}`, { replace: true })
+      navigate(alsoSubmit ? '/account/products' : `/account/products/${saved.id}`, { replace: true })
     } catch (requestError) {
       setNotice(translateApiError(requestError) || t('market.saveFailed'))
     } finally {
@@ -102,14 +102,14 @@ export function ListingEditorPage() {
     }
   }
 
-  const editable = isNew || listing?.status === 'draft' || listing?.status === 'rejected'
+  const editable = isNew || listing?.status === 'draft' || listing?.status === 'rejected' || listing?.status === 'unpublished'
 
   return <>
     <PageHeader
-      eyebrow={t('nav.market')}
-      title={isNew ? t('market.newListing') : t('market.editListing')}
+      eyebrow={t('nav.myAccount')}
+      title={isNew ? t('market.addProduct') : t('market.editProduct')}
       description={t('market.editorDescription')}
-      actions={<Link className="link-button" to="/seller/listings">{t('market.backToListings')}</Link>}
+      actions={<Link className="link-button" to="/account/products">{t('market.backToListings')}</Link>}
     />
 
     {error && <ErrorBanner message={error} onRetry={reload} />}
@@ -170,7 +170,7 @@ export function ListingEditorPage() {
               {submitting ? t('common.saving') : t('common.save')}
             </button>
             <button type="button" className="refresh" disabled={submitting || !title.trim()} onClick={() => void save(true)}>
-              {t('market.saveAndSubmit')}
+              {t('market.publishProduct')}
             </button>
           </div>
         )}

@@ -28,6 +28,9 @@ export const logout = (token: string) => request<void>('/auth/logout', { method:
 
 export const getCurrentUser = (token: string) => request<User>('/user', {}, token)
 
+export const updateAccountProfile = (token: string, payload: { name: string }) =>
+  request<User>('/account/profile', { method: 'PATCH', body: JSON.stringify(payload) }, token)
+
 export type AuthSession = {
   id: number
   name: string

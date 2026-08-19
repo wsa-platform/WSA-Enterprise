@@ -149,6 +149,9 @@
     "primary": "Ana gezinme",
     "toggleNav": "Gezinmeyi aç/kapat",
     "myListings": "İlanlarım",
+    "myAccount": "Hesabım",
+    "profile": "Profil",
+    "myProducts": "Ürünlerim",
     "communications": "İletişim",
     "market": "Pazar yeri"
   },
@@ -247,7 +250,26 @@
     "country": "Ülke",
     "sellerEmail": "Satıcı e-postası",
     "sellerPhone": "Satıcı telefonu",
-    "saveAndSubmit": "Kaydet ve gönder"
+    "saveAndSubmit": "Kaydet ve gönder",
+    "addProduct": "Ürün ekle",
+    "editProduct": "Ürünü düzenle",
+    "hideProduct": "Ürünü gizle",
+    "publishProduct": "İncelemeye gönder",
+    "deleteProduct": "Ürünü sil",
+    "confirmHide": "Bu ürün herkese açık pazardan gizlensin mi?",
+    "hidden": "Ürün pazardan gizlendi."
+  },
+  "accountPage": {
+    "description": "Profilinizi ve pazar ürünlerinizi yönetin.",
+    "profile": "Profil",
+    "profileDescription": "Görünen adınızı güncelleyin.",
+    "myProducts": "Ürünlerim",
+    "myProductsDescription": "Pazar ilanlarınızı ekleyin, düzenleyin, gizleyin veya silin.",
+    "backToAccount": "Hesaba dön",
+    "nameUpdated": "Profil güncellendi.",
+    "updateFailed": "Profil güncellenemedi.",
+    "saveProfile": "Profili kaydet",
+    "emailReadOnly": "E-posta buradan değiştirilemez."
   },
   "communications": {
     "noPermission": "İletişimleri görüntüleme izniniz yok.",
