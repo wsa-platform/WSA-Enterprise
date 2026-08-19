@@ -20,7 +20,15 @@ export type PublicListing = {
   contact_access_currency?: string
   contact_access_required?: boolean
   contact?: PublicListingContact
-  seller?: { display_name?: string; country?: string; city?: string; verified?: boolean }
+  seller?: { display_name?: string; country?: string; city?: string; seller_type?: string; verified?: boolean }
+  category?: { id?: number; slug?: string; name?: string; name_ar?: string } | null
+}
+
+export type PublicMarketCategory = {
+  id: number
+  slug?: string
+  name?: string
+  name_ar?: string
 }
 
 export type ContactAccessOrder = {
@@ -33,12 +41,17 @@ export type PayContactAccessResult = {
   contact?: PublicListingContact | null
 }
 
-export async function fetchPublicListings(params: { page?: number; search?: string } = {}) {
+export async function fetchPublicListings(params: { page?: number; search?: string; category_id?: number } = {}) {
   const query = new URLSearchParams()
   if (params.page) query.set('page', String(params.page))
   if (params.search) query.set('search', params.search)
+  if (params.category_id) query.set('category_id', String(params.category_id))
   const suffix = query.toString() ? `?${query}` : ''
   return request<PaginatedResponse<PublicListing>>(`/public/market/listings${suffix}`)
+}
+
+export async function fetchPublicCategories() {
+  return request<{ data: PublicMarketCategory[] }>('/public/market/categories')
 }
 
 export async function fetchPublicListing(id: number, token?: string | null) {

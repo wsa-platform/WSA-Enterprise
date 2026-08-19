@@ -1,13 +1,21 @@
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { PublicFeatured } from '../../public/PublicFeatured'
 import { PublicLayout } from '../../public/PublicLayout'
+import { PublicMarketSection } from '../../public/PublicMarketSection'
 import { PublicSectionCard } from '../../public/PublicSectionCard'
 import { WaveDivider } from '../../public/WaveDivider'
 import { HERO_IMAGE, PUBLIC_SECTIONS } from '../../public/sections'
 
 export function HomePage() {
   const { t } = useTranslation()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (location.hash !== '#market') return
+    document.getElementById('market')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [location.hash])
 
   return (
     <PublicLayout>
@@ -70,6 +78,10 @@ export function HomePage() {
       </section>
 
       <WaveDivider fill="oklch(1 0 0)" flip />
+
+      <PublicMarketSection />
+
+      <WaveDivider fill="oklch(1 0 0)" />
 
       <PublicFeatured />
     </PublicLayout>

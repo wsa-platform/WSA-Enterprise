@@ -11,7 +11,7 @@ import {
 import { PublicLayout } from '../../public/PublicLayout'
 
 export function MarketplaceListingPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { id } = useParams()
   const { token } = useAuth()
   const [listing, setListing] = useState<PublicListing | null>(null)
@@ -64,7 +64,7 @@ export function MarketplaceListingPage() {
     <PublicLayout>
       <section className="gs-section">
         <div className="gs-container">
-          <Link to="/market">← {t('market.backToMarket')}</Link>
+          <Link to={{ pathname: '/', hash: 'market' }}>← {t('market.backToMarket')}</Link>
           {loading && <p>{t('common.loading')}</p>}
           {error && <p role="alert">{error}</p>}
           {listing && (
@@ -74,6 +74,14 @@ export function MarketplaceListingPage() {
               <p>
                 {t('market.seller')}: {listing.seller?.display_name ?? '—'} — {listing.city} {listing.country}
               </p>
+              {listing.category && (
+                <p>
+                  {t('market.categories')}:{' '}
+                  {i18n.language.startsWith('ar') && listing.category.name_ar
+                    ? listing.category.name_ar
+                    : listing.category.name}
+                </p>
+              )}
               {listing.contact ? (
                 <div>
                   <h2>{t('market.contactDetails')}</h2>

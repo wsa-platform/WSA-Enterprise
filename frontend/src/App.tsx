@@ -31,7 +31,6 @@ import { MonitoringPage } from './pages/admin/MonitoringPage'
 import { AnalyticsPage } from './pages/admin/AnalyticsPage'
 import { ApiClientsPage } from './pages/admin/ApiClientsPage'
 import { MarketplaceListingPage } from './pages/marketplace/MarketplaceListingPage'
-import { MarketplacePage } from './pages/marketplace/MarketplacePage'
 import { MyListingsPage } from './pages/marketplace/MyListingsPage'
 import { ListingEditorPage } from './pages/marketplace/ListingEditorPage'
 import { CommunicationsPage } from './pages/communications/CommunicationsPage'
@@ -120,7 +119,7 @@ function AppRoutes() {
       <Route path="/privacy" element={<InfoPage page="privacy" />} />
       <Route path="/terms" element={<InfoPage page="terms" />} />
       <Route path="/contact" element={<InfoPage page="contact" />} />
-      <Route path="/market" element={<MarketplacePage />} />
+      <Route path="/market" element={<Navigate to={{ pathname: '/', hash: 'market' }} replace />} />
       <Route path="/market/:id" element={<MarketplaceListingPage />} />
       <Route path="/login" element={token ? <AuthenticatedRedirect /> : <LoginPage />} />
       <Route path="/register" element={token ? <AuthenticatedRedirect /> : <RegisterPage />} />

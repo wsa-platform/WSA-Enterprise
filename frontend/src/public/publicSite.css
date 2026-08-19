@@ -583,6 +583,47 @@
   line-height: 1.5;
 }
 
+.gs-market-section {
+  overflow-x: hidden;
+}
+
+.gs-market-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  overflow-x: hidden;
+}
+
+.gs-market-chip {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gs-market-chip.active,
+.gs-market-chip[aria-pressed='true'] {
+  background: oklch(0.35 0.12 145);
+  color: white;
+  border-color: oklch(0.35 0.12 145);
+}
+
+.gs-market-meta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.gs-market-section .gs-product-card-body .gs-btn {
+  margin-top: 0.5rem;
+  align-self: flex-start;
+}
+
 /* Newsletter (Home.tsx newsletter section) */
 .gs-newsletter {
   background: var(--primary);

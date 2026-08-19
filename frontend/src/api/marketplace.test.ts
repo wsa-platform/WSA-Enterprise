@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   createListing,
   fetchMyListings,
+  fetchPublicCategories,
   fetchPublicListing,
   fetchPublicListings,
   payContactAccess,
@@ -38,6 +39,36 @@ describe('marketplace API', () => {
     const [url, init] = fetchMock.mock.calls[0]
     expect(String(url)).toContain('/public/market/listings')
     expect(String(url)).toContain('search=tomato')
+    expect(init?.headers).not.toHaveProperty('Authorization')
+  })
+
+  it('loads public listings filtered by category', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ data: [], current_page: 1, last_page: 1, total: 0 }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await fetchPublicListings({ category_id: 3 })
+
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/public/market/listings')
+    expect(String(fetchMock.mock.calls[0][0])).toContain('category_id=3')
+  })
+
+  it('loads public marketplace categories without a token', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ data: [{ id: 3, name: 'Produce', name_ar: 'منتجات' }] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const result = await fetchPublicCategories()
+
+    expect(result.data[0]?.name).toBe('Produce')
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(String(url)).toContain('/public/market/categories')
     expect(init?.headers).not.toHaveProperty('Authorization')
   })
 
