@@ -125,9 +125,14 @@ class AiController extends Controller
         $this->authorizePermission($request, 'ai.use');
 
         $organizationId = $this->organization($request);
+        $description = $this->aiService->providerDescription($organizationId);
 
         return response()->json([
-            'provider' => $this->aiService->providerName($organizationId),
+            'provider' => $description['provider'],
+            'model' => $description['model'],
+            'requested_provider' => $description['requested_provider'],
+            'fallback_provider' => $description['fallback_provider'],
+            'used_fallback' => $description['used_fallback'],
             'decision_support_notice' => 'AI outputs are agricultural decision support only and are not authoritative diagnoses.',
             'supported_request_types' => ['diagnosis', 'library_summary', 'library_qa', 'training_assistance', 'assistant', 'vision_analysis', 'cv_parse', 'job_match'],
             'async_dispatch' => (bool) config('ai.async_dispatch', false),

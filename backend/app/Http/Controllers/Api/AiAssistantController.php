@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AiConversation;
 use App\Services\Ai\AiActionRegistry;
 use App\Services\Ai\AiAssistantService;
+use App\Services\Ai\AiDomain;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -50,8 +51,12 @@ class AiAssistantController extends Controller
         $data = $request->validate([
             'domain' => ['required', 'string', 'max:64'],
             'title' => ['nullable', 'string', 'max:255'],
-            'message' => ['required', 'string'],
+            'message' => ['required', 'string', 'max:8000'],
+            'provider' => ['prohibited'],
+            'model' => ['prohibited'],
+            'api_key' => ['prohibited'],
         ]);
+        $data['domain'] = AiDomain::assert($data['domain']);
 
         $conversation = $this->assistantService->startConversation(
             $this->organization($request),
@@ -76,7 +81,12 @@ class AiAssistantController extends Controller
         $this->authorizeAnyPermission($request, ['ai.use', 'ai.assistant']);
         $this->assertConversationAccess($request, $conversation);
 
-        $data = $request->validate(['message' => ['required', 'string']]);
+        $data = $request->validate([
+            'message' => ['required', 'string', 'max:8000'],
+            'provider' => ['prohibited'],
+            'model' => ['prohibited'],
+            'api_key' => ['prohibited'],
+        ]);
 
         return response()->json(
             $this->assistantService->sendMessage(

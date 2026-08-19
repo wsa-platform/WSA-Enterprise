@@ -11,6 +11,7 @@ use App\Services\Ai\AiService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class Phase10AsyncAiTest extends TestCase
@@ -25,6 +26,7 @@ class Phase10AsyncAiTest extends TestCase
 
     public function test_async_store_returns_202_and_pending_status(): void
     {
+        Queue::fake();
         Config::set('ai.async_dispatch', true);
 
         $organization = Organization::first();
@@ -50,6 +52,7 @@ class Phase10AsyncAiTest extends TestCase
             'status' => 'pending',
         ]);
         $this->assertDatabaseHas('audit_logs', ['action' => 'ai.request.dispatched']);
+        Queue::assertPushed(ProcessAiRequest::class);
     }
 
     public function test_sync_store_still_returns_201(): void

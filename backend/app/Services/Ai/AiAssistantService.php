@@ -49,7 +49,8 @@ class AiAssistantService
             input: [
                 'message' => $message,
                 'domain' => $conversation->domain,
-                'context' => $context,
+                'context' => $this->contextBuilder->forProvider($context),
+                'history' => [],
             ],
             userId: $user->id,
             sourceType: AiConversation::class,

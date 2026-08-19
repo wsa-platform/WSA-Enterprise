@@ -19,6 +19,9 @@ class StoreAiRequestRequest extends FormRequest
             'input' => ['required', 'array'],
             'source_type' => ['nullable', 'string', 'max:255'],
             'source_id' => ['nullable', 'integer'],
+            'provider' => ['prohibited'],
+            'model' => ['prohibited'],
+            'api_key' => ['prohibited'],
         ];
     }
 }

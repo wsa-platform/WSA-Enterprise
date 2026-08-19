@@ -1,6 +1,8 @@
 <?php
 
 use App\Exceptions\AiQuotaExceededException;
+use App\Exceptions\AiProviderTimeoutException;
+use App\Exceptions\AiProviderUnavailableException;
 use App\Exceptions\PlanRestrictionException;
 use App\Exceptions\SubscriptionInactiveException;
 use Illuminate\Foundation\Application;
@@ -54,6 +56,25 @@ return Application::configure(basePath: dirname(__DIR__))
                         'used' => $exception->used,
                     ],
                 ], 429);
+            }
+        });
+
+        $exceptions->render(function (AiProviderUnavailableException $exception, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => $exception->getMessage(),
+                    'provider' => [
+                        'requested' => $exception->requestedProvider,
+                    ],
+                ], $exception->status);
+            }
+        });
+
+        $exceptions->render(function (AiProviderTimeoutException $exception, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => $exception->getMessage(),
+                ], 504);
             }
         });
 

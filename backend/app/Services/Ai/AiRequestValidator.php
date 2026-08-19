@@ -15,6 +15,8 @@ class AiRequestValidator
         'vision_analysis',
     ];
 
+    private const CLIENT_FORBIDDEN_KEYS = ['provider', 'model', 'api_key', 'apiKey', 'secret', 'token'];
+
     /** @return array<string, mixed> */
     public function validate(string $requestType, array $input): array
     {
@@ -26,6 +28,9 @@ class AiRequestValidator
 
         abort_if(empty($input), 422, 'AI input payload is required.');
 
+        $input = $this->stripClientProviderOverrides($input);
+        $this->assertInputSize($input);
+
         return match ($requestType) {
             'diagnosis' => $this->validateDiagnosisInput($input),
             'library_summary', 'library_qa' => $this->validateLibraryInput($input),
@@ -36,6 +41,25 @@ class AiRequestValidator
             'vision_analysis' => $this->validateVisionInput($input),
             default => $input,
         };
+    }
+
+    /** @param  array<string, mixed>  $input */
+    private function stripClientProviderOverrides(array $input): array
+    {
+        foreach (self::CLIENT_FORBIDDEN_KEYS as $key) {
+            unset($input[$key]);
+        }
+
+        return $input;
+    }
+
+    /** @param  array<string, mixed>  $input */
+    private function assertInputSize(array $input): void
+    {
+        $limit = max(1, (int) config('ai.max_input_characters', 8000));
+        $encoded = json_encode($input) ?: '';
+
+        abort_if(strlen($encoded) > $limit * 4, 422, 'AI input payload is too large.');
     }
 
     /** @param  array<string, mixed>  $input */
@@ -94,6 +118,14 @@ class AiRequestValidator
     private function validateAssistantInput(array $input): array
     {
         abort_unless(isset($input['message']) && is_string($input['message']), 422, 'Assistant message is required.');
+        abort_if($input['message'] === '', 422, 'Assistant message is required.');
+        abort_if(mb_strlen($input['message']) > (int) config('ai.max_input_characters', 8000), 422, 'Assistant message is too long.');
+
+        if (isset($input['domain']) && is_string($input['domain'])) {
+            $input['domain'] = AiDomain::assert($input['domain']);
+        }
+
+        $input['history'] = is_array($input['history'] ?? null) ? $input['history'] : [];
 
         return $input;
     }

@@ -2,6 +2,7 @@
 
 namespace App\Services\Ai;
 
+use App\Exceptions\AiProviderTimeoutException;
 use App\Exceptions\AiQuotaExceededException;
 use App\Jobs\ProcessAiRequest;
 use App\Models\AiRequest;
@@ -31,6 +32,12 @@ class AiService
     public function providerName(?int $organizationId = null): string
     {
         return $this->providerResolver->providerNameForOrganization($organizationId);
+    }
+
+    /** @return array<string, mixed> */
+    public function providerDescription(?int $organizationId = null): array
+    {
+        return $this->providerResolver->describe($organizationId);
     }
 
     /** @param  array<string, mixed>  $input */
@@ -181,19 +188,30 @@ class AiService
                 return $locked;
             }
 
-            $provider = $this->providerResolver->forOrganization($locked->organization_id);
             $started = microtime(true);
             $timeout = max(1, (int) config('ai.timeout', 30));
+            $providerName = $locked->provider ?: 'unknown';
 
             try {
+                $provider = $this->providerResolver->forOrganization($locked->organization_id);
+                $providerName = $provider->name();
                 $output = $this->callWithTimeout($provider, $locked->request_type, $locked->input ?? [], $timeout);
-                $normalized = $this->normalizer->normalize($locked->request_type, $output);
+                if (! is_array($output)) {
+                    throw new \RuntimeException('AI provider returned a malformed response.');
+                }
+                $normalized = $this->normalizer->normalize(
+                    $locked->request_type,
+                    $output,
+                    $provider->name(),
+                    $provider->model(),
+                );
 
                 $locked->update([
                     'status' => 'completed',
                     'output' => $normalized,
+                    'provider' => $provider->name(),
                     'latency_ms' => (int) ((microtime(true) - $started) * 1000),
-                    'tokens_used' => (int) ($output['tokens_used'] ?? 0),
+                    'tokens_used' => (int) ($normalized['tokens_used'] ?? $output['tokens_used'] ?? 0),
                 ]);
 
                 $this->auditLifecycle($locked->fresh(), 'ai.request.completed', [
@@ -209,21 +227,23 @@ class AiService
                 );
             } catch (\Throwable $exception) {
                 Log::warning('AI provider failed', [
-                    'provider' => $provider->name(),
+                    'provider' => $providerName,
                     'request_type' => $locked->request_type,
                     'organization_id' => $locked->organization_id,
-                    'message' => $exception->getMessage(),
+                    'message' => AiErrorSanitizer::logMessage($exception),
                 ]);
+
+                $publicMessage = AiErrorSanitizer::publicMessage($exception);
 
                 $locked->update([
                     'status' => 'failed',
-                    'error_message' => $exception->getMessage(),
+                    'error_message' => $publicMessage,
                     'latency_ms' => (int) ((microtime(true) - $started) * 1000),
                 ]);
 
                 $this->auditLifecycle($locked->fresh(), 'ai.request.failed', [
                     'request_type' => $locked->request_type,
-                    'error_message' => $exception->getMessage(),
+                    'error_message' => $publicMessage,
                 ]);
 
                 $this->notificationService->notifyAiFailed(
@@ -231,7 +251,7 @@ class AiService
                     $locked->user_id,
                     $locked->id,
                     $locked->request_type,
-                    $exception->getMessage(),
+                    $publicMessage,
                 );
             }
 
@@ -247,7 +267,7 @@ class AiService
         $output = $provider->complete($requestType, $input);
 
         if ((microtime(true) - $started) > $timeoutSeconds) {
-            throw new \RuntimeException('AI provider exceeded configured timeout.');
+            throw new AiProviderTimeoutException($timeoutSeconds);
         }
 
         return $output;

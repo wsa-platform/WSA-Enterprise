@@ -60,16 +60,20 @@ class ProcessAiRequest implements ShouldBeUnique, ShouldQueue
             return;
         }
 
+        $safeMessage = $exception
+            ? \App\Services\Ai\AiErrorSanitizer::publicMessage($exception)
+            : 'Queue worker failed after retries.';
+
         Log::error('ProcessAiRequest job failed after retries', [
             'ai_request_id' => $this->aiRequestId,
             'organization_id' => $record->organization_id,
             'request_type' => $record->request_type,
-            'message' => $exception?->getMessage(),
+            'message' => $exception ? \App\Services\Ai\AiErrorSanitizer::logMessage($exception) : null,
         ]);
 
         $record->update([
             'status' => 'failed',
-            'error_message' => $exception?->getMessage() ?? 'Queue worker failed after retries.',
+            'error_message' => $safeMessage,
         ]);
 
         app(AuditService::class)->record(

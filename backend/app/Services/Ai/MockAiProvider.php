@@ -11,9 +11,14 @@ class MockAiProvider implements AiProviderInterface
         return 'mock';
     }
 
+    public function model(): string
+    {
+        return (string) config('ai.models.mock', config('ai.model', 'mock-v1'));
+    }
+
     public function complete(string $requestType, array $input): array
     {
-        return match ($requestType) {
+        $payload = match ($requestType) {
             'diagnosis' => [
                 'title' => 'Possible early blight (decision support)',
                 'summary' => 'Demo mock analysis based on submitted symptoms. This is agricultural decision support only and is not a definitive scientific diagnosis.',
@@ -68,6 +73,7 @@ class MockAiProvider implements AiProviderInterface
                 'confidence' => 0.4,
                 'domain' => $input['domain'] ?? 'platform',
                 'requires_more_information' => true,
+                'sources' => $input['sources'] ?? [],
             ],
             'vision_analysis' => [
                 'status' => 'completed',
@@ -81,5 +87,12 @@ class MockAiProvider implements AiProviderInterface
                 'message' => 'Mock AI response for '.$requestType,
             ],
         };
+
+        return array_merge($payload, [
+            'provider' => $this->name(),
+            'model' => $this->model(),
+            'tokens_used' => 0,
+            'finish_reason' => 'stop',
+        ]);
     }
 }

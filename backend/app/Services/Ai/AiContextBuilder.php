@@ -13,6 +13,7 @@ class AiContextBuilder
     /** @return array<string, mixed> */
     public function build(int $organizationId, User $user, string $domain): array
     {
+        $domain = AiDomain::assert($domain);
         $organization = Organization::find($organizationId);
         $permissions = $this->permissions->permissionsFor($user, $organizationId);
 
@@ -50,5 +51,25 @@ class AiContextBuilder
         }
 
         return $context;
+    }
+
+    /**
+     * Minimized payload for provider execution. Keeps ids and capability flags, not display names.
+     *
+     * @param  array<string, mixed>  $context
+     * @return array<string, mixed>
+     */
+    public function forProvider(array $context): array
+    {
+        return [
+            'organization_id' => $context['organization']['id'] ?? null,
+            'user_id' => $context['user']['id'] ?? null,
+            'domain' => $context['domain'] ?? null,
+            'capabilities' => [
+                'jobs' => $context['jobs'] ?? null,
+                'beekeeping' => $context['beekeeping'] ?? null,
+                'marketing' => $context['marketing'] ?? null,
+            ],
+        ];
     }
 }
