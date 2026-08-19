@@ -64,7 +64,7 @@ export function MarketplaceListingPage() {
     <PublicLayout>
       <section className="gs-section">
         <div className="gs-container">
-          <Link to={{ pathname: '/', hash: 'market' }}>← {t('market.backToMarket')}</Link>
+          <Link to="/market">← {t('market.backToMarket')}</Link>
           {loading && <p>{t('common.loading')}</p>}
           {error && <p role="alert">{error}</p>}
           {listing && (

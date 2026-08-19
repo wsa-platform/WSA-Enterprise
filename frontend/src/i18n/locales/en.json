@@ -1119,6 +1119,10 @@
         "description": "Agricultural products, supplies, equipment, inputs, and farm goods.",
         "imageAlt": "Fresh produce and farming supplies at a market"
       },
+      "productMarket": {
+        "title": "Product Market",
+        "description": "Browse agricultural product listings from sellers."
+      },
       "fieldCrops.features.planning": {
         "title": "Crop planning",
         "body": "Plan sowing, irrigation, and harvest cycles for grain and field crops."

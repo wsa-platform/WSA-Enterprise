@@ -1119,6 +1119,10 @@
         "description": "Produits agricoles, fournitures, équipements, intrants et biens de ferme.",
         "imageAlt": "Produits frais et fournitures agricoles sur un marché"
       },
+      "productMarket": {
+        "title": "Marché des produits",
+        "description": "Parcourir les annonces de produits agricoles des vendeurs."
+      },
       "fieldCrops.features.planning": {
         "title": "Planification des cultures",
         "body": "Planifiez les cycles de semis, d'irrigation et de récolte pour les céréales et grandes cultures."

@@ -3,13 +3,21 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { PublicSectionConfig } from './sections'
 
+type PublicSectionCardModel = Pick<PublicSectionConfig, 'titleKey' | 'descriptionKey' | 'icon' | 'iconBg'>
+
 /** Category card — garden-store Home.tsx category grid */
-export function PublicSectionCard({ section }: { section: PublicSectionConfig }) {
+export function PublicSectionCard({
+  section,
+  to,
+}: {
+  section: PublicSectionCardModel
+  to: string
+}) {
   const { t } = useTranslation()
 
   return (
     <Link
-      to={`/sections/${section.id}`}
+      to={to}
       className="gs-category-card"
       style={{ '--icon-bg': section.iconBg } as CSSProperties}
     >

@@ -1119,6 +1119,10 @@
         "description": "Tarımsal ürünler, malzemeler, ekipman, girdiler ve çiftlik malları.",
         "imageAlt": "Pazarda taze ürünler ve tarım malzemeleri"
       },
+      "productMarket": {
+        "title": "Ürün pazarı",
+        "description": "Satıcıların tarımsal ürün ilanlarına göz atın."
+      },
       "fieldCrops.features.planning": {
         "title": "Ürün planlaması",
         "body": "Tahıl ve tarla bitkileri için ekim, sulama ve hasat döngülerini planlayın."

@@ -263,6 +263,15 @@ export const PUBLIC_SECTIONS: PublicSectionConfig[] = [
   },
 ]
 
+/** Homepage-only tile; opens the existing public `/market` listings page. */
+export const HOME_MARKETPLACE_TILE = {
+  titleKey: 'website.sections.productMarket.title',
+  descriptionKey: 'website.sections.productMarket.description',
+  icon: '🛒',
+  iconBg: 'oklch(0.88 0.06 145)',
+  to: '/market',
+} as const
+
 export const LEGACY_SECTION_REDIRECTS: Record<string, PublicSectionId> = {
   'vegetable-crops': 'vegetables',
   'honey-bees': 'beekeeping',

@@ -1,21 +1,13 @@
-import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { PublicFeatured } from '../../public/PublicFeatured'
 import { PublicLayout } from '../../public/PublicLayout'
-import { PublicMarketSection } from '../../public/PublicMarketSection'
 import { PublicSectionCard } from '../../public/PublicSectionCard'
 import { WaveDivider } from '../../public/WaveDivider'
-import { HERO_IMAGE, PUBLIC_SECTIONS } from '../../public/sections'
+import { HERO_IMAGE, HOME_MARKETPLACE_TILE, PUBLIC_SECTIONS } from '../../public/sections'
 
 export function HomePage() {
   const { t } = useTranslation()
-  const location = useLocation()
-
-  useEffect(() => {
-    if (location.hash !== '#market') return
-    document.getElementById('market')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [location.hash])
 
   return (
     <PublicLayout>
@@ -58,7 +50,7 @@ export function HomePage() {
         <WaveDivider fill="oklch(0.965 0.018 90)" />
       </section>
 
-      {/* 11 category sections — garden-store category grid */}
+      {/* Category sections — garden-store category grid */}
       <section className="gs-section gs-section-cream" aria-labelledby="sections-title">
         <div className="gs-container">
           <div className="gs-section-header">
@@ -71,17 +63,22 @@ export function HomePage() {
           </div>
           <div className="gs-category-grid">
             {PUBLIC_SECTIONS.map((section) => (
-              <PublicSectionCard key={section.id} section={section} />
+              <PublicSectionCard
+                key={section.id}
+                section={section}
+                to={`/sections/${section.id}`}
+              />
             ))}
+            <PublicSectionCard
+              key="product-market"
+              section={HOME_MARKETPLACE_TILE}
+              to={HOME_MARKETPLACE_TILE.to}
+            />
           </div>
         </div>
       </section>
 
       <WaveDivider fill="oklch(1 0 0)" flip />
-
-      <PublicMarketSection />
-
-      <WaveDivider fill="oklch(1 0 0)" />
 
       <PublicFeatured />
     </PublicLayout>
