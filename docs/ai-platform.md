@@ -1,6 +1,6 @@
 # AI Platform
 
-**Last updated:** AI-08 knowledge retrieval expansion (2026-08-19)
+**Last updated:** AI-09 knowledge ingestion and retrieval operations (2026-08-19)
 
 ## Overview
 
@@ -245,6 +245,78 @@ Observability is stored on `ai_usage_records.retrieval` as aggregates only (`can
 
 ---
 
+## Knowledge ingestion and retrieval operations (AI-09)
+
+AI-09 is an operational layer **on top of** AI-08. It does not replace keyword retrieval, redesign ranking, or change provider/HTTP adapters. There is still **no** embeddings, vector database, semantic/hybrid retrieval, agents, tool calling, vision, or conversation-history RAG.
+
+```
+operator/service
+  -> KnowledgeIngestionService (upsert, validate, sanitize)
+  -> BeeKnowledgeBodyBackfillService (empty bodies only)
+  -> KnowledgeFreshnessService (fresh / stale / unknown)
+  -> KnowledgeRetrievalOperations (bounded inspect)
+  -> KnowledgeRetrievalHealthService (tenant-scoped summary)
+
+AI request path (unchanged):
+  AiService -> AI-05 retriever (indexer/ranker) -> bounded context
+            -> provider -> AI-06 grounding -> AI-07 disclosure
+            -> AI-04 usage + retrieval telemetry
+```
+
+### Ingestion architecture
+
+`KnowledgeIngestionService` upserts existing knowledge records:
+
+- `library_items` identity: `(organization_id, slug)`
+- `bee_knowledge_topics` identity: `slug` (platform catalog)
+
+Tenant identity always comes from the authenticated/service caller. Client-supplied `organization_id` cannot override it. Library writes are scoped to that tenant; bee topics cannot be assigned a tenant.
+
+Ingestion validates title/summary/body/slug/source type/publication state, normalizes searchable text, and derives tokens through `KnowledgeTextNormalizer`. Malformed input is rejected. Model-generated citation URLs and untrusted `url` / `source_url` / `citations` fields are never stored as authoritative source metadata. If `source` looks like a URL but is not a valid `http`/`https` URL, nothing is fabricated — the attribution is stored as empty.
+
+### Idempotency
+
+Repeating the same payload for the same source identity does not create duplicates, does not duplicate searchable content or source metadata, and does not bump `updated_at` when no fields changed.
+
+### Bee knowledge backfill policy
+
+`BeeKnowledgeBodyBackfillService` fills **missing/empty** `bee_knowledge_topics.body` values from existing catalog fields only (`slug`, `category`, `title_key`, `summary_key`, `tags`). It never overwrites a non-empty body, never invents scientific claims, and never fabricates URLs or citations. If those authoritative fields are insufficient, the row is skipped and the body stays null. The operation is explicit (not a model observer) and idempotent.
+
+### Freshness policy
+
+`KnowledgeFreshnessService` classifies `updated_at` as `fresh`, `stale`, or `unknown` (missing timestamp). Stale is `updated_at` older than `AI_RETRIEVAL_FRESHNESS_STALE_AFTER_DAYS` (default 90). Ranking is **not** redesigned: AI-08 `KnowledgeRanker` still applies a 0–2 point freshness signal that cannot outrank a title token. Tests should pass an explicit `$now` so classification stays deterministic.
+
+### Retrieval operations
+
+`KnowledgeRetrievalOperations` is backend/domain access for a future admin/operator interface — not an admin UI and not raw SQL. It can retrieve a bounded set by tenant, source type, publication state, and freshness, and can inspect one record plus source distribution. Default publication state is `published`. Unpublished library items are visible only when `publication_state` is explicitly `unpublished` or `all`, and only for the current tenant.
+
+### Telemetry
+
+`ai_usage_records.retrieval` remains aggregate-only. AI-09 adds optional `freshness_distribution` (`fresh` / `stale` / `unknown` counts) alongside `candidate_count`, `returned_count`, `retrieval_duration_ms`, `source_types`, and `retrieval_status` (`ok` / `empty` / `failed` / `disabled`). Secrets, API keys, Authorization headers, full prompts, and full model responses are not stored. Telemetry persistence failure is logged and never fails a successful AI response. The AI-04 `ai.requests` quota metric is unchanged.
+
+### Health summary
+
+`KnowledgeRetrievalHealthService::summary($organizationId)` reports indexed/available counts, published/unpublished, empty bodies, freshness buckets, deterministic source-type distribution, and retrieval success/empty/failure counts from that tenant’s usage records. Library totals are tenant-scoped. Bee topics remain a platform catalog (labeled `platform_catalog`) shared across tenants.
+
+### Security boundaries
+
+- Tenant isolation on library reads and writes
+- Unpublished library content never enters normal AI retrieval
+- Client tenant IDs cannot override authenticated context
+- Ingestion and operational queries are sanitized
+- AI-06 grounding, AI-07 disclosure, and AI-04 usage accounting are unchanged
+- No second authorization system
+
+### Operational limitations
+
+- Keyword retrieval only (no embeddings / vector DB)
+- Bee catalog is global, not per-tenant
+- Backfill concatenates existing catalog keys; it does not author scientific content
+- No admin UI, frontend, or mobile changes in AI-09
+- OpenAI HTTP adapter remains unaware of retrieval internals
+
+---
+
 ## Configuration Reference
 
 | Variable | Default | Purpose |
@@ -262,6 +334,8 @@ Observability is stored on `ai_usage_records.retrieval` as aggregates only (`can
 | `AI_RETRIEVAL_MAX_CONTEXT_CHARACTERS` | `4000` | Max grounded context size |
 | `AI_RETRIEVAL_CANDIDATE_LIMIT` | `40` | Max candidates before final ranking |
 | `AI_RETRIEVAL_MAX_EXCERPT_CHARACTERS` | `400` | Max characters per retrieved body excerpt |
+| `AI_RETRIEVAL_FRESHNESS_STALE_AFTER_DAYS` | `90` | Operational stale threshold (ranking still uses AI-08 0–2 signal) |
+| `AI_RETRIEVAL_OPERATIONS_MAX_RESULTS` | `50` | Max hits returned by retrieval operations |
 
 ---
 

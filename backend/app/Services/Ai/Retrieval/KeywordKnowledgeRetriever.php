@@ -28,6 +28,7 @@ class KeywordKnowledgeRetriever implements AiKnowledgeRetrieverInterface
         if ($keywords === []) {
             return AiRetrievalResult::empty([
                 'retrieval_duration_ms' => max(0, ((int) round(microtime(true) * 1000)) - $started),
+                'freshness_distribution' => ['fresh' => 0, 'stale' => 0, 'unknown' => 0],
             ]);
         }
 
@@ -45,12 +46,16 @@ class KeywordKnowledgeRetriever implements AiKnowledgeRetrieverInterface
             static fn (AiRetrievalHit $hit): string => $hit->sourceType,
             $hits,
         )));
+        $freshness = app(KnowledgeFreshnessService::class)->distribution(
+            array_map(static fn (AiRetrievalHit $hit) => $hit->updatedAt, $hits),
+        );
 
         return new AiRetrievalResult($hits, $this->boundedContext($hits, $maxChars), [
             'candidate_count' => $candidateCount,
             'returned_count' => count($hits),
             'retrieval_duration_ms' => max(0, ((int) round(microtime(true) * 1000)) - $started),
             'source_types' => $sourceTypes,
+            'freshness_distribution' => $freshness,
             'retrieval_status' => $hits === [] ? 'empty' : 'ok',
         ]);
     }
@@ -88,7 +93,7 @@ class KeywordKnowledgeRetriever implements AiKnowledgeRetrieverInterface
             visible: true,
         );
 
-        return (new KnowledgeRanker(new KnowledgeTextNormalizer()))->score('', $keywords, $document);
+        return (new KnowledgeRanker(new KnowledgeTextNormalizer))->score('', $keywords, $document);
     }
 
     public static function escapeLike(string $value): string

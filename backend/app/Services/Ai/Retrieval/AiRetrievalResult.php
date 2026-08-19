@@ -33,6 +33,7 @@ final class AiRetrievalResult
             'returned_count' => 0,
             'retrieval_duration_ms' => 0,
             'source_types' => [],
+            'freshness_distribution' => ['fresh' => 0, 'stale' => 0, 'unknown' => 0],
             'retrieval_status' => 'empty',
         ], $telemetry));
     }

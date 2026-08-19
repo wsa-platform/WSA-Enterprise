@@ -91,11 +91,19 @@ class AiUsageRecorder
             }
         }
 
+        $freshness = ['fresh' => 0, 'stale' => 0, 'unknown' => 0];
+        if (is_array($telemetry['freshness_distribution'] ?? null)) {
+            foreach (array_keys($freshness) as $key) {
+                $freshness[$key] = max(0, (int) ($telemetry['freshness_distribution'][$key] ?? 0));
+            }
+        }
+
         return [
             'candidate_count' => max(0, (int) ($telemetry['candidate_count'] ?? 0)),
             'returned_count' => max(0, (int) ($telemetry['returned_count'] ?? 0)),
             'retrieval_duration_ms' => max(0, (int) ($telemetry['retrieval_duration_ms'] ?? 0)),
             'source_types' => array_values($sourceTypes),
+            'freshness_distribution' => $freshness,
             'retrieval_status' => $status,
         ];
     }
