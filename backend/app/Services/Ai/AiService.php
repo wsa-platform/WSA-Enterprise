@@ -205,7 +205,12 @@ class AiService
                 $provider = $this->providerResolver->forOrganization($locked->organization_id);
                 $providerName = $provider->name();
                 $resolvedModel = $provider->model();
-                $output = $this->callWithTimeout($provider, $locked->request_type, $locked->input ?? [], $timeout);
+                $providerInput = $this->attachRetrievedKnowledge(
+                    $locked->organization_id,
+                    $locked->request_type,
+                    $locked->input ?? [],
+                );
+                $output = $this->callWithTimeout($provider, $locked->request_type, $providerInput, $timeout);
                 if (! is_array($output)) {
                     throw new \RuntimeException('AI provider returned a malformed response.');
                 }
@@ -214,6 +219,10 @@ class AiService
                     $output,
                     $provider->name(),
                     $provider->model(),
+                );
+                $normalized['sources'] = $this->mergeCitationSources(
+                    is_array($normalized['sources'] ?? null) ? $normalized['sources'] : [],
+                    is_array($providerInput['sources'] ?? null) ? $providerInput['sources'] : [],
                 );
 
                 $locked->update([
@@ -300,6 +309,80 @@ class AiService
         }
 
         return $output;
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    private function attachRetrievedKnowledge(int $organizationId, string $requestType, array $input): array
+    {
+        unset($requestType);
+
+        if (! config('ai.retrieval.enabled', true)) {
+            return $input;
+        }
+
+        try {
+            $retriever = app(\App\Services\Ai\Retrieval\KeywordKnowledgeRetriever::class);
+            $result = $retriever->retrieve($organizationId, $this->retrievalQuery($input));
+        } catch (\Throwable $exception) {
+            Log::warning('AI retrieval failed', [
+                'organization_id' => $organizationId,
+                'message' => AiErrorSanitizer::logMessage($exception),
+            ]);
+
+            return $input;
+        }
+
+        if ($result->isEmpty()) {
+            return $input;
+        }
+
+        $input['sources'] = $this->mergeCitationSources(
+            is_array($input['sources'] ?? null) ? $input['sources'] : [],
+            $result->citations(),
+        );
+        $input['retrieved_context'] = $result->context;
+
+        return $input;
+    }
+
+    /** @param  array<string, mixed>  $input */
+    private function retrievalQuery(array $input): string
+    {
+        foreach (['message', 'content', 'query', 'notes', 'question', 'title', 'lesson_title'] as $key) {
+            if (isset($input[$key]) && is_string($input[$key]) && trim($input[$key]) !== '') {
+                return $input[$key];
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $primary
+     * @param  list<array<string, mixed>>  $secondary
+     * @return list<array<string, mixed>>
+     */
+    private function mergeCitationSources(array $primary, array $secondary): array
+    {
+        $merged = [];
+        $seen = [];
+
+        foreach (array_merge($primary, $secondary) as $source) {
+            if (! is_array($source)) {
+                continue;
+            }
+            $key = ($source['source_type'] ?? '').':'.($source['source_id'] ?? $source['reference'] ?? $source['title'] ?? '');
+            if ($key === ':' || isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $merged[] = $source;
+        }
+
+        return $merged;
     }
 
     /** @param  array<string, mixed>|null  $newValues */

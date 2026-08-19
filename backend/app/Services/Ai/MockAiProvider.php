@@ -36,7 +36,7 @@ class MockAiProvider implements AiProviderInterface
             ],
             'library_summary' => [
                 'summary' => 'Demo summary generated for library content review.',
-                'sources' => [],
+                'sources' => $input['sources'] ?? [],
             ],
             'library_qa' => [
                 'answer' => 'Demo answer for agricultural library question. This is decision support only.',

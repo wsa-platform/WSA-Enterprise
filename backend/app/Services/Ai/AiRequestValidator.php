@@ -15,7 +15,10 @@ class AiRequestValidator
         'vision_analysis',
     ];
 
-    private const CLIENT_FORBIDDEN_KEYS = ['provider', 'model', 'api_key', 'apiKey', 'secret', 'token'];
+    private const CLIENT_FORBIDDEN_KEYS = [
+        'provider', 'model', 'api_key', 'apiKey', 'secret', 'token',
+        'retrieved_context', 'retrieved_sources', 'sources',
+    ];
 
     /** @return array<string, mixed> */
     public function validate(string $requestType, array $input): array
