@@ -21,6 +21,27 @@ class AiErrorSanitizer
         return 'The AI provider failed to complete the request.';
     }
 
+    public static function category(Throwable $exception): string
+    {
+        if ($exception instanceof AiProviderTimeoutException) {
+            return 'timeout';
+        }
+
+        if ($exception instanceof AiProviderUnavailableException) {
+            $message = $exception->getMessage();
+
+            return match (true) {
+                str_contains($message, 'authenticate') => 'authentication',
+                str_contains($message, 'rate limit') => 'rate_limit',
+                str_contains($message, 'malformed') => 'malformed',
+                str_contains($message, 'rejected') => 'invalid_request',
+                default => 'unavailable',
+            };
+        }
+
+        return 'provider_failure';
+    }
+
     public static function logMessage(Throwable $exception): string
     {
         return self::redact($exception->getMessage());

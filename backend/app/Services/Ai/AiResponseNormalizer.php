@@ -24,6 +24,9 @@ class AiResponseNormalizer
             'model' => $model ?? ($output['model'] ?? null),
             'tokens_used' => isset($output['tokens_used']) ? (int) $output['tokens_used'] : null,
             'finish_reason' => $output['finish_reason'] ?? 'stop',
+            'request_id' => is_string($output['request_id'] ?? null) && $output['request_id'] !== ''
+                ? $output['request_id']
+                : null,
             'sources' => $normalized['sources'] ?? $output['sources'] ?? [],
         ]);
     }

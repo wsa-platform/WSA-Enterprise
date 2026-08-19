@@ -132,7 +132,7 @@ class AiService
 
     public function cancel(AiRequest $record, ?int $userId = null): AiRequest
     {
-        return DB::transaction(function () use ($record, $userId): AiRequest {
+        $cancelled = DB::transaction(function () use ($record, $userId): AiRequest {
             /** @var AiRequest|null $locked */
             $locked = AiRequest::query()->whereKey($record->id)->lockForUpdate()->first();
 
@@ -156,12 +156,21 @@ class AiService
 
             return $locked->fresh();
         });
+
+        if ($cancelled->status === 'cancelled') {
+            $this->persistUsageSafely($cancelled, 'cancelled');
+        }
+
+        return $cancelled;
     }
 
     /** Process an existing AI request (sync path or queued worker). Idempotent for terminal states. */
     public function processRecord(AiRequest $record): AiRequest
     {
-        return DB::transaction(function () use ($record): AiRequest {
+        $errorCategory = null;
+        $resolvedModel = null;
+
+        $processed = DB::transaction(function () use ($record, &$errorCategory, &$resolvedModel): AiRequest {
             /** @var AiRequest|null $locked */
             $locked = AiRequest::query()->whereKey($record->id)->lockForUpdate()->first();
 
@@ -195,6 +204,7 @@ class AiService
             try {
                 $provider = $this->providerResolver->forOrganization($locked->organization_id);
                 $providerName = $provider->name();
+                $resolvedModel = $provider->model();
                 $output = $this->callWithTimeout($provider, $locked->request_type, $locked->input ?? [], $timeout);
                 if (! is_array($output)) {
                     throw new \RuntimeException('AI provider returned a malformed response.');
@@ -226,6 +236,8 @@ class AiService
                     $locked->request_type,
                 );
             } catch (\Throwable $exception) {
+                $errorCategory = AiErrorSanitizer::category($exception);
+
                 Log::warning('AI provider failed', [
                     'provider' => $providerName,
                     'request_type' => $locked->request_type,
@@ -257,6 +269,23 @@ class AiService
 
             return $locked->fresh();
         });
+
+        $this->persistUsageSafely($processed, $errorCategory, $resolvedModel);
+
+        return $processed;
+    }
+
+    private function persistUsageSafely(AiRequest $record, ?string $errorCategory = null, ?string $model = null): void
+    {
+        try {
+            $this->usageRecorder->recordOutcome($record, $errorCategory, $model);
+        } catch (\Throwable $exception) {
+            Log::warning('AI usage persistence failed', [
+                'ai_request_id' => $record->id,
+                'organization_id' => $record->organization_id,
+                'message' => AiErrorSanitizer::logMessage($exception),
+            ]);
+        }
     }
 
     /** @param  array<string, mixed>  $input */
