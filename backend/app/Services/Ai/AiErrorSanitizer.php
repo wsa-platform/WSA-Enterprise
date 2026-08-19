@@ -30,7 +30,9 @@ class AiErrorSanitizer
     {
         $text = (string) $value;
         $text = preg_replace('/sk-[A-Za-z0-9_\-]+/', '[redacted]', $text) ?? $text;
+        $text = preg_replace('/Authorization:\s*Bearer\s+\S+/i', 'Authorization: Bearer [redacted]', $text) ?? $text;
         $text = preg_replace('/Bearer\s+\S+/i', 'Bearer [redacted]', $text) ?? $text;
+        $text = preg_replace('/OPENAI_API_KEY\s*[:=]\s*\S+/i', 'OPENAI_API_KEY=[redacted]', $text) ?? $text;
         $text = preg_replace('/(api[_-]?key|secret|token|password)\s*[:=]\s*\S+/i', '$1=[redacted]', $text) ?? $text;
 
         return $text;

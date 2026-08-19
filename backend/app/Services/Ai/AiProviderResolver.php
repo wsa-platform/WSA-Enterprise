@@ -5,6 +5,7 @@ namespace App\Services\Ai;
 use App\Contracts\AiProviderInterface;
 use App\Exceptions\AiProviderUnavailableException;
 use App\Models\OrganizationSetting;
+use App\Services\Ai\Providers\OpenAiProvider;
 
 class AiProviderResolver
 {
@@ -67,6 +68,7 @@ class AiProviderResolver
     {
         return match ($provider) {
             'mock' => app(MockAiProvider::class),
+            'openai' => app(OpenAiProvider::class),
             default => throw new AiProviderUnavailableException($provider),
         };
     }

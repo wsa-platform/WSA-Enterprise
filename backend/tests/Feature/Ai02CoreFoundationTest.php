@@ -70,7 +70,7 @@ class Ai02CoreFoundationTest extends TestCase
 
     public function test_unknown_provider_is_rejected(): void
     {
-        Config::set('ai.provider', 'openai');
+        Config::set('ai.provider', 'not-implemented');
 
         $this->expectException(AiProviderUnavailableException::class);
         app(AiProviderResolver::class)->forOrganization(Organization::first()->id);
@@ -78,7 +78,7 @@ class Ai02CoreFoundationTest extends TestCase
 
     public function test_unknown_provider_endpoint_does_not_leak_secrets(): void
     {
-        Config::set('ai.provider', 'openai');
+        Config::set('ai.provider', 'not-implemented');
         Config::set('ai.api_key', 'sk-SECRETVALUE');
 
         $response = $this->getJson('/api/v1/ai/provider', $this->adminHeaders())
