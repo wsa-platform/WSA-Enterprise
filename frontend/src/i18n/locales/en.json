@@ -877,7 +877,37 @@
     "cvUploadFailed": "Unable to upload CV.",
     "parseCv": "Parse CV with AI",
     "cvParseStarted": "CV parsing started.",
-    "cvParseFailed": "Unable to parse CV."
+    "cvParseFailed": "Unable to parse CV.",
+    "myApplicationTitle": "My Job Application",
+    "myApplicationDescription": "View and update your recruitment application profile.",
+    "viewAndEdit": "View & Edit",
+    "editMode": "Edit Application",
+    "applicationSaved": "Application profile saved.",
+    "applicationSaveFailed": "Unable to save application profile.",
+    "fullName": "Full name",
+    "email": "Email",
+    "phoneNumber": "Phone number",
+    "region": "Region",
+    "desiredSalary": "Desired salary",
+    "salaryCurrency": "Currency",
+    "availabilityDate": "Available from",
+    "cvPath": "CV file",
+    "recruitmentStatus": "Application status",
+    "completeness": "Profile completeness",
+    "jsonPlaceholder": "JSON array, e.g. [{\"title\":\"Manager\",\"company\":\"Acme\",\"years\":3}]",
+    "experience": "Experience",
+    "education": "Education",
+    "certifications": "Certifications",
+    "languages": "Languages",
+    "status": {
+      "new": "New",
+      "under_review": "Under review",
+      "qualified": "Qualified",
+      "interview": "Interview",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "hired": "Hired"
+    }
   },
   "beekeeping": {
     "dashboardTitle": "Beekeeping dashboard",
@@ -1107,7 +1137,8 @@
       "language": "Language",
       "primary": "Primary navigation",
       "market": "Marketplace",
-      "sell": "Sell"
+      "sell": "Sell",
+      "myJobApplication": "My Application"
     },
     "hero": {
       "title": "Integrated agricultural platform for modern farming",

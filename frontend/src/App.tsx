@@ -43,6 +43,7 @@ import { OAuthCallbackPage } from './pages/OAuthCallbackPage'
 import { AcceptInvitationPage } from './pages/AcceptInvitationPage'
 import { JobsMarketplacePage } from './pages/jobs/JobsMarketplacePage'
 import { TalentProfilePage } from './pages/jobs/TalentProfilePage'
+import { MyJobApplicationPage } from './pages/jobs/MyJobApplicationPage'
 import { BeekeepingDashboardPage } from './pages/beekeeping/BeekeepingDashboardPage'
 import { AiAssistantPage } from './pages/ai/AiAssistantPage'
 import { AiVisionPage } from './pages/ai/AiVisionPage'
@@ -170,6 +171,7 @@ function AppRoutes() {
         <Route path="/marketing/consent" element={<ConsentPage />} />
         <Route path="/jobs" element={<JobsMarketplacePage />} />
         <Route path="/jobs/talent" element={<TalentProfilePage />} />
+        <Route path="/jobs/application" element={<MyJobApplicationPage />} />
         <Route path="/seller/listings" element={<Navigate to="/account/products" replace />} />
         <Route path="/seller/listings/new" element={<Navigate to="/account/products/new" replace />} />
         <Route path="/seller/listings/:listingId" element={<SellerListingRedirect />} />

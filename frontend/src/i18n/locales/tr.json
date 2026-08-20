@@ -877,7 +877,37 @@
     "cvUploadFailed": "CV yüklenemedi.",
     "parseCv": "CV'yi YZ ile ayrıştır",
     "cvParseStarted": "CV ayrıştırma başladı.",
-    "cvParseFailed": "CV ayrıştırılamadı."
+    "cvParseFailed": "CV ayrıştırılamadı.",
+    "myApplicationTitle": "İş Başvurum",
+    "myApplicationDescription": "İşe alım başvuru profilinizi görüntüleyin ve güncelleyin.",
+    "viewAndEdit": "Görüntüle ve Düzenle",
+    "editMode": "Başvuruyu Düzenle",
+    "applicationSaved": "İş başvuru profili kaydedildi.",
+    "applicationSaveFailed": "İş başvuru profili kaydedilemedi.",
+    "fullName": "Tam ad",
+    "email": "E-posta",
+    "phoneNumber": "Telefon numarası",
+    "region": "Bölge",
+    "desiredSalary": "İstenen maaş",
+    "salaryCurrency": "Para birimi",
+    "availabilityDate": "Müsaitlik tarihi",
+    "cvPath": "CV dosya yolu",
+    "recruitmentStatus": "Başvuru durumu",
+    "completeness": "Profil tamamlama",
+    "jsonPlaceholder": "JSON dizisi, örn: [{\"title\":\"Yönetici\",\"company\":\"Acme\",\"years\":3}]",
+    "experience": "Deneyim",
+    "education": "Eğitim",
+    "certifications": "Sertifikalar",
+    "languages": "Diller",
+    "status": {
+      "new": "Yeni",
+      "under_review": "İnceleniyor",
+      "qualified": "Niteliikli",
+      "interview": "Mülakat",
+      "accepted": "Kabul edildi",
+      "rejected": "Reddedildi",
+      "hired": "İşe alındı"
+    }
   },
   "beekeeping": {
     "dashboardTitle": "Arıcılık panosu",
@@ -1107,7 +1137,8 @@
       "language": "Dil",
       "primary": "Ana gezinme",
       "market": "Pazar yeri",
-      "sell": "Sat"
+      "sell": "Sat",
+      "myJobApplication": "İş Başvurum"
     },
     "hero": {
       "title": "Modern tarım için entegre tarımsal platform",

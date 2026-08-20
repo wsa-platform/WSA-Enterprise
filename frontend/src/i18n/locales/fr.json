@@ -877,7 +877,37 @@
     "cvUploadFailed": "Impossible de téléverser le CV.",
     "parseCv": "Analyser le CV avec l'IA",
     "cvParseStarted": "Analyse du CV démarrée.",
-    "cvParseFailed": "Impossible d'analyser le CV."
+    "cvParseFailed": "Impossible d'analyser le CV.",
+    "myApplicationTitle": "Ma candidature",
+    "myApplicationDescription": "Consultez et mettez à jour votre profil de candidature.",
+    "viewAndEdit": "Voir et modifier",
+    "editMode": "Modifier la candidature",
+    "applicationSaved": "Profil de candidature enregistré.",
+    "applicationSaveFailed": "Impossible d'enregistrer le profil de candidature.",
+    "fullName": "Nom complet",
+    "email": "E-mail",
+    "phoneNumber": "Téléphone",
+    "region": "Région",
+    "desiredSalary": "Salaire souhaité",
+    "salaryCurrency": "Devise",
+    "availabilityDate": "Disponible à partir du",
+    "cvPath": "Chemin du CV",
+    "recruitmentStatus": "Statut de la candidature",
+    "completeness": "Complétude du profil",
+    "jsonPlaceholder": "Tableau JSON, ex. : [{\"titre\":\"Manager\",\"entreprise\":\"Acme\",\"annees\":3}]",
+    "experience": "Expérience",
+    "education": "Formation",
+    "certifications": "Certifications",
+    "languages": "Langues",
+    "status": {
+      "new": "Nouveau",
+      "under_review": "En cours d'examen",
+      "qualified": "Qualifié",
+      "interview": "Entretien",
+      "accepted": "Accepté",
+      "rejected": "Rejeté",
+      "hired": "Embauché"
+    }
   },
   "beekeeping": {
     "dashboardTitle": "Tableau de bord apiculture",
@@ -1107,7 +1137,8 @@
       "language": "Langue",
       "primary": "Navigation principale",
       "market": "Place de marché",
-      "sell": "Vendre"
+      "sell": "Vendre",
+      "myJobApplication": "Ma candidature"
     },
     "hero": {
       "title": "Plateforme agricole intégrée pour l'agriculture moderne",

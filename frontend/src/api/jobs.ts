@@ -145,3 +145,42 @@ export const payContactRequest = (
     method: 'POST',
     body: JSON.stringify({ idempotency_key: idempotencyKey }),
   }, token, organizationId)
+
+export type JobSeekerProfile = {
+  id: number
+  full_name: string
+  email: string | null
+  phone: string | null
+  country: string | null
+  region: string | null
+  city: string | null
+  specialization: string | null
+  biography: string | null
+  skills: string[] | null
+  experience: unknown[] | null
+  education: unknown[] | null
+  certifications: unknown[] | null
+  languages: string[] | null
+  availability_date: string | null
+  recruitment_status: string
+  is_active: boolean
+  cv_path: string | null
+  desired_salary: string | null
+  salary_currency: string | null
+  completeness_percent: number | null
+  created_at?: string
+  updated_at?: string
+}
+
+export const getMyJobSeekerProfile = (token: string, organizationId?: number) =>
+  request<JobSeekerProfile>('/job-seekers/me', {}, token, organizationId)
+
+export const upsertMyJobSeekerProfile = (
+  token: string,
+  payload: Record<string, unknown>,
+  organizationId?: number,
+) =>
+  request<JobSeekerProfile>('/job-seekers/me', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  }, token, organizationId)

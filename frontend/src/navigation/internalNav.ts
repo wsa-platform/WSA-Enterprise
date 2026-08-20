@@ -49,6 +49,7 @@ export const INTERNAL_NAV_SECTIONS: InternalNavSection[] = [
     items: [
       { to: '/jobs', labelKey: 'nav.jobs', permission: 'jobs.view' },
       { to: '/jobs/talent', labelKey: 'nav.talentProfile', anyPermission: ['jobs.talent.register', 'jobs.talent.manage'] },
+      { to: '/jobs/application', labelKey: 'nav.myJobApplication', anyPermission: ['jobs.talent.register', 'jobs.talent.manage'] },
       { to: '/communications', labelKey: 'nav.communications', permission: 'platform.view' },
       { to: '/beekeeping', labelKey: 'nav.beekeeping', permission: 'beekeeping.view' },
     ],
@@ -140,6 +141,7 @@ export function buildInternalBreadcrumbs(
     '/ai/vision': [dashboard, { label: t('nav.aiVision') }],
     '/jobs': [dashboard, { label: t('nav.jobs') }],
     '/jobs/talent': [dashboard, { label: t('nav.jobs'), to: '/jobs' }, { label: t('nav.talentProfile') }],
+    '/jobs/application': [dashboard, { label: t('nav.jobs'), to: '/jobs' }, { label: t('nav.myJobApplication') }],
     [internalPaths.account]: [dashboard, { label: t('nav.myAccount') }],
     [internalPaths.profile]: [dashboard, account, { label: t('nav.profile') }],
     [internalPaths.products]: [dashboard, account, { label: t('nav.myProducts') }],

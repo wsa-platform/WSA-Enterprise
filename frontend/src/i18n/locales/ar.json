@@ -877,7 +877,37 @@
     "cvUploadFailed": "تعذر رفع السيرة الذاتية.",
     "parseCv": "تحليل السيرة بالذكاء الاصطناعي",
     "cvParseStarted": "بدأ تحليل السيرة الذاتية.",
-    "cvParseFailed": "تعذر تحليل السيرة الذاتية."
+    "cvParseFailed": "تعذر تحليل السيرة الذاتية.",
+    "myApplicationTitle": "طلب التوظيف",
+    "myApplicationDescription": "عرض وتحديث ملف طلب التوظيف.",
+    "viewAndEdit": "عرض وتعديل",
+    "editMode": "تعديل الطلب",
+    "applicationSaved": "تم حفظ ملف طلب التوظيف.",
+    "applicationSaveFailed": "تعذر حفظ ملف طلب التوظيف.",
+    "fullName": "الاسم الكامل",
+    "email": "البريد الإلكتروني",
+    "phoneNumber": "رقم الهاتف",
+    "region": "المنطقة",
+    "desiredSalary": "الراتب المطلوب",
+    "salaryCurrency": "العملة",
+    "availabilityDate": "متاح من تاريخ",
+    "cvPath": "مسار السيرة الذاتية",
+    "recruitmentStatus": "حالة الطلب",
+    "completeness": "اكتمال الملف",
+    "jsonPlaceholder": "مصفوفة JSON، مثال: [{\"title\":\"مدير\",\"company\":\"شركة\",\"years\":3}]",
+    "experience": "الخبرة",
+    "education": "التعليم",
+    "certifications": "الشهادات",
+    "languages": "اللغات",
+    "status": {
+      "new": "جديد",
+      "under_review": "قيد المراجعة",
+      "qualified": "مؤهل",
+      "interview": "مقابلة",
+      "accepted": "مقبول",
+      "rejected": "مرفوض",
+      "hired": "تم التوظيف"
+    }
   },
   "beekeeping": {
     "dashboardTitle": "لوحة تربية النحل",
@@ -1107,7 +1137,8 @@
       "language": "اللغة",
       "primary": "التنقل الرئيسي",
       "market": "السوق",
-      "sell": "بيع"
+      "sell": "بيع",
+      "myJobApplication": "طلب التوظيف"
     },
     "hero": {
       "title": "منصة زراعية متكاملة للزراعة الحديثة",
