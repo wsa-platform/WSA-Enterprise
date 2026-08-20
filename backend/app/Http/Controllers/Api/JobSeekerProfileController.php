@@ -36,6 +36,7 @@ class JobSeekerProfileController extends Controller
             'email' => ['nullable', 'email'],
             'phone' => ['nullable', 'string', 'max:50'],
             'specialization' => ['nullable', 'string', 'max:255'],
+            'target_job_title' => ['nullable', 'string', 'max:255'],
             'biography' => ['nullable', 'string'],
             'country' => ['nullable', 'string', 'max:100'],
             'region' => ['nullable', 'string', 'max:100'],
@@ -44,6 +45,9 @@ class JobSeekerProfileController extends Controller
             'desired_salary' => ['nullable', 'numeric', 'min:0'],
             'salary_currency' => ['nullable', 'string', 'size:3'],
             'availability_date' => ['nullable', 'date'],
+            'date_of_birth' => ['nullable', 'date'],
+            'nationality' => ['nullable', 'string', 'max:100'],
+            'address' => ['nullable', 'string', 'max:500'],
         ], JobSeekerProfile::nestedPayloadRules())));
 
         $existing = $this->ownership
@@ -63,5 +67,18 @@ class JobSeekerProfileController extends Controller
         $profile->update(['is_active' => false]);
 
         return response()->json(['message' => 'Profile deactivated.']);
+    }
+
+    public function uploadCv(Request $request): JsonResponse
+    {
+        $profile = $this->ownership
+            ->scopeOwnedByUser(JobSeekerProfile::query(), $request->user())
+            ->firstOrFail();
+        $request->validate(['cv' => ['required', 'file', 'mimes:pdf,doc,docx,txt', 'max:5120']]);
+
+        $path = $request->file('cv')->store('job-cvs/'.$profile->id, 'local');
+        $profile->update(['cv_path' => $path]);
+
+        return response()->json($profile->fresh()->toOwnerArray());
     }
 }

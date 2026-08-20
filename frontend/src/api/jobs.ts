@@ -155,6 +155,7 @@ export type JobSeekerProfile = {
   region: string | null
   city: string | null
   specialization: string | null
+  target_job_title: string | null
   biography: string | null
   skills: string[] | null
   experience: unknown[] | null
@@ -162,6 +163,9 @@ export type JobSeekerProfile = {
   certifications: unknown[] | null
   languages: string[] | null
   availability_date: string | null
+  date_of_birth: string | null
+  nationality: string | null
+  address: string | null
   recruitment_status: string
   is_active: boolean
   cv_path: string | null
@@ -184,3 +188,20 @@ export const upsertMyJobSeekerProfile = (
     method: 'PUT',
     body: JSON.stringify(payload),
   }, token, organizationId)
+
+export async function uploadMyJobSeekerCv(token: string, file: File, organizationId?: number) {
+  const form = new FormData()
+  form.append('cv', file)
+  const response = await fetch(`${apiUrl}/job-seekers/me/cv`, {
+    method: 'POST',
+    headers: buildHeaders(token, organizationId),
+    body: form,
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { message?: string } | null
+    throw new ApiError(payload?.message ?? 'Unable to upload CV.', response.status)
+  }
+
+  return response.json() as Promise<JobSeekerProfile>
+}
