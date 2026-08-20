@@ -1,6 +1,6 @@
 # AI Platform
 
-**Last updated:** AI-14 production RAG intelligence layer (2026-08-20)
+**Last updated:** AI-15 retrieval evaluation harness (2026-08-20)
 
 ## Overview
 
@@ -592,6 +592,42 @@ User query
 - Context assembly still uses `UNTRUSTED RETRIEVED KNOWLEDGE`, `max_results`, `max_context_characters`, and `max_excerpt_characters`. Duplicate source keys and duplicate content fingerprints are removed before assembly.
 - Citations remain server-controlled. Additive fields: `score`, `freshness`. URLs and secrets are not added.
 - Telemetry may include `merged_candidate_count`, `final_context_count`, `context_assembly_duration_ms`, `rag_orchestrated`, and `reranker`. API keys, Authorization headers, and raw prompts are not stored.
+
+## Retrieval evaluation harness (AI-15)
+
+AI-15 measures **retrieval quality** without executing AI provider requests. It does not replace production RAG, rerankers, embeddings, or operator APIs.
+
+```
+RetrievalEvaluationCase
+  -> RetrievalEvaluationRunner (temporary strategy override, then restore)
+       -> RagOrchestrator -> KnowledgeRetrievalRouter
+  -> RetrievalEvaluationMetrics (Precision@K, Recall@K, F1@K, Hit@K, MRR)
+  -> RetrievalEvaluationReport
+```
+
+Evaluation uses the same tenant, publication, deletion, ranking, and duplicate-suppression boundaries as production retrieval. It never calls the chat/completions provider.
+
+### Metric definitions
+
+| Metric | Definition |
+|--------|------------|
+| Precision@K | `\|relevant ∩ top-K\| / \|top-K\|`. Both empty → `1.0`. |
+| Recall@K | `\|relevant ∩ top-K\| / \|expected\|`. Empty expected → `1.0`. |
+| F1@K | Harmonic mean of precision and recall. Both zero → `0.0`. |
+| Hit@K | `1` if any expected ID is in top-K. Both empty → `1`. Empty expected with non-empty retrieved → `0`. |
+| MRR | `1 / rank` of the first expected ID in top-K, else `0`. Empty expected → `0`. |
+
+Duplicate retrieved IDs keep first rank. Duplicate expected IDs are treated as a set. Composite IDs are `source_type:source_id`.
+
+### How to run
+
+```
+docker compose run --rm backend-test php artisan test --filter=Ai15RetrievalEvaluationHarnessTest
+```
+
+Fixtures are tenant-safe library items created inside the test (mock embeddings, no OpenAI key, no pgvector required). Local `postgres:16-alpine` uses JSON cosine fallback; health/eval report the effective strategy and `fallback_reason` when semantic is unavailable.
+
+Interpretation: high precision means few off-topic hits in the cut; high recall means expected sources were found; Hit@K is a binary “was the answer in the list?” check; MRR rewards earlier ranks. Evaluation scores are **not** production SLAs and are not written to `ai_usage_records`.
 
 ---
 
