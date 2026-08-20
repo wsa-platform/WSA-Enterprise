@@ -46,7 +46,7 @@ export function PublicHeader() {
 
         <div className="gs-header-actions">
           <PublicLanguageMenu />
-          <Link to="/login" className="gs-btn gs-btn-ghost">
+          <Link to="/login?next=/jobs/application" className="gs-btn gs-btn-ghost">
             {t('website.nav.login')}
           </Link>
           <Link to="/register" className="gs-btn gs-btn-primary">

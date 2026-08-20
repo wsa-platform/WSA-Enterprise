@@ -48,7 +48,7 @@ export function PublicFooter() {
           <nav aria-label={t('website.footer.account')}>
             <h4>{t('website.footer.account')}</h4>
             <ul>
-              <li><Link to="/login">{t('website.nav.login')}</Link></li>
+               <li><Link to="/login?next=/jobs/application">{t('website.nav.login')}</Link></li>
               <li><Link to="/register">{t('website.nav.register')}</Link></li>
             </ul>
           </nav>

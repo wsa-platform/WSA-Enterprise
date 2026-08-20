@@ -159,7 +159,7 @@ export function SectionPage() {
                     <h4>{module.label}</h4>
                     <p>{t(MODULE_DESCRIPTION_KEYS[module.key] ?? 'website.services.genericDesc')}</p>
                     {!token && requiresAuth && (
-                      <Link to="/login" className="gs-btn gs-btn-primary">
+                      <Link to={section.id === 'jobs' ? '/login?next=/jobs/application' : '/login'} className="gs-btn gs-btn-primary">
                         {t('website.nav.login')}
                       </Link>
                     )}
