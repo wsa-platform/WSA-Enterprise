@@ -10,6 +10,9 @@ use App\Services\Ai\Embeddings\EmbeddingProviderInterface;
 use App\Services\Ai\Embeddings\EmbeddingProviderResolver;
 use App\Services\Ai\Embeddings\PgvectorSchema;
 use App\Services\Ai\Embeddings\PostgresKnowledgeVectorStore;
+use App\Services\Ai\Rag\IdentityReranker;
+use App\Services\Ai\Rag\KnowledgeRerankerInterface;
+use App\Services\Ai\Rag\WeightedScoreReranker;
 use App\Services\Ai\Retrieval\DeterministicLexicalSemanticIndex;
 use App\Services\Ai\Retrieval\KnowledgeRetrievalRouter;
 use App\Services\Ai\Retrieval\KnowledgeSemanticIndexInterface;
@@ -30,6 +33,13 @@ class AiRetrievalServiceProvider extends ServiceProvider
         $this->app->singleton(DeterministicLexicalSemanticIndex::class);
         $this->app->bind(KnowledgeSemanticIndexInterface::class, VectorKnowledgeSemanticIndex::class);
         $this->app->bind(AiKnowledgeRetrieverInterface::class, KnowledgeRetrievalRouter::class);
+        $this->app->bind(KnowledgeRerankerInterface::class, function ($app) {
+            $name = strtolower(trim((string) config('ai.rag.reranker', 'weighted')));
+
+            return $name === 'identity'
+                ? $app->make(IdentityReranker::class)
+                : $app->make(WeightedScoreReranker::class);
+        });
     }
 
     public function boot(): void

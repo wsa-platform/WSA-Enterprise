@@ -2,14 +2,14 @@
 
 namespace App\Services\Ai;
 
-use App\Contracts\AiKnowledgeRetrieverInterface;
+use App\Services\Ai\Rag\RagOrchestrator;
+use App\Services\Ai\Rag\RagResult;
 use App\Services\Ai\Retrieval\AiRetrievalHit;
-use App\Services\Ai\Retrieval\AiRetrievalResult;
 use Illuminate\Support\Facades\Log;
 
 class AiGroundedAnswerPolicy
 {
-    public function __construct(private AiKnowledgeRetrieverInterface $retriever) {}
+    public function __construct(private RagOrchestrator $orchestrator) {}
 
     /**
      * Retrieve existing knowledge and prepare provider input.
@@ -30,7 +30,7 @@ class AiGroundedAnswerPolicy
         }
 
         try {
-            $result = $this->retriever->retrieve($organizationId, $this->query($input));
+            $result = $this->orchestrator->assemble($organizationId, $input);
         } catch (\Throwable $exception) {
             Log::warning('AI retrieval failed', [
                 'organization_id' => $organizationId,
@@ -47,8 +47,12 @@ class AiGroundedAnswerPolicy
         }
 
         $citations = $this->usableCitations($result);
-        if ($citations === []) {
-            return AiGroundedAnswerDecision::ungrounded($input, telemetry: $result->telemetry);
+        if ($citations === [] || $result->failed) {
+            return AiGroundedAnswerDecision::ungrounded(
+                $input,
+                retrievalFailed: $result->failed,
+                telemetry: $result->telemetry,
+            );
         }
 
         $context = $this->boundedContext($result->context);
@@ -80,69 +84,81 @@ class AiGroundedAnswerPolicy
         return $normalized;
     }
 
-    /** @param  array<string, mixed>  $input */
-    private function query(array $input): string
-    {
-        foreach (['message', 'content', 'query', 'notes', 'question', 'title', 'lesson_title'] as $key) {
-            if (isset($input[$key]) && is_string($input[$key]) && trim($input[$key]) !== '') {
-                return $input[$key];
-            }
-        }
-
-        return '';
-    }
-
     /**
      * @return list<array<string, mixed>>
      */
-    private function usableCitations(AiRetrievalResult $result): array
+    private function usableCitations(RagResult $result): array
     {
         $citations = [];
         $seen = [];
+
+        foreach ($result->citations as $citation) {
+            if (! is_array($citation)) {
+                continue;
+            }
+            $trusted = $this->trustedCitation($citation);
+            if ($trusted === null) {
+                continue;
+            }
+            $key = $trusted['source_type'].':'.$trusted['source_id'];
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $citations[] = $trusted;
+        }
 
         foreach ($result->hits as $hit) {
             if (! $hit instanceof AiRetrievalHit) {
                 continue;
             }
-
-            $citation = $this->trustedCitation($hit);
-            if ($citation === null) {
+            $trusted = $this->trustedCitation([
+                'title' => $hit->title,
+                'reference' => $hit->sourceType.':'.$hit->sourceId,
+                'source_type' => $hit->sourceType,
+                'source_id' => $hit->sourceId,
+                'score' => $hit->score,
+            ]);
+            if ($trusted === null) {
                 continue;
             }
-
-            $key = $citation['source_type'].':'.$citation['source_id'];
+            $key = $trusted['source_type'].':'.$trusted['source_id'];
             if (isset($seen[$key])) {
                 continue;
             }
             $seen[$key] = true;
-            $citations[] = $citation;
+            $citations[] = $trusted;
         }
 
         return $citations;
     }
 
-    /** @return array<string, mixed>|null */
-    private function trustedCitation(AiRetrievalHit $hit): ?array
+    /** @param  array<string, mixed>  $citation */
+    private function trustedCitation(array $citation): ?array
     {
-        $sourceType = trim($hit->sourceType);
-        $title = trim($hit->title);
-        if ($sourceType === '' || $hit->sourceId < 1 || $title === '') {
-            return null;
-        }
-
-        $citation = $hit->toCitation();
         unset($citation['url'], $citation['uri'], $citation['href'], $citation['link']);
-
-        if (($citation['source_type'] ?? '') === '' || ! isset($citation['source_id']) || ($citation['title'] ?? '') === '') {
+        $sourceType = trim((string) ($citation['source_type'] ?? ''));
+        $title = trim((string) ($citation['title'] ?? ''));
+        $sourceId = (int) ($citation['source_id'] ?? 0);
+        if ($sourceType === '' || $sourceId < 1 || $title === '') {
             return null;
         }
 
-        return [
-            'title' => (string) $citation['title'],
-            'reference' => (string) ($citation['reference'] ?? $sourceType.':'.$hit->sourceId),
-            'source_type' => (string) $citation['source_type'],
-            'source_id' => (int) $citation['source_id'],
+        $trusted = [
+            'title' => $title,
+            'reference' => (string) ($citation['reference'] ?? $sourceType.':'.$sourceId),
+            'source_type' => $sourceType,
+            'source_id' => $sourceId,
         ];
+        if (isset($citation['score']) && is_numeric($citation['score'])) {
+            $trusted['score'] = round((float) $citation['score'], 4);
+        }
+        $freshness = strtolower((string) ($citation['freshness'] ?? ''));
+        if (in_array($freshness, ['fresh', 'stale', 'unknown'], true)) {
+            $trusted['freshness'] = $freshness;
+        }
+
+        return $trusted;
     }
 
     private function boundedContext(string $context): string

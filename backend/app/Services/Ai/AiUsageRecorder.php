@@ -104,7 +104,7 @@ class AiUsageRecorder
         }
 
         $reason = (string) ($telemetry['fallback_reason'] ?? '');
-        if (! in_array($reason, ['semantic_unavailable', 'semantic_error', 'invalid_strategy'], true)) {
+        if (! in_array($reason, ['semantic_unavailable', 'semantic_error', 'invalid_strategy', 'keyword_error', 'retrieval_unavailable'], true)) {
             $reason = '';
         }
 
@@ -168,6 +168,22 @@ class AiUsageRecorder
         }
         if (isset($telemetry['embedding_attempts'])) {
             $safe['embedding_attempts'] = max(0, (int) $telemetry['embedding_attempts']);
+        }
+        if (isset($telemetry['merged_candidate_count'])) {
+            $safe['merged_candidate_count'] = max(0, (int) $telemetry['merged_candidate_count']);
+        }
+        if (isset($telemetry['final_context_count'])) {
+            $safe['final_context_count'] = max(0, (int) $telemetry['final_context_count']);
+        }
+        if (isset($telemetry['context_assembly_duration_ms'])) {
+            $safe['context_assembly_duration_ms'] = max(0, (int) $telemetry['context_assembly_duration_ms']);
+        }
+        if (array_key_exists('rag_orchestrated', $telemetry)) {
+            $safe['rag_orchestrated'] = (bool) $telemetry['rag_orchestrated'];
+        }
+        $reranker = strtolower((string) ($telemetry['reranker'] ?? ''));
+        if (in_array($reranker, ['weighted', 'identity'], true)) {
+            $safe['reranker'] = $reranker;
         }
 
         return $safe;

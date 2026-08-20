@@ -1,6 +1,6 @@
 # AI Platform
 
-**Last updated:** AI-13 production embeddings and PostgreSQL vector ANN/HNSW (2026-08-20)
+**Last updated:** AI-14 production RAG intelligence layer (2026-08-20)
 
 ## Overview
 
@@ -572,6 +572,27 @@ AI-13 hardens AI-12. It does **not** replace `KnowledgeSemanticIndexInterface`. 
 - Operator `POST /api/v1/operator/ai/knowledge/backfill` supports tenant-scoped backfill with optional `dry_run`. It does not index another tenant's library items.
 - `AI_EMBEDDING_ANN_ENABLED=false` forces the JSON fallback even when pgvector is present.
 
+## RAG intelligence (AI-14)
+
+AI-14 adds a **production RAG orchestration layer** on top of AI-10–AI-13. It does **not** replace keyword retrieval, vector search, hybrid mixing, grounding, or the embedding/pgvector backends.
+
+```
+User query
+  -> RagQueryNormalizer
+  -> KnowledgeRetrievalRouter (keyword | semantic | hybrid)
+  -> RagCandidateProcessor (tenant filter, content dedupe, min-score)
+  -> KnowledgeRerankerInterface (weighted local scores | identity)
+  -> KnowledgeContextBuilder (bounded untrusted context)
+  -> trusted citations (title, reference, source_type, source_id, score, freshness)
+  -> existing AI provider
+```
+
+- Hybrid keyword and semantic backends now fail independently: semantic down still returns keyword; keyword down still returns semantic; both down returns a sanitized empty/failed retrieval and the AI request continues ungrounded.
+- Ranking reuses AI-08/AI-10 scores. `KnowledgeRerankerInterface` is the extension point for a future external reranker; none is required or called in AI-14.
+- Context assembly still uses `UNTRUSTED RETRIEVED KNOWLEDGE`, `max_results`, `max_context_characters`, and `max_excerpt_characters`. Duplicate source keys and duplicate content fingerprints are removed before assembly.
+- Citations remain server-controlled. Additive fields: `score`, `freshness`. URLs and secrets are not added.
+- Telemetry may include `merged_candidate_count`, `final_context_count`, `context_assembly_duration_ms`, `rag_orchestrated`, and `reranker`. API keys, Authorization headers, and raw prompts are not stored.
+
 ---
 
 ## Configuration Reference
@@ -610,6 +631,9 @@ AI-13 hardens AI-12. It does **not** replace `KnowledgeSemanticIndexInterface`. 
 | `AI_EMBEDDING_SIMILARITY_THRESHOLD` | `0.15` | Minimum cosine similarity |
 | `AI_EMBEDDING_MAX_CANDIDATES` | retrieval candidate limit | Max semantic hits returned |
 | `AI_EMBEDDING_MAX_SCAN` | `500` | Max eligible JSON vectors scanned when ANN is unavailable |
+| `AI_RAG_MIN_SCORE` | `0` | Drop RAG candidates below this score (0 keeps existing ranking) |
+| `AI_RAG_RERANKER` | `weighted` | `weighted` (local score sort) or `identity` |
+| `AI_RAG_DEDUPE_CONTENT` | `true` | Remove duplicate content fingerprints from RAG context |
 
 ---
 

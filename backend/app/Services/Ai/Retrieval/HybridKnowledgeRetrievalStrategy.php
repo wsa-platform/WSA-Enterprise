@@ -2,6 +2,9 @@
 
 namespace App\Services\Ai\Retrieval;
 
+use App\Services\Ai\AiErrorSanitizer;
+use Illuminate\Support\Facades\Log;
+
 class HybridKnowledgeRetrievalStrategy implements KnowledgeRetrievalStrategyInterface
 {
     public function __construct(
@@ -29,13 +32,47 @@ class HybridKnowledgeRetrievalStrategy implements KnowledgeRetrievalStrategyInte
         $candidateLimit = max(1, (int) config('ai.retrieval.candidate_limit', 40));
         $maxResults = max(1, (int) config('ai.retrieval.max_results', 5));
 
-        $keywordHits = $keywords === [] ? [] : array_merge(
-            $this->libraryItems->search($organizationId, $keywords, $candidateLimit, $query),
-            $this->beeKnowledgeTopics->search($organizationId, $keywords, $candidateLimit, $query),
-        );
-        $semanticHits = $this->index->isAvailable()
-            ? $this->index->search($organizationId, $query, $candidateLimit)
-            : [];
+        $keywordError = false;
+        $semanticError = false;
+        $keywordHits = [];
+        try {
+            if ($keywords !== []) {
+                $keywordHits = array_merge(
+                    $this->libraryItems->search($organizationId, $keywords, $candidateLimit, $query),
+                    $this->beeKnowledgeTopics->search($organizationId, $keywords, $candidateLimit, $query),
+                );
+            }
+        } catch (\Throwable $exception) {
+            $keywordError = true;
+            Log::warning('AI hybrid keyword retrieval failed; continuing with semantic candidates', [
+                'organization_id' => $organizationId,
+                'message' => AiErrorSanitizer::logMessage($exception),
+            ]);
+        }
+
+        $semanticHits = [];
+        try {
+            if ($this->index->isAvailable()) {
+                $semanticHits = $this->index->search($organizationId, $query, $candidateLimit);
+            }
+        } catch (\Throwable $exception) {
+            $semanticError = true;
+            Log::warning('AI hybrid semantic retrieval failed; continuing with keyword candidates', [
+                'organization_id' => $organizationId,
+                'message' => AiErrorSanitizer::logMessage($exception),
+            ]);
+        }
+
+        if ($keywordError && ($semanticError || $semanticHits === [])) {
+            return AiRetrievalResult::empty([
+                'retrieval_duration_ms' => max(0, ((int) round(microtime(true) * 1000)) - $started),
+                'retrieval_strategy' => $this->name(),
+                'retrieval_status' => 'failed',
+                'fallback_reason' => $semanticError ? 'retrieval_unavailable' : 'keyword_error',
+                'keyword_candidate_count' => 0,
+                'semantic_candidate_count' => count($semanticHits),
+            ]);
+        }
 
         $keywordByKey = [];
         foreach ($keywordHits as $hit) {
@@ -99,7 +136,19 @@ class HybridKnowledgeRetrievalStrategy implements KnowledgeRetrievalStrategyInte
             $hits,
         )));
 
-        return new AiRetrievalResult($hits, $this->context->build($hits), [
+        $status = 'ok';
+        $reason = null;
+        if ($keywordError) {
+            $status = 'fallback';
+            $reason = 'keyword_error';
+        } elseif ($semanticError) {
+            $status = 'fallback';
+            $reason = 'semantic_error';
+        } elseif ($hits === []) {
+            $status = 'empty';
+        }
+
+        $telemetry = [
             'candidate_count' => $candidateCount,
             'returned_count' => count($hits),
             'retrieval_duration_ms' => max(0, ((int) round(microtime(true) * 1000)) - $started),
@@ -107,12 +156,18 @@ class HybridKnowledgeRetrievalStrategy implements KnowledgeRetrievalStrategyInte
             'freshness_distribution' => $this->freshness->distribution(
                 array_map(static fn (AiRetrievalHit $hit) => $hit->updatedAt, $hits),
             ),
-            'retrieval_status' => $hits === [] ? 'empty' : 'ok',
+            'retrieval_status' => $status,
             'retrieval_strategy' => $this->name(),
             'keyword_candidate_count' => count($keywordHits),
             'semantic_candidate_count' => count($semanticHits),
             'hybrid_result_count' => count($hits),
-        ]);
+            'merged_candidate_count' => $candidateCount,
+        ];
+        if ($reason !== null) {
+            $telemetry['fallback_reason'] = $reason;
+        }
+
+        return new AiRetrievalResult($hits, $this->context->build($hits), $telemetry);
     }
 
     private function key(AiRetrievalHit $hit): string

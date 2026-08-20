@@ -114,6 +114,10 @@ class KnowledgeRetrievalOperationsService
             'embedding_model' => app(EmbeddingConfig::class)->model(),
             'embedding_dimensions' => app(EmbeddingConfig::class)->dimensions(),
             'similarity_threshold' => app(EmbeddingConfig::class)->similarityThreshold(),
+            'rag_orchestration' => true,
+            'reranker' => strtolower(trim((string) config('ai.rag.reranker', 'weighted'))) === 'identity'
+                ? 'identity'
+                : 'weighted',
             'weights' => [
                 'keyword' => $this->config->keywordWeight(),
                 'semantic' => $this->config->semanticWeight(),

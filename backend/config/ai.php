@@ -12,6 +12,7 @@ return [
     | AI_EMBEDDING_PROVIDER, AI_EMBEDDING_MODEL, AI_EMBEDDING_DIMENSIONS, AI_EMBEDDING_TIMEOUT, AI_EMBEDDING_CONNECT_TIMEOUT
     | AI_EMBEDDING_RETRY_TIMES, AI_EMBEDDING_RETRY_SLEEP_MS, AI_EMBEDDING_BATCH_SIZE, AI_EMBEDDING_SIMILARITY_THRESHOLD, AI_EMBEDDING_MAX_CANDIDATES, AI_EMBEDDING_MAX_SCAN
     | AI_EMBEDDING_ENABLED, AI_EMBEDDING_DISTANCE_METRIC, AI_EMBEDDING_ANN_ENABLED
+    | AI_RAG_MIN_SCORE, AI_RAG_RERANKER, AI_RAG_DEDUPE_CONTENT
     | Grounded answers (AI-06) reuse those retrieval limits; citations are server-controlled.
     | AI-07 adds user-visible disclosure for empty/failed knowledge retrieval.
     | Existing keys: AI_QUEUE, AI_QUEUE_TRIES, AI_ASYNC_DISPATCH,
@@ -65,6 +66,11 @@ return [
         'keyword_weight' => (float) env('AI_RETRIEVAL_KEYWORD_WEIGHT', 1.0),
         'semantic_weight' => (float) env('AI_RETRIEVAL_SEMANTIC_WEIGHT', 0.25),
         'freshness_weight' => (float) env('AI_RETRIEVAL_FRESHNESS_WEIGHT', 0.05),
+    ],
+    'rag' => [
+        'min_score' => (float) env('AI_RAG_MIN_SCORE', 0),
+        'reranker' => env('AI_RAG_RERANKER', 'weighted'),
+        'dedupe_content' => filter_var(env('AI_RAG_DEDUPE_CONTENT', true), FILTER_VALIDATE_BOOL),
     ],
     'embeddings' => [
         'enabled' => filter_var(env('AI_EMBEDDING_ENABLED', true), FILTER_VALIDATE_BOOL),

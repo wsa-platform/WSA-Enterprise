@@ -8,7 +8,13 @@ class KnowledgeRetrievalConfig
     public const STRATEGIES = ['keyword', 'semantic', 'hybrid'];
 
     /** @var list<string> */
-    public const FALLBACK_REASONS = ['semantic_unavailable', 'semantic_error', 'invalid_strategy'];
+    public const FALLBACK_REASONS = [
+        'semantic_unavailable',
+        'semantic_error',
+        'invalid_strategy',
+        'keyword_error',
+        'retrieval_unavailable',
+    ];
 
     public function strategy(): string
     {
