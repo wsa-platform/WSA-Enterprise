@@ -9,6 +9,8 @@ return [
     | AI_RETRIEVAL_ENABLED, AI_RETRIEVAL_MAX_RESULTS, AI_RETRIEVAL_MAX_CONTEXT_CHARACTERS, AI_RETRIEVAL_CANDIDATE_LIMIT
     | AI_RETRIEVAL_MAX_EXCERPT_CHARACTERS, AI_RETRIEVAL_FRESHNESS_STALE_AFTER_DAYS, AI_RETRIEVAL_OPERATIONS_MAX_RESULTS
     | AI_RETRIEVAL_STRATEGY, AI_RETRIEVAL_SEMANTIC_ENABLED, AI_RETRIEVAL_KEYWORD_WEIGHT, AI_RETRIEVAL_SEMANTIC_WEIGHT, AI_RETRIEVAL_FRESHNESS_WEIGHT
+    | AI_EMBEDDING_PROVIDER, AI_EMBEDDING_MODEL, AI_EMBEDDING_DIMENSIONS, AI_EMBEDDING_TIMEOUT, AI_EMBEDDING_CONNECT_TIMEOUT
+    | AI_EMBEDDING_RETRY_TIMES, AI_EMBEDDING_RETRY_SLEEP_MS, AI_EMBEDDING_BATCH_SIZE, AI_EMBEDDING_SIMILARITY_THRESHOLD, AI_EMBEDDING_MAX_CANDIDATES, AI_EMBEDDING_MAX_SCAN
     | Grounded answers (AI-06) reuse those retrieval limits; citations are server-controlled.
     | AI-07 adds user-visible disclosure for empty/failed knowledge retrieval.
     | Existing keys: AI_QUEUE, AI_QUEUE_TRIES, AI_ASYNC_DISPATCH,
@@ -62,6 +64,19 @@ return [
         'keyword_weight' => (float) env('AI_RETRIEVAL_KEYWORD_WEIGHT', 1.0),
         'semantic_weight' => (float) env('AI_RETRIEVAL_SEMANTIC_WEIGHT', 0.25),
         'freshness_weight' => (float) env('AI_RETRIEVAL_FRESHNESS_WEIGHT', 0.05),
+    ],
+    'embeddings' => [
+        'provider' => env('AI_EMBEDDING_PROVIDER', 'mock'),
+        'model' => env('AI_EMBEDDING_MODEL', 'mock-hash-v1'),
+        'dimensions' => (int) env('AI_EMBEDDING_DIMENSIONS', 64),
+        'timeout' => (int) env('AI_EMBEDDING_TIMEOUT', env('OPENAI_TIMEOUT', 30)),
+        'connect_timeout' => (int) env('AI_EMBEDDING_CONNECT_TIMEOUT', env('OPENAI_CONNECT_TIMEOUT', 10)),
+        'retry_times' => (int) env('AI_EMBEDDING_RETRY_TIMES', env('AI_RETRY_TIMES', 2)),
+        'retry_sleep_ms' => (int) env('AI_EMBEDDING_RETRY_SLEEP_MS', env('AI_RETRY_SLEEP_MS', 200)),
+        'batch_size' => (int) env('AI_EMBEDDING_BATCH_SIZE', 16),
+        'similarity_threshold' => (float) env('AI_EMBEDDING_SIMILARITY_THRESHOLD', 0.15),
+        'max_candidates' => (int) env('AI_EMBEDDING_MAX_CANDIDATES', env('AI_RETRIEVAL_CANDIDATE_LIMIT', 40)),
+        'max_scan' => (int) env('AI_EMBEDDING_MAX_SCAN', 500),
     ],
     'queue' => env('AI_QUEUE', 'default'),
     'queue_tries' => (int) env('AI_QUEUE_TRIES', 3),

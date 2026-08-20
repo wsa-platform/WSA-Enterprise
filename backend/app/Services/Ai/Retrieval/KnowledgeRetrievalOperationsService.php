@@ -5,6 +5,7 @@ namespace App\Services\Ai\Retrieval;
 use App\Models\AiUsageRecord;
 use App\Models\LibraryItem;
 use App\Services\Ai\AiErrorSanitizer;
+use App\Services\Ai\Embeddings\EmbeddingConfig;
 use App\Services\Audit\AuditService;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -39,12 +40,18 @@ class KnowledgeRetrievalOperationsService
         $retrievalAvailable = (bool) config('ai.retrieval.enabled', true);
         $ingestionAvailable = true;
         $semanticAvailable = $this->semanticAvailable();
+        $vectorStoreAvailable = $this->vectorStoreAvailable();
+        $embeddingProviderAvailable = $this->embeddingProviderAvailable();
         $effective = $this->config->strategy();
         $needsSemantic = in_array($effective, ['semantic', 'hybrid'], true);
         $status = 'healthy';
-        if (! $retrievalAvailable) {
+        if (! $retrievalAvailable && ! $vectorStoreAvailable) {
+            $status = 'unavailable';
+        } elseif (! $retrievalAvailable) {
             $status = 'unavailable';
         } elseif ($this->config->configuredStrategyIsInvalid() || ($needsSemantic && ! $semanticAvailable)) {
+            $status = 'degraded';
+        } elseif ((bool) config('ai.retrieval.semantic_enabled', true) && (! $embeddingProviderAvailable || ! $vectorStoreAvailable)) {
             $status = 'degraded';
         }
 
@@ -64,6 +71,10 @@ class KnowledgeRetrievalOperationsService
             'retrieval_available' => $retrievalAvailable,
             'semantic_available' => $semanticAvailable,
             'ingestion_available' => $ingestionAvailable,
+            'vector_store_available' => $vectorStoreAvailable,
+            'embedding_provider_available' => $embeddingProviderAvailable,
+            'pgvector_available' => $this->pgvectorAvailable(),
+            'semantic_backend' => 'vector',
             'organization_id' => $organizationId,
             'knowledge' => $knowledge,
         ]);
@@ -87,6 +98,14 @@ class KnowledgeRetrievalOperationsService
             'hybrid_enabled' => $semanticAvailable,
             'fallback_enabled' => true,
             'retrieval_enabled' => (bool) config('ai.retrieval.enabled', true),
+            'semantic_backend' => 'vector',
+            'vector_store_available' => $this->vectorStoreAvailable(),
+            'embedding_provider_available' => $this->embeddingProviderAvailable(),
+            'pgvector_available' => $this->pgvectorAvailable(),
+            'embedding_provider' => app(EmbeddingConfig::class)->provider(),
+            'embedding_model' => app(EmbeddingConfig::class)->model(),
+            'embedding_dimensions' => app(EmbeddingConfig::class)->dimensions(),
+            'similarity_threshold' => app(EmbeddingConfig::class)->similarityThreshold(),
             'weights' => [
                 'keyword' => $this->config->keywordWeight(),
                 'semantic' => $this->config->semanticWeight(),
@@ -112,6 +131,7 @@ class KnowledgeRetrievalOperationsService
                 'organization_id' => $organizationId,
                 'status' => 'unavailable',
                 'semantic_available' => $this->semanticAvailable(),
+                'semantic_backend' => 'vector',
             ]);
         }
 
@@ -120,6 +140,7 @@ class KnowledgeRetrievalOperationsService
             + (int) $summary['zero_result_count']
             + (int) $summary['error_count']
             + (int) $summary['fallback_count'];
+        $summary['semantic_backend'] = 'vector';
         $summary['semantic_available'] = $this->semanticAvailable();
         $summary['average_retrieval_duration_ms'] = $this->averageDuration($organizationId);
 
@@ -169,6 +190,12 @@ class KnowledgeRetrievalOperationsService
                 'retrieval_duration_ms' => $telemetry['retrieval_duration_ms'] ?? null,
                 'source_types' => $telemetry['source_types'] ?? [],
                 'fallback_reason' => $telemetry['fallback_reason'] ?? null,
+                'embedding_provider' => $telemetry['embedding_provider'] ?? null,
+                'embedding_model' => $telemetry['embedding_model'] ?? null,
+                'embedding_duration_ms' => $telemetry['embedding_duration_ms'] ?? null,
+                'vector_search_duration_ms' => $telemetry['vector_search_duration_ms'] ?? null,
+                'similarity_threshold' => $telemetry['similarity_threshold'] ?? null,
+                'semantic_result_count' => $telemetry['semantic_result_count'] ?? null,
             ]);
         }
 
@@ -220,7 +247,26 @@ class KnowledgeRetrievalOperationsService
         $item = $this->ownedLibraryItem($organizationId, $sourceId);
         $document = $this->indexer->fromLibraryItem($item);
         $semanticAvailable = $this->semanticAvailable();
-        $this->semanticSync->syncLibraryItem($item);
+        $indexed = 0;
+        $skipped = 0;
+        $failed = 0;
+        $removed = 0;
+        $fallback = null;
+        $status = 'ok';
+
+        if ($this->semanticIndex instanceof VectorKnowledgeSemanticIndex) {
+            $outcome = $this->semanticIndex->indexDocument($document);
+            match ($outcome->status) {
+                'indexed' => $indexed = 1,
+                'skipped' => $skipped = 1,
+                'removed' => $removed = 1,
+                default => $failed = 1,
+            };
+            $fallback = $outcome->fallbackReason;
+        } else {
+            $this->semanticSync->syncLibraryItem($item);
+        }
+
         $semanticIndexed = false;
         if ($semanticAvailable && $document->visible) {
             try {
@@ -232,14 +278,13 @@ class KnowledgeRetrievalOperationsService
                 ]);
             }
         }
-        $status = 'ok';
-        $fallback = null;
         if (! $semanticAvailable) {
             $status = 'degraded';
-            $fallback = 'semantic_unavailable';
+            $fallback = $fallback ?? 'semantic_unavailable';
         } elseif ($document->visible && ! $semanticIndexed) {
             $status = 'degraded';
-            $fallback = 'semantic_error';
+            $fallback = $fallback ?? 'semantic_error';
+            $failed = max($failed, 1);
         }
         $this->audit->record(
             'ai.knowledge.reindexed',
@@ -257,6 +302,13 @@ class KnowledgeRetrievalOperationsService
             'semantic_indexed' => $semanticIndexed,
             'status' => $status,
             'fallback_reason' => $fallback,
+            'total' => 1,
+            'indexed' => $indexed,
+            'skipped' => $skipped,
+            'failed' => $failed,
+            'semantic_skipped' => $skipped,
+            'semantic_failed' => $failed,
+            'removed' => $removed,
         ]);
     }
 
@@ -353,6 +405,26 @@ class KnowledgeRetrievalOperationsService
 
             return false;
         }
+    }
+
+    private function vectorStoreAvailable(): bool
+    {
+        return $this->semanticIndex instanceof VectorKnowledgeSemanticIndex
+            ? $this->semanticIndex->vectorStoreAvailable()
+            : $this->semanticAvailable();
+    }
+
+    private function embeddingProviderAvailable(): bool
+    {
+        return $this->semanticIndex instanceof VectorKnowledgeSemanticIndex
+            ? $this->semanticIndex->embeddingProviderAvailable()
+            : $this->semanticAvailable();
+    }
+
+    private function pgvectorAvailable(): bool
+    {
+        return $this->semanticIndex instanceof VectorKnowledgeSemanticIndex
+            && $this->semanticIndex->pgvectorAvailable();
     }
 
     private function averageDuration(int $organizationId): ?float

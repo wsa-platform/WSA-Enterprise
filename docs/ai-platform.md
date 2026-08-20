@@ -1,6 +1,6 @@
 # AI Platform
 
-**Last updated:** AI-11 authenticated retrieval operations API (2026-08-20)
+**Last updated:** AI-12 production vector retrieval backend (2026-08-20)
 
 ## Overview
 
@@ -374,7 +374,7 @@ Every strategy uses the same tenant and publication filters as AI-08. Semantic s
 
 ## Operator retrieval operations API (AI-11)
 
-AI-11 is an **authenticated operator observability and knowledge-operations API**. It is **not** a public user retrieval API. It does **not** introduce a vector database. AI-10 semantic retrieval remains the current deterministic/lexical foundation until a future real embedding backend is introduced behind `KnowledgeSemanticIndexInterface`.
+AI-11 is an **authenticated operator observability and knowledge-operations API**. It is **not** a public user retrieval API. It does **not** introduce an external vector database. AI-12 now supplies the production semantic backend behind the same `KnowledgeSemanticIndexInterface`; AI-11 remains the operational HTTP interface.
 
 ```
 Authenticated operator
@@ -460,15 +460,106 @@ Ingest, reindex, publish, and unpublish record existing `AuditService` actions: 
 - Tenant isolation; no client tenant override
 - Unpublished knowledge stays out of retrieval
 - No secrets, credentials, prompts, or model completions in operator responses
-- No vector database and no OpenAI adapter changes
+- No OpenAI chat-adapter changes
 - No admin-mobile / frontend changes
 
 ### Operational limitations
 
-- Semantic path is still AI-10 deterministic lexical similarity, not embeddings
 - Operator writes are library-item only
 - Telemetry and duration lookbacks are bounded; they are not unlimited historical scans
 - Health/quality degrade or omit sections when supporting queries fail; they do not throw raw exceptions to clients
+- Semantic retrieval is implemented by AI-12 (see below)
+
+---
+
+## Production vector retrieval (AI-12)
+
+AI-12 replaces the AI-10 deterministic/lexical semantic path with a **real embedding + vector similarity backend**. `KnowledgeSemanticIndexInterface` remains the stable abstraction. AI-11 operator endpoints remain the operational interface. Keyword retrieval, hybrid mixing, grounding, disclosure, and usage accounting are unchanged.
+
+```
+AiService
+  -> KnowledgeRetrievalRouter (keyword | semantic | hybrid)
+       -> KeywordKnowledgeRetriever (AI-08)
+       -> VectorKnowledgeSemanticIndex (implements KnowledgeSemanticIndexInterface)
+            -> EmbeddingProviderInterface (mock hashed embeddings | OpenAI /v1/embeddings)
+            -> PostgresKnowledgeVectorStore (knowledge_embeddings JSON vectors)
+       -> HybridKnowledgeRetrievalStrategy
+  -> bounded context
+  -> provider
+  -> AI-06 grounding / AI-07 disclosure / AI-04 usage
+```
+
+This is **not** Pinecone, Weaviate, Milvus, Qdrant, or Elasticsearch. Vectors are stored in the existing PostgreSQL database (`knowledge_embeddings`). Cosine similarity is computed over persisted dense vectors. The AI-10 `DeterministicLexicalSemanticIndex` remains in the repository but is no longer the bound production semantic index.
+
+### Embedding providers
+
+| Provider | When | How |
+|----------|------|-----|
+| `mock` (default) | Tests and local without an API key | Deterministic hashed n-gram dense vectors (feature hashing), L2-normalized. Real cosine search, not lexical ranking and not random vectors. |
+| `openai` | `AI_EMBEDDING_PROVIDER=openai` with existing `OPENAI_API_KEY` | Reuses the AI-03 OpenAI HTTP conventions (`Http::withToken`, base URL, timeout, bounded retries) against `/v1/embeddings`. |
+
+The chat completions adapter is not a second embeddings client stack; embeddings use the same key, base URL, timeout, and retry settings with embedding-specific overrides.
+
+### Vector storage
+
+- Table: `knowledge_embeddings` (additive migration)
+- Fields: source_type, source_id, organization_id (nullable for Bee catalog), embedding (JSON float array), embedding_model, embedding_dimensions, content_hash, indexed_at
+- Unique identity: `(source_type, source_id)`
+- Distance metric: **cosine similarity**
+- Similarity threshold: `AI_EMBEDDING_SIMILARITY_THRESHOLD` (default `0.15`, clamped 0–1)
+- Scan bound: `AI_EMBEDDING_MAX_SCAN` (default 500)
+
+**pgvector:** native `vector` extension support is detected at runtime (`pgvector_available` on health/strategy). The current Docker `postgres:16-alpine` image does not ship pgvector, so JSON storage remains the production-safe default and cosine search still runs. The migration does **not** run `CREATE EXTENSION` (a failed statement would abort the PostgreSQL migration transaction). When pgvector is installed by operations, health reports the capability; a later additive migration can attach a native `vector` column. No `docker-compose.yml` rewrite was made.
+
+### Content hash / idempotency
+
+Embeddings are regenerated only when retrieval-relevant content, embedding model, or dimensions change. `content_hash` is SHA-256 over title, summary, body, searchable text, and source identity. Unchanged hash + same model + same dimensions → skip generation.
+
+### Publication gate
+
+Unpublished library items and inactive Bee topics are excluded **in the SQL eligibility query** (exists/join on `publication_status=published` / `is_active=true`), not merely filtered after scoring. Unpublish deletes the vector row via existing `KnowledgeSemanticIndexSync`. Publish re-indexes. Keyword, semantic, and hybrid cannot bypass this gate.
+
+### Tenant isolation
+
+Library vectors are stored and queried with `organization_id`. Bee catalog vectors keep `organization_id=null` (platform-wide, same distinction as AI-08/AI-09). Client tenant IDs are not trusted.
+
+### Failure / fallback
+
+Embedding or vector failures do not destroy keyword retrieval. Hybrid/semantic fall back through the existing AI-10 router (`semantic_unavailable`, `semantic_error`). Invalid or wrong-dimension vectors are rejected and never stored. Indexing reports success only when a fingerprint exists.
+
+### Retry / timeout
+
+OpenAI embedding HTTP uses bounded timeout, connect timeout, retry count (max 5), and linear backoff. There are no infinite retries.
+
+### Batch indexing
+
+`VectorKnowledgeSemanticIndex.indexDocuments()` embeds in bounded batches. A single failed document does not corrupt the index; remaining documents continue. Partial counts are returned.
+
+### Reindex / lifecycle
+
+AI-11 `POST /knowledge/{id}/index` now uses the vector backend. Additive fields: `total`, `indexed`, `skipped`, `failed`, `semantic_skipped`, `semantic_failed`, `removed`. Existing `keyword_indexed` / `semantic_indexed` / `status` / `fallback_reason` remain. Delete of a library item or Bee topic removes the vector (no orphans). Updates go through ingestion sync + content hash.
+
+### Health, strategy, telemetry
+
+AI-11 health adds `semantic_backend=vector`, `vector_store_available`, `embedding_provider_available`, `pgvector_available`. Keyword+vector+embedding available → `healthy`. Embedding or store down while semantic is enabled → `degraded`. Retrieval and vector both unavailable → `unavailable`.
+
+Strategy inspection reports vector capability, embedding provider **name**, model, dimensions, and threshold — never credentials.
+
+Telemetry may include embedding/vector durations, provider name, model, threshold, and semantic result count. API keys, Authorization headers, and raw prompts are not stored.
+
+### Security
+
+- Reuses existing OpenAI API key configuration; nothing is hardcoded
+- Logs go through `AiErrorSanitizer`
+- Operator responses still pass `withoutSecrets`
+- Unpublished and cross-tenant vectors cannot be retrieved
+
+### Operational limitations
+
+- Default embedding provider is `mock` so environments without `OPENAI_API_KEY` keep working
+- Native pgvector ANN indexes are not required and are not present on the current Docker Postgres image
+- Scan is bounded (not an unbounded corpus scan)
+- No frontend / admin-mobile / chat-adapter changes
 
 ---
 
@@ -496,6 +587,15 @@ Ingest, reindex, publish, and unpublish record existing `AuditService` actions: 
 | `AI_RETRIEVAL_KEYWORD_WEIGHT` | `1.0` | Hybrid keyword weight (clamped 0–2) |
 | `AI_RETRIEVAL_SEMANTIC_WEIGHT` | `0.25` | Hybrid semantic weight (clamped 0–0.5) |
 | `AI_RETRIEVAL_FRESHNESS_WEIGHT` | `0.05` | Extra hybrid freshness weight (clamped 0–1; AI-08 ranker still includes 0–2) |
+| `AI_EMBEDDING_PROVIDER` | `mock` | `mock` or `openai` |
+| `AI_EMBEDDING_MODEL` | `mock-hash-v1` | Embedding model name (`text-embedding-3-small` when using OpenAI) |
+| `AI_EMBEDDING_DIMENSIONS` | `64` | Stored vector size (OpenAI production typically `1536`) |
+| `AI_EMBEDDING_TIMEOUT` | OpenAI timeout | Embedding HTTP timeout |
+| `AI_EMBEDDING_RETRY_TIMES` | `2` | Bounded embedding retries |
+| `AI_EMBEDDING_BATCH_SIZE` | `16` | Max texts per embedding batch |
+| `AI_EMBEDDING_SIMILARITY_THRESHOLD` | `0.15` | Minimum cosine similarity |
+| `AI_EMBEDDING_MAX_CANDIDATES` | retrieval candidate limit | Max semantic hits returned |
+| `AI_EMBEDDING_MAX_SCAN` | `500` | Max eligible vectors scanned per query |
 
 ---
 

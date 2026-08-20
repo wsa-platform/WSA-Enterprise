@@ -37,7 +37,7 @@ class SemanticKnowledgeRetrievalStrategy implements KnowledgeRetrievalStrategyIn
             $hits,
         )));
 
-        return new AiRetrievalResult($hits, $this->context->build($hits), [
+        $telemetry = [
             'candidate_count' => $candidateCount,
             'returned_count' => count($hits),
             'retrieval_duration_ms' => max(0, ((int) round(microtime(true) * 1000)) - $started),
@@ -49,6 +49,15 @@ class SemanticKnowledgeRetrievalStrategy implements KnowledgeRetrievalStrategyIn
             'retrieval_strategy' => $this->name(),
             'keyword_candidate_count' => 0,
             'semantic_candidate_count' => $candidateCount,
-        ]);
+        ];
+        if (method_exists($this->index, 'lastSearchStats')) {
+            foreach ($this->index->lastSearchStats() as $key => $value) {
+                if (in_array($key, ['embedding_provider', 'embedding_model', 'embedding_duration_ms', 'vector_search_duration_ms', 'similarity_threshold', 'semantic_result_count'], true)) {
+                    $telemetry[$key] = $value;
+                }
+            }
+        }
+
+        return new AiRetrievalResult($hits, $this->context->build($hits), $telemetry);
     }
 }

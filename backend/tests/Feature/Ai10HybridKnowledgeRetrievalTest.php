@@ -11,7 +11,6 @@ use App\Models\User;
 use App\Services\Ai\AiGroundedAnswerDisclosurePolicy;
 use App\Services\Ai\AiService;
 use App\Services\Ai\AiUsageRecorder;
-use App\Services\Ai\Retrieval\DeterministicLexicalSemanticIndex;
 use App\Services\Ai\Retrieval\KeywordKnowledgeRetriever;
 use App\Services\Ai\Retrieval\KnowledgeFreshnessService;
 use App\Services\Ai\Retrieval\KnowledgeIndexer;
@@ -22,6 +21,7 @@ use App\Services\Ai\Retrieval\KnowledgeRetrievalQualityService;
 use App\Services\Ai\Retrieval\KnowledgeRetrievalRouter;
 use App\Services\Ai\Retrieval\KnowledgeSemanticIndexInterface;
 use App\Services\Ai\Retrieval\KnowledgeSemanticIndexSync;
+use App\Services\Ai\Retrieval\VectorKnowledgeSemanticIndex;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
@@ -112,6 +112,7 @@ class Ai10HybridKnowledgeRetrievalTest extends TestCase
         $this->assertSame('semantic', $result->telemetry['retrieval_strategy'] ?? null);
         $this->assertTrue(collect($result->hits)->contains(fn ($hit) => $hit->sourceId === $created->sourceId));
         $this->assertGreaterThan(0, $result->hits[0]->metadata['semantic_score'] ?? 0);
+        $this->assertInstanceOf(VectorKnowledgeSemanticIndex::class, app(KnowledgeSemanticIndexInterface::class));
     }
 
     public function test_hybrid_strategy_combines_scores_deterministically(): void
@@ -302,7 +303,7 @@ class Ai10HybridKnowledgeRetrievalTest extends TestCase
             'summary' => 'Original.',
             'publication_status' => 'published',
         ]);
-        $index = app(DeterministicLexicalSemanticIndex::class);
+        $index = app(KnowledgeSemanticIndexInterface::class);
         $first = $index->fingerprint('library_items', $created->sourceId);
         $item = LibraryItem::query()->find($created->sourceId);
         $index->index(app(KnowledgeIndexer::class)->fromLibraryItem($item));

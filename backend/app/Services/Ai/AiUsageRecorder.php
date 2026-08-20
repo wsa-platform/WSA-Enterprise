@@ -133,6 +133,26 @@ class AiUsageRecorder
         if ($requested !== '') {
             $safe['requested_strategy'] = $requested;
         }
+        if (isset($telemetry['embedding_duration_ms'])) {
+            $safe['embedding_duration_ms'] = max(0, (int) $telemetry['embedding_duration_ms']);
+        }
+        if (isset($telemetry['vector_search_duration_ms'])) {
+            $safe['vector_search_duration_ms'] = max(0, (int) $telemetry['vector_search_duration_ms']);
+        }
+        $provider = strtolower((string) ($telemetry['embedding_provider'] ?? ''));
+        if (in_array($provider, ['mock', 'openai'], true)) {
+            $safe['embedding_provider'] = $provider;
+        }
+        $model = (string) ($telemetry['embedding_model'] ?? '');
+        if ($model !== '' && preg_match('/^[A-Za-z0-9._:-]{1,128}$/', $model) === 1) {
+            $safe['embedding_model'] = $model;
+        }
+        if (isset($telemetry['similarity_threshold']) && is_numeric($telemetry['similarity_threshold'])) {
+            $safe['similarity_threshold'] = max(0.0, min(1.0, (float) $telemetry['similarity_threshold']));
+        }
+        if (isset($telemetry['semantic_result_count'])) {
+            $safe['semantic_result_count'] = max(0, (int) $telemetry['semantic_result_count']);
+        }
 
         return $safe;
     }
