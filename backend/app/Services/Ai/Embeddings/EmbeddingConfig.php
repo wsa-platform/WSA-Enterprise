@@ -21,6 +21,11 @@ class EmbeddingConfig
         return $value !== '' && ! in_array($value, self::PROVIDERS, true);
     }
 
+    public function enabled(): bool
+    {
+        return (bool) config('ai.embeddings.enabled', true);
+    }
+
     public function model(): string
     {
         $configured = trim((string) config('ai.embeddings.model', ''));
@@ -33,9 +38,24 @@ class EmbeddingConfig
 
     public function dimensions(): int
     {
-        $value = (int) config('ai.embeddings.dimensions', $this->provider() === 'openai' ? 1536 : 64);
+        $configured = config('ai.embeddings.dimensions');
+        if ($configured === null || $configured === '') {
+            $value = $this->provider() === 'openai' ? 1536 : 64;
+        } else {
+            $value = (int) $configured;
+        }
 
         return max(8, min(3072, $value));
+    }
+
+    public function distanceMetric(): string
+    {
+        return 'cosine';
+    }
+
+    public function annEnabled(): bool
+    {
+        return (bool) config('ai.embeddings.ann_enabled', true);
     }
 
     public function timeoutSeconds(): int

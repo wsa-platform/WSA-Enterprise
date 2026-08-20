@@ -52,7 +52,7 @@ class SemanticKnowledgeRetrievalStrategy implements KnowledgeRetrievalStrategyIn
         ];
         if (method_exists($this->index, 'lastSearchStats')) {
             foreach ($this->index->lastSearchStats() as $key => $value) {
-                if (in_array($key, ['embedding_provider', 'embedding_model', 'embedding_duration_ms', 'vector_search_duration_ms', 'similarity_threshold', 'semantic_result_count'], true)) {
+                if (in_array($key, ['embedding_provider', 'embedding_model', 'embedding_duration_ms', 'vector_search_duration_ms', 'similarity_threshold', 'semantic_result_count', 'ann_used', 'distance_metric', 'hnsw_available', 'embedding_attempts'], true)) {
                     $telemetry[$key] = $value;
                 }
             }

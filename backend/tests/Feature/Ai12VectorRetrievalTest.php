@@ -419,7 +419,8 @@ class Ai12VectorRetrievalTest extends TestCase
         $this->assertSame('vector', $health->json('data.semantic_backend'));
         $this->assertTrue($health->json('data.vector_store_available'));
         $this->assertTrue($health->json('data.embedding_provider_available'));
-        $this->assertFalse($health->json('data.pgvector_available'));
+        $this->assertIsBool($health->json('data.pgvector_available'));
+        $this->assertIsBool($health->json('data.hnsw_available') ?? false);
         $this->assertStringNotContainsString('sk-ai12-secret-key', $health->getContent());
 
         $strategy = $this->getJson('/api/v1/operator/ai/retrieval/strategy', $this->operatorHeaders())->assertOk();

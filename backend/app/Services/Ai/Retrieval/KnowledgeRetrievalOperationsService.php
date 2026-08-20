@@ -74,6 +74,10 @@ class KnowledgeRetrievalOperationsService
             'vector_store_available' => $vectorStoreAvailable,
             'embedding_provider_available' => $embeddingProviderAvailable,
             'pgvector_available' => $this->pgvectorAvailable(),
+            'native_vector_available' => $this->nativeVectorAvailable(),
+            'hnsw_available' => $this->hnswAvailable(),
+            'ann_available' => $this->annAvailable(),
+            'distance_metric' => app(EmbeddingConfig::class)->distanceMetric(),
             'semantic_backend' => 'vector',
             'organization_id' => $organizationId,
             'knowledge' => $knowledge,
@@ -102,6 +106,10 @@ class KnowledgeRetrievalOperationsService
             'vector_store_available' => $this->vectorStoreAvailable(),
             'embedding_provider_available' => $this->embeddingProviderAvailable(),
             'pgvector_available' => $this->pgvectorAvailable(),
+            'native_vector_available' => $this->nativeVectorAvailable(),
+            'hnsw_available' => $this->hnswAvailable(),
+            'ann_available' => $this->annAvailable(),
+            'distance_metric' => app(EmbeddingConfig::class)->distanceMetric(),
             'embedding_provider' => app(EmbeddingConfig::class)->provider(),
             'embedding_model' => app(EmbeddingConfig::class)->model(),
             'embedding_dimensions' => app(EmbeddingConfig::class)->dimensions(),
@@ -196,6 +204,8 @@ class KnowledgeRetrievalOperationsService
                 'vector_search_duration_ms' => $telemetry['vector_search_duration_ms'] ?? null,
                 'similarity_threshold' => $telemetry['similarity_threshold'] ?? null,
                 'semantic_result_count' => $telemetry['semantic_result_count'] ?? null,
+                'ann_used' => $telemetry['ann_used'] ?? null,
+                'distance_metric' => $telemetry['distance_metric'] ?? null,
             ]);
         }
 
@@ -313,6 +323,47 @@ class KnowledgeRetrievalOperationsService
     }
 
     /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function backfill(int $organizationId, array $payload, int $userId): array
+    {
+        $dryRun = (bool) ($payload['dry_run'] ?? false);
+        $limit = max(1, min(500, (int) ($payload['limit'] ?? 100)));
+        $summary = [
+            'total' => 0,
+            'indexed' => 0,
+            'skipped' => 0,
+            'failed' => 0,
+            'removed' => 0,
+            'dry_run' => $dryRun,
+            'keyword_indexed' => true,
+            'status' => 'ok',
+            'fallback_reason' => null,
+        ];
+        if ($this->semanticIndex instanceof VectorKnowledgeSemanticIndex) {
+            $summary = array_merge($summary, $this->semanticIndex->backfill($organizationId, $dryRun, $limit));
+        }
+        if (! $this->semanticAvailable()) {
+            $summary['status'] = 'degraded';
+            $summary['fallback_reason'] = $summary['fallback_reason'] ?? 'semantic_unavailable';
+        } elseif ((int) ($summary['failed'] ?? 0) > 0) {
+            $summary['status'] = 'degraded';
+            $summary['fallback_reason'] = $summary['fallback_reason'] ?? 'semantic_error';
+        }
+        $this->audit->record(
+            'ai.knowledge.backfilled',
+            $organizationId,
+            $this->actorId($userId),
+            null,
+            null,
+            ['dry_run' => $dryRun, 'status' => $summary['status'], 'total' => $summary['total']],
+        );
+
+        return $this->withoutSecrets($summary);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function publish(int $organizationId, int $sourceId, int $userId): array
@@ -425,6 +476,24 @@ class KnowledgeRetrievalOperationsService
     {
         return $this->semanticIndex instanceof VectorKnowledgeSemanticIndex
             && $this->semanticIndex->pgvectorAvailable();
+    }
+
+    private function hnswAvailable(): bool
+    {
+        return $this->semanticIndex instanceof VectorKnowledgeSemanticIndex
+            && $this->semanticIndex->hnswAvailable();
+    }
+
+    private function annAvailable(): bool
+    {
+        return $this->semanticIndex instanceof VectorKnowledgeSemanticIndex
+            && $this->semanticIndex->annAvailable();
+    }
+
+    private function nativeVectorAvailable(): bool
+    {
+        return $this->semanticIndex instanceof VectorKnowledgeSemanticIndex
+            && $this->semanticIndex->nativeVectorAvailable();
     }
 
     private function averageDuration(int $organizationId): ?float

@@ -1,6 +1,6 @@
 # AI Platform
 
-**Last updated:** AI-12 production vector retrieval backend (2026-08-20)
+**Last updated:** AI-13 production embeddings and PostgreSQL vector ANN/HNSW (2026-08-20)
 
 ## Overview
 
@@ -482,7 +482,7 @@ AiService
        -> KeywordKnowledgeRetriever (AI-08)
        -> VectorKnowledgeSemanticIndex (implements KnowledgeSemanticIndexInterface)
             -> EmbeddingProviderInterface (mock hashed embeddings | OpenAI /v1/embeddings)
-            -> PostgresKnowledgeVectorStore (knowledge_embeddings JSON vectors)
+            -> PostgresKnowledgeVectorStore (JSON vectors + native pgvector/HNSW when available)
        -> HybridKnowledgeRetrievalStrategy
   -> bounded context
   -> provider
@@ -509,7 +509,7 @@ The chat completions adapter is not a second embeddings client stack; embeddings
 - Similarity threshold: `AI_EMBEDDING_SIMILARITY_THRESHOLD` (default `0.15`, clamped 0–1)
 - Scan bound: `AI_EMBEDDING_MAX_SCAN` (default 500)
 
-**pgvector:** native `vector` extension support is detected at runtime (`pgvector_available` on health/strategy). The current Docker `postgres:16-alpine` image does not ship pgvector, so JSON storage remains the production-safe default and cosine search still runs. The migration does **not** run `CREATE EXTENSION` (a failed statement would abort the PostgreSQL migration transaction). When pgvector is installed by operations, health reports the capability; a later additive migration can attach a native `vector` column. No `docker-compose.yml` rewrite was made.
+**pgvector / AI-13:** additive migration `2026_08_20_200000_add_knowledge_embedding_pgvector` runs `CREATE EXTENSION IF NOT EXISTS vector` **outside a PostgreSQL transaction**. If the server does not ship pgvector, the migration succeeds without changing existing JSON rows. If the extension is present, it adds `embedding_vector`, backfills from JSON, and creates an HNSW index (`vector_cosine_ops`). Retrieval then uses native `ORDER BY embedding_vector <=> query` with tenant and publication filters in SQL — not an O(N) PHP cosine loop. If native ANN is unavailable or fails, the AI-12 JSON cosine path is used. CI uses `pgvector/pgvector:pg16`. Local Docker `postgres:16-alpine` still falls back to JSON. `docker-compose.yml` was not rewritten.
 
 ### Content hash / idempotency
 
@@ -541,11 +541,11 @@ AI-11 `POST /knowledge/{id}/index` now uses the vector backend. Additive fields:
 
 ### Health, strategy, telemetry
 
-AI-11 health adds `semantic_backend=vector`, `vector_store_available`, `embedding_provider_available`, `pgvector_available`. Keyword+vector+embedding available → `healthy`. Embedding or store down while semantic is enabled → `degraded`. Retrieval and vector both unavailable → `unavailable`.
+AI-11 health adds `semantic_backend=vector`, `vector_store_available`, `embedding_provider_available`, `pgvector_available`, plus AI-13 `hnsw_available`, `ann_available`, and `distance_metric=cosine`. Keyword + vector store + embedding available → `healthy` (JSON fallback is a valid vector store). Embedding or store down while semantic is enabled → `degraded`. Retrieval disabled → `unavailable`. Missing pgvector alone is not degraded; health reports the capability honestly.
 
-Strategy inspection reports vector capability, embedding provider **name**, model, dimensions, and threshold — never credentials.
+Strategy inspection reports vector capability, embedding provider **name**, model, dimensions, distance metric, HNSW/ANN availability, and threshold — never credentials.
 
-Telemetry may include embedding/vector durations, provider name, model, threshold, and semantic result count. API keys, Authorization headers, and raw prompts are not stored.
+Telemetry may include embedding/vector durations, provider name, model, threshold, semantic result count, `ann_used`, and `distance_metric`. API keys, Authorization headers, and raw prompts are not stored.
 
 ### Security
 
@@ -557,9 +557,20 @@ Telemetry may include embedding/vector durations, provider name, model, threshol
 ### Operational limitations
 
 - Default embedding provider is `mock` so environments without `OPENAI_API_KEY` keep working
-- Native pgvector ANN indexes are not required and are not present on the current Docker Postgres image
-- Scan is bounded (not an unbounded corpus scan)
+- Native pgvector ANN/HNSW is used when the extension is installed; otherwise JSON cosine fallback remains
+- JSON fallback scan is bounded (`AI_EMBEDDING_MAX_SCAN`); native ANN uses `LIMIT` plus the HNSW index
 - No frontend / admin-mobile / chat-adapter changes
+
+## Production embeddings and native ANN (AI-13)
+
+AI-13 hardens AI-12. It does **not** replace `KnowledgeSemanticIndexInterface`. OpenAI embeddings stay behind `EmbeddingProviderInterface`. Vectors stay in PostgreSQL.
+
+- Production OpenAI embeddings reuse AI-03 HTTP (`Http::withToken`, existing `OPENAI_API_KEY`, timeout, bounded retries) against `/v1/embeddings`. Oversized inputs are rejected. `dimensions` is sent only for `text-embedding-3-*` models.
+- Mock embeddings remain the default when `OPENAI_API_KEY` is absent.
+- Native storage column: `knowledge_embeddings.embedding_vector` (`vector`), dual-written with the JSON `embedding` column.
+- Distance metric: cosine (`<=>` / `vector_cosine_ops`). Unsupported metric values are ignored; cosine is used.
+- Operator `POST /api/v1/operator/ai/knowledge/backfill` supports tenant-scoped backfill with optional `dry_run`. It does not index another tenant's library items.
+- `AI_EMBEDDING_ANN_ENABLED=false` forces the JSON fallback even when pgvector is present.
 
 ---
 
@@ -587,15 +598,18 @@ Telemetry may include embedding/vector durations, provider name, model, threshol
 | `AI_RETRIEVAL_KEYWORD_WEIGHT` | `1.0` | Hybrid keyword weight (clamped 0–2) |
 | `AI_RETRIEVAL_SEMANTIC_WEIGHT` | `0.25` | Hybrid semantic weight (clamped 0–0.5) |
 | `AI_RETRIEVAL_FRESHNESS_WEIGHT` | `0.05` | Extra hybrid freshness weight (clamped 0–1; AI-08 ranker still includes 0–2) |
+| `AI_EMBEDDING_ENABLED` | `true` | Disable embedding generation without removing keyword retrieval |
 | `AI_EMBEDDING_PROVIDER` | `mock` | `mock` or `openai` |
 | `AI_EMBEDDING_MODEL` | `mock-hash-v1` | Embedding model name (`text-embedding-3-small` when using OpenAI) |
-| `AI_EMBEDDING_DIMENSIONS` | `64` | Stored vector size (OpenAI production typically `1536`) |
+| `AI_EMBEDDING_DIMENSIONS` | mock `64` / openai `1536` | Stored vector size when unset |
+| `AI_EMBEDDING_DISTANCE_METRIC` | `cosine` | Only cosine is implemented |
+| `AI_EMBEDDING_ANN_ENABLED` | `true` | Use native pgvector ANN when the column exists |
 | `AI_EMBEDDING_TIMEOUT` | OpenAI timeout | Embedding HTTP timeout |
 | `AI_EMBEDDING_RETRY_TIMES` | `2` | Bounded embedding retries |
 | `AI_EMBEDDING_BATCH_SIZE` | `16` | Max texts per embedding batch |
 | `AI_EMBEDDING_SIMILARITY_THRESHOLD` | `0.15` | Minimum cosine similarity |
 | `AI_EMBEDDING_MAX_CANDIDATES` | retrieval candidate limit | Max semantic hits returned |
-| `AI_EMBEDDING_MAX_SCAN` | `500` | Max eligible vectors scanned per query |
+| `AI_EMBEDDING_MAX_SCAN` | `500` | Max eligible JSON vectors scanned when ANN is unavailable |
 
 ---
 

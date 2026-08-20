@@ -16,6 +16,8 @@ class OpenAiEmbeddingProvider implements EmbeddingProviderInterface
     /** @var list<int> */
     private const RETRYABLE_STATUSES = [408, 429, 500, 502, 503, 504];
 
+    private int $lastAttempts = 0;
+
     public function __construct(
         private EmbeddingConfig $config,
         private EmbeddingVectorValidator $validator,
@@ -40,7 +42,12 @@ class OpenAiEmbeddingProvider implements EmbeddingProviderInterface
 
     public function isAvailable(): bool
     {
-        return $this->apiKey() !== '';
+        return $this->config->enabled() && $this->apiKey() !== '';
+    }
+
+    public function lastAttempts(): int
+    {
+        return $this->lastAttempts;
     }
 
     public function embed(string $text): EmbeddingResult
@@ -60,16 +67,23 @@ class OpenAiEmbeddingProvider implements EmbeddingProviderInterface
             return [];
         }
         $this->assertServerConfiguration();
+        foreach ($texts as $text) {
+            $this->assertInputSize((string) $text);
+        }
         $started = (int) round(microtime(true) * 1000);
         $payload = [
             'model' => $this->model(),
             'input' => array_values($texts),
-            'dimensions' => $this->dimensions(),
         ];
+        if ($this->supportsDimensionsParameter()) {
+            $payload['dimensions'] = $this->dimensions();
+        }
         $attempts = max(1, 1 + $this->config->retryTimes());
+        $this->lastAttempts = 0;
         $lastStatus = null;
 
         for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+            $this->lastAttempts = $attempt;
             try {
                 $response = $this->send($payload);
             } catch (Throwable $exception) {
@@ -105,6 +119,19 @@ class OpenAiEmbeddingProvider implements EmbeddingProviderInterface
             throw new EmbeddingException('The embedding provider is not configured.');
         }
         $this->baseUrl();
+    }
+
+    private function assertInputSize(string $text): void
+    {
+        $max = max(1, (int) config('ai.max_input_characters', 8000));
+        if (mb_strlen($text) > $max) {
+            throw new EmbeddingException('The embedding input exceeds the allowed size.');
+        }
+    }
+
+    private function supportsDimensionsParameter(): bool
+    {
+        return str_starts_with($this->model(), 'text-embedding-3');
     }
 
     /** @param  array<string, mixed>  $payload */

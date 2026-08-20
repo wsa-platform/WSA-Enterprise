@@ -2,6 +2,8 @@
 
 namespace App\Services\Ai\Retrieval;
 
+use App\Models\BeeKnowledgeTopic;
+use App\Models\LibraryItem;
 use App\Services\Ai\AiErrorSanitizer;
 use App\Services\Ai\Embeddings\EmbeddingConfig;
 use App\Services\Ai\Embeddings\EmbeddingException;
@@ -19,15 +21,15 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
     public function __construct(
         private KnowledgeRetrievalConfig $retrievalConfig,
         private EmbeddingConfig $embeddingConfig,
-        private EmbeddingProviderInterface $embeddings,
         private PostgresKnowledgeVectorStore $store,
         private KnowledgeEmbeddingHasher $hasher,
+        private KnowledgeIndexer $indexer,
     ) {}
 
     public function isAvailable(): bool
     {
         return $this->retrievalConfig->semanticEnabled()
-            && $this->embeddings->isAvailable()
+            && $this->embeddings()->isAvailable()
             && $this->store->isAvailable();
     }
 
@@ -38,12 +40,27 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
 
     public function embeddingProviderAvailable(): bool
     {
-        return $this->embeddings->isAvailable();
+        return $this->embeddings()->isAvailable();
+    }
+
+    public function nativeVectorAvailable(): bool
+    {
+        return $this->store->nativeVectorAvailable();
     }
 
     public function pgvectorAvailable(): bool
     {
         return $this->store->pgvectorAvailable();
+    }
+
+    public function hnswAvailable(): bool
+    {
+        return $this->store->hnswAvailable();
+    }
+
+    public function annAvailable(): bool
+    {
+        return $this->store->annAvailable();
     }
 
     public function index(AiKnowledgeDocument $document): void
@@ -62,8 +79,8 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
             return VectorIndexOutcome::failed('semantic_unavailable');
         }
 
-        $model = $this->embeddings->model();
-        $dimensions = $this->embeddings->dimensions();
+        $model = $this->embeddings()->model();
+        $dimensions = $this->embeddings()->dimensions();
         $contentHash = $this->hasher->hash($document);
         $existing = $this->store->find($document->sourceType, $document->sourceId);
         if (
@@ -77,7 +94,7 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
 
         try {
             $text = $this->embeddingText($document);
-            $result = $this->embeddings->embed($text);
+            $result = $this->embeddings()->embed($text);
             if ($result->dimensions !== $dimensions || $result->model !== $model) {
                 if ($result->dimensions !== $dimensions) {
                     throw new EmbeddingException('The embedding dimension does not match the configured size.');
@@ -123,8 +140,8 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
             if (
                 $existing !== null
                 && $existing->content_hash === $hash
-                && $existing->embedding_model === $this->embeddings->model()
-                && (int) $existing->embedding_dimensions === $this->embeddings->dimensions()
+                && $existing->embedding_model === $this->embeddings()->model()
+                && (int) $existing->embedding_dimensions === $this->embeddings()->dimensions()
             ) {
                 $summary['skipped']++;
 
@@ -136,7 +153,7 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
         foreach (array_chunk($pending, $this->embeddingConfig->batchSize()) as $chunk) {
             try {
                 $texts = array_map(fn (AiKnowledgeDocument $document): string => $this->embeddingText($document), $chunk);
-                $results = $this->embeddings->embedMany($texts);
+                $results = $this->embeddings()->embedMany($texts);
                 foreach ($chunk as $offset => $document) {
                     try {
                         $embedding = $results[$offset] ?? null;
@@ -148,8 +165,8 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
                         $this->store->upsert(
                             $document,
                             $embedding->vector,
-                            $this->embeddings->model(),
-                            $this->embeddings->dimensions(),
+                            $this->embeddings()->model(),
+                            $this->embeddings()->dimensions(),
                             $this->hasher->hash($document),
                         );
                         $summary['indexed']++;
@@ -176,6 +193,61 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
         return $summary;
     }
 
+    /**
+     * @return array{total: int, indexed: int, skipped: int, failed: int, removed: int, dry_run: bool}
+     */
+    public function backfill(int $organizationId, bool $dryRun = false, int $limit = 100): array
+    {
+        $limit = max(1, min(500, $limit));
+        $documents = [];
+        foreach (LibraryItem::query()->where('organization_id', $organizationId)->orderBy('id')->limit($limit)->get() as $item) {
+            $documents[] = $this->indexer->fromLibraryItem($item);
+        }
+        foreach (BeeKnowledgeTopic::query()->orderBy('id')->limit($limit)->get() as $topic) {
+            $documents[] = $this->indexer->fromBeeTopic($topic);
+        }
+        if ($dryRun) {
+            return array_merge($this->planBackfill($documents), ['dry_run' => true]);
+        }
+        $summary = $this->indexDocuments($documents);
+        $summary['dry_run'] = false;
+
+        return $summary;
+    }
+
+    /**
+     * @param  list<AiKnowledgeDocument>  $documents
+     * @return array{total: int, indexed: int, skipped: int, failed: int, removed: int}
+     */
+    private function planBackfill(array $documents): array
+    {
+        $summary = ['total' => count($documents), 'indexed' => 0, 'skipped' => 0, 'failed' => 0, 'removed' => 0];
+        $model = $this->embeddings()->model();
+        $dimensions = $this->embeddings()->dimensions();
+        foreach ($documents as $document) {
+            if (! $document->visible) {
+                $summary['removed']++;
+
+                continue;
+            }
+            $existing = $this->store->find($document->sourceType, $document->sourceId);
+            $hash = $this->hasher->hash($document);
+            if (
+                $existing !== null
+                && $existing->content_hash === $hash
+                && $existing->embedding_model === $model
+                && (int) $existing->embedding_dimensions === $dimensions
+            ) {
+                $summary['skipped']++;
+
+                continue;
+            }
+            $summary['indexed']++;
+        }
+
+        return $summary;
+    }
+
     public function remove(string $sourceType, int $sourceId): void
     {
         $this->store->remove($sourceType, $sourceId);
@@ -185,12 +257,16 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
     {
         $started = (int) round(microtime(true) * 1000);
         $this->lastSearchStats = [
-            'embedding_provider' => $this->embeddings->name(),
-            'embedding_model' => $this->embeddings->model(),
+            'embedding_provider' => $this->embeddings()->name(),
+            'embedding_model' => $this->embeddings()->model(),
             'similarity_threshold' => $this->embeddingConfig->similarityThreshold(),
+            'distance_metric' => $this->embeddingConfig->distanceMetric(),
             'embedding_duration_ms' => 0,
             'vector_search_duration_ms' => 0,
             'semantic_result_count' => 0,
+            'ann_used' => false,
+            'hnsw_available' => $this->store->hnswAvailable(),
+            'vector_retrieval_enabled' => true,
         ];
         if (! $this->isAvailable()) {
             return [];
@@ -201,7 +277,8 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
         }
 
         $embedStarted = (int) round(microtime(true) * 1000);
-        $embedding = $this->embeddings->embed($normalized);
+        $provider = $this->embeddings();
+        $embedding = $provider->embed($normalized);
         $embedMs = max(0, ((int) round(microtime(true) * 1000)) - $embedStarted);
         $searchStarted = (int) round(microtime(true) * 1000);
         $hits = $this->store->search(
@@ -212,13 +289,18 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
         );
         $searchMs = max(0, ((int) round(microtime(true) * 1000)) - $searchStarted);
         $this->lastSearchStats = [
-            'embedding_provider' => $this->embeddings->name(),
-            'embedding_model' => $this->embeddings->model(),
+            'embedding_provider' => $provider->name(),
+            'embedding_model' => $provider->model(),
             'similarity_threshold' => $this->embeddingConfig->similarityThreshold(),
+            'distance_metric' => $this->embeddingConfig->distanceMetric(),
             'embedding_duration_ms' => $embedMs,
             'vector_search_duration_ms' => $searchMs,
             'semantic_result_count' => count($hits),
             'retrieval_duration_ms' => max(0, ((int) round(microtime(true) * 1000)) - $started),
+            'ann_used' => $this->store->lastUsedAnn(),
+            'hnsw_available' => $this->store->hnswAvailable(),
+            'vector_retrieval_enabled' => true,
+            'embedding_attempts' => method_exists($provider, 'lastAttempts') ? $provider->lastAttempts() : 1,
         ];
 
         return $hits;
@@ -246,5 +328,10 @@ class VectorKnowledgeSemanticIndex implements KnowledgeSemanticIndexInterface
         ])));
 
         return mb_substr($text !== '' ? $text : $document->title, 0, $max);
+    }
+
+    private function embeddings(): EmbeddingProviderInterface
+    {
+        return app(EmbeddingProviderInterface::class);
     }
 }

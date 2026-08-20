@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Operator;
 
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Ai\AiKnowledgeBackfillRequest;
 use App\Http\Requests\Ai\AiKnowledgeIngestRequest;
 use App\Http\Requests\Ai\AiKnowledgeReindexRequest;
 use App\Http\Requests\Ai\AiRetrievalTelemetryRequest;
@@ -87,6 +88,17 @@ class AiRetrievalOperationsController extends Controller
         return ApiResponse::success($this->operations->unpublish(
             $this->organization($request),
             $id,
+            (int) ($request->user()?->id ?? 0),
+        ));
+    }
+
+    public function backfill(AiKnowledgeBackfillRequest $request): JsonResponse
+    {
+        $this->authorizeOperator($request);
+
+        return ApiResponse::success($this->operations->backfill(
+            $this->organization($request),
+            $request->validated(),
             (int) ($request->user()?->id ?? 0),
         ));
     }

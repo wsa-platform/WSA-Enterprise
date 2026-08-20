@@ -153,6 +153,22 @@ class AiUsageRecorder
         if (isset($telemetry['semantic_result_count'])) {
             $safe['semantic_result_count'] = max(0, (int) $telemetry['semantic_result_count']);
         }
+        if (array_key_exists('ann_used', $telemetry)) {
+            $safe['ann_used'] = (bool) $telemetry['ann_used'];
+        }
+        $metric = strtolower((string) ($telemetry['distance_metric'] ?? ''));
+        if ($metric === 'cosine') {
+            $safe['distance_metric'] = 'cosine';
+        }
+        if (array_key_exists('hnsw_available', $telemetry)) {
+            $safe['hnsw_available'] = (bool) $telemetry['hnsw_available'];
+        }
+        if (array_key_exists('vector_retrieval_enabled', $telemetry)) {
+            $safe['vector_retrieval_enabled'] = (bool) $telemetry['vector_retrieval_enabled'];
+        }
+        if (isset($telemetry['embedding_attempts'])) {
+            $safe['embedding_attempts'] = max(0, (int) $telemetry['embedding_attempts']);
+        }
 
         return $safe;
     }

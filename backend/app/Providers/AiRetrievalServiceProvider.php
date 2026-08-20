@@ -8,6 +8,8 @@ use App\Models\LibraryItem;
 use App\Services\Ai\Embeddings\EmbeddingConfig;
 use App\Services\Ai\Embeddings\EmbeddingProviderInterface;
 use App\Services\Ai\Embeddings\EmbeddingProviderResolver;
+use App\Services\Ai\Embeddings\PgvectorSchema;
+use App\Services\Ai\Embeddings\PostgresKnowledgeVectorStore;
 use App\Services\Ai\Retrieval\DeterministicLexicalSemanticIndex;
 use App\Services\Ai\Retrieval\KnowledgeRetrievalRouter;
 use App\Services\Ai\Retrieval\KnowledgeSemanticIndexInterface;
@@ -20,6 +22,8 @@ class AiRetrievalServiceProvider extends ServiceProvider
     {
         $this->app->singleton(EmbeddingConfig::class);
         $this->app->singleton(EmbeddingProviderResolver::class);
+        $this->app->singleton(PgvectorSchema::class);
+        $this->app->singleton(PostgresKnowledgeVectorStore::class);
         $this->app->bind(EmbeddingProviderInterface::class, function ($app) {
             return $app->make(EmbeddingProviderResolver::class)->resolve();
         });

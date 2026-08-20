@@ -13,6 +13,7 @@ Route::prefix('v1/operator/ai')->middleware(['auth.principal', 'resolve.organiza
     Route::get('/retrieval/quality', [AiRetrievalOperationsController::class, 'quality']);
     Route::get('/retrieval/telemetry', [AiRetrievalOperationsController::class, 'telemetry']);
     Route::post('/knowledge', [AiRetrievalOperationsController::class, 'ingest']);
+    Route::post('/knowledge/backfill', [AiRetrievalOperationsController::class, 'backfill']);
     Route::post('/knowledge/{id}/index', [AiRetrievalOperationsController::class, 'reindex'])->whereNumber('id');
     Route::post('/knowledge/{id}/publish', [AiRetrievalOperationsController::class, 'publish'])->whereNumber('id');
     Route::post('/knowledge/{id}/unpublish', [AiRetrievalOperationsController::class, 'unpublish'])->whereNumber('id');

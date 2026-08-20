@@ -31,7 +31,7 @@ class MockEmbeddingProvider implements EmbeddingProviderInterface
 
     public function isAvailable(): bool
     {
-        return true;
+        return $this->config->enabled();
     }
 
     public function embed(string $text): EmbeddingResult
