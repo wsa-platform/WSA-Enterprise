@@ -1,6 +1,6 @@
 # AI Platform
 
-**Last updated:** AI-10 hybrid knowledge retrieval foundation (2026-08-20)
+**Last updated:** AI-11 authenticated retrieval operations API (2026-08-20)
 
 ## Overview
 
@@ -369,6 +369,106 @@ Additive fields on `ai_usage_records.retrieval`: `retrieval_strategy`, `keyword_
 ### Isolation and trust
 
 Every strategy uses the same tenant and publication filters as AI-08. Semantic similarity cannot promote unpublished or foreign-tenant documents, and cannot turn model/client URLs into trusted citations.
+
+---
+
+## Operator retrieval operations API (AI-11)
+
+AI-11 is an **authenticated operator observability and knowledge-operations API**. It is **not** a public user retrieval API. It does **not** introduce a vector database. AI-10 semantic retrieval remains the current deterministic/lexical foundation until a future real embedding backend is introduced behind `KnowledgeSemanticIndexInterface`.
+
+```
+Authenticated operator
+  -> /api/v1/operator/ai/...
+  -> AiRetrievalOperationsController (validate, authorize, respond)
+  -> KnowledgeRetrievalOperationsService
+       -> AI-08/AI-09/AI-10 retrieval, quality, ingestion, indexing, telemetry
+```
+
+Controllers do not contain retrieval, ranking, indexing, or OpenAI HTTP logic.
+
+### Authentication and authorization
+
+| Requirement | Mechanism |
+|-------------|-----------|
+| Authentication | Existing `auth.principal` (Sanctum user or API client) |
+| Tenant context | Existing `resolve.organization` |
+| Authorization | Existing permission `access.manage` (organization admin/owner). No second auth system. No hardcoded admin email, user ID, password, or API key. |
+
+Unauthenticated callers receive the standard `401 Unauthenticated.` response. Authenticated non-operators receive `403 This action is unauthorized.`
+
+### Tenant isolation
+
+Tenant scope always comes from the authenticated organization context. Client-supplied `organization_id` / `tenant_id` is rejected (`prohibited`) on mutating and telemetry requests. A tenant operator cannot inspect, ingest, reindex, publish, or unpublish another tenant's knowledge. Cross-organization `X-Organization-Id` for a non-member is denied by existing organization middleware. Platform-admin cross-tenant access is not invented here; only existing membership/context rules apply.
+
+Operator knowledge writes are limited to **tenant `library_items`**. The Bee catalog remains a platform-wide source and is not writable through this API.
+
+### Endpoints
+
+All routes are authenticated and authorized. Envelope: `{ "data": ... }` via `ApiResponse::success`.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/api/v1/operator/ai/retrieval/health` | Retrieval health |
+| `GET` | `/api/v1/operator/ai/retrieval/strategy` | Safe effective strategy inspection |
+| `GET` | `/api/v1/operator/ai/retrieval/quality` | Tenant-scoped quality summary |
+| `GET` | `/api/v1/operator/ai/retrieval/telemetry` | Bounded retrieval telemetry |
+| `POST` | `/api/v1/operator/ai/knowledge` | Ingest/update a library item |
+| `POST` | `/api/v1/operator/ai/knowledge/{id}/index` | Reindex a tenant library item |
+| `POST` | `/api/v1/operator/ai/knowledge/{id}/publish` | Publish (make retrievable) |
+| `POST` | `/api/v1/operator/ai/knowledge/{id}/unpublish` | Unpublish (exclude from retrieval) |
+
+Conceptual operator namespace `/api/operator/ai/...` is implemented under the existing `/api/v1` convention.
+
+### Health
+
+`status` is one of `healthy`, `degraded`, `unavailable`:
+
+- keyword available and selected, semantic unused → `healthy` (`semantic_available` may be `false`)
+- semantic/hybrid selected but semantic unavailable, or invalid configured strategy → `degraded`
+- retrieval disabled → `unavailable`
+
+Telemetry/knowledge-summary failures are logged and omitted; they must not crash the endpoint. Semantic availability failures cannot report `healthy` when semantic/hybrid is the effective strategy. Secrets, API keys, credentials, connection strings, and `.env` values are never returned.
+
+### Strategy inspection
+
+Returns configured vs effective strategy, keyword/semantic/hybrid/fallback capability flags, retrieval enabled, and **clamped** hybrid weights. Invalid configured strategies are reported as `invalid` and cannot become the active effective strategy (effective remains `keyword`). Raw environment values and secrets are not echoed.
+
+### Quality
+
+Reuses `KnowledgeRetrievalQualityService` (no new metrics engine). Tenant-scoped aggregates that already exist: success/empty/error/fallback counts, strategy distribution, source-type distribution, average returned count. Operator extras: `total_retrieval_requests`, `semantic_available`, `average_retrieval_duration_ms` (bounded lookback). If quality aggregation fails, the endpoint returns `status: unavailable` instead of fabricating values.
+
+### Telemetry
+
+Bounded operator view of `ai_usage_records.retrieval` only. Filters: `from`, `to`, `strategy`, `status`, `limit`. Default limit **25**, maximum **100**. Date range maximum **90** days (default last 7 days). Rows are tenant-scoped. Responses are allowlisted operational fields only — not raw prompts, model responses, API keys, authorization headers, or provider secrets.
+
+### Ingestion, reindex, publish, unpublish
+
+Ingestion reuses AI-09 `KnowledgeIngestionService` (normalizer + semantic sync). Tenant is taken from authorization context. Title/summary/body/source type/publication state are validated; system fields cannot be mass-assigned. Idempotency follows existing slug-per-tenant semantics.
+
+Reindex uses the existing indexer + semantic sync. Keyword indexing remains usable if semantic is unavailable; the operation then reports `status=degraded` and `fallback_reason=semantic_unavailable` with `semantic_indexed=false` (no false semantic success).
+
+Publish/unpublish reuse ingestion publication rules. **Unpublished knowledge is not retrievable** for keyword, semantic, or hybrid retrieval.
+
+### Audit
+
+Ingest, reindex, publish, and unpublish record existing `AuditService` actions: `ai.knowledge.ingested`, `ai.knowledge.reindexed`, `ai.knowledge.published`, `ai.knowledge.unpublished`. No second audit framework.
+
+### Security restrictions
+
+- Not a public retrieval API
+- Existing auth + `access.manage` only
+- Tenant isolation; no client tenant override
+- Unpublished knowledge stays out of retrieval
+- No secrets, credentials, prompts, or model completions in operator responses
+- No vector database and no OpenAI adapter changes
+- No admin-mobile / frontend changes
+
+### Operational limitations
+
+- Semantic path is still AI-10 deterministic lexical similarity, not embeddings
+- Operator writes are library-item only
+- Telemetry and duration lookbacks are bounded; they are not unlimited historical scans
+- Health/quality degrade or omit sections when supporting queries fail; they do not throw raw exceptions to clients
 
 ---
 
