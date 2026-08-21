@@ -111,6 +111,21 @@ class Phase17M17AgriculturalEcosystemTest extends TestCase
         $payload = json_encode($search->json());
         $this->assertStringNotContainsString('hidden@wsa.test', $payload);
         $this->assertStringNotContainsString('+966500000001', $payload);
+        $row = collect($search->json('data'))->firstWhere('professional_name', 'Crop Specialist');
+        $this->assertIsArray($row);
+        $this->assertArrayNotHasKey('cv_path', $row);
+        $this->assertArrayNotHasKey('email', $row);
+        $this->assertArrayNotHasKey('phone', $row);
+        $this->assertArrayNotHasKey('contact', $row);
+        $this->assertArrayNotHasKey('user_id', $row);
+        $this->assertArrayNotHasKey('address', $row);
+
+        $profile = JobTalentProfile::where('professional_name', 'Crop Specialist')->firstOrFail();
+        $detail = $this->getJson('/api/v1/jobs/candidates/'.$profile->id, $this->adminHeaders($organization))
+            ->assertOk();
+        $this->assertArrayNotHasKey('cv_path', $detail->json());
+        $this->assertArrayNotHasKey('contact', $detail->json());
+        $this->assertStringNotContainsString('hidden@wsa.test', (string) json_encode($detail->json()));
     }
 
     public function test_successful_payment_performs_two_way_contact_exchange(): void
@@ -213,7 +228,7 @@ class Phase17M17AgriculturalEcosystemTest extends TestCase
 
         $this->postJson("/api/v1/jobs/candidates/{$profile->id}/contact-requests", [
             'employer_contact' => ['name' => 'Other', 'email' => 'other@wsa.test'],
-        ], $adminHeaders)->assertStatus(422);
+        ], $adminHeaders)->assertStatus(409);
     }
 
     public function test_beekeeping_profile_apiary_and_calendar_flow(): void

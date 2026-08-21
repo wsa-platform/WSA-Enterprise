@@ -11,6 +11,7 @@ export function translateApiError(error: unknown): string {
     if (apiError.isUnauthorized) return i18n.t('errors.unauthorized')
     if (apiError.isForbidden) return i18n.t('errors.forbidden')
     if (apiError.isNotFound) return i18n.t('errors.notFound')
+    if (apiError.isConflict) return i18n.t('errors.conflict')
     if (apiError.isRateLimited) return i18n.t('errors.rateLimited')
     if (apiError.errors) return i18n.t('errors.validation')
   }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 
 class JobTalentProfile extends Model
 {
@@ -37,6 +38,11 @@ class JobTalentProfile extends Model
         'cv_parse_status',
         'cv_parsed_at',
         'is_public',
+    ];
+
+    protected $hidden = [
+        'user_id',
+        'cv_path',
     ];
 
     protected function casts(): array
@@ -80,6 +86,24 @@ class JobTalentProfile extends Model
         return $this->employment_status === self::STATUS_AVAILABLE && $this->is_public;
     }
 
+    public function storedCvDiskPath(): ?string
+    {
+        if (! is_string($this->cv_path) || $this->cv_path === '') {
+            return null;
+        }
+
+        $prefix = 'job-cvs/'.$this->id.'/';
+        if (str_contains($this->cv_path, '..') || ! str_starts_with($this->cv_path, $prefix)) {
+            return null;
+        }
+
+        if (! Storage::disk('local')->exists($this->cv_path)) {
+            return null;
+        }
+
+        return $this->cv_path;
+    }
+
     /** @return array<string, mixed> */
     public function toPublicArray(): array
     {
@@ -100,10 +124,24 @@ class JobTalentProfile extends Model
             'work_preferences',
             'availability',
             'employment_status',
-            'cv_parse_status',
             'is_public',
             'created_at',
             'updated_at',
         ]);
+    }
+
+    /** @return array<string, mixed> */
+    public function toOwnerArray(): array
+    {
+        $data = $this->toPublicArray();
+        $data['has_cv'] = filled($this->cv_path);
+        $data['cv_filename'] = $this->cv_path ? basename($this->cv_path) : null;
+        $data['cv_parse_status'] = $this->cv_parse_status;
+        if ($this->relationLoaded('contact') && $this->contact) {
+            $this->contact->makeVisible(['email', 'phone', 'whatsapp', 'other_channels']);
+            $data['contact'] = $this->contact->only(['email', 'phone', 'whatsapp', 'other_channels']);
+        }
+
+        return $data;
     }
 }

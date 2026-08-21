@@ -34,6 +34,10 @@ export class ApiError extends Error {
     return this.status === 404
   }
 
+  get isConflict() {
+    return this.status === 409
+  }
+
   get isRateLimited() {
     return this.status === 429
   }

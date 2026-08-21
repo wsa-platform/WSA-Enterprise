@@ -13,6 +13,8 @@ use App\Services\Jobs\JobTalentProfileService;
 use App\Services\Ownership\ServiceOwnershipAuthorizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class JobsEmployerController extends Controller
 {
@@ -34,7 +36,6 @@ class JobsEmployerController extends Controller
             'specialization' => ['nullable', 'string'],
             'discipline' => ['nullable', 'string'],
             'skill' => ['nullable', 'string'],
-            'employment_status' => ['nullable', 'string'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
@@ -95,7 +96,12 @@ class JobsEmployerController extends Controller
             $data['idempotency_key'] ?? null,
         );
 
-        return response()->json($contactRequest, 201);
+        return response()->json([
+            'id' => $contactRequest->id,
+            'status' => $contactRequest->status,
+            'job_reference' => $contactRequest->job_reference,
+            'talent_profile_id' => $contactRequest->talent_profile_id,
+        ], 201);
     }
 
     public function payContact(Request $request, int $contactRequestId): JsonResponse
@@ -108,12 +114,65 @@ class JobsEmployerController extends Controller
             ->findOrFail($contactRequestId);
         $this->assertContactRequestAccess($request, $contactRequest);
 
-        $transaction = $this->exchangeService->initiatePayment($contactRequest, $data['idempotency_key'], $request);
+        $transaction = $this->exchangeService->initiatePayment(
+            $contactRequest,
+            $data['idempotency_key'],
+            $request,
+            $this->organization($request),
+        );
 
         return response()->json([
-            'transaction' => $transaction,
+            'transaction' => [
+                'id' => $transaction->id,
+                'contact_request_id' => $transaction->contact_request_id,
+                'amount' => $transaction->amount,
+                'currency' => $transaction->currency,
+                'payment_status' => $transaction->payment_status,
+                'contact_exchange_status' => $transaction->contact_exchange_status,
+                'exchanged_at' => $transaction->exchanged_at,
+            ],
             'exchange' => $this->exchangeService->exchangePayload($transaction),
+            'hiring_record' => $transaction->employmentRecord?->toHiringArray(),
         ]);
+    }
+
+    public function unlockedContact(Request $request, int $contactRequestId): JsonResponse
+    {
+        $this->authorizePermission($request, 'jobs.manage');
+        $contactRequest = JobContactRequest::withoutGlobalScopes()
+            ->where('organization_id', $this->organization($request))
+            ->with(['transaction.employmentRecord'])
+            ->findOrFail($contactRequestId);
+        $this->assertContactRequestAccess($request, $contactRequest);
+
+        $transaction = $this->exchangeService->assertUnlockedContact(
+            $contactRequest,
+            $contactRequest->transaction,
+            $this->organization($request),
+        );
+
+        return response()->json($this->exchangeService->exchangePayload($transaction));
+    }
+
+    public function unlockedCv(Request $request, int $contactRequestId): StreamedResponse
+    {
+        $this->authorizePermission($request, 'jobs.manage');
+        $contactRequest = JobContactRequest::withoutGlobalScopes()
+            ->where('organization_id', $this->organization($request))
+            ->with(['transaction', 'talentProfile'])
+            ->findOrFail($contactRequestId);
+        $this->assertContactRequestAccess($request, $contactRequest);
+        $this->exchangeService->assertUnlockedContact(
+            $contactRequest,
+            $contactRequest->transaction,
+            $this->organization($request),
+        );
+
+        $talent = $contactRequest->talentProfile;
+        $path = $talent?->storedCvDiskPath();
+        abort_unless($path !== null, 404, 'CV not found.');
+
+        return Storage::disk('local')->download($path, basename($path));
     }
 
     public function markHired(Request $request, int $contactRequestId): JsonResponse
@@ -128,11 +187,12 @@ class JobsEmployerController extends Controller
         $record = $this->exchangeService->markHired(
             $contactRequest,
             $contactRequest->transaction,
-            $request->input('job_reference'),
+            is_string($request->input('job_reference')) ? $request->input('job_reference') : null,
             $request,
+            $this->organization($request),
         );
 
-        return response()->json($record);
+        return response()->json($record->toHiringArray());
     }
 
     public function report(Request $request): JsonResponse

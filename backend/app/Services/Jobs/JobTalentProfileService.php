@@ -7,7 +7,6 @@ use App\Models\JobTalentProfile;
 use App\Models\User;
 use App\Services\Ownership\UserGlobalOwnershipAuthorizer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Http\Request;
 
 class JobTalentProfileService
 {
@@ -16,13 +15,15 @@ class JobTalentProfileService
     /** @param  array<string, mixed>  $data */
     public function registerOrUpdate(User $user, array $data, ?array $contact = null): JobTalentProfile
     {
+        unset($data['employment_status'], $data['payment_status'], $data['user_id'], $data['organization_id']);
+
         $profile = JobTalentProfile::unguarded(fn () => JobTalentProfile::updateOrCreate(
             ['user_id' => $user->id],
             $this->ownership->assignOwnerFromSession(
                 collect($data)->only([
                     'professional_name', 'specialization', 'biography', 'country', 'region', 'city',
                     'skills', 'experience', 'education', 'certificates', 'languages', 'disciplines',
-                    'work_preferences', 'availability', 'employment_status', 'is_public',
+                    'work_preferences', 'availability', 'is_public',
                 ])->all(),
                 $user,
             ),
@@ -72,9 +73,6 @@ class JobTalentProfileService
         }
         if ($skill = $filters['skill'] ?? null) {
             $query->whereJsonContains('skills', $skill);
-        }
-        if ($employmentStatus = $filters['employment_status'] ?? null) {
-            $query->where('employment_status', $employmentStatus);
         }
 
         return $query->orderByDesc('updated_at')->paginate($perPage);

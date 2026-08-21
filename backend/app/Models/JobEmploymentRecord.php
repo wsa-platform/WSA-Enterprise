@@ -34,4 +34,16 @@ class JobEmploymentRecord extends Model
     {
         return $this->belongsTo(JobContactTransaction::class, 'contact_transaction_id');
     }
+
+    /** @return array<string, mixed> */
+    public function toHiringArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'talent_profile_id' => $this->talent_profile_id,
+            'job_reference' => $this->job_reference,
+            'employment_status' => $this->employment_status,
+            'hired_at' => $this->hired_at,
+        ];
+    }
 }

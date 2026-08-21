@@ -3,10 +3,13 @@
 namespace App\Services\Recruitment;
 
 use App\Models\EmploymentStatusHistory;
+use App\Models\JobContactRequest;
 use App\Models\JobSeekerProfile;
+use App\Models\JobTalentProfile;
 use App\Models\RecruiterNote;
 use App\Models\User;
 use App\Services\Audit\AuditService;
+use App\Services\Jobs\JobContactExchangeService;
 use App\Services\Notifications\NotificationService;
 use App\Services\Ownership\UserGlobalOwnershipAuthorizer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -18,13 +21,15 @@ class JobSeekerService
         private AuditService $audit,
         private NotificationService $notifications,
         private UserGlobalOwnershipAuthorizer $ownership,
+        private JobContactExchangeService $exchange,
     ) {}
 
     /** @param  array<string, mixed>  $filters */
     public function search(array $filters, int $perPage = 15, bool $canSearchPrivate = false): LengthAwarePaginator
     {
-        // Platform-global recruiter CRM (same user-global model as M17 talent). Private contact/CV require jobs.private_data.
-        $query = JobSeekerProfile::query()->with('user:id,name,email');
+        // Platform-global recruiter CRM (same user-global model as M17 talent).
+        // Directory search is global; private CV download requires an org-scoped verified unlock.
+        $query = JobSeekerProfile::query()->with('user:id,name');
 
         if (! empty($filters['status'])) {
             $query->where('recruitment_status', $filters['status']);
@@ -37,13 +42,9 @@ class JobSeekerService
         }
         if (! empty($filters['search'])) {
             $term = $filters['search'];
-            $query->where(function ($q) use ($term, $canSearchPrivate): void {
+            $query->where(function ($q) use ($term): void {
                 $q->where('full_name', 'like', "%{$term}%")
                     ->orWhere('specialization', 'like', "%{$term}%");
-                if ($canSearchPrivate) {
-                    $q->orWhere('email', 'like', "%{$term}%")
-                        ->orWhere('phone', 'like', "%{$term}%");
-                }
             });
         }
         if (isset($filters['is_active'])) {
@@ -53,12 +54,35 @@ class JobSeekerService
         return $query->latest()->paginate(min(max($perPage, 1), 100));
     }
 
+    public function organizationHasVerifiedCandidateAccess(int $organizationId, JobSeekerProfile $profile): bool
+    {
+        $talentIds = JobTalentProfile::query()
+            ->where('user_id', $profile->user_id)
+            ->pluck('id');
+
+        if ($talentIds->isEmpty()) {
+            return false;
+        }
+
+        $requests = JobContactRequest::withoutGlobalScopes()
+            ->where('organization_id', $organizationId)
+            ->whereIn('talent_profile_id', $talentIds)
+            ->with('transaction')
+            ->get();
+
+        foreach ($requests as $request) {
+            if ($this->exchange->isUnlockActive($request->transaction, $request)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** @param  array<string, mixed>  $data */
     public function upsertForUser(User $user, array $data): JobSeekerProfile
     {
-        $data = $this->ownership->stripOwnerKeys($data);
-        unset($data['recruitment_status'], $data['is_active']);
-        $data = JobSeekerProfile::sanitizeNested($data);
+        $data = JobSeekerProfile::candidateWritable($this->ownership->stripOwnerKeys($data));
 
         $profile = JobSeekerProfile::firstOrNew(['user_id' => $user->id]);
         $profile->user_id = $user->id;

@@ -18,7 +18,8 @@ export type JobTalentProfile = {
   work_preferences: unknown | null
   availability: unknown | null
   employment_status: string | null
-  cv_path: string | null
+  has_cv?: boolean
+  cv_filename?: string | null
   cv_parse_status: string | null
   is_public: boolean
   contact?: {
@@ -61,7 +62,6 @@ export type JobTalentUpsertPayload = {
   region?: string
   city?: string
   skills?: string[]
-  employment_status?: string
   is_public?: boolean
   contact?: {
     email?: string
@@ -141,10 +141,63 @@ export const payContactRequest = (
   idempotencyKey: string,
   organizationId?: number,
 ) =>
-  request<{ transaction: unknown; exchange: unknown }>(`/jobs/contact-requests/${contactRequestId}/pay`, {
+  request<{
+    transaction: { id: number; payment_status: string; contact_exchange_status: string }
+    exchange: {
+      candidate_contact?: { email?: string | null; phone?: string | null }
+      employer_contact?: { email?: string | null; name?: string | null }
+      hiring_record_id?: number | null
+    }
+    hiring_record: { id: number; employment_status: string } | null
+  }>(`/jobs/contact-requests/${contactRequestId}/pay`, {
     method: 'POST',
     body: JSON.stringify({ idempotency_key: idempotencyKey }),
   }, token, organizationId)
+
+export const getUnlockedContact = (token: string, contactRequestId: number, organizationId?: number) =>
+  request<{
+    candidate_contact?: { email?: string | null; phone?: string | null }
+    employer_contact?: { email?: string | null; name?: string | null }
+  }>(`/jobs/contact-requests/${contactRequestId}/contact`, {}, token, organizationId)
+
+export const markCandidateHired = (token: string, contactRequestId: number, organizationId?: number) =>
+  request<{ id: number; employment_status: string }>(`/jobs/contact-requests/${contactRequestId}/hire`, {
+    method: 'POST',
+  }, token, organizationId)
+
+export async function downloadUnlockedCv(token: string, contactRequestId: number, organizationId?: number) {
+  const response = await fetch(`${apiUrl}/jobs/contact-requests/${contactRequestId}/cv`, {
+    headers: buildHeaders(token, organizationId),
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { message?: string } | null
+    throw new ApiError(payload?.message ?? 'Unable to download CV.', response.status)
+  }
+
+  return response.blob()
+}
+
+export async function downloadMyTalentCv(token: string, organizationId?: number) {
+  const response = await fetch(`${apiUrl}/jobs/talent/me/cv`, {
+    headers: buildHeaders(token, organizationId),
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { message?: string } | null
+    throw new ApiError(payload?.message ?? 'Unable to download CV.', response.status)
+  }
+
+  return response.blob()
+}
+
+export const listMyContactRequests = (token: string, organizationId?: number) =>
+  request<{ data: Array<{ id: number; status: string; job_reference: string | null; created_at: string }> }>(
+    '/jobs/talent/me/contact-requests',
+    {},
+    token,
+    organizationId,
+  )
 
 export type JobSeekerProfile = {
   id: number
@@ -168,10 +221,14 @@ export type JobSeekerProfile = {
   address: string | null
   recruitment_status: string
   is_active: boolean
-  cv_path: string | null
+  has_cv?: boolean
+  cv_filename?: string | null
+  has_photo?: boolean
+  cv_path?: string | null
   desired_salary: string | null
   salary_currency: string | null
   completeness_percent: number | null
+  years_of_experience: number | null
   created_at?: string
   updated_at?: string
 }
@@ -204,4 +261,47 @@ export async function uploadMyJobSeekerCv(token: string, file: File, organizatio
   }
 
   return response.json() as Promise<JobSeekerProfile>
+}
+
+export async function downloadMyJobSeekerCv(token: string, organizationId?: number) {
+  const response = await fetch(`${apiUrl}/job-seekers/me/cv`, {
+    headers: buildHeaders(token, organizationId),
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { message?: string } | null
+    throw new ApiError(payload?.message ?? 'Unable to download CV.', response.status)
+  }
+
+  return response.blob()
+}
+
+export async function uploadMyJobSeekerPhoto(token: string, file: File, organizationId?: number) {
+  const form = new FormData()
+  form.append('photo', file)
+  const response = await fetch(`${apiUrl}/job-seekers/me/photo`, {
+    method: 'POST',
+    headers: buildHeaders(token, organizationId),
+    body: form,
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { message?: string } | null
+    throw new ApiError(payload?.message ?? 'Unable to upload photo.', response.status)
+  }
+
+  return response.json() as Promise<JobSeekerProfile>
+}
+
+export async function downloadMyJobSeekerPhoto(token: string, organizationId?: number) {
+  const response = await fetch(`${apiUrl}/job-seekers/me/photo`, {
+    headers: buildHeaders(token, organizationId),
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { message?: string } | null
+    throw new ApiError(payload?.message ?? 'Unable to download photo.', response.status)
+  }
+
+  return response.blob()
 }

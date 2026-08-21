@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
+  downloadMyTalentCv,
   getMyTalentProfile,
   parseTalentCv,
   uploadTalentCv,
@@ -107,6 +108,18 @@ export function TalentProfilePage() {
     }
   }
 
+  const handleDownloadCv = async () => {
+    if (!token || !canManage) return
+    setMessage('')
+    try {
+      const blob = await downloadMyTalentCv(token, organizationId ?? undefined)
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (requestError) {
+      setMessage(translateApiError(requestError) || t('jobs.cvDownloadFailed'))
+    }
+  }
+
   return <>
     <PageHeader
       eyebrow={t('nav.ecosystem')}
@@ -174,8 +187,11 @@ export function TalentProfilePage() {
             {t('jobs.selectCv')}
             <input type="file" accept=".pdf,.doc,.docx,.txt" onChange={(event) => void handleCvUpload(event)} />
           </label>
-          {profile?.cv_path && (
-            <button type="button" onClick={() => void handleParseCv()}>{t('jobs.parseCv')}</button>
+          {profile?.has_cv && (
+            <>
+              <button type="button" onClick={() => void handleDownloadCv()}>{t('jobs.downloadCv')}</button>
+              <button type="button" onClick={() => void handleParseCv()}>{t('jobs.parseCv')}</button>
+            </>
           )}
         </div>
       </section>

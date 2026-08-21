@@ -11,6 +11,7 @@ use App\Services\Authorization\PermissionService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class JobSeekersTest extends TestCase
@@ -105,7 +106,6 @@ class JobSeekersTest extends TestCase
             'experience' => [['title' => 'Farm lead']],
             'certifications' => [['name' => 'GAP']],
             'languages' => ['ar'],
-            'cv_path' => 'resumes/seeker-user.pdf',
         ], $headers)->assertCreated()
             ->assertJsonPath('specialization', 'Agronomist')
             ->assertJsonPath('recruitment_status', JobSeekerProfile::STATUS_NEW);
@@ -113,8 +113,7 @@ class JobSeekersTest extends TestCase
         $this->getJson('/api/v1/job-seekers/me', $headers)
             ->assertOk()
             ->assertJsonPath('specialization', 'Agronomist')
-            ->assertJsonPath('email', 'myseeker@wsa.test')
-            ->assertJsonPath('cv_path', 'resumes/seeker-user.pdf');
+            ->assertJsonPath('email', 'myseeker@wsa.test');
 
         $this->putJson('/api/v1/job-seekers/me', [
             'full_name' => 'Seeker User',
@@ -207,6 +206,7 @@ class JobSeekersTest extends TestCase
         $this->assertSame($publicCompleteness, $response->json('completeness_percent'));
         $this->assertArrayNotHasKey('email', $response->json());
         $this->assertArrayNotHasKey('phone', $response->json());
+        $this->assertArrayNotHasKey('address', $response->json());
         $this->assertArrayNotHasKey('cv_path', $response->json());
         $this->assertArrayNotHasKey('desired_salary', $response->json());
         $this->assertArrayNotHasKey('salary_currency', $response->json());
@@ -215,10 +215,17 @@ class JobSeekersTest extends TestCase
 
         $this->getJson("/api/v1/job-seekers/{$profile->id}", $this->adminHeaders())
             ->assertOk()
-            ->assertJsonPath('cv_path', 'resumes/private-seeded.pdf')
             ->assertJsonPath('desired_salary', '15000.00')
             ->assertJsonPath('salary_currency', 'SAR')
-            ->assertJsonPath('completeness_percent', $profile->completenessPercent(true));
+            ->assertJsonPath('completeness_percent', $profile->completenessPercent(false));
+        $adminPrivate = $this->getJson("/api/v1/job-seekers/{$profile->id}", $this->adminHeaders())->json();
+        $this->assertArrayNotHasKey('cv_path', $adminPrivate);
+        $this->assertArrayNotHasKey('has_cv', $adminPrivate);
+        $this->assertArrayNotHasKey('cv_filename', $adminPrivate);
+        $this->assertArrayNotHasKey('email', $adminPrivate);
+        $this->assertArrayNotHasKey('phone', $adminPrivate);
+        $this->assertArrayNotHasKey('address', $adminPrivate);
+        $this->assertArrayNotHasKey('email', $adminPrivate['user'] ?? []);
     }
 
     public function test_public_completeness_ignores_private_contact_cv_and_salary(): void
@@ -524,18 +531,223 @@ class JobSeekersTest extends TestCase
             'full_name' => 'Nested User',
             'experience' => [[
                 'title' => 'Farm lead',
+                'company' => 'WSA Farms',
+                'start_date' => '2020-01-01',
+                'end_date' => '2022-06-01',
+                'current' => false,
                 'years' => 3,
                 'ssn' => 'should-not-persist',
             ]],
-            'education' => [['institution' => 'KSU', 'degree' => 'BSc']],
+            'education' => [['institution' => 'KSU', 'degree' => 'BSc', 'country' => 'SA']],
             'certifications' => [['name' => 'GAP']],
             'languages' => ['ar'],
+            'years_of_experience' => 5,
         ], $headers)->assertCreated();
 
         $this->getJson('/api/v1/job-seekers/me', $headers)
             ->assertOk()
             ->assertJsonPath('experience.0.title', 'Farm lead')
+            ->assertJsonPath('experience.0.start_date', '2020-01-01')
+            ->assertJsonPath('education.0.country', 'SA')
+            ->assertJsonPath('years_of_experience', 5)
             ->assertJsonMissing(['ssn' => 'should-not-persist']);
+
+        $this->assertArrayNotHasKey('recruitment_status', $this->getJson('/api/v1/job-seekers/me', $headers)->json('experience.0'));
+    }
+
+    public function test_candidate_cannot_set_completeness_or_nested_system_fields(): void
+    {
+        $org = Organization::first();
+        $user = User::create([
+            'name' => 'System Fields',
+            'email' => 'system-fields@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $org->members()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
+        $headers = $this->memberHeaders($user, $org);
+
+        $created = $this->putJson('/api/v1/job-seekers/me', [
+            'full_name' => 'System Fields',
+            'email' => 'system-fields@wsa.test',
+            'phone' => '+962700000000',
+            'country' => 'JO',
+            'city' => 'Amman',
+            'completeness_percent' => 100,
+            'cv_path' => '../secrets/id.pdf',
+            'photo_path' => '../secrets/photo.jpg',
+            'employment_status' => 'hired',
+            'payment_status' => 'paid',
+            'tenant_id' => 99,
+            'experience' => [[
+                'title' => 'Lead',
+                'recruitment_status' => 'hired',
+                'payment_status' => 'paid',
+            ]],
+        ], $headers)->assertCreated();
+
+        $this->assertNotEquals(100, $created->json('completeness_percent'));
+        $this->assertNull($created->json('cv_path'));
+        $this->assertArrayNotHasKey('photo_path', $created->json());
+        $this->assertSame(JobSeekerProfile::STATUS_NEW, $created->json('recruitment_status'));
+        $this->assertArrayNotHasKey('recruitment_status', $created->json('experience.0') ?? []);
+        $this->assertArrayNotHasKey('payment_status', $created->json('experience.0') ?? []);
+
+        $profile = JobSeekerProfile::where('user_id', $user->id)->firstOrFail();
+        $this->assertNull($profile->cv_path);
+        $this->assertNull($profile->photo_path);
+        $this->assertSame(JobSeekerProfile::STATUS_NEW, $profile->recruitment_status);
+    }
+
+    public function test_only_owner_can_download_own_cv(): void
+    {
+        $org = Organization::first();
+        $owner = User::create([
+            'name' => 'CV Owner',
+            'email' => 'cv-owner@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $intruder = User::create([
+            'name' => 'CV Intruder',
+            'email' => 'cv-intruder@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $org->members()->syncWithoutDetaching([
+            $owner->id => ['role' => 'member'],
+            $intruder->id => ['role' => 'member'],
+        ]);
+        $ownerHeaders = $this->memberHeaders($owner, $org);
+        $intruderHeaders = $this->memberHeaders($intruder, $org);
+
+        $this->putJson('/api/v1/job-seekers/me', ['full_name' => 'CV Owner'], $ownerHeaders)->assertCreated();
+        $profile = JobSeekerProfile::where('user_id', $owner->id)->firstOrFail();
+        Storage::fake('local');
+        Storage::disk('local')->put('job-cvs/'.$profile->id.'/cv.pdf', 'cv-bytes');
+        $profile->update(['cv_path' => 'job-cvs/'.$profile->id.'/cv.pdf']);
+
+        $this->get('/api/v1/job-seekers/me/cv', $ownerHeaders)->assertOk();
+        $this->get('/api/v1/job-seekers/me/cv', $intruderHeaders)->assertNotFound();
+        $this->getJson('/api/v1/job-seekers/me', $ownerHeaders)
+            ->assertOk()
+            ->assertJsonPath('has_cv', true)
+            ->assertJsonPath('cv_filename', 'cv.pdf');
+        $this->assertArrayNotHasKey('cv_path', $this->getJson('/api/v1/job-seekers/me', $ownerHeaders)->json());
+
+        $profile->update(['cv_path' => '../secrets/passwd']);
+        $this->get('/api/v1/job-seekers/me/cv', $ownerHeaders)->assertNotFound();
+    }
+
+    public function test_recruiter_crm_cv_is_permission_scoped_and_omits_filesystem_path(): void
+    {
+        $orgA = Organization::first();
+        $owner = User::create([
+            'name' => 'CRM CV Owner',
+            'email' => 'crm-cv-owner@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $orgA->members()->syncWithoutDetaching([$owner->id => ['role' => 'member']]);
+        $ownerHeaders = $this->memberHeaders($owner, $orgA);
+        $this->putJson('/api/v1/job-seekers/me', ['full_name' => 'CRM CV Owner'], $ownerHeaders)->assertCreated();
+        $profile = JobSeekerProfile::where('user_id', $owner->id)->firstOrFail();
+        Storage::fake('local');
+        Storage::disk('local')->put('job-cvs/'.$profile->id.'/cv.pdf', 'crm-cv-bytes');
+        $profile->update(['cv_path' => 'job-cvs/'.$profile->id.'/cv.pdf']);
+
+        $adminJson = $this->getJson("/api/v1/job-seekers/{$profile->id}", $this->adminHeaders($orgA))
+            ->assertOk();
+        $this->assertArrayNotHasKey('cv_path', $adminJson->json());
+        $this->assertArrayNotHasKey('has_cv', $adminJson->json());
+        $this->assertArrayNotHasKey('cv_filename', $adminJson->json());
+        $this->get("/api/v1/job-seekers/{$profile->id}/cv", $this->adminHeaders($orgA))->assertForbidden();
+
+        $viewer = User::create([
+            'name' => 'CRM CV Viewer',
+            'email' => 'crm-cv-viewer@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $this->attachViewer($viewer, $orgA);
+        $this->get("/api/v1/job-seekers/{$profile->id}/cv", $this->memberHeaders($viewer, $orgA))->assertForbidden();
+        $this->getJson("/api/v1/job-seekers/{$profile->id}", $this->memberHeaders($viewer, $orgA))
+            ->assertOk();
+        $this->assertArrayNotHasKey('cv_path', $this->getJson("/api/v1/job-seekers/{$profile->id}", $this->memberHeaders($viewer, $orgA))->json());
+        $this->assertArrayNotHasKey('email', $this->getJson("/api/v1/job-seekers/{$profile->id}", $this->memberHeaders($viewer, $orgA))->json());
+
+        $orgB = Organization::create(['name' => 'CRM Org B', 'slug' => 'crm-org-b']);
+        $outsider = User::create([
+            'name' => 'CRM Outsider',
+            'email' => 'crm-cv-outsider@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $orgB->members()->syncWithoutDetaching([$outsider->id => ['role' => 'member', 'is_active' => true]]);
+        $this->get("/api/v1/job-seekers/{$profile->id}/cv", $this->memberHeaders($outsider, $orgB))->assertForbidden();
+
+        $this->patchJson("/api/v1/job-seekers/{$profile->id}", [
+            'cv_path' => '../secrets/id.pdf',
+        ], $this->adminHeaders($orgA))->assertOk();
+        $this->assertSame('job-cvs/'.$profile->id.'/cv.pdf', $profile->fresh()->cv_path);
+
+        $this->get('/api/v1/job-seekers/'.$profile->id.'/cv')->assertUnauthorized();
+        $profile->update(['cv_path' => '../secrets/id.pdf']);
+        $this->get("/api/v1/job-seekers/{$profile->id}/cv", $this->adminHeaders($orgA))->assertForbidden();
+    }
+
+    public function test_owner_completeness_is_server_calculated_and_photo_is_owner_only(): void
+    {
+        $org = Organization::first();
+        $user = User::create([
+            'name' => 'Photo Owner',
+            'email' => 'photo-owner@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $intruder = User::create([
+            'name' => 'Photo Intruder',
+            'email' => 'photo-intruder@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $org->members()->syncWithoutDetaching([
+            $user->id => ['role' => 'member'],
+            $intruder->id => ['role' => 'member'],
+        ]);
+        $headers = $this->memberHeaders($user, $org);
+        $intruderHeaders = $this->memberHeaders($intruder, $org);
+
+        $empty = new JobSeekerProfile(['full_name' => 'Empty']);
+        $this->assertSame(0, $empty->ownerCompletenessPercent());
+
+        $partial = $this->putJson('/api/v1/job-seekers/me', [
+            'full_name' => 'Photo Owner',
+            'email' => 'photo-owner@wsa.test',
+            'phone' => '+962700000000',
+            'country' => 'JO',
+            'city' => 'Amman',
+        ], $headers)->assertCreated();
+        $this->assertSame(14, $partial->json('completeness_percent'));
+
+        $this->putJson('/api/v1/job-seekers/me', [
+            'full_name' => 'Photo Owner',
+            'email' => 'photo-owner@wsa.test',
+            'phone' => '+962700000000',
+            'country' => 'JO',
+            'city' => 'Amman',
+            'target_job_title' => 'Agronomist',
+            'biography' => 'Summary',
+            'specialization' => 'Soil',
+            'education' => [['institution' => 'KSU', 'degree' => 'BSc']],
+            'experience' => [['title' => 'Lead']],
+            'skills' => ['irrigation'],
+            'languages' => ['ar'],
+            'completeness_percent' => 3,
+        ], $headers)->assertOk();
+        $withoutCv = $this->getJson('/api/v1/job-seekers/me', $headers)->assertOk();
+        $this->assertSame(86, $withoutCv->json('completeness_percent'));
+        $this->assertFalse($withoutCv->json('has_photo'));
+
+        Storage::fake('local');
+        $file = \Illuminate\Http\UploadedFile::fake()->create('avatar.jpg', 120, 'image/jpeg');
+        $this->post('/api/v1/job-seekers/me/photo', ['photo' => $file], $headers)->assertOk()
+            ->assertJsonPath('has_photo', true);
+        $this->assertArrayNotHasKey('photo_path', $this->getJson('/api/v1/job-seekers/me', $headers)->json());
+        $this->get('/api/v1/job-seekers/me/photo', $headers)->assertOk();
+        $this->get('/api/v1/job-seekers/me/photo', $intruderHeaders)->assertNotFound();
     }
 
     public function test_recruitment_routes_are_documented_in_openapi(): void
@@ -544,7 +756,10 @@ class JobSeekersTest extends TestCase
         foreach ([
             '/job-seekers',
             '/job-seekers/me',
+            '/job-seekers/me/cv',
+            '/job-seekers/me/photo',
             '/job-seekers/{jobSeeker}',
+            '/job-seekers/{jobSeeker}/cv',
             '/job-seekers/{jobSeeker}/status',
             '/job-seekers/{jobSeeker}/notes',
             '/job-seekers/{jobSeeker}/history',

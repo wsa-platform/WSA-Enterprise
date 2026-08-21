@@ -2374,6 +2374,9 @@ paths:
     put:
       tags: [Jobs]
       summary: Register or update talent profile (free)
+      description: >
+        Candidate-editable professional and contact fields only. employment_status, payment_status,
+        user_id, organization_id, and cv_path are ignored. Employment state changes only after verified hiring.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
@@ -2399,6 +2402,18 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
   /jobs/talent/me/cv:
+    get:
+      tags: [Jobs]
+      summary: Download the authenticated talent's own CV
+      description: Owner-scoped. Path must remain under job-cvs/{talentProfileId}/. Filesystem paths are not returned in JSON. Returns 404 when missing or invalid.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: CV file stream }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
     post:
       tags: [Jobs]
       summary: Upload talent CV (pdf/doc/docx/txt)
@@ -2415,7 +2430,7 @@ paths:
               properties:
                 cv: { type: string, format: binary }
       responses:
-        '200': { description: Profile with stored CV path }
+        '200': { description: Profile with has_cv metadata. Filesystem path is not returned. }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
   /jobs/talent/me/cv/parse:
@@ -2428,10 +2443,28 @@ paths:
       responses:
         '200': { description: Parse result }
         '403': { $ref: '#/components/responses/Forbidden' }
+  /jobs/talent/me/contact-requests:
+    get:
+      tags: [Jobs]
+      summary: List the authenticated talent's contact requests
+      description: Returns request status and job_reference only. Employer contact is not included.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Candidate's job contact requests without employer contact }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /jobs/candidates:
     get:
       tags: [Jobs]
       summary: Search public talent candidates
+      description: >
+        Returns public professional fields only. Email, phone, address, cv_path, contact records,
+        payment records, user_id, and hiring metadata are omitted. Marketplace search always lists
+        available public talent; client-supplied employment_status cannot list hired or private profiles.
+        Contact is available only from the verified unlock endpoints.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
@@ -2451,6 +2484,7 @@ paths:
     get:
       tags: [Jobs]
       summary: Show public talent profile
+      description: Public professional fields only. Contact, cv_path, and owner IDs are omitted. Returns 404 when the profile is not public.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
@@ -2485,8 +2519,9 @@ paths:
                 notes: { type: string }
                 idempotency_key: { type: string }
       responses:
-        '201': { description: Contact request created }
+        '201': { description: Contact request created. Candidate contact is not included. }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { description: Candidate is already hired. }
         '422': { $ref: '#/components/responses/ValidationError' }
   /jobs/contact-requests/{contactRequestId}/pay:
     post:
@@ -2509,14 +2544,72 @@ paths:
               properties:
                 idempotency_key: { type: string }
       responses:
-        '200': { description: Payment transaction and exchange payload }
+        '200': { description: Payment transaction. Exchange/contact payload is included only after server-verified payment and active ContactUnlock. Client-supplied payment_status is ignored. }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: Candidate is already hired. Payment is not charged. }
+        '422': { description: Payment could not be verified. Response must not include contact information. }
+  /jobs/contact-requests/{contactRequestId}/contact:
+    get:
+      tags: [Jobs]
+      summary: Return unlocked contact information after verified payment
+      description: >
+        Returns employer and candidate contact only when the server has verified payment_status=completed,
+        contact_exchange_status=completed, a matching organization-scoped hiring record exists for this
+        request/candidate, and ContactUnlock is active. Forged completed flags without that hiring record
+        do not unlock contact. Otherwise 403 with no contact payload. The frontend must never
+        treat client-supplied payment_status as success.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: contactRequestId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Employer and candidate contact after verified ContactUnlock }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Contact is locked. Response must not include phone, email, or address.' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /jobs/contact-requests/{contactRequestId}/cv:
+    get:
+      tags: [Jobs]
+      summary: Download candidate CV after verified ContactUnlock
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: contactRequestId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: CV file after verified payment and unlock }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: CV is locked until payment is verified. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /jobs/contact-requests/{contactRequestId}/hire:
+    post:
+      tags: [Jobs]
+      summary: Confirm hiring after verified payment and ContactUnlock
+      description: Idempotent. Uses the contact request's own verified transaction; client-supplied transaction_id and payment_status are ignored. Creates the hiring record if needed. Returns 409 if the candidate is already hired by another request.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: contactRequestId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: 'Hiring record id, talent_profile_id, job_reference, employment_status, hired_at. Organization and notes are not returned.' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Hiring requires verified payment and active unlock. }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: Candidate is already hired. }
   /job-seekers:
     get:
       tags: [Recruitment]
       summary: Search job-seeker recruitment profiles
-      description: Recruiter CRM list is platform-global (user-owned profiles, same model as M17 talent). Email, phone, cv_path, desired_salary, and salary_currency require `jobs.private_data`. Vacancy search and matching remain on `/jobs/candidates`.
+      description: Recruiter CRM list is platform-global (user-owned profiles, same model as M17 talent). Compensation fields require `jobs.private_data`. Email, phone, and address require a verified organization-scoped ContactUnlock; jobs.private_data alone is not sufficient. Nested user objects never include email. Filesystem cv_path is never returned. Recruiter CV download requires the same verified unlock. Vacancy search and matching remain on `/jobs/candidates`.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
@@ -2575,22 +2668,50 @@ paths:
                 email: { type: string, format: email }
                 phone: { type: string, maxLength: 50 }
                 specialization: { type: string }
+                target_job_title: { type: string }
                 biography: { type: string }
                 country: { type: string }
                 region: { type: string }
                 city: { type: string }
+                date_of_birth: { type: string, format: date }
+                nationality: { type: string }
+                address: { type: string, maxLength: 500 }
+                years_of_experience: { type: integer, minimum: 0, maximum: 80 }
                 skills: { type: array, items: { type: string } }
-                experience: { type: array, items: { type: object, properties: { title: { type: string }, company: { type: string }, years: { type: number }, description: { type: string } } } }
-                education: { type: array, items: { type: object, properties: { institution: { type: string }, degree: { type: string }, field: { type: string }, year: { type: integer } } } }
+                experience: { type: array, items: { type: object, properties: { title: { type: string }, company: { type: string }, start_date: { type: string, format: date }, end_date: { type: string, format: date }, current: { type: boolean }, years: { type: number }, description: { type: string } } } }
+                education: { type: array, items: { type: object, properties: { institution: { type: string }, degree: { type: string }, field: { type: string }, country: { type: string }, year: { type: integer } } } }
                 certifications: { type: array, items: { type: object, properties: { name: { type: string }, issuer: { type: string }, year: { type: integer } } } }
                 languages: { type: array, items: { type: string } }
-                cv_path: { type: string, description: Owner-only CV metadata path. File upload remains on `/jobs/talent/me/cv`. Not returned on recruiter list/show without `jobs.private_data`. }
                 desired_salary: { type: number, description: Private compensation field. Returned on owner `/me` and recruiter show/list only with `jobs.private_data`. }
                 salary_currency: { type: string, minLength: 3, maxLength: 3, description: Private compensation currency. Omitted without `jobs.private_data`. }
                 availability_date: { type: string, format: date }
+              description: >
+                Candidate self-service fields only. System-controlled keys such as user_id, organization_id,
+                recruitment_status, employment_status, payment_status, completeness_percent, recruiter notes,
+                and cv_path, photo_path are ignored. Upload CVs via POST /job-seekers/me/cv.
       responses:
         '200': { description: Profile updated }
         '201': { description: Profile created }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    patch:
+      tags: [Recruitment]
+      summary: Update the authenticated user's job-seeker profile
+      description: Same allowed fields and ignored system-controlled keys as PUT /job-seekers/me.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [full_name]
+              properties:
+                full_name: { type: string, maxLength: 255 }
+      responses:
+        '200': { description: Profile updated }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
     delete:
@@ -2603,6 +2724,69 @@ paths:
         '200': { description: Profile deactivated }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /job-seekers/me/cv:
+    get:
+      tags: [Recruitment]
+      summary: Download the authenticated user's CV
+      description: Owner-only. Unauthorized callers receive 401/404. The stored path is not client-trusted.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: CV file stream }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Recruitment]
+      summary: Upload or replace the authenticated user's CV
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [cv]
+              properties:
+                cv: { type: string, format: binary }
+      responses:
+        '200': { description: Profile including owner CV metadata }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /job-seekers/me/photo:
+    get:
+      tags: [Recruitment]
+      summary: Download the authenticated user's profile photo
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Image stream }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Recruitment]
+      summary: Upload or replace the authenticated user's profile photo
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [photo]
+              properties:
+                photo: { type: string, format: binary }
+      responses:
+        '200': { description: Profile including has_photo }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /job-seekers/{jobSeeker}:
     get:
       tags: [Recruitment]
@@ -2615,7 +2799,7 @@ paths:
           required: true
           schema: { type: integer }
       responses:
-        '200': { description: 'Profile. Email, phone, cv_path, and desired_salary omitted without jobs.private_data.' }
+        '200': { description: 'Profile. Compensation fields require jobs.private_data. Email, phone, and address require a verified organization-scoped ContactUnlock. Nested user never includes email. Filesystem cv_path is never returned.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -2646,7 +2830,6 @@ paths:
                 education: { type: array }
                 certifications: { type: array }
                 languages: { type: array }
-                cv_path: { type: string }
                 desired_salary: { type: number, description: Private compensation. Visible on the response only with `jobs.private_data`. }
                 salary_currency: { type: string }
                 availability_date: { type: string, format: date }
@@ -2658,11 +2841,32 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /job-seekers/{jobSeeker}/cv:
+    get:
+      tags: [Recruitment]
+      summary: Download a job-seeker CV for authorized recruiters
+      description: Requires jobs.view, jobs.private_data, and a verified organization-scoped ContactUnlock for this candidate. jobs.private_data alone is not sufficient. Returns the file stream only. Filesystem paths are not in the JSON API. Path traversal and foreign prefixes are rejected with 404.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: jobSeeker
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: CV file stream }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Missing jobs.private_data, jobs.view, or a verified organization-scoped contact unlock' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /job-seekers/{jobSeeker}/status:
     patch:
       tags: [Recruitment]
       summary: Advance recruitment application status
-      description: Lifecycle is profile-scoped (new → under_review → qualified/interview → accepted/rejected → hired). Separate job-vacancy applications are not part of this API.
+      description: >
+        Recruiter CRM/HR pipeline only (requires jobs.status). This does not unlock contact data, grant CV access,
+        create a marketplace JobEmploymentRecord, or change JobTalentProfile employment_status. Marketplace hire and
+        contact remain behind verified organization-scoped payment. Candidates cannot use this endpoint to self-hire.
+        Lifecycle is profile-scoped (new → under_review → qualified/interview → accepted/rejected → hired).
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/OrganizationId'

@@ -9,6 +9,8 @@ use App\Services\Ownership\UserGlobalOwnershipAuthorizer;
 use App\Services\Recruitment\JobSeekerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class JobSeekerProfileController extends Controller
 {
@@ -41,14 +43,15 @@ class JobSeekerProfileController extends Controller
             'country' => ['nullable', 'string', 'max:100'],
             'region' => ['nullable', 'string', 'max:100'],
             'city' => ['nullable', 'string', 'max:100'],
-            'cv_path' => ['nullable', 'string', 'max:2048'],
             'desired_salary' => ['nullable', 'numeric', 'min:0'],
             'salary_currency' => ['nullable', 'string', 'size:3'],
             'availability_date' => ['nullable', 'date'],
             'date_of_birth' => ['nullable', 'date'],
             'nationality' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string', 'max:500'],
+            'years_of_experience' => ['nullable', 'integer', 'min:0', 'max:80'],
         ], JobSeekerProfile::nestedPayloadRules())));
+        $data = JobSeekerProfile::candidateWritable($data);
 
         $existing = $this->ownership
             ->scopeOwnedByUser(JobSeekerProfile::query(), $request->user())
@@ -80,5 +83,45 @@ class JobSeekerProfileController extends Controller
         $profile->update(['cv_path' => $path]);
 
         return response()->json($profile->fresh()->toOwnerArray());
+    }
+
+    public function downloadCv(Request $request): StreamedResponse
+    {
+        $profile = $this->ownership
+            ->scopeOwnedByUser(JobSeekerProfile::query(), $request->user())
+            ->firstOrFail();
+        $path = $profile->storedCvDiskPath();
+        abort_unless($path !== null, 404, 'CV not found.');
+
+        return Storage::disk('local')->download($path, basename($path));
+    }
+
+    public function uploadPhoto(Request $request): JsonResponse
+    {
+        $profile = $this->ownership
+            ->scopeOwnedByUser(JobSeekerProfile::query(), $request->user())
+            ->firstOrFail();
+        $request->validate([
+            'photo' => ['required', 'file', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+        ]);
+
+        $path = $request->file('photo')->store('job-photos/'.$profile->id, 'local');
+        if (is_string($profile->photo_path) && Storage::disk('local')->exists($profile->photo_path)) {
+            Storage::disk('local')->delete($profile->photo_path);
+        }
+        $profile->update(['photo_path' => $path]);
+
+        return response()->json($profile->fresh()->toOwnerArray());
+    }
+
+    public function downloadPhoto(Request $request): StreamedResponse
+    {
+        $profile = $this->ownership
+            ->scopeOwnedByUser(JobSeekerProfile::query(), $request->user())
+            ->firstOrFail();
+        $path = $profile->storedPhotoDiskPath();
+        abort_unless($path !== null, 404, 'Photo not found.');
+
+        return Storage::disk('local')->download($path, basename($path));
     }
 }

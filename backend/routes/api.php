@@ -309,9 +309,14 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/', [JobSeekerController::class, 'index']);
             Route::get('/me', [JobSeekerProfileController::class, 'showMine']);
             Route::put('/me', [JobSeekerProfileController::class, 'upsertMine']);
+            Route::patch('/me', [JobSeekerProfileController::class, 'upsertMine']);
             Route::delete('/me', [JobSeekerProfileController::class, 'destroyMine']);
+            Route::get('/me/cv', [JobSeekerProfileController::class, 'downloadCv']);
             Route::post('/me/cv', [JobSeekerProfileController::class, 'uploadCv']);
+            Route::get('/me/photo', [JobSeekerProfileController::class, 'downloadPhoto']);
+            Route::post('/me/photo', [JobSeekerProfileController::class, 'uploadPhoto']);
             Route::get('/{jobSeeker}', [JobSeekerController::class, 'show'])->whereNumber('jobSeeker');
+            Route::get('/{jobSeeker}/cv', [JobSeekerController::class, 'downloadCv'])->whereNumber('jobSeeker');
             Route::patch('/{jobSeeker}', [JobSeekerController::class, 'update'])->whereNumber('jobSeeker');
             Route::patch('/{jobSeeker}/status', [JobSeekerController::class, 'updateStatus'])->whereNumber('jobSeeker');
             Route::post('/{jobSeeker}/notes', [JobSeekerController::class, 'storeNote'])->whereNumber('jobSeeker');
@@ -342,13 +347,17 @@ Route::prefix('v1')->group(function (): void {
         Route::prefix('jobs')->group(function (): void {
             Route::get('/talent/me', [JobsTalentController::class, 'showMine']);
             Route::put('/talent/me', [JobsTalentController::class, 'upsert']);
+            Route::get('/talent/me/cv', [JobsTalentController::class, 'downloadCv']);
             Route::post('/talent/me/cv', [JobsTalentController::class, 'uploadCv']);
             Route::post('/talent/me/cv/parse', [JobsTalentController::class, 'parseCv']);
+            Route::get('/talent/me/contact-requests', [JobsTalentController::class, 'myContactRequests']);
             Route::get('/candidates', [JobsEmployerController::class, 'search']);
             Route::post('/candidates/match', [JobsEmployerController::class, 'match']);
             Route::get('/candidates/{talentProfile}', [JobsEmployerController::class, 'show'])->whereNumber('talentProfile');
             Route::post('/candidates/{talentProfile}/contact-requests', [JobsEmployerController::class, 'requestContact'])->whereNumber('talentProfile');
             Route::post('/contact-requests/{contactRequestId}/pay', [JobsEmployerController::class, 'payContact'])->whereNumber('contactRequestId');
+            Route::get('/contact-requests/{contactRequestId}/contact', [JobsEmployerController::class, 'unlockedContact'])->whereNumber('contactRequestId');
+            Route::get('/contact-requests/{contactRequestId}/cv', [JobsEmployerController::class, 'unlockedCv'])->whereNumber('contactRequestId');
             Route::post('/contact-requests/{contactRequestId}/hire', [JobsEmployerController::class, 'markHired'])->whereNumber('contactRequestId');
             Route::post('/reports', [JobsEmployerController::class, 'report']);
         });

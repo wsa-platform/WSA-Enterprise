@@ -10,7 +10,9 @@ use App\Services\Ownership\UserGlobalOwnershipAuthorizer;
 use App\Services\Recruitment\JobSeekerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class JobSeekerController extends Controller
 {
@@ -33,15 +35,13 @@ class JobSeekerController extends Controller
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
-        $includePrivate = $this->canViewPrivate($request);
-        $paginator = $this->service->search($filters, $filters['per_page'] ?? 15, $includePrivate);
+        $includeHrPrivate = $this->canViewPrivate($request);
+        $paginator = $this->service->search($filters, $filters['per_page'] ?? 15, $includeHrPrivate);
+        $organizationId = $this->organization($request);
 
         return response()->json([
             'data' => collect($paginator->items())->map(
-                fn (JobSeekerProfile $p) => array_merge(
-                    $p->toAdminArray($includePrivate),
-                    ['user' => $p->user?->only($includePrivate ? ['id', 'name', 'email'] : ['id', 'name'])]
-                )
+                fn (JobSeekerProfile $p) => $this->crmPayload($p, $includeHrPrivate, $organizationId)
             )->values(),
             'current_page' => $paginator->currentPage(),
             'last_page' => $paginator->lastPage(),
@@ -52,12 +52,24 @@ class JobSeekerController extends Controller
     public function show(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
     {
         $this->authorizePermission($request, 'jobs.view');
-        $includePrivate = $this->canViewPrivate($request);
+        $includeHrPrivate = $this->canViewPrivate($request);
 
-        return response()->json(array_merge(
-            $jobSeeker->toAdminArray($includePrivate),
-            ['user' => $jobSeeker->user?->only($includePrivate ? ['id', 'name', 'email'] : ['id', 'name'])]
-        ));
+        return response()->json($this->crmPayload($jobSeeker, $includeHrPrivate, $this->organization($request)));
+    }
+
+    public function downloadCv(Request $request, JobSeekerProfile $jobSeeker): StreamedResponse
+    {
+        $this->authorizePermission($request, 'jobs.view');
+        abort_unless($this->canViewPrivate($request), 403, 'CV access requires recruiter private-data permission.');
+        abort_unless(
+            $this->service->organizationHasVerifiedCandidateAccess($this->organization($request), $jobSeeker),
+            403,
+            'CV access requires a verified organization-scoped contact unlock.',
+        );
+        $path = $jobSeeker->storedCvDiskPath();
+        abort_unless($path !== null, 404, 'CV not found.');
+
+        return Storage::disk('local')->download($path, basename($path));
     }
 
     public function update(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
@@ -70,16 +82,37 @@ class JobSeekerController extends Controller
             'country' => ['nullable', 'string', 'max:100'],
             'region' => ['nullable', 'string', 'max:100'],
             'city' => ['nullable', 'string', 'max:100'],
-            'cv_path' => ['nullable', 'string', 'max:2048'],
             'desired_salary' => ['nullable', 'numeric', 'min:0'],
             'salary_currency' => ['nullable', 'string', 'size:3'],
             'availability_date' => ['nullable', 'date'],
             'is_active' => ['sometimes', 'boolean'],
         ], JobSeekerProfile::nestedPayloadRules())));
-        unset($data['recruitment_status'], $data['user_id']);
+        unset($data['recruitment_status'], $data['user_id'], $data['cv_path'], $data['photo_path'], $data['completeness_percent']);
         $data = JobSeekerProfile::sanitizeNested($data);
+        $data = array_intersect_key($data, array_flip([
+            'full_name',
+            'specialization',
+            'biography',
+            'country',
+            'region',
+            'city',
+            'desired_salary',
+            'salary_currency',
+            'availability_date',
+            'is_active',
+            'skills',
+            'experience',
+            'education',
+            'certifications',
+            'languages',
+            'email',
+            'phone',
+        ]));
 
-        if ($this->canViewPrivate($request)) {
+        if (
+            $this->canViewPrivate($request)
+            && $this->service->organizationHasVerifiedCandidateAccess($this->organization($request), $jobSeeker)
+        ) {
             $data = array_merge($data, $request->validate([
                 'email' => ['nullable', 'email'],
                 'phone' => ['nullable', 'string', 'max:50'],
@@ -88,7 +121,11 @@ class JobSeekerController extends Controller
 
         $jobSeeker->update($data);
 
-        return response()->json($jobSeeker->fresh()->toAdminArray($this->canViewPrivate($request)));
+        return response()->json($this->crmPayload(
+            $jobSeeker->fresh(),
+            $this->canViewPrivate($request),
+            $this->organization($request),
+        ));
     }
 
     public function updateStatus(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
@@ -108,7 +145,11 @@ class JobSeekerController extends Controller
             $request,
         );
 
-        return response()->json($profile->toAdminArray($this->canViewPrivate($request)));
+        return response()->json($this->crmPayload(
+            $profile,
+            $this->canViewPrivate($request),
+            $this->organization($request),
+        ));
     }
 
     public function notes(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
@@ -184,6 +225,18 @@ class JobSeekerController extends Controller
         $days = min(max((int) $request->query('days', 30), 1), 365);
 
         return response()->json($this->service->report($days));
+    }
+
+    /** @return array<string, mixed> */
+    private function crmPayload(JobSeekerProfile $profile, bool $includeHrPrivate, int $organizationId): array
+    {
+        $includeContact = $includeHrPrivate
+            && $this->service->organizationHasVerifiedCandidateAccess($organizationId, $profile);
+
+        return array_merge(
+            $profile->toAdminArray($includeHrPrivate, $includeContact),
+            ['user' => $profile->user?->only(['id', 'name'])],
+        );
     }
 
     private function canViewPrivate(Request $request): bool
