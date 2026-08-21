@@ -125,4 +125,6 @@ return [
 
     'allow_registration' => (bool) env('ALLOW_REGISTRATION', false),
 
+    'allow_job_seeker_registration' => filter_var(env('ALLOW_JOB_SEEKER_REGISTRATION', true), FILTER_VALIDATE_BOOLEAN),
+
 ];

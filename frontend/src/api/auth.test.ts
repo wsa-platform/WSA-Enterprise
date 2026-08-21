@@ -26,7 +26,7 @@ describe('register', () => {
     })
 
     expect(result.token).toBe('test-token')
-    expect(result.organization.slug).toBe('owner-10')
+    expect(result.organization?.slug).toBe('owner-10')
     expect(fetchMock).toHaveBeenCalledOnce()
 
     const [url, init] = fetchMock.mock.calls[0]
@@ -35,6 +35,33 @@ describe('register', () => {
     expect(JSON.parse(String(init?.body))).toMatchObject({
       email: 'owner@wsa.test',
       device_name: 'wsa-web-dashboard',
+    })
+  })
+
+  it('sends job-seeker audience so dedicated signup is not treated as service-owner registration', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          token: 'seeker-token',
+          user: { id: 2, name: 'Seeker', email: 'seeker@wsa.test' },
+        }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const result = await register({
+      name: 'Seeker',
+      email: 'seeker@wsa.test',
+      password: 'password123',
+      password_confirmation: 'password123',
+      audience: 'job_seeker',
+    })
+
+    expect(result.token).toBe('seeker-token')
+    expect(result.organization).toBeUndefined()
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toMatchObject({
+      email: 'seeker@wsa.test',
+      audience: 'job_seeker',
     })
   })
 })

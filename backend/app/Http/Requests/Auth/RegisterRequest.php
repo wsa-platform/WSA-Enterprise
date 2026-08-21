@@ -19,6 +19,7 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'device_name' => ['nullable', 'string', 'max:255'],
+            'audience' => ['nullable', 'in:job_seeker,employer,admin'],
         ];
     }
 }

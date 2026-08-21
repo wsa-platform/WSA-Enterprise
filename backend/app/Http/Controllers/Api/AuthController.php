@@ -7,7 +7,9 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use App\Services\Audit\AuditService;
+use App\Services\Auth\IdentityService;
 use App\Services\Ownership\ServiceOwnerRegistrationService;
+use App\Services\Recruitment\JobSeekerRegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,13 +21,38 @@ class AuthController extends Controller
     public function __construct(
         private AuditService $auditService,
         private ServiceOwnerRegistrationService $serviceOwnerRegistration,
+        private JobSeekerRegistrationService $jobSeekerRegistration,
+        private IdentityService $identityService,
     ) {}
 
     public function register(RegisterRequest $request): JsonResponse
     {
+        $data = $request->validated();
+
+        if (($data['audience'] ?? null) === 'job_seeker') {
+            abort_unless(config('app.allow_job_seeker_registration'), 403, 'Registration is disabled.');
+
+            $user = $this->jobSeekerRegistration->register($data);
+
+            $this->auditService->record(
+                action: 'auth.register',
+                userId: $user->id,
+                auditable: $user,
+                newValues: [
+                    'email' => $user->email,
+                    'name' => $user->name,
+                    'audience' => 'job_seeker',
+                ],
+                request: $request,
+            );
+
+            $this->identityService->ensureEmailIdentity($user);
+
+            return response()->json($this->authenticatedPayload($user, $data['device_name'] ?? 'web'), 201);
+        }
+
         abort_unless(config('app.allow_registration'), 403, 'Registration is disabled.');
 
-        $data = $request->validated();
         $registration = $this->serviceOwnerRegistration->register($data);
         $user = $registration['user'];
 

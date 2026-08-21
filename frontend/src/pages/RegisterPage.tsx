@@ -54,6 +54,7 @@ export function RegisterPage() {
         email: email.trim(),
         password,
         password_confirmation: passwordConfirmation,
+        audience,
       })
       const destination = await completeAuthenticatedSession({
         token: result.token,

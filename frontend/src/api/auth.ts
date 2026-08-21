@@ -13,11 +13,12 @@ export async function register(payload: {
   email: string
   password: string
   password_confirmation: string
+  audience?: 'job_seeker' | 'employer' | 'admin' | null
 }) {
   return request<{
     token: string
     user: User
-    organization: { id: number; name: string; slug: string }
+    organization?: { id: number; name: string; slug: string }
   }>('/auth/register', {
     method: 'POST',
     body: JSON.stringify({ ...payload, device_name: 'wsa-web-dashboard' }),
