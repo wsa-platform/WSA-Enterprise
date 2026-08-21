@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { completeGoogleCallback, getOrganizations } from '../api'
+import { completeFacebookCallback, completeGoogleCallback } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { translateApiError } from '../i18n/apiErrors'
+import { safeReturnPath } from '../navigation/routeGuards'
+import {
+  AUTH_NEXT_STORAGE_KEY,
+  AUTH_PROVIDER_STORAGE_KEY,
+  completeAuthenticatedSession,
+  JOB_SEEKER_HOME,
+  parseAudience,
+  readStoredAudience,
+} from '../navigation/roleDestinations'
 import { PublicLanguageMenu } from '../public/PublicLanguageMenu'
 import '../public/publicSite.css'
 
@@ -24,14 +33,25 @@ export function OAuthCallbackPage() {
 
     void (async () => {
       try {
-        const authenticated = await completeGoogleCallback(code, state)
-        setSession(authenticated.token, authenticated.user)
-        const organizations = await getOrganizations(authenticated.token)
-        if (organizations[0]) setOrganizationId(organizations[0].id)
-        const stored = sessionStorage.getItem('wsa.auth.next') || '/dashboard'
-        sessionStorage.removeItem('wsa.auth.next')
-        const next = stored.startsWith('/') && !stored.startsWith('//') ? stored : '/dashboard'
-        navigate(next, { replace: true })
+        const provider = sessionStorage.getItem(AUTH_PROVIDER_STORAGE_KEY) === 'facebook' ? 'facebook' : 'google'
+        const authenticated = provider === 'facebook'
+          ? await completeFacebookCallback(code, state)
+          : await completeGoogleCallback(code, state)
+        const audience = parseAudience(params.get('audience')) ?? readStoredAudience()
+        const stored = sessionStorage.getItem(AUTH_NEXT_STORAGE_KEY)
+        sessionStorage.removeItem(AUTH_NEXT_STORAGE_KEY)
+        sessionStorage.removeItem(AUTH_PROVIDER_STORAGE_KEY)
+        const defaultNext = audience === 'job_seeker' ? JOB_SEEKER_HOME : audience === 'employer' ? '/employer' : '/'
+        const next = safeReturnPath(stored, defaultNext)
+        const destination = await completeAuthenticatedSession({
+          token: authenticated.token,
+          user: authenticated.user,
+          audience,
+          next,
+          setSession,
+          setOrganizationId,
+        })
+        navigate(destination, { replace: true })
       } catch (requestError) {
         setError(translateApiError(requestError) || t('auth.googleFailed'))
       }
@@ -55,7 +75,7 @@ export function OAuthCallbackPage() {
           {error ? (
             <>
               <p className="error" role="alert">{error}</p>
-              <Link to="/login">{t('auth.backToLogin')}</Link>
+              <Link to="/jobs/enter">{t('auth.backToLogin')}</Link>
             </>
           ) : (
             <p className="muted">{t('common.loading')}</p>

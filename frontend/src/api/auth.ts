@@ -64,6 +64,15 @@ export const completeGoogleCallback = (code: string, state: string) =>
     body: JSON.stringify({ code, state, device_name: 'wsa-web-dashboard' }),
   })
 
+export const getFacebookRedirect = () =>
+  request<{ url: string; state: string } | { error: string }>('/auth/facebook/redirect')
+
+export const completeFacebookCallback = (code: string, state: string) =>
+  request<{ token: string; user: User; created?: boolean }>('/auth/facebook/callback', {
+    method: 'POST',
+    body: JSON.stringify({ code, state, device_name: 'wsa-web-dashboard' }),
+  })
+
 export const sendPhoneOtp = (phone: string) =>
   request<{ sent?: boolean; message?: string }>('/auth/phone/send-otp', {
     method: 'POST',

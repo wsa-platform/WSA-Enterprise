@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 import type { Organization, User } from '../api'
+import { clearStoredAuthNavigation } from '../navigation/roleDestinations'
 
 type AuthContextValue = {
   token: string
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('wsa_token')
       localStorage.removeItem('wsa_user')
       localStorage.removeItem('wsa_organization_id')
+      clearStoredAuthNavigation()
       setToken('')
       setUser(null)
       setOrganizationIdState(null)

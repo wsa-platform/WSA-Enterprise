@@ -67,7 +67,7 @@ export function MarketplaceListingPage() {
           <Link to="/market">← {t('market.backToMarket')}</Link>
           {token && (
             <p className="gs-internal-links">
-              <Link to="/dashboard">{t('nav.home')}</Link>
+              <Link to="/account">{t('nav.myAccount')}</Link>
               {' · '}
               <Link to="/account/products">{t('nav.myProducts')}</Link>
             </p>

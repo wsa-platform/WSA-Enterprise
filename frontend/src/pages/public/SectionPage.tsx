@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { PublicLayout } from '../../public/PublicLayout'
+import { JobEntryChoices } from '../jobs/JobsEnterPage'
 import {
   getSectionById,
   HIDDEN_PUBLIC_MODULES,
@@ -159,7 +160,7 @@ export function SectionPage() {
                     <h4>{module.label}</h4>
                     <p>{t(MODULE_DESCRIPTION_KEYS[module.key] ?? 'website.services.genericDesc')}</p>
                     {!token && requiresAuth && (
-                      <Link to={section.id === 'jobs' ? '/login?next=/jobs/application' : '/login'} className="gs-btn gs-btn-primary">
+                      <Link to={section.id === 'jobs' ? '/jobs/enter' : '/login'} className="gs-btn gs-btn-primary">
                         {t('website.nav.login')}
                       </Link>
                     )}
@@ -202,7 +203,9 @@ export function SectionPage() {
           <p className="muted">{t('website.browse.orgHint')}</p>
         )}
 
-        {!token && (
+        {section.id === 'jobs' && <JobEntryChoices />}
+
+        {!token && section.id !== 'jobs' && (
           <div className="public-cta-banner">
             <div>
               <h3>{t('website.cta.joinTitle')}</h3>

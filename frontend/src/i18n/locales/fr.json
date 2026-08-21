@@ -197,7 +197,35 @@
     "phoneSend": "Envoyer le code",
     "phoneVerify": "Vérifier et se connecter",
     "googleFailed": "La connexion Google n'a pas pu aboutir.",
-    "completingSignIn": "Finalisation de la connexion…"
+    "completingSignIn": "Finalisation de la connexion…",
+    "entry": {
+      "title": "Continuer comme chercheur d'emploi ou employeur",
+      "subtitle": "Choisissez le type de compte qui correspond à votre usage du recrutement.",
+      "jobSeeker": "S'inscrire ou se connecter comme chercheur d'emploi",
+      "jobSeekerHint": "Créez ou ouvrez votre profil, CV et candidatures.",
+      "employer": "Se connecter comme employeur",
+      "employerHint": "Ouvrez l'espace dédié aux employeurs.",
+      "backToChoices": "Retour au type de compte"
+    },
+    "jobSeeker": {
+      "navLabel": "Chercheur d'emploi",
+      "modeLabel": "Compte chercheur d'emploi",
+      "createAccount": "Créer un compte / S'inscrire",
+      "signIn": "Se connecter",
+      "loginSubtitle": "Connectez-vous avec Google, Facebook ou e-mail pour ouvrir votre profil chercheur d'emploi.",
+      "registerSubtitle": "Créez un compte chercheur d'emploi avec Google, Facebook ou e-mail. Vous irez directement à votre page chercheur d'emploi."
+    },
+    "employer": {
+      "navLabel": "Employeur",
+      "home": "Employeur",
+      "title": "Espace employeur",
+      "loginTitle": "Connexion employeur",
+      "loginSubtitle": "Connectez-vous pour ouvrir la route dédiée employeur. La page employeur sera construite dans la prochaine tâche.",
+      "registerTitle": "Créer un compte employeur",
+      "registerSubtitle": "Inscrivez-vous pour ouvrir l'espace employeur dédié.",
+      "placeholder": "Cette route employeur dédiée est prête pour la prochaine construction.",
+      "placeholderBody": "Vous êtes dans l'espace employeur, pas l'ancien tableau de bord ni la page chercheur d'emploi. La page employeur sera conçue ensuite."
+    }
   },
   "public": {
     "browseTitle": "Explorez les services WSA Enterprise",
@@ -935,6 +963,7 @@
     "completeness": "Complétude du profil",
     "jsonPlaceholder": "Tableau JSON, ex. : [{\"titre\":\"Manager\",\"entreprise\":\"Acme\",\"annees\":3}]",
     "experience": "Expérience",
+    "workExperience": "Expérience professionnelle",
     "education": "Formation",
     "certifications": "Certifications",
     "languages": "Langues",
@@ -1716,6 +1745,7 @@
       "phoneSoon": "Continuer avec le téléphone (bientôt disponible)",
       "orEmail": "Ou continuer avec l'e-mail",
       "google": "Continuer avec Google",
+      "facebook": "Continuer avec Facebook",
       "phone": "Continuer avec le téléphone",
       "unavailable": "Cette méthode de connexion n'est pas encore disponible."
     },

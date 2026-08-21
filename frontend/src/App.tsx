@@ -1,8 +1,8 @@
-import { Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { PermissionProvider } from './context/PermissionContext'
+import { PermissionProvider, usePermissions } from './context/PermissionContext'
 import { setUnauthorizedHandler } from './api'
 import { AppShell } from './components/AppShell'
 import { LoginPage } from './pages/LoginPage'
@@ -53,16 +53,55 @@ import { CampaignEditorPage } from './pages/marketing/CampaignEditorPage'
 import { TemplatesPage } from './pages/marketing/TemplatesPage'
 import { SegmentsPage } from './pages/marketing/SegmentsPage'
 import { ConsentPage } from './pages/marketing/ConsentPage'
-import { loginPathForProtectedRoute, safeReturnPath, unknownRouteFallback } from './navigation/routeGuards'
+import { loginPathForProtectedRoute, unknownRouteFallback } from './navigation/routeGuards'
+import { JOB_SEEKER_HOME, roleFlagsFromPermissions } from './navigation/roleDestinations'
+import { AdminWorkspaceGuard } from './components/AdminWorkspaceGuard'
+import { EmployerShell } from './components/EmployerShell'
+import { JobSeekerShell } from './components/JobSeekerShell'
+import { RoleHomeRedirect } from './components/RoleHomeRedirect'
+import { JobsEnterPage } from './pages/jobs/JobsEnterPage'
+import { EmployerEntryPage } from './pages/employer/EmployerEntryPage'
 
 function AuthenticatedRedirect() {
-  const [params] = useSearchParams()
-  return <Navigate to={safeReturnPath(params.get('next'))} replace />
+  return <RoleHomeRedirect />
 }
 
 function UnknownRouteFallback() {
   const { token } = useAuth()
-  return <Navigate to={unknownRouteFallback(Boolean(token))} replace />
+  if (token) return <RoleHomeRedirect />
+  return <Navigate to={unknownRouteFallback(false)} replace />
+}
+
+function JobSeekerProtected() {
+  const { token } = useAuth()
+  const location = useLocation()
+
+  if (!token) {
+    const next = `${location.pathname}${location.search}`
+    return <Navigate to={loginPathForProtectedRoute(next, 'job_seeker')} replace />
+  }
+
+  return (
+    <PermissionProvider>
+      <JobSeekerShell />
+    </PermissionProvider>
+  )
+}
+
+function EmployerProtected() {
+  const { token } = useAuth()
+  const location = useLocation()
+
+  if (!token) {
+    const next = `${location.pathname}${location.search}`
+    return <Navigate to={loginPathForProtectedRoute(next, 'employer')} replace />
+  }
+
+  return (
+    <PermissionProvider>
+      <EmployerShell />
+    </PermissionProvider>
+  )
 }
 
 function ProtectedShell() {
@@ -82,6 +121,25 @@ function ProtectedShell() {
   )
 }
 
+function AdminDashboardRoute() {
+  const { token, organizationId } = useAuth()
+  const location = useLocation()
+  const workspaceName = useDashboardTitle(token, organizationId)
+
+  if (!token) {
+    const next = `${location.pathname}${location.search}`
+    return <Navigate to={loginPathForProtectedRoute(next, 'admin')} replace />
+  }
+
+  return (
+    <PermissionProvider>
+      <AdminWorkspaceGuard>
+        <AppShell workspaceName={workspaceName} />
+      </AdminWorkspaceGuard>
+    </PermissionProvider>
+  )
+}
+
 function SessionGuard({ children }: { children: ReactNode }) {
   const { clearSession } = useAuth()
   const navigate = useNavigate()
@@ -97,6 +155,17 @@ function SessionGuard({ children }: { children: ReactNode }) {
   }, [clearSession, navigate, location.pathname, location.search])
 
   return children
+}
+
+function RecruiterJobsGuard() {
+  const { t } = useTranslation()
+  const { loading, context } = usePermissions()
+  if (loading) return <p className="loading">{t('common.loading')}</p>
+  const roles = roleFlagsFromPermissions(context?.permissions)
+  if (roles.isJobSeeker && !roles.isAdmin && !roles.isEmployer) {
+    return <Navigate to={JOB_SEEKER_HOME} replace />
+  }
+  return <JobsMarketplacePage />
 }
 
 function FarmsPage() {
@@ -132,15 +201,25 @@ function AppRoutes() {
       <Route path="/contact" element={<InfoPage page="contact" />} />
       <Route path="/market" element={<MarketplacePage />} />
       <Route path="/market/:id" element={<MarketplaceListingPage />} />
+      <Route path="/jobs/enter" element={<JobsEnterPage />} />
       <Route path="/login" element={token ? <AuthenticatedRedirect /> : <LoginPage />} />
       <Route path="/register" element={token ? <AuthenticatedRedirect /> : <RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/auth/callback" element={<OAuthCallbackPage />} />
       <Route path="/browse" element={<Navigate to="/" replace />} />
-      <Route path="/accept-invitation" element={token ? <Navigate to="/dashboard" replace /> : <AcceptInvitationPage />} />
-      <Route element={<ProtectedShell />}>
+      <Route path="/accept-invitation" element={token ? <AuthenticatedRedirect /> : <AcceptInvitationPage />} />
+      <Route element={<JobSeekerProtected />}>
+        <Route path="/jobs/application" element={<MyJobApplicationPage />} />
+        <Route path="/jobs/talent" element={<TalentProfilePage />} />
+      </Route>
+      <Route element={<EmployerProtected />}>
+        <Route path="/employer" element={<EmployerEntryPage />} />
+      </Route>
+      <Route element={<AdminDashboardRoute />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+      </Route>
+      <Route element={<ProtectedShell />}>
         <Route path="/organization" element={<OrganizationPage />} />
         <Route path="/billing" element={<BillingPage />} />
         <Route path="/settings" element={<SettingsPage />} />
@@ -169,9 +248,7 @@ function AppRoutes() {
         <Route path="/marketing/templates" element={<TemplatesPage />} />
         <Route path="/marketing/segments" element={<SegmentsPage />} />
         <Route path="/marketing/consent" element={<ConsentPage />} />
-        <Route path="/jobs" element={<JobsMarketplacePage />} />
-        <Route path="/jobs/talent" element={<TalentProfilePage />} />
-        <Route path="/jobs/application" element={<MyJobApplicationPage />} />
+        <Route path="/jobs" element={<RecruiterJobsGuard />} />
         <Route path="/seller/listings" element={<Navigate to="/account/products" replace />} />
         <Route path="/seller/listings/new" element={<Navigate to="/account/products/new" replace />} />
         <Route path="/seller/listings/:listingId" element={<SellerListingRedirect />} />

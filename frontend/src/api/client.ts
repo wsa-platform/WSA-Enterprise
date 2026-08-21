@@ -84,7 +84,7 @@ export async function request<T>(
     } | null
     const requestId = response.headers.get('X-Request-Id') ?? undefined
 
-    if (response.status === 401 && token) {
+    if (response.status === 401 && token && path !== '/auth/logout') {
       unauthorizedHandler?.()
     }
 

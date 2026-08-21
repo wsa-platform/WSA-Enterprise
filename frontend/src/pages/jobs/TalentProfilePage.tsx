@@ -18,7 +18,7 @@ import { translateApiError } from '../../i18n/apiErrors'
 export function TalentProfilePage() {
   const { t } = useTranslation()
   const { token, organizationId } = useAuth()
-  const { can } = usePermissions()
+  const { can, loading: permissionsLoading } = usePermissions()
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
   const [professionalName, setProfessionalName] = useState('')
@@ -51,6 +51,10 @@ export function TalentProfilePage() {
     setContactPhone(profile.contact?.phone ?? '')
     setIsPublic(profile.is_public ?? true)
   }, [profile])
+
+  if (permissionsLoading) {
+    return <p className="loading">{t('jobs.loadingProfile')}</p>
+  }
 
   if (!canRegister && !canManage) {
     return <ErrorBanner message={t('jobs.noPermissionTalent')} />
@@ -125,7 +129,7 @@ export function TalentProfilePage() {
       eyebrow={t('nav.ecosystem')}
       title={t('jobs.talentProfileTitle')}
       description={t('jobs.talentProfileDescription')}
-      actions={<Link to="/jobs" className="link-button">{t('jobs.backToMarketplace')}</Link>}
+      actions={<Link to="/jobs/application" className="link-button">{t('jobs.myApplicationTitle')}</Link>}
     />
 
     {error && <ErrorBanner message={error} onRetry={reload} />}

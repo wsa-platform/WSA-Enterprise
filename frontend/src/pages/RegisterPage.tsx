@@ -1,9 +1,16 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { getGoogleRedirect, register } from '../api'
+import { register } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { translateApiError } from '../i18n/apiErrors'
+import { authQuery, safeReturnPath } from '../navigation/routeGuards'
+import {
+  completeAuthenticatedSession,
+  JOB_SEEKER_HOME,
+  parseAudience,
+} from '../navigation/roleDestinations'
+import { AuthProviders } from './auth/AuthProviders'
 import { PublicLanguageMenu } from '../public/PublicLanguageMenu'
 import '../public/publicSite.css'
 
@@ -11,10 +18,9 @@ export function RegisterPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const requestedNext = params.get('next')
-  const nextPath = requestedNext && requestedNext.startsWith('/') && !requestedNext.startsWith('//')
-    ? requestedNext
-    : '/dashboard'
+  const audience = parseAudience(params.get('audience'))
+  const defaultNext = audience === 'job_seeker' ? JOB_SEEKER_HOME : audience === 'employer' ? '/employer' : '/'
+  const nextPath = safeReturnPath(params.get('next'), defaultNext)
   const { setSession, setOrganizationId } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -22,24 +28,18 @@ export function RegisterPage() {
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const loginTo = `/login${authQuery({ audience, next: nextPath })}`
 
-  const handleGoogle = async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const result = await getGoogleRedirect()
-      if ('error' in result || !('url' in result)) {
-        setError(t('website.auth.unavailable'))
-        return
-      }
-      sessionStorage.setItem('wsa.auth.next', nextPath)
-      window.location.assign(result.url)
-    } catch (requestError) {
-      setError(translateApiError(requestError) || t('website.auth.unavailable'))
-    } finally {
-      setLoading(false)
-    }
-  }
+  const title = audience === 'job_seeker'
+    ? t('auth.entry.jobSeeker')
+    : audience === 'employer'
+      ? t('auth.employer.registerTitle')
+      : t('auth.registerTitle')
+  const subtitle = audience === 'job_seeker'
+    ? t('auth.jobSeeker.registerSubtitle')
+    : audience === 'employer'
+      ? t('auth.employer.registerSubtitle')
+      : t('auth.registerSubtitle')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -53,11 +53,15 @@ export function RegisterPage() {
         password,
         password_confirmation: passwordConfirmation,
       })
-      setSession(result.token, result.user)
-      if (result.organization) {
-        setOrganizationId(result.organization.id)
-      }
-      navigate(nextPath)
+      const destination = await completeAuthenticatedSession({
+        token: result.token,
+        user: result.user,
+        audience,
+        next: nextPath,
+        setSession,
+        setOrganizationId,
+      })
+      navigate(destination, { replace: true })
     } catch (requestError) {
       setError(translateApiError(requestError) || t('auth.registerFailed'))
     } finally {
@@ -75,23 +79,31 @@ export function RegisterPage() {
           </Link>
           <div className="public-header-actions">
             <PublicLanguageMenu />
-            <Link to="/login" className="gs-btn gs-btn-ghost">
-              {t('website.nav.login')}
+            <Link to={loginTo} className="gs-btn gs-btn-ghost">
+              {t('auth.jobSeeker.signIn')}
             </Link>
           </div>
         </div>
       </header>
       <main className="public-auth-shell">
         <section className="public-auth-card">
-          <Link to="/" className="public-auth-back">← {t('website.nav.home')}</Link>
+          <Link to="/jobs/enter" className="public-auth-back">← {t('auth.entry.backToChoices')}</Link>
           <p className="eyebrow">{t('auth.brand')}</p>
-          <h1>{t('auth.registerTitle')}</h1>
-          <p className="muted">{t('auth.registerSubtitle')}</p>
-          <div className="public-auth-providers">
-            <button type="button" className="public-auth-provider" disabled={loading} onClick={() => void handleGoogle()}>
-              {t('website.auth.google')}
-            </button>
-          </div>
+          <h1>{title}</h1>
+          <p className="muted">{subtitle}</p>
+          {audience === 'job_seeker' && (
+            <div className="auth-mode-toggle" role="tablist" aria-label={t('auth.jobSeeker.modeLabel')}>
+              <Link to={loginTo}>{t('auth.jobSeeker.signIn')}</Link>
+              <span className="auth-mode-toggle-active">{t('auth.jobSeeker.createAccount')}</span>
+            </div>
+          )}
+          <AuthProviders
+            loading={loading}
+            nextPath={nextPath}
+            audience={audience}
+            onError={setError}
+            onLoading={setLoading}
+          />
           <p className="public-auth-divider">{t('website.auth.orEmail')}</p>
           <form onSubmit={handleSubmit}>
             <label>{t('common.name')}<input value={name} onChange={(event) => setName(event.target.value)} required autoComplete="name" /></label>
@@ -102,7 +114,7 @@ export function RegisterPage() {
             <button disabled={loading} type="submit">{loading ? t('auth.registering') : t('auth.createAccount')}</button>
           </form>
           <p className="hint">
-            {t('auth.alreadyHaveAccount')} <Link to="/login">{t('common.signIn')}</Link>
+            {t('auth.alreadyHaveAccount')} <Link to={loginTo}>{t('common.signIn')}</Link>
           </p>
         </section>
       </main>

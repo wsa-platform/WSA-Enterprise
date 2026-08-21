@@ -197,7 +197,35 @@
     "phoneSend": "Kod gönder",
     "phoneVerify": "Doğrula ve giriş yap",
     "googleFailed": "Google ile giriş tamamlanamadı.",
-    "completingSignIn": "Giriş tamamlanıyor…"
+    "completingSignIn": "Giriş tamamlanıyor…",
+    "entry": {
+      "title": "İş arayan veya işveren olarak devam edin",
+      "subtitle": "İşe alımı nasıl kullanmak istediğinize uygun hesap türünü seçin.",
+      "jobSeeker": "İş arayan olarak kayıt ol veya giriş yap",
+      "jobSeekerHint": "İş arayan profilinizi, CV’nizi ve başvurularınızı açın.",
+      "employer": "İşveren olarak giriş yap",
+      "employerHint": "İşverene özel çalışma alanını açın.",
+      "backToChoices": "Hesap türüne dön"
+    },
+    "jobSeeker": {
+      "navLabel": "İş arayan",
+      "modeLabel": "İş arayan hesabı",
+      "createAccount": "Hesap oluştur / Kayıt ol",
+      "signIn": "Giriş yap",
+      "loginSubtitle": "İş arayan profilinizi açmak için Google, Facebook veya e-posta ile giriş yapın.",
+      "registerSubtitle": "Google, Facebook veya e-posta ile bir iş arayan hesabı oluşturun. Doğrudan iş arayan sayfanıza gidersiniz."
+    },
+    "employer": {
+      "navLabel": "İşveren",
+      "home": "İşveren",
+      "title": "İşveren çalışma alanı",
+      "loginTitle": "İşveren olarak giriş yapın",
+      "loginSubtitle": "İşverene özel rotayı açmak için giriş yapın. İşveren sayfası sonraki görevde oluşturulacak.",
+      "registerTitle": "İşveren hesabı oluşturun",
+      "registerSubtitle": "İşverene özel çalışma alanını açmak için kayıt olun.",
+      "placeholder": "Bu özel işveren rotası sonraki geliştirme için hazır.",
+      "placeholderBody": "İşveren bölgesindesiniz; eski pano veya iş arayan profili değil. İşveren sayfası sonraki görevde tasarlanacak."
+    }
   },
   "public": {
     "browseTitle": "WSA Enterprise hizmetlerini keşfedin",
@@ -935,6 +963,7 @@
     "completeness": "Profil tamamlama",
     "jsonPlaceholder": "JSON dizisi, örn: [{\"title\":\"Yönetici\",\"company\":\"Acme\",\"years\":3}]",
     "experience": "Deneyim",
+    "workExperience": "İş deneyimi",
     "education": "Eğitim",
     "certifications": "Sertifikalar",
     "languages": "Diller",
@@ -1716,6 +1745,7 @@
       "phoneSoon": "Telefon ile devam et (yakında)",
       "orEmail": "Veya e-posta ile devam et",
       "google": "Google ile devam et",
+      "facebook": "Facebook ile devam et",
       "phone": "Telefon ile devam et",
       "unavailable": "Bu giriş yöntemi henüz kullanılamıyor."
     },

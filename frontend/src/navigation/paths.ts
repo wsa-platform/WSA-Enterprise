@@ -7,6 +7,9 @@ export const internalPaths = {
   editProduct: (listingId: number | string) => `/account/products/${listingId}`,
   settings: '/settings',
   login: '/login',
+  jobSeekerEnter: '/jobs/enter',
+  jobSeekerHome: '/jobs/application',
+  employerHome: '/employer',
 } as const
 
 export const publicPaths = {

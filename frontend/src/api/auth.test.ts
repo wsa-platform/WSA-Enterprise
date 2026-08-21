@@ -73,6 +73,21 @@ describe('password reset and google redirect', () => {
     expect('url' in result && result.url).toContain('accounts.google.com')
     expect(String(fetchMock.mock.calls[0][0])).toContain('/auth/google/redirect')
   })
+
+  it('loads the facebook redirect URL without inventing a second auth system', async () => {
+    const { getFacebookRedirect } = await import('./auth')
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ url: 'https://www.facebook.com/dialog/oauth', state: 'xyz' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const result = await getFacebookRedirect()
+
+    expect('url' in result && result.url).toContain('facebook.com')
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/auth/facebook/redirect')
+  })
 })
 
 describe('public services catalog', () => {

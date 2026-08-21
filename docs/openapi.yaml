@@ -433,6 +433,45 @@ paths:
                 $ref: '#/components/schemas/AuthResponse'
         '422': { $ref: '#/components/responses/ValidationError' }
         '503': { description: Google OAuth is not connected }
+  /auth/facebook/redirect:
+    get:
+      tags: [Auth]
+      summary: Start Facebook OAuth and return the authorization URL
+      responses:
+        '200':
+          description: Redirect URL and state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+                  state: { type: string }
+        '503': { description: Facebook OAuth is not connected }
+  /auth/facebook/callback:
+    post:
+      tags: [Auth]
+      summary: Exchange Facebook OAuth code for a Sanctum token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, state]
+              properties:
+                code: { type: string }
+                state: { type: string }
+                device_name: { type: string }
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { description: Facebook OAuth is not connected }
   /auth/phone/send-otp:
     post:
       tags: [Auth]

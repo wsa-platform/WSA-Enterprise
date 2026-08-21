@@ -69,15 +69,15 @@ describe('internal breadcrumbs', () => {
 })
 
 describe('route guards', () => {
-  it('sends authenticated unknown URLs to the dashboard', () => {
-    expect(unknownRouteFallback(true)).toBe('/dashboard')
+  it('sends authenticated unknown URLs away from a hard-coded dashboard default', () => {
+    expect(unknownRouteFallback(true)).toBe('/account')
     expect(unknownRouteFallback(false)).toBe('/')
   })
 
   it('rejects open redirects when returning after login', () => {
     expect(safeReturnPath('/account/products')).toBe('/account/products')
-    expect(safeReturnPath('https://evil.example')).toBe('/dashboard')
-    expect(safeReturnPath('//evil.example')).toBe('/dashboard')
+    expect(safeReturnPath('https://evil.example')).toBe('/')
+    expect(safeReturnPath('//evil.example')).toBe('/')
     expect(loginPathForProtectedRoute('/account/profile')).toBe('/login?next=%2Faccount%2Fprofile')
   })
 })

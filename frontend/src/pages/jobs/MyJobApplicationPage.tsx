@@ -53,6 +53,8 @@ export function MyJobApplicationPage() {
   const { t } = useTranslation()
   const { token, organizationId } = useAuth()
   const { can } = usePermissions()
+  const canAccess = Boolean(token)
+  const canOpenTalent = can('jobs.talent.register') || can('jobs.talent.manage')
   const [viewMode, setViewMode] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -82,8 +84,6 @@ export function MyJobApplicationPage() {
   const [languages, setLanguages] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [missingProfile, setMissingProfile] = useState(false)
-
-  const canAccess = can('jobs.talent.register') || can('jobs.talent.manage')
 
   const { data: profile, loading, error, reload } = useAsyncData(async () => {
     if (!token || !canAccess) return null
@@ -440,7 +440,7 @@ export function MyJobApplicationPage() {
         description={t('jobs.myApplicationDescription')}
         actions={
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Link to="/jobs" className="link-button">{t('jobs.backToMarketplace')}</Link>
+            {canOpenTalent ? <Link to="/jobs/talent" className="link-button">{t('nav.talentProfile')}</Link> : null}
             <button type="button" className="link-button" onClick={() => setViewMode(true)}>{t('jobs.viewApplication')}</button>
             {viewMode ? (
               <button type="button" onClick={() => { setViewMode(false); setMessage('') }}>{t('jobs.editProfile')}</button>

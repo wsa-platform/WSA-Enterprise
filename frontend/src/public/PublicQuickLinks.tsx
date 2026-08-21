@@ -28,8 +28,8 @@ export function PublicQuickLinks() {
               <li><Link to="/privacy">{t('website.footer.privacy')}</Link></li>
               <li><Link to="/terms">{t('website.footer.terms')}</Link></li>
               <li><Link to="/contact">{t('website.footer.contact')}</Link></li>
-              <li><Link to="/login?next=/jobs/application">{t('website.nav.login')}</Link></li>
-              <li><Link to="/register">{t('website.nav.register')}</Link></li>
+              <li><Link to="/jobs/enter">{t('website.nav.login')}</Link></li>
+              <li><Link to="/jobs/enter">{t('website.nav.register')}</Link></li>
             </ul>
           </nav>
         </div>

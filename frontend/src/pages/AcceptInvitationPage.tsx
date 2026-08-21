@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { acceptInvitation } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { translateApiError } from '../i18n/apiErrors'
+import { completeAuthenticatedSession } from '../navigation/roleDestinations'
 
 export function AcceptInvitationPage() {
   const { t } = useTranslation()
@@ -31,9 +32,14 @@ export function AcceptInvitationPage() {
         name: name.trim() || undefined,
         password,
       })
-      setSession(result.token, result.user)
-      setOrganizationId(result.organization.id)
-      navigate('/dashboard')
+      const destination = await completeAuthenticatedSession({
+        token: result.token,
+        user: result.user,
+        next: '/dashboard',
+        setSession,
+        setOrganizationId,
+      })
+      navigate(destination, { replace: true })
     } catch (requestError) {
       setError(translateApiError(requestError) || t('auth.acceptFailed'))
     } finally {

@@ -197,7 +197,35 @@
     "phoneSend": "Send code",
     "phoneVerify": "Verify and sign in",
     "googleFailed": "Google sign-in could not be completed.",
-    "completingSignIn": "Completing sign-in…"
+    "completingSignIn": "Completing sign-in…",
+    "entry": {
+      "title": "Continue as a job seeker or employer",
+      "subtitle": "Choose the account type that matches how you want to use recruitment.",
+      "jobSeeker": "Register or sign in as a job seeker",
+      "jobSeekerHint": "Create or open your job seeker profile, CV, and applications.",
+      "employer": "Sign in as an employer",
+      "employerHint": "Open the dedicated employer workspace.",
+      "backToChoices": "Back to account type"
+    },
+    "jobSeeker": {
+      "navLabel": "Job seeker",
+      "modeLabel": "Job seeker account",
+      "createAccount": "Create account / Register",
+      "signIn": "Sign in",
+      "loginSubtitle": "Sign in with Google, Facebook, or email to open your job seeker profile.",
+      "registerSubtitle": "Create a job seeker account with Google, Facebook, or email. You will go straight to your job seeker profile."
+    },
+    "employer": {
+      "navLabel": "Employer",
+      "home": "Employer",
+      "title": "Employer workspace",
+      "loginTitle": "Sign in as an employer",
+      "loginSubtitle": "Sign in to open the dedicated employer route. The employer workspace will be built in the next task.",
+      "registerTitle": "Create an employer account",
+      "registerSubtitle": "Register to open the dedicated employer workspace.",
+      "placeholder": "This dedicated employer route is ready for the next build.",
+      "placeholderBody": "You are in the employer area, not the legacy dashboard and not the job seeker profile. The employer page will be designed in the next task."
+    }
   },
   "public": {
     "browseTitle": "Explore WSA Enterprise services",
@@ -935,6 +963,7 @@
     "completeness": "Profile completeness",
     "jsonPlaceholder": "JSON array, e.g. [{\"title\":\"Manager\",\"company\":\"Acme\",\"years\":3}]",
     "experience": "Experience",
+    "workExperience": "Work experience",
     "education": "Education",
     "certifications": "Certifications",
     "languages": "Languages",
@@ -1716,6 +1745,7 @@
       "phoneSoon": "Continue with phone (coming soon)",
       "orEmail": "Or continue with email",
       "google": "Continue with Google",
+      "facebook": "Continue with Facebook",
       "phone": "Continue with phone",
       "unavailable": "This sign-in method is not available yet."
     },
