@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { logout } from '../api'
 import { useAuth } from '../context/AuthContext'
-import { EMPLOYER_HOME } from '../navigation/roleDestinations'
+import { EMPLOYER_HOME, employerLogoutPath } from '../navigation/roleDestinations'
 import { PublicLanguageMenu } from '../public/PublicLanguageMenu'
 import '../public/publicSite.css'
 
@@ -16,7 +16,7 @@ export function EmployerShell() {
   const handleLogout = async () => {
     setSigningOut(true)
     const currentToken = token
-    navigate('/jobs/enter', { replace: true })
+    navigate(employerLogoutPath(), { replace: true })
     if (currentToken) await logout(currentToken).catch(() => undefined)
     clearSession()
   }

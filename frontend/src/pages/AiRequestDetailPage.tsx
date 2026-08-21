@@ -34,7 +34,7 @@ export function AiRequestDetailPage() {
       title={`#${data.id}`}
       description={data.request_type}
       breadcrumbs={[
-        { label: t('nav.dashboard'), to: '/' },
+        { label: t('nav.home'), to: '/account' },
         { label: t('ai.workspace'), to: '/ai/workspace' },
         { label: `#${data.id}` },
       ]}

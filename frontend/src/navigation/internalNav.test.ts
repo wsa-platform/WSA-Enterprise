@@ -14,7 +14,7 @@ describe('internal navigation map', () => {
 
   it('covers the required authenticated destinations', () => {
     expect(targets).toEqual(expect.arrayContaining([...REQUIRED_INTERNAL_NAV_PATHS]))
-    expect(targets).toContain(internalPaths.dashboard)
+    expect(targets).not.toContain('/dashboard')
     expect(targets).toContain(internalPaths.account)
     expect(targets).toContain(internalPaths.profile)
     expect(targets).toContain(internalPaths.products)
@@ -56,10 +56,11 @@ describe('internal navigation map', () => {
 describe('internal breadcrumbs', () => {
   const t = (key: string) => key
 
-  it('points the home crumb at the authenticated dashboard', () => {
+  it('points the home crumb at the account workspace, not the legacy dashboard', () => {
     const crumbs = buildInternalBreadcrumbs(internalPaths.profile, t)
-    expect(crumbs[0]).toEqual({ label: 'nav.home', to: '/dashboard' })
+    expect(crumbs[0]).toEqual({ label: 'nav.home', to: '/account' })
     expect(crumbs[0]?.to).not.toBe('/')
+    expect(crumbs[0]?.to).not.toBe('/dashboard')
   })
 
   it('distinguishes add-product from edit-product crumbs', () => {

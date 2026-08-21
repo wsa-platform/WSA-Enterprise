@@ -35,7 +35,6 @@ export function AcceptInvitationPage() {
       const destination = await completeAuthenticatedSession({
         token: result.token,
         user: result.user,
-        next: '/dashboard',
         setSession,
         setOrganizationId,
       })

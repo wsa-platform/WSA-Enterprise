@@ -1,14 +1,16 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PublicLanguageMenu } from '../../public/PublicLanguageMenu'
-import { authQuery } from '../../navigation/routeGuards'
-import { EMPLOYER_HOME, JOB_SEEKER_HOME } from '../../navigation/roleDestinations'
+import { useAuth } from '../../context/AuthContext'
+import { employerStartPath, jobSeekerStartPath } from '../../navigation/roleDestinations'
 import '../../public/publicSite.css'
 
 export function JobsEnterPage() {
   const { t } = useTranslation()
-  const jobSeekerAuth = `/login${authQuery({ audience: 'job_seeker', next: JOB_SEEKER_HOME })}`
-  const employerAuth = `/login${authQuery({ audience: 'employer', next: EMPLOYER_HOME })}`
+  const { token } = useAuth()
+  const authenticated = Boolean(token)
+  const jobSeekerAuth = jobSeekerStartPath(authenticated)
+  const employerAuth = employerStartPath(authenticated)
 
   return (
     <div className="public-site">
@@ -47,8 +49,10 @@ export function JobsEnterPage() {
 
 export function JobEntryChoices() {
   const { t } = useTranslation()
-  const jobSeekerAuth = `/login${authQuery({ audience: 'job_seeker', next: JOB_SEEKER_HOME })}`
-  const employerAuth = `/login${authQuery({ audience: 'employer', next: EMPLOYER_HOME })}`
+  const { token } = useAuth()
+  const authenticated = Boolean(token)
+  const jobSeekerAuth = jobSeekerStartPath(authenticated)
+  const employerAuth = employerStartPath(authenticated)
 
   return (
     <div className="entry-choice-banner">

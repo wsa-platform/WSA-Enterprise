@@ -9,6 +9,7 @@ import { authQuery, safeReturnPath } from '../navigation/routeGuards'
 import {
   completeAuthenticatedSession,
   JOB_SEEKER_HOME,
+  isUserDashboardPath,
   parseAudience,
   persistAudience,
 } from '../navigation/roleDestinations'
@@ -24,7 +25,8 @@ export function LoginPage() {
   const expired = (location.state as { expired?: boolean } | null)?.expired === true
   const audience = parseAudience(params.get('audience'))
   const defaultNext = audience === 'job_seeker' ? JOB_SEEKER_HOME : audience === 'employer' ? '/employer' : '/'
-  const nextPath = safeReturnPath(params.get('next'), defaultNext)
+  const requestedNext = safeReturnPath(params.get('next'), defaultNext)
+  const nextPath = isUserDashboardPath(requestedNext) ? defaultNext : requestedNext
   const { setSession, setOrganizationId } = useAuth()
   const loginDefaults = audience ? { email: '', password: '' } : getLoginDefaults()
   const [email, setEmail] = useState(loginDefaults.email)

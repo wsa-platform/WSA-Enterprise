@@ -1,5 +1,4 @@
 export const internalPaths = {
-  dashboard: '/dashboard',
   account: '/account',
   profile: '/account/profile',
   products: '/account/products',
@@ -19,7 +18,6 @@ export const publicPaths = {
 } as const
 
 export const REQUIRED_INTERNAL_NAV_PATHS = [
-  internalPaths.dashboard,
   internalPaths.account,
   internalPaths.profile,
   internalPaths.products,

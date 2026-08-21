@@ -3,9 +3,11 @@ import type { User } from '../api'
 import { internalPaths } from './paths'
 
 export const JOB_SEEKER_HOME = '/jobs/application'
+export const JOB_SEEKER_ENTER = '/jobs/enter'
 export const EMPLOYER_HOME = '/employer'
-export const ADMIN_HOME = internalPaths.dashboard
+export const ADMIN_HOME = '/admin/users'
 export const ACCOUNT_HOME = internalPaths.account
+export const LEGACY_DASHBOARD_PATH = '/dashboard'
 
 export const AUDIENCE_STORAGE_KEY = 'wsa.auth.audience'
 export const AUTH_NEXT_STORAGE_KEY = 'wsa.auth.next'
@@ -72,7 +74,7 @@ export function audienceFromPath(pathname: string): AuthAudience | null {
     return 'job_seeker'
   }
   if (pathname.startsWith('/employer')) return 'employer'
-  if (pathname.startsWith('/admin') || pathname === ADMIN_HOME) return 'admin'
+  if (pathname.startsWith('/admin') || pathname === LEGACY_DASHBOARD_PATH) return 'admin'
   return null
 }
 
@@ -87,7 +89,26 @@ export function roleFlagsFromPermissions(permissions: string[] | null | undefine
 }
 
 export function isUserDashboardPath(pathname: string): boolean {
-  return pathname === ADMIN_HOME || pathname.startsWith(`${ADMIN_HOME}/`)
+  return pathname === LEGACY_DASHBOARD_PATH || pathname.startsWith(`${LEGACY_DASHBOARD_PATH}/`)
+}
+
+export function loginHref(audience: AuthAudience, next: string): string {
+  const params = new URLSearchParams()
+  params.set('next', safePath(next))
+  params.set('audience', audience)
+  return `/login?${params.toString()}`
+}
+
+export function jobSeekerStartPath(isAuthenticated: boolean): string {
+  return isAuthenticated ? JOB_SEEKER_HOME : loginHref('job_seeker', JOB_SEEKER_HOME)
+}
+
+export function employerStartPath(isAuthenticated: boolean): string {
+  return isAuthenticated ? EMPLOYER_HOME : loginHref('employer', EMPLOYER_HOME)
+}
+
+export function employerLogoutPath(): string {
+  return loginHref('employer', EMPLOYER_HOME)
 }
 
 export function destinationForRoles(
@@ -102,13 +123,13 @@ export function destinationForRoles(
     return usableNext.startsWith('/employer') ? usableNext : EMPLOYER_HOME
   }
 
-  if (audience === 'job_seeker' && !roles.isAdmin) {
+  if (audience === 'job_seeker') {
     if (usableNext.startsWith('/jobs/application') || usableNext.startsWith('/jobs/talent')) return usableNext
     return JOB_SEEKER_HOME
   }
 
   if (roles.isAdmin) {
-    if (requested && (isUserDashboardPath(requested) || requested.startsWith('/admin'))) return requested
+    if (usableNext.startsWith('/admin')) return usableNext
     return ADMIN_HOME
   }
 
@@ -121,7 +142,8 @@ export function destinationForRoles(
     return JOB_SEEKER_HOME
   }
 
-  return usableNext || ACCOUNT_HOME
+  if (usableNext) return usableNext
+  return ACCOUNT_HOME
 }
 
 export async function resolvePostAuthPath(options: {

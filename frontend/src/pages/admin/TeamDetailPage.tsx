@@ -74,7 +74,7 @@ export function TeamDetailPage() {
       eyebrow={t('common.enterprise')}
       title={team.name}
       description={team.description ?? t('teams.orgTeam')}
-      breadcrumbs={[{ label: t('nav.dashboard'), to: '/' }, { label: t('nav.teams'), to: '/admin/teams' }, { label: team.name }]}
+      breadcrumbs={[{ label: t('nav.home'), to: '/account' }, { label: t('nav.teams'), to: '/admin/teams' }, { label: team.name }]}
     />
 
     {message && <p className="notice">{message}</p>}

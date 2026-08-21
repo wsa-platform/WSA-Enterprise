@@ -10,6 +10,7 @@ import {
   AUTH_PROVIDER_STORAGE_KEY,
   completeAuthenticatedSession,
   JOB_SEEKER_HOME,
+  isUserDashboardPath,
   parseAudience,
   readStoredAudience,
 } from '../navigation/roleDestinations'
@@ -42,7 +43,8 @@ export function OAuthCallbackPage() {
         sessionStorage.removeItem(AUTH_NEXT_STORAGE_KEY)
         sessionStorage.removeItem(AUTH_PROVIDER_STORAGE_KEY)
         const defaultNext = audience === 'job_seeker' ? JOB_SEEKER_HOME : audience === 'employer' ? '/employer' : '/'
-        const next = safeReturnPath(stored, defaultNext)
+        const storedNext = safeReturnPath(stored, defaultNext)
+        const next = isUserDashboardPath(storedNext) ? defaultNext : storedNext
         const destination = await completeAuthenticatedSession({
           token: authenticated.token,
           user: authenticated.user,

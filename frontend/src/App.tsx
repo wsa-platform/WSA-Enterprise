@@ -10,7 +10,6 @@ import { RegisterPage } from './pages/RegisterPage'
 import { HomePage } from './pages/public/HomePage'
 import { SectionPage } from './pages/public/SectionPage'
 import { InfoPage } from './pages/public/InfoPage'
-import { DashboardPage, useDashboardTitle } from './pages/DashboardPage'
 import { ModulePage, cropCreateFields, cropTabs, farmCreateFields, farmTabs, soilCreateFields, soilTabs } from './pages/ModulePage'
 import { BusinessPage } from './pages/BusinessPage'
 import { DiagnosisPage } from './pages/DiagnosisPage'
@@ -54,13 +53,13 @@ import { TemplatesPage } from './pages/marketing/TemplatesPage'
 import { SegmentsPage } from './pages/marketing/SegmentsPage'
 import { ConsentPage } from './pages/marketing/ConsentPage'
 import { loginPathForProtectedRoute, unknownRouteFallback } from './navigation/routeGuards'
-import { JOB_SEEKER_HOME, roleFlagsFromPermissions } from './navigation/roleDestinations'
-import { AdminWorkspaceGuard } from './components/AdminWorkspaceGuard'
+import { ADMIN_HOME, JOB_SEEKER_HOME, roleFlagsFromPermissions } from './navigation/roleDestinations'
 import { EmployerShell } from './components/EmployerShell'
 import { JobSeekerShell } from './components/JobSeekerShell'
 import { RoleHomeRedirect } from './components/RoleHomeRedirect'
 import { JobsEnterPage } from './pages/jobs/JobsEnterPage'
 import { EmployerEntryPage } from './pages/employer/EmployerEntryPage'
+import { useWorkspaceName } from './hooks/useWorkspaceName'
 
 function AuthenticatedRedirect() {
   return <RoleHomeRedirect />
@@ -107,7 +106,7 @@ function EmployerProtected() {
 function ProtectedShell() {
   const { token, organizationId } = useAuth()
   const location = useLocation()
-  const workspaceName = useDashboardTitle(token, organizationId)
+  const workspaceName = useWorkspaceName(token, organizationId)
 
   if (!token) {
     const next = `${location.pathname}${location.search}`
@@ -121,23 +120,12 @@ function ProtectedShell() {
   )
 }
 
-function AdminDashboardRoute() {
-  const { token, organizationId } = useAuth()
-  const location = useLocation()
-  const workspaceName = useDashboardTitle(token, organizationId)
-
+function LegacyDashboardRedirect() {
+  const { token } = useAuth()
   if (!token) {
-    const next = `${location.pathname}${location.search}`
-    return <Navigate to={loginPathForProtectedRoute(next, 'admin')} replace />
+    return <Navigate to={loginPathForProtectedRoute(ADMIN_HOME, 'admin')} replace />
   }
-
-  return (
-    <PermissionProvider>
-      <AdminWorkspaceGuard>
-        <AppShell workspaceName={workspaceName} />
-      </AdminWorkspaceGuard>
-    </PermissionProvider>
-  )
+  return <RoleHomeRedirect />
 }
 
 function SessionGuard({ children }: { children: ReactNode }) {
@@ -216,9 +204,7 @@ function AppRoutes() {
       <Route element={<EmployerProtected />}>
         <Route path="/employer" element={<EmployerEntryPage />} />
       </Route>
-      <Route element={<AdminDashboardRoute />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-      </Route>
+      <Route path="/dashboard" element={<LegacyDashboardRedirect />} />
       <Route element={<ProtectedShell />}>
         <Route path="/organization" element={<OrganizationPage />} />
         <Route path="/billing" element={<BillingPage />} />

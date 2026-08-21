@@ -8,6 +8,7 @@ import { authQuery, safeReturnPath } from '../navigation/routeGuards'
 import {
   completeAuthenticatedSession,
   JOB_SEEKER_HOME,
+  isUserDashboardPath,
   parseAudience,
 } from '../navigation/roleDestinations'
 import { AuthProviders } from './auth/AuthProviders'
@@ -20,7 +21,8 @@ export function RegisterPage() {
   const [params] = useSearchParams()
   const audience = parseAudience(params.get('audience'))
   const defaultNext = audience === 'job_seeker' ? JOB_SEEKER_HOME : audience === 'employer' ? '/employer' : '/'
-  const nextPath = safeReturnPath(params.get('next'), defaultNext)
+  const requestedNext = safeReturnPath(params.get('next'), defaultNext)
+  const nextPath = isUserDashboardPath(requestedNext) ? defaultNext : requestedNext
   const { setSession, setOrganizationId } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')

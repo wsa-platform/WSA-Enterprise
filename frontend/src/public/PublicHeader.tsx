@@ -1,13 +1,21 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { JOB_SEEKER_ENTER, jobSeekerStartPath, readStoredAudience } from '../navigation/roleDestinations'
 import { PUBLIC_TOP_NAV_ITEMS } from '../navigation/paths'
 import { PublicLanguageMenu } from './PublicLanguageMenu'
 
 /** Header — adapted from garden-store/components/Header.tsx */
 export function PublicHeader() {
   const { t } = useTranslation()
+  const { token } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
+  const authenticated = Boolean(token)
+  const storedAudience = readStoredAudience()
+  const accountEntry = storedAudience === 'job_seeker' && authenticated
+    ? jobSeekerStartPath(true)
+    : JOB_SEEKER_ENTER
 
   return (
     <header className="gs-header">
@@ -46,10 +54,10 @@ export function PublicHeader() {
 
         <div className="gs-header-actions">
           <PublicLanguageMenu />
-          <Link to="/jobs/enter" className="gs-btn gs-btn-ghost">
+          <Link to={accountEntry} className="gs-btn gs-btn-ghost">
             {t('website.nav.login')}
           </Link>
-          <Link to="/jobs/enter" className="gs-btn gs-btn-primary">
+          <Link to={accountEntry} className="gs-btn gs-btn-primary">
             {t('website.nav.register')}
           </Link>
         </div>

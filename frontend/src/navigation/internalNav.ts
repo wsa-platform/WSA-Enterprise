@@ -18,7 +18,6 @@ export const INTERNAL_NAV_SECTIONS: InternalNavSection[] = [
   {
     titleKey: 'nav.overview',
     items: [
-      { to: internalPaths.dashboard, labelKey: 'nav.home', end: true, permission: 'platform.view' },
       { to: '/notifications', labelKey: 'nav.notifications', permission: 'platform.view' },
     ],
   },
@@ -121,57 +120,56 @@ export function buildInternalBreadcrumbs(
   pathname: string,
   t: (key: string) => string,
 ): BreadcrumbItem[] {
-  const dashboard = { label: t('nav.home'), to: internalPaths.dashboard }
+  const home = { label: t('nav.home'), to: internalPaths.account }
   const account = { label: t('nav.myAccount'), to: internalPaths.account }
   const products = { label: t('nav.myProducts'), to: internalPaths.products }
 
   const map: Record<string, BreadcrumbItem[]> = {
-    [internalPaths.dashboard]: [{ label: t('nav.home') }],
-    '/organization': [dashboard, { label: t('nav.organization') }],
-    '/billing': [dashboard, { label: t('nav.billing') }],
-    '/admin/users': [dashboard, { label: t('nav.users') }],
-    '/admin/teams': [dashboard, { label: t('nav.teams') }],
-    '/admin/roles': [dashboard, { label: t('nav.roles') }],
-    '/admin/audit': [dashboard, { label: t('nav.audit') }],
-    '/admin/monitoring': [dashboard, { label: t('nav.monitoring') }],
-    '/admin/analytics': [dashboard, { label: t('nav.analytics') }],
-    '/admin/api-clients': [dashboard, { label: t('nav.apiClients') }],
-    '/ai/workspace': [dashboard, { label: t('nav.aiWorkspace') }],
-    '/ai/assistant': [dashboard, { label: t('nav.aiAssistant') }],
-    '/ai/vision': [dashboard, { label: t('nav.aiVision') }],
-    '/jobs': [dashboard, { label: t('nav.jobs') }],
-    '/jobs/talent': [dashboard, { label: t('nav.jobs'), to: '/jobs' }, { label: t('nav.talentProfile') }],
-    '/jobs/application': [dashboard, { label: t('nav.jobs'), to: '/jobs' }, { label: t('nav.myJobApplication') }],
-    [internalPaths.account]: [dashboard, { label: t('nav.myAccount') }],
-    [internalPaths.profile]: [dashboard, account, { label: t('nav.profile') }],
-    [internalPaths.products]: [dashboard, account, { label: t('nav.myProducts') }],
-    [internalPaths.newProduct]: [dashboard, account, products, { label: t('market.addProduct') }],
-    '/communications': [dashboard, { label: t('nav.communications') }],
-    '/beekeeping': [dashboard, { label: t('nav.beekeeping') }],
-    '/marketing': [dashboard, { label: t('nav.marketingDashboard') }],
-    '/marketing/campaigns': [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingCampaigns') }],
-    '/marketing/templates': [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingTemplates') }],
-    '/marketing/segments': [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingSegments') }],
-    '/marketing/consent': [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingConsent') }],
-    '/notifications': [dashboard, { label: t('nav.notifications') }],
-    [internalPaths.settings]: [dashboard, { label: t('nav.settings') }],
+    '/organization': [home, { label: t('nav.organization') }],
+    '/billing': [home, { label: t('nav.billing') }],
+    '/admin/users': [home, { label: t('nav.users') }],
+    '/admin/teams': [home, { label: t('nav.teams') }],
+    '/admin/roles': [home, { label: t('nav.roles') }],
+    '/admin/audit': [home, { label: t('nav.audit') }],
+    '/admin/monitoring': [home, { label: t('nav.monitoring') }],
+    '/admin/analytics': [home, { label: t('nav.analytics') }],
+    '/admin/api-clients': [home, { label: t('nav.apiClients') }],
+    '/ai/workspace': [home, { label: t('nav.aiWorkspace') }],
+    '/ai/assistant': [home, { label: t('nav.aiAssistant') }],
+    '/ai/vision': [home, { label: t('nav.aiVision') }],
+    '/jobs': [home, { label: t('nav.jobs') }],
+    '/jobs/talent': [home, { label: t('nav.jobs'), to: '/jobs' }, { label: t('nav.talentProfile') }],
+    '/jobs/application': [home, { label: t('nav.jobs'), to: '/jobs' }, { label: t('nav.myJobApplication') }],
+    [internalPaths.account]: [{ label: t('nav.myAccount') }],
+    [internalPaths.profile]: [home, account, { label: t('nav.profile') }],
+    [internalPaths.products]: [home, account, { label: t('nav.myProducts') }],
+    [internalPaths.newProduct]: [home, account, products, { label: t('market.addProduct') }],
+    '/communications': [home, { label: t('nav.communications') }],
+    '/beekeeping': [home, { label: t('nav.beekeeping') }],
+    '/marketing': [home, { label: t('nav.marketingDashboard') }],
+    '/marketing/campaigns': [home, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingCampaigns') }],
+    '/marketing/templates': [home, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingTemplates') }],
+    '/marketing/segments': [home, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingSegments') }],
+    '/marketing/consent': [home, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingConsent') }],
+    '/notifications': [home, { label: t('nav.notifications') }],
+    [internalPaths.settings]: [home, { label: t('nav.settings') }],
   }
 
   if (pathname.startsWith('/ai/requests/')) {
-    return [dashboard, { label: t('nav.aiWorkspace'), to: '/ai/workspace' }, { label: t('nav.requestDetail') }]
+    return [home, { label: t('nav.aiWorkspace'), to: '/ai/workspace' }, { label: t('nav.requestDetail') }]
   }
   if (pathname.startsWith('/admin/teams/')) {
-    return [dashboard, { label: t('nav.teams'), to: '/admin/teams' }, { label: t('nav.teamDetail') }]
+    return [home, { label: t('nav.teams'), to: '/admin/teams' }, { label: t('nav.teamDetail') }]
   }
   if (pathname === internalPaths.newProduct || pathname.startsWith('/seller/listings/new')) {
-    return map[internalPaths.newProduct] ?? [dashboard, account, products, { label: t('market.addProduct') }]
+    return map[internalPaths.newProduct] ?? [home, account, products, { label: t('market.addProduct') }]
   }
   if (pathname.startsWith(`${internalPaths.products}/`) || pathname.startsWith('/seller/listings/')) {
-    return [dashboard, account, products, { label: t('market.editProduct') }]
+    return [home, account, products, { label: t('market.editProduct') }]
   }
   if (pathname.startsWith('/marketing/campaigns/')) {
-    return [dashboard, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingCampaigns'), to: '/marketing/campaigns' }, { label: t('nav.marketingCampaignDetail') }]
+    return [home, { label: t('nav.marketing'), to: '/marketing' }, { label: t('nav.marketingCampaigns'), to: '/marketing/campaigns' }, { label: t('nav.marketingCampaignDetail') }]
   }
 
-  return map[pathname] ?? [dashboard, { label: pathname.replace('/', '') || t('nav.page') }]
+  return map[pathname] ?? [home, { label: pathname.replace('/', '') || t('nav.page') }]
 }
