@@ -20,11 +20,15 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { translateApiError } from '../../i18n/apiErrors'
 import {
   CANDIDATE_STATUS_TIMELINE,
+  nextProfileSection,
   timelineStepIndex,
   toCandidatePayload,
+  toDateInputValue,
   validateCandidateProfile,
+  validateCandidateSection,
   type EducationItem,
   type ExperienceItem,
+  type ProfileSectionId,
 } from './candidateProfile'
 
 function initials(name: string): string {
@@ -47,6 +51,33 @@ function formatEducationItem(item: EducationItem): string {
   const parts = [item.degree, item.institution].filter(Boolean)
   const meta = [item.country, item.year].filter(Boolean)
   return [parts.join(' • '), meta.join(' • ')].filter(Boolean).join('\n')
+}
+
+function ProfileField({
+  htmlFor,
+  label,
+  error,
+  children,
+}: {
+  htmlFor: string
+  label: string
+  error?: string
+  children: ReactNode
+}) {
+  return (
+    <div className="profile-field">
+      <label htmlFor={htmlFor}>{label}</label>
+      {children}
+      {error ? <p className="field-error" role="alert">{error}</p> : null}
+    </div>
+  )
+}
+
+function focusProfileSection(section: ProfileSectionId) {
+  const root = document.getElementById(`job-seeker-section-${section}`)
+  root?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const firstField = root?.querySelector<HTMLElement>('input:not([disabled]):not([type=hidden]):not([type=file]), textarea')
+  firstField?.focus()
 }
 
 export function MyJobApplicationPage() {
@@ -85,7 +116,7 @@ export function MyJobApplicationPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [missingProfile, setMissingProfile] = useState(false)
 
-  const { data: profile, loading, error, reload } = useAsyncData(async () => {
+  const { data: profile, loading, error, reload, setData } = useAsyncData(async () => {
     if (!token || !canAccess) return null
     try {
       setMissingProfile(false)
@@ -118,7 +149,7 @@ export function MyJobApplicationPage() {
     setBiography(profile.biography ?? '')
     setCountry(profile.country ?? '')
     setCity(profile.city ?? '')
-    setDateOfBirth(profile.date_of_birth ?? '')
+    setDateOfBirth(toDateInputValue(profile.date_of_birth))
     setNationality(profile.nationality ?? '')
     setAddress(profile.address ?? '')
     setSkills((profile.skills ?? []).join(', '))
@@ -126,14 +157,16 @@ export function MyJobApplicationPage() {
     setExperienceItems(Array.isArray(profile.experience) ? (profile.experience as ExperienceItem[]) : [])
     setEducationItems(Array.isArray(profile.education) ? (profile.education as EducationItem[]) : [])
     setYearsOfExperience(profile.years_of_experience != null ? String(profile.years_of_experience) : '')
-    setViewMode(true)
-    setMessage('')
     setCvFile(null)
     setEditingExperienceIndex(null)
     setEditingEducationIndex(null)
     setExperienceForm({})
     setEducationForm({})
   }, [profile])
+
+  useEffect(() => {
+    if (missingProfile) setViewMode(false)
+  }, [missingProfile])
 
   useEffect(() => {
     if (!token || !profile?.has_photo) {
@@ -181,22 +214,31 @@ export function MyJobApplicationPage() {
     return <ErrorBanner message={t('jobs.noPermissionTalent')} />
   }
 
-  const handleSave = async () => {
-    if (!token) return
-    const errors = validateCandidateProfile(formState)
+  const handleSave = async (section?: ProfileSectionId) => {
+    if (!token || saving) return
+    const errors = section
+      ? validateCandidateSection(formState, section)
+      : validateCandidateProfile(formState)
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) {
       setMessage(t('jobs.applicationValidationFailed'))
+      if (section) focusProfileSection(section)
       return
     }
     setSaving(true)
     setMessage('')
     try {
-      await upsertMyJobSeekerProfile(token, toCandidatePayload(formState), organizationId ?? undefined)
+      const saved = await upsertMyJobSeekerProfile(token, toCandidatePayload(formState), organizationId ?? undefined)
+      setData(saved)
       setMessage(t('jobs.applicationSaved'))
       setMissingProfile(false)
-      await reload()
-      setViewMode(true)
+      const next = section ? nextProfileSection(section) : null
+      if (section && !next) {
+        setViewMode(true)
+      }
+      if (next) {
+        window.setTimeout(() => focusProfileSection(next), 50)
+      }
     } catch (requestError) {
       setMessage(translateApiError(requestError) || t('jobs.applicationSaveFailed'))
     } finally {
@@ -217,7 +259,7 @@ export function MyJobApplicationPage() {
       setBiography(profile.biography ?? '')
       setCountry(profile.country ?? '')
       setCity(profile.city ?? '')
-      setDateOfBirth(profile.date_of_birth ?? '')
+      setDateOfBirth(toDateInputValue(profile.date_of_birth))
       setNationality(profile.nationality ?? '')
       setAddress(profile.address ?? '')
       setSkills((profile.skills ?? []).join(', '))
@@ -235,29 +277,37 @@ export function MyJobApplicationPage() {
 
   const handlePhotoUpload = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!token || !photoFile) return
+    if (!token || !photoFile || saving) return
+    setSaving(true)
     setMessage('')
     try {
-      await uploadMyJobSeekerPhoto(token, photoFile, organizationId ?? undefined)
+      const saved = await uploadMyJobSeekerPhoto(token, photoFile, organizationId ?? undefined)
+      setData(saved)
       setMessage(t('jobs.photoUploaded'))
       setPhotoFile(null)
-      await reload()
+      setViewMode(true)
     } catch (requestError) {
       setMessage(translateApiError(requestError) || t('jobs.photoUploadFailed'))
+    } finally {
+      setSaving(false)
     }
   }
 
   const handleCvUpload = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!token || !cvFile) return
+    if (!token || !cvFile || saving) return
+    setSaving(true)
     setMessage('')
     try {
-      await uploadMyJobSeekerCv(token, cvFile, organizationId ?? undefined)
+      const saved = await uploadMyJobSeekerCv(token, cvFile, organizationId ?? undefined)
+      setData(saved)
       setMessage(t('jobs.cvUploaded'))
       setCvFile(null)
-      await reload()
+      window.setTimeout(() => focusProfileSection('photo'), 50)
     } catch (requestError) {
       setMessage(translateApiError(requestError) || t('jobs.cvUploadFailed'))
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -464,7 +514,7 @@ export function MyJobApplicationPage() {
         </ul>
       )}
 
-      {loading && canAccess ? (
+      {loading && !profile && !missingProfile ? (
         <p className="loading">{t('jobs.loadingProfile')}</p>
       ) : profile || missingProfile ? (
         <>
@@ -528,62 +578,113 @@ export function MyJobApplicationPage() {
             </div>
           </section>
 
+          <div id="job-seeker-section-personal">
           <Panel eyebrow={t('jobs.personalInfo')} title={t('jobs.personalInfo')}>
-            {viewMode ? (
-              <div className="detail-grid">
-                <div><span>{t('jobs.fullName')}</span><strong dir="auto">{profile?.full_name || '—'}</strong></div>
-                <div><span>{t('jobs.email')}</span><strong dir="auto">{profile?.email || '—'}</strong></div>
-                <div><span>{t('jobs.phoneNumber')}</span><strong dir="auto">{profile?.phone || '—'}</strong></div>
-                <div><span>{t('jobs.country')}</span><strong dir="auto">{profile?.country || '—'}</strong></div>
-                <div><span>{t('jobs.city')}</span><strong dir="auto">{profile?.city || '—'}</strong></div>
-                <div><span>{t('jobs.dateOfBirth')}</span><strong dir="auto">{profile?.date_of_birth || '—'}</strong></div>
-                <div><span>{t('jobs.nationality')}</span><strong dir="auto">{profile?.nationality || '—'}</strong></div>
-                <div><span>{t('jobs.address')}</span><strong dir="auto">{profile?.address || '—'}</strong></div>
-              </div>
-            ) : (
-              <div className="record-form">
-                <label>
-                  {t('jobs.fullName')}
-                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} required dir="auto" />
-                </label>
-                <label>
-                  {t('jobs.email')}
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} dir="auto" />
-                </label>
-                <label>
-                  {t('jobs.phoneNumber')}
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} dir="auto" />
-                </label>
-                <label>
-                  {t('jobs.country')}
-                  <input value={country} onChange={(e) => setCountry(e.target.value)} dir="auto" />
-                </label>
-                <label>
-                  {t('jobs.city')}
-                  <input value={city} onChange={(e) => setCity(e.target.value)} dir="auto" />
-                </label>
-                <label>
-                  {t('jobs.dateOfBirth')}
-                  <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} dir="auto" />
-                </label>
-                <label>
-                  {t('jobs.nationality')}
-                  <input value={nationality} onChange={(e) => setNationality(e.target.value)} dir="auto" />
-                </label>
-                <label>
-                  {t('jobs.address')}
-                  <input value={address} onChange={(e) => setAddress(e.target.value)} dir="auto" />
-                </label>
+            <div className="record-form profile-fields">
+              <ProfileField htmlFor="job-seeker-full-name" label={t('jobs.fullName')} error={fieldErrors.fullName ? t(fieldErrors.fullName) : undefined}>
+                <input
+                  id="job-seeker-full-name"
+                  name="full_name"
+                  autoComplete="name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  readOnly={viewMode}
+                  dir="auto"
+                />
+              </ProfileField>
+              <ProfileField htmlFor="job-seeker-email" label={t('jobs.email')} error={fieldErrors.email ? t(fieldErrors.email) : undefined}>
+                <input
+                  id="job-seeker-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  readOnly={viewMode}
+                  dir="ltr"
+                />
+              </ProfileField>
+              <ProfileField htmlFor="job-seeker-phone" label={t('jobs.phoneNumber')}>
+                <input
+                  id="job-seeker-phone"
+                  name="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  readOnly={viewMode}
+                  dir="ltr"
+                />
+              </ProfileField>
+              <ProfileField htmlFor="job-seeker-country" label={t('jobs.country')}>
+                <input
+                  id="job-seeker-country"
+                  name="country"
+                  autoComplete="country-name"
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  readOnly={viewMode}
+                  dir="auto"
+                />
+              </ProfileField>
+              <ProfileField htmlFor="job-seeker-city" label={t('jobs.city')}>
+                <input
+                  id="job-seeker-city"
+                  name="city"
+                  autoComplete="address-level2"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  readOnly={viewMode}
+                  dir="auto"
+                />
+              </ProfileField>
+              <ProfileField htmlFor="job-seeker-date-of-birth" label={t('jobs.dateOfBirth')}>
+                <input
+                  id="job-seeker-date-of-birth"
+                  name="date_of_birth"
+                  type="date"
+                  autoComplete="bday"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  readOnly={viewMode}
+                  dir="ltr"
+                />
+              </ProfileField>
+              <ProfileField htmlFor="job-seeker-nationality" label={t('jobs.nationality')}>
+                <input
+                  id="job-seeker-nationality"
+                  name="nationality"
+                  value={nationality}
+                  onChange={(e) => setNationality(e.target.value)}
+                  readOnly={viewMode}
+                  dir="auto"
+                />
+              </ProfileField>
+              <ProfileField htmlFor="job-seeker-address" label={t('jobs.address')}>
+                <input
+                  id="job-seeker-address"
+                  name="address"
+                  autoComplete="street-address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  readOnly={viewMode}
+                  dir="auto"
+                />
+              </ProfileField>
+              {!viewMode && (
                 <div className="form-actions">
-                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave()}>
+                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave('personal')}>
                     {saving ? t('common.saving') : t('common.save')}
                   </button>
                   <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </Panel>
+          </div>
 
+          <div id="job-seeker-section-professional">
           <Panel eyebrow={t('jobs.professionalProfile')} title={t('jobs.professionalProfile')}>
             {viewMode ? (
               <div style={{ display: 'grid', gap: 14 }}>
@@ -611,7 +712,7 @@ export function MyJobApplicationPage() {
                 </label>
                 <label>
                   {t('jobs.yearsOfExperience')}
-                  <input type="number" min="0" max="80" value={yearsOfExperience} onChange={(e) => setYearsOfExperience(e.target.value)} dir="auto" />
+                  <input id="job-seeker-years-of-experience" type="number" min="0" max="80" value={yearsOfExperience} onChange={(e) => setYearsOfExperience(e.target.value)} dir="ltr" />
                 </label>
                 <label>
                   {t('jobs.professionalField')}
@@ -626,7 +727,7 @@ export function MyJobApplicationPage() {
                   <input value={languages} onChange={(e) => setLanguages(e.target.value)} placeholder={t('jobs.languages')} dir="auto" />
                 </label>
                 <div className="form-actions">
-                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave()}>
+                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave('professional')}>
                     {saving ? t('common.saving') : t('common.save')}
                   </button>
                   <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
@@ -634,7 +735,9 @@ export function MyJobApplicationPage() {
               </div>
             )}
           </Panel>
+          </div>
 
+          <div id="job-seeker-section-education">
           <Panel eyebrow={t('jobs.education')} title={t('jobs.education')}>
             {viewMode ? (
               educationItems.length === 0 ? (
@@ -671,7 +774,7 @@ export function MyJobApplicationPage() {
                 )}
                 {editingEducationIndex === -1 && renderEducationForm(null, educationForm)}
                 <div className="form-actions" style={{ marginTop: 18 }}>
-                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave()}>
+                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave('education')}>
                     {saving ? t('common.saving') : t('common.save')}
                   </button>
                   <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
@@ -679,7 +782,9 @@ export function MyJobApplicationPage() {
               </>
             )}
           </Panel>
+          </div>
 
+          <div id="job-seeker-section-experience">
           <Panel eyebrow={t('jobs.workExperience')} title={t('jobs.workExperience')}>
             {viewMode ? (
               experienceItems.length === 0 ? (
@@ -716,7 +821,7 @@ export function MyJobApplicationPage() {
                 )}
                 {editingExperienceIndex === -1 && renderExperienceForm(null, experienceForm)}
                 <div className="form-actions" style={{ marginTop: 18 }}>
-                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave()}>
+                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave('experience')}>
                     {saving ? t('common.saving') : t('common.save')}
                   </button>
                   <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
@@ -724,7 +829,9 @@ export function MyJobApplicationPage() {
               </>
             )}
           </Panel>
+          </div>
 
+          <div id="job-seeker-section-cv">
           <Panel eyebrow={t('jobs.cvSection')} title={t('jobs.cvSection')}>
             {viewMode ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
@@ -743,13 +850,15 @@ export function MyJobApplicationPage() {
                   <input type="file" accept=".pdf,.doc,.docx,.txt" onChange={(e) => setCvFile(e.target.files?.[0] ?? null)} />
                 </label>
                 <div className="form-actions">
-                  <button type="submit" disabled={!cvFile}>{t('jobs.replaceCv')}</button>
+                  <button type="submit" disabled={!cvFile || saving}>{t('jobs.replaceCv')}</button>
                 </div>
               </form>
             )}
           </Panel>
+          </div>
 
           {!viewMode && (
+            <div id="job-seeker-section-photo">
             <Panel eyebrow={t('jobs.profilePhoto')} title={t('jobs.profilePhoto')}>
               <form className="record-form" onSubmit={handlePhotoUpload}>
                 <label>
@@ -757,10 +866,11 @@ export function MyJobApplicationPage() {
                   <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)} />
                 </label>
                 <div className="form-actions">
-                  <button type="submit" disabled={!photoFile}>{t('jobs.replacePhoto')}</button>
+                  <button type="submit" disabled={!photoFile || saving}>{t('jobs.replacePhoto')}</button>
                 </div>
               </form>
             </Panel>
+            </div>
           )}
 
           <Panel eyebrow={t('jobs.myApplications')} title={t('jobs.myApplications')}>

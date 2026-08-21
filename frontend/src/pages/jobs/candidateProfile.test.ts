@@ -3,7 +3,10 @@ import {
   ownerCompletenessPercent,
   timelineStepIndex,
   toCandidatePayload,
+  toDateInputValue,
+  nextProfileSection,
   validateCandidateProfile,
+  validateCandidateSection,
   authorizedUnlockFromPay,
   type CandidateProfileForm,
 } from './candidateProfile'
@@ -87,6 +90,50 @@ describe('candidate profile helpers', () => {
       languages: ['en'],
       has_cv: true,
     })).toBe(100)
+  })
+
+  it('maps personal fields onto the matching backend properties', () => {
+    const payload = toCandidatePayload(emptyForm({
+      fullName: 'فاطمة العتيبي',
+      email: 'seeker@wsa.test',
+      phone: '+966500000001',
+      country: 'SA',
+      city: 'الرياض',
+      dateOfBirth: '1994-05-12',
+      nationality: 'سعودية',
+      address: 'حي النخيل',
+    }))
+    expect(payload).toMatchObject({
+      full_name: 'فاطمة العتيبي',
+      email: 'seeker@wsa.test',
+      phone: '+966500000001',
+      country: 'SA',
+      city: 'الرياض',
+      date_of_birth: '1994-05-12',
+      nationality: 'سعودية',
+      address: 'حي النخيل',
+    })
+  })
+
+  it('normalizes ISO dates so the date-of-birth control can display them', () => {
+    expect(toDateInputValue('1994-05-12T00:00:00.000000Z')).toBe('1994-05-12')
+    expect(toDateInputValue('1994-05-12')).toBe('1994-05-12')
+    expect(toDateInputValue(null)).toBe('')
+  })
+
+  it('advances profile sections in the existing page order without leaving the page', () => {
+    expect(nextProfileSection('personal')).toBe('professional')
+    expect(nextProfileSection('professional')).toBe('education')
+    expect(nextProfileSection('education')).toBe('experience')
+    expect(nextProfileSection('experience')).toBe('cv')
+    expect(nextProfileSection('cv')).toBe('photo')
+    expect(nextProfileSection('photo')).toBeNull()
+  })
+
+  it('keeps personal-section validation on personal fields only', () => {
+    expect(validateCandidateSection(emptyForm({ fullName: 'Ada', yearsOfExperience: 'bad' }), 'personal')).toEqual({})
+    expect(validateCandidateSection(emptyForm({ fullName: 'Ada', email: 'bad' }), 'personal').email).toBe('jobs.emailInvalid')
+    expect(validateCandidateSection(emptyForm({ fullName: 'Ada', yearsOfExperience: 'bad' }), 'professional').yearsOfExperience).toBe('jobs.yearsOfExperienceInvalid')
   })
 
   it('unlocks contact only from a server-verified payment payload', () => {

@@ -46,26 +46,68 @@ export function timelineStepIndex(status: string | null | undefined): number {
   return CANDIDATE_STATUS_TIMELINE.findIndex((step) => (step.statuses as readonly string[]).includes(status))
 }
 
+export const PROFILE_SECTION_ORDER = [
+  'personal',
+  'professional',
+  'education',
+  'experience',
+  'cv',
+  'photo',
+] as const
+
+export type ProfileSectionId = (typeof PROFILE_SECTION_ORDER)[number]
+
 export function splitCsv(value: string): string[] {
   return value.split(',').map((item) => item.trim()).filter(Boolean)
 }
 
+export function toDateInputValue(value: string | null | undefined): string {
+  if (!value) return ''
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(value)
+  return match?.[1] ?? ''
+}
+
+export function nextProfileSection(section: ProfileSectionId): ProfileSectionId | null {
+  const index = PROFILE_SECTION_ORDER.indexOf(section)
+  if (index < 0 || index >= PROFILE_SECTION_ORDER.length - 1) return null
+  return PROFILE_SECTION_ORDER[index + 1]
+}
+
+export function validateCandidateSection(
+  form: CandidateProfileForm,
+  section: ProfileSectionId,
+): Record<string, string> {
+  if (section === 'personal') {
+    const errors: Record<string, string> = {}
+    if (!form.fullName.trim()) {
+      errors.fullName = 'jobs.fullNameRequired'
+    }
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      errors.email = 'jobs.emailInvalid'
+    }
+    return errors
+  }
+
+  if (section === 'professional') {
+    const errors: Record<string, string> = {}
+    if (form.yearsOfExperience !== '' && Number.isNaN(Number(form.yearsOfExperience))) {
+      errors.yearsOfExperience = 'jobs.yearsOfExperienceInvalid'
+    }
+    const years = Number(form.yearsOfExperience)
+    if (form.yearsOfExperience !== '' && (years < 0 || years > 80)) {
+      errors.yearsOfExperience = 'jobs.yearsOfExperienceInvalid'
+    }
+    return errors
+  }
+
+  return {}
+}
+
 export function validateCandidateProfile(form: CandidateProfileForm): Record<string, string> {
-  const errors: Record<string, string> = {}
-  if (!form.fullName.trim()) {
-    errors.fullName = 'jobs.fullNameRequired'
+  return {
+    ...validateCandidateSection(form, 'personal'),
+    ...validateCandidateSection(form, 'professional'),
   }
-  if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = 'jobs.emailInvalid'
-  }
-  if (form.yearsOfExperience !== '' && Number.isNaN(Number(form.yearsOfExperience))) {
-    errors.yearsOfExperience = 'jobs.yearsOfExperienceInvalid'
-  }
-  const years = Number(form.yearsOfExperience)
-  if (form.yearsOfExperience !== '' && (years < 0 || years > 80)) {
-    errors.yearsOfExperience = 'jobs.yearsOfExperienceInvalid'
-  }
-  return errors
 }
 
 export function toCandidatePayload(form: CandidateProfileForm): Record<string, unknown> {
