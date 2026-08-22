@@ -205,6 +205,11 @@
       "jobSeekerHint": "أنشئ أو افتح ملف طالب الوظيفة والسيرة الذاتية والطلبات.",
       "employer": "الدخول كصاحب عمل",
       "employerHint": "افتح مساحة العمل المخصصة لصاحب العمل.",
+      "headline": "هل تبحث عن فرصتك القادمة؟",
+      "seekOpportunity": "أبحث عن فرصة عمل",
+      "seekOpportunityHint": "أنشئ ملفك المهني وأبرز خبراتك ومهاراتك، ودع الفرصة المناسبة تصل إليك.",
+      "findTalent": "أبحث عن كفاءة",
+      "findTalentHint": "اكتشف أفضل الكفاءات، وابحث عن المرشح المناسب لاحتياجاتك من بين مجموعة واسعة من المواهب.",
       "backToChoices": "العودة إلى نوع الحساب"
     },
     "jobSeeker": {
@@ -946,7 +951,28 @@
     "applicationSaveFailed": "تعذر حفظ ملف طلب التوظيف.",
     "applicationValidationFailed": "يرجى تصحيح الحقول المظللة قبل الحفظ.",
     "fullNameRequired": "الاسم الكامل مطلوب.",
+    "fullNameFourPartsRequired": "يجب أن يتكون الاسم الكامل من أربعة أجزاء.",
+    "emailRequired": "البريد الإلكتروني مطلوب.",
     "emailInvalid": "البريد الإلكتروني غير صالح.",
+    "phoneRequired": "رقم الهاتف مطلوب.",
+    "countryRequired": "البلد مطلوب.",
+    "cityRequired": "المدينة مطلوبة.",
+    "dateOfBirthRequired": "تاريخ الميلاد مطلوب.",
+    "nationalityRequired": "الجنسية مطلوبة.",
+    "addressRequired": "العنوان مطلوب.",
+    "primaryQualification": "المؤهل الأساسي",
+    "primaryQualificationRequired": "المؤهل الأساسي مطلوب.",
+    "primaryQualificationDocument": "صورة المؤهل",
+    "primaryQualificationDocumentRequired": "يجب إرفاق مستند يثبت المؤهل الأساسي.",
+    "primaryQualificationUploaded": "تم رفع مستند المؤهل.",
+    "primaryQualificationUploadFailed": "تعذر رفع مستند المؤهل.",
+    "primaryQualificationDownloadFailed": "تعذر عرض مستند المؤهل.",
+    "viewQualificationDocument": "عرض مستند المؤهل",
+    "selectQualificationDocument": "ارفع مستند المؤهل",
+    "additionalQualifications": "المؤهلات الإضافية",
+    "additionalQualificationsOptional": "اختياري — يمكنك إضافة مؤهلات أخرى إن رغبت.",
+    "requiredField": "مطلوب",
+    "optionalField": "اختياري",
     "yearsOfExperienceInvalid": "سنوات الخبرة يجب أن تكون رقماً بين 0 و 80.",
     "cvDownloadFailed": "تعذر عرض السيرة الذاتية.",
     "present": "الحاضر",
@@ -1290,7 +1316,25 @@
       "jobs": {
         "title": "التوظيف",
         "description": "فرص العمل الزراعي وملفات الكفاءات والمسارات المهنية.",
-        "imageAlt": "متخصصون زراعيون يعملون في حقل أخضر"
+        "imageAlt": "متخصصون زراعيون يعملون في حقل أخضر",
+        "features": {
+          "listings": {
+            "title": "إعلانات الوظائف",
+            "body": "تصفح فرص العمل الزراعي على المنصة."
+          },
+          "employers": {
+            "title": "فرص أصحاب العمل",
+            "body": "ربط المزارع والشركات الزراعية بالكفاءات المؤهلة."
+          },
+          "talent": {
+            "title": "ملفات الكفاءات",
+            "body": "يعرض المتخصصون الزراعيون مهاراتهم وخبراتهم."
+          },
+          "careers": {
+            "title": "مسارات مهنية",
+            "body": "اكتشف أدوارًا للمهندسين ومديري المزارع والمتخصصين الميدانيين."
+          }
+        }
       },
       "store": {
         "title": "المتجر",
@@ -1396,22 +1440,6 @@
       "training.features.education": {
         "title": "محتوى تعليمي",
         "body": "موارد تعليمية تشمل تربية النحل وتعليم المحاصيل."
-      },
-      "jobs.features.listings": {
-        "title": "إعلانات الوظائف",
-        "body": "تصفح فرص العمل الزراعي على المنصة."
-      },
-      "jobs.features.employers": {
-        "title": "فرص أصحاب العمل",
-        "body": "ربط المزارع والشركات الزراعية بالكفاءات المؤهلة."
-      },
-      "jobs.features.talent": {
-        "title": "ملفات الكفاءات",
-        "body": "يعرض المتخصصون الزراعيون مهاراتهم وخبراتهم."
-      },
-      "jobs.features.careers": {
-        "title": "مسارات مهنية",
-        "body": "اكتشف أدوارًا للمهندسين ومديري المزارع والمتخصصين الميدانيين."
       },
       "store.features.products": {
         "title": "منتجات زراعية",

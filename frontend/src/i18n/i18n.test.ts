@@ -3,6 +3,7 @@ import en from './locales/en.json'
 import ar from './locales/ar.json'
 import tr from './locales/tr.json'
 import fr from './locales/fr.json'
+import i18n from './config'
 import {
   DEFAULT_LANGUAGE,
   isRtlLanguage,
@@ -68,5 +69,28 @@ describe('locale key parity', () => {
 
   it('keeps French keys aligned with English', () => {
     expect(frKeys).toEqual(enKeys)
+  })
+})
+
+describe('jobs landing translations', () => {
+  const featureKeys = [
+    'website.sections.jobs.features.listings.title',
+    'website.sections.jobs.features.employers.title',
+    'website.sections.jobs.features.talent.title',
+    'website.sections.jobs.features.careers.title',
+    'auth.entry.headline',
+    'auth.entry.seekOpportunity',
+    'auth.entry.findTalent',
+  ]
+
+  it('resolves jobs landing copy instead of showing raw keys', async () => {
+    for (const language of SUPPORTED_LANGUAGES) {
+      await i18n.changeLanguage(language)
+      for (const key of featureKeys) {
+        const value = i18n.t(key)
+        expect(value).not.toBe(key)
+        expect(value).not.toContain('website.sections.jobs.features')
+      }
+    }
   })
 })

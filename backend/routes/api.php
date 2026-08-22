@@ -315,6 +315,8 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/me/cv', [JobSeekerProfileController::class, 'uploadCv']);
             Route::get('/me/photo', [JobSeekerProfileController::class, 'downloadPhoto']);
             Route::post('/me/photo', [JobSeekerProfileController::class, 'uploadPhoto']);
+            Route::get('/me/primary-qualification', [JobSeekerProfileController::class, 'downloadPrimaryQualification']);
+            Route::post('/me/primary-qualification', [JobSeekerProfileController::class, 'uploadPrimaryQualification']);
             Route::get('/{jobSeeker}', [JobSeekerController::class, 'show'])->whereNumber('jobSeeker');
             Route::get('/{jobSeeker}/cv', [JobSeekerController::class, 'downloadCv'])->whereNumber('jobSeeker');
             Route::patch('/{jobSeeker}', [JobSeekerController::class, 'update'])->whereNumber('jobSeeker');

@@ -205,6 +205,11 @@
       "jobSeekerHint": "İş arayan profilinizi, CV’nizi ve başvurularınızı açın.",
       "employer": "İşveren olarak giriş yap",
       "employerHint": "İşverene özel çalışma alanını açın.",
+      "headline": "Bir sonraki fırsatınızı mı arıyorsunuz?",
+      "seekOpportunity": "İş fırsatı arıyorum",
+      "seekOpportunityHint": "Profesyonel profilinizi oluşturun, deneyiminizi ve becerilerinizi öne çıkarın; doğru fırsat size ulaşsın.",
+      "findTalent": "Nitelikli aday arıyorum",
+      "findTalentHint": "En iyi yetenekleri keşfedin ve geniş bir aday havuzundan ihtiyaçlarınıza uygun kişiyi bulun.",
       "backToChoices": "Hesap türüne dön"
     },
     "jobSeeker": {
@@ -946,7 +951,28 @@
     "applicationSaveFailed": "İş başvuru profili kaydedilemedi.",
     "applicationValidationFailed": "Lütfen kaydetmeden önce işaretli alanları düzeltin.",
     "fullNameRequired": "Tam ad zorunludur.",
+    "fullNameFourPartsRequired": "Tam ad dört bölümden oluşmalıdır.",
+    "emailRequired": "E-posta zorunludur.",
     "emailInvalid": "Geçerli bir e-posta adresi girin.",
+    "phoneRequired": "Telefon numarası zorunludur.",
+    "countryRequired": "Ülke zorunludur.",
+    "cityRequired": "Şehir zorunludur.",
+    "dateOfBirthRequired": "Doğum tarihi zorunludur.",
+    "nationalityRequired": "Uyruk zorunludur.",
+    "addressRequired": "Adres zorunludur.",
+    "primaryQualification": "Asıl yeterlilik",
+    "primaryQualificationRequired": "Asıl yeterlilik zorunludur.",
+    "primaryQualificationDocument": "Yeterlilik belgesi",
+    "primaryQualificationDocumentRequired": "Asıl yeterliliği kanıtlayan bir belge zorunludur.",
+    "primaryQualificationUploaded": "Yeterlilik belgesi yüklendi.",
+    "primaryQualificationUploadFailed": "Yeterlilik belgesi yüklenemedi.",
+    "primaryQualificationDownloadFailed": "Yeterlilik belgesi açılamadı.",
+    "viewQualificationDocument": "Yeterlilik belgesini görüntüle",
+    "selectQualificationDocument": "Yeterlilik belgesi yükleyin",
+    "additionalQualifications": "Ek yeterlilikler",
+    "additionalQualificationsOptional": "İsteğe bağlı — dilerseniz ek yeterlilik ekleyebilirsiniz.",
+    "requiredField": "Zorunlu",
+    "optionalField": "İsteğe bağlı",
     "yearsOfExperienceInvalid": "Deneyim yılı 0 ile 80 arasında bir sayı olmalıdır.",
     "cvDownloadFailed": "CV açılamadı.",
     "present": "Halen",
@@ -1290,7 +1316,25 @@
       "jobs": {
         "title": "İş İlanları",
         "description": "Tarımsal istihdam fırsatları, yetenek profilleri ve profesyonel kariyerler.",
-        "imageAlt": "Yeşil bir tarlada çalışan tarım profesyonelleri"
+        "imageAlt": "Yeşil bir tarlada çalışan tarım profesyonelleri",
+        "features": {
+          "listings": {
+            "title": "İş ilanları",
+            "body": "Platformdaki tarımsal istihdam fırsatlarına göz atın."
+          },
+          "employers": {
+            "title": "İşveren fırsatları",
+            "body": "Çiftlikleri ve tarımsal işletmeleri nitelikli yeteneklerle buluşturun."
+          },
+          "talent": {
+            "title": "Yetenek profilleri",
+            "body": "Tarım profesyonelleri becerilerini ve deneyimlerini sergiler."
+          },
+          "careers": {
+            "title": "Profesyonel kariyerler",
+            "body": "Mühendisler, çiftlik yöneticileri ve saha uzmanları için roller keşfedin."
+          }
+        }
       },
       "store": {
         "title": "Mağaza",
@@ -1396,22 +1440,6 @@
       "training.features.education": {
         "title": "Eğitim içeriği",
         "body": "Arıcılık ve ürün eğitimi dahil öğrenme kaynakları."
-      },
-      "jobs.features.listings": {
-        "title": "İş ilanları",
-        "body": "Platformdaki tarımsal istihdam fırsatlarına göz atın."
-      },
-      "jobs.features.employers": {
-        "title": "İşveren fırsatları",
-        "body": "Çiftlikleri ve tarımsal işletmeleri nitelikli yeteneklerle buluşturun."
-      },
-      "jobs.features.talent": {
-        "title": "Yetenek profilleri",
-        "body": "Tarım profesyonelleri becerilerini ve deneyimlerini sergiler."
-      },
-      "jobs.features.careers": {
-        "title": "Profesyonel kariyerler",
-        "body": "Mühendisler, çiftlik yöneticileri ve saha uzmanları için roller keşfedin."
       },
       "store.features.products": {
         "title": "Tarımsal ürünler",

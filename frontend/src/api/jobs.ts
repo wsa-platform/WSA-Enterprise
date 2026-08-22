@@ -224,6 +224,8 @@ export type JobSeekerProfile = {
   has_cv?: boolean
   cv_filename?: string | null
   has_photo?: boolean
+  has_primary_qualification_document?: boolean
+  primary_qualification_filename?: string | null
   cv_path?: string | null
   desired_salary: string | null
   salary_currency: string | null
@@ -301,6 +303,36 @@ export async function downloadMyJobSeekerPhoto(token: string, organizationId?: n
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { message?: string } | null
     throw new ApiError(payload?.message ?? 'Unable to download photo.', response.status)
+  }
+
+  return response.blob()
+}
+
+export async function uploadMyJobSeekerPrimaryQualification(token: string, file: File, organizationId?: number) {
+  const form = new FormData()
+  form.append('document', file)
+  const response = await fetch(`${apiUrl}/job-seekers/me/primary-qualification`, {
+    method: 'POST',
+    headers: buildHeaders(token, organizationId),
+    body: form,
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { message?: string } | null
+    throw new ApiError(payload?.message ?? 'Unable to upload qualification document.', response.status)
+  }
+
+  return response.json() as Promise<JobSeekerProfile>
+}
+
+export async function downloadMyJobSeekerPrimaryQualification(token: string, organizationId?: number) {
+  const response = await fetch(`${apiUrl}/job-seekers/me/primary-qualification`, {
+    headers: buildHeaders(token, organizationId),
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { message?: string } | null
+    throw new ApiError(payload?.message ?? 'Unable to download qualification document.', response.status)
   }
 
   return response.blob()

@@ -103,6 +103,17 @@ export function jobSeekerStartPath(isAuthenticated: boolean): string {
   return isAuthenticated ? JOB_SEEKER_HOME : loginHref('job_seeker', JOB_SEEKER_HOME)
 }
 
+export function jobSeekerLandingPath(isAuthenticated: boolean): string {
+  return isAuthenticated ? JOB_SEEKER_HOME : JOB_SEEKER_ENTER
+}
+
+export function registerHref(audience: AuthAudience, next: string): string {
+  const params = new URLSearchParams()
+  params.set('next', safePath(next))
+  params.set('audience', audience)
+  return `/register?${params.toString()}`
+}
+
 export function employerStartPath(isAuthenticated: boolean): string {
   return isAuthenticated ? EMPLOYER_HOME : loginHref('employer', EMPLOYER_HOME)
 }

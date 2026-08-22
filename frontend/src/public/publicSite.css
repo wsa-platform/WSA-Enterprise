@@ -1197,8 +1197,61 @@
   font-weight: 700;
 }
 
+.public-header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: oklch(1 0 0 / 0.95);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+
+.public-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding: 0.75rem 1.25rem;
+}
+
+.public-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  font-weight: 800;
+  color: inherit;
+}
+
+.public-brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 800;
+}
+
+.public-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-inline-start: auto;
+}
+
 .entry-choice-card {
-  max-width: 640px;
+  max-width: 720px;
+}
+
+.entry-choice-headline {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  line-height: 1.35;
 }
 
 .entry-choice-grid {
@@ -1207,25 +1260,65 @@
   margin-top: 1.25rem;
 }
 
+@media (min-width: 640px) {
+  .entry-choice-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .entry-choice {
   display: grid;
-  gap: 0.35rem;
-  padding: 1rem 1.1rem;
+  gap: 0.45rem;
+  padding: 1.05rem 1.15rem;
   border: 1px solid var(--border);
   border-radius: 0.9rem;
   text-decoration: none;
-  color: inherit;
+  color: #fff;
   background: var(--card);
+  min-height: 7.25rem;
+  align-content: start;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.entry-choice:hover {
-  border-color: var(--primary);
+.entry-choice strong {
+  font-size: 1.05rem;
+  line-height: 1.35;
 }
 
 .entry-choice span {
-  color: var(--muted-foreground);
+  color: rgba(255, 255, 255, 0.92);
   font-size: 0.875rem;
+  font-weight: 500;
   line-height: 1.45;
+}
+
+.entry-choice:hover {
+  box-shadow: 0 8px 18px oklch(0.2 0.04 145 / 0.18);
+}
+
+.entry-choice:focus-visible {
+  outline: 3px solid #111827;
+  outline-offset: 3px;
+}
+
+.entry-choice-seeker {
+  background: #b42318;
+  border-color: #911c14;
+}
+
+.entry-choice-seeker:hover {
+  background: #9b1c15;
+  border-color: #7a1711;
+}
+
+.entry-choice-employer {
+  background: #157347;
+  border-color: #0f5c38;
+}
+
+.entry-choice-employer:hover {
+  background: #0f5c38;
+  border-color: #0c4a2d;
 }
 
 .entry-choice-banner {

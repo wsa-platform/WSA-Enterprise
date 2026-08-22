@@ -78,6 +78,7 @@ class JobSeekerProfile extends Model
         'address',
         'years_of_experience',
         'photo_path',
+        'primary_qualification_path',
         'is_active',
     ];
 
@@ -87,6 +88,7 @@ class JobSeekerProfile extends Model
         'address',
         'cv_path',
         'photo_path',
+        'primary_qualification_path',
         'desired_salary',
         'salary_currency',
     ];
@@ -151,6 +153,7 @@ class JobSeekerProfile extends Model
         'status_history',
         'cv_path',
         'photo_path',
+        'primary_qualification_path',
     ];
 
     protected function casts(): array
@@ -166,6 +169,13 @@ class JobSeekerProfile extends Model
             'years_of_experience' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    public static function fullNamePartCount(string $name): int
+    {
+        $parts = preg_split('/\s+/u', trim($name), -1, PREG_SPLIT_NO_EMPTY);
+
+        return is_array($parts) ? count($parts) : 0;
     }
 
     public static function canTransition(string $from, string $to): bool
@@ -393,6 +403,24 @@ class JobSeekerProfile extends Model
         return $this->photo_path;
     }
 
+    public function storedPrimaryQualificationDiskPath(): ?string
+    {
+        if (! is_string($this->primary_qualification_path) || $this->primary_qualification_path === '') {
+            return null;
+        }
+
+        $prefix = 'job-qualifications/'.$this->id.'/';
+        if (str_contains($this->primary_qualification_path, '..') || ! str_starts_with($this->primary_qualification_path, $prefix)) {
+            return null;
+        }
+
+        if (! Storage::disk('local')->exists($this->primary_qualification_path)) {
+            return null;
+        }
+
+        return $this->primary_qualification_path;
+    }
+
     /** @return array<string, mixed> */
     public function toOwnerArray(): array
     {
@@ -403,6 +431,8 @@ class JobSeekerProfile extends Model
             'has_cv' => filled($this->cv_path),
             'cv_filename' => $this->cv_path ? basename($this->cv_path) : null,
             'has_photo' => filled($this->photo_path),
+            'has_primary_qualification_document' => filled($this->primary_qualification_path),
+            'primary_qualification_filename' => $this->primary_qualification_path ? basename($this->primary_qualification_path) : null,
         ]);
     }
 }

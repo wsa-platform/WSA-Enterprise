@@ -96,17 +96,17 @@ class JobSeekersTest extends TestCase
         $org->members()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
         $headers = $this->memberHeaders($user, $org);
 
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Seeker User',
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Seeker User Test Name',
+            'email' => 'myseeker@wsa.test',
             'specialization' => 'Agronomist',
             'country' => 'SA',
             'city' => 'Riyadh',
             'skills' => ['irrigation'],
-            'education' => [['institution' => 'KSU']],
             'experience' => [['title' => 'Farm lead']],
             'certifications' => [['name' => 'GAP']],
             'languages' => ['ar'],
-        ], $headers)->assertCreated()
+        ]), $headers)->assertCreated()
             ->assertJsonPath('specialization', 'Agronomist')
             ->assertJsonPath('recruitment_status', JobSeekerProfile::STATUS_NEW);
 
@@ -115,10 +115,11 @@ class JobSeekersTest extends TestCase
             ->assertJsonPath('specialization', 'Agronomist')
             ->assertJsonPath('email', 'myseeker@wsa.test');
 
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Seeker User',
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Seeker User Test Name',
+            'email' => 'myseeker@wsa.test',
             'specialization' => 'Irrigation specialist',
-        ], $headers)->assertOk()
+        ]), $headers)->assertOk()
             ->assertJsonPath('specialization', 'Irrigation specialist');
 
         $this->assertSame(1, JobSeekerProfile::where('user_id', $user->id)->count());
@@ -136,16 +137,17 @@ class JobSeekersTest extends TestCase
         $other = User::where('email', 'admin@wsa.test')->first();
         $headers = $this->memberHeaders($user, $org);
 
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Mass Assign',
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Mass Assign Test Name',
+            'email' => 'massassign@wsa.test',
             'user_id' => $other->id,
             'owner_user_id' => $other->id,
             'recruitment_status' => JobSeekerProfile::STATUS_HIRED,
             'is_active' => false,
-        ], $headers)->assertCreated();
+        ]), $headers)->assertCreated();
 
         $profile = JobSeekerProfile::where('email', 'massassign@wsa.test')->first()
-            ?? JobSeekerProfile::where('full_name', 'Mass Assign')->latest('id')->first();
+            ?? JobSeekerProfile::where('full_name', 'Mass Assign Test Name')->latest('id')->first();
         $this->assertNotNull($profile);
         $this->assertSame($user->id, $profile->user_id);
         $this->assertSame(JobSeekerProfile::STATUS_NEW, $profile->recruitment_status);
@@ -271,10 +273,11 @@ class JobSeekersTest extends TestCase
         ]);
         $org->members()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
         $headers = $this->memberHeaders($user, $org);
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'CV Privacy',
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'CV Privacy Test Name',
+            'email' => 'cv-privacy-owner@wsa.test',
             'specialization' => 'Agronomist',
-        ], $headers)->assertCreated();
+        ]), $headers)->assertCreated();
 
         $viewer = User::create([
             'name' => 'CV Privacy Viewer',
@@ -288,15 +291,15 @@ class JobSeekersTest extends TestCase
             ->assertOk()
             ->json('completeness_percent');
 
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'CV Privacy',
-            'specialization' => 'Agronomist',
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'CV Privacy Test Name',
             'email' => 'private-cv@wsa.test',
+            'specialization' => 'Agronomist',
             'phone' => '+966500009997',
             'cv_path' => 'resumes/secret.pdf',
             'desired_salary' => 18000,
             'salary_currency' => 'SAR',
-        ], $headers)->assertOk();
+        ]), $headers)->assertOk();
 
         $after = $this->getJson("/api/v1/job-seekers/{$profile->id}", $viewerHeaders)
             ->assertOk();
@@ -469,9 +472,10 @@ class JobSeekersTest extends TestCase
         $org->members()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
         $headers = $this->memberHeaders($user, $org);
 
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Deactivate Me',
-        ], $headers)->assertCreated();
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Deactivate Me Test Name',
+            'email' => 'deactivate@wsa.test',
+        ]), $headers)->assertCreated();
 
         $this->deleteJson('/api/v1/job-seekers/me')->assertUnauthorized();
 
@@ -527,8 +531,9 @@ class JobSeekersTest extends TestCase
             'skills' => [123],
         ], $headers)->assertUnprocessable();
 
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Nested User',
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Nested User Test Name',
+            'email' => 'nested@wsa.test',
             'experience' => [[
                 'title' => 'Farm lead',
                 'company' => 'WSA Farms',
@@ -538,11 +543,31 @@ class JobSeekersTest extends TestCase
                 'years' => 3,
                 'ssn' => 'should-not-persist',
             ]],
+            'certifications' => [['name' => 'GAP']],
+            'languages' => ['ar'],
+            'years_of_experience' => 5,
+        ]), $headers)->assertCreated();
+
+        Storage::fake('local');
+        $document = \Illuminate\Http\UploadedFile::fake()->create('degree.pdf', 120, 'application/pdf');
+        $this->post('/api/v1/job-seekers/me/primary-qualification', ['document' => $document], $headers)->assertOk();
+
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Nested User Test Name',
+            'email' => 'nested@wsa.test',
+            'experience' => [[
+                'title' => 'Farm lead',
+                'company' => 'WSA Farms',
+                'start_date' => '2020-01-01',
+                'end_date' => '2022-06-01',
+                'current' => false,
+                'years' => 3,
+            ]],
             'education' => [['institution' => 'KSU', 'degree' => 'BSc', 'country' => 'SA']],
             'certifications' => [['name' => 'GAP']],
             'languages' => ['ar'],
             'years_of_experience' => 5,
-        ], $headers)->assertCreated();
+        ]), $headers)->assertOk();
 
         $this->getJson('/api/v1/job-seekers/me', $headers)
             ->assertOk()
@@ -566,8 +591,8 @@ class JobSeekersTest extends TestCase
         $org->members()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
         $headers = $this->memberHeaders($user, $org);
 
-        $created = $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'System Fields',
+        $created = $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'System Fields Test Name',
             'email' => 'system-fields@wsa.test',
             'phone' => '+962700000000',
             'country' => 'JO',
@@ -575,6 +600,7 @@ class JobSeekersTest extends TestCase
             'completeness_percent' => 100,
             'cv_path' => '../secrets/id.pdf',
             'photo_path' => '../secrets/photo.jpg',
+            'primary_qualification_path' => '../secrets/degree.pdf',
             'employment_status' => 'hired',
             'payment_status' => 'paid',
             'tenant_id' => 99,
@@ -583,7 +609,7 @@ class JobSeekersTest extends TestCase
                 'recruitment_status' => 'hired',
                 'payment_status' => 'paid',
             ]],
-        ], $headers)->assertCreated();
+        ]), $headers)->assertCreated();
 
         $this->assertNotEquals(100, $created->json('completeness_percent'));
         $this->assertNull($created->json('cv_path'));
@@ -618,7 +644,10 @@ class JobSeekersTest extends TestCase
         $ownerHeaders = $this->memberHeaders($owner, $org);
         $intruderHeaders = $this->memberHeaders($intruder, $org);
 
-        $this->putJson('/api/v1/job-seekers/me', ['full_name' => 'CV Owner'], $ownerHeaders)->assertCreated();
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'CV Owner Test Name',
+            'email' => 'cv-owner@wsa.test',
+        ]), $ownerHeaders)->assertCreated();
         $profile = JobSeekerProfile::where('user_id', $owner->id)->firstOrFail();
         Storage::fake('local');
         Storage::disk('local')->put('job-cvs/'.$profile->id.'/cv.pdf', 'cv-bytes');
@@ -646,7 +675,10 @@ class JobSeekersTest extends TestCase
         ]);
         $orgA->members()->syncWithoutDetaching([$owner->id => ['role' => 'member']]);
         $ownerHeaders = $this->memberHeaders($owner, $orgA);
-        $this->putJson('/api/v1/job-seekers/me', ['full_name' => 'CRM CV Owner'], $ownerHeaders)->assertCreated();
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'CRM CV Owner Test Name',
+            'email' => 'crm-cv-owner@wsa.test',
+        ]), $ownerHeaders)->assertCreated();
         $profile = JobSeekerProfile::where('user_id', $owner->id)->firstOrFail();
         Storage::fake('local');
         Storage::disk('local')->put('job-cvs/'.$profile->id.'/cv.pdf', 'crm-cv-bytes');
@@ -713,17 +745,21 @@ class JobSeekersTest extends TestCase
         $empty = new JobSeekerProfile(['full_name' => 'Empty']);
         $this->assertSame(0, $empty->ownerCompletenessPercent());
 
-        $partial = $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Photo Owner',
+        $partial = $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Photo Owner Test Name',
             'email' => 'photo-owner@wsa.test',
             'phone' => '+962700000000',
             'country' => 'JO',
             'city' => 'Amman',
-        ], $headers)->assertCreated();
+        ]), $headers)->assertCreated();
         $this->assertSame(14, $partial->json('completeness_percent'));
 
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Photo Owner',
+        Storage::fake('local');
+        $document = \Illuminate\Http\UploadedFile::fake()->create('degree.pdf', 80, 'application/pdf');
+        $this->post('/api/v1/job-seekers/me/primary-qualification', ['document' => $document], $headers)->assertOk();
+
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Photo Owner Test Name',
             'email' => 'photo-owner@wsa.test',
             'phone' => '+962700000000',
             'country' => 'JO',
@@ -736,7 +772,7 @@ class JobSeekersTest extends TestCase
             'skills' => ['irrigation'],
             'languages' => ['ar'],
             'completeness_percent' => 3,
-        ], $headers)->assertOk();
+        ]), $headers)->assertOk();
         $withoutCv = $this->getJson('/api/v1/job-seekers/me', $headers)->assertOk();
         $this->assertSame(86, $withoutCv->json('completeness_percent'));
         $this->assertFalse($withoutCv->json('has_photo'));
@@ -758,6 +794,7 @@ class JobSeekersTest extends TestCase
             '/job-seekers/me',
             '/job-seekers/me/cv',
             '/job-seekers/me/photo',
+            '/job-seekers/me/primary-qualification',
             '/job-seekers/{jobSeeker}',
             '/job-seekers/{jobSeeker}/cv',
             '/job-seekers/{jobSeeker}/status',

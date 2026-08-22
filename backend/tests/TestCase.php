@@ -52,4 +52,22 @@ abstract class TestCase extends BaseTestCase
 
         return base_path('../docs/openapi.yaml');
     }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    protected function jobSeekerPersonalPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'full_name' => 'Ahmed Mohamed Ali Hassan',
+            'email' => 'seeker-personal@wsa.test',
+            'phone' => '+966500000001',
+            'country' => 'SA',
+            'city' => 'Riyadh',
+            'date_of_birth' => '1990-01-15',
+            'nationality' => 'Saudi',
+            'address' => 'Olaya Street',
+        ], $overrides);
+    }
 }

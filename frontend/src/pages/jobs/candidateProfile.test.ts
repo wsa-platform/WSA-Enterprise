@@ -5,9 +5,11 @@ import {
   toCandidatePayload,
   toDateInputValue,
   nextProfileSection,
+  countNameParts,
   validateCandidateProfile,
   validateCandidateSection,
   authorizedUnlockFromPay,
+  PROFILE_SECTION_ORDER,
   type CandidateProfileForm,
 } from './candidateProfile'
 
@@ -34,10 +36,30 @@ function emptyForm(overrides: Partial<CandidateProfileForm> = {}): CandidateProf
 }
 
 describe('candidate profile helpers', () => {
-  it('requires a full name and rejects invalid email', () => {
-    expect(validateCandidateProfile(emptyForm())).toMatchObject({ fullName: 'jobs.fullNameRequired' })
-    expect(validateCandidateProfile(emptyForm({ fullName: 'Ada', email: 'bad' })).email).toBe('jobs.emailInvalid')
-    expect(validateCandidateProfile(emptyForm({ fullName: 'Ada', email: 'ada@wsa.test' }))).toEqual({})
+  it('requires a four-part full name and the rest of the personal fields', () => {
+    expect(validateCandidateProfile(emptyForm())).toMatchObject({
+      fullName: 'jobs.fullNameRequired',
+      email: 'jobs.emailRequired',
+      phone: 'jobs.phoneRequired',
+      country: 'jobs.countryRequired',
+      city: 'jobs.cityRequired',
+      dateOfBirth: 'jobs.dateOfBirthRequired',
+      nationality: 'jobs.nationalityRequired',
+      address: 'jobs.addressRequired',
+    })
+    expect(validateCandidateProfile(emptyForm({ fullName: 'Ada', email: 'bad' })).fullName).toBe('jobs.fullNameFourPartsRequired')
+    expect(validateCandidateProfile(emptyForm({ fullName: 'Ahmed Mohamed Ali', email: 'ada@wsa.test' })).fullName).toBe('jobs.fullNameFourPartsRequired')
+    expect(countNameParts('أحمد محمد علي حسن')).toBe(4)
+    expect(validateCandidateProfile(emptyForm({
+      fullName: 'أحمد محمد علي حسن',
+      email: 'ada@wsa.test',
+      phone: '+9665',
+      country: 'SA',
+      city: 'Riyadh',
+      dateOfBirth: '1990-01-15',
+      nationality: 'Saudi',
+      address: 'Olaya',
+    }))).toEqual({})
   })
 
   it('omits system-controlled fields from the save payload', () => {
@@ -94,7 +116,7 @@ describe('candidate profile helpers', () => {
 
   it('maps personal fields onto the matching backend properties', () => {
     const payload = toCandidatePayload(emptyForm({
-      fullName: 'فاطمة العتيبي',
+      fullName: 'فاطمة محمد علي العتيبي',
       email: 'seeker@wsa.test',
       phone: '+966500000001',
       country: 'SA',
@@ -104,7 +126,7 @@ describe('candidate profile helpers', () => {
       address: 'حي النخيل',
     }))
     expect(payload).toMatchObject({
-      full_name: 'فاطمة العتيبي',
+      full_name: 'فاطمة محمد علي العتيبي',
       email: 'seeker@wsa.test',
       phone: '+966500000001',
       country: 'SA',
@@ -121,19 +143,42 @@ describe('candidate profile helpers', () => {
     expect(toDateInputValue(null)).toBe('')
   })
 
-  it('advances profile sections in the existing page order without leaving the page', () => {
+  it('keeps personal-section validation on personal fields only', () => {
+    const validPersonal = {
+      fullName: 'Ahmed Mohamed Ali Hassan',
+      email: 'ada@wsa.test',
+      phone: '+9665',
+      country: 'SA',
+      city: 'Riyadh',
+      dateOfBirth: '1990-01-15',
+      nationality: 'Saudi',
+      address: 'Olaya',
+    }
+    expect(validateCandidateSection(emptyForm({ ...validPersonal, yearsOfExperience: 'bad' }), 'personal')).toEqual({})
+    expect(validateCandidateSection(emptyForm({ fullName: 'Ada', email: 'bad' }), 'personal').email).toBe('jobs.emailInvalid')
+    expect(validateCandidateSection(emptyForm({ ...validPersonal, yearsOfExperience: 'bad' }), 'professional').yearsOfExperience).toBe('jobs.yearsOfExperienceInvalid')
+  })
+
+  it('requires a primary qualification and document, but not additional qualifications', () => {
+    const form = emptyForm({ educationItems: [{ degree: 'BSc Agricultural Engineering' }, { degree: 'Diploma' }] })
+    expect(validateCandidateSection(form, 'education')).toMatchObject({
+      primaryQualificationDocument: 'jobs.primaryQualificationDocumentRequired',
+    })
+    expect(validateCandidateSection(emptyForm({ educationItems: [{}] }), 'education').primaryQualification).toBe('jobs.primaryQualificationRequired')
+    expect(validateCandidateSection(form, 'education', { hasPrimaryQualificationDocument: true })).toEqual({})
+  })
+
+  it('advances profile sections in the existing page order without leaving the page or opening the dashboard', () => {
     expect(nextProfileSection('personal')).toBe('professional')
     expect(nextProfileSection('professional')).toBe('education')
     expect(nextProfileSection('education')).toBe('experience')
     expect(nextProfileSection('experience')).toBe('cv')
     expect(nextProfileSection('cv')).toBe('photo')
     expect(nextProfileSection('photo')).toBeNull()
-  })
-
-  it('keeps personal-section validation on personal fields only', () => {
-    expect(validateCandidateSection(emptyForm({ fullName: 'Ada', yearsOfExperience: 'bad' }), 'personal')).toEqual({})
-    expect(validateCandidateSection(emptyForm({ fullName: 'Ada', email: 'bad' }), 'personal').email).toBe('jobs.emailInvalid')
-    expect(validateCandidateSection(emptyForm({ fullName: 'Ada', yearsOfExperience: 'bad' }), 'professional').yearsOfExperience).toBe('jobs.yearsOfExperienceInvalid')
+    for (const section of PROFILE_SECTION_ORDER) {
+      const next = nextProfileSection(section)
+      expect(String(next ?? '')).not.toContain('dashboard')
+    }
   })
 
   it('unlocks contact only from a server-verified payment payload', () => {

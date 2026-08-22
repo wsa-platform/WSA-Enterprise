@@ -15,9 +15,14 @@ aside { display: flex; flex-direction: column; padding: 28px 18px; background: #
 .record-form textarea, .record-form select { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font: inherit; width: 100%; box-sizing: border-box; }
 .record-form .checkbox-row { display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .record-form .checkbox-row input { width: auto; }
-.profile-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.profile-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+  align-items: start;
+}
 .profile-field { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0; }
-.profile-field > label { display: block; }
+.profile-field > label { display: block; font-size: 13px; color: #475569; font-weight: 700; }
 .profile-field > input,
 .profile-field > textarea {
   display: block;
@@ -25,6 +30,22 @@ aside { display: flex; flex-direction: column; padding: 28px 18px; background: #
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
+}
+.profile-field-wide { grid-column: 1 / -1; }
+.profile-field-medium { max-width: 22rem; }
+.profile-field-date { max-width: 14rem; }
+.profile-field-actions { grid-column: 1 / -1; }
+.profile-readout {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.profile-readout span { color: #64748b; font-size: 12px; font-weight: 700; }
+.profile-readout strong { font-size: 16px; line-height: 1.4; word-break: break-word; }
+@media (max-width: 720px) {
+  .profile-fields { grid-template-columns: 1fr; }
+  .profile-field-medium,
+  .profile-field-date { max-width: none; }
 }
 .profile-field > input[readonly],
 .profile-field > textarea[readonly] {

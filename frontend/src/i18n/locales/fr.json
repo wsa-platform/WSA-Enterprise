@@ -205,6 +205,11 @@
       "jobSeekerHint": "Créez ou ouvrez votre profil, CV et candidatures.",
       "employer": "Se connecter comme employeur",
       "employerHint": "Ouvrez l'espace dédié aux employeurs.",
+      "headline": "Vous cherchez votre prochaine opportunité ?",
+      "seekOpportunity": "Je cherche un emploi",
+      "seekOpportunityHint": "Créez votre profil professionnel, mettez en valeur votre expérience et vos compétences, et laissez la bonne opportunité vous trouver.",
+      "findTalent": "Je cherche un talent",
+      "findTalentHint": "Découvrez les meilleurs talents et trouvez le candidat adapté à vos besoins parmi un large vivier de professionnels.",
       "backToChoices": "Retour au type de compte"
     },
     "jobSeeker": {
@@ -946,7 +951,28 @@
     "applicationSaveFailed": "Impossible d'enregistrer le profil de candidature.",
     "applicationValidationFailed": "Veuillez corriger les champs indiqués avant d'enregistrer.",
     "fullNameRequired": "Le nom complet est obligatoire.",
+    "fullNameFourPartsRequired": "Le nom complet doit contenir quatre parties.",
+    "emailRequired": "L'e-mail est obligatoire.",
     "emailInvalid": "Veuillez saisir une adresse e-mail valide.",
+    "phoneRequired": "Le numéro de téléphone est obligatoire.",
+    "countryRequired": "Le pays est obligatoire.",
+    "cityRequired": "La ville est obligatoire.",
+    "dateOfBirthRequired": "La date de naissance est obligatoire.",
+    "nationalityRequired": "La nationalité est obligatoire.",
+    "addressRequired": "L'adresse est obligatoire.",
+    "primaryQualification": "Qualification principale",
+    "primaryQualificationRequired": "La qualification principale est obligatoire.",
+    "primaryQualificationDocument": "Justificatif de qualification",
+    "primaryQualificationDocumentRequired": "Un document prouvant la qualification principale est obligatoire.",
+    "primaryQualificationUploaded": "Justificatif de qualification téléversé.",
+    "primaryQualificationUploadFailed": "Impossible de téléverser le justificatif de qualification.",
+    "primaryQualificationDownloadFailed": "Impossible d'ouvrir le justificatif de qualification.",
+    "viewQualificationDocument": "Voir le justificatif",
+    "selectQualificationDocument": "Téléverser le justificatif de qualification",
+    "additionalQualifications": "Qualifications supplémentaires",
+    "additionalQualificationsOptional": "Facultatif — ajoutez d'autres qualifications si vous le souhaitez.",
+    "requiredField": "Obligatoire",
+    "optionalField": "Facultatif",
     "yearsOfExperienceInvalid": "Les années d'expérience doivent être un nombre entre 0 et 80.",
     "cvDownloadFailed": "Impossible d'ouvrir le CV.",
     "present": "Présent",
@@ -1290,7 +1316,25 @@
       "jobs": {
         "title": "Emploi",
         "description": "Opportunités d'emploi agricole, profils de talents et carrières professionnelles.",
-        "imageAlt": "Professionnels agricoles travaillant dans un champ vert"
+        "imageAlt": "Professionnels agricoles travaillant dans un champ vert",
+        "features": {
+          "listings": {
+            "title": "Offres d'emploi",
+            "body": "Parcourez les opportunités d'emploi agricole sur la plateforme."
+          },
+          "employers": {
+            "title": "Opportunités pour employeurs",
+            "body": "Connectez fermes et entreprises agricoles avec des talents qualifiés."
+          },
+          "talent": {
+            "title": "Profils de talents",
+            "body": "Les professionnels agricoles présentent leurs compétences et leur expérience."
+          },
+          "careers": {
+            "title": "Carrières professionnelles",
+            "body": "Découvrez des postes pour ingénieurs, gestionnaires de ferme et spécialistes de terrain."
+          }
+        }
       },
       "store": {
         "title": "Boutique",
@@ -1396,22 +1440,6 @@
       "training.features.education": {
         "title": "Contenu éducatif",
         "body": "Ressources d'apprentissage incluant l'apiculture et la formation aux cultures."
-      },
-      "jobs.features.listings": {
-        "title": "Offres d'emploi",
-        "body": "Parcourez les opportunités d'emploi agricole sur la plateforme."
-      },
-      "jobs.features.employers": {
-        "title": "Opportunités pour employeurs",
-        "body": "Connectez fermes et entreprises agricoles avec des talents qualifiés."
-      },
-      "jobs.features.talent": {
-        "title": "Profils de talents",
-        "body": "Les professionnels agricoles présentent leurs compétences et leur expérience."
-      },
-      "jobs.features.careers": {
-        "title": "Carrières professionnelles",
-        "body": "Découvrez des postes pour ingénieurs, gestionnaires de ferme et spécialistes de terrain."
       },
       "store.features.products": {
         "title": "Produits agricoles",

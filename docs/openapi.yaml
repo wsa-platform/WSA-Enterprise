@@ -2826,6 +2826,38 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /job-seekers/me/primary-qualification:
+    get:
+      tags: [Recruitment]
+      summary: Download the authenticated user's primary qualification document
+      description: Owner-only. Unauthorized callers receive 401/404. The stored path is not exposed in JSON.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200': { description: Qualification document stream }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Recruitment]
+      summary: Upload or replace the authenticated user's primary qualification document
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [document]
+              properties:
+                document: { type: string, format: binary }
+      responses:
+        '200': { description: Profile including owner qualification metadata }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /job-seekers/{jobSeeker}:
     get:
       tags: [Recruitment]

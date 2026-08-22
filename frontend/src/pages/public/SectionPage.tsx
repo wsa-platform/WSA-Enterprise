@@ -199,7 +199,7 @@ export function SectionPage() {
 
         {browseError && <p className="muted">{browseError}</p>}
 
-        {!orgSlug && section.catalogModule && (
+        {!orgSlug && (section.catalogModule === 'training' || section.catalogModule === 'library') && (
           <p className="muted">{t('website.browse.orgHint')}</p>
         )}
 

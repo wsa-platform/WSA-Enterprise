@@ -33,6 +33,10 @@ export type CandidateProfileForm = {
   educationItems: EducationItem[]
 }
 
+export type CandidateSectionValidationOptions = {
+  hasPrimaryQualificationDocument?: boolean
+}
+
 export const CANDIDATE_STATUS_TIMELINE = [
   { key: 'new', labelKey: 'jobs.statusTimeline.created', statuses: ['new'] },
   { key: 'applied', labelKey: 'jobs.statusTimeline.submitted', statuses: ['under_review'] },
@@ -67,6 +71,18 @@ export function toDateInputValue(value: string | null | undefined): string {
   return match?.[1] ?? ''
 }
 
+export function countNameParts(name: string): number {
+  return name.trim().split(/\s+/u).filter(Boolean).length
+}
+
+export function primaryEducationItem(items: EducationItem[]): EducationItem {
+  return items[0] ?? {}
+}
+
+export function additionalEducationItems(items: EducationItem[]): EducationItem[] {
+  return items.slice(1)
+}
+
 export function nextProfileSection(section: ProfileSectionId): ProfileSectionId | null {
   const index = PROFILE_SECTION_ORDER.indexOf(section)
   if (index < 0 || index >= PROFILE_SECTION_ORDER.length - 1) return null
@@ -76,15 +92,26 @@ export function nextProfileSection(section: ProfileSectionId): ProfileSectionId 
 export function validateCandidateSection(
   form: CandidateProfileForm,
   section: ProfileSectionId,
+  options: CandidateSectionValidationOptions = {},
 ): Record<string, string> {
   if (section === 'personal') {
     const errors: Record<string, string> = {}
     if (!form.fullName.trim()) {
       errors.fullName = 'jobs.fullNameRequired'
+    } else if (countNameParts(form.fullName) < 4) {
+      errors.fullName = 'jobs.fullNameFourPartsRequired'
     }
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    if (!form.email.trim()) {
+      errors.email = 'jobs.emailRequired'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errors.email = 'jobs.emailInvalid'
     }
+    if (!form.phone.trim()) errors.phone = 'jobs.phoneRequired'
+    if (!form.country.trim()) errors.country = 'jobs.countryRequired'
+    if (!form.city.trim()) errors.city = 'jobs.cityRequired'
+    if (!form.dateOfBirth.trim()) errors.dateOfBirth = 'jobs.dateOfBirthRequired'
+    if (!form.nationality.trim()) errors.nationality = 'jobs.nationalityRequired'
+    if (!form.address.trim()) errors.address = 'jobs.addressRequired'
     return errors
   }
 
@@ -100,10 +127,24 @@ export function validateCandidateSection(
     return errors
   }
 
+  if (section === 'education') {
+    const errors: Record<string, string> = {}
+    const primary = primaryEducationItem(form.educationItems)
+    if (!primary.degree?.trim()) {
+      errors.primaryQualification = 'jobs.primaryQualificationRequired'
+    }
+    if (!options.hasPrimaryQualificationDocument) {
+      errors.primaryQualificationDocument = 'jobs.primaryQualificationDocumentRequired'
+    }
+    return errors
+  }
+
   return {}
 }
 
-export function validateCandidateProfile(form: CandidateProfileForm): Record<string, string> {
+export function validateCandidateProfile(
+  form: CandidateProfileForm,
+): Record<string, string> {
   return {
     ...validateCandidateSection(form, 'personal'),
     ...validateCandidateSection(form, 'professional'),
@@ -113,16 +154,16 @@ export function validateCandidateProfile(form: CandidateProfileForm): Record<str
 export function toCandidatePayload(form: CandidateProfileForm): Record<string, unknown> {
   return {
     full_name: form.fullName.trim(),
-    email: form.email || undefined,
-    phone: form.phone || undefined,
+    email: form.email.trim() || undefined,
+    phone: form.phone.trim() || undefined,
     specialization: form.specialization || undefined,
     target_job_title: form.targetJobTitle || undefined,
     biography: form.biography || undefined,
-    country: form.country || undefined,
-    city: form.city || undefined,
+    country: form.country.trim() || undefined,
+    city: form.city.trim() || undefined,
     date_of_birth: form.dateOfBirth || undefined,
-    nationality: form.nationality || undefined,
-    address: form.address || undefined,
+    nationality: form.nationality.trim() || undefined,
+    address: form.address.trim() || undefined,
     years_of_experience: form.yearsOfExperience === '' ? undefined : Number(form.yearsOfExperience),
     skills: splitCsv(form.skills),
     languages: splitCsv(form.languages),

@@ -105,14 +105,15 @@ class JobHiringSecurityTest extends TestCase
         $user = $this->talentUser('seeker-status@wsa.test');
         $headers = $this->talentHeaders($user, $organization);
 
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Seeker Status',
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Seeker Status Test Name',
+            'email' => 'seeker-status@wsa.test',
             'recruitment_status' => JobSeekerProfile::STATUS_HIRED,
             'payment_status' => 'paid',
             'employment_status' => 'hired',
             'user_id' => 999999,
             'organization_id' => 999999,
-        ], $headers)->assertCreated()
+        ]), $headers)->assertCreated()
             ->assertJsonPath('recruitment_status', JobSeekerProfile::STATUS_NEW);
 
         $profile = JobSeekerProfile::where('user_id', $user->id)->firstOrFail();
@@ -218,9 +219,10 @@ class JobHiringSecurityTest extends TestCase
         $adminHeaders = $this->adminHeaders($organization);
         $talent = User::findOrFail($profile->user_id);
 
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Hiring Talent',
-        ], $talentHeaders)->assertCreated();
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Hiring Talent Test Name',
+            'email' => $talent->email,
+        ]), $talentHeaders)->assertCreated();
         $this->assertSame(JobSeekerProfile::STATUS_NEW, JobSeekerProfile::where('user_id', $talent->id)->value('recruitment_status'));
         $this->assertSame(0, AppNotification::withoutGlobalScopes()->where('type', 'jobs.hiring.completed')->count());
 
@@ -420,9 +422,10 @@ class JobHiringSecurityTest extends TestCase
     public function test_crm_cv_requires_verified_org_unlock_not_private_data_alone(): void
     {
         [$talent, $talentHeaders, $orgA] = $this->seededCandidate();
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Irrigation Engineer',
-        ], $talentHeaders)->assertCreated();
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Irrigation Engineer Test Name',
+            'email' => 'crm-cv-engineer@wsa.test',
+        ]), $talentHeaders)->assertCreated();
         $seeker = JobSeekerProfile::where('user_id', $talent->user_id)->firstOrFail();
         Storage::fake('local');
         Storage::disk('local')->put('job-cvs/'.$seeker->id.'/cv.pdf', 'seeker-cv');
@@ -465,7 +468,10 @@ class JobHiringSecurityTest extends TestCase
             'Authorization' => 'Bearer '.$otherUser->createToken('crm-cv-other')->plainTextToken,
             'X-Organization-Id' => (string) $orgA->id,
         ];
-        $this->putJson('/api/v1/job-seekers/me', ['full_name' => 'Other Seeker'], $otherHeaders)->assertCreated();
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Other Seeker Test Name',
+            'email' => $otherUser->email,
+        ]), $otherHeaders)->assertCreated();
         $otherSeeker = JobSeekerProfile::where('user_id', $otherUser->id)->firstOrFail();
         Storage::disk('local')->put('job-cvs/'.$otherSeeker->id.'/cv.pdf', 'other-cv');
         $otherSeeker->update(['cv_path' => 'job-cvs/'.$otherSeeker->id.'/cv.pdf']);
@@ -475,17 +481,17 @@ class JobHiringSecurityTest extends TestCase
     public function test_crm_email_and_phone_require_verified_org_unlock(): void
     {
         [$talent, $talentHeaders, $orgA] = $this->seededCandidate();
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Irrigation Engineer',
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Irrigation Engineer Test Name',
             'email' => 'crm-private@wsa.test',
             'phone' => '+962700009999',
-        ], $talentHeaders)->assertCreated();
+        ]), $talentHeaders)->assertCreated();
         $seeker = JobSeekerProfile::where('user_id', $talent->user_id)->firstOrFail();
         $headersA = $this->adminHeaders($orgA);
 
         $before = $this->getJson("/api/v1/job-seekers/{$seeker->id}", $headersA)->assertOk();
         $this->assertSame($seeker->id, $before->json('id'));
-        $this->assertSame('Irrigation Engineer', $before->json('full_name'));
+        $this->assertSame('Irrigation Engineer Test Name', $before->json('full_name'));
         $this->assertArrayNotHasKey('email', $before->json());
         $this->assertArrayNotHasKey('phone', $before->json());
         $this->assertArrayNotHasKey('address', $before->json());
@@ -539,11 +545,11 @@ class JobHiringSecurityTest extends TestCase
             'Authorization' => 'Bearer '.$otherUser->createToken('crm-contact-other')->plainTextToken,
             'X-Organization-Id' => (string) $orgA->id,
         ];
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Other Contact Seeker',
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Other Contact Seeker Name',
             'email' => 'other-private@wsa.test',
             'phone' => '+962700008888',
-        ], $otherHeaders)->assertCreated();
+        ]), $otherHeaders)->assertCreated();
         $otherSeeker = JobSeekerProfile::where('user_id', $otherUser->id)->firstOrFail();
         $idor = $this->getJson("/api/v1/job-seekers/{$otherSeeker->id}", $headersA)->assertOk();
         $this->assertArrayNotHasKey('email', $idor->json());
@@ -695,11 +701,11 @@ class JobHiringSecurityTest extends TestCase
     public function test_crm_hired_status_does_not_bypass_marketplace_payment_or_unlock(): void
     {
         [$talent, $talentHeaders, $organization] = $this->seededCandidate();
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Irrigation Engineer',
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Irrigation Engineer Test Name',
             'email' => 'crm-hire-bypass@wsa.test',
             'phone' => '+962700001234',
-        ], $talentHeaders)->assertCreated();
+        ]), $talentHeaders)->assertCreated();
         $seeker = JobSeekerProfile::where('user_id', $talent->user_id)->firstOrFail();
         $adminHeaders = $this->adminHeaders($organization);
 
@@ -740,9 +746,10 @@ class JobHiringSecurityTest extends TestCase
     public function test_job_seeker_and_talent_cv_stores_stay_isolated(): void
     {
         [$talent, $talentHeaders, $organization] = $this->seededCandidate();
-        $this->putJson('/api/v1/job-seekers/me', [
-            'full_name' => 'Irrigation Engineer',
-        ], $talentHeaders)->assertCreated();
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Irrigation Engineer Test Name',
+            'email' => 'isolated-engineer@wsa.test',
+        ]), $talentHeaders)->assertCreated();
         $seeker = JobSeekerProfile::where('user_id', $talent->user_id)->firstOrFail();
         $this->assertNotSame($talent->id, $seeker->id);
 

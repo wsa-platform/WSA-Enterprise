@@ -205,6 +205,11 @@
       "jobSeekerHint": "Create or open your job seeker profile, CV, and applications.",
       "employer": "Sign in as an employer",
       "employerHint": "Open the dedicated employer workspace.",
+      "headline": "Looking for your next opportunity?",
+      "seekOpportunity": "I'm looking for a job",
+      "seekOpportunityHint": "Create your professional profile, highlight your experience and skills, and let the right opportunity find you.",
+      "findTalent": "I'm looking for talent",
+      "findTalentHint": "Discover top talent and find the right candidate for your needs from a wide pool of professionals.",
       "backToChoices": "Back to account type"
     },
     "jobSeeker": {
@@ -946,7 +951,28 @@
     "applicationSaveFailed": "Unable to save application profile.",
     "applicationValidationFailed": "Please correct the highlighted fields before saving.",
     "fullNameRequired": "Full name is required.",
+    "fullNameFourPartsRequired": "Full name must contain four parts.",
+    "emailRequired": "Email is required.",
     "emailInvalid": "Please enter a valid email address.",
+    "phoneRequired": "Phone number is required.",
+    "countryRequired": "Country is required.",
+    "cityRequired": "City is required.",
+    "dateOfBirthRequired": "Date of birth is required.",
+    "nationalityRequired": "Nationality is required.",
+    "addressRequired": "Address is required.",
+    "primaryQualification": "Primary qualification",
+    "primaryQualificationRequired": "Primary qualification is required.",
+    "primaryQualificationDocument": "Qualification document",
+    "primaryQualificationDocumentRequired": "A document proving the primary qualification is required.",
+    "primaryQualificationUploaded": "Qualification document uploaded.",
+    "primaryQualificationUploadFailed": "Unable to upload the qualification document.",
+    "primaryQualificationDownloadFailed": "Unable to open the qualification document.",
+    "viewQualificationDocument": "View qualification document",
+    "selectQualificationDocument": "Upload qualification document",
+    "additionalQualifications": "Additional qualifications",
+    "additionalQualificationsOptional": "Optional — add further qualifications if you wish.",
+    "requiredField": "Required",
+    "optionalField": "Optional",
     "yearsOfExperienceInvalid": "Years of experience must be a number between 0 and 80.",
     "cvDownloadFailed": "Unable to open the CV.",
     "present": "Present",
@@ -1290,7 +1316,25 @@
       "jobs": {
         "title": "Jobs",
         "description": "Agricultural employment opportunities, talent profiles, and professional careers.",
-        "imageAlt": "Agricultural professionals working in a green field"
+        "imageAlt": "Agricultural professionals working in a green field",
+        "features": {
+          "listings": {
+            "title": "Job listings",
+            "body": "Browse agricultural employment opportunities on the platform."
+          },
+          "employers": {
+            "title": "Employer opportunities",
+            "body": "Connect farms and agribusinesses with qualified talent."
+          },
+          "talent": {
+            "title": "Talent profiles",
+            "body": "Agricultural professionals showcase skills and experience."
+          },
+          "careers": {
+            "title": "Professional careers",
+            "body": "Discover roles for engineers, farm managers, and field specialists."
+          }
+        }
       },
       "store": {
         "title": "Store",
@@ -1396,22 +1440,6 @@
       "training.features.education": {
         "title": "Educational content",
         "body": "Learning resources including beekeeping and crop education."
-      },
-      "jobs.features.listings": {
-        "title": "Job listings",
-        "body": "Browse agricultural employment opportunities on the platform."
-      },
-      "jobs.features.employers": {
-        "title": "Employer opportunities",
-        "body": "Connect farms and agribusinesses with qualified talent."
-      },
-      "jobs.features.talent": {
-        "title": "Talent profiles",
-        "body": "Agricultural professionals showcase skills and experience."
-      },
-      "jobs.features.careers": {
-        "title": "Professional careers",
-        "body": "Discover roles for engineers, farm managers, and field specialists."
       },
       "store.features.products": {
         "title": "Agricultural products",

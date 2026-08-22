@@ -9,9 +9,11 @@ import {
   destinationForRoles,
   employerLogoutPath,
   employerStartPath,
+  jobSeekerLandingPath,
   jobSeekerStartPath,
   loginHref,
   parseAudience,
+  registerHref,
   roleFlagsFromPermissions,
 } from './roleDestinations'
 import { loginPathForProtectedRoute, safeReturnPath, unknownRouteFallback } from './routeGuards'
@@ -81,12 +83,17 @@ describe('role destinations', () => {
   })
 
   it('routes Job-Seeker and Employer entry from the public homepage choice', () => {
+    expect(jobSeekerLandingPath(false)).toBe(JOB_SEEKER_ENTER)
+    expect(jobSeekerLandingPath(true)).toBe(JOB_SEEKER_HOME)
     expect(jobSeekerStartPath(false)).toBe(loginHref('job_seeker', JOB_SEEKER_HOME))
     expect(jobSeekerStartPath(true)).toBe(JOB_SEEKER_HOME)
     expect(employerStartPath(false)).toBe(loginHref('employer', EMPLOYER_HOME))
     expect(employerStartPath(true)).toBe(EMPLOYER_HOME)
+    expect(jobSeekerLandingPath(false)).not.toContain('/dashboard')
     expect(jobSeekerStartPath(false)).not.toContain('/dashboard')
     expect(employerStartPath(false)).not.toContain('/dashboard')
+    expect(registerHref('job_seeker', JOB_SEEKER_HOME)).toContain('audience=job_seeker')
+    expect(registerHref('job_seeker', JOB_SEEKER_HOME)).toContain(encodeURIComponent(JOB_SEEKER_HOME))
   })
 
   it('logs Job-Seekers out to the entry page and Employers out to employer login', () => {

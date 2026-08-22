@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom'
 import {
   downloadMyJobSeekerCv,
   downloadMyJobSeekerPhoto,
+  downloadMyJobSeekerPrimaryQualification,
   getMyJobSeekerProfile,
   listMyContactRequests,
   upsertMyJobSeekerProfile,
   uploadMyJobSeekerCv,
   uploadMyJobSeekerPhoto,
+  uploadMyJobSeekerPrimaryQualification,
 } from '../../api/jobs'
 import { ApiError } from '../../api/client'
 import { PageHeader } from '../../components/PageHeader'
@@ -20,7 +22,9 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { translateApiError } from '../../i18n/apiErrors'
 import {
   CANDIDATE_STATUS_TIMELINE,
+  additionalEducationItems,
   nextProfileSection,
+  primaryEducationItem,
   timelineStepIndex,
   toCandidatePayload,
   toDateInputValue,
@@ -57,15 +61,17 @@ function ProfileField({
   htmlFor,
   label,
   error,
+  className,
   children,
 }: {
   htmlFor: string
   label: string
   error?: string
+  className?: string
   children: ReactNode
 }) {
   return (
-    <div className="profile-field">
+    <div className={['profile-field', className].filter(Boolean).join(' ')}>
       <label htmlFor={htmlFor}>{label}</label>
       {children}
       {error ? <p className="field-error" role="alert">{error}</p> : null}
@@ -91,6 +97,7 @@ export function MyJobApplicationPage() {
   const [message, setMessage] = useState('')
   const [cvFile, setCvFile] = useState<File | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [primaryQualificationFile, setPrimaryQualificationFile] = useState<File | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [experienceItems, setExperienceItems] = useState<ExperienceItem[]>([])
   const [educationItems, setEducationItems] = useState<EducationItem[]>([])
@@ -158,6 +165,7 @@ export function MyJobApplicationPage() {
     setEducationItems(Array.isArray(profile.education) ? (profile.education as EducationItem[]) : [])
     setYearsOfExperience(profile.years_of_experience != null ? String(profile.years_of_experience) : '')
     setCvFile(null)
+    setPrimaryQualificationFile(null)
     setEditingExperienceIndex(null)
     setEditingEducationIndex(null)
     setExperienceForm({})
@@ -217,7 +225,11 @@ export function MyJobApplicationPage() {
   const handleSave = async (section?: ProfileSectionId) => {
     if (!token || saving) return
     const errors = section
-      ? validateCandidateSection(formState, section)
+      ? validateCandidateSection(formState, section, {
+          hasPrimaryQualificationDocument: Boolean(
+            profile?.has_primary_qualification_document || primaryQualificationFile,
+          ),
+        })
       : validateCandidateProfile(formState)
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) {
@@ -228,7 +240,26 @@ export function MyJobApplicationPage() {
     setSaving(true)
     setMessage('')
     try {
-      const saved = await upsertMyJobSeekerProfile(token, toCandidatePayload(formState), organizationId ?? undefined)
+      const payload = toCandidatePayload(formState)
+      if (section && section !== 'education') {
+        delete payload.education
+      }
+      if (section === 'education' && !profile) {
+        const bootstrap = { ...payload }
+        delete bootstrap.education
+        const created = await upsertMyJobSeekerProfile(token, bootstrap, organizationId ?? undefined)
+        setData(created)
+      }
+      if (section === 'education' && primaryQualificationFile) {
+        const withDocument = await uploadMyJobSeekerPrimaryQualification(
+          token,
+          primaryQualificationFile,
+          organizationId ?? undefined,
+        )
+        setData(withDocument)
+        setPrimaryQualificationFile(null)
+      }
+      const saved = await upsertMyJobSeekerProfile(token, payload, organizationId ?? undefined)
       setData(saved)
       setMessage(t('jobs.applicationSaved'))
       setMissingProfile(false)
@@ -268,6 +299,7 @@ export function MyJobApplicationPage() {
       setEducationItems(Array.isArray(profile.education) ? (profile.education as EducationItem[]) : [])
       setYearsOfExperience(profile.years_of_experience != null ? String(profile.years_of_experience) : '')
       setCvFile(null)
+      setPrimaryQualificationFile(null)
       setEditingExperienceIndex(null)
       setEditingEducationIndex(null)
       setExperienceForm({})
@@ -336,6 +368,17 @@ export function MyJobApplicationPage() {
       URL.revokeObjectURL(url)
     } catch (requestError) {
       setMessage(translateApiError(requestError) || t('jobs.cvDownloadFailed'))
+    }
+  }
+
+  const handleViewQualificationDocument = async () => {
+    if (!token) return
+    try {
+      const blob = await downloadMyJobSeekerPrimaryQualification(token, organizationId ?? undefined)
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (requestError) {
+      setMessage(translateApiError(requestError) || t('jobs.primaryQualificationDownloadFailed'))
     }
   }
 
@@ -463,7 +506,7 @@ export function MyJobApplicationPage() {
           type="button"
           onClick={() => {
             if (index === null) {
-              setEducationItems([...educationItems, initial])
+              setEducationItems(educationItems.length === 0 ? [{}, initial] : [...educationItems, initial])
             } else {
               const next = [...educationItems]
               next[index] = initial
@@ -581,7 +624,12 @@ export function MyJobApplicationPage() {
           <div id="job-seeker-section-personal">
           <Panel eyebrow={t('jobs.personalInfo')} title={t('jobs.personalInfo')}>
             <div className="record-form profile-fields">
-              <ProfileField htmlFor="job-seeker-full-name" label={t('jobs.fullName')} error={fieldErrors.fullName ? t(fieldErrors.fullName) : undefined}>
+              <ProfileField
+                htmlFor="job-seeker-full-name"
+                className="profile-field-wide"
+                label={`${t('jobs.fullName')} (${t('jobs.requiredField')})`}
+                error={fieldErrors.fullName ? t(fieldErrors.fullName) : undefined}
+              >
                 <input
                   id="job-seeker-full-name"
                   name="full_name"
@@ -593,7 +641,12 @@ export function MyJobApplicationPage() {
                   dir="auto"
                 />
               </ProfileField>
-              <ProfileField htmlFor="job-seeker-email" label={t('jobs.email')} error={fieldErrors.email ? t(fieldErrors.email) : undefined}>
+              <ProfileField
+                htmlFor="job-seeker-email"
+                className="profile-field-medium"
+                label={`${t('jobs.email')} (${t('jobs.requiredField')})`}
+                error={fieldErrors.email ? t(fieldErrors.email) : undefined}
+              >
                 <input
                   id="job-seeker-email"
                   name="email"
@@ -601,11 +654,17 @@ export function MyJobApplicationPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                   readOnly={viewMode}
                   dir="ltr"
                 />
               </ProfileField>
-              <ProfileField htmlFor="job-seeker-phone" label={t('jobs.phoneNumber')}>
+              <ProfileField
+                htmlFor="job-seeker-phone"
+                className="profile-field-medium"
+                label={`${t('jobs.phoneNumber')} (${t('jobs.requiredField')})`}
+                error={fieldErrors.phone ? t(fieldErrors.phone) : undefined}
+              >
                 <input
                   id="job-seeker-phone"
                   name="phone"
@@ -613,33 +672,49 @@ export function MyJobApplicationPage() {
                   autoComplete="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  required
                   readOnly={viewMode}
                   dir="ltr"
                 />
               </ProfileField>
-              <ProfileField htmlFor="job-seeker-country" label={t('jobs.country')}>
+              <ProfileField
+                htmlFor="job-seeker-country"
+                label={`${t('jobs.country')} (${t('jobs.requiredField')})`}
+                error={fieldErrors.country ? t(fieldErrors.country) : undefined}
+              >
                 <input
                   id="job-seeker-country"
                   name="country"
                   autoComplete="country-name"
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
+                  required
                   readOnly={viewMode}
                   dir="auto"
                 />
               </ProfileField>
-              <ProfileField htmlFor="job-seeker-city" label={t('jobs.city')}>
+              <ProfileField
+                htmlFor="job-seeker-city"
+                label={`${t('jobs.city')} (${t('jobs.requiredField')})`}
+                error={fieldErrors.city ? t(fieldErrors.city) : undefined}
+              >
                 <input
                   id="job-seeker-city"
                   name="city"
                   autoComplete="address-level2"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
+                  required
                   readOnly={viewMode}
                   dir="auto"
                 />
               </ProfileField>
-              <ProfileField htmlFor="job-seeker-date-of-birth" label={t('jobs.dateOfBirth')}>
+              <ProfileField
+                htmlFor="job-seeker-date-of-birth"
+                className="profile-field-date"
+                label={`${t('jobs.dateOfBirth')} (${t('jobs.requiredField')})`}
+                error={fieldErrors.dateOfBirth ? t(fieldErrors.dateOfBirth) : undefined}
+              >
                 <input
                   id="job-seeker-date-of-birth"
                   name="date_of_birth"
@@ -647,34 +722,46 @@ export function MyJobApplicationPage() {
                   autoComplete="bday"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
+                  required
                   readOnly={viewMode}
                   dir="ltr"
                 />
               </ProfileField>
-              <ProfileField htmlFor="job-seeker-nationality" label={t('jobs.nationality')}>
+              <ProfileField
+                htmlFor="job-seeker-nationality"
+                label={`${t('jobs.nationality')} (${t('jobs.requiredField')})`}
+                error={fieldErrors.nationality ? t(fieldErrors.nationality) : undefined}
+              >
                 <input
                   id="job-seeker-nationality"
                   name="nationality"
                   value={nationality}
                   onChange={(e) => setNationality(e.target.value)}
+                  required
                   readOnly={viewMode}
                   dir="auto"
                 />
               </ProfileField>
-              <ProfileField htmlFor="job-seeker-address" label={t('jobs.address')}>
+              <ProfileField
+                htmlFor="job-seeker-address"
+                className="profile-field-wide"
+                label={`${t('jobs.address')} (${t('jobs.requiredField')})`}
+                error={fieldErrors.address ? t(fieldErrors.address) : undefined}
+              >
                 <input
                   id="job-seeker-address"
                   name="address"
                   autoComplete="street-address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
+                  required
                   readOnly={viewMode}
                   dir="auto"
                 />
               </ProfileField>
               {!viewMode && (
-                <div className="form-actions">
-                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave('personal')}>
+                <div className="form-actions profile-field-actions">
+                  <button type="button" disabled={saving} onClick={() => void handleSave('personal')}>
                     {saving ? t('common.saving') : t('common.save')}
                   </button>
                   <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
@@ -692,12 +779,31 @@ export function MyJobApplicationPage() {
                   <p style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>{t('jobs.professionalSummary')}</p>
                   <p dir="auto" style={{ whiteSpace: 'pre-wrap' }}>{profile?.biography || '—'}</p>
                 </div>
-                <div className="detail-grid">
-                  <div><span>{t('jobs.targetJobTitle')}</span><strong dir="auto">{profile?.target_job_title || '—'}</strong></div>
-                  <div><span>{t('jobs.yearsOfExperience')}</span><strong dir="auto">{profile?.years_of_experience ?? '—'}</strong></div>
-                  <div><span>{t('jobs.professionalField')}</span><strong dir="auto">{profile?.specialization || '—'}</strong></div>
-                  <div><span>{t('jobs.skills')}</span><strong dir="auto">{(profile?.skills ?? []).join(', ') || '—'}</strong></div>
-                  <div><span>{t('jobs.languages')}</span><strong dir="auto">{(profile?.languages ?? []).join(', ') || '—'}</strong></div>
+                <div className="profile-fields">
+                  <div className="profile-readout profile-field-wide">
+                    <span>{t('jobs.professionalSummary')}</span>
+                    <strong dir="auto" style={{ whiteSpace: 'pre-wrap', fontWeight: 500 }}>{profile?.biography || '—'}</strong>
+                  </div>
+                  <div className="profile-readout">
+                    <span>{t('jobs.targetJobTitle')}</span>
+                    <strong dir="auto">{profile?.target_job_title || '—'}</strong>
+                  </div>
+                  <div className="profile-readout profile-field-date">
+                    <span>{t('jobs.yearsOfExperience')}</span>
+                    <strong dir="auto">{profile?.years_of_experience ?? '—'}</strong>
+                  </div>
+                  <div className="profile-readout">
+                    <span>{t('jobs.professionalField')}</span>
+                    <strong dir="auto">{profile?.specialization || '—'}</strong>
+                  </div>
+                  <div className="profile-readout profile-field-wide">
+                    <span>{t('jobs.skills')}</span>
+                    <strong dir="auto">{(profile?.skills ?? []).join(', ') || '—'}</strong>
+                  </div>
+                  <div className="profile-readout">
+                    <span>{t('jobs.languages')}</span>
+                    <strong dir="auto">{(profile?.languages ?? []).join(', ') || '—'}</strong>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -746,35 +852,129 @@ export function MyJobApplicationPage() {
                 <div style={{ display: 'grid', gap: 12 }}>
                   {educationItems.map((item, index) => (
                     <div key={index} style={{ padding: 12, border: '1px solid #e5e7eb', borderRadius: 10 }}>
+                      <p className="eyebrow">{index === 0 ? t('jobs.primaryQualification') : t('jobs.additionalQualifications')}</p>
                       <strong dir="auto">{item.degree || '—'}</strong>
                       <p dir="auto" style={{ margin: '4px 0 0', fontSize: 13 }}>{formatEducationItem(item) || '—'}</p>
+                      {index === 0 && profile?.has_primary_qualification_document && (
+                        <button type="button" className="link-button" onClick={() => void handleViewQualificationDocument()}>
+                          {t('jobs.viewQualificationDocument')}
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
               )
             ) : (
               <>
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {educationItems.map((item, index) => (
-                    <div key={index} style={{ padding: 12, border: '1px solid #e5e7eb', borderRadius: 10 }}>
-                      <strong dir="auto">{item.degree || '—'}</strong>
-                      <p dir="auto" style={{ margin: '4px 0 0', fontSize: 13 }}>{formatEducationItem(item) || '—'}</p>
-                      <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                        <button type="button" onClick={() => { setEditingEducationIndex(index); setEducationForm(item) }}>{t('common.edit')}</button>
-                        <button type="button" style={{ background: '#dc2626' }} onClick={() => setEducationItems(educationItems.filter((_, i) => i !== index))}>{t('common.delete')}</button>
-                      </div>
-                      {editingEducationIndex === index && renderEducationForm(index, educationForm)}
-                    </div>
-                  ))}
+                <div className="record-form profile-fields">
+                  <p className="profile-field-wide">
+                    <strong>{t('jobs.primaryQualification')}</strong>
+                    {' '}
+                    <span className="muted">({t('jobs.requiredField')})</span>
+                  </p>
+                  <ProfileField
+                    htmlFor="job-seeker-primary-qualification"
+                    className="profile-field-wide"
+                    label={t('jobs.qualification')}
+                    error={fieldErrors.primaryQualification ? t(fieldErrors.primaryQualification) : undefined}
+                  >
+                    <input
+                      id="job-seeker-primary-qualification"
+                      name="primary_qualification"
+                      dir="auto"
+                      value={primaryEducationItem(educationItems).degree ?? ''}
+                      onChange={(e) => setEducationItems([{ ...primaryEducationItem(educationItems), degree: e.target.value }, ...educationItems.slice(1)])}
+                    />
+                  </ProfileField>
+                  <ProfileField htmlFor="job-seeker-primary-university" label={t('jobs.university')}>
+                    <input
+                      id="job-seeker-primary-university"
+                      dir="auto"
+                      value={primaryEducationItem(educationItems).institution ?? ''}
+                      onChange={(e) => setEducationItems([{ ...primaryEducationItem(educationItems), institution: e.target.value }, ...educationItems.slice(1)])}
+                    />
+                  </ProfileField>
+                  <ProfileField htmlFor="job-seeker-primary-country" label={t('jobs.country')}>
+                    <input
+                      id="job-seeker-primary-country"
+                      dir="auto"
+                      value={primaryEducationItem(educationItems).country ?? ''}
+                      onChange={(e) => setEducationItems([{ ...primaryEducationItem(educationItems), country: e.target.value }, ...educationItems.slice(1)])}
+                    />
+                  </ProfileField>
+                  <ProfileField htmlFor="job-seeker-primary-year" className="profile-field-date" label={t('jobs.graduationYear')}>
+                    <input
+                      id="job-seeker-primary-year"
+                      dir="ltr"
+                      type="number"
+                      min="1950"
+                      max="2100"
+                      value={primaryEducationItem(educationItems).year ?? ''}
+                      onChange={(e) => setEducationItems([{
+                        ...primaryEducationItem(educationItems),
+                        year: e.target.value ? Number(e.target.value) : undefined,
+                      }, ...educationItems.slice(1)])}
+                    />
+                  </ProfileField>
+                  <ProfileField
+                    htmlFor="job-seeker-primary-qualification-document"
+                    className="profile-field-wide"
+                    label={t('jobs.selectQualificationDocument')}
+                    error={fieldErrors.primaryQualificationDocument ? t(fieldErrors.primaryQualificationDocument) : undefined}
+                  >
+                    <input
+                      id="job-seeker-primary-qualification-document"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                      onChange={(e) => setPrimaryQualificationFile(e.target.files?.[0] ?? null)}
+                    />
+                  </ProfileField>
+                  {(profile?.has_primary_qualification_document || primaryQualificationFile) && (
+                    <p className="muted profile-field-wide">
+                      {primaryQualificationFile?.name || profile?.primary_qualification_filename}
+                      {profile?.has_primary_qualification_document && (
+                        <>
+                          {' '}
+                          <button type="button" className="link-button inline" onClick={() => void handleViewQualificationDocument()}>
+                            {t('jobs.viewQualificationDocument')}
+                          </button>
+                        </>
+                      )}
+                    </p>
+                  )}
                 </div>
-                {editingEducationIndex === null && (
-                  <button type="button" style={{ marginTop: 12 }} onClick={() => { setEditingEducationIndex(-1); setEducationForm({}) }}>
-                    {t('jobs.addEducation')}
-                  </button>
-                )}
-                {editingEducationIndex === -1 && renderEducationForm(null, educationForm)}
+                <div style={{ marginTop: 18 }}>
+                  <p>
+                    <strong>{t('jobs.additionalQualifications')}</strong>
+                    {' '}
+                    <span className="muted">({t('jobs.optionalField')})</span>
+                  </p>
+                  <p className="muted">{t('jobs.additionalQualificationsOptional')}</p>
+                  <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
+                    {additionalEducationItems(educationItems).map((item, additionalIndex) => {
+                      const index = additionalIndex + 1
+                      return (
+                        <div key={index} style={{ padding: 12, border: '1px solid #e5e7eb', borderRadius: 10 }}>
+                          <strong dir="auto">{item.degree || '—'}</strong>
+                          <p dir="auto" style={{ margin: '4px 0 0', fontSize: 13 }}>{formatEducationItem(item) || '—'}</p>
+                          <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                            <button type="button" onClick={() => { setEditingEducationIndex(index); setEducationForm(item) }}>{t('common.edit')}</button>
+                            <button type="button" style={{ background: '#dc2626' }} onClick={() => setEducationItems(educationItems.filter((_, i) => i !== index))}>{t('common.delete')}</button>
+                          </div>
+                          {editingEducationIndex === index && renderEducationForm(index, educationForm)}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {editingEducationIndex === null && (
+                    <button type="button" style={{ marginTop: 12 }} onClick={() => { setEditingEducationIndex(-1); setEducationForm({}) }}>
+                      {t('jobs.addEducation')}
+                    </button>
+                  )}
+                  {editingEducationIndex === -1 && renderEducationForm(null, educationForm)}
+                </div>
                 <div className="form-actions" style={{ marginTop: 18 }}>
-                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave('education')}>
+                  <button type="button" disabled={saving} onClick={() => void handleSave('education')}>
                     {saving ? t('common.saving') : t('common.save')}
                   </button>
                   <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
