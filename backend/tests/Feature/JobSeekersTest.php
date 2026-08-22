@@ -461,7 +461,7 @@ class JobSeekersTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_owner_can_deactivate_own_profile(): void
+    public function test_owner_can_delete_own_application_without_deleting_the_user(): void
     {
         $org = Organization::first();
         $user = User::create([
@@ -481,13 +481,14 @@ class JobSeekersTest extends TestCase
 
         $this->deleteJson('/api/v1/job-seekers/me', [], $headers)
             ->assertOk()
-            ->assertJsonPath('message', 'Profile deactivated.');
+            ->assertJsonPath('message', __('jobs.application_deleted'));
 
         $this->getJson('/api/v1/job-seekers/me', $headers)
-            ->assertOk()
-            ->assertJsonPath('is_active', false);
+            ->assertNotFound();
 
-        $this->assertTrue(JobSeekerProfile::where('user_id', $user->id)->exists());
+        $this->assertTrue(User::where('id', $user->id)->exists());
+        $this->assertTrue(JobSeekerProfile::withTrashed()->where('user_id', $user->id)->exists());
+        $this->assertFalse(JobSeekerProfile::where('user_id', $user->id)->exists());
 
         $intruder = User::create([
             'name' => 'Other Seeker',
@@ -497,7 +498,8 @@ class JobSeekersTest extends TestCase
         $org->members()->syncWithoutDetaching([$intruder->id => ['role' => 'member']]);
         $this->deleteJson('/api/v1/job-seekers/me', [], $this->memberHeaders($intruder, $org))
             ->assertNotFound();
-        $this->assertTrue(JobSeekerProfile::where('user_id', $user->id)->where('is_active', false)->exists());
+        $this->assertTrue(User::where('id', $user->id)->exists());
+        $this->assertTrue(JobSeekerProfile::withTrashed()->where('user_id', $user->id)->exists());
     }
 
     public function test_nested_json_is_validated_and_unknown_keys_are_stripped(): void
@@ -776,14 +778,45 @@ class JobSeekersTest extends TestCase
         $withoutCv = $this->getJson('/api/v1/job-seekers/me', $headers)->assertOk();
         $this->assertSame(86, $withoutCv->json('completeness_percent'));
         $this->assertFalse($withoutCv->json('has_photo'));
+        $this->assertArrayNotHasKey('photo_path', $withoutCv->json());
+        $this->post('/api/v1/job-seekers/me/photo', [], $headers)->assertNotFound();
+        $this->get('/api/v1/job-seekers/me/photo', $headers)->assertNotFound();
+        $this->get('/api/v1/job-seekers/me/photo', $intruderHeaders)->assertNotFound();
+    }
+
+    public function test_job_seeker_cv_upload_accepts_pdf_only(): void
+    {
+        $org = Organization::first();
+        $user = User::create([
+            'name' => 'Cv Pdf Owner',
+            'email' => 'cv-pdf-owner@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $org->members()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
+        $headers = $this->memberHeaders($user, $org);
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Cv Pdf Owner Test Name',
+            'email' => 'cv-pdf-owner@wsa.test',
+        ]), $headers)->assertCreated();
 
         Storage::fake('local');
-        $file = \Illuminate\Http\UploadedFile::fake()->create('avatar.jpg', 120, 'image/jpeg');
-        $this->post('/api/v1/job-seekers/me/photo', ['photo' => $file], $headers)->assertOk()
-            ->assertJsonPath('has_photo', true);
-        $this->assertArrayNotHasKey('photo_path', $this->getJson('/api/v1/job-seekers/me', $headers)->json());
-        $this->get('/api/v1/job-seekers/me/photo', $headers)->assertOk();
-        $this->get('/api/v1/job-seekers/me/photo', $intruderHeaders)->assertNotFound();
+        $docx = \Illuminate\Http\UploadedFile::fake()->create('resume.docx', 80, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        $jpg = \Illuminate\Http\UploadedFile::fake()->create('resume.jpg', 40, 'image/jpeg');
+        $arabicRejection = $this->post('/api/v1/job-seekers/me/cv', ['cv' => $docx], $headers + ['Accept-Language' => 'ar'])
+            ->assertUnprocessable();
+        $this->assertStringContainsString('يجب رفع السيرة الذاتية بصيغة PDF فقط', json_encode($arabicRejection->json(), JSON_UNESCAPED_UNICODE));
+        $this->post('/api/v1/job-seekers/me/cv', ['cv' => $jpg], $headers)
+            ->assertUnprocessable();
+
+        $pdfPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'wsa-job-seeker-cv.pdf';
+        file_put_contents($pdfPath, "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF");
+        $pdf = new \Illuminate\Http\UploadedFile($pdfPath, 'resume.pdf', 'application/pdf', null, true);
+        $uploaded = $this->post('/api/v1/job-seekers/me/cv', ['cv' => $pdf], $headers)->assertOk();
+        $this->assertTrue($uploaded->json('has_cv'));
+        $this->assertNotEmpty($uploaded->json('cv_filename'));
+        $this->assertStringEndsWith('.pdf', (string) $uploaded->json('cv_filename'));
+        $this->assertArrayNotHasKey('cv_path', $this->getJson('/api/v1/job-seekers/me', $headers)->json());
+        $this->assertTrue(str_starts_with((string) JobSeekerProfile::query()->where('email', 'cv-pdf-owner@wsa.test')->value('cv_path'), 'job-cvs/'));
     }
 
     public function test_recruitment_routes_are_documented_in_openapi(): void
@@ -793,7 +826,6 @@ class JobSeekersTest extends TestCase
             '/job-seekers',
             '/job-seekers/me',
             '/job-seekers/me/cv',
-            '/job-seekers/me/photo',
             '/job-seekers/me/primary-qualification',
             '/job-seekers/{jobSeeker}',
             '/job-seekers/{jobSeeker}/cv',

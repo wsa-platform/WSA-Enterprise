@@ -215,4 +215,42 @@ class JobSeekerProfileValidationTest extends TestCase
 
         $this->assertSame($first->json('id'), JobSeekerProfile::where('email', 'section-save@wsa.test')->value('id'));
     }
+
+    public function test_personal_save_without_education_key_succeeds_when_existing_education_has_no_document(): void
+    {
+        $headers = $this->seekerHeaders('education-block@wsa.test');
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'email' => 'education-block@wsa.test',
+            'city' => 'Riyadh',
+        ]), $headers)->assertCreated();
+
+        $profile = JobSeekerProfile::where('email', 'education-block@wsa.test')->firstOrFail();
+        $profile->update([
+            'education' => [['degree' => 'BSc Agricultural Engineering', 'institution' => 'KSU']],
+        ]);
+
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'email' => 'education-block@wsa.test',
+            'education' => [['degree' => 'BSc Agricultural Engineering', 'institution' => 'KSU']],
+        ]), $headers)->assertUnprocessable()
+            ->assertJsonValidationErrors(['primary_qualification_document']);
+
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'email' => 'education-block@wsa.test',
+            'city' => 'Jeddah',
+            'nationality' => 'EG',
+            'country' => 'TR',
+            'biography' => 'CV summary',
+            'target_job_title' => 'Agronomist',
+        ]), $headers)->assertOk()
+            ->assertJsonPath('city', 'Jeddah')
+            ->assertJsonPath('nationality', 'EG')
+            ->assertJsonPath('country', 'TR')
+            ->assertJsonPath('biography', 'CV summary')
+            ->assertJsonPath('target_job_title', 'Agronomist');
+
+        $saved = $this->getJson('/api/v1/job-seekers/me', $headers)->assertOk();
+        $this->assertSame('Jeddah', $saved->json('city'));
+        $this->assertSame('BSc Agricultural Engineering', $saved->json('education.0.degree'));
+    }
 }

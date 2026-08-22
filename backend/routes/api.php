@@ -313,8 +313,6 @@ Route::prefix('v1')->group(function (): void {
             Route::delete('/me', [JobSeekerProfileController::class, 'destroyMine']);
             Route::get('/me/cv', [JobSeekerProfileController::class, 'downloadCv']);
             Route::post('/me/cv', [JobSeekerProfileController::class, 'uploadCv']);
-            Route::get('/me/photo', [JobSeekerProfileController::class, 'downloadPhoto']);
-            Route::post('/me/photo', [JobSeekerProfileController::class, 'uploadPhoto']);
             Route::get('/me/primary-qualification', [JobSeekerProfileController::class, 'downloadPrimaryQualification']);
             Route::post('/me/primary-qualification', [JobSeekerProfileController::class, 'uploadPrimaryQualification']);
             Route::get('/{jobSeeker}', [JobSeekerController::class, 'show'])->whereNumber('jobSeeker');

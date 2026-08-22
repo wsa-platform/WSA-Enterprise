@@ -2755,12 +2755,13 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
     delete:
       tags: [Recruitment]
-      summary: Deactivate the authenticated user's job-seeker profile
+      summary: Delete the authenticated user's job-seeker application
+      description: Soft-deletes only the current user's job-seeker profile and its owned notes/history. Does not delete the user account or stored CV files.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
       responses:
-        '200': { description: Profile deactivated }
+        '200': { description: Job application deleted }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
   /job-seekers/me/cv:
@@ -2778,6 +2779,7 @@ paths:
     post:
       tags: [Recruitment]
       summary: Upload or replace the authenticated user's CV
+      description: Accepts PDF files only. The file is stored on the configured local disk; only the path is saved in the database.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
@@ -2792,37 +2794,6 @@ paths:
                 cv: { type: string, format: binary }
       responses:
         '200': { description: Profile including owner CV metadata }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '422': { $ref: '#/components/responses/ValidationError' }
-  /job-seekers/me/photo:
-    get:
-      tags: [Recruitment]
-      summary: Download the authenticated user's profile photo
-      security: [{ bearerAuth: [] }]
-      parameters:
-        - $ref: '#/components/parameters/OrganizationId'
-      responses:
-        '200': { description: Image stream }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-    post:
-      tags: [Recruitment]
-      summary: Upload or replace the authenticated user's profile photo
-      security: [{ bearerAuth: [] }]
-      parameters:
-        - $ref: '#/components/parameters/OrganizationId'
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required: [photo]
-              properties:
-                photo: { type: string, format: binary }
-      responses:
-        '200': { description: Profile including has_photo }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/ValidationError' }

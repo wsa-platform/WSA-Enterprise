@@ -3,13 +3,20 @@ import {
   ownerCompletenessPercent,
   timelineStepIndex,
   toCandidatePayload,
+  toCandidateSavePayload,
+  toCandidateSectionPayload,
   toDateInputValue,
   nextProfileSection,
+  parseYearsOfExperience,
   countNameParts,
   validateCandidateProfile,
   validateCandidateSection,
   authorizedUnlockFromPay,
+  isInternationalPhone,
+  isLettersOnlyText,
+  isNumericOnlyText,
   PROFILE_SECTION_ORDER,
+  isPdfCvFile,
   type CandidateProfileForm,
 } from './candidateProfile'
 
@@ -36,12 +43,18 @@ function emptyForm(overrides: Partial<CandidateProfileForm> = {}): CandidateProf
 }
 
 describe('candidate profile helpers', () => {
+  it('keeps years of experience as a numeric professional-summary value', () => {
+    expect(parseYearsOfExperience('5')).toBe(5)
+    expect(parseYearsOfExperience('')).toBeNull()
+    expect(parseYearsOfExperience('bad')).toBeNull()
+  })
+
   it('requires a four-part full name and the rest of the personal fields', () => {
     expect(validateCandidateProfile(emptyForm())).toMatchObject({
       fullName: 'jobs.fullNameRequired',
       email: 'jobs.emailRequired',
       phone: 'jobs.phoneRequired',
-      country: 'jobs.countryRequired',
+      country: 'jobs.residenceCountryRequired',
       city: 'jobs.cityRequired',
       dateOfBirth: 'jobs.dateOfBirthRequired',
       nationality: 'jobs.nationalityRequired',
@@ -53,13 +66,139 @@ describe('candidate profile helpers', () => {
     expect(validateCandidateProfile(emptyForm({
       fullName: 'أحمد محمد علي حسن',
       email: 'ada@wsa.test',
-      phone: '+9665',
+      phone: '+966522222222',
       country: 'SA',
       city: 'Riyadh',
       dateOfBirth: '1990-01-15',
-      nationality: 'Saudi',
+      nationality: 'SA',
       address: 'Olaya',
     }))).toEqual({})
+    expect(validateCandidateProfile(emptyForm({
+      fullName: 'Ahmed Mohamed Ali 123',
+      email: 'ada@wsa.test',
+      phone: '+966522222222',
+      country: 'SA',
+      city: 'Riyadh',
+      dateOfBirth: '1990-01-15',
+      nationality: 'EG',
+      address: 'Olaya',
+    })).fullName).toBe('jobs.fullNameLettersOnly')
+    expect(validateCandidateProfile(emptyForm({
+      fullName: 'Ahmed Mohamed Ali Hassan',
+      email: 'not-an-email',
+      phone: '+966522222222',
+      country: 'TR',
+      city: 'Riyadh',
+      dateOfBirth: '1990-01-15',
+      nationality: 'EG',
+      address: 'Olaya',
+    })).email).toBe('jobs.emailInvalid')
+    expect(validateCandidateProfile(emptyForm({
+      fullName: 'Ahmed Mohamed Ali Hassan',
+      email: 'ada@wsa.test',
+      phone: '90555abc',
+      country: 'TR',
+      city: 'Riyadh',
+      dateOfBirth: '1990-01-15',
+      nationality: 'EG',
+      address: 'Olaya',
+    })).phone).toBe('jobs.phoneInvalid')
+    expect(isLettersOnlyText('Ahmed123')).toBe(false)
+    expect(isLettersOnlyText('François')).toBe(true)
+    expect(isLettersOnlyText('Ahmed Mohamed Ali Hassan')).toBe(true)
+    expect(isNumericOnlyText('12345')).toBe(true)
+    expect(isNumericOnlyText('3D')).toBe(false)
+    expect(isNumericOnlyText('irrigation, soil')).toBe(false)
+    expect(isInternationalPhone('+905551112233')).toBe(true)
+    expect(isInternationalPhone('+9665')).toBe(false)
+    expect(validateCandidateProfile(emptyForm({
+      fullName: 'Ahmed Mohamed Ali Hassan',
+      email: 'ada@wsa.test',
+      phone: '+966522222222',
+      country: 'SA',
+      city: 'Riyadh12',
+      dateOfBirth: '1990-01-15',
+      nationality: 'EG',
+      address: 'Olaya',
+    })).city).toBe('jobs.cityLettersOnly')
+    expect(validateCandidateProfile(emptyForm({
+      fullName: 'Ahmed Mohamed Ali Hassan',
+      email: 'ada@wsa.test',
+      phone: '+966522222222',
+      country: 'SA',
+      city: 'Riyadh',
+      dateOfBirth: '1990-13-40',
+      nationality: 'EG',
+      address: 'Olaya',
+    })).dateOfBirth).toBe('jobs.dateOfBirthInvalid')
+    expect(validateCandidateProfile(emptyForm({
+      fullName: 'Ahmed Mohamed Ali Hassan',
+      email: 'ada@wsa.test',
+      phone: '+966522222222',
+      country: 'SA',
+      city: 'Riyadh',
+      dateOfBirth: '1990-01-15',
+      nationality: 'EG',
+      address: '12345',
+    })).address).toBe('jobs.naturalLanguageNotNumeric')
+    expect(validateCandidateProfile(emptyForm({
+      fullName: 'Ahmed Mohamed Ali Hassan',
+      email: 'ada@wsa.test',
+      phone: '+966522222222',
+      country: 'SA',
+      city: 'Riyadh',
+      dateOfBirth: '1990-01-15',
+      nationality: 'EG',
+      address: 'Olaya',
+      targetJobTitle: 'Engineer123',
+    })).targetJobTitle).toBe('jobs.jobTitleLettersOnly')
+  })
+
+  it('accepts PDF CVs and rejects other file types', () => {
+    expect(isPdfCvFile({ name: 'resume.pdf', type: 'application/pdf', size: 1200 })).toBe(true)
+    expect(isPdfCvFile({ name: 'resume.PDF', type: 'application/pdf', size: 1200 })).toBe(true)
+    expect(isPdfCvFile({ name: 'resume.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', size: 1200 })).toBe(false)
+    expect(isPdfCvFile({ name: 'resume.jpg', type: 'image/jpeg', size: 1200 })).toBe(false)
+    expect(isPdfCvFile({ name: 'resume.png', type: 'image/png', size: 1200 })).toBe(false)
+    expect(isPdfCvFile({ name: 'resume.pdf', type: 'image/jpeg', size: 1200 })).toBe(false)
+    expect(isPdfCvFile({ name: 'resume.pdf.exe', type: 'application/pdf', size: 1200 })).toBe(false)
+  })
+
+  it('keeps nationality independent from current country of residence', () => {
+    const payload = toCandidatePayload(emptyForm({
+      fullName: 'Ahmed Mohamed Ali Hassan',
+      email: 'ada@wsa.test',
+      phone: '+966522222222',
+      country: 'TR',
+      city: 'Istanbul',
+      dateOfBirth: '1990-01-15',
+      nationality: 'EG',
+      address: 'Kadikoy',
+    }))
+    expect(payload.nationality).toBe('EG')
+    expect(payload.country).toBe('TR')
+  })
+
+  it('omits incomplete education from save until a qualification document exists', () => {
+    const form = emptyForm({
+      fullName: 'Ahmed Mohamed Ali Hassan',
+      educationItems: [{ degree: 'BSc', institution: 'Cairo University' }],
+    })
+    expect(toCandidatePayload(form).education).toEqual([{ degree: 'BSc', institution: 'Cairo University' }])
+    expect(toCandidateSavePayload(form, { hasPrimaryQualificationDocument: false }).education).toBeUndefined()
+    expect(toCandidateSavePayload(form, { hasPrimaryQualificationDocument: true }).education).toEqual([
+      { degree: 'BSc', institution: 'Cairo University' },
+    ])
+  })
+
+  it('omits empty education and experience rows from the save payload', () => {
+    const payload = toCandidatePayload(emptyForm({
+      fullName: 'Ahmed Mohamed Ali Hassan',
+      educationItems: [{}, { degree: 'BSc', institution: 'Cairo University', year: 2018 }],
+      experienceItems: [{}, { title: 'Engineer', company: 'WSA' }],
+    }))
+    expect(payload.education).toEqual([{ degree: 'BSc', institution: 'Cairo University', year: 2018 }])
+    expect(payload.experience).toEqual([{ title: 'Engineer', company: 'WSA' }])
   })
 
   it('omits system-controlled fields from the save payload', () => {
@@ -122,7 +261,7 @@ describe('candidate profile helpers', () => {
       country: 'SA',
       city: 'الرياض',
       dateOfBirth: '1994-05-12',
-      nationality: 'سعودية',
+      nationality: 'SA',
       address: 'حي النخيل',
     }))
     expect(payload).toMatchObject({
@@ -132,9 +271,40 @@ describe('candidate profile helpers', () => {
       country: 'SA',
       city: 'الرياض',
       date_of_birth: '1994-05-12',
-      nationality: 'سعودية',
+      nationality: 'SA',
       address: 'حي النخيل',
     })
+  })
+
+  it('keeps intermediate personal saves from wiping education or experience', () => {
+    const form = emptyForm({
+      fullName: 'Ahmed Mohamed Ali Hassan',
+      email: 'ada@wsa.test',
+      phone: '+966522222222',
+      country: 'SA',
+      city: 'Riyadh',
+      dateOfBirth: '1990-01-15',
+      nationality: 'SA',
+      address: 'Olaya',
+      educationItems: [{ degree: 'BSc' }],
+      experienceItems: [{ title: 'Analyst' }],
+      skills: 'irrigation',
+      languages: 'ar',
+    })
+    const personal = toCandidateSectionPayload(form, 'personal')
+    expect(personal).toMatchObject({
+      full_name: 'Ahmed Mohamed Ali Hassan',
+      email: 'ada@wsa.test',
+      nationality: 'SA',
+    })
+    expect(personal).not.toHaveProperty('experience')
+    expect(personal).not.toHaveProperty('education')
+    expect(personal).not.toHaveProperty('skills')
+    expect(personal).not.toHaveProperty('languages')
+    expect(toCandidateSectionPayload(form, 'education')).toMatchObject({
+      education: [{ degree: 'BSc' }],
+    })
+    expect(toCandidateSectionPayload(form, 'education')).not.toHaveProperty('experience')
   })
 
   it('normalizes ISO dates so the date-of-birth control can display them', () => {
@@ -147,16 +317,18 @@ describe('candidate profile helpers', () => {
     const validPersonal = {
       fullName: 'Ahmed Mohamed Ali Hassan',
       email: 'ada@wsa.test',
-      phone: '+9665',
+      phone: '+966522222222',
       country: 'SA',
       city: 'Riyadh',
       dateOfBirth: '1990-01-15',
-      nationality: 'Saudi',
+      nationality: 'SA',
       address: 'Olaya',
     }
     expect(validateCandidateSection(emptyForm({ ...validPersonal, yearsOfExperience: 'bad' }), 'personal')).toEqual({})
     expect(validateCandidateSection(emptyForm({ fullName: 'Ada', email: 'bad' }), 'personal').email).toBe('jobs.emailInvalid')
     expect(validateCandidateSection(emptyForm({ ...validPersonal, yearsOfExperience: 'bad' }), 'professional').yearsOfExperience).toBe('jobs.yearsOfExperienceInvalid')
+    expect(validateCandidateSection(emptyForm({ ...validPersonal, biography: '12345' }), 'professional').biography).toBe('jobs.naturalLanguageNotNumeric')
+    expect(validateCandidateSection(emptyForm({ ...validPersonal, skills: '3D, irrigation' }), 'professional').skills).toBeUndefined()
   })
 
   it('requires a primary qualification and document, but not additional qualifications', () => {
@@ -173,8 +345,7 @@ describe('candidate profile helpers', () => {
     expect(nextProfileSection('professional')).toBe('education')
     expect(nextProfileSection('education')).toBe('experience')
     expect(nextProfileSection('experience')).toBe('cv')
-    expect(nextProfileSection('cv')).toBe('photo')
-    expect(nextProfileSection('photo')).toBeNull()
+    expect(nextProfileSection('cv')).toBeNull()
     for (const section of PROFILE_SECTION_ORDER) {
       const next = nextProfileSection(section)
       expect(String(next ?? '')).not.toContain('dashboard')

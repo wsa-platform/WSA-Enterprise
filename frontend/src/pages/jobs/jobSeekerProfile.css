@@ -1,0 +1,643 @@
+.job-seeker-profile {
+  --js-label-bg: #f3f4f6;
+  --js-value-bg: #f0fdf4;
+  --js-text: #122033;
+  --js-muted: #5d6f62;
+  --js-border: #d5e0d6;
+  --js-focus: #2f6f50;
+  --js-gap: 10px;
+  --js-section-gap: 16px;
+  --js-label-gap: 6px;
+  --js-radius: 10px;
+  --js-input-pad: 10px 12px;
+  box-sizing: border-box;
+  direction: inherit;
+  width: 100%;
+  max-width: min(1040px, 100%);
+  margin-inline: auto;
+  overflow: visible;
+  text-align: start;
+}
+
+.job-seeker-profile *,
+.job-seeker-profile *::before,
+.job-seeker-profile *::after {
+  box-sizing: border-box;
+}
+
+.job-seeker-profile .page-header {
+  margin-bottom: var(--js-section-gap);
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-direction: row;
+}
+
+.job-seeker-profile .page-header h1 {
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 800;
+  text-align: start;
+}
+
+.job-seeker-profile .page-description {
+  text-align: start;
+}
+
+.job-seeker-profile .header-actions,
+.job-seeker-profile .profile-mode-bar,
+.job-seeker-profile .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  flex-direction: row;
+}
+
+div.job-seeker-profile .panel {
+  margin-top: var(--js-section-gap);
+  padding: 16px;
+  border: 1px solid var(--js-border);
+  border-radius: 12px;
+  background: #fff;
+  overflow: visible;
+}
+
+.job-seeker-profile .panel-heading {
+  margin-bottom: 14px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-direction: row;
+}
+
+.job-seeker-profile .panel-heading .eyebrow {
+  display: none;
+}
+
+.job-seeker-profile .panel-heading h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--js-text);
+  text-align: start;
+}
+
+.job-seeker-profile .js-grid {
+  display: grid;
+  gap: var(--js-gap) 12px;
+  align-items: start;
+  overflow: visible;
+}
+
+.job-seeker-profile .js-grid-stack {
+  margin-top: var(--js-gap);
+}
+
+.job-seeker-profile .js-grid-2 {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.35fr);
+}
+
+.job-seeker-profile .js-grid-3 {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(140px, 0.7fr);
+}
+
+.job-seeker-profile .js-field {
+  display: grid;
+  gap: var(--js-label-gap);
+  min-width: 0;
+  justify-self: stretch;
+  width: 100%;
+}
+
+.job-seeker-profile .js-field-short {
+  max-width: 12rem;
+  justify-self: start;
+  width: 100%;
+}
+
+.job-seeker-profile .js-field-medium {
+  max-width: 24rem;
+  justify-self: start;
+  width: 100%;
+}
+
+.job-seeker-profile .js-field-large {
+  max-width: none;
+  justify-self: stretch;
+}
+
+.job-seeker-profile .js-field-full,
+.job-seeker-profile .js-span-all,
+.job-seeker-profile .profile-field-actions {
+  grid-column: 1 / -1;
+  max-width: none;
+  justify-self: stretch;
+}
+
+.job-seeker-profile .js-field-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 7px 12px;
+  border-radius: 8px 8px 0 0;
+  background: var(--js-label-bg);
+  color: var(--js-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: start;
+}
+
+.job-seeker-profile .js-field-hint {
+  color: var(--js-focus);
+  font-weight: 800;
+}
+
+.job-seeker-profile .js-field-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: var(--js-input-pad);
+  border: 1px solid var(--js-border);
+  border-radius: 0 0 8px 8px;
+  background: var(--js-value-bg);
+  color: var(--js-text);
+  text-align: start;
+  overflow: visible;
+  position: relative;
+}
+
+.job-seeker-profile .js-field-value.is-multiline {
+  align-items: flex-start;
+}
+
+.job-seeker-profile .js-field-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  word-break: break-word;
+  text-align: start;
+}
+
+.job-seeker-profile .js-field-value.is-editing {
+  align-items: stretch;
+  z-index: 1;
+}
+
+.job-seeker-profile .js-field-value.is-editing:focus-within {
+  z-index: 6;
+}
+
+.job-seeker-profile .js-field-value input,
+.job-seeker-profile .js-field-value textarea,
+.job-seeker-profile .js-field-value select {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 22px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--js-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: start;
+  cursor: text;
+  pointer-events: auto;
+  user-select: text;
+  box-shadow: none;
+}
+
+.job-seeker-profile .js-field-value textarea {
+  min-height: 5.5rem;
+  resize: vertical;
+  font-weight: 500;
+}
+
+.job-seeker-profile .js-field-value input:focus,
+.job-seeker-profile .js-field-value textarea:focus,
+.job-seeker-profile .js-field-value select:focus {
+  outline: none;
+}
+
+.job-seeker-profile .js-field-value:focus-within {
+  border-color: var(--js-focus);
+  box-shadow: 0 0 0 3px rgba(47, 111, 80, 0.16);
+  background: #fff;
+}
+
+.job-seeker-shell .job-seeker-profile .js-field-pencil,
+.job-seeker-shell .job-seeker-profile button.js-field-pencil,
+.job-seeker-profile .js-field-pencil {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--js-focus);
+  cursor: pointer;
+}
+
+.job-seeker-profile .js-field-value input[type='file'] {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.job-seeker-profile .checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: var(--js-input-pad);
+  border: 1px solid var(--js-border);
+  border-radius: 8px;
+  background: var(--js-value-bg);
+  color: var(--js-text);
+  font-weight: 600;
+  text-align: start;
+}
+
+.job-seeker-profile .js-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--js-gap);
+  align-items: start;
+  text-align: start;
+}
+
+.job-seeker-profile .js-summary-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.job-seeker-profile .js-summary-name-row strong {
+  font-size: 18px;
+  color: var(--js-text);
+}
+
+.job-seeker-profile .js-summary-title,
+.job-seeker-profile .js-summary-meta {
+  margin: 4px 0 0;
+  text-align: start;
+}
+
+.job-seeker-profile .js-summary-title {
+  color: var(--js-text);
+  font-weight: 600;
+}
+
+.job-seeker-profile .js-summary-meta {
+  color: var(--js-muted);
+  font-size: 13px;
+}
+
+.job-seeker-profile .js-summary-progress {
+  margin-top: 10px;
+}
+
+.job-seeker-profile .js-summary-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--js-label-bg);
+  overflow: hidden;
+  max-width: none;
+}
+
+.job-seeker-profile .js-summary-progress-fill {
+  height: 100%;
+  background: #2f6f50;
+}
+
+.job-seeker-profile .js-summary-progress span {
+  font-size: 12px;
+  color: var(--js-muted);
+}
+
+.job-seeker-shell .job-seeker-profile button.country-combobox-trigger,
+.job-seeker-profile .js-field-value .country-combobox-trigger,
+.job-seeker-profile .country-combobox-trigger {
+  width: 100%;
+  min-height: 22px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--js-text);
+  font-weight: 600;
+  text-align: start;
+}
+
+.job-seeker-profile .country-combobox {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+  position: relative;
+}
+
+.job-seeker-profile .country-combobox[data-open='true'] {
+  z-index: 20;
+}
+
+.job-seeker-profile .country-combobox-panel {
+  z-index: 80;
+  max-height: min(280px, calc(100vh - 24px));
+  text-align: start;
+  overflow: hidden;
+}
+
+.job-seeker-profile .js-field-value .country-combobox-search input,
+.job-seeker-profile .country-combobox-search input {
+  flex: none;
+  width: 100%;
+  min-height: 36px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--js-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--js-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: text;
+  pointer-events: auto;
+  user-select: text;
+  box-shadow: none;
+}
+
+.job-seeker-profile .js-field-error,
+.job-seeker-profile .field-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: start;
+}
+
+.job-seeker-profile .js-empty {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--js-label-bg);
+  color: var(--js-muted);
+  text-align: start;
+}
+
+.job-seeker-profile .muted {
+  color: var(--js-muted);
+}
+
+.job-seeker-profile .js-item-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--js-border);
+  border-radius: var(--js-radius);
+  background: #fff;
+}
+
+.job-seeker-profile .js-item-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--js-text);
+  text-align: start;
+}
+
+.job-seeker-profile .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  flex-direction: row;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.job-seeker-profile .js-bottom-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--js-border);
+}
+
+.job-seeker-profile .js-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.job-seeker-profile .js-confirm-dialog {
+  width: min(100%, 420px);
+  padding: 20px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--js-border);
+  color: var(--js-text);
+  text-align: start;
+}
+
+.job-seeker-profile .js-confirm-dialog p {
+  margin: 0 0 16px;
+  white-space: pre-line;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.job-seeker-profile .js-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.job-seeker-shell .job-seeker-profile .js-btn,
+.job-seeker-profile .js-btn,
+.job-seeker-shell .job-seeker-profile .profile-save-button,
+.job-seeker-shell .job-seeker-profile .profile-cancel-button,
+.job-seeker-shell .job-seeker-profile .profile-edit-button,
+.job-seeker-shell .job-seeker-profile .profile-view-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.job-seeker-shell .job-seeker-profile .js-btn-primary,
+.job-seeker-shell .job-seeker-profile .profile-save-button,
+.job-seeker-profile .js-btn-primary {
+  background: #2f6f50;
+  color: #fff;
+  border: 1px solid #2f6f50;
+}
+
+.job-seeker-shell .job-seeker-profile .js-btn-secondary,
+.job-seeker-shell .job-seeker-profile .profile-cancel-button,
+.job-seeker-shell .job-seeker-profile .profile-edit-button,
+.job-seeker-shell .job-seeker-profile .profile-view-button,
+.job-seeker-profile .js-btn-secondary {
+  background: #fff;
+  color: #1f4d3a;
+  border: 1px solid #2f6f50;
+}
+
+.job-seeker-shell .job-seeker-profile .profile-view-button[aria-pressed='true'],
+.job-seeker-profile .profile-view-button[aria-pressed='true'] {
+  background: var(--js-label-bg);
+}
+
+.job-seeker-shell .job-seeker-profile .profile-edit-button[aria-pressed='true'],
+.job-seeker-profile .profile-edit-button[aria-pressed='true'] {
+  background: #e8f8ee;
+}
+
+.job-seeker-shell .job-seeker-profile .js-btn-danger,
+.job-seeker-profile .js-btn-danger {
+  background: #dc2626;
+  color: #fff;
+  border: 1px solid #dc2626;
+}
+
+.job-seeker-profile .profile-highlight {
+  padding: 0;
+  overflow: hidden;
+  background: var(--js-value-bg);
+  border-color: var(--js-border);
+}
+
+.job-seeker-profile .profile-highlight span {
+  display: block;
+  padding: 7px 12px;
+  background: var(--js-label-bg);
+  color: var(--js-muted);
+  font-weight: 700;
+}
+
+.job-seeker-profile .profile-highlight strong {
+  display: block;
+  padding: 10px 12px;
+  background: var(--js-value-bg);
+  color: var(--js-text);
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .job-seeker-profile .js-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .job-seeker-profile .js-grid-3 > .js-field-short {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .job-seeker-profile .page-header,
+  .job-seeker-profile .js-grid-2,
+  .job-seeker-profile .js-grid-3,
+  .job-seeker-profile .js-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .job-seeker-profile .js-field-short,
+  .job-seeker-profile .js-field-medium,
+  .job-seeker-profile .js-field-large {
+    max-width: none;
+    justify-self: stretch;
+  }
+
+  .job-seeker-profile .header-actions,
+  .job-seeker-profile .profile-mode-bar {
+    width: 100%;
+  }
+}
+
+html[dir='rtl'] .job-seeker-profile .js-confirm-dialog,
+html[dir='rtl'] .job-seeker-profile .js-confirm-actions,
+html[dir='rtl'] .job-seeker-profile .js-bottom-actions {
+  text-align: right;
+}
+
+html[dir='rtl'] .job-seeker-profile,
+html[dir='rtl'] .job-seeker-profile .page-header,
+html[dir='rtl'] .job-seeker-profile .panel-heading,
+html[dir='rtl'] .job-seeker-profile .header-actions,
+html[dir='rtl'] .job-seeker-profile .profile-mode-bar,
+html[dir='rtl'] .job-seeker-profile .form-actions,
+html[dir='rtl'] .job-seeker-profile .js-summary-name-row,
+html[dir='rtl'] .job-seeker-profile .js-bottom-actions,
+html[dir='rtl'] .job-seeker-profile .js-confirm-actions {
+  flex-direction: row;
+}
+
+html[dir='rtl'] .job-seeker-profile .js-grid,
+html[dir='rtl'] .job-seeker-profile .js-summary,
+html[dir='rtl'] .job-seeker-profile .js-item-card,
+html[dir='rtl'] .job-seeker-profile .js-field,
+html[dir='rtl'] .job-seeker-profile .panel,
+html[dir='rtl'] .job-seeker-profile .profile-highlights,
+html[dir='rtl'] .job-seeker-profile .profile-highlight {
+  direction: rtl;
+}
+
+html[dir='rtl'] .job-seeker-profile .js-field-label,
+html[dir='rtl'] .job-seeker-profile .js-field-value,
+html[dir='rtl'] .job-seeker-profile .js-field-text,
+html[dir='rtl'] .job-seeker-profile .js-field-value input,
+html[dir='rtl'] .job-seeker-profile .js-field-value textarea,
+html[dir='rtl'] .job-seeker-profile .js-field-value select,
+html[dir='rtl'] .job-seeker-profile .js-item-title,
+html[dir='rtl'] .job-seeker-profile .panel-heading h2,
+html[dir='rtl'] .job-seeker-profile .page-header h1,
+html[dir='rtl'] .job-seeker-profile .page-description,
+html[dir='rtl'] .job-seeker-profile .js-summary,
+html[dir='rtl'] .job-seeker-profile .js-summary-title,
+html[dir='rtl'] .job-seeker-profile .js-summary-meta,
+html[dir='rtl'] .job-seeker-profile .js-empty,
+html[dir='rtl'] .job-seeker-profile .js-field-error,
+html[dir='rtl'] .job-seeker-profile .profile-highlight,
+html[dir='rtl'] .job-seeker-profile .profile-highlight span,
+html[dir='rtl'] .job-seeker-profile .profile-highlight strong,
+html[dir='rtl'] .job-seeker-profile .country-combobox-trigger,
+html[dir='rtl'] .job-seeker-profile .country-combobox-search input,
+html[dir='rtl'] .job-seeker-profile .country-combobox-option {
+  text-align: right;
+}
+
+html[dir='rtl'] .job-seeker-profile .js-field-value input[dir='ltr'],
+html[dir='rtl'] .job-seeker-profile .js-field-text[dir='ltr'] {
+  direction: ltr;
+  text-align: right;
+  unicode-bidi: isolate;
+}
+
+html[dir='rtl'] .job-seeker-profile .js-field-value input[type='file'] {
+  direction: rtl;
+  text-align: right;
+}

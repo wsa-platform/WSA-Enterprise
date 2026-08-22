@@ -18,39 +18,308 @@ aside { display: flex; flex-direction: column; padding: 28px 18px; background: #
 .profile-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 20px;
+  gap: 16px 24px;
   align-items: start;
 }
 .profile-field { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0; }
-.profile-field > label { display: block; font-size: 13px; color: #475569; font-weight: 700; }
+.profile-field > label {
+  display: block;
+  font-size: 13px;
+  color: #1f4d3a;
+  font-weight: 800;
+  letter-spacing: .01em;
+}
 .profile-field > input,
-.profile-field > textarea {
+.profile-field > textarea,
+.profile-field > select {
   display: block;
   width: 100%;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #d5e0d6;
+  border-radius: 8px;
+  background: #f4f8f5;
+  color: #122033;
+  font: inherit;
+  font-weight: 500;
+  cursor: text;
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.profile-field > textarea { min-height: 7.5rem; resize: vertical; }
+.profile-field > input:focus,
+.profile-field > textarea:focus,
+.profile-field > select:focus {
+  outline: none;
+  border-color: #2f6f50;
+  box-shadow: 0 0 0 3px rgba(47, 111, 80, 0.16);
+  background: #fff;
+}
+.profile-field > input[readonly],
+.profile-field > textarea[readonly],
+.profile-field > select:disabled {
+  background: #f3f7f3;
+  color: #162033;
+  opacity: 1;
+  cursor: default;
 }
 .profile-field-wide { grid-column: 1 / -1; }
+.profile-field-name,
 .profile-field-medium { max-width: 22rem; }
 .profile-field-date { max-width: 14rem; }
+.profile-field-emphasis { max-width: 16rem; }
 .profile-field-actions { grid-column: 1 / -1; }
 .profile-readout {
   display: grid;
   gap: 4px;
   min-width: 0;
 }
-.profile-readout span { color: #64748b; font-size: 12px; font-weight: 700; }
-.profile-readout strong { font-size: 16px; line-height: 1.4; word-break: break-word; }
-@media (max-width: 720px) {
-  .profile-fields { grid-template-columns: 1fr; }
-  .profile-field-medium,
-  .profile-field-date { max-width: none; }
+.profile-readout span {
+  color: #5d6f62;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
 }
-.profile-field > input[readonly],
-.profile-field > textarea[readonly] {
+.profile-readout strong {
+  font-size: 15px;
+  line-height: 1.45;
+  word-break: break-word;
+  font-weight: 600;
+  color: #122033;
+}
+.profile-readout-muted strong { font-weight: 500; }
+.profile-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.profile-highlight {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #dce8de;
+  border-radius: 10px;
+  background: #f7faf7;
+}
+.profile-highlight span { color: #5d6f62; font-size: 12px; font-weight: 700; }
+.profile-highlight strong { font-size: 16px; font-weight: 600; color: #122033; word-break: break-word; }
+.page-header .profile-mode-bar { margin-top: 0; }
+.job-seeker-profile .page-header {
+  margin-bottom: 18px;
+  gap: 12px;
+}
+.job-seeker-profile .page-header h1 {
+  font-size: clamp(22px, 3vw, 30px);
+  letter-spacing: -0.03em;
+}
+.job-seeker-profile .page-description {
+  margin-top: 6px;
+  font-size: 14px;
+}
+.job-seeker-profile .panel {
+  margin-top: 16px;
+  padding: 22px;
+}
+.profile-summary-card .panel-heading h2 {
+  display: none;
+}
+.profile-summary-card .panel-heading {
+  margin-bottom: 8px;
+}
+.profile-edit-button {
+  background: #fff;
+  color: #1f4d3a;
+  border: 1px solid #2f6f50;
+  box-shadow: 0 1px 2px rgba(31, 77, 58, 0.08);
+}
+.profile-edit-button svg {
+  flex-shrink: 0;
+}
+.job-seeker-profile .record-form,
+.job-seeker-profile .profile-field,
+.job-seeker-profile .country-combobox {
+  overflow: visible;
+}
+.profile-mode-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.profile-mode-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #eef6ef;
+  color: #1f4d3a;
+  font-size: 12px;
+  font-weight: 800;
+}
+.profile-mode-bar[data-profile-mode='edit'] .profile-mode-chip {
+  background: #fff4e5;
+  color: #9a3412;
+}
+.profile-edit-button,
+.profile-save-button,
+.profile-cancel-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 10px 16px;
+}
+.profile-edit-button {
+  background: #fff;
+  color: #1f4d3a;
+  border: 1px solid #2f6f50;
+  box-shadow: 0 1px 2px rgba(31, 77, 58, 0.08);
+}
+.profile-save-button {
+  background: #2f6f50;
+  color: #fff;
+  border: 1px solid #2f6f50;
+}
+.profile-cancel-button {
+  background: #fff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+.country-combobox {
+  position: relative;
+  min-width: 0;
+}
+.country-combobox-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #d5e0d6;
+  border-radius: 8px;
+  background: #f4f8f5;
+  color: #122033;
+  font: inherit;
+  font-weight: 500;
+  text-align: start;
+  cursor: pointer;
+}
+.country-combobox-trigger.is-placeholder {
+  color: #64748b;
+}
+.country-combobox-trigger:focus {
+  outline: none;
+  border-color: #2f6f50;
+  box-shadow: 0 0 0 3px rgba(47, 111, 80, 0.16);
+}
+.country-combobox-panel {
+  position: absolute;
+  z-index: 40;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  top: calc(100% + 4px);
+  margin-top: 0;
+  background: #fff;
+  border: 1px solid #d5e0d6;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+  max-height: min(280px, calc(100vh - 24px));
+}
+.country-combobox-panel.is-drop-up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+.country-combobox-search {
+  display: block;
+  padding: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.country-combobox-search input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #d5e0d6;
+  border-radius: 8px;
   background: #fff;
   color: #162033;
+  font: inherit;
+  cursor: text;
+  pointer-events: auto;
+}
+.country-combobox-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: min(220px, calc(100vh - 8rem));
+  overflow-y: auto;
+}
+.country-combobox-option {
+  display: block;
+  width: 100%;
+  text-align: start;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #162033;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.country-combobox-option.is-active,
+.country-combobox-option:hover {
+  background: #eef6ef;
+}
+.country-combobox-option.is-selected {
+  color: #1f4d3a;
+  font-weight: 800;
+}
+@media (max-width: 720px) {
+  .profile-fields { grid-template-columns: 1fr; }
+  .profile-field-name,
+  .profile-field-medium,
+  .profile-field-date,
+  .profile-field-emphasis { max-width: none; }
+  .profile-highlights { grid-template-columns: 1fr; }
+  .job-seeker-profile .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .job-seeker-profile .header-actions,
+  .job-seeker-profile .profile-mode-bar {
+    width: 100%;
+  }
+}
+.job-seeker-profile .record-form input,
+.job-seeker-profile .record-form textarea,
+.job-seeker-profile .record-form select {
+  background: #f4f8f5;
+  border-color: #d5e0d6;
+  color: #122033;
+  cursor: text;
+  pointer-events: auto;
+  user-select: text;
+}
+.job-seeker-profile .record-form input:focus,
+.job-seeker-profile .record-form textarea:focus,
+.job-seeker-profile .record-form select:focus {
+  outline: none;
+  border-color: #2f6f50;
+  box-shadow: 0 0 0 3px rgba(47, 111, 80, 0.16);
+  background: #fff;
 }
 .field-error { margin: 0; color: #b91c1c; font-size: 12px; font-weight: 600; } .app-shell h1, .app-shell h2, .app-shell h3, .app-shell p, .login-shell h1, .login-shell h2, .login-shell h3, .login-shell p { margin: 0; } .app-shell h1, .login-shell h1 { font-size: clamp(30px, 4vw, 42px); letter-spacing: -.04em; } .app-shell h2 { font-size: 22px; } .app-shell h3 { margin-top: 18px; font-size: 18px; }.eyebrow { color: #7c3aed; font-size: 11px; font-weight: 800; letter-spacing: .12em; margin-bottom: 7px; }.app-shell .muted, .login-shell .muted { color: #64748b; }
 .app-shell button, .login-shell button, .confirm-backdrop button { border: 0; border-radius: 8px; background: #6d28d9; color: #fff; cursor: pointer; font: inherit; font-weight: 700; padding: 12px 16px; } .app-shell button:hover, .login-shell button:hover, .confirm-backdrop button:hover { background: #5b21b6; } .app-shell button:disabled, .login-shell button:disabled, .confirm-backdrop button:disabled { opacity: .6; cursor: wait; }.refresh { background: #ede9fe; color: #5b21b6; }
@@ -130,4 +399,6 @@ html[dir="rtl"] .metrics { direction: rtl; }
 html[dir="rtl"] .account-nav-grid { direction: rtl; }
 html[dir="rtl"] .field-errors { text-align: right; }
 html[dir="rtl"] .profile-fields,
-html[dir="rtl"] .profile-field { direction: rtl; }
+html[dir="rtl"] .profile-field,
+html[dir="rtl"] .profile-highlights,
+html[dir="rtl"] .profile-highlight { direction: rtl; }

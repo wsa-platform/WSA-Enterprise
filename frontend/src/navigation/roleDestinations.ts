@@ -99,19 +99,38 @@ export function loginHref(audience: AuthAudience, next: string): string {
   return `/login?${params.toString()}`
 }
 
+export function registerHref(audience: AuthAudience, next: string): string {
+  const params = new URLSearchParams()
+  params.set('next', safePath(next))
+  params.set('audience', audience)
+  return `/register?${params.toString()}`
+}
+
+export function publicHeaderAudience(
+  stored?: AuthAudience | null,
+  pathname?: string,
+): Exclude<AuthAudience, 'admin'> {
+  const fromPath = pathname ? audienceFromPath(pathname) : null
+  if (fromPath === 'employer' || stored === 'employer') return 'employer'
+  return 'job_seeker'
+}
+
+export function publicLoginHref(stored?: AuthAudience | null, pathname?: string): string {
+  const audience = publicHeaderAudience(stored, pathname)
+  return loginHref(audience, audience === 'employer' ? EMPLOYER_HOME : JOB_SEEKER_HOME)
+}
+
+export function publicRegisterHref(stored?: AuthAudience | null, pathname?: string): string {
+  const audience = publicHeaderAudience(stored, pathname)
+  return registerHref(audience, audience === 'employer' ? EMPLOYER_HOME : JOB_SEEKER_HOME)
+}
+
 export function jobSeekerStartPath(isAuthenticated: boolean): string {
   return isAuthenticated ? JOB_SEEKER_HOME : loginHref('job_seeker', JOB_SEEKER_HOME)
 }
 
 export function jobSeekerLandingPath(isAuthenticated: boolean): string {
   return isAuthenticated ? JOB_SEEKER_HOME : JOB_SEEKER_ENTER
-}
-
-export function registerHref(audience: AuthAudience, next: string): string {
-  const params = new URLSearchParams()
-  params.set('next', safePath(next))
-  params.set('audience', audience)
-  return `/register?${params.toString()}`
 }
 
 export function employerStartPath(isAuthenticated: boolean): string {

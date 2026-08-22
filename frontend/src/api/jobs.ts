@@ -248,6 +248,9 @@ export const upsertMyJobSeekerProfile = (
     body: JSON.stringify(payload),
   }, token, organizationId)
 
+export const deleteMyJobSeekerApplication = (token: string, organizationId?: number) =>
+  request<{ message?: string }>('/job-seekers/me', { method: 'DELETE' }, token, organizationId)
+
 export async function uploadMyJobSeekerCv(token: string, file: File, organizationId?: number) {
   const form = new FormData()
   form.append('cv', file)
@@ -273,36 +276,6 @@ export async function downloadMyJobSeekerCv(token: string, organizationId?: numb
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { message?: string } | null
     throw new ApiError(payload?.message ?? 'Unable to download CV.', response.status)
-  }
-
-  return response.blob()
-}
-
-export async function uploadMyJobSeekerPhoto(token: string, file: File, organizationId?: number) {
-  const form = new FormData()
-  form.append('photo', file)
-  const response = await fetch(`${apiUrl}/job-seekers/me/photo`, {
-    method: 'POST',
-    headers: buildHeaders(token, organizationId),
-    body: form,
-  })
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { message?: string } | null
-    throw new ApiError(payload?.message ?? 'Unable to upload photo.', response.status)
-  }
-
-  return response.json() as Promise<JobSeekerProfile>
-}
-
-export async function downloadMyJobSeekerPhoto(token: string, organizationId?: number) {
-  const response = await fetch(`${apiUrl}/job-seekers/me/photo`, {
-    headers: buildHeaders(token, organizationId),
-  })
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { message?: string } | null
-    throw new ApiError(payload?.message ?? 'Unable to download photo.', response.status)
   }
 
   return response.blob()

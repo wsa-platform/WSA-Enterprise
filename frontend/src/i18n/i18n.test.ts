@@ -12,6 +12,7 @@ import {
   resolveLanguage,
   SUPPORTED_LANGUAGES,
 } from './languages'
+import { PUBLIC_SECTIONS } from '../public/sections'
 
 function flattenKeys(value: unknown, prefix = ''): string[] {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
@@ -74,13 +75,16 @@ describe('locale key parity', () => {
 
 describe('jobs landing translations', () => {
   const featureKeys = [
-    'website.sections.jobs.features.listings.title',
-    'website.sections.jobs.features.employers.title',
-    'website.sections.jobs.features.talent.title',
-    'website.sections.jobs.features.careers.title',
     'auth.entry.headline',
+    'auth.entry.intro',
     'auth.entry.seekOpportunity',
+    'auth.entry.seekOpportunityHint',
     'auth.entry.findTalent',
+    'auth.entry.findTalentHint',
+    'jobs.selectNationality',
+    'jobs.yearsOfExperienceValue',
+    'website.nav.login',
+    'website.nav.register',
   ]
 
   it('resolves jobs landing copy instead of showing raw keys', async () => {
@@ -90,7 +94,24 @@ describe('jobs landing translations', () => {
         const value = i18n.t(key)
         expect(value).not.toBe(key)
         expect(value).not.toContain('website.sections.jobs.features')
+        expect(value).not.toContain('VITE_PUBLIC_ORG_SLUG')
       }
     }
+  })
+
+  it('uses the approved Arabic job-seeker and employer CTA labels', async () => {
+    await i18n.changeLanguage('ar')
+    expect(i18n.t('auth.entry.seekOpportunity')).toBe('باحث عن وظيفة')
+    expect(i18n.t('auth.entry.findTalent')).toBe('صاحب عمل')
+    expect(i18n.t('auth.entry.intro')).toContain('باحث عن وظيفة')
+    expect(i18n.t('auth.entry.intro')).toContain('صاحب عمل')
+    expect(i18n.t('auth.entry.intro')).not.toContain('VITE_PUBLIC_ORG_SLUG')
+    expect(i18n.t('auth.entry.seekOpportunity')).not.toContain('website.sections.jobs.features')
+  })
+
+  it('does not register obsolete jobs feature or highlight cards', () => {
+    const jobs = PUBLIC_SECTIONS.find((section) => section.id === 'jobs')
+    expect(jobs?.featureKeys).toEqual([])
+    expect(jobs?.highlightKeys).toEqual([])
   })
 })

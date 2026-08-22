@@ -13,6 +13,8 @@ import {
   jobSeekerStartPath,
   loginHref,
   parseAudience,
+  publicLoginHref,
+  publicRegisterHref,
   registerHref,
   roleFlagsFromPermissions,
 } from './roleDestinations'
@@ -94,6 +96,20 @@ describe('role destinations', () => {
     expect(employerStartPath(false)).not.toContain('/dashboard')
     expect(registerHref('job_seeker', JOB_SEEKER_HOME)).toContain('audience=job_seeker')
     expect(registerHref('job_seeker', JOB_SEEKER_HOME)).toContain(encodeURIComponent(JOB_SEEKER_HOME))
+  })
+
+  it('keeps public header login and registration as distinct audience-aware actions', () => {
+    expect(publicLoginHref(null, '/sections/jobs')).toBe(loginHref('job_seeker', JOB_SEEKER_HOME))
+    expect(publicRegisterHref(null, '/sections/jobs')).toBe(registerHref('job_seeker', JOB_SEEKER_HOME))
+    expect(publicLoginHref(null, '/sections/jobs')).not.toBe(publicRegisterHref(null, '/sections/jobs'))
+    expect(publicLoginHref(null, '/sections/jobs')).not.toContain('/jobs/enter')
+    expect(publicRegisterHref(null, '/sections/jobs')).not.toContain('/jobs/enter')
+    expect(publicLoginHref(null, '/sections/jobs')).not.toContain('/dashboard')
+    expect(publicRegisterHref(null, '/sections/jobs')).not.toContain('/dashboard')
+    expect(publicLoginHref('employer', '/sections/jobs')).toBe(loginHref('employer', EMPLOYER_HOME))
+    expect(publicRegisterHref('employer', '/sections/jobs')).toBe(registerHref('employer', EMPLOYER_HOME))
+    expect(publicLoginHref(null, '/employer')).toBe(loginHref('employer', EMPLOYER_HOME))
+    expect(publicRegisterHref(null, '/employer')).toBe(registerHref('employer', EMPLOYER_HOME))
   })
 
   it('logs Job-Seekers out to the entry page and Employers out to employer login', () => {

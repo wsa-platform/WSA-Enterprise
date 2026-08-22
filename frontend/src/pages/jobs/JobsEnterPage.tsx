@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { PublicLanguageMenu } from '../../public/PublicLanguageMenu'
 import { useAuth } from '../../context/AuthContext'
 import {
@@ -14,8 +14,12 @@ import '../../public/publicSite.css'
 
 export function JobsEnterPage() {
   const { t } = useTranslation()
+  const location = useLocation()
   const { token } = useAuth()
   const authenticated = Boolean(token)
+  const notice = typeof (location.state as { notice?: unknown } | null)?.notice === 'string'
+    ? String((location.state as { notice: string }).notice)
+    : ''
   const jobSeekerAuth = jobSeekerStartPath(authenticated)
   const employerAuth = employerStartPath(authenticated)
   const loginTo = loginHref('job_seeker', JOB_SEEKER_HOME)
@@ -43,6 +47,7 @@ export function JobsEnterPage() {
       <main className="public-auth-shell">
         <section className="public-auth-card entry-choice-card">
           <Link to="/" className="public-auth-back">← {t('website.nav.home')}</Link>
+          {notice ? <p role="status" data-testid="jobs-enter-notice">{notice}</p> : null}
           <JobEntryChoiceContent
             headingLevel="h1"
             jobSeekerTo={jobSeekerAuth}
@@ -54,12 +59,12 @@ export function JobsEnterPage() {
   )
 }
 
-export function JobEntryChoices() {
+export function JobEntryChoices({ className }: { className?: string }) {
   const { token } = useAuth()
   const authenticated = Boolean(token)
 
   return (
-    <div className="entry-choice-banner">
+    <div className={['entry-choice-banner', className].filter(Boolean).join(' ')}>
       <JobEntryChoiceContent
         jobSeekerTo={jobSeekerLandingPath(authenticated)}
         employerTo={employerStartPath(authenticated)}
@@ -80,9 +85,16 @@ function JobEntryChoiceContent({
   const { t } = useTranslation()
   const Heading = headingLevel
 
+  const intro = t('auth.entry.intro').split('\n').filter(Boolean)
+
   return (
     <>
       <Heading className="entry-choice-headline">{t('auth.entry.headline')}</Heading>
+      <div className="entry-choice-intro">
+        {intro.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
+      </div>
       <div className="entry-choice-grid">
         <Link className="entry-choice entry-choice-seeker" to={jobSeekerTo}>
           <strong>{t('auth.entry.seekOpportunity')}</strong>

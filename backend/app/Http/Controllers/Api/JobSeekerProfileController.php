@@ -66,13 +66,17 @@ class JobSeekerProfileController extends Controller
 
     public function destroyMine(Request $request): JsonResponse
     {
+        $user = $request->user();
         $profile = $this->ownership
-            ->scopeOwnedByUser(JobSeekerProfile::query(), $request->user())
+            ->scopeOwnedByUser(JobSeekerProfile::query(), $user)
             ->firstOrFail();
-        $this->ownership->assertOwnedByUser($request->user(), $profile);
-        $profile->update(['is_active' => false]);
+        $this->ownership->assertOwnedByUser($user, $profile);
 
-        return response()->json(['message' => 'Profile deactivated.']);
+        $profile->recruiterNotes()->delete();
+        $profile->statusHistory()->delete();
+        $profile->delete();
+
+        return response()->json(['message' => __('jobs.application_deleted')]);
     }
 
     public function uploadCv(Request $request): JsonResponse
@@ -80,9 +84,18 @@ class JobSeekerProfileController extends Controller
         $profile = $this->ownership
             ->scopeOwnedByUser(JobSeekerProfile::query(), $request->user())
             ->firstOrFail();
-        $request->validate(['cv' => ['required', 'file', 'mimes:pdf,doc,docx,txt', 'max:5120']]);
+        $request->validate(
+            ['cv' => ['required', 'file', 'mimes:pdf', 'mimetypes:application/pdf', 'max:5120']],
+            [
+                'cv.mimes' => __('jobs.cv_pdf_only'),
+                'cv.mimetypes' => __('jobs.cv_pdf_only'),
+            ],
+        );
 
         $path = $request->file('cv')->store('job-cvs/'.$profile->id, 'local');
+        if (is_string($profile->cv_path) && $profile->cv_path !== $path && Storage::disk('local')->exists($profile->cv_path)) {
+            Storage::disk('local')->delete($profile->cv_path);
+        }
         $profile->update(['cv_path' => $path]);
 
         return response()->json($profile->fresh()->toOwnerArray());
@@ -95,35 +108,6 @@ class JobSeekerProfileController extends Controller
             ->firstOrFail();
         $path = $profile->storedCvDiskPath();
         abort_unless($path !== null, 404, 'CV not found.');
-
-        return Storage::disk('local')->download($path, basename($path));
-    }
-
-    public function uploadPhoto(Request $request): JsonResponse
-    {
-        $profile = $this->ownership
-            ->scopeOwnedByUser(JobSeekerProfile::query(), $request->user())
-            ->firstOrFail();
-        $request->validate([
-            'photo' => ['required', 'file', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-        ]);
-
-        $path = $request->file('photo')->store('job-photos/'.$profile->id, 'local');
-        if (is_string($profile->photo_path) && Storage::disk('local')->exists($profile->photo_path)) {
-            Storage::disk('local')->delete($profile->photo_path);
-        }
-        $profile->update(['photo_path' => $path]);
-
-        return response()->json($profile->fresh()->toOwnerArray());
-    }
-
-    public function downloadPhoto(Request $request): StreamedResponse
-    {
-        $profile = $this->ownership
-            ->scopeOwnedByUser(JobSeekerProfile::query(), $request->user())
-            ->firstOrFail();
-        $path = $profile->storedPhotoDiskPath();
-        abort_unless($path !== null, 404, 'Photo not found.');
 
         return Storage::disk('local')->download($path, basename($path));
     }

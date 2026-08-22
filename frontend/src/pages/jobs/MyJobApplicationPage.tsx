@@ -1,110 +1,72 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
-  downloadMyJobSeekerCv,
-  downloadMyJobSeekerPhoto,
+  deleteMyJobSeekerApplication,
   downloadMyJobSeekerPrimaryQualification,
   getMyJobSeekerProfile,
   listMyContactRequests,
   upsertMyJobSeekerProfile,
-  uploadMyJobSeekerCv,
-  uploadMyJobSeekerPhoto,
   uploadMyJobSeekerPrimaryQualification,
 } from '../../api/jobs'
 import { ApiError } from '../../api/client'
 import { PageHeader } from '../../components/PageHeader'
 import { Panel } from '../../components/AppShell'
-import { ErrorBanner, StatusBadge } from '../../components/UiPrimitives'
+import { ErrorBanner } from '../../components/UiPrimitives'
 import { useAuth } from '../../context/AuthContext'
-import { usePermissions } from '../../context/PermissionContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { translateApiError } from '../../i18n/apiErrors'
+import { apiFieldErrorMessages, translateApiError } from '../../i18n/apiErrors'
+import { JOB_SEEKER_ENTER } from '../../navigation/roleDestinations'
 import {
-  CANDIDATE_STATUS_TIMELINE,
   additionalEducationItems,
-  nextProfileSection,
+  parseYearsOfExperience,
   primaryEducationItem,
-  timelineStepIndex,
-  toCandidatePayload,
+  isLettersOnlyText,
+  sanitizeInternationalPhone,
+  sanitizeYearsOfExperience,
+  toCandidateSavePayload,
   toDateInputValue,
   validateCandidateProfile,
-  validateCandidateSection,
   type EducationItem,
   type ExperienceItem,
   type ProfileSectionId,
 } from './candidateProfile'
+import { countryLabel } from './countries'
+import { CountryCombobox } from './CountryCombobox'
+import { JobSeekerField } from './JobSeekerField'
+import './jobSeekerProfile.css'
 
-function initials(name: string): string {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+function firstFilled(...values: Array<string | null | undefined>): string {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim() !== '') return value
+  }
+  return ''
 }
 
-function formatExperienceItem(item: ExperienceItem, presentLabel: string): string {
-  const parts = [item.title, item.company].filter(Boolean)
-  const dates = [item.start_date, item.current ? presentLabel : item.end_date].filter(Boolean)
-  return [parts.join(' • '), dates.join(' — ')].filter(Boolean).join('\n')
-}
-
-function formatEducationItem(item: EducationItem): string {
-  const parts = [item.degree, item.institution].filter(Boolean)
-  const meta = [item.country, item.year].filter(Boolean)
-  return [parts.join(' • '), meta.join(' • ')].filter(Boolean).join('\n')
-}
-
-function ProfileField({
-  htmlFor,
-  label,
-  error,
-  className,
-  children,
-}: {
-  htmlFor: string
-  label: string
-  error?: string
-  className?: string
-  children: ReactNode
-}) {
-  return (
-    <div className={['profile-field', className].filter(Boolean).join(' ')}>
-      <label htmlFor={htmlFor}>{label}</label>
-      {children}
-      {error ? <p className="field-error" role="alert">{error}</p> : null}
-    </div>
-  )
+function joinList(values: string[] | null | undefined): string {
+  return (values ?? []).map((item) => item.trim()).filter(Boolean).join(', ')
 }
 
 function focusProfileSection(section: ProfileSectionId) {
   const root = document.getElementById(`job-seeker-section-${section}`)
   root?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  const firstField = root?.querySelector<HTMLElement>('input:not([disabled]):not([type=hidden]):not([type=file]), textarea')
+  const firstField = root?.querySelector<HTMLElement>('input:not([disabled]):not([type=hidden]):not([type=file]), textarea, select:not([disabled])')
   firstField?.focus()
 }
 
 export function MyJobApplicationPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
   const { token, organizationId } = useAuth()
-  const { can } = usePermissions()
   const canAccess = Boolean(token)
-  const canOpenTalent = can('jobs.talent.register') || can('jobs.talent.manage')
   const [viewMode, setViewMode] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [message, setMessage] = useState('')
-  const [cvFile, setCvFile] = useState<File | null>(null)
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [primaryQualificationFile, setPrimaryQualificationFile] = useState<File | null>(null)
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [experienceItems, setExperienceItems] = useState<ExperienceItem[]>([])
   const [educationItems, setEducationItems] = useState<EducationItem[]>([])
-  const [editingExperienceIndex, setEditingExperienceIndex] = useState<number | null>(null)
-  const [editingEducationIndex, setEditingEducationIndex] = useState<number | null>(null)
-  const [experienceForm, setExperienceForm] = useState<ExperienceItem>({})
-  const [educationForm, setEducationForm] = useState<EducationItem>({})
 
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -164,36 +126,12 @@ export function MyJobApplicationPage() {
     setExperienceItems(Array.isArray(profile.experience) ? (profile.experience as ExperienceItem[]) : [])
     setEducationItems(Array.isArray(profile.education) ? (profile.education as EducationItem[]) : [])
     setYearsOfExperience(profile.years_of_experience != null ? String(profile.years_of_experience) : '')
-    setCvFile(null)
     setPrimaryQualificationFile(null)
-    setEditingExperienceIndex(null)
-    setEditingEducationIndex(null)
-    setExperienceForm({})
-    setEducationForm({})
   }, [profile])
 
   useEffect(() => {
     if (missingProfile) setViewMode(false)
   }, [missingProfile])
-
-  useEffect(() => {
-    if (!token || !profile?.has_photo) {
-      setPhotoUrl(null)
-      return
-    }
-    let cancelled = false
-    void downloadMyJobSeekerPhoto(token, organizationId ?? undefined)
-      .then((blob) => {
-        if (cancelled) return
-        setPhotoUrl(URL.createObjectURL(blob))
-      })
-      .catch(() => {
-        if (!cancelled) setPhotoUrl(null)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [token, organizationId, profile?.has_photo])
 
   const formState = useMemo(() => ({
     fullName,
@@ -222,152 +160,82 @@ export function MyJobApplicationPage() {
     return <ErrorBanner message={t('jobs.noPermissionTalent')} />
   }
 
-  const handleSave = async (section?: ProfileSectionId) => {
-    if (!token || saving) return
-    const errors = section
-      ? validateCandidateSection(formState, section, {
-          hasPrimaryQualificationDocument: Boolean(
-            profile?.has_primary_qualification_document || primaryQualificationFile,
-          ),
-        })
-      : validateCandidateProfile(formState)
+  const handleSave = async () => {
+    if (!token || saving || deleting) return
+    const errors = validateCandidateProfile(formState)
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) {
       setMessage(t('jobs.applicationValidationFailed'))
-      if (section) focusProfileSection(section)
+      const firstSection = errors.fullName || errors.email || errors.phone || errors.country || errors.city || errors.dateOfBirth || errors.nationality || errors.address
+        ? 'personal'
+        : 'professional'
+      focusProfileSection(firstSection)
       return
     }
     setSaving(true)
     setMessage('')
     try {
-      const payload = toCandidatePayload(formState)
-      if (section && section !== 'education') {
-        delete payload.education
+      const org = organizationId ?? undefined
+      let saved = profile
+      if (!saved) {
+        saved = await upsertMyJobSeekerProfile(token, toCandidateSavePayload(formState, { hasPrimaryQualificationDocument: false }), org)
       }
-      if (section === 'education' && !profile) {
-        const bootstrap = { ...payload }
-        delete bootstrap.education
-        const created = await upsertMyJobSeekerProfile(token, bootstrap, organizationId ?? undefined)
-        setData(created)
-      }
-      if (section === 'education' && primaryQualificationFile) {
-        const withDocument = await uploadMyJobSeekerPrimaryQualification(
-          token,
-          primaryQualificationFile,
-          organizationId ?? undefined,
-        )
-        setData(withDocument)
+      if (primaryQualificationFile) {
+        saved = await uploadMyJobSeekerPrimaryQualification(token, primaryQualificationFile, org)
         setPrimaryQualificationFile(null)
       }
-      const saved = await upsertMyJobSeekerProfile(token, payload, organizationId ?? undefined)
+      const hasDocument = Boolean(saved?.has_primary_qualification_document)
+      saved = await upsertMyJobSeekerProfile(token, toCandidateSavePayload(formState, { hasPrimaryQualificationDocument: hasDocument }), org)
       setData(saved)
       setMessage(t('jobs.applicationSaved'))
       setMissingProfile(false)
-      const next = section ? nextProfileSection(section) : null
-      if (section && !next) {
-        setViewMode(true)
-      }
-      if (next) {
-        window.setTimeout(() => focusProfileSection(next), 50)
-      }
+      setViewMode(true)
     } catch (requestError) {
-      setMessage(translateApiError(requestError) || t('jobs.applicationSaveFailed'))
+      const fieldMessages = apiFieldErrorMessages(requestError)
+      setMessage(fieldMessages.join(' ') || (requestError instanceof ApiError ? requestError.message : '') || translateApiError(requestError) || t('jobs.applicationSaveFailed'))
     } finally {
       setSaving(false)
     }
   }
 
-  const handleCancel = () => {
+  const enterEditMode = () => {
+    setViewMode(false)
+    setMessage('')
+    setFieldErrors({})
+    window.setTimeout(() => {
+      document.getElementById('job-seeker-full-name')?.focus()
+    }, 0)
+  }
+
+  const enterViewMode = () => {
     setViewMode(true)
     setMessage('')
     setFieldErrors({})
-    if (profile) {
-      setFullName(profile.full_name ?? '')
-      setEmail(profile.email ?? '')
-      setPhone(profile.phone ?? '')
-      setSpecialization(profile.specialization ?? '')
-      setTargetJobTitle(profile.target_job_title ?? '')
-      setBiography(profile.biography ?? '')
-      setCountry(profile.country ?? '')
-      setCity(profile.city ?? '')
-      setDateOfBirth(toDateInputValue(profile.date_of_birth))
-      setNationality(profile.nationality ?? '')
-      setAddress(profile.address ?? '')
-      setSkills((profile.skills ?? []).join(', '))
-      setLanguages((profile.languages ?? []).join(', '))
-      setExperienceItems(Array.isArray(profile.experience) ? (profile.experience as ExperienceItem[]) : [])
-      setEducationItems(Array.isArray(profile.education) ? (profile.education as EducationItem[]) : [])
-      setYearsOfExperience(profile.years_of_experience != null ? String(profile.years_of_experience) : '')
-      setCvFile(null)
-      setPrimaryQualificationFile(null)
-      setEditingExperienceIndex(null)
-      setEditingEducationIndex(null)
-      setExperienceForm({})
-      setEducationForm({})
-    }
+    if (token) void reload()
   }
 
-  const handlePhotoUpload = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!token || !photoFile || saving) return
-    setSaving(true)
+  const handleCancel = () => {
+    enterViewMode()
+  }
+
+  const handleDeleteApplication = async () => {
+    if (!token || deleting) return
+    setDeleting(true)
     setMessage('')
     try {
-      const saved = await uploadMyJobSeekerPhoto(token, photoFile, organizationId ?? undefined)
-      setData(saved)
-      setMessage(t('jobs.photoUploaded'))
-      setPhotoFile(null)
-      setViewMode(true)
+      const result = await deleteMyJobSeekerApplication(token, organizationId ?? undefined)
+      setConfirmDelete(false)
+      setMessage(result.message || t('jobs.applicationDeleted'))
+      navigate(JOB_SEEKER_ENTER, {
+        replace: true,
+        state: { notice: result.message || t('jobs.applicationDeleted') },
+      })
     } catch (requestError) {
-      setMessage(translateApiError(requestError) || t('jobs.photoUploadFailed'))
+      setConfirmDelete(false)
+      const fieldMessages = apiFieldErrorMessages(requestError)
+      setMessage(fieldMessages.join(' ') || (requestError instanceof ApiError ? requestError.message : '') || translateApiError(requestError) || t('jobs.applicationDeleteFailed'))
     } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleCvUpload = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!token || !cvFile || saving) return
-    setSaving(true)
-    setMessage('')
-    try {
-      const saved = await uploadMyJobSeekerCv(token, cvFile, organizationId ?? undefined)
-      setData(saved)
-      setMessage(t('jobs.cvUploaded'))
-      setCvFile(null)
-      window.setTimeout(() => focusProfileSection('photo'), 50)
-    } catch (requestError) {
-      setMessage(translateApiError(requestError) || t('jobs.cvUploadFailed'))
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleViewCv = async () => {
-    if (!token) return
-    try {
-      const blob = await downloadMyJobSeekerCv(token, organizationId ?? undefined)
-      const url = URL.createObjectURL(blob)
-      window.open(url, '_blank', 'noopener,noreferrer')
-    } catch (requestError) {
-      setMessage(translateApiError(requestError) || t('jobs.cvDownloadFailed'))
-    }
-  }
-
-  const handleDownloadCv = async () => {
-    if (!token) return
-    try {
-      const blob = await downloadMyJobSeekerCv(token, organizationId ?? undefined)
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = profile?.cv_filename || 'cv'
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      URL.revokeObjectURL(url)
-    } catch (requestError) {
-      setMessage(translateApiError(requestError) || t('jobs.cvDownloadFailed'))
+      setDeleting(false)
     }
   }
 
@@ -382,175 +250,74 @@ export function MyJobApplicationPage() {
     }
   }
 
-  const currentStatusIndex = timelineStepIndex(profile?.recruitment_status)
-  const isComplete = (profile?.completeness_percent ?? 0) >= 80
   const presentLabel = t('jobs.present')
+  const locale = i18n.language ?? 'en'
+  const yearsCount = parseYearsOfExperience(firstFilled(
+    yearsOfExperience,
+    profile?.years_of_experience != null ? String(profile.years_of_experience) : '',
+  ))
+  const yearsDisplay = yearsCount == null ? '' : t('jobs.yearsOfExperienceValue', { count: yearsCount })
+  const displayedJobTitle = viewMode
+    ? firstFilled(profile?.target_job_title, targetJobTitle)
+    : firstFilled(targetJobTitle, profile?.target_job_title)
+  const displayedField = viewMode
+    ? firstFilled(profile?.specialization, specialization)
+    : firstFilled(specialization, profile?.specialization)
+  const displayedSkills = firstFilled(skills, joinList(profile?.skills))
+  const displayedLanguages = firstFilled(languages, joinList(profile?.languages))
+  const primaryEducation = primaryEducationItem(educationItems)
 
-  const renderExperienceForm = (index: number | null, initial: ExperienceItem): ReactNode => (
-    <div className="record-form" style={{ marginTop: 12 }}>
-      <label>
-        {t('jobs.jobTitle')}
-        <input
-          dir="auto"
-          value={initial.title ?? ''}
-          onChange={(e) => setExperienceForm({ ...initial, title: e.target.value })}
-        />
-      </label>
-      <label>
-        {t('jobs.employer')}
-        <input
-          dir="auto"
-          value={initial.company ?? ''}
-          onChange={(e) => setExperienceForm({ ...initial, company: e.target.value })}
-        />
-      </label>
-      <label>
-        {t('jobs.startDate')}
-        <input
-          type="date"
-          dir="auto"
-          value={initial.start_date ?? ''}
-          onChange={(e) => setExperienceForm({ ...initial, start_date: e.target.value })}
-        />
-      </label>
-      <label>
-        {t('jobs.endDate')}
-        <input
-          type="date"
-          dir="auto"
-          value={initial.end_date ?? ''}
-          disabled={initial.current}
-          onChange={(e) => setExperienceForm({ ...initial, end_date: e.target.value })}
-        />
-      </label>
-      <label className="checkbox-row">
-        <input
-          type="checkbox"
-          checked={initial.current ?? false}
-          onChange={(e) => setExperienceForm({ ...initial, current: e.target.checked })}
-        />
-        {t('jobs.currentPosition')}
-      </label>
-      <label>
-        {t('jobs.description')}
-        <textarea
-          dir="auto"
-          rows={3}
-          value={initial.description ?? ''}
-          onChange={(e) => setExperienceForm({ ...initial, description: e.target.value })}
-        />
-      </label>
-      <div className="form-actions">
-        <button
-          type="button"
-          onClick={() => {
-            if (index === null) {
-              setExperienceItems([...experienceItems, initial])
-            } else {
-              const next = [...experienceItems]
-              next[index] = initial
-              setExperienceItems(next)
-            }
-            setEditingExperienceIndex(null)
-            setExperienceForm({})
-          }}
-        >
-          {t('common.save')}
-        </button>
-        <button type="button" className="link-button" onClick={() => { setEditingExperienceIndex(null); setExperienceForm({}) }}>
-          {t('common.cancel')}
-        </button>
-      </div>
-    </div>
-  )
+  const patchExperience = (index: number, patch: Partial<ExperienceItem>) => {
+    setExperienceItems((items) => items.map((item, i) => (i === index ? { ...item, ...patch } : item)))
+  }
 
-  const renderEducationForm = (index: number | null, initial: EducationItem): ReactNode => (
-    <div className="record-form" style={{ marginTop: 12 }}>
-      <label>
-        {t('jobs.qualification')}
-        <input
-          dir="auto"
-          value={initial.degree ?? ''}
-          onChange={(e) => setEducationForm({ ...initial, degree: e.target.value })}
-        />
-      </label>
-      <label>
-        {t('jobs.university')}
-        <input
-          dir="auto"
-          value={initial.institution ?? ''}
-          onChange={(e) => setEducationForm({ ...initial, institution: e.target.value })}
-        />
-      </label>
-      <label>
-        {t('jobs.country')}
-        <input
-          dir="auto"
-          value={initial.country ?? ''}
-          onChange={(e) => setEducationForm({ ...initial, country: e.target.value })}
-        />
-      </label>
-      <label>
-        {t('jobs.graduationYear')}
-        <input
-          dir="auto"
-          type="number"
-          min="1950"
-          max="2100"
-          value={initial.year ?? ''}
-          onChange={(e) => setEducationForm({ ...initial, year: e.target.value ? Number(e.target.value) : undefined })}
-        />
-      </label>
-      <div className="form-actions">
-        <button
-          type="button"
-          onClick={() => {
-            if (index === null) {
-              setEducationItems(educationItems.length === 0 ? [{}, initial] : [...educationItems, initial])
-            } else {
-              const next = [...educationItems]
-              next[index] = initial
-              setEducationItems(next)
-            }
-            setEditingEducationIndex(null)
-            setEducationForm({})
-          }}
-        >
-          {t('common.save')}
-        </button>
-        <button type="button" className="link-button" onClick={() => { setEditingEducationIndex(null); setEducationForm({}) }}>
-          {t('common.cancel')}
-        </button>
-      </div>
-    </div>
-  )
+  const patchEducation = (index: number, patch: Partial<EducationItem>) => {
+    setEducationItems((items) => {
+      const next = items.length ? [...items] : [{}]
+      while (next.length <= index) next.push({})
+      next[index] = { ...next[index], ...patch }
+      return next
+    })
+  }
 
   return (
-    <>
+    <div className="job-seeker-profile">
       <PageHeader
         eyebrow={t('nav.ecosystem')}
         title={t('jobs.myApplicationTitle')}
         description={t('jobs.myApplicationDescription')}
         actions={
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {canOpenTalent ? <Link to="/jobs/talent" className="link-button">{t('nav.talentProfile')}</Link> : null}
-            <button type="button" className="link-button" onClick={() => setViewMode(true)}>{t('jobs.viewApplication')}</button>
-            {viewMode ? (
-              <button type="button" onClick={() => { setViewMode(false); setMessage('') }}>{t('jobs.editProfile')}</button>
-            ) : (
-              <>
-                <button type="button" onClick={() => void handleSave()} disabled={saving}>
-                  {saving ? t('common.saving') : t('jobs.saveChanges')}
-                </button>
-                <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
-              </>
-            )}
+          <div className="profile-mode-bar" data-profile-mode={viewMode ? 'view' : 'edit'}>
+            <button
+              type="button"
+              className="profile-view-button"
+              data-testid="view-profile"
+              aria-pressed={viewMode}
+              onClick={enterViewMode}
+            >
+              {t('jobs.viewProfile')}
+            </button>
+            <button type="button" className="profile-edit-button" data-testid="edit-profile" aria-pressed={!viewMode} onClick={enterEditMode}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+              {t('jobs.editProfile')}
+            </button>
           </div>
         }
       />
 
       {error && !missingProfile && <ErrorBanner message={error} onRetry={reload} />}
-      {message && <p className={`notice${message === t('jobs.applicationSaved') ? ' success' : ''}`} role="status">{message}</p>}
+      {message && (
+        <p
+          className={`notice${message === t('jobs.applicationSaved') ? ' success' : ''}`}
+          role="status"
+          data-testid="profile-notice"
+        >
+          {message}
+        </p>
+      )}
       {Object.keys(fieldErrors).length > 0 && (
         <ul className="field-errors">
           {Object.values(fieldErrors).map((key) => <li key={key}>{t(key)}</li>)}
@@ -561,61 +328,44 @@ export function MyJobApplicationPage() {
         <p className="loading">{t('jobs.loadingProfile')}</p>
       ) : profile || missingProfile ? (
         <>
-          <section className="panel">
+          <section className="panel profile-summary-card">
             <div className="panel-heading">
               <div>
                 <p className="eyebrow">{t('jobs.profile')}</p>
                 <h2>{t('jobs.myApplicationTitle')}</h2>
               </div>
             </div>
-            <div className="detail-grid" style={{ gridTemplateColumns: 'auto 1fr', gap: 16, alignItems: 'start' }}>
-              <div
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: '50%',
-                  background: '#6d28d9',
-                  color: '#fff',
-                  display: 'grid',
-                  placeItems: 'center',
-                  fontWeight: 800,
-                  fontSize: 24,
-                  flexShrink: 0,
-                  overflow: 'hidden',
-                }}
-              >
-                {photoUrl ? (
-                  <img src={photoUrl} alt="" width={72} height={72} style={{ objectFit: 'cover' }} />
-                ) : (
-                  initials(profile?.full_name || fullName || '?')
-                )}
-              </div>
+            <div className="js-summary">
               <div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-                  <strong style={{ fontSize: 18 }} dir="auto">{profile?.full_name || fullName || '—'}</strong>
-                  <StatusBadge status={isComplete ? 'completed' : 'pending'} />
-                  <span className="status-badge">{t(`jobs.status.${profile?.recruitment_status ?? 'new'}`)}</span>
+                <div className="js-summary-name-row">
+                  <strong dir="auto">{profile?.full_name || fullName || '—'}</strong>
                 </div>
-                <p dir="auto" style={{ margin: '6px 0 0' }}>{profile?.target_job_title || profile?.specialization || targetJobTitle || '—'}</p>
-                <p dir="auto" style={{ margin: 2, color: '#64748b', fontSize: 13 }}>{[profile?.city || city, profile?.country || country].filter(Boolean).join(', ') || '—'}</p>
-                <div style={{ marginTop: 10 }}>
-                  <div style={{ height: 8, borderRadius: 999, background: '#e2e8f0', overflow: 'hidden', maxWidth: 320 }}>
-                    <div style={{ height: '100%', width: `${profile?.completeness_percent ?? 0}%`, background: '#6d28d9' }} />
+                <p className="js-summary-title" dir="auto">{displayedJobTitle || '—'}</p>
+                <p className="js-summary-meta" dir="auto">
+                  {[
+                    profile?.city || city,
+                    (profile?.country || country) ? countryLabel(profile?.country || country, locale) : '',
+                  ].filter(Boolean).join(', ') || '—'}
+                </p>
+                <div className="profile-highlights">
+                  <div className="profile-highlight">
+                    <span>{t('jobs.targetJobTitle')}</span>
+                    <strong dir="auto">{displayedJobTitle || '—'}</strong>
                   </div>
-                  <span style={{ fontSize: 12, color: '#64748b' }}>{profile?.completeness_percent ?? 0}% {t('jobs.completeness')}</span>
+                  <div className="profile-highlight profile-highlight-emphasis">
+                    <span>{t('jobs.yearsOfExperience')}</span>
+                    <strong dir="auto">{yearsDisplay || '—'}</strong>
+                  </div>
+                  <div className="profile-highlight">
+                    <span>{t('jobs.professionalField')}</span>
+                    <strong dir="auto">{displayedField || '—'}</strong>
+                  </div>
                 </div>
-                <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button type="button" className="link-button" onClick={() => setViewMode(true)}>{t('jobs.viewApplication')}</button>
-                  {viewMode ? (
-                    <button type="button" onClick={() => setViewMode(false)}>{t('jobs.editProfile')}</button>
-                  ) : (
-                    <>
-                      <button type="button" onClick={() => void handleSave()} disabled={saving || !fullName}>
-                        {saving ? t('common.saving') : t('jobs.saveChanges')}
-                      </button>
-                      <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
-                    </>
-                  )}
+                <div className="js-summary-progress">
+                  <div className="js-summary-progress-track">
+                    <div className="js-summary-progress-fill" style={{ width: `${profile?.completeness_percent ?? 0}%` }} />
+                  </div>
+                  <span>{profile?.completeness_percent ?? 0}% {t('jobs.completeness')}</span>
                 </div>
               </div>
             </div>
@@ -623,508 +373,400 @@ export function MyJobApplicationPage() {
 
           <div id="job-seeker-section-personal">
           <Panel eyebrow={t('jobs.personalInfo')} title={t('jobs.personalInfo')}>
-            <div className="record-form profile-fields">
-              <ProfileField
+            <div className="js-grid js-grid-2">
+              <JobSeekerField
                 htmlFor="job-seeker-full-name"
-                className="profile-field-wide"
-                label={`${t('jobs.fullName')} (${t('jobs.requiredField')})`}
+                size="full"
+                label={t('jobs.fullName')}
+                value={firstFilled(fullName, profile?.full_name)}
+                dir="auto"
+                editing={!viewMode}
                 error={fieldErrors.fullName ? t(fieldErrors.fullName) : undefined}
               >
-                <input
-                  id="job-seeker-full-name"
-                  name="full_name"
-                  autoComplete="name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  readOnly={viewMode}
-                  dir="auto"
-                />
-              </ProfileField>
-              <ProfileField
+                <input id="job-seeker-full-name" name="full_name" autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required dir="auto" />
+              </JobSeekerField>
+              <JobSeekerField
                 htmlFor="job-seeker-email"
-                className="profile-field-medium"
-                label={`${t('jobs.email')} (${t('jobs.requiredField')})`}
+                size="medium"
+                label={t('jobs.email')}
+                value={firstFilled(email, profile?.email)}
+                dir="ltr"
+                editing={!viewMode}
                 error={fieldErrors.email ? t(fieldErrors.email) : undefined}
               >
-                <input
-                  id="job-seeker-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  readOnly={viewMode}
-                  dir="ltr"
-                />
-              </ProfileField>
-              <ProfileField
+                <input id="job-seeker-email" name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required dir="ltr" />
+              </JobSeekerField>
+              <JobSeekerField
                 htmlFor="job-seeker-phone"
-                className="profile-field-medium"
-                label={`${t('jobs.phoneNumber')} (${t('jobs.requiredField')})`}
+                size="medium"
+                label={t('jobs.phoneNumber')}
+                value={firstFilled(phone, profile?.phone)}
+                dir="ltr"
+                editing={!viewMode}
                 error={fieldErrors.phone ? t(fieldErrors.phone) : undefined}
               >
-                <input
-                  id="job-seeker-phone"
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                  readOnly={viewMode}
-                  dir="ltr"
-                />
-              </ProfileField>
-              <ProfileField
-                htmlFor="job-seeker-country"
-                label={`${t('jobs.country')} (${t('jobs.requiredField')})`}
-                error={fieldErrors.country ? t(fieldErrors.country) : undefined}
-              >
-                <input
-                  id="job-seeker-country"
-                  name="country"
-                  autoComplete="country-name"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  required
-                  readOnly={viewMode}
-                  dir="auto"
-                />
-              </ProfileField>
-              <ProfileField
-                htmlFor="job-seeker-city"
-                label={`${t('jobs.city')} (${t('jobs.requiredField')})`}
-                error={fieldErrors.city ? t(fieldErrors.city) : undefined}
-              >
-                <input
-                  id="job-seeker-city"
-                  name="city"
-                  autoComplete="address-level2"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  required
-                  readOnly={viewMode}
-                  dir="auto"
-                />
-              </ProfileField>
-              <ProfileField
+                <input id="job-seeker-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(sanitizeInternationalPhone(e.target.value))} required dir="ltr" />
+              </JobSeekerField>
+              <JobSeekerField
                 htmlFor="job-seeker-date-of-birth"
-                className="profile-field-date"
-                label={`${t('jobs.dateOfBirth')} (${t('jobs.requiredField')})`}
+                size="short"
+                label={t('jobs.dateOfBirth')}
+                value={firstFilled(dateOfBirth, toDateInputValue(profile?.date_of_birth))}
+                dir="ltr"
+                editing={!viewMode}
                 error={fieldErrors.dateOfBirth ? t(fieldErrors.dateOfBirth) : undefined}
               >
-                <input
-                  id="job-seeker-date-of-birth"
-                  name="date_of_birth"
-                  type="date"
-                  autoComplete="bday"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                  required
-                  readOnly={viewMode}
-                  dir="ltr"
-                />
-              </ProfileField>
-              <ProfileField
+                <input id="job-seeker-date-of-birth" name="date_of_birth" type="date" autoComplete="bday" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required dir="ltr" />
+              </JobSeekerField>
+              <JobSeekerField
                 htmlFor="job-seeker-nationality"
-                label={`${t('jobs.nationality')} (${t('jobs.requiredField')})`}
+                size="medium"
+                label={t('jobs.nationality')}
+                value={firstFilled(nationality, profile?.nationality) ? countryLabel(firstFilled(nationality, profile?.nationality), locale) : ''}
+                editing={!viewMode}
                 error={fieldErrors.nationality ? t(fieldErrors.nationality) : undefined}
               >
-                <input
-                  id="job-seeker-nationality"
-                  name="nationality"
-                  value={nationality}
-                  onChange={(e) => setNationality(e.target.value)}
-                  required
-                  readOnly={viewMode}
-                  dir="auto"
-                />
-              </ProfileField>
-              <ProfileField
+                <CountryCombobox id="job-seeker-nationality" name="nationality" value={nationality} onChange={setNationality} required placeholder={t('jobs.selectNationality')} searchPlaceholder={t('jobs.searchCountry')} locale={locale} />
+              </JobSeekerField>
+              <JobSeekerField
+                htmlFor="job-seeker-country"
+                size="medium"
+                label={t('jobs.residenceCountry')}
+                value={firstFilled(country, profile?.country) ? countryLabel(firstFilled(country, profile?.country), locale) : ''}
+                editing={!viewMode}
+                error={fieldErrors.country ? t(fieldErrors.country) : undefined}
+              >
+                <CountryCombobox id="job-seeker-country" name="country" value={country} onChange={setCountry} required placeholder={t('jobs.selectResidenceCountry')} searchPlaceholder={t('jobs.searchCountry')} locale={locale} />
+              </JobSeekerField>
+              <JobSeekerField
+                htmlFor="job-seeker-city"
+                size="short"
+                label={t('jobs.city')}
+                value={firstFilled(city, profile?.city)}
+                editing={!viewMode}
+                error={fieldErrors.city ? t(fieldErrors.city) : undefined}
+              >
+                <input id="job-seeker-city" name="city" autoComplete="address-level2" value={city} onChange={(e) => setCity(e.target.value)} required dir="auto" />
+              </JobSeekerField>
+              <JobSeekerField
                 htmlFor="job-seeker-address"
-                className="profile-field-wide"
-                label={`${t('jobs.address')} (${t('jobs.requiredField')})`}
+                size="full"
+                label={t('jobs.address')}
+                value={firstFilled(address, profile?.address)}
+                editing={!viewMode}
                 error={fieldErrors.address ? t(fieldErrors.address) : undefined}
               >
-                <input
-                  id="job-seeker-address"
-                  name="address"
-                  autoComplete="street-address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  required
-                  readOnly={viewMode}
-                  dir="auto"
-                />
-              </ProfileField>
-              {!viewMode && (
-                <div className="form-actions profile-field-actions">
-                  <button type="button" disabled={saving} onClick={() => void handleSave('personal')}>
-                    {saving ? t('common.saving') : t('common.save')}
-                  </button>
-                  <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
-                </div>
-              )}
+                <input id="job-seeker-address" name="address" autoComplete="street-address" value={address} onChange={(e) => setAddress(e.target.value)} required dir="auto" />
+              </JobSeekerField>
             </div>
           </Panel>
           </div>
 
           <div id="job-seeker-section-professional">
           <Panel eyebrow={t('jobs.professionalProfile')} title={t('jobs.professionalProfile')}>
-            {viewMode ? (
-              <div style={{ display: 'grid', gap: 14 }}>
-                <div>
-                  <p style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>{t('jobs.professionalSummary')}</p>
-                  <p dir="auto" style={{ whiteSpace: 'pre-wrap' }}>{profile?.biography || '—'}</p>
-                </div>
-                <div className="profile-fields">
-                  <div className="profile-readout profile-field-wide">
-                    <span>{t('jobs.professionalSummary')}</span>
-                    <strong dir="auto" style={{ whiteSpace: 'pre-wrap', fontWeight: 500 }}>{profile?.biography || '—'}</strong>
-                  </div>
-                  <div className="profile-readout">
-                    <span>{t('jobs.targetJobTitle')}</span>
-                    <strong dir="auto">{profile?.target_job_title || '—'}</strong>
-                  </div>
-                  <div className="profile-readout profile-field-date">
-                    <span>{t('jobs.yearsOfExperience')}</span>
-                    <strong dir="auto">{profile?.years_of_experience ?? '—'}</strong>
-                  </div>
-                  <div className="profile-readout">
-                    <span>{t('jobs.professionalField')}</span>
-                    <strong dir="auto">{profile?.specialization || '—'}</strong>
-                  </div>
-                  <div className="profile-readout profile-field-wide">
-                    <span>{t('jobs.skills')}</span>
-                    <strong dir="auto">{(profile?.skills ?? []).join(', ') || '—'}</strong>
-                  </div>
-                  <div className="profile-readout">
-                    <span>{t('jobs.languages')}</span>
-                    <strong dir="auto">{(profile?.languages ?? []).join(', ') || '—'}</strong>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="record-form">
-                <label>
-                  {t('jobs.targetJobTitle')}
-                  <input value={targetJobTitle} onChange={(e) => setTargetJobTitle(e.target.value)} dir="auto" />
-                </label>
-                <label>
-                  {t('jobs.professionalSummary')}
-                  <textarea value={biography} onChange={(e) => setBiography(e.target.value)} rows={6} dir="auto" />
-                </label>
-                <label>
-                  {t('jobs.yearsOfExperience')}
-                  <input id="job-seeker-years-of-experience" type="number" min="0" max="80" value={yearsOfExperience} onChange={(e) => setYearsOfExperience(e.target.value)} dir="ltr" />
-                </label>
-                <label>
-                  {t('jobs.professionalField')}
-                  <input value={specialization} onChange={(e) => setSpecialization(e.target.value)} dir="auto" />
-                </label>
-                <label>
-                  {t('jobs.skills')}
-                  <input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder={t('jobs.skillsPlaceholder')} dir="auto" />
-                </label>
-                <label>
-                  {t('jobs.languages')}
-                  <input value={languages} onChange={(e) => setLanguages(e.target.value)} placeholder={t('jobs.languages')} dir="auto" />
-                </label>
-                <div className="form-actions">
-                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave('professional')}>
-                    {saving ? t('common.saving') : t('common.save')}
-                  </button>
-                  <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
-                </div>
-              </div>
-            )}
+            <div className="js-grid js-grid-3">
+              <JobSeekerField
+                htmlFor="job-seeker-target-job-title"
+                size="medium"
+                label={t('jobs.targetJobTitle')}
+                value={displayedJobTitle}
+                dir="auto"
+                editing={!viewMode}
+                error={fieldErrors.targetJobTitle ? t(fieldErrors.targetJobTitle) : undefined}
+              >
+                <input id="job-seeker-target-job-title" value={targetJobTitle} onChange={(e) => setTargetJobTitle(e.target.value)} dir="auto" />
+              </JobSeekerField>
+              <JobSeekerField
+                htmlFor="job-seeker-professional-field"
+                size="short"
+                label={t('jobs.professionalField')}
+                value={displayedField}
+                dir="auto"
+                editing={!viewMode}
+                error={fieldErrors.specialization ? t(fieldErrors.specialization) : undefined}
+              >
+                <input id="job-seeker-professional-field" value={specialization} onChange={(e) => setSpecialization(e.target.value)} dir="auto" />
+              </JobSeekerField>
+              <JobSeekerField
+                htmlFor="job-seeker-years-of-experience"
+                size="short"
+                label={t('jobs.yearsOfExperience')}
+                value={yearsDisplay}
+                editing={!viewMode}
+                error={fieldErrors.yearsOfExperience ? t(fieldErrors.yearsOfExperience) : undefined}
+              >
+                <input id="job-seeker-years-of-experience" type="text" inputMode="numeric" value={yearsOfExperience} onChange={(e) => setYearsOfExperience(sanitizeYearsOfExperience(e.target.value))} dir="ltr" />
+              </JobSeekerField>
+            </div>
           </Panel>
           </div>
 
+          <Panel eyebrow={t('jobs.professionalSummary')} title={t('jobs.professionalSummary')}>
+            <div className="js-grid js-grid-stack">
+              <JobSeekerField
+                htmlFor="job-seeker-biography"
+                size="full"
+                label={t('jobs.professionalSummary')}
+                value={viewMode ? firstFilled(profile?.biography, biography) : biography}
+                dir="auto"
+                editing={!viewMode}
+                error={fieldErrors.biography ? t(fieldErrors.biography) : undefined}
+              >
+                <textarea id="job-seeker-biography" value={biography} onChange={(e) => setBiography(e.target.value)} rows={4} dir="auto" />
+              </JobSeekerField>
+            </div>
+          </Panel>
+
+          <Panel eyebrow={t('jobs.skills')} title={t('jobs.skills')}>
+            <div className="js-grid js-grid-stack">
+              <JobSeekerField
+                htmlFor="job-seeker-skills"
+                size="full"
+                label={t('jobs.skills')}
+                value={viewMode ? firstFilled(joinList(profile?.skills), skills) : displayedSkills}
+                dir="auto"
+                editing={!viewMode}
+                error={fieldErrors.skills ? t(fieldErrors.skills) : undefined}
+              >
+                <input id="job-seeker-skills" value={skills} onChange={(e) => setSkills(e.target.value)} placeholder={t('jobs.skillsPlaceholder')} dir="auto" />
+              </JobSeekerField>
+            </div>
+          </Panel>
+
+          <Panel eyebrow={t('jobs.languages')} title={t('jobs.languages')}>
+            <div className="js-grid js-grid-stack">
+              <JobSeekerField
+                htmlFor="job-seeker-languages"
+                size="full"
+                label={t('jobs.languages')}
+                value={viewMode ? firstFilled(joinList(profile?.languages), languages) : displayedLanguages}
+                dir="auto"
+                editing={!viewMode}
+                error={fieldErrors.languages ? t(fieldErrors.languages) : undefined}
+              >
+                <input id="job-seeker-languages" value={languages} onChange={(e) => setLanguages(e.target.value)} placeholder={t('jobs.languages')} dir="auto" />
+              </JobSeekerField>
+            </div>
+          </Panel>
+
           <div id="job-seeker-section-education">
           <Panel eyebrow={t('jobs.education')} title={t('jobs.education')}>
-            {viewMode ? (
-              educationItems.length === 0 ? (
-                <p className="muted">{t('jobs.emptyData')}</p>
-              ) : (
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {educationItems.map((item, index) => (
-                    <div key={index} style={{ padding: 12, border: '1px solid #e5e7eb', borderRadius: 10 }}>
-                      <p className="eyebrow">{index === 0 ? t('jobs.primaryQualification') : t('jobs.additionalQualifications')}</p>
-                      <strong dir="auto">{item.degree || '—'}</strong>
-                      <p dir="auto" style={{ margin: '4px 0 0', fontSize: 13 }}>{formatEducationItem(item) || '—'}</p>
-                      {index === 0 && profile?.has_primary_qualification_document && (
-                        <button type="button" className="link-button" onClick={() => void handleViewQualificationDocument()}>
-                          {t('jobs.viewQualificationDocument')}
-                        </button>
-                      )}
-                    </div>
-                  ))}
+            <div className="js-item-card">
+              <p className="js-item-title">{t('jobs.primaryQualification')}</p>
+              <div className="js-grid js-grid-2">
+                <JobSeekerField
+                  htmlFor="job-seeker-primary-qualification"
+                  size="medium"
+                  label={t('jobs.qualification')}
+                  value={primaryEducation.degree}
+                  dir="auto"
+                  editing={!viewMode}
+                  error={fieldErrors.primaryQualification ? t(fieldErrors.primaryQualification) : undefined}
+                >
+                  <input id="job-seeker-primary-qualification" name="primary_qualification" dir="auto" value={primaryEducation.degree ?? ''} onChange={(e) => patchEducation(0, { degree: e.target.value })} />
+                </JobSeekerField>
+                <JobSeekerField
+                  htmlFor="job-seeker-primary-country"
+                  size="medium"
+                  label={t('jobs.country')}
+                  value={primaryEducation.country ? countryLabel(primaryEducation.country, locale) : ''}
+                  editing={!viewMode}
+                >
+                  <CountryCombobox id="job-seeker-primary-country" name="primary_education_country" value={primaryEducation.country ?? ''} onChange={(value) => patchEducation(0, { country: value })} placeholder={t('jobs.selectCountry')} searchPlaceholder={t('jobs.searchCountry')} locale={locale} />
+                </JobSeekerField>
+                <JobSeekerField
+                  htmlFor="job-seeker-primary-university"
+                  size="medium"
+                  label={t('jobs.university')}
+                  value={primaryEducation.institution}
+                  dir="auto"
+                  editing={!viewMode}
+                >
+                  <input id="job-seeker-primary-university" dir="auto" value={primaryEducation.institution ?? ''} onChange={(e) => patchEducation(0, { institution: e.target.value })} />
+                </JobSeekerField>
+                <JobSeekerField
+                  htmlFor="job-seeker-primary-year"
+                  size="short"
+                  label={t('jobs.graduationYear')}
+                  value={primaryEducation.year != null ? String(primaryEducation.year) : ''}
+                  dir="ltr"
+                  editing={!viewMode}
+                >
+                  <input id="job-seeker-primary-year" dir="ltr" type="number" min="1950" max="2100" value={primaryEducation.year ?? ''} onChange={(e) => patchEducation(0, { year: e.target.value ? Number(e.target.value) : undefined })} />
+                </JobSeekerField>
+                <JobSeekerField
+                  htmlFor="job-seeker-primary-qualification-document"
+                  size="full"
+                  label={t('jobs.selectQualificationDocument')}
+                  value={primaryQualificationFile?.name || profile?.primary_qualification_filename || (profile?.has_primary_qualification_document ? t('jobs.viewQualificationDocument') : '')}
+                  editing={!viewMode}
+                  error={fieldErrors.primaryQualificationDocument ? t(fieldErrors.primaryQualificationDocument) : undefined}
+                >
+                  <input id="job-seeker-primary-qualification-document" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" onChange={(e) => setPrimaryQualificationFile(e.target.files?.[0] ?? null)} />
+                </JobSeekerField>
+              </div>
+              {profile?.has_primary_qualification_document && (
+                <button type="button" className="link-button" onClick={() => void handleViewQualificationDocument()}>
+                  {t('jobs.viewQualificationDocument')}
+                </button>
+              )}
+            </div>
+            {additionalEducationItems(educationItems).map((item, additionalIndex) => {
+              const index = additionalIndex + 1
+              return (
+                <div key={index} className="js-item-card" style={{ marginTop: 12 }}>
+                  <p className="js-item-title">{t('jobs.additionalQualifications')}</p>
+                  <div className="js-grid js-grid-2">
+                    <JobSeekerField size="medium" label={t('jobs.qualification')} value={item.degree} dir="auto" editing={!viewMode} htmlFor={`edu-degree-${index}`}>
+                      <input id={`edu-degree-${index}`} dir="auto" value={item.degree ?? ''} onChange={(e) => patchEducation(index, { degree: e.target.value })} />
+                    </JobSeekerField>
+                    <JobSeekerField size="medium" label={t('jobs.country')} value={item.country ? countryLabel(item.country, locale) : ''} editing={!viewMode} htmlFor={`edu-country-${index}`}>
+                      <CountryCombobox id={`edu-country-${index}`} name={`education_country_${index}`} value={item.country ?? ''} onChange={(value) => patchEducation(index, { country: value })} placeholder={t('jobs.selectCountry')} searchPlaceholder={t('jobs.searchCountry')} locale={locale} />
+                    </JobSeekerField>
+                    <JobSeekerField size="medium" label={t('jobs.university')} value={item.institution} dir="auto" editing={!viewMode} htmlFor={`edu-uni-${index}`}>
+                      <input id={`edu-uni-${index}`} dir="auto" value={item.institution ?? ''} onChange={(e) => patchEducation(index, { institution: e.target.value })} />
+                    </JobSeekerField>
+                    <JobSeekerField size="short" label={t('jobs.graduationYear')} value={item.year != null ? String(item.year) : ''} dir="ltr" editing={!viewMode} htmlFor={`edu-year-${index}`}>
+                      <input id={`edu-year-${index}`} dir="ltr" type="number" min="1950" max="2100" value={item.year ?? ''} onChange={(e) => patchEducation(index, { year: e.target.value ? Number(e.target.value) : undefined })} />
+                    </JobSeekerField>
+                  </div>
+                  {!viewMode && (
+                    <button type="button" className="js-btn js-btn-danger" onClick={() => setEducationItems(educationItems.filter((_, i) => i !== index))}>{t('common.delete')}</button>
+                  )}
                 </div>
               )
-            ) : (
-              <>
-                <div className="record-form profile-fields">
-                  <p className="profile-field-wide">
-                    <strong>{t('jobs.primaryQualification')}</strong>
-                    {' '}
-                    <span className="muted">({t('jobs.requiredField')})</span>
-                  </p>
-                  <ProfileField
-                    htmlFor="job-seeker-primary-qualification"
-                    className="profile-field-wide"
-                    label={t('jobs.qualification')}
-                    error={fieldErrors.primaryQualification ? t(fieldErrors.primaryQualification) : undefined}
-                  >
-                    <input
-                      id="job-seeker-primary-qualification"
-                      name="primary_qualification"
-                      dir="auto"
-                      value={primaryEducationItem(educationItems).degree ?? ''}
-                      onChange={(e) => setEducationItems([{ ...primaryEducationItem(educationItems), degree: e.target.value }, ...educationItems.slice(1)])}
-                    />
-                  </ProfileField>
-                  <ProfileField htmlFor="job-seeker-primary-university" label={t('jobs.university')}>
-                    <input
-                      id="job-seeker-primary-university"
-                      dir="auto"
-                      value={primaryEducationItem(educationItems).institution ?? ''}
-                      onChange={(e) => setEducationItems([{ ...primaryEducationItem(educationItems), institution: e.target.value }, ...educationItems.slice(1)])}
-                    />
-                  </ProfileField>
-                  <ProfileField htmlFor="job-seeker-primary-country" label={t('jobs.country')}>
-                    <input
-                      id="job-seeker-primary-country"
-                      dir="auto"
-                      value={primaryEducationItem(educationItems).country ?? ''}
-                      onChange={(e) => setEducationItems([{ ...primaryEducationItem(educationItems), country: e.target.value }, ...educationItems.slice(1)])}
-                    />
-                  </ProfileField>
-                  <ProfileField htmlFor="job-seeker-primary-year" className="profile-field-date" label={t('jobs.graduationYear')}>
-                    <input
-                      id="job-seeker-primary-year"
-                      dir="ltr"
-                      type="number"
-                      min="1950"
-                      max="2100"
-                      value={primaryEducationItem(educationItems).year ?? ''}
-                      onChange={(e) => setEducationItems([{
-                        ...primaryEducationItem(educationItems),
-                        year: e.target.value ? Number(e.target.value) : undefined,
-                      }, ...educationItems.slice(1)])}
-                    />
-                  </ProfileField>
-                  <ProfileField
-                    htmlFor="job-seeker-primary-qualification-document"
-                    className="profile-field-wide"
-                    label={t('jobs.selectQualificationDocument')}
-                    error={fieldErrors.primaryQualificationDocument ? t(fieldErrors.primaryQualificationDocument) : undefined}
-                  >
-                    <input
-                      id="job-seeker-primary-qualification-document"
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
-                      onChange={(e) => setPrimaryQualificationFile(e.target.files?.[0] ?? null)}
-                    />
-                  </ProfileField>
-                  {(profile?.has_primary_qualification_document || primaryQualificationFile) && (
-                    <p className="muted profile-field-wide">
-                      {primaryQualificationFile?.name || profile?.primary_qualification_filename}
-                      {profile?.has_primary_qualification_document && (
-                        <>
-                          {' '}
-                          <button type="button" className="link-button inline" onClick={() => void handleViewQualificationDocument()}>
-                            {t('jobs.viewQualificationDocument')}
-                          </button>
-                        </>
-                      )}
-                    </p>
-                  )}
-                </div>
-                <div style={{ marginTop: 18 }}>
-                  <p>
-                    <strong>{t('jobs.additionalQualifications')}</strong>
-                    {' '}
-                    <span className="muted">({t('jobs.optionalField')})</span>
-                  </p>
-                  <p className="muted">{t('jobs.additionalQualificationsOptional')}</p>
-                  <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
-                    {additionalEducationItems(educationItems).map((item, additionalIndex) => {
-                      const index = additionalIndex + 1
-                      return (
-                        <div key={index} style={{ padding: 12, border: '1px solid #e5e7eb', borderRadius: 10 }}>
-                          <strong dir="auto">{item.degree || '—'}</strong>
-                          <p dir="auto" style={{ margin: '4px 0 0', fontSize: 13 }}>{formatEducationItem(item) || '—'}</p>
-                          <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                            <button type="button" onClick={() => { setEditingEducationIndex(index); setEducationForm(item) }}>{t('common.edit')}</button>
-                            <button type="button" style={{ background: '#dc2626' }} onClick={() => setEducationItems(educationItems.filter((_, i) => i !== index))}>{t('common.delete')}</button>
-                          </div>
-                          {editingEducationIndex === index && renderEducationForm(index, educationForm)}
-                        </div>
-                      )
-                    })}
-                  </div>
-                  {editingEducationIndex === null && (
-                    <button type="button" style={{ marginTop: 12 }} onClick={() => { setEditingEducationIndex(-1); setEducationForm({}) }}>
-                      {t('jobs.addEducation')}
-                    </button>
-                  )}
-                  {editingEducationIndex === -1 && renderEducationForm(null, educationForm)}
-                </div>
-                <div className="form-actions" style={{ marginTop: 18 }}>
-                  <button type="button" disabled={saving} onClick={() => void handleSave('education')}>
-                    {saving ? t('common.saving') : t('common.save')}
-                  </button>
-                  <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
-                </div>
-              </>
+            })}
+            {!viewMode && (
+              <div className="form-actions js-grid-stack">
+                <button type="button" className="js-btn js-btn-secondary" onClick={() => setEducationItems(educationItems.length === 0 ? [{}, {}] : [...educationItems, {}])}>
+                  {t('jobs.addEducation')}
+                </button>
+              </div>
             )}
           </Panel>
           </div>
 
           <div id="job-seeker-section-experience">
           <Panel eyebrow={t('jobs.workExperience')} title={t('jobs.workExperience')}>
-            {viewMode ? (
-              experienceItems.length === 0 ? (
-                <p className="muted">{t('jobs.emptyData')}</p>
-              ) : (
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {experienceItems.map((item, index) => (
-                    <div key={index} style={{ padding: 12, border: '1px solid #e5e7eb', borderRadius: 10 }}>
-                      <strong dir="auto">{item.title || '—'}</strong>
-                      <p dir="auto" style={{ margin: '4px 0 0', fontSize: 13 }}>{formatExperienceItem(item, presentLabel) || '—'}</p>
-                    </div>
-                  ))}
-                </div>
-              )
+            {experienceItems.length === 0 ? (
+              <p className="js-empty">{t('jobs.emptyData')}</p>
             ) : (
-              <>
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {experienceItems.map((item, index) => (
-                    <div key={index} style={{ padding: 12, border: '1px solid #e5e7eb', borderRadius: 10 }}>
-                      <strong dir="auto">{item.title || '—'}</strong>
-                      <p dir="auto" style={{ margin: '4px 0 0', fontSize: 13 }}>{formatExperienceItem(item, presentLabel) || '—'}</p>
-                      <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                        <button type="button" onClick={() => { setEditingExperienceIndex(index); setExperienceForm(item) }}>{t('common.edit')}</button>
-                        <button type="button" style={{ background: '#dc2626' }} onClick={() => setExperienceItems(experienceItems.filter((_, i) => i !== index))}>{t('common.delete')}</button>
-                      </div>
-                      {editingExperienceIndex === index && renderExperienceForm(index, experienceForm)}
+              <div style={{ display: 'grid', gap: 12 }}>
+                {experienceItems.map((item, index) => (
+                  <div key={index} className="js-item-card">
+                    <div className="js-grid js-grid-2">
+                      <JobSeekerField size="medium" label={t('jobs.employer')} value={item.company} dir="auto" editing={!viewMode} htmlFor={`exp-company-${index}`}>
+                        <input id={`exp-company-${index}`} dir="auto" value={item.company ?? ''} onChange={(e) => patchExperience(index, { company: e.target.value })} />
+                      </JobSeekerField>
+                      <JobSeekerField size="medium" label={t('jobs.jobTitle')} value={item.title} dir="auto" editing={!viewMode} htmlFor={`exp-title-${index}`} error={item.title?.trim() && !isLettersOnlyText(item.title) ? t('jobs.jobTitleLettersOnly') : undefined}>
+                        <input
+                          id={`exp-title-${index}`}
+                          dir="auto"
+                          value={item.title ?? ''}
+                          onChange={(e) => {
+                            if (e.target.value.trim() && !isLettersOnlyText(e.target.value) && /\p{N}/u.test(e.target.value)) {
+                              setFieldErrors((current) => ({ ...current, jobTitle: 'jobs.jobTitleLettersOnly' }))
+                            } else {
+                              setFieldErrors((current) => {
+                                const next = { ...current }
+                                delete next.jobTitle
+                                return next
+                              })
+                            }
+                            patchExperience(index, { title: e.target.value })
+                          }}
+                        />
+                      </JobSeekerField>
+                      <JobSeekerField size="short" label={t('jobs.startDate')} value={item.start_date} dir="ltr" editing={!viewMode} htmlFor={`exp-start-${index}`}>
+                        <input id={`exp-start-${index}`} type="date" dir="ltr" value={item.start_date ?? ''} onChange={(e) => patchExperience(index, { start_date: e.target.value })} />
+                      </JobSeekerField>
+                      <JobSeekerField size="short" label={t('jobs.endDate')} value={item.current ? presentLabel : (item.end_date || '')} dir="ltr" editing={!viewMode} htmlFor={`exp-end-${index}`}>
+                        <input id={`exp-end-${index}`} type="date" dir="ltr" value={item.end_date ?? ''} disabled={item.current} onChange={(e) => patchExperience(index, { end_date: e.target.value })} />
+                      </JobSeekerField>
+                      {!viewMode && (
+                        <label className="checkbox-row js-span-all">
+                          <input type="checkbox" checked={item.current ?? false} onChange={(e) => patchExperience(index, { current: e.target.checked })} />
+                          {t('jobs.currentPosition')}
+                        </label>
+                      )}
+                      <JobSeekerField size="full" label={t('jobs.description')} value={item.description} dir="auto" editing={!viewMode} htmlFor={`exp-desc-${index}`}>
+                        <textarea id={`exp-desc-${index}`} dir="auto" rows={3} value={item.description ?? ''} onChange={(e) => patchExperience(index, { description: e.target.value })} />
+                      </JobSeekerField>
                     </div>
-                  ))}
-                </div>
-                {editingExperienceIndex === null && (
-                  <button type="button" style={{ marginTop: 12 }} onClick={() => { setEditingExperienceIndex(-1); setExperienceForm({}) }}>
-                    {t('jobs.addExperience')}
-                  </button>
-                )}
-                {editingExperienceIndex === -1 && renderExperienceForm(null, experienceForm)}
-                <div className="form-actions" style={{ marginTop: 18 }}>
-                  <button type="button" disabled={saving || !fullName} onClick={() => void handleSave('experience')}>
-                    {saving ? t('common.saving') : t('common.save')}
-                  </button>
-                  <button type="button" className="link-button" onClick={handleCancel}>{t('common.cancel')}</button>
-                </div>
-              </>
-            )}
-          </Panel>
-          </div>
-
-          <div id="job-seeker-section-cv">
-          <Panel eyebrow={t('jobs.cvSection')} title={t('jobs.cvSection')}>
-            {viewMode ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-                <span dir="auto">{profile?.has_cv ? (profile.cv_filename || t('jobs.cvSection')) : t('jobs.noCvYet')}</span>
-                {profile?.has_cv && (
-                  <>
-                    <button type="button" className="link-button" onClick={() => void handleViewCv()}>{t('jobs.viewCv')}</button>
-                    <button type="button" className="link-button" onClick={() => void handleDownloadCv()}>{t('jobs.downloadCv')}</button>
-                  </>
-                )}
+                    {!viewMode && (
+                      <button type="button" className="js-btn js-btn-danger" onClick={() => setExperienceItems(experienceItems.filter((_, i) => i !== index))}>{t('common.delete')}</button>
+                    )}
+                  </div>
+                ))}
               </div>
-            ) : (
-              <form className="record-form" onSubmit={handleCvUpload}>
-                <label>
-                  {t('jobs.selectCv')}
-                  <input type="file" accept=".pdf,.doc,.docx,.txt" onChange={(e) => setCvFile(e.target.files?.[0] ?? null)} />
-                </label>
-                <div className="form-actions">
-                  <button type="submit" disabled={!cvFile || saving}>{t('jobs.replaceCv')}</button>
-                </div>
-              </form>
+            )}
+            {!viewMode && (
+              <div className="form-actions js-grid-stack">
+                <button type="button" className="js-btn js-btn-secondary" onClick={() => setExperienceItems([...experienceItems, {}])}>
+                  {t('jobs.addExperience')}
+                </button>
+              </div>
             )}
           </Panel>
           </div>
-
-          {!viewMode && (
-            <div id="job-seeker-section-photo">
-            <Panel eyebrow={t('jobs.profilePhoto')} title={t('jobs.profilePhoto')}>
-              <form className="record-form" onSubmit={handlePhotoUpload}>
-                <label>
-                  {t('jobs.selectPhoto')}
-                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)} />
-                </label>
-                <div className="form-actions">
-                  <button type="submit" disabled={!photoFile || saving}>{t('jobs.replacePhoto')}</button>
-                </div>
-              </form>
-            </Panel>
-            </div>
-          )}
 
           <Panel eyebrow={t('jobs.myApplications')} title={t('jobs.myApplications')}>
             {(applications?.data ?? []).length === 0 ? (
-              <p className="muted">{t('jobs.emptyData')}</p>
+              <p className="js-empty">{t('jobs.emptyData')}</p>
             ) : (
-              <div style={{ display: 'grid', gap: 10 }}>
+              <div className="profile-fields">
                 {(applications?.data ?? []).map((item) => (
-                  <div key={item.id} className="detail-grid">
-                    <div><span>{t('jobs.jobReference')}</span><strong dir="auto">{item.job_reference || '—'}</strong></div>
-                    <div><span>{t('common.status')}</span><strong>{t(`jobs.requestStatus.${item.status}`)}</strong></div>
+                  <div key={item.id} className="js-item-card js-field-wide">
+                    <JobSeekerField className="js-field-wide" label={t('jobs.jobReference')} value={item.job_reference || '—'} />
                   </div>
                 ))}
               </div>
             )}
           </Panel>
 
-          <Panel eyebrow={t('jobs.recruitmentStatus')} title={t('jobs.applicationStatus')}>
-            <p className="muted">{t('jobs.applicationStatusHint')}</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
-              {CANDIDATE_STATUS_TIMELINE.map((status, index) => {
-                const isActive = index === currentStatusIndex
-                const isPast = currentStatusIndex > index
-                return (
-                  <div key={status.key} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: '50%',
-                        border: `2px solid ${isActive ? '#6d28d9' : isPast ? '#059669' : '#cbd5e1'}`,
-                        background: isActive ? '#6d28d9' : isPast ? '#059669' : '#fff',
-                        color: isActive || isPast ? '#fff' : '#64748b',
-                        display: 'grid',
-                        placeItems: 'center',
-                        fontSize: 12,
-                        fontWeight: 800,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {isActive || isPast ? '✓' : ''}
-                    </div>
-                    <div>
-                      <p style={{ fontWeight: isActive ? 800 : 400, color: isActive ? '#6d28d9' : '#334155', margin: 0 }}>
-                        {t(status.labelKey)}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </Panel>
+          <div className="js-bottom-actions">
+            {!viewMode && (
+              <>
+                <button type="button" className="profile-save-button" data-testid="save-profile" disabled={saving || deleting} onClick={() => void handleSave()}>
+                  {saving ? t('common.saving') : t('jobs.saveChanges')}
+                </button>
+                <button type="button" className="profile-cancel-button" data-testid="cancel-profile" disabled={saving || deleting} onClick={handleCancel}>{t('common.cancel')}</button>
+              </>
+            )}
+            <button
+              type="button"
+              className="js-btn js-btn-danger"
+              data-testid="delete-application"
+              disabled={saving || deleting || missingProfile}
+              onClick={() => setConfirmDelete(true)}
+            >
+              {t('jobs.deleteApplication')}
+            </button>
+          </div>
         </>
       ) : null}
-    </>
+
+      {confirmDelete ? (
+        <div className="js-confirm-backdrop" role="presentation" onClick={() => !deleting && setConfirmDelete(false)}>
+          <div
+            className="js-confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="job-seeker-delete-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p id="job-seeker-delete-title">{t('jobs.deleteApplicationConfirm')}</p>
+            <div className="js-confirm-actions">
+              <button type="button" className="js-btn js-btn-secondary" disabled={deleting} onClick={() => setConfirmDelete(false)}>
+                {t('common.cancel')}
+              </button>
+              <button type="button" className="js-btn js-btn-danger" disabled={deleting} onClick={() => void handleDeleteApplication()}>
+                {t('jobs.deleteApplicationConfirmYes')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
   )
 }

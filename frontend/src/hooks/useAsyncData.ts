@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useAsyncData<T>(
   loader: () => Promise<T>,
@@ -7,15 +7,17 @@ export function useAsyncData<T>(
   const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const dataRef = useRef<T | null>(null)
+  dataRef.current = data
 
   const reload = useCallback(async () => {
-    setLoading(true)
+    if (dataRef.current == null) setLoading(true)
     setError('')
     try {
       const next = await loader()
       setData(next)
     } catch (requestError) {
-      setData(null)
+      if (dataRef.current == null) setData(null)
       setError(requestError instanceof Error ? requestError.message : 'Unable to load data.')
     } finally {
       setLoading(false)
