@@ -35,6 +35,12 @@ class EmployerRecruitmentTest extends TestCase
         $response->assertCreated()->assertJsonPath('recruitment.is_employer', true);
         $user = User::where('email', 'owner@wsa.test')->firstOrFail();
         $this->assertDatabaseMissing('job_seeker_profiles', ['user_id' => $user->id]);
+        $this->assertTrue(class_exists(\App\Services\Welcome\WelcomeWorkflowService::class));
+        $this->assertNotNull(app(\App\Services\Welcome\WelcomeWorkflowService::class));
+        $this->assertDatabaseHas('welcome_events', [
+            'user_id' => $user->id,
+            'trigger' => 'registration',
+        ]);
     }
 
     public function test_job_seeker_cannot_register_or_login_as_employer_with_the_same_account(): void
