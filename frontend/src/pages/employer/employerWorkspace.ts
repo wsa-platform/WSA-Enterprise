@@ -73,6 +73,14 @@ export function employerSearchView(input: { loading: boolean; error: string; cou
   return 'results'
 }
 
+export function shouldFocusEmployerSearchResults(input: {
+  view: EmployerSearchView
+  searchSubmitted: boolean
+  resultsReady: boolean
+}): boolean {
+  return input.searchSubmitted && input.view === 'results' && input.resultsReady
+}
+
 export type EmployerRoleGate = 'guest' | 'job_seeker' | 'employer' | 'unknown'
 
 export function employerRoleGate(input: {

@@ -7,6 +7,7 @@ import {
   employerRoleGate,
   employerSearchView,
   employerSeekerLeaksProtectedData,
+  shouldFocusEmployerSearchResults,
   sanitizeEmployerSeeker,
   unlockFromVerifiedPayment,
 } from './employerWorkspace'
@@ -112,6 +113,15 @@ describe('employer workspace helpers', () => {
     expect(employerSearchView({ loading: false, error: 'fail', count: 0 })).toBe('error')
     expect(employerSearchView({ loading: false, error: '', count: 0 })).toBe('empty')
     expect(employerSearchView({ loading: false, error: '', count: 2 })).toBe('results')
+  })
+
+  it('focuses the candidate results heading only after a successful search has rendered matches', () => {
+    expect(shouldFocusEmployerSearchResults({ view: 'results', searchSubmitted: true, resultsReady: true })).toBe(true)
+    expect(shouldFocusEmployerSearchResults({ view: 'results', searchSubmitted: true, resultsReady: false })).toBe(false)
+    expect(shouldFocusEmployerSearchResults({ view: 'results', searchSubmitted: false, resultsReady: true })).toBe(false)
+    expect(shouldFocusEmployerSearchResults({ view: 'empty', searchSubmitted: true, resultsReady: true })).toBe(false)
+    expect(shouldFocusEmployerSearchResults({ view: 'error', searchSubmitted: true, resultsReady: true })).toBe(false)
+    expect(shouldFocusEmployerSearchResults({ view: 'loading', searchSubmitted: true, resultsReady: true })).toBe(false)
   })
 
   it('unlocks contact only after backend-confirmed completed payment', () => {

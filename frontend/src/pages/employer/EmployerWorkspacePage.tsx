@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { searchEmployerSeekers, type EmployerSeekerFilters } from '../../api/jobs'
@@ -11,6 +11,7 @@ import {
   compactEmployerSeekerFilters,
   employerSearchView,
   sanitizeEmployerSeeker,
+  shouldFocusEmployerSearchResults,
 } from './employerWorkspace'
 import '../jobs/jobSeekerProfile.css'
 import './employerWorkspace.css'
@@ -21,6 +22,9 @@ export function EmployerWorkspacePage() {
   const [draft, setDraft] = useState<EmployerSeekerFilters>(EMPTY_EMPLOYER_FILTERS)
   const [applied, setApplied] = useState<EmployerSeekerFilters>(EMPTY_EMPLOYER_FILTERS)
   const [page, setPage] = useState(1)
+  const [searchSubmitted, setSearchSubmitted] = useState(false)
+  const resultsHeadingRef = useRef<HTMLHeadingElement>(null)
+  const dataAtSubmitRef = useRef<unknown>(undefined)
 
   const { data, loading, error } = useAsyncData(async () => {
     if (!token) throw new Error(t('errors.notAuthenticated'))
@@ -29,15 +33,29 @@ export function EmployerWorkspacePage() {
   }, [token, organizationId, applied, page, t])
 
   const view = employerSearchView({ loading, error, count: data?.data.length ?? 0 })
+  const resultsReady = data != null && data !== dataAtSubmitRef.current
+
+  useEffect(() => {
+    if (!shouldFocusEmployerSearchResults({ view, searchSubmitted, resultsReady })) return
+    const heading = resultsHeadingRef.current
+    if (!heading) return
+    const frame = window.requestAnimationFrame(() => {
+      heading.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      heading.focus({ preventScroll: true })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [view, searchSubmitted, resultsReady, data])
 
   const setField = (key: keyof EmployerSeekerFilters, value: string) => {
     setDraft((current) => ({ ...current, [key]: value }))
   }
 
   const resetFilters = () => {
+    dataAtSubmitRef.current = data
     setDraft(EMPTY_EMPLOYER_FILTERS)
     setApplied(EMPTY_EMPLOYER_FILTERS)
     setPage(1)
+    setSearchSubmitted(false)
   }
 
   return (
@@ -63,7 +81,9 @@ export function EmployerWorkspacePage() {
         className="panel"
         onSubmit={(event) => {
           event.preventDefault()
+          dataAtSubmitRef.current = data
           setPage(1)
+          setSearchSubmitted(true)
           setApplied(compactEmployerSeekerFilters(draft))
         }}
       >
@@ -105,8 +125,10 @@ export function EmployerWorkspacePage() {
 
       {view === 'error' ? <p className="js-field-error" role="alert">{error}</p> : null}
 
-      <section className="panel">
-        <h2>{t('auth.employer.results')}</h2>
+      <section className="panel" data-testid="employer-results">
+        <h2 ref={resultsHeadingRef} tabIndex={-1}>
+          {t('auth.employer.results')}
+        </h2>
         {view === 'loading' ? <p>{t('common.loading')}</p> : null}
         {view === 'empty' ? <p data-testid="employer-empty">{t('auth.employer.noResults')}</p> : null}
         <div className="employer-candidate-grid">
