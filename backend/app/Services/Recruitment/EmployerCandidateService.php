@@ -20,7 +20,7 @@ class EmployerCandidateService
         $query = JobSeekerProfile::query()->where('is_active', true);
 
         $this->applyText($query, 'target_job_title', $filters['target_job_title'] ?? $filters['job_title'] ?? null);
-        $this->applyText($query, 'country', $filters['country'] ?? null, exact: true);
+        $this->applyText($query, 'country', $filters['country'] ?? null);
         $this->applyText($query, 'city', $filters['city'] ?? null);
         $this->applyText($query, 'specialization', $filters['specialization'] ?? null);
 
@@ -32,7 +32,7 @@ class EmployerCandidateService
             });
         }
 
-        if (isset($filters['years_of_experience']) && $filters['years_of_experience'] !== '') {
+        if (array_key_exists('years_of_experience', $filters) && $filters['years_of_experience'] !== null && $filters['years_of_experience'] !== '') {
             $query->where('years_of_experience', '>=', (int) $filters['years_of_experience']);
         }
 
@@ -46,10 +46,6 @@ class EmployerCandidateService
                     ->orWhereRaw('LOWER(CAST(experience AS TEXT)) LIKE ?', [$needle])
                     ->orWhereRaw('LOWER(COALESCE(biography, \'\')) LIKE ?', [$needle]);
             });
-        }
-
-        if (isset($filters['desired_salary']) && $filters['desired_salary'] !== '') {
-            $query->where('desired_salary', '<=', (float) $filters['desired_salary']);
         }
 
         $paginator = $query->orderByDesc('updated_at')->paginate(min(max($perPage, 1), 100));

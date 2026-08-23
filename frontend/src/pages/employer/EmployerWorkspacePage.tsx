@@ -8,6 +8,7 @@ import { JobSeekerField } from '../jobs/JobSeekerField'
 import { EmployerSeekerPhoto } from './EmployerSeekerPhoto'
 import {
   EMPTY_EMPLOYER_FILTERS,
+  compactEmployerSeekerFilters,
   employerSearchView,
   sanitizeEmployerSeeker,
 } from './employerWorkspace'
@@ -23,7 +24,7 @@ export function EmployerWorkspacePage() {
 
   const { data, loading, error } = useAsyncData(async () => {
     if (!token) throw new Error(t('errors.notAuthenticated'))
-    const payload = await searchEmployerSeekers(token, { ...applied, page, per_page: 10 }, organizationId ?? undefined)
+    const payload = await searchEmployerSeekers(token, compactEmployerSeekerFilters({ ...applied, page, per_page: 10 }), organizationId ?? undefined)
     return { ...payload, data: payload.data.map(sanitizeEmployerSeeker) }
   }, [token, organizationId, applied, page, t])
 
@@ -63,7 +64,7 @@ export function EmployerWorkspacePage() {
         onSubmit={(event) => {
           event.preventDefault()
           setPage(1)
-          setApplied(draft)
+          setApplied(compactEmployerSeekerFilters(draft))
         }}
       >
         <h2>{t('auth.employer.searchHeading')}</h2>
@@ -91,9 +92,6 @@ export function EmployerWorkspacePage() {
           </JobSeekerField>
           <JobSeekerField label={t('auth.employer.filters.workType')} htmlFor="employer-work-type" editing size="medium">
             <input id="employer-work-type" value={draft.work_type ?? ''} onChange={(event) => setField('work_type', event.target.value)} />
-          </JobSeekerField>
-          <JobSeekerField label={t('auth.employer.filters.expectedSalary')} htmlFor="employer-salary" editing size="short">
-            <input id="employer-salary" inputMode="decimal" value={draft.desired_salary ?? ''} onChange={(event) => setField('desired_salary', event.target.value)} />
           </JobSeekerField>
           <JobSeekerField label={t('auth.employer.filters.specialization')} htmlFor="employer-specialization" editing size="full">
             <input id="employer-specialization" value={draft.specialization ?? ''} onChange={(event) => setField('specialization', event.target.value)} />

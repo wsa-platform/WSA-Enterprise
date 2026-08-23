@@ -216,6 +216,68 @@ class EmployerRecruitmentTest extends TestCase
         $this->assertArrayNotHasKey('phone', $show->json());
     }
 
+    public function test_employer_search_applies_only_supplied_optional_criteria(): void
+    {
+        $employer = $this->registerEmployer('partial-search@wsa.test');
+        $headers = $this->authHeaders($employer->json('token'), $employer->json('organization.id'));
+        $this->createSeeker('agronomist@wsa.test', [
+            'full_name' => 'Nour Ali Hassan Omar',
+            'target_job_title' => 'Agricultural Engineer',
+            'country' => 'Saudi Arabia',
+            'city' => 'Riyadh',
+            'specialization' => 'Irrigation',
+            'skills' => ['irrigation', 'agronomy'],
+            'education' => [['degree' => 'BSc Agriculture', 'year' => 2016]],
+            'desired_salary' => 15000,
+        ]);
+        $this->createSeeker('accountant@wsa.test', [
+            'full_name' => 'Mona Ali Hassan Omar',
+            'target_job_title' => 'Accountant',
+            'country' => 'Egypt',
+            'city' => 'Cairo',
+            'specialization' => 'Finance',
+            'skills' => ['accounting'],
+            'education' => [['degree' => 'MBA Finance', 'year' => 2019]],
+            'desired_salary' => 4000,
+        ]);
+
+        $title = $this->withHeaders($headers)->getJson('/api/v1/jobs/seekers?job_title=Agricultural')->assertOk();
+        $this->assertSame(1, $title->json('total'));
+        $this->assertSame('Agricultural Engineer', $title->json('data.0.target_job_title'));
+
+        $country = $this->withHeaders($headers)->getJson('/api/v1/jobs/seekers?country=Saudi')->assertOk();
+        $this->assertSame(1, $country->json('total'));
+        $this->assertSame('Saudi Arabia', $country->json('data.0.country'));
+
+        $city = $this->withHeaders($headers)->getJson('/api/v1/jobs/seekers?city=Cairo')->assertOk();
+        $this->assertSame(1, $city->json('total'));
+        $this->assertSame('Cairo', $city->json('data.0.city'));
+
+        $skills = $this->withHeaders($headers)->getJson('/api/v1/jobs/seekers?skills=irrigation')->assertOk();
+        $this->assertSame(1, $skills->json('total'));
+        $this->assertContains('irrigation', $skills->json('data.0.skills'));
+
+        $qualification = $this->withHeaders($headers)->getJson('/api/v1/jobs/seekers?qualification=MBA')->assertOk();
+        $this->assertSame(1, $qualification->json('total'));
+        $this->assertSame('Accountant', $qualification->json('data.0.target_job_title'));
+
+        $combined = $this->withHeaders($headers)->getJson(
+            '/api/v1/jobs/seekers?job_title=Agricultural&country=Saudi%20Arabia&city=Riyadh&skills=irrigation&qualification=Agriculture'
+        )->assertOk();
+        $this->assertSame(1, $combined->json('total'));
+        $this->assertSame('Agricultural Engineer', $combined->json('data.0.target_job_title'));
+
+        $unfiltered = $this->withHeaders($headers)->getJson(
+            '/api/v1/jobs/seekers?job_title=&country=&city=&qualification=&skills=&desired_salary=1'
+        )->assertOk();
+        $this->assertSame(2, $unfiltered->json('total'));
+
+        $this->withHeaders($headers)
+            ->getJson('/api/v1/jobs/seekers?desired_salary=1')
+            ->assertOk()
+            ->assertJsonPath('total', 2);
+    }
+
     public function test_failed_and_forged_payment_do_not_unlock_contact_or_hire(): void
     {
         $employer = $this->registerEmployer('payer@wsa.test');

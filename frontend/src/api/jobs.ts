@@ -341,7 +341,6 @@ export type EmployerSeekerFilters = {
   skills?: string
   languages?: string
   work_type?: string
-  desired_salary?: string
   specialization?: string
   page?: number
   per_page?: number
@@ -354,7 +353,11 @@ export const searchEmployerSeekers = (
 ) => {
   const params = new URLSearchParams()
   Object.entries(filters).forEach(([key, value]) => {
-    if (value !== undefined && value !== '') params.set(key, String(value))
+    if (key === 'desired_salary') return
+    if (value === undefined || value === null) return
+    const serialized = String(value).trim()
+    if (serialized === '') return
+    params.set(key, serialized)
   })
   const suffix = params.toString() ? `?${params.toString()}` : ''
   return request<PaginatedResponse<EmployerSeeker>>(`/jobs/seekers${suffix}`, {}, token, organizationId)

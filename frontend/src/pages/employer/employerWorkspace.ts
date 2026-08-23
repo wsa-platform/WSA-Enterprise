@@ -12,8 +12,30 @@ export const EMPTY_EMPLOYER_FILTERS: EmployerSeekerFilters = {
   skills: '',
   languages: '',
   work_type: '',
-  desired_salary: '',
   specialization: '',
+}
+
+/** Drop blank employer-search fields so they never become restrictive filters. */
+export function compactEmployerSeekerFilters(filters: EmployerSeekerFilters): EmployerSeekerFilters {
+  const compacted: EmployerSeekerFilters = {}
+  ;(Object.entries(filters) as Array<[keyof EmployerSeekerFilters, string | number | undefined]>).forEach(([key, value]) => {
+    if (String(key) === 'desired_salary') {
+      return
+    }
+    if (value === undefined || value === null) {
+      return
+    }
+    if (typeof value === 'number') {
+      compacted[key] = value as never
+      return
+    }
+    const trimmed = String(value).trim()
+    if (trimmed === '') {
+      return
+    }
+    compacted[key] = trimmed as never
+  })
+  return compacted
 }
 
 export const EMPLOYER_PROTECTED_FIELDS = [

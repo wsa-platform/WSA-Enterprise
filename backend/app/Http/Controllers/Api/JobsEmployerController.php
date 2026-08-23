@@ -94,12 +94,26 @@ class JobsEmployerController extends Controller
             'languages' => ['nullable'],
             'language' => ['nullable', 'string', 'max:255'],
             'work_type' => ['nullable', 'string', 'max:255'],
-            'desired_salary' => ['nullable', 'numeric', 'min:0'],
             'specialization' => ['nullable', 'string', 'max:255'],
+            'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
-        $paginator = $this->employerCandidates->search($filters, (int) ($filters['per_page'] ?? 15));
+        $filters = collect($filters)
+            ->except(['page', 'per_page'])
+            ->reject(function (mixed $value): bool {
+                if ($value === null) {
+                    return true;
+                }
+                if (is_string($value) && trim($value) === '') {
+                    return true;
+                }
+
+                return is_array($value) && $value === [];
+            })
+            ->all();
+
+        $paginator = $this->employerCandidates->search($filters, (int) ($request->input('per_page') ?? 15));
 
         return response()->json([
             'data' => $paginator->items(),

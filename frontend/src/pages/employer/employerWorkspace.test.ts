@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import ar from '../../i18n/locales/ar.json'
 import {
   EMPTY_EMPLOYER_FILTERS,
+  compactEmployerSeekerFilters,
   employerGuestEntryPath,
   employerRoleGate,
   employerSearchView,
@@ -10,7 +11,7 @@ import {
   unlockFromVerifiedPayment,
 } from './employerWorkspace'
 import { EMPLOYER_ENTER } from '../../navigation/roleDestinations'
-import type { EmployerSeeker } from '../../api/jobs'
+import type { EmployerSeeker, EmployerSeekerFilters } from '../../api/jobs'
 
 function publicSeeker(overrides: Partial<EmployerSeeker> = {}): EmployerSeeker {
   return {
@@ -41,7 +42,6 @@ describe('employer workspace helpers', () => {
     expect(Object.keys(EMPTY_EMPLOYER_FILTERS).sort()).toEqual([
       'city',
       'country',
-      'desired_salary',
       'job_title',
       'languages',
       'qualification',
@@ -50,6 +50,30 @@ describe('employer workspace helpers', () => {
       'work_type',
       'years_of_experience',
     ])
+    expect(Object.keys(EMPTY_EMPLOYER_FILTERS)).not.toContain('desired_salary')
+  })
+
+  it('omits blank search fields so a single criterion can be submitted', () => {
+    expect(compactEmployerSeekerFilters({
+      ...EMPTY_EMPLOYER_FILTERS,
+      job_title: 'مهندس زراعي',
+      country: '   ',
+      desired_salary: '9000',
+    } as EmployerSeekerFilters)).toEqual({ job_title: 'مهندس زراعي' })
+
+    expect(compactEmployerSeekerFilters({ country: 'السعودية' })).toEqual({ country: 'السعودية' })
+    expect(compactEmployerSeekerFilters({ city: 'الرياض' })).toEqual({ city: 'الرياض' })
+    expect(compactEmployerSeekerFilters({ skills: 'ري' })).toEqual({ skills: 'ري' })
+    expect(compactEmployerSeekerFilters({ qualification: 'بكالوريوس' })).toEqual({ qualification: 'بكالوريوس' })
+    expect(compactEmployerSeekerFilters({
+      job_title: 'مهندس',
+      country: 'السعودية',
+      city: 'الرياض',
+    })).toEqual({
+      job_title: 'مهندس',
+      country: 'السعودية',
+      city: 'الرياض',
+    })
   })
 
   it('sends unauthenticated employers to the existing entry route', () => {
