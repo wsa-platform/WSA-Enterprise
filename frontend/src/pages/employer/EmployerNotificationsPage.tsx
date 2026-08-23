@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { getNotifications, markNotificationRead, type AppNotification, type PaginatedResponse } from '../../api'
 import { useAuth } from '../../context/AuthContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { translateApiError } from '../../i18n/apiErrors'
 import '../jobs/jobSeekerProfile.css'
 import './employerWorkspace.css'
 

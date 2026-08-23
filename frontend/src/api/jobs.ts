@@ -380,3 +380,17 @@ export const requestSeekerContact = (
     token,
     organizationId,
   )
+
+export async function fetchEmployerSeekerPhoto(
+  token: string,
+  seekerId: number,
+  organizationId?: number,
+): Promise<string | null> {
+  const response = await fetch(`${apiUrl}/jobs/seekers/${seekerId}/photo`, {
+    headers: buildHeaders(token, organizationId),
+  })
+  if (!response.ok) return null
+  const blob = await response.blob()
+  if (!blob.type.startsWith('image/')) return null
+  return URL.createObjectURL(blob)
+}

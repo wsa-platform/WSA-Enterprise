@@ -9,7 +9,7 @@ export function translateApiError(error: unknown): string {
   if (error.name === 'ApiError') {
     const apiError = error as ApiError
     if (apiError.isUnauthorized) return i18n.t('errors.unauthorized')
-    if (apiError.isForbidden) return i18n.t('errors.forbidden')
+    if (apiError.isForbidden) return apiError.message || i18n.t('errors.forbidden')
     if (apiError.isNotFound) return i18n.t('errors.notFound')
     if (apiError.isConflict) return i18n.t('errors.conflict')
     if (apiError.isRateLimited) return i18n.t('errors.rateLimited')

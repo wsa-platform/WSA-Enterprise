@@ -1,8 +1,13 @@
 .employer-workspace {
   --js-label-bg: #f3f4f6;
   --js-value-bg: #f0fdf4;
-  max-width: 1080px;
-  margin-inline: auto;
+}
+
+.employer-identity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  margin-top: 8px;
 }
 
 .employer-filter-grid {
@@ -11,8 +16,8 @@
   gap: 10px 12px;
 }
 
-.employer-filter-grid .js-field-wide {
-  grid-column: span 2;
+.employer-filter-grid .js-field-full {
+  grid-column: 1 / -1;
 }
 
 .employer-candidate-grid {
@@ -24,7 +29,7 @@
   display: grid;
   gap: 8px;
   padding: 16px;
-  border: 1px solid #d5e0d6;
+  border: 1px solid var(--js-border, #d5e0d6);
   border-radius: 12px;
   background: #fff;
   text-align: start;
@@ -37,6 +42,7 @@
 
 .employer-status {
   display: inline-flex;
+  width: fit-content;
   padding: 4px 10px;
   border-radius: 999px;
   background: var(--js-label-bg, #f3f4f6);
@@ -48,9 +54,30 @@
   background: var(--js-value-bg, #f0fdf4);
 }
 
+.employer-photo {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--js-border, #d5e0d6);
+  background: var(--js-label-bg, #f3f4f6);
+}
+
+.employer-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.employer-card-head .employer-photo {
+  width: 64px;
+  height: 64px;
+  flex: none;
+}
+
 @media (max-width: 720px) {
   .employer-filter-grid,
-  .employer-filter-grid .js-field-wide {
+  .employer-filter-grid .js-field-full {
     grid-template-columns: 1fr;
     grid-column: auto;
   }
