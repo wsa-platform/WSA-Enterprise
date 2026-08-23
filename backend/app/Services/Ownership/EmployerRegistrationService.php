@@ -6,12 +6,17 @@ use App\Models\Organization;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Authorization\EnterpriseRoleService;
+use App\Services\Authorization\PermissionService;
+use App\Services\Recruitment\RecruitmentRoleService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class EmployerRegistrationService
 {
-    public function __construct(private EnterpriseRoleService $enterpriseRoles) {}
+    public function __construct(
+        private RecruitmentRoleService $recruitmentRoles,
+        private PermissionService $permissions,
+    ) {}
 
     /**
      * @param  array{name: string, email: string, password: string}  $data
@@ -25,15 +30,44 @@ class EmployerRegistrationService
             'password' => Hash::make($data['password']),
         ]);
 
-        $organization = Organization::create([
-            'name' => $data['name']."'s Workspace",
-            'slug' => $this->uniqueWorkspaceSlug($data['email'], $user->id),
-        ]);
+        $organization = $this->provisionEmployerWorkspace($user);
 
-        $organization->members()->attach($user->id, [
-            'role' => 'member',
-            'is_active' => true,
-        ]);
+        return [
+            'user' => $user,
+            'organization' => $organization,
+        ];
+    }
+
+    /**
+     * Assign the employer employment-service role to an existing platform account.
+     */
+    public function activate(User $user): Organization
+    {
+        $this->recruitmentRoles->assertCanRegisterEmployer($user);
+
+        $existing = $this->employerOrganization($user);
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        return $this->provisionEmployerWorkspace($user);
+    }
+
+    private function provisionEmployerWorkspace(User $user): Organization
+    {
+        $organization = $user->organizations()->wherePivot('is_active', true)->first();
+
+        if ($organization === null) {
+            $organization = Organization::create([
+                'name' => $user->name."'s Workspace",
+                'slug' => $this->uniqueWorkspaceSlug($user->email, $user->id),
+            ]);
+
+            $organization->members()->attach($user->id, [
+                'role' => 'member',
+                'is_active' => true,
+            ]);
+        }
 
         EnterpriseRoleService::seedForOrganization($organization->id);
 
@@ -48,10 +82,20 @@ class EmployerRegistrationService
             ]);
         }
 
-        return [
-            'user' => $user,
-            'organization' => $organization,
-        ];
+        $this->permissions->forget($user, (int) $organization->id);
+
+        return $organization;
+    }
+
+    private function employerOrganization(User $user): ?Organization
+    {
+        foreach ($user->organizations()->wherePivot('is_active', true)->get() as $organization) {
+            if ($this->permissions->userCan($user, (int) $organization->id, 'jobs.manage')) {
+                return $organization;
+            }
+        }
+
+        return null;
     }
 
     private function uniqueWorkspaceSlug(string $email, int $userId): string

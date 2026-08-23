@@ -7,6 +7,7 @@ import { translateApiError } from '../i18n/apiErrors'
 import { authQuery, safeReturnPath } from '../navigation/routeGuards'
 import {
   completeAuthenticatedSession,
+  EMPLOYER_ENTER,
   JOB_SEEKER_HOME,
   isUserDashboardPath,
   parseAudience,
@@ -83,21 +84,30 @@ export function RegisterPage() {
           <div className="public-header-actions">
             <PublicLanguageMenu />
             <Link to={loginTo} className="gs-btn gs-btn-ghost">
-              {t('auth.jobSeeker.signIn')}
+              {audience === 'employer' ? t('common.signIn') : t('auth.jobSeeker.signIn')}
             </Link>
           </div>
         </div>
       </header>
       <main className="public-auth-shell">
         <section className="public-auth-card">
-          <Link to="/jobs/enter" className="public-auth-back">← {t('auth.entry.backToChoices')}</Link>
+          <Link to={audience === 'employer' ? EMPLOYER_ENTER : '/jobs/enter'} className="public-auth-back">← {audience === 'employer' ? t('auth.employer.back') : t('auth.entry.backToChoices')}</Link>
           <p className="eyebrow">{t('auth.brand')}</p>
-          <h1>{title}</h1>
-          <p className="muted">{subtitle}</p>
+          <h1>{audience === 'employer' ? t('auth.employer.platformRegistration') : title}</h1>
+          <p className="muted">{audience === 'employer' ? t('auth.employer.employmentServiceRegistration') : subtitle}</p>
+          {audience === 'employer' && (
+            <p className="hint">{t('auth.employer.registerSubtitle')}</p>
+          )}
           {audience === 'job_seeker' && (
             <div className="auth-mode-toggle" role="tablist" aria-label={t('auth.jobSeeker.modeLabel')}>
               <Link to={loginTo}>{t('auth.jobSeeker.signIn')}</Link>
               <span className="auth-mode-toggle-active">{t('auth.jobSeeker.createAccount')}</span>
+            </div>
+          )}
+          {audience === 'employer' && (
+            <div className="auth-mode-toggle" role="tablist" aria-label={t('auth.employer.registerTitle')}>
+              <Link to={loginTo}>{t('common.signIn')}</Link>
+              <span className="auth-mode-toggle-active">{t('auth.employer.registerTitle')}</span>
             </div>
           )}
           <AuthProviders

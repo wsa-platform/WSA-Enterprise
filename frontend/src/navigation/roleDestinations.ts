@@ -108,6 +108,24 @@ export function registerHref(audience: AuthAudience, next: string): string {
   return `/register?${params.toString()}`
 }
 
+export function employerCreateAccountHref(): string {
+  return registerHref('employer', EMPLOYER_HOME)
+}
+
+export function employerSignInHref(): string {
+  return loginHref('employer', EMPLOYER_HOME)
+}
+
+export function shouldOpenEmployerRegisterForm(isEmployer: boolean): boolean {
+  return !isEmployer
+}
+
+export function employerWorkspaceGate(role: { is_job_seeker: boolean; is_employer: boolean } | null): 'blocked' | 'activate' | 'workspace' {
+  if (role?.is_job_seeker) return 'blocked'
+  if (role?.is_employer) return 'workspace'
+  return 'activate'
+}
+
 export function publicHeaderAudience(
   stored?: AuthAudience | null,
   pathname?: string,

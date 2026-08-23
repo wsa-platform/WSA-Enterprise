@@ -89,6 +89,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
             Route::get('/auth/sessions', [AuthController::class, 'sessions']);
             Route::get('/auth/recruitment-role', [AuthController::class, 'recruitmentRole']);
+        Route::post('/auth/employer-service', [AuthController::class, 'activateEmployerService']);
         Route::delete('/auth/sessions/{token}', [AuthController::class, 'revokeSession'])->whereNumber('token');
         Route::post('/auth/email/verify', [AuthExtensionController::class, 'verifyEmail']);
         Route::post('/auth/email/resend', [AuthExtensionController::class, 'resendVerification'])->middleware('throttle:3,1');

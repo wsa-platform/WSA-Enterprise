@@ -134,8 +134,15 @@ class AuthController extends Controller
         }
 
         $audience = $data['audience'] ?? null;
-        if ($audience === 'employer' && $this->recruitmentRoles->isJobSeeker($user)) {
-            abort(403, __('jobs.job_seeker_cannot_be_employer'));
+        if ($audience === 'employer') {
+            if ($this->recruitmentRoles->isJobSeeker($user)) {
+                abort(403, __('jobs.job_seeker_cannot_be_employer'));
+            }
+            if (! $this->recruitmentRoles->isEmployer($user)) {
+                abort_unless(config('app.allow_employer_registration'), 403, 'Registration is disabled.');
+                $this->employerRegistration->activate($user);
+                $user->refresh();
+            }
         }
         if ($audience === 'job_seeker' && $this->recruitmentRoles->isEmployer($user)) {
             abort(403, __('jobs.employer_cannot_be_job_seeker'));
@@ -269,6 +276,36 @@ class AuthController extends Controller
         abort_unless($user !== null, 401);
 
         return response()->json($this->recruitmentRoles->payload($user));
+    }
+
+    public function activateEmployerService(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null, 401);
+        abort_unless(config('app.allow_employer_registration'), 403, 'Registration is disabled.');
+
+        $alreadyEmployer = $this->recruitmentRoles->isEmployer($user);
+        $organization = $this->employerRegistration->activate($user);
+
+        $this->auditService->record(
+            action: 'auth.employer_service.activated',
+            userId: $user->id,
+            auditable: $user,
+            newValues: [
+                'organization_id' => $organization->id,
+                'duplicate' => $alreadyEmployer,
+            ],
+            request: $request,
+        );
+
+        if (! $alreadyEmployer) {
+            $this->welcomeWorkflow->dispatchRegistrationWelcome($user, $organization->id);
+        }
+
+        return response()->json([
+            'organization' => $organization->only(['id', 'name', 'slug']),
+            'recruitment' => $this->recruitmentRoles->payload($user->fresh()),
+        ]);
     }
 
     private function authenticatedResponse(User $user, string $deviceName, Request $request): JsonResponse

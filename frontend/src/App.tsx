@@ -5,8 +5,6 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { PermissionProvider, usePermissions } from './context/PermissionContext'
 import { setUnauthorizedHandler } from './api'
 import { AppShell } from './components/AppShell'
-import { LoginPage } from './pages/LoginPage'
-import { RegisterPage } from './pages/RegisterPage'
 import { HomePage } from './pages/public/HomePage'
 import { SectionPage } from './pages/public/SectionPage'
 import { InfoPage } from './pages/public/InfoPage'
@@ -54,13 +52,15 @@ import { TemplatesPage } from './pages/marketing/TemplatesPage'
 import { SegmentsPage } from './pages/marketing/SegmentsPage'
 import { ConsentPage } from './pages/marketing/ConsentPage'
 import { loginPathForProtectedRoute, unknownRouteFallback } from './navigation/routeGuards'
-import { ADMIN_HOME, EMPLOYER_ENTER, JOB_SEEKER_AUTH_ENTER, JOB_SEEKER_HOME, roleFlagsFromPermissions } from './navigation/roleDestinations'
+import { ADMIN_HOME, EMPLOYER_ENTER, JOB_SEEKER_AUTH_ENTER, JOB_SEEKER_HOME, employerWorkspaceGate, roleFlagsFromPermissions } from './navigation/roleDestinations'
 import { EmployerShell } from './components/EmployerShell'
 import { JobSeekerShell } from './components/JobSeekerShell'
 import { RoleHomeRedirect } from './components/RoleHomeRedirect'
 import { JobsEnterPage } from './pages/jobs/JobsEnterPage'
 import { EmployerEnterPage } from './pages/employer/EmployerEnterPage'
+import { EmployerAudienceAuthPage } from './pages/employer/EmployerAudienceAuthPage'
 import { EmployerBlockedPage } from './pages/employer/EmployerBlockedPage'
+import { EmployerServiceActivation } from './pages/employer/EmployerServiceActivation'
 import { EmployerWorkspacePage } from './pages/employer/EmployerWorkspacePage'
 import { EmployerSearchPage } from './pages/employer/EmployerSearchPage'
 import { EmployerCandidatePage } from './pages/employer/EmployerCandidatePage'
@@ -107,7 +107,7 @@ function JobSeekerProtected() {
 function EmployerProtected() {
   const { t } = useTranslation()
   const { token } = useAuth()
-  const { role, loading } = useRecruitmentRole()
+  const { role, loading, reload } = useRecruitmentRole()
 
   if (!token) {
     return <Navigate to={EMPLOYER_ENTER} replace />
@@ -117,8 +117,12 @@ function EmployerProtected() {
     return <p className="loading">{t('common.loading')}</p>
   }
 
-  if (role?.is_job_seeker || !role?.is_employer) {
+  const gate = employerWorkspaceGate(role)
+  if (gate === 'blocked') {
     return <EmployerBlockedPage />
+  }
+  if (gate === 'activate') {
+    return <EmployerServiceActivation onActivated={reload} />
   }
 
   return (
@@ -217,8 +221,8 @@ function AppRoutes() {
       <Route path="/jobs/enter" element={<JobsEnterPage />} />
       <Route path="/jobs/enter/seeker" element={<JobSeekerEnterPage />} />
       <Route path="/employer/enter" element={<EmployerEnterPage />} />
-      <Route path="/login" element={token ? <AuthenticatedRedirect /> : <LoginPage />} />
-      <Route path="/register" element={token ? <AuthenticatedRedirect /> : <RegisterPage />} />
+      <Route path="/login" element={<EmployerAudienceAuthPage mode="login" />} />
+      <Route path="/register" element={<EmployerAudienceAuthPage mode="register" />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/auth/callback" element={<OAuthCallbackPage />} />

@@ -34,6 +34,12 @@ export type RecruitmentRole = {
 export const getRecruitmentRole = (token: string) =>
   request<RecruitmentRole>('/auth/recruitment-role', {}, token)
 
+export const activateEmployerService = (token: string) =>
+  request<{
+    organization: { id: number; name: string; slug: string }
+    recruitment: RecruitmentRole
+  }>('/auth/employer-service', { method: 'POST' }, token)
+
 export const logout = (token: string) => request<void>('/auth/logout', { method: 'POST' }, token)
 
 export const getCurrentUser = (token: string) => request<User>('/user', {}, token)

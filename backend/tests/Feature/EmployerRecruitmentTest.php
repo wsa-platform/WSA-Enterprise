@@ -78,6 +78,76 @@ class EmployerRecruitmentTest extends TestCase
         ]);
     }
 
+    public function test_platform_account_without_recruitment_role_can_activate_employer_service(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Platform Account',
+            'email' => 'platform-employer@wsa.test',
+            'password' => 'password123',
+        ]);
+
+        $this->postJson('/api/v1/auth/login', [
+            'email' => 'platform-employer@wsa.test',
+            'password' => 'password123',
+            'audience' => 'employer',
+            'device_name' => 'test',
+        ])->assertOk()
+            ->assertJsonPath('recruitment.is_employer', true)
+            ->assertJsonPath('recruitment.is_job_seeker', false);
+
+        $this->assertSame(1, $user->fresh()->organizations()->count());
+        $this->assertDatabaseMissing('job_seeker_profiles', ['user_id' => $user->id]);
+    }
+
+    public function test_duplicate_employer_service_activation_does_not_create_a_second_workspace(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'duplicate-employer@wsa.test',
+            'password' => 'password123',
+        ]);
+        $token = $user->createToken('test')->plainTextToken;
+
+        $this->withHeaders(['Authorization' => 'Bearer '.$token])
+            ->postJson('/api/v1/auth/employer-service')
+            ->assertOk()
+            ->assertJsonPath('recruitment.is_employer', true);
+
+        $this->withHeaders(['Authorization' => 'Bearer '.$token])
+            ->postJson('/api/v1/auth/employer-service')
+            ->assertOk()
+            ->assertJsonPath('recruitment.is_employer', true);
+
+        $this->assertSame(1, $user->fresh()->organizations()->count());
+    }
+
+    public function test_job_seeker_cannot_activate_employer_service_and_arabic_message_is_returned(): void
+    {
+        $seeker = $this->postJson('/api/v1/auth/register', $this->authPayload('seeker-activate@wsa.test', 'job_seeker'))
+            ->assertCreated();
+        $token = $seeker->json('token');
+
+        app()->setLocale('ar');
+
+        $this->withHeaders([
+            'Authorization' => 'Bearer '.$token,
+            'Accept-Language' => 'ar',
+        ])->postJson('/api/v1/auth/employer-service')
+            ->assertForbidden()
+            ->assertJsonFragment([
+                'message' => __('jobs.job_seeker_cannot_be_employer'),
+            ]);
+
+        $this->assertSame(
+            'هذا الحساب مسجل بالفعل كطالب وظيفة ولا يمكن استخدامه كصاحب عمل.',
+            __('jobs.job_seeker_cannot_be_employer'),
+        );
+
+        $this->assertDatabaseHas('job_seeker_profiles', [
+            'email' => 'seeker-activate@wsa.test',
+        ]);
+        $this->assertSame(0, User::where('email', 'seeker-activate@wsa.test')->firstOrFail()->organizations()->count());
+    }
+
     public function test_job_seeker_cannot_search_candidates_or_unlock_contact(): void
     {
         $seekerToken = $this->postJson('/api/v1/auth/register', $this->authPayload('locked-out@wsa.test', 'job_seeker'))

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { register, forgotPassword, getGoogleRedirect, updateAccountProfile } from './auth'
+import { register, forgotPassword, getGoogleRedirect, updateAccountProfile, activateEmployerService } from './auth'
 
 describe('register', () => {
   beforeEach(() => {
@@ -63,6 +63,61 @@ describe('register', () => {
       email: 'seeker@wsa.test',
       audience: 'job_seeker',
     })
+  })
+
+  it('sends employer audience so employer signup stays on the existing register endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          token: 'employer-token',
+          user: { id: 3, name: 'Employer', email: 'employer@wsa.test' },
+          organization: { id: 11, name: 'Employer Workspace', slug: 'employer-11' },
+        }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const result = await register({
+      name: 'Employer',
+      email: 'employer@wsa.test',
+      password: 'password123',
+      password_confirmation: 'password123',
+      audience: 'employer',
+    })
+
+    expect(result.token).toBe('employer-token')
+    expect(result.organization?.slug).toBe('employer-11')
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toMatchObject({
+      email: 'employer@wsa.test',
+      audience: 'employer',
+    })
+  })
+})
+
+describe('activateEmployerService', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('posts to the existing employer-service activation endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          organization: { id: 21, name: 'Employer Workspace', slug: 'employer-21' },
+          recruitment: { role: 'employer', is_job_seeker: false, is_employer: true },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const result = await activateEmployerService('token-1')
+
+    expect(result.recruitment.is_employer).toBe(true)
+    expect(result.organization.id).toBe(21)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(String(url)).toContain('/auth/employer-service')
+    expect(init?.method).toBe('POST')
+    expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer token-1')
   })
 })
 

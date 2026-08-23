@@ -1,13 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PublicLanguageMenu } from '../../public/PublicLanguageMenu'
-import { loginHref, registerHref, EMPLOYER_HOME } from '../../navigation/roleDestinations'
+import { loginHref, employerCreateAccountHref, EMPLOYER_HOME } from '../../navigation/roleDestinations'
 import '../../public/publicSite.css'
 
 export function EmployerEnterPage() {
   const { t } = useTranslation()
   const loginTo = loginHref('employer', EMPLOYER_HOME)
-  const registerTo = registerHref('employer', EMPLOYER_HOME)
+  const registerTo = employerCreateAccountHref()
 
   return (
     <div className="public-site">

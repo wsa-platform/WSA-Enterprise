@@ -3,8 +3,17 @@ import { Link } from 'react-router-dom'
 import { PublicLanguageMenu } from '../../public/PublicLanguageMenu'
 import '../../public/publicSite.css'
 
-export function EmployerBlockedPage({ asJobSeeker = false }: { asJobSeeker?: boolean }) {
+export function EmployerBlockedPage({
+  asJobSeeker = false,
+  message,
+}: {
+  asJobSeeker?: boolean
+  message?: string
+}) {
   const { t } = useTranslation()
+  const detail = message ?? (asJobSeeker ? t('auth.employer.blockedEmployer') : t('auth.employer.blockedJobSeeker'))
+  const backTo = asJobSeeker ? '/' : '/employer/enter'
+  const backLabel = asJobSeeker ? t('website.nav.home') : t('auth.employer.back')
 
   return (
     <div className="public-site">
@@ -20,10 +29,8 @@ export function EmployerBlockedPage({ asJobSeeker = false }: { asJobSeeker?: boo
       <main className="public-auth-shell">
         <section className="public-auth-card">
           <h1>{t('auth.employer.blockedTitle')}</h1>
-          <p role="alert">
-            {asJobSeeker ? t('auth.employer.blockedEmployer') : t('auth.employer.blockedJobSeeker')}
-          </p>
-          <Link to="/" className="gs-btn gs-btn-primary">{t('website.nav.home')}</Link>
+          <p role="alert">{detail}</p>
+          <Link to={backTo} className="gs-btn gs-btn-primary">{backLabel}</Link>
         </section>
       </main>
     </div>

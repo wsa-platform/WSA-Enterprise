@@ -8,6 +8,7 @@ import { translateApiError } from '../i18n/apiErrors'
 import { authQuery, safeReturnPath } from '../navigation/routeGuards'
 import {
   completeAuthenticatedSession,
+  EMPLOYER_ENTER,
   JOB_SEEKER_HOME,
   isUserDashboardPath,
   parseAudience,
@@ -119,14 +120,14 @@ export function LoginPage() {
           <div className="public-header-actions">
             <PublicLanguageMenu />
             <Link to={registerTo} className="gs-btn gs-btn-primary">
-              {t('auth.jobSeeker.createAccount')}
+              {audience === 'employer' ? t('auth.employer.registerTitle') : t('auth.jobSeeker.createAccount')}
             </Link>
           </div>
         </div>
       </header>
       <main className="public-auth-shell">
         <section className="public-auth-card">
-          <Link to="/jobs/enter" className="public-auth-back">← {t('auth.entry.backToChoices')}</Link>
+          <Link to={audience === 'employer' ? EMPLOYER_ENTER : '/jobs/enter'} className="public-auth-back">← {audience === 'employer' ? t('auth.employer.back') : t('auth.entry.backToChoices')}</Link>
           <p className="eyebrow">{t('auth.brand')}</p>
           <h1>{title}</h1>
           <p className="muted" dir="auto">{subtitle}</p>
@@ -134,6 +135,12 @@ export function LoginPage() {
             <div className="auth-mode-toggle" role="tablist" aria-label={t('auth.jobSeeker.modeLabel')}>
               <span className="auth-mode-toggle-active">{t('auth.jobSeeker.signIn')}</span>
               <Link to={registerTo}>{t('auth.jobSeeker.createAccount')}</Link>
+            </div>
+          )}
+          {audience === 'employer' && (
+            <div className="auth-mode-toggle" role="tablist" aria-label={t('auth.employer.loginTitle')}>
+              <span className="auth-mode-toggle-active">{t('common.signIn')}</span>
+              <Link to={registerTo}>{t('auth.employer.registerTitle')}</Link>
             </div>
           )}
           {expired && <p className="banner">{t('auth.sessionExpired')}</p>}
