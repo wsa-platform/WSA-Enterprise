@@ -484,9 +484,6 @@ export function MyJobApplicationPage() {
                           <textarea id={`exp-desc-${index}`} dir="auto" rows={3} value={item.description ?? ''} onChange={(e) => patchExperience(index, { description: e.target.value })} />
                         </JobSeekerField>
                       </div>
-                      {editing ? (
-                        <button type="button" className="js-btn js-btn-danger" onClick={() => setExperienceItems(experienceItems.filter((_, i) => i !== index))}>{t('common.delete')}</button>
-                      ) : null}
                     </div>
                   ))}
                 </div>
