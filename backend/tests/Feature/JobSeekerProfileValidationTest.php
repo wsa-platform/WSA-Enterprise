@@ -176,7 +176,11 @@ class JobSeekerProfileValidationTest extends TestCase
         $this->post('/api/v1/job-seekers/me/primary-qualification', ['document' => $exe], $ownerHeaders)
             ->assertUnprocessable();
 
-        $document = UploadedFile::fake()->create('degree.jpg', 80, 'image/jpeg');
+        $jpeg = UploadedFile::fake()->create('degree.jpg', 80, 'image/jpeg');
+        $this->post('/api/v1/job-seekers/me/primary-qualification', ['document' => $jpeg], $ownerHeaders)
+            ->assertUnprocessable();
+
+        $document = UploadedFile::fake()->create('degree.pdf', 80, 'application/pdf');
         $this->post('/api/v1/job-seekers/me/primary-qualification', ['document' => $document], $ownerHeaders)
             ->assertOk();
 

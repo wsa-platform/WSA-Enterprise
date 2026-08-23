@@ -117,9 +117,13 @@ class JobSeekerProfileController extends Controller
         $profile = $this->ownership
             ->scopeOwnedByUser(JobSeekerProfile::query(), $request->user())
             ->firstOrFail();
-        $request->validate([
-            'document' => ['required', 'file', 'mimes:jpeg,jpg,png,webp,pdf', 'max:5120'],
-        ]);
+        $request->validate(
+            ['document' => ['required', 'file', 'mimes:pdf', 'mimetypes:application/pdf', 'max:5120']],
+            [
+                'document.mimes' => __('jobs.primary_qualification_pdf_only'),
+                'document.mimetypes' => __('jobs.primary_qualification_pdf_only'),
+            ],
+        );
 
         $path = $request->file('document')->store('job-qualifications/'.$profile->id, 'local');
         if (is_string($profile->primary_qualification_path) && Storage::disk('local')->exists($profile->primary_qualification_path)) {

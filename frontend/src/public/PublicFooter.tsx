@@ -1,10 +1,15 @@
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { publicLoginHref, publicRegisterHref, readStoredAudience } from '../navigation/roleDestinations'
 import { PUBLIC_SECTIONS } from './sections'
 
 /** Footer — adapted from garden-store/components/Footer.tsx */
 export function PublicFooter() {
   const { t } = useTranslation()
+  const { pathname } = useLocation()
+  const storedAudience = readStoredAudience()
+  const loginTo = publicLoginHref(storedAudience, pathname)
+  const registerTo = publicRegisterHref(storedAudience, pathname)
 
   return (
     <footer className="gs-footer">
@@ -48,8 +53,8 @@ export function PublicFooter() {
           <nav aria-label={t('website.footer.account')}>
             <h4>{t('website.footer.account')}</h4>
             <ul>
-               <li><Link to="/jobs/enter">{t('website.nav.login')}</Link></li>
-              <li><Link to="/jobs/enter">{t('website.nav.register')}</Link></li>
+              <li><Link to={loginTo}>{t('website.nav.login')}</Link></li>
+              <li><Link to={registerTo}>{t('website.nav.register')}</Link></li>
             </ul>
           </nav>
         </div>

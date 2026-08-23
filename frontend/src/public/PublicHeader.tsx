@@ -1,8 +1,15 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { JOB_SEEKER_ENTER, jobSeekerStartPath, readStoredAudience } from '../navigation/roleDestinations'
+import {
+  EMPLOYER_HOME,
+  JOB_SEEKER_HOME,
+  publicHeaderAudience,
+  publicLoginHref,
+  publicRegisterHref,
+  readStoredAudience,
+} from '../navigation/roleDestinations'
 import { PUBLIC_TOP_NAV_ITEMS } from '../navigation/paths'
 import { PublicLanguageMenu } from './PublicLanguageMenu'
 
@@ -10,12 +17,17 @@ import { PublicLanguageMenu } from './PublicLanguageMenu'
 export function PublicHeader() {
   const { t } = useTranslation()
   const { token } = useAuth()
+  const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const authenticated = Boolean(token)
   const storedAudience = readStoredAudience()
-  const accountEntry = storedAudience === 'job_seeker' && authenticated
-    ? jobSeekerStartPath(true)
-    : JOB_SEEKER_ENTER
+  const audience = publicHeaderAudience(storedAudience, pathname)
+  const loginTo = authenticated
+    ? (audience === 'employer' ? EMPLOYER_HOME : JOB_SEEKER_HOME)
+    : publicLoginHref(storedAudience, pathname)
+  const registerTo = authenticated
+    ? (audience === 'employer' ? EMPLOYER_HOME : JOB_SEEKER_HOME)
+    : publicRegisterHref(storedAudience, pathname)
 
   return (
     <header className="gs-header">
@@ -54,10 +66,10 @@ export function PublicHeader() {
 
         <div className="gs-header-actions">
           <PublicLanguageMenu />
-          <Link to={accountEntry} className="gs-btn gs-btn-ghost">
+          <Link to={loginTo} className="gs-btn gs-btn-ghost">
             {t('website.nav.login')}
           </Link>
-          <Link to={accountEntry} className="gs-btn gs-btn-primary">
+          <Link to={registerTo} className="gs-btn gs-btn-primary">
             {t('website.nav.register')}
           </Link>
         </div>

@@ -903,6 +903,9 @@
     "photoUploaded": "تم رفع الصورة.",
     "photoUploadFailed": "تعذر رفع الصورة.",
     "myApplications": "طلباتي",
+    "applicationsListTitle": "طلباتي",
+    "noApplications": "لا توجد طلبات حالياً.",
+    "createApplication": "إنشاء طلب",
     "employmentStatus": {
       "available": "متاح",
       "hired": "تم التوظيف"
@@ -987,6 +990,7 @@
     "primaryQualificationRequired": "المؤهل الأساسي مطلوب.",
     "primaryQualificationDocument": "صورة المؤهل",
     "primaryQualificationDocumentRequired": "يجب إرفاق مستند يثبت المؤهل الأساسي.",
+    "primaryQualificationPdfOnly": "يجب رفع مستند المؤهل بصيغة PDF فقط.",
     "primaryQualificationUploaded": "تم رفع مستند المؤهل.",
     "primaryQualificationUploadFailed": "تعذر رفع مستند المؤهل.",
     "primaryQualificationDownloadFailed": "تعذر عرض مستند المؤهل.",

@@ -43,6 +43,7 @@ import { AcceptInvitationPage } from './pages/AcceptInvitationPage'
 import { JobsMarketplacePage } from './pages/jobs/JobsMarketplacePage'
 import { TalentProfilePage } from './pages/jobs/TalentProfilePage'
 import { MyJobApplicationPage } from './pages/jobs/MyJobApplicationPage'
+import { MyApplicationsPage } from './pages/jobs/MyApplicationsPage'
 import { BeekeepingDashboardPage } from './pages/beekeeping/BeekeepingDashboardPage'
 import { AiAssistantPage } from './pages/ai/AiAssistantPage'
 import { AiVisionPage } from './pages/ai/AiVisionPage'
@@ -199,6 +200,7 @@ function AppRoutes() {
       <Route path="/accept-invitation" element={token ? <AuthenticatedRedirect /> : <AcceptInvitationPage />} />
       <Route element={<JobSeekerProtected />}>
         <Route path="/jobs/application" element={<MyJobApplicationPage />} />
+        <Route path="/jobs/applications" element={<MyApplicationsPage />} />
         <Route path="/jobs/talent" element={<TalentProfilePage />} />
       </Route>
       <Route element={<EmployerProtected />}>

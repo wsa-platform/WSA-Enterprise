@@ -6,17 +6,8 @@ import { PublicLayout } from '../../public/PublicLayout'
 import { JobEntryChoices } from '../jobs/JobsEnterPage'
 import {
   getSectionById,
-  HIDDEN_PUBLIC_MODULES,
   LEGACY_SECTION_REDIRECTS,
-  MODULE_DESCRIPTION_KEYS,
-  SECTION_MODULE_MAP,
 } from '../../public/sections'
-
-type CatalogModule = { key: string; label: string; requires_auth: boolean }
-
-type PublicCatalog = {
-  service_modules: CatalogModule[]
-}
 
 type BrowseItem = {
   id: number
@@ -32,22 +23,11 @@ export function SectionPage() {
   const { t, i18n } = useTranslation()
   const { token } = useAuth()
   const section = getSectionById(sectionId)
-  const [catalog, setCatalog] = useState<PublicCatalog | null>(null)
   const [browseItems, setBrowseItems] = useState<BrowseItem[]>([])
   const [browseError, setBrowseError] = useState('')
 
   const orgSlug = import.meta.env.VITE_PUBLIC_ORG_SLUG as string | undefined
   const locale = i18n.language?.slice(0, 2) ?? 'en'
-
-  useEffect(() => {
-    fetch('/api/v1/public/services')
-      .then(async (response) => {
-        if (!response.ok) throw new Error('catalog')
-        return response.json() as Promise<PublicCatalog>
-      })
-      .then(setCatalog)
-      .catch(() => setCatalog({ service_modules: [] }))
-  }, [])
 
   useEffect(() => {
     if (!section?.catalogModule || !orgSlug) {
@@ -88,12 +68,6 @@ export function SectionPage() {
     return <Navigate to="/" replace />
   }
 
-  const moduleKeys = SECTION_MODULE_MAP[section.id] ?? []
-  const modules =
-    catalog?.service_modules.filter(
-      (module) => moduleKeys.includes(module.key) && !HIDDEN_PUBLIC_MODULES.has(module.key),
-    ) ?? []
-
   return (
     <PublicLayout>
       <nav className="public-breadcrumb" aria-label={t('website.breadcrumb')}>
@@ -120,58 +94,20 @@ export function SectionPage() {
       </section>
 
       <div className="public-page-content">
-        <div className="public-features">
-          {section.featureKeys.map((key) => (
-            <article key={key} className="public-feature">
-              <h3>{t(`${key}.title`)}</h3>
-              <p>{t(`${key}.body`)}</p>
-            </article>
-          ))}
-        </div>
+        {section.id === 'jobs' && <JobEntryChoices className="entry-choice-banner-top" />}
 
-        {section.highlightKeys.length > 0 && (
-          <>
-            <h2 className="public-services-heading">{t('website.services.highlights')}</h2>
-            <div className="public-services-grid">
-              {section.highlightKeys.map((key) => (
-                <article key={key} className="public-service-card">
-                  <h4>{t(`${key}.title`)}</h4>
-                  <p>{t(`${key}.body`)}</p>
-                </article>
-              ))}
-            </div>
-          </>
+        {section.id !== 'jobs' && (
+          <div className="public-features">
+            {section.featureKeys.map((key) => (
+              <article key={key} className="public-feature">
+                <h3>{t(`${key}.title`)}</h3>
+                <p>{t(`${key}.body`)}</p>
+              </article>
+            ))}
+          </div>
         )}
 
-        {modules.length > 0 && (
-          <>
-            <h2 className="public-services-heading">{t('website.services.heading')}</h2>
-            <div className="public-services-grid">
-              {modules.map((module) => {
-                const requiresAuth = module.requires_auth
-
-                return (
-                  <article key={module.key} className="public-service-card">
-                    <span className={`public-service-badge ${requiresAuth ? 'auth' : 'public'}`}>
-                      {requiresAuth
-                        ? t('website.access.signInRequired')
-                        : t('website.access.public')}
-                    </span>
-                    <h4>{module.label}</h4>
-                    <p>{t(MODULE_DESCRIPTION_KEYS[module.key] ?? 'website.services.genericDesc')}</p>
-                    {!token && requiresAuth && (
-                      <Link to={section.id === 'jobs' ? '/jobs/enter' : '/login'} className="gs-btn gs-btn-primary">
-                        {t('website.nav.login')}
-                      </Link>
-                    )}
-                  </article>
-                )
-              })}
-            </div>
-          </>
-        )}
-
-        {browseItems.length > 0 && (
+        {section.id !== 'jobs' && browseItems.length > 0 && (
           <>
             <h2 className="public-services-heading">{t('website.browse.title')}</h2>
             <ul className="public-browse-list">
@@ -197,13 +133,11 @@ export function SectionPage() {
           </>
         )}
 
-        {browseError && <p className="muted">{browseError}</p>}
+        {section.id !== 'jobs' && browseError && <p className="muted">{browseError}</p>}
 
-        {!orgSlug && (section.catalogModule === 'training' || section.catalogModule === 'library') && (
+        {section.id !== 'jobs' && !orgSlug && (section.catalogModule === 'training' || section.catalogModule === 'library') && (
           <p className="muted">{t('website.browse.orgHint')}</p>
         )}
-
-        {section.id === 'jobs' && <JobEntryChoices />}
 
         {!token && section.id !== 'jobs' && (
           <div className="public-cta-banner">

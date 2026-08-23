@@ -207,16 +207,8 @@ export const PUBLIC_SECTIONS: PublicSectionConfig[] = [
     icon: '👨‍🌾',
     image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1400&q=80',
     imageAltKey: 'website.sections.jobs.imageAlt',
-    featureKeys: [
-      'website.sections.jobs.features.listings',
-      'website.sections.jobs.features.employers',
-      'website.sections.jobs.features.talent',
-      'website.sections.jobs.features.careers',
-    ],
-    highlightKeys: [
-      'website.highlights.jobs.opportunities',
-      'website.highlights.jobs.professionals',
-    ],
+    featureKeys: [],
+    highlightKeys: [],
     catalogModule: 'jobs',
   },
   {

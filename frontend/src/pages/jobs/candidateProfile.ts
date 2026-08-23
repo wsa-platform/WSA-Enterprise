@@ -35,6 +35,7 @@ export type CandidateProfileForm = {
 
 export type CandidateSectionValidationOptions = {
   hasPrimaryQualificationDocument?: boolean
+  qualificationFile?: { name: string; type?: string; size?: number }
 }
 
 export const CANDIDATE_STATUS_TIMELINE = [
@@ -70,6 +71,8 @@ export function isPdfCvFile(file: { name: string; type?: string; size?: number }
   if (typeof file.size === 'number' && file.size > JOB_SEEKER_CV_MAX_BYTES) return false
   return true
 }
+
+export const isPdfQualificationFile = isPdfCvFile
 
 export type ProfileSectionId = (typeof PROFILE_SECTION_ORDER)[number]
 
@@ -226,7 +229,9 @@ export function validateCandidateSection(
     if (!primary.degree?.trim()) {
       errors.primaryQualification = 'jobs.primaryQualificationRequired'
     }
-    if (!options.hasPrimaryQualificationDocument) {
+    if (options.qualificationFile && !isPdfQualificationFile(options.qualificationFile)) {
+      errors.primaryQualificationDocument = 'jobs.primaryQualificationPdfOnly'
+    } else if (!options.hasPrimaryQualificationDocument && !options.qualificationFile) {
       errors.primaryQualificationDocument = 'jobs.primaryQualificationDocumentRequired'
     }
     return errors
@@ -237,10 +242,15 @@ export function validateCandidateSection(
 
 export function validateCandidateProfile(
   form: CandidateProfileForm,
+  options: { hasPrimaryQualificationDocument?: boolean; qualificationFile?: { name: string; type?: string; size?: number } | null } = {},
 ): Record<string, string> {
   return {
     ...validateCandidateSection(form, 'personal'),
     ...validateCandidateSection(form, 'professional'),
+    ...validateCandidateSection(form, 'education', {
+      hasPrimaryQualificationDocument: options.hasPrimaryQualificationDocument,
+      qualificationFile: options.qualificationFile ?? undefined,
+    }),
   }
 }
 

@@ -903,6 +903,9 @@
     "photoUploaded": "Fotoğraf yüklendi.",
     "photoUploadFailed": "Fotoğraf yüklenemedi.",
     "myApplications": "Başvurularım",
+    "applicationsListTitle": "Başvurularım",
+    "noApplications": "Henüz başvuru yok.",
+    "createApplication": "Başvuru oluştur",
     "employmentStatus": {
       "available": "Müsait",
       "hired": "İşe alındı"
@@ -987,6 +990,7 @@
     "primaryQualificationRequired": "Asıl yeterlilik zorunludur.",
     "primaryQualificationDocument": "Yeterlilik belgesi",
     "primaryQualificationDocumentRequired": "Asıl yeterliliği kanıtlayan bir belge zorunludur.",
+    "primaryQualificationPdfOnly": "Yeterlilik belgesi yalnızca PDF dosyası olmalıdır.",
     "primaryQualificationUploaded": "Yeterlilik belgesi yüklendi.",
     "primaryQualificationUploadFailed": "Yeterlilik belgesi yüklenemedi.",
     "primaryQualificationDownloadFailed": "Yeterlilik belgesi açılamadı.",

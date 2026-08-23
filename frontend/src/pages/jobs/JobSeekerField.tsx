@@ -11,6 +11,7 @@ export function JobSeekerField({
   className,
   size = 'medium',
   editing = false,
+  hideLabel = false,
   dir,
   children,
 }: {
@@ -22,6 +23,7 @@ export function JobSeekerField({
   className?: string
   size?: JobSeekerFieldSize
   editing?: boolean
+  hideLabel?: boolean
   dir?: 'auto' | 'ltr' | 'rtl'
   children?: ReactNode
 }) {
@@ -36,8 +38,8 @@ export function JobSeekerField({
   }
 
   return (
-    <div className={['js-field', `js-field-${size}`, className].filter(Boolean).join(' ')} ref={rootRef}>
-      <label className="js-field-label" htmlFor={editing ? htmlFor : undefined}>
+    <div className={['js-field', `js-field-${size}`, hideLabel ? 'js-field-no-label' : '', className].filter(Boolean).join(' ')} ref={rootRef}>
+      <label className={`js-field-label${hideLabel ? ' is-visually-hidden' : ''}`} htmlFor={editing ? htmlFor : undefined}>
         <span className="js-field-label-text">{label}</span>
         {hint ? <span className="js-field-hint">{hint}</span> : null}
       </label>

@@ -903,6 +903,9 @@
     "photoUploaded": "Photo uploaded.",
     "photoUploadFailed": "Unable to upload photo.",
     "myApplications": "My applications",
+    "applicationsListTitle": "My applications",
+    "noApplications": "No applications yet.",
+    "createApplication": "Create application",
     "employmentStatus": {
       "available": "Available",
       "hired": "Hired"
@@ -987,6 +990,7 @@
     "primaryQualificationRequired": "Primary qualification is required.",
     "primaryQualificationDocument": "Qualification document",
     "primaryQualificationDocumentRequired": "A document proving the primary qualification is required.",
+    "primaryQualificationPdfOnly": "The qualification document must be a PDF file.",
     "primaryQualificationUploaded": "Qualification document uploaded.",
     "primaryQualificationUploadFailed": "Unable to upload the qualification document.",
     "primaryQualificationDownloadFailed": "Unable to open the qualification document.",

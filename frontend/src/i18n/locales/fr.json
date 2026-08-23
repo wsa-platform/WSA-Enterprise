@@ -903,6 +903,9 @@
     "photoUploaded": "Photo téléversée.",
     "photoUploadFailed": "Impossible de téléverser la photo.",
     "myApplications": "Mes candidatures",
+    "applicationsListTitle": "Mes candidatures",
+    "noApplications": "Aucune candidature pour le moment.",
+    "createApplication": "Créer une candidature",
     "employmentStatus": {
       "available": "Disponible",
       "hired": "Embauché"
@@ -987,6 +990,7 @@
     "primaryQualificationRequired": "La qualification principale est obligatoire.",
     "primaryQualificationDocument": "Justificatif de qualification",
     "primaryQualificationDocumentRequired": "Un document prouvant la qualification principale est obligatoire.",
+    "primaryQualificationPdfOnly": "Le document de qualification doit être un fichier PDF.",
     "primaryQualificationUploaded": "Justificatif de qualification téléversé.",
     "primaryQualificationUploadFailed": "Impossible de téléverser le justificatif de qualification.",
     "primaryQualificationDownloadFailed": "Impossible d'ouvrir le justificatif de qualification.",

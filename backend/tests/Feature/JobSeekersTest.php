@@ -477,6 +477,19 @@ class JobSeekersTest extends TestCase
             'email' => 'deactivate@wsa.test',
         ]), $headers)->assertCreated();
 
+        $other = User::create([
+            'name' => 'Keep Profile',
+            'email' => 'keep-profile@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $org->members()->syncWithoutDetaching([$other->id => ['role' => 'member']]);
+        $otherHeaders = $this->memberHeaders($other, $org);
+        $this->putJson('/api/v1/job-seekers/me', $this->jobSeekerPersonalPayload([
+            'full_name' => 'Keep Profile User Name',
+            'email' => 'keep-profile@wsa.test',
+        ]), $otherHeaders)->assertCreated();
+        $otherProfileId = JobSeekerProfile::where('user_id', $other->id)->value('id');
+
         $this->deleteJson('/api/v1/job-seekers/me')->assertUnauthorized();
 
         $this->deleteJson('/api/v1/job-seekers/me', [], $headers)
@@ -489,6 +502,8 @@ class JobSeekersTest extends TestCase
         $this->assertTrue(User::where('id', $user->id)->exists());
         $this->assertTrue(JobSeekerProfile::withTrashed()->where('user_id', $user->id)->exists());
         $this->assertFalse(JobSeekerProfile::where('user_id', $user->id)->exists());
+        $this->assertTrue(User::where('id', $other->id)->exists());
+        $this->assertTrue(JobSeekerProfile::where('id', $otherProfileId)->exists());
 
         $intruder = User::create([
             'name' => 'Other Seeker',

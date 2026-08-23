@@ -17,6 +17,7 @@ import {
   isNumericOnlyText,
   PROFILE_SECTION_ORDER,
   isPdfCvFile,
+  isPdfQualificationFile,
   type CandidateProfileForm,
 } from './candidateProfile'
 
@@ -63,7 +64,7 @@ describe('candidate profile helpers', () => {
     expect(validateCandidateProfile(emptyForm({ fullName: 'Ada', email: 'bad' })).fullName).toBe('jobs.fullNameFourPartsRequired')
     expect(validateCandidateProfile(emptyForm({ fullName: 'Ahmed Mohamed Ali', email: 'ada@wsa.test' })).fullName).toBe('jobs.fullNameFourPartsRequired')
     expect(countNameParts('أحمد محمد علي حسن')).toBe(4)
-    expect(validateCandidateProfile(emptyForm({
+    const completePersonal = emptyForm({
       fullName: 'أحمد محمد علي حسن',
       email: 'ada@wsa.test',
       phone: '+966522222222',
@@ -72,7 +73,19 @@ describe('candidate profile helpers', () => {
       dateOfBirth: '1990-01-15',
       nationality: 'SA',
       address: 'Olaya',
-    }))).toEqual({})
+    })
+    expect(validateCandidateProfile(completePersonal).fullName).toBeUndefined()
+    expect(validateCandidateProfile(completePersonal).email).toBeUndefined()
+    expect(validateCandidateProfile(completePersonal).primaryQualification).toBe('jobs.primaryQualificationRequired')
+    expect(validateCandidateProfile(completePersonal).primaryQualificationDocument).toBe('jobs.primaryQualificationDocumentRequired')
+    expect(validateCandidateProfile(emptyForm({
+      ...completePersonal,
+      educationItems: [{ degree: 'BSc Agricultural Engineering' }],
+    }), { qualificationFile: { name: 'degree.jpg', type: 'image/jpeg', size: 1200 } }).primaryQualificationDocument).toBe('jobs.primaryQualificationPdfOnly')
+    expect(validateCandidateProfile(emptyForm({
+      ...completePersonal,
+      educationItems: [{ degree: 'BSc Agricultural Engineering' }],
+    }), { hasPrimaryQualificationDocument: true })).toEqual({})
     expect(validateCandidateProfile(emptyForm({
       fullName: 'Ahmed Mohamed Ali 123',
       email: 'ada@wsa.test',
@@ -162,6 +175,8 @@ describe('candidate profile helpers', () => {
     expect(isPdfCvFile({ name: 'resume.png', type: 'image/png', size: 1200 })).toBe(false)
     expect(isPdfCvFile({ name: 'resume.pdf', type: 'image/jpeg', size: 1200 })).toBe(false)
     expect(isPdfCvFile({ name: 'resume.pdf.exe', type: 'application/pdf', size: 1200 })).toBe(false)
+    expect(isPdfQualificationFile({ name: 'degree.pdf', type: 'application/pdf', size: 1200 })).toBe(true)
+    expect(isPdfQualificationFile({ name: 'degree.jpg', type: 'image/jpeg', size: 1200 })).toBe(false)
   })
 
   it('keeps nationality independent from current country of residence', () => {
