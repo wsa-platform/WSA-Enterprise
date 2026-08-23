@@ -27,18 +27,46 @@ class MarketplaceListing extends Model
 
     public const SELLER_INTERNATIONAL = 'international';
 
+    public const AVAILABILITY_AVAILABLE_NOW = 'available_now';
+
+    public const AVAILABILITY_SEASONAL = 'seasonal';
+
+    public const AVAILABILITY_ON_DEMAND = 'on_demand';
+
+    public const AVAILABILITY_UNAVAILABLE = 'unavailable';
+
+    /** @var list<string> */
+    public const AVAILABILITIES = [
+        self::AVAILABILITY_AVAILABLE_NOW,
+        self::AVAILABILITY_SEASONAL,
+        self::AVAILABILITY_ON_DEMAND,
+        self::AVAILABILITY_UNAVAILABLE,
+    ];
+
+    /** @var list<string> */
+    public const SELLER_TYPES = [
+        self::SELLER_LOCAL,
+        self::SELLER_INTERNATIONAL,
+    ];
+
     protected $fillable = [
         'seller_user_id',
         'organization_id',
         'category_id',
+        'product_type',
         'title',
+        'brand',
         'description',
         'seller_type',
         'status',
+        'availability',
+        'unit_id',
         'price',
         'currency',
         'country',
+        'origin_country',
         'city',
+        'seller_region',
         'seller_display_name',
         'seller_email',
         'seller_phone',
@@ -48,6 +76,16 @@ class MarketplaceListing extends Model
         'export_metadata',
         'contact_access_price',
         'contact_access_currency',
+        'min_order_quantity',
+        'available_quantity',
+        'production_capacity',
+        'wholesale',
+        'retail',
+        'packaging',
+        'shipping_terms',
+        'lead_time_days',
+        'specifications',
+        'video_url',
         'published_at',
     ];
 
@@ -60,6 +98,12 @@ class MarketplaceListing extends Model
             'export_ready' => 'boolean',
             'export_metadata' => 'array',
             'published_at' => 'datetime',
+            'wholesale' => 'boolean',
+            'retail' => 'boolean',
+            'specifications' => 'array',
+            'min_order_quantity' => 'decimal:3',
+            'available_quantity' => 'decimal:3',
+            'production_capacity' => 'decimal:3',
         ];
     }
 
@@ -76,6 +120,11 @@ class MarketplaceListing extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(MarketplaceCategory::class, 'category_id');
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(MarketplaceUnit::class, 'unit_id');
     }
 
     public function images(): HasMany
@@ -99,14 +148,30 @@ class MarketplaceListing extends Model
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'brand' => $this->brand,
             'description' => $this->description,
+            'product_type' => $this->product_type,
             'seller_type' => $this->seller_type,
+            'availability' => $this->availability,
             'price' => $this->price,
             'currency' => $this->currency,
             'country' => $this->country,
+            'seller_country' => $this->country,
+            'origin_country' => $this->origin_country,
             'city' => $this->city,
+            'seller_region' => $this->seller_region,
             'export_ready' => $this->export_ready,
-            'export_destination' => $this->export_destination,
+            'min_order_quantity' => $this->min_order_quantity,
+            'available_quantity' => $this->available_quantity,
+            'production_capacity' => $this->production_capacity,
+            'wholesale' => $this->wholesale,
+            'retail' => $this->retail,
+            'packaging' => $this->packaging,
+            'shipping_terms' => $this->shipping_terms,
+            'lead_time_days' => $this->lead_time_days,
+            'specifications' => $this->specifications,
+            'video_url' => $this->video_url,
+            'unit' => $this->unit?->only(['id', 'slug', 'name', 'name_ar']),
             'contact_access_price' => $this->contact_access_price,
             'contact_access_currency' => $this->contact_access_currency,
             'published_at' => $this->published_at,
@@ -115,6 +180,7 @@ class MarketplaceListing extends Model
                 'display_name' => $this->seller_display_name,
                 'country' => $this->country,
                 'city' => $this->city,
+                'region' => $this->seller_region,
                 'seller_type' => $this->seller_type,
                 'verified' => $this->seller_verified,
             ],

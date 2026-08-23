@@ -74,6 +74,8 @@ class M23UserAccountProductsTest extends TestCase
         $create = $this->postJson('/api/v1/market/listings', [
             'title' => 'Tomatoes',
             'description' => 'Fresh',
+            'seller_type' => MarketplaceListing::SELLER_LOCAL,
+            'country' => 'SA',
             'seller_user_id' => 999999,
             'status' => 'published',
         ], $headers);

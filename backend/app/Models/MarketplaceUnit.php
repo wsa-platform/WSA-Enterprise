@@ -4,17 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class MarketplaceCategory extends Model
+class MarketplaceUnit extends Model
 {
-    use SoftDeletes;
-
     protected $fillable = [
         'slug',
         'name',
         'name_ar',
-        'description',
         'is_active',
         'sort_order',
     ];
@@ -28,11 +24,6 @@ class MarketplaceCategory extends Model
 
     public function listings(): HasMany
     {
-        return $this->hasMany(MarketplaceListing::class, 'category_id');
-    }
-
-    public function attributeDefinitions(): HasMany
-    {
-        return $this->hasMany(MarketplaceAttributeDefinition::class, 'category_id');
+        return $this->hasMany(MarketplaceListing::class, 'unit_id');
     }
 }

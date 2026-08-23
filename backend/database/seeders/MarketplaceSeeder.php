@@ -22,6 +22,8 @@ class MarketplaceSeeder extends Seeder
             MarketplaceCategory::updateOrCreate(['slug' => $cat['slug']], $cat + ['is_active' => true]);
         }
 
+        $this->call(MarketplaceProductFoundationSeeder::class);
+
         $org = Organization::where('slug', 'wsa-demo')->first();
         $seller = User::firstOrCreate(
             ['email' => 'seller@wsa.test'],
@@ -45,7 +47,10 @@ class MarketplaceSeeder extends Seeder
                 'price' => 1500,
                 'currency' => 'SAR',
                 'country' => 'SA',
+                'origin_country' => 'EG',
                 'city' => 'الرياض',
+                'seller_region' => 'منطقة الرياض',
+                'availability' => MarketplaceListing::AVAILABILITY_AVAILABLE_NOW,
                 'seller_display_name' => 'مزارع WSA',
                 'seller_email' => 'seller@wsa.test',
                 'seller_phone' => '+966511111111',

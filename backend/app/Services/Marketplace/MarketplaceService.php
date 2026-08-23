@@ -23,7 +23,7 @@ class MarketplaceService
     {
         // Published catalog is public. Seller/admin management queries must use searchAdmin / my-listings with organization_id.
         $query = MarketplaceListing::query()
-            ->with(['category:id,slug,name,name_ar', 'images'])
+            ->with(['category:id,slug,name,name_ar', 'images', 'unit:id,slug,name,name_ar'])
             ->where('status', MarketplaceListing::STATUS_PUBLISHED);
 
         if (! empty($filters['category_id'])) {
@@ -88,7 +88,7 @@ class MarketplaceService
 
         $this->recordStatusChange($listing, MarketplaceListing::STATUS_DRAFT, $seller->id, 'Listing created');
 
-        return $listing->fresh(['category', 'images']);
+        return $listing->fresh(['category', 'images', 'unit']);
     }
 
     /** @param  array<string, mixed>  $data */
@@ -96,7 +96,7 @@ class MarketplaceService
     {
         $listing->update($data);
 
-        return $listing->fresh(['category', 'images']);
+        return $listing->fresh(['category', 'images', 'unit']);
     }
 
     public function submitForReview(MarketplaceListing $listing, User $actor, ?int $organizationId, ?Request $request = null): MarketplaceListing
@@ -131,7 +131,7 @@ class MarketplaceService
             );
         }
 
-        return $listing->fresh(['category', 'images']);
+        return $listing->fresh(['category', 'images', 'unit']);
     }
 
     public function unpublish(MarketplaceListing $listing, User $actor, ?int $organizationId, ?Request $request = null): MarketplaceListing
@@ -156,7 +156,7 @@ class MarketplaceService
             $request,
         );
 
-        return $listing->fresh(['category', 'images']);
+        return $listing->fresh(['category', 'images', 'unit']);
     }
 
     public function moderate(
@@ -207,7 +207,7 @@ class MarketplaceService
             );
         }
 
-        return $listing->fresh(['category', 'images']);
+        return $listing->fresh(['category', 'images', 'unit']);
     }
 
     public function recordStatusChange(MarketplaceListing $listing, string $status, ?int $userId, ?string $reason): void

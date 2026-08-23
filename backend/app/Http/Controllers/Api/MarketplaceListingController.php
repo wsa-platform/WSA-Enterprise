@@ -7,12 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Models\ContactAccessOrder;
 use App\Models\MarketplaceEntitlement;
 use App\Models\MarketplaceListing;
+use App\Support\IsoCountries;
 use App\Services\Authorization\PermissionService;
 use App\Services\Marketplace\MarketplaceContactService;
 use App\Services\Marketplace\MarketplaceService;
 use App\Services\Ownership\ServiceOwnershipAuthorizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class MarketplaceListingController extends Controller
 {
@@ -28,7 +30,7 @@ class MarketplaceListingController extends Controller
         $this->authorizeAnyPermission($request, ['market.view', 'market.create', 'market.manage_own']);
         $organizationId = $this->organization($request);
         $query = MarketplaceListing::query()
-            ->with(['category', 'images'])
+            ->with(['category', 'images', 'unit'])
             ->where('organization_id', $organizationId);
 
         if (! app(PermissionService::class)->userCan(
@@ -180,25 +182,48 @@ class MarketplaceListingController extends Controller
     /** @return array<string, mixed> */
     private function validatedListingData(Request $request, bool $partial = false): array
     {
-        $rules = [
+        foreach (['country', 'origin_country'] as $isoField) {
+            $value = $request->input($isoField);
+            if (is_string($value) && $value !== '') {
+                $request->merge([$isoField => strtoupper(trim($value))]);
+            } elseif ($request->exists($isoField) && ($value === '' || $value === null)) {
+                $request->merge([$isoField => null]);
+            }
+        }
+
+        $isoCode = ['string', 'size:2', Rule::in(IsoCountries::codes())];
+
+        return $request->validate([
             'title' => [$partial ? 'sometimes' : 'required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'category_id' => ['nullable', 'integer', 'exists:marketplace_categories,id'],
-            'seller_type' => ['nullable', 'string', 'in:local,international'],
+            'product_type' => ['nullable', 'string', 'max:64'],
+            'brand' => ['nullable', 'string', 'max:255'],
+            'seller_type' => [$partial ? 'sometimes' : 'required', 'string', Rule::in(MarketplaceListing::SELLER_TYPES)],
+            'availability' => ['nullable', 'string', Rule::in(MarketplaceListing::AVAILABILITIES)],
+            'unit_id' => ['nullable', 'integer', 'exists:marketplace_units,id'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'size:3'],
-            'country' => ['nullable', 'string', 'max:100'],
+            'country' => array_merge([$partial ? 'sometimes' : 'required'], $isoCode),
+            'origin_country' => array_merge(['nullable'], $isoCode),
             'city' => ['nullable', 'string', 'max:100'],
+            'seller_region' => ['nullable', 'string', 'max:150'],
             'seller_display_name' => ['nullable', 'string', 'max:255'],
             'seller_email' => ['nullable', 'email'],
             'seller_phone' => ['nullable', 'string', 'max:50'],
             'export_ready' => ['sometimes', 'boolean'],
-            'export_destination' => ['nullable', 'string', 'max:255'],
-            'export_metadata' => ['nullable', 'array'],
+            'min_order_quantity' => ['nullable', 'numeric', 'min:0'],
+            'available_quantity' => ['nullable', 'numeric', 'min:0'],
+            'production_capacity' => ['nullable', 'numeric', 'min:0'],
+            'wholesale' => ['sometimes', 'boolean'],
+            'retail' => ['sometimes', 'boolean'],
+            'packaging' => ['nullable', 'string'],
+            'shipping_terms' => ['nullable', 'string'],
+            'lead_time_days' => ['nullable', 'integer', 'min:0'],
+            'specifications' => ['nullable', 'array'],
+            'video_url' => ['nullable', 'url', 'max:2048'],
             'contact_access_price' => ['nullable', 'numeric', 'min:0'],
-        ];
-
-        return $request->validate($rules);
+        ]);
     }
 
     private function assertOwnListing(Request $request, MarketplaceListing $listing): void
