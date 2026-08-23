@@ -6,11 +6,14 @@ use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use App\Models\JobContactRequest;
 use App\Models\JobModerationReport;
+use App\Models\JobSeekerProfile;
 use App\Models\JobTalentProfile;
 use App\Services\Jobs\JobContactExchangeService;
 use App\Services\Jobs\JobMatchingService;
 use App\Services\Jobs\JobTalentProfileService;
 use App\Services\Ownership\ServiceOwnershipAuthorizer;
+use App\Services\Recruitment\EmployerCandidateService;
+use App\Services\Recruitment\RecruitmentRoleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -24,6 +27,8 @@ class JobsEmployerController extends Controller
         private JobTalentProfileService $profileService,
         private JobContactExchangeService $exchangeService,
         private JobMatchingService $matchingService,
+        private EmployerCandidateService $employerCandidates,
+        private RecruitmentRoleService $recruitmentRoles,
     ) {}
 
     public function search(Request $request): JsonResponse
@@ -72,6 +77,91 @@ class JobsEmployerController extends Controller
         ]);
     }
 
+    public function searchSeekers(Request $request): JsonResponse
+    {
+        $this->recruitmentRoles->assertCanAccessEmployer($request->user());
+        $this->authorizePermission($request, 'jobs.view');
+        $filters = $request->validate([
+            'target_job_title' => ['nullable', 'string', 'max:255'],
+            'job_title' => ['nullable', 'string', 'max:255'],
+            'country' => ['nullable', 'string', 'max:100'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'qualification' => ['nullable', 'string', 'max:255'],
+            'education' => ['nullable', 'string', 'max:255'],
+            'years_of_experience' => ['nullable', 'integer', 'min:0', 'max:80'],
+            'skills' => ['nullable'],
+            'skill' => ['nullable', 'string', 'max:255'],
+            'languages' => ['nullable'],
+            'language' => ['nullable', 'string', 'max:255'],
+            'work_type' => ['nullable', 'string', 'max:255'],
+            'desired_salary' => ['nullable', 'numeric', 'min:0'],
+            'specialization' => ['nullable', 'string', 'max:255'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $paginator = $this->employerCandidates->search($filters, (int) ($filters['per_page'] ?? 15));
+
+        return response()->json([
+            'data' => $paginator->items(),
+            'current_page' => $paginator->currentPage(),
+            'last_page' => $paginator->lastPage(),
+            'total' => $paginator->total(),
+        ]);
+    }
+
+    public function showSeeker(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
+    {
+        $this->authorizePermission($request, 'jobs.view');
+        $this->recruitmentRoles->assertCanAccessEmployer($request->user());
+
+        return response()->json($this->employerCandidates->publicProfile($jobSeeker));
+    }
+
+    public function seekerPhoto(Request $request, JobSeekerProfile $jobSeeker): StreamedResponse
+    {
+        $this->authorizePermission($request, 'jobs.view');
+        $this->recruitmentRoles->assertCanAccessEmployer($request->user());
+        abort_unless($jobSeeker->is_active, 404);
+        $path = $jobSeeker->storedPhotoDiskPath();
+        abort_unless($path !== null, 404, 'Photo not found.');
+
+        return Storage::disk('local')->response($path, basename($path));
+    }
+
+    public function requestSeekerContact(Request $request, JobSeekerProfile $jobSeeker): JsonResponse
+    {
+        $this->authorizePermission($request, 'jobs.manage');
+        $this->recruitmentRoles->assertCanAccessEmployer($request->user());
+        $data = $request->validate([
+            'employer_contact' => ['required', 'array'],
+            'employer_contact.name' => ['required', 'string'],
+            'employer_contact.email' => ['required', 'email'],
+            'employer_contact.phone' => ['nullable', 'string'],
+            'employer_contact.whatsapp' => ['nullable', 'string'],
+            'job_reference' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string'],
+            'idempotency_key' => ['nullable', 'string', 'max:64'],
+        ]);
+
+        $talent = $this->employerCandidates->talentProfileFor($jobSeeker);
+        $contactRequest = $this->exchangeService->createRequest(
+            $this->organization($request),
+            $request->user()->id,
+            $talent,
+            $data['employer_contact'],
+            $data['job_reference'] ?? null,
+            $data['notes'] ?? null,
+            $data['idempotency_key'] ?? null,
+        );
+
+        return response()->json([
+            'id' => $contactRequest->id,
+            'status' => $contactRequest->status,
+            'job_reference' => $contactRequest->job_reference,
+            'message' => __('jobs.contact_locked_until_payment'),
+        ], 201);
+    }
+
     public function requestContact(Request $request, JobTalentProfile $talentProfile): JsonResponse
     {
         $this->authorizePermission($request, 'jobs.manage');
@@ -107,6 +197,7 @@ class JobsEmployerController extends Controller
     public function payContact(Request $request, int $contactRequestId): JsonResponse
     {
         $this->authorizePermission($request, 'jobs.manage');
+        $this->recruitmentRoles->assertCanAccessEmployer($request->user());
         $data = $request->validate(['idempotency_key' => ['required', 'string', 'max:64']]);
 
         $contactRequest = JobContactRequest::withoutGlobalScopes()

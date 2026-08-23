@@ -42,10 +42,11 @@ class JobSeekerRegistrationTest extends TestCase
         ]);
     }
 
-    public function test_generic_and_employer_registration_stay_disabled_without_allow_registration(): void
+    public function test_generic_registration_stays_disabled_without_allow_registration(): void
     {
         Config::set('app.allow_registration', false);
         Config::set('app.allow_job_seeker_registration', true);
+        Config::set('app.allow_employer_registration', false);
 
         $this->postJson('/api/v1/auth/register', [
             'name' => 'Blocked Owner',
@@ -73,6 +74,30 @@ class JobSeekerRegistrationTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'blocked-owner@wsa.test']);
         $this->assertDatabaseMissing('users', ['email' => 'blocked-employer@wsa.test']);
         $this->assertDatabaseMissing('users', ['email' => 'blocked-admin@wsa.test']);
+    }
+
+    public function test_employer_can_register_when_generic_registration_is_disabled(): void
+    {
+        Config::set('app.allow_registration', false);
+        Config::set('app.allow_job_seeker_registration', true);
+        Config::set('app.allow_employer_registration', true);
+
+        $response = $this->postJson('/api/v1/auth/register', [
+            'name' => 'New Employer',
+            'email' => 'new-employer@wsa.test',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'audience' => 'employer',
+            'device_name' => 'test',
+        ])->assertCreated()
+            ->assertJsonPath('user.email', 'new-employer@wsa.test')
+            ->assertJsonPath('recruitment.is_employer', true)
+            ->assertJsonPath('recruitment.is_job_seeker', false)
+            ->assertJsonStructure(['organization' => ['id', 'name', 'slug']]);
+
+        $user = User::where('email', 'new-employer@wsa.test')->firstOrFail();
+        $this->assertTrue($user->organizations()->exists());
+        $this->assertDatabaseMissing('job_seeker_profiles', ['user_id' => $user->id]);
     }
 
     public function test_job_seeker_registration_can_be_disabled_independently(): void

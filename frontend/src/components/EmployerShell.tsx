@@ -30,6 +30,9 @@ export function EmployerShell() {
         </Link>
         <nav className="job-seeker-shell-nav" aria-label={t('auth.employer.navLabel')}>
           <Link to={EMPLOYER_HOME}>{t('auth.employer.home')}</Link>
+          <Link to="/employer/search">{t('auth.employer.search')}</Link>
+          <Link to="/employer/notifications">{t('auth.employer.notifications')}</Link>
+          <Link to="/employer/account">{t('auth.employer.account')}</Link>
         </nav>
         <div className="job-seeker-shell-actions">
           <PublicLanguageMenu />

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { JobEntryChoices } from '../jobs/JobsEnterPage'
 import { PublicFeatured } from '../../public/PublicFeatured'
 import { PublicLayout } from '../../public/PublicLayout'
 import { PublicSectionCard } from '../../public/PublicSectionCard'
@@ -38,6 +39,10 @@ export function HomePage() {
           </svg>
         </div>
       </section>
+
+      <div className="gs-container">
+        <JobEntryChoices className="entry-choice-banner-top" />
+      </div>
 
       {/* Feature strip — garden-store feature-strip */}
       <section className="gs-feature-strip" aria-hidden="true">

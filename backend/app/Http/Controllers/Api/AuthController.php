@@ -8,8 +8,11 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use App\Services\Audit\AuditService;
 use App\Services\Auth\IdentityService;
+use App\Services\Ownership\EmployerRegistrationService;
 use App\Services\Ownership\ServiceOwnerRegistrationService;
 use App\Services\Recruitment\JobSeekerRegistrationService;
+use App\Services\Recruitment\RecruitmentRoleService;
+use App\Services\Welcome\WelcomeWorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -21,8 +24,11 @@ class AuthController extends Controller
     public function __construct(
         private AuditService $auditService,
         private ServiceOwnerRegistrationService $serviceOwnerRegistration,
+        private EmployerRegistrationService $employerRegistration,
         private JobSeekerRegistrationService $jobSeekerRegistration,
+        private RecruitmentRoleService $recruitmentRoles,
         private IdentityService $identityService,
+        private WelcomeWorkflowService $welcomeWorkflow,
     ) {}
 
     public function register(RegisterRequest $request): JsonResponse
@@ -51,6 +57,34 @@ class AuthController extends Controller
             return response()->json($this->authenticatedPayload($user, $data['device_name'] ?? 'web'), 201);
         }
 
+        if (($data['audience'] ?? null) === 'employer') {
+            abort_unless(config('app.allow_employer_registration'), 403, 'Registration is disabled.');
+
+            $registration = $this->employerRegistration->register($data);
+            $user = $registration['user'];
+
+            $this->auditService->record(
+                action: 'auth.register',
+                userId: $user->id,
+                auditable: $user,
+                newValues: [
+                    'email' => $user->email,
+                    'name' => $user->name,
+                    'audience' => 'employer',
+                    'organization_id' => $registration['organization']->id,
+                ],
+                request: $request,
+            );
+
+            $this->identityService->ensureEmailIdentity($user);
+            $this->welcomeWorkflow->dispatchRegistrationWelcome($user, $registration['organization']->id);
+
+            return response()->json([
+                ...$this->authenticatedPayload($user, $data['device_name'] ?? 'web'),
+                'organization' => $registration['organization']->only(['id', 'name', 'slug']),
+            ], 201);
+        }
+
         abort_unless(config('app.allow_registration'), 403, 'Registration is disabled.');
 
         $registration = $this->serviceOwnerRegistration->register($data);
@@ -67,6 +101,9 @@ class AuthController extends Controller
             ],
             request: $request,
         );
+
+        $this->identityService->ensureEmailIdentity($user);
+        $this->welcomeWorkflow->dispatchRegistrationWelcome($user, $registration['organization']->id);
 
         return response()->json([
             ...$this->authenticatedPayload($user, $data['device_name'] ?? 'web'),
@@ -94,6 +131,14 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['Your account is inactive in all organizations. Contact an administrator.'],
             ]);
+        }
+
+        $audience = $data['audience'] ?? null;
+        if ($audience === 'employer' && $this->recruitmentRoles->isJobSeeker($user)) {
+            abort(403, __('jobs.job_seeker_cannot_be_employer'));
+        }
+        if ($audience === 'job_seeker' && $this->recruitmentRoles->isEmployer($user)) {
+            abort(403, __('jobs.employer_cannot_be_job_seeker'));
         }
 
         $this->auditService->record(
@@ -157,6 +202,39 @@ class AuthController extends Controller
         return response()->json($sessions);
     }
 
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null, 401);
+
+        $data = $request->validate([
+            'name' => ['sometimes', 'string', 'max:255'],
+            'email' => ['sometimes', 'email', 'unique:users,email,'.$user->id],
+            'password' => ['sometimes', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $oldValues = $user->only(['name', 'email']);
+
+        if (isset($data['name']) || isset($data['email'])) {
+            $user->update(collect($data)->only(['name', 'email'])->all());
+        }
+
+        if (isset($data['password'])) {
+            $user->update(['password' => Hash::make($data['password'])]);
+        }
+
+        $this->auditService->record(
+            action: 'user.profile.updated',
+            userId: $user->id,
+            auditable: $user,
+            oldValues: $oldValues,
+            newValues: $user->only(['name', 'email']),
+            request: $request,
+        );
+
+        return response()->json($user->only(['id', 'name', 'email']));
+    }
+
     public function revokeSession(Request $request, int $token): JsonResponse
     {
         $user = $request->user();
@@ -185,6 +263,14 @@ class AuthController extends Controller
         return response()->json(status: 204);
     }
 
+    public function recruitmentRole(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null, 401);
+
+        return response()->json($this->recruitmentRoles->payload($user));
+    }
+
     private function authenticatedResponse(User $user, string $deviceName, Request $request): JsonResponse
     {
         return response()->json($this->authenticatedPayload($user, $deviceName));
@@ -196,6 +282,7 @@ class AuthController extends Controller
         return [
             'token' => $user->createToken($deviceName)->plainTextToken,
             'user' => $user->only(['id', 'name', 'email']),
+            'recruitment' => $this->recruitmentRoles->payload($user),
         ];
     }
 }

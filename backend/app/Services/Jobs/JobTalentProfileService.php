@@ -66,7 +66,7 @@ class JobTalentProfileService
             $query->where('city', $city);
         }
         if ($specialization = $filters['specialization'] ?? null) {
-            $query->where('specialization', 'ilike', '%'.$specialization.'%');
+            $query->whereRaw('LOWER(COALESCE(specialization, \'\')) LIKE ?', ['%'.mb_strtolower((string) $specialization).'%']);
         }
         if ($discipline = $filters['discipline'] ?? null) {
             $query->whereJsonContains('disciplines', $discipline);

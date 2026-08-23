@@ -4,7 +4,9 @@ import { internalPaths } from './paths'
 
 export const JOB_SEEKER_HOME = '/jobs/application'
 export const JOB_SEEKER_ENTER = '/jobs/enter'
+export const JOB_SEEKER_AUTH_ENTER = '/jobs/enter/seeker'
 export const EMPLOYER_HOME = '/employer'
+export const EMPLOYER_ENTER = '/employer/enter'
 export const ADMIN_HOME = '/admin/users'
 export const ACCOUNT_HOME = internalPaths.account
 export const LEGACY_DASHBOARD_PATH = '/dashboard'
@@ -126,15 +128,15 @@ export function publicRegisterHref(stored?: AuthAudience | null, pathname?: stri
 }
 
 export function jobSeekerStartPath(isAuthenticated: boolean): string {
-  return isAuthenticated ? JOB_SEEKER_HOME : loginHref('job_seeker', JOB_SEEKER_HOME)
+  return isAuthenticated ? JOB_SEEKER_HOME : JOB_SEEKER_AUTH_ENTER
 }
 
 export function jobSeekerLandingPath(isAuthenticated: boolean): string {
-  return isAuthenticated ? JOB_SEEKER_HOME : JOB_SEEKER_ENTER
+  return isAuthenticated ? JOB_SEEKER_HOME : JOB_SEEKER_AUTH_ENTER
 }
 
 export function employerStartPath(isAuthenticated: boolean): string {
-  return isAuthenticated ? EMPLOYER_HOME : loginHref('employer', EMPLOYER_HOME)
+  return isAuthenticated ? EMPLOYER_HOME : EMPLOYER_ENTER
 }
 
 export function employerLogoutPath(): string {

@@ -68,7 +68,7 @@ export function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      const authenticated = await login(email, password)
+      const authenticated = await login(email, password, audience)
       await finishLogin(authenticated.token, authenticated.user)
     } catch (requestError) {
       setError(translateApiError(requestError) || t('auth.signInFailed'))

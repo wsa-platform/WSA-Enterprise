@@ -1,10 +1,10 @@
 import { request } from './client'
 import type { User } from './types'
 
-export async function login(email: string, password: string) {
-  return request<{ token: string; user: User }>('/auth/login', {
+export async function login(email: string, password: string, audience?: 'job_seeker' | 'employer' | 'admin' | null) {
+  return request<{ token: string; user: User; recruitment?: RecruitmentRole }>('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password, device_name: 'wsa-web-dashboard' }),
+    body: JSON.stringify({ email, password, device_name: 'wsa-web-dashboard', audience }),
   })
 }
 
@@ -24,6 +24,15 @@ export async function register(payload: {
     body: JSON.stringify({ ...payload, device_name: 'wsa-web-dashboard' }),
   })
 }
+
+export type RecruitmentRole = {
+  role: 'job_seeker' | 'employer' | 'conflict' | null
+  is_job_seeker: boolean
+  is_employer: boolean
+}
+
+export const getRecruitmentRole = (token: string) =>
+  request<RecruitmentRole>('/auth/recruitment-role', {}, token)
 
 export const logout = (token: string) => request<void>('/auth/logout', { method: 'POST' }, token)
 

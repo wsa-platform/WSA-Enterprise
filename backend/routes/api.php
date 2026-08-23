@@ -87,7 +87,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/user/settings', [UserSettingsController::class, 'show']);
         Route::put('/user/settings', [UserSettingsController::class, 'update']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
-        Route::get('/auth/sessions', [AuthController::class, 'sessions']);
+            Route::get('/auth/sessions', [AuthController::class, 'sessions']);
+            Route::get('/auth/recruitment-role', [AuthController::class, 'recruitmentRole']);
         Route::delete('/auth/sessions/{token}', [AuthController::class, 'revokeSession'])->whereNumber('token');
         Route::post('/auth/email/verify', [AuthExtensionController::class, 'verifyEmail']);
         Route::post('/auth/email/resend', [AuthExtensionController::class, 'resendVerification'])->middleware('throttle:3,1');
@@ -351,6 +352,10 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/talent/me/cv', [JobsTalentController::class, 'uploadCv']);
             Route::post('/talent/me/cv/parse', [JobsTalentController::class, 'parseCv']);
             Route::get('/talent/me/contact-requests', [JobsTalentController::class, 'myContactRequests']);
+            Route::get('/seekers', [JobsEmployerController::class, 'searchSeekers']);
+            Route::get('/seekers/{jobSeeker}', [JobsEmployerController::class, 'showSeeker'])->whereNumber('jobSeeker');
+            Route::get('/seekers/{jobSeeker}/photo', [JobsEmployerController::class, 'seekerPhoto'])->whereNumber('jobSeeker');
+            Route::post('/seekers/{jobSeeker}/contact-requests', [JobsEmployerController::class, 'requestSeekerContact'])->whereNumber('jobSeeker');
             Route::get('/candidates', [JobsEmployerController::class, 'search']);
             Route::post('/candidates/match', [JobsEmployerController::class, 'match']);
             Route::get('/candidates/{talentProfile}', [JobsEmployerController::class, 'show'])->whereNumber('talentProfile');

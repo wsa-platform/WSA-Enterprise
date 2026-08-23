@@ -1,0 +1,57 @@
+.employer-workspace {
+  --js-label-bg: #f3f4f6;
+  --js-value-bg: #f0fdf4;
+  max-width: 1080px;
+  margin-inline: auto;
+}
+
+.employer-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 10px 12px;
+}
+
+.employer-filter-grid .js-field-wide {
+  grid-column: span 2;
+}
+
+.employer-candidate-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.employer-candidate-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #d5e0d6;
+  border-radius: 12px;
+  background: #fff;
+  text-align: start;
+}
+
+.employer-candidate-card h3,
+.employer-candidate-card p {
+  margin: 0;
+}
+
+.employer-status {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--js-label-bg, #f3f4f6);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.employer-status.is-hired {
+  background: var(--js-value-bg, #f0fdf4);
+}
+
+@media (max-width: 720px) {
+  .employer-filter-grid,
+  .employer-filter-grid .js-field-wide {
+    grid-template-columns: 1fr;
+    grid-column: auto;
+  }
+}

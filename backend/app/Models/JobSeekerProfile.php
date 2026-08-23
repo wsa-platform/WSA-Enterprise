@@ -367,6 +367,62 @@ class JobSeekerProfile extends Model
         return $data;
     }
 
+    /** @return array<string, mixed> */
+    public function toEmployerPublicArray(): array
+    {
+        $hired = $this->recruitment_status === self::STATUS_HIRED;
+
+        return [
+            'id' => $this->id,
+            'full_name' => $this->full_name,
+            'has_photo' => filled($this->photo_path),
+            'target_job_title' => $this->target_job_title,
+            'country' => $this->country,
+            'region' => $this->region,
+            'city' => $this->city,
+            'specialization' => $this->specialization,
+            'years_of_experience' => $this->years_of_experience,
+            'skills' => $this->skills,
+            'languages' => $this->languages,
+            'education' => $this->publicEducation(),
+            'experience' => $this->publicExperience(),
+            'biography' => $this->biography,
+            'nationality' => $this->nationality,
+            'availability_date' => $this->availability_date,
+            'employment_status' => $hired ? 'hired' : 'job_seeker',
+            'employment_label' => $hired ? 'تم التوظيف' : 'طالب وظيفة',
+            'has_cv' => filled($this->cv_path),
+        ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function publicEducation(): array
+    {
+        $rows = is_array($this->education) ? $this->education : [];
+
+        return array_values(array_map(function ($row) {
+            if (! is_array($row)) {
+                return ['degree' => is_string($row) ? $row : null];
+            }
+
+            return array_intersect_key($row, array_flip(['degree', 'institution', 'country', 'year', 'field']));
+        }, $rows));
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function publicExperience(): array
+    {
+        $rows = is_array($this->experience) ? $this->experience : [];
+
+        return array_values(array_map(function ($row) {
+            if (! is_array($row)) {
+                return ['title' => is_string($row) ? $row : null];
+            }
+
+            return array_intersect_key($row, array_flip(['title', 'company', 'start_date', 'end_date', 'current', 'description']));
+        }, $rows));
+    }
+
     public function storedCvDiskPath(): ?string
     {
         if (! is_string($this->cv_path) || $this->cv_path === '') {

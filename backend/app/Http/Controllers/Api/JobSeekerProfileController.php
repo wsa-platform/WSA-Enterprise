@@ -8,6 +8,7 @@ use App\Models\JobSeekerProfile;
 use App\Rules\FourPartFullName;
 use App\Services\Ownership\UserGlobalOwnershipAuthorizer;
 use App\Services\Recruitment\JobSeekerService;
+use App\Services\Recruitment\RecruitmentRoleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -21,6 +22,7 @@ class JobSeekerProfileController extends Controller
     public function __construct(
         private JobSeekerService $service,
         private UserGlobalOwnershipAuthorizer $ownership,
+        private RecruitmentRoleService $recruitmentRoles,
     ) {}
 
     public function showMine(Request $request): JsonResponse
@@ -35,6 +37,7 @@ class JobSeekerProfileController extends Controller
 
     public function upsertMine(Request $request): JsonResponse
     {
+        $this->recruitmentRoles->assertCanAccessJobSeeker($request->user());
         $existing = $this->ownership
             ->scopeOwnedByUser(JobSeekerProfile::query(), $request->user())
             ->first();

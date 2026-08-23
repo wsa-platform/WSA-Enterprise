@@ -350,6 +350,17 @@ class JobContactExchangeService
         $organizationId = (int) $request->organization_id;
         $candidateUserId = $request->talentProfile?->user_id;
         $hiringRecordId = $transaction->employmentRecord?->id ?? $transaction->fresh()?->employmentRecord?->id;
+        $request->loadMissing(['talentProfile.contact']);
+        $candidateContact = $request->talentProfile?->contact;
+        $candidateLine = trim(implode(' — ', array_filter([
+            $candidateContact?->email,
+            $candidateContact?->phone,
+        ])));
+        $employerLine = trim(implode(' — ', array_filter([
+            $request->employer_contact_name,
+            $request->employer_contact_email,
+            $request->employer_contact_phone,
+        ])));
         $payload = [
             'contact_request_id' => $request->id,
             'hiring_record_id' => $hiringRecordId,
@@ -363,8 +374,8 @@ class JobContactExchangeService
             organizationId: $organizationId,
             userId: $request->requested_by_user_id,
             type: 'jobs.hiring.completed',
-            title: 'Hiring completed',
-            body: 'Payment was verified. Contact details are available from the authorized contact endpoint.',
+            title: __('jobs.hiring_employer_title'),
+            body: __('jobs.hiring_employer_body', ['contact' => $candidateLine !== '' ? $candidateLine : __('jobs.contact_locked_until_payment')]),
             data: $payload,
         );
 
@@ -373,8 +384,8 @@ class JobContactExchangeService
                 organizationId: $organizationId,
                 userId: $candidateUserId,
                 type: 'jobs.hiring.completed',
-                title: 'Congratulations — you have been hired',
-                body: 'An employer completed hiring after verified payment.',
+                title: __('jobs.hiring_candidate_title'),
+                body: __('jobs.hiring_candidate_body', ['contact' => $employerLine !== '' ? $employerLine : __('jobs.contact_locked_until_payment')]),
                 data: $payload,
             );
         }

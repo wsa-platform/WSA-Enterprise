@@ -54,12 +54,20 @@ import { TemplatesPage } from './pages/marketing/TemplatesPage'
 import { SegmentsPage } from './pages/marketing/SegmentsPage'
 import { ConsentPage } from './pages/marketing/ConsentPage'
 import { loginPathForProtectedRoute, unknownRouteFallback } from './navigation/routeGuards'
-import { ADMIN_HOME, JOB_SEEKER_HOME, roleFlagsFromPermissions } from './navigation/roleDestinations'
+import { ADMIN_HOME, EMPLOYER_ENTER, JOB_SEEKER_AUTH_ENTER, JOB_SEEKER_HOME, roleFlagsFromPermissions } from './navigation/roleDestinations'
 import { EmployerShell } from './components/EmployerShell'
 import { JobSeekerShell } from './components/JobSeekerShell'
 import { RoleHomeRedirect } from './components/RoleHomeRedirect'
 import { JobsEnterPage } from './pages/jobs/JobsEnterPage'
-import { EmployerEntryPage } from './pages/employer/EmployerEntryPage'
+import { EmployerEnterPage } from './pages/employer/EmployerEnterPage'
+import { EmployerBlockedPage } from './pages/employer/EmployerBlockedPage'
+import { EmployerWorkspacePage } from './pages/employer/EmployerWorkspacePage'
+import { EmployerSearchPage } from './pages/employer/EmployerSearchPage'
+import { EmployerCandidatePage } from './pages/employer/EmployerCandidatePage'
+import { EmployerNotificationsPage } from './pages/employer/EmployerNotificationsPage'
+import { EmployerAccountPage } from './pages/employer/EmployerAccountPage'
+import { JobSeekerEnterPage } from './pages/jobs/JobSeekerEnterPage'
+import { useRecruitmentRole } from './hooks/useRecruitmentRole'
 import { useWorkspaceName } from './hooks/useWorkspaceName'
 
 function AuthenticatedRedirect() {
@@ -73,12 +81,20 @@ function UnknownRouteFallback() {
 }
 
 function JobSeekerProtected() {
+  const { t } = useTranslation()
   const { token } = useAuth()
-  const location = useLocation()
+  const { role, loading } = useRecruitmentRole()
 
   if (!token) {
-    const next = `${location.pathname}${location.search}`
-    return <Navigate to={loginPathForProtectedRoute(next, 'job_seeker')} replace />
+    return <Navigate to={JOB_SEEKER_AUTH_ENTER} replace />
+  }
+
+  if (loading) {
+    return <p className="loading">{t('common.loading')}</p>
+  }
+
+  if (role?.is_employer) {
+    return <EmployerBlockedPage asJobSeeker />
   }
 
   return (
@@ -89,12 +105,20 @@ function JobSeekerProtected() {
 }
 
 function EmployerProtected() {
+  const { t } = useTranslation()
   const { token } = useAuth()
-  const location = useLocation()
+  const { role, loading } = useRecruitmentRole()
 
   if (!token) {
-    const next = `${location.pathname}${location.search}`
-    return <Navigate to={loginPathForProtectedRoute(next, 'employer')} replace />
+    return <Navigate to={EMPLOYER_ENTER} replace />
+  }
+
+  if (loading) {
+    return <p className="loading">{t('common.loading')}</p>
+  }
+
+  if (role?.is_job_seeker || !role?.is_employer) {
+    return <EmployerBlockedPage />
   }
 
   return (
@@ -191,6 +215,8 @@ function AppRoutes() {
       <Route path="/market" element={<MarketplacePage />} />
       <Route path="/market/:id" element={<MarketplaceListingPage />} />
       <Route path="/jobs/enter" element={<JobsEnterPage />} />
+      <Route path="/jobs/enter/seeker" element={<JobSeekerEnterPage />} />
+      <Route path="/employer/enter" element={<EmployerEnterPage />} />
       <Route path="/login" element={token ? <AuthenticatedRedirect /> : <LoginPage />} />
       <Route path="/register" element={token ? <AuthenticatedRedirect /> : <RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -204,7 +230,11 @@ function AppRoutes() {
         <Route path="/jobs/talent" element={<TalentProfilePage />} />
       </Route>
       <Route element={<EmployerProtected />}>
-        <Route path="/employer" element={<EmployerEntryPage />} />
+        <Route path="/employer" element={<EmployerWorkspacePage />} />
+        <Route path="/employer/search" element={<EmployerSearchPage />} />
+        <Route path="/employer/candidates/:candidateId" element={<EmployerCandidatePage />} />
+        <Route path="/employer/notifications" element={<EmployerNotificationsPage />} />
+        <Route path="/employer/account" element={<EmployerAccountPage />} />
       </Route>
       <Route path="/dashboard" element={<LegacyDashboardRedirect />} />
       <Route element={<ProtectedShell />}>

@@ -310,3 +310,73 @@ export async function downloadMyJobSeekerPrimaryQualification(token: string, org
 
   return response.blob()
 }
+
+export type EmployerSeeker = {
+  id: number
+  full_name: string
+  has_photo: boolean
+  target_job_title: string | null
+  country: string | null
+  city: string | null
+  region: string | null
+  specialization: string | null
+  years_of_experience: number | null
+  skills: string[] | null
+  languages: string[] | null
+  education: Array<{ degree?: string; institution?: string; year?: string | number }> | null
+  experience: Array<{ title?: string; company?: string; description?: string }> | null
+  biography: string | null
+  nationality: string | null
+  employment_status: 'job_seeker' | 'hired'
+  employment_label: string
+  has_cv: boolean
+}
+
+export type EmployerSeekerFilters = {
+  job_title?: string
+  country?: string
+  city?: string
+  qualification?: string
+  years_of_experience?: string
+  skills?: string
+  languages?: string
+  work_type?: string
+  desired_salary?: string
+  specialization?: string
+  page?: number
+  per_page?: number
+}
+
+export const searchEmployerSeekers = (
+  token: string,
+  filters: EmployerSeekerFilters = {},
+  organizationId?: number,
+) => {
+  const params = new URLSearchParams()
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') params.set(key, String(value))
+  })
+  const suffix = params.toString() ? `?${params.toString()}` : ''
+  return request<PaginatedResponse<EmployerSeeker>>(`/jobs/seekers${suffix}`, {}, token, organizationId)
+}
+
+export const getEmployerSeeker = (token: string, seekerId: number, organizationId?: number) =>
+  request<EmployerSeeker>(`/jobs/seekers/${seekerId}`, {}, token, organizationId)
+
+export const requestSeekerContact = (
+  token: string,
+  seekerId: number,
+  payload: {
+    employer_contact: { name: string; email: string; phone?: string; whatsapp?: string }
+    job_reference?: string
+    notes?: string
+    idempotency_key?: string
+  },
+  organizationId?: number,
+) =>
+  request<{ id: number; status: string; job_reference: string | null; message?: string }>(
+    `/jobs/seekers/${seekerId}/contact-requests`,
+    { method: 'POST', body: JSON.stringify(payload) },
+    token,
+    organizationId,
+  )

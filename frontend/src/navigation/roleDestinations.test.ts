@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   ADMIN_HOME,
   EMPLOYER_HOME,
+  EMPLOYER_ENTER,
+  JOB_SEEKER_AUTH_ENTER,
   JOB_SEEKER_ENTER,
   JOB_SEEKER_HOME,
   LEGACY_DASHBOARD_PATH,
@@ -85,11 +87,11 @@ describe('role destinations', () => {
   })
 
   it('routes Job-Seeker and Employer entry from the public homepage choice', () => {
-    expect(jobSeekerLandingPath(false)).toBe(JOB_SEEKER_ENTER)
+    expect(jobSeekerLandingPath(false)).toBe(JOB_SEEKER_AUTH_ENTER)
     expect(jobSeekerLandingPath(true)).toBe(JOB_SEEKER_HOME)
-    expect(jobSeekerStartPath(false)).toBe(loginHref('job_seeker', JOB_SEEKER_HOME))
+    expect(jobSeekerStartPath(false)).toBe(JOB_SEEKER_AUTH_ENTER)
     expect(jobSeekerStartPath(true)).toBe(JOB_SEEKER_HOME)
-    expect(employerStartPath(false)).toBe(loginHref('employer', EMPLOYER_HOME))
+    expect(employerStartPath(false)).toBe(EMPLOYER_ENTER)
     expect(employerStartPath(true)).toBe(EMPLOYER_HOME)
     expect(jobSeekerLandingPath(false)).not.toContain('/dashboard')
     expect(jobSeekerStartPath(false)).not.toContain('/dashboard')

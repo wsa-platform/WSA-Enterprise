@@ -18,6 +18,7 @@ class LoginRequest extends FormRequest
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
             'device_name' => ['nullable', 'string', 'max:255'],
+            'audience' => ['nullable', 'in:job_seeker,employer,admin'],
         ];
     }
 }
