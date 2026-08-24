@@ -5,9 +5,11 @@ import { register } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { translateApiError } from '../i18n/apiErrors'
 import { authQuery, safeReturnPath } from '../navigation/routeGuards'
+import { publicPaths } from '../navigation/paths'
 import {
   completeAuthenticatedSession,
   EMPLOYER_ENTER,
+  JOB_SEEKER_ENTER,
   JOB_SEEKER_HOME,
   isUserDashboardPath,
   parseAudience,
@@ -84,14 +86,27 @@ export function RegisterPage() {
           <div className="public-header-actions">
             <PublicLanguageMenu />
             <Link to={loginTo} className="gs-btn gs-btn-ghost">
-              {audience === 'employer' ? t('common.signIn') : t('auth.jobSeeker.signIn')}
+              {audience === 'employer'
+                ? t('common.signIn')
+                : audience === 'job_seeker'
+                  ? t('auth.jobSeeker.signIn')
+                  : t('common.signIn')}
             </Link>
           </div>
         </div>
       </header>
       <main className="public-auth-shell">
         <section className="public-auth-card">
-          <Link to={audience === 'employer' ? EMPLOYER_ENTER : '/jobs/enter'} className="public-auth-back">← {audience === 'employer' ? t('auth.employer.back') : t('auth.entry.backToChoices')}</Link>
+          <Link
+            to={audience === 'employer' ? EMPLOYER_ENTER : audience === 'job_seeker' ? JOB_SEEKER_ENTER : publicPaths.market}
+            className="public-auth-back"
+          >
+            ← {audience === 'employer'
+              ? t('auth.employer.back')
+              : audience === 'job_seeker'
+                ? t('auth.entry.backToChoices')
+                : t('website.nav.productMarket')}
+          </Link>
           <p className="eyebrow">{t('auth.brand')}</p>
           <h1>{audience === 'employer' ? t('auth.employer.platformRegistration') : title}</h1>
           <p className="muted">{audience === 'employer' ? t('auth.employer.employmentServiceRegistration') : subtitle}</p>

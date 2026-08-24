@@ -5,12 +5,13 @@ import { useAuth } from '../context/AuthContext'
 import {
   EMPLOYER_HOME,
   JOB_SEEKER_HOME,
+  isMarketplacePath,
   publicHeaderAudience,
   publicLoginHref,
   publicRegisterHref,
   readStoredAudience,
 } from '../navigation/roleDestinations'
-import { PUBLIC_TOP_NAV_ITEMS } from '../navigation/paths'
+import { PUBLIC_TOP_NAV_ITEMS, internalPaths } from '../navigation/paths'
 import { PublicLanguageMenu } from './PublicLanguageMenu'
 
 /** Header — adapted from garden-store/components/Header.tsx */
@@ -22,12 +23,13 @@ export function PublicHeader() {
   const authenticated = Boolean(token)
   const storedAudience = readStoredAudience()
   const audience = publicHeaderAudience(storedAudience, pathname)
-  const loginTo = authenticated
-    ? (audience === 'employer' ? EMPLOYER_HOME : JOB_SEEKER_HOME)
-    : publicLoginHref(storedAudience, pathname)
-  const registerTo = authenticated
-    ? (audience === 'employer' ? EMPLOYER_HOME : JOB_SEEKER_HOME)
-    : publicRegisterHref(storedAudience, pathname)
+  const authenticatedHome = audience === 'employer'
+    ? EMPLOYER_HOME
+    : isMarketplacePath(pathname)
+      ? internalPaths.products
+      : JOB_SEEKER_HOME
+  const loginTo = authenticated ? authenticatedHome : publicLoginHref(storedAudience, pathname)
+  const registerTo = authenticated ? authenticatedHome : publicRegisterHref(storedAudience, pathname)
 
   return (
     <header className="gs-header">

@@ -6,9 +6,11 @@ import { DEMO_HINT, getLoginDefaults, isDemoLoginEnabled } from '../config/login
 import { useAuth } from '../context/AuthContext'
 import { translateApiError } from '../i18n/apiErrors'
 import { authQuery, safeReturnPath } from '../navigation/routeGuards'
+import { publicPaths } from '../navigation/paths'
 import {
   completeAuthenticatedSession,
   EMPLOYER_ENTER,
+  JOB_SEEKER_ENTER,
   JOB_SEEKER_HOME,
   isUserDashboardPath,
   parseAudience,
@@ -120,14 +122,27 @@ export function LoginPage() {
           <div className="public-header-actions">
             <PublicLanguageMenu />
             <Link to={registerTo} className="gs-btn gs-btn-primary">
-              {audience === 'employer' ? t('auth.employer.registerTitle') : t('auth.jobSeeker.createAccount')}
+              {audience === 'employer'
+                ? t('auth.employer.registerTitle')
+                : audience === 'job_seeker'
+                  ? t('auth.jobSeeker.createAccount')
+                  : t('auth.createAccount')}
             </Link>
           </div>
         </div>
       </header>
       <main className="public-auth-shell">
         <section className="public-auth-card">
-          <Link to={audience === 'employer' ? EMPLOYER_ENTER : '/jobs/enter'} className="public-auth-back">← {audience === 'employer' ? t('auth.employer.back') : t('auth.entry.backToChoices')}</Link>
+          <Link
+            to={audience === 'employer' ? EMPLOYER_ENTER : audience === 'job_seeker' ? JOB_SEEKER_ENTER : publicPaths.market}
+            className="public-auth-back"
+          >
+            ← {audience === 'employer'
+              ? t('auth.employer.back')
+              : audience === 'job_seeker'
+                ? t('auth.entry.backToChoices')
+                : t('website.nav.productMarket')}
+          </Link>
           <p className="eyebrow">{t('auth.brand')}</p>
           <h1>{title}</h1>
           <p className="muted" dir="auto">{subtitle}</p>

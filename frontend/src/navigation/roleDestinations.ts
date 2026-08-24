@@ -94,18 +94,39 @@ export function isUserDashboardPath(pathname: string): boolean {
   return pathname === LEGACY_DASHBOARD_PATH || pathname.startsWith(`${LEGACY_DASHBOARD_PATH}/`)
 }
 
-export function loginHref(audience: AuthAudience, next: string): string {
+export function isMarketplacePath(pathname?: string | null): boolean {
+  if (!pathname) return false
+  return pathname === '/market'
+    || pathname.startsWith('/market/')
+    || pathname === '/account'
+    || pathname.startsWith('/account/')
+}
+
+export function marketplaceReturnPath(pathname?: string | null): string {
+  if (pathname && pathname.startsWith('/account')) return pathname
+  return internalPaths.products
+}
+
+export function loginHref(audience: AuthAudience | null, next: string): string {
   const params = new URLSearchParams()
   params.set('next', safePath(next))
-  params.set('audience', audience)
+  if (audience) params.set('audience', audience)
   return `/login?${params.toString()}`
 }
 
-export function registerHref(audience: AuthAudience, next: string): string {
+export function registerHref(audience: AuthAudience | null, next: string): string {
   const params = new URLSearchParams()
   params.set('next', safePath(next))
-  params.set('audience', audience)
+  if (audience) params.set('audience', audience)
   return `/register?${params.toString()}`
+}
+
+export function marketplaceLoginHref(next: string = internalPaths.products): string {
+  return loginHref(null, next)
+}
+
+export function marketplaceRegisterHref(next: string = internalPaths.newProduct): string {
+  return registerHref(null, next)
 }
 
 export function employerCreateAccountHref(): string {
@@ -129,20 +150,26 @@ export function employerWorkspaceGate(role: { is_job_seeker: boolean; is_employe
 export function publicHeaderAudience(
   stored?: AuthAudience | null,
   pathname?: string,
-): Exclude<AuthAudience, 'admin'> {
+): Exclude<AuthAudience, 'admin'> | null {
   const fromPath = pathname ? audienceFromPath(pathname) : null
-  if (fromPath === 'employer' || stored === 'employer') return 'employer'
+  if (fromPath === 'employer') return 'employer'
+  if (pathname && isMarketplacePath(pathname)) return null
+  if (stored === 'employer') return 'employer'
   return 'job_seeker'
 }
 
 export function publicLoginHref(stored?: AuthAudience | null, pathname?: string): string {
   const audience = publicHeaderAudience(stored, pathname)
-  return loginHref(audience, audience === 'employer' ? EMPLOYER_HOME : JOB_SEEKER_HOME)
+  if (audience === 'employer') return loginHref('employer', EMPLOYER_HOME)
+  if (audience === 'job_seeker') return loginHref('job_seeker', JOB_SEEKER_HOME)
+  return marketplaceLoginHref(marketplaceReturnPath(pathname))
 }
 
 export function publicRegisterHref(stored?: AuthAudience | null, pathname?: string): string {
   const audience = publicHeaderAudience(stored, pathname)
-  return registerHref(audience, audience === 'employer' ? EMPLOYER_HOME : JOB_SEEKER_HOME)
+  if (audience === 'employer') return registerHref('employer', EMPLOYER_HOME)
+  if (audience === 'job_seeker') return registerHref('job_seeker', JOB_SEEKER_HOME)
+  return marketplaceRegisterHref(internalPaths.newProduct)
 }
 
 export function jobSeekerStartPath(isAuthenticated: boolean): string {
@@ -177,6 +204,8 @@ export function destinationForRoles(
     if (usableNext.startsWith('/jobs/application') || usableNext.startsWith('/jobs/talent')) return usableNext
     return JOB_SEEKER_HOME
   }
+
+  if (isMarketplacePath(usableNext)) return usableNext
 
   if (roles.isAdmin) {
     if (usableNext.startsWith('/admin')) return usableNext

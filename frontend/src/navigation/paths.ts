@@ -27,6 +27,7 @@ export const REQUIRED_INTERNAL_NAV_PATHS = [
 
 export const PUBLIC_TOP_NAV_ITEMS = [
   { to: publicPaths.home, labelKey: 'website.nav.home', end: true },
+  { to: publicPaths.market, labelKey: 'website.nav.productMarket', end: true },
 ] as const
 
-export const PUBLIC_TOP_NAV_FORBIDDEN_PATHS = ['/market', '/sell', '/seller'] as const
+export const PUBLIC_TOP_NAV_FORBIDDEN_PATHS = ['/sell', '/seller'] as const

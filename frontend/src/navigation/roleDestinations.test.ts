@@ -11,9 +11,12 @@ import {
   destinationForRoles,
   employerLogoutPath,
   employerStartPath,
+  isMarketplacePath,
   jobSeekerLandingPath,
   jobSeekerStartPath,
   loginHref,
+  marketplaceLoginHref,
+  marketplaceRegisterHref,
   parseAudience,
   publicLoginHref,
   publicRegisterHref,
@@ -21,6 +24,7 @@ import {
   roleFlagsFromPermissions,
 } from './roleDestinations'
 import { loginPathForProtectedRoute, safeReturnPath, unknownRouteFallback } from './routeGuards'
+import { internalPaths } from './paths'
 
 const combinations: Array<{ permissions: string[]; audience: 'job_seeker' | 'employer' | 'admin' | null; next?: string }> = [
   { permissions: [], audience: 'job_seeker' },
@@ -135,5 +139,29 @@ describe('route guards', () => {
     )
     expect(loginPathForProtectedRoute('/employer')).toContain('audience=employer')
     expect(loginPathForProtectedRoute('/dashboard', 'admin')).not.toContain('Dashboard')
+  })
+})
+
+describe('marketplace account separation', () => {
+  it('keeps marketplace login and registration off the Job-Seeker audience', () => {
+    expect(isMarketplacePath('/market')).toBe(true)
+    expect(isMarketplacePath('/account/products')).toBe(true)
+    expect(isMarketplacePath('/jobs/application')).toBe(false)
+    expect(publicLoginHref(null, '/market')).not.toContain('audience=job_seeker')
+    expect(publicRegisterHref(null, '/market')).not.toContain('audience=job_seeker')
+    expect(marketplaceLoginHref()).not.toContain('audience=')
+    expect(marketplaceRegisterHref()).not.toContain('audience=')
+    expect(marketplaceRegisterHref()).toContain(encodeURIComponent(internalPaths.newProduct))
+    expect(publicLoginHref(null, '/')).toContain('audience=job_seeker')
+    expect(registerHref('job_seeker', JOB_SEEKER_HOME)).toContain('audience=job_seeker')
+  })
+
+  it('returns marketplace users to their products instead of the Job-Seeker profile', () => {
+    const jobSeeker = roleFlagsFromPermissions(['jobs.talent.register'])
+    expect(destinationForRoles(jobSeeker, null, internalPaths.products)).toBe(internalPaths.products)
+    expect(destinationForRoles(jobSeeker, null, internalPaths.newProduct)).toBe(internalPaths.newProduct)
+    expect(destinationForRoles(jobSeeker, 'job_seeker', internalPaths.products)).toBe(JOB_SEEKER_HOME)
+    expect(loginPathForProtectedRoute('/jobs/application')).toContain('audience=job_seeker')
+    expect(loginPathForProtectedRoute(internalPaths.products)).not.toContain('audience=job_seeker')
   })
 })

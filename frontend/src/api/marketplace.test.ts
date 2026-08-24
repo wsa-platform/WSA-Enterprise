@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   createListing,
+  deleteListing,
   fetchMyListing,
   fetchMyListings,
   fetchPublicCategories,
@@ -9,6 +10,7 @@ import {
   payContactAccess,
   requestContactAccess,
   unpublishListing,
+  updateListing,
 } from './marketplace'
 import { fetchPublicListings as fetchPublicListingsFromBarrel } from './index'
 
@@ -56,6 +58,24 @@ describe('marketplace API', () => {
 
     expect(String(fetchMock.mock.calls[0][0])).toContain('/public/market/listings')
     expect(String(fetchMock.mock.calls[0][0])).toContain('category_id=3')
+  })
+
+  it('loads public listings with supported seller and country filters', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ data: [], current_page: 1, last_page: 1, total: 0 }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await fetchPublicListings({ country: 'SA', seller_type: 'local', per_page: 12, page: 2 })
+
+    const url = String(fetchMock.mock.calls[0][0])
+    expect(url).toContain('/public/market/listings')
+    expect(url).toContain('country=SA')
+    expect(url).toContain('seller_type=local')
+    expect(url).toContain('per_page=12')
+    expect(url).toContain('page=2')
   })
 
   it('loads public marketplace categories without a token', async () => {
@@ -201,5 +221,68 @@ describe('marketplace API', () => {
     const [url, init] = fetchMock.mock.calls[0]
     expect(String(url)).toContain('/market/listings/9/unpublish')
     expect(init?.method).toBe('POST')
+  })
+
+  it('creates a new listing for every save instead of overwriting the previous product', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: 11, title: 'Olives', status: 'draft' }), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: 12, title: 'Honey', status: 'draft' }), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+
+    const first = await createListing('token-1', { title: 'Olives', seller_type: 'local' }, 4)
+    const second = await createListing('token-1', { title: 'Honey', seller_type: 'local' }, 4)
+
+    expect(first.id).toBe(11)
+    expect(second.id).toBe(12)
+    expect(fetchMock.mock.calls).toHaveLength(2)
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/market/listings')
+    expect(String(fetchMock.mock.calls[1][0])).toContain('/market/listings')
+    expect(String(fetchMock.mock.calls[0][0])).not.toMatch(/\/market\/listings\/\d+$/)
+    expect(String(fetchMock.mock.calls[1][0])).not.toMatch(/\/market\/listings\/\d+$/)
+    expect(fetchMock.mock.calls[0][1]?.method).toBe('POST')
+    expect(fetchMock.mock.calls[1][1]?.method).toBe('POST')
+  })
+
+  it('updates an owned listing by id without creating a second product', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ id: 11, title: 'Olive oil', status: 'draft' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const result = await updateListing('token-1', 11, { title: 'Olive oil' }, 4)
+
+    expect(result.id).toBe(11)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(String(url)).toContain('/market/listings/11')
+    expect(init?.method).toBe('PATCH')
+    expect(JSON.parse(String(init?.body))).toMatchObject({ title: 'Olive oil' })
+  })
+
+  it('deletes only the requested owned listing', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ message: 'deleted' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await deleteListing('token-1', 11, 4)
+
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(String(url)).toContain('/market/listings/11')
+    expect(String(url)).not.toContain('/market/listings/12')
+    expect(init?.method).toBe('DELETE')
+    expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer token-1')
   })
 })
