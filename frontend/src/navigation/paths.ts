@@ -1,9 +1,9 @@
 export const internalPaths = {
   account: '/account',
   profile: '/account/profile',
-  products: '/account/products',
-  newProduct: '/account/products/new',
-  editProduct: (listingId: number | string) => `/account/products/${listingId}`,
+  products: '/seller/listings',
+  newProduct: '/seller/listings/new',
+  editProduct: (listingId: number | string) => `/seller/listings/${listingId}`,
   settings: '/settings',
   login: '/login',
   jobSeekerEnter: '/jobs/enter',
@@ -20,8 +20,6 @@ export const publicPaths = {
 export const REQUIRED_INTERNAL_NAV_PATHS = [
   internalPaths.account,
   internalPaths.profile,
-  internalPaths.products,
-  internalPaths.newProduct,
   publicPaths.market,
 ] as const
 

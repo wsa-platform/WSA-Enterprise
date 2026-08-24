@@ -8,6 +8,7 @@ import {
   JOB_SEEKER_HOME,
   LEGACY_DASHBOARD_PATH,
   audienceFromPath,
+  canonicalSellerPath,
   destinationForRoles,
   employerLogoutPath,
   employerStartPath,
@@ -145,7 +146,10 @@ describe('route guards', () => {
 describe('marketplace account separation', () => {
   it('keeps marketplace login and registration off the Job-Seeker audience', () => {
     expect(isMarketplacePath('/market')).toBe(true)
+    expect(isMarketplacePath('/seller/listings')).toBe(true)
+    expect(isMarketplacePath('/seller/listings/new')).toBe(true)
     expect(isMarketplacePath('/account/products')).toBe(true)
+    expect(isMarketplacePath('/account')).toBe(false)
     expect(isMarketplacePath('/jobs/application')).toBe(false)
     expect(publicLoginHref(null, '/market')).not.toContain('audience=job_seeker')
     expect(publicRegisterHref(null, '/market')).not.toContain('audience=job_seeker')
@@ -160,6 +164,8 @@ describe('marketplace account separation', () => {
     const jobSeeker = roleFlagsFromPermissions(['jobs.talent.register'])
     expect(destinationForRoles(jobSeeker, null, internalPaths.products)).toBe(internalPaths.products)
     expect(destinationForRoles(jobSeeker, null, internalPaths.newProduct)).toBe(internalPaths.newProduct)
+    expect(destinationForRoles(jobSeeker, null, '/account/products/new')).toBe(internalPaths.newProduct)
+    expect(canonicalSellerPath('/account/products')).toBe('/seller/listings')
     expect(destinationForRoles(jobSeeker, 'job_seeker', internalPaths.products)).toBe(JOB_SEEKER_HOME)
     expect(loginPathForProtectedRoute('/jobs/application')).toContain('audience=job_seeker')
     expect(loginPathForProtectedRoute(internalPaths.products)).not.toContain('audience=job_seeker')

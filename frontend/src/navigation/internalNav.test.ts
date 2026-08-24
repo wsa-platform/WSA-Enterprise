@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildInternalBreadcrumbs, flattenNavTargets, INTERNAL_NAV_SECTIONS, isNavItemVisible, visibleNavSections } from './internalNav'
+import { buildInternalBreadcrumbs, flattenNavTargets, visibleNavSections } from './internalNav'
 import {
   PUBLIC_TOP_NAV_FORBIDDEN_PATHS,
   PUBLIC_TOP_NAV_ITEMS,
@@ -17,12 +17,14 @@ describe('internal navigation map', () => {
     expect(targets).not.toContain('/dashboard')
     expect(targets).toContain(internalPaths.account)
     expect(targets).toContain(internalPaths.profile)
-    expect(targets).toContain(internalPaths.products)
-    expect(targets).toContain(internalPaths.newProduct)
+    expect(targets).not.toContain('/account/products')
+    expect(targets).not.toContain('/account/products/new')
     expect(targets).toContain(publicPaths.market)
   })
 
-  it('does not invent a second product system or seller dashboard', () => {
+  it('does not keep Marketplace Seller product management inside the ERP workspace nav', () => {
+    expect(targets).not.toContain(internalPaths.products)
+    expect(targets).not.toContain(internalPaths.newProduct)
     expect(targets.some((path) => path.startsWith('/seller'))).toBe(false)
     expect(targets).not.toContain('/cart')
     expect(targets).not.toContain('/checkout')
@@ -34,22 +36,6 @@ describe('internal navigation map', () => {
     expect(loadingTargets).toContain(internalPaths.account)
     expect(loadingTargets).toContain(internalPaths.profile)
     expect(loadingTargets).toContain(publicPaths.market)
-    expect(loadingTargets).not.toContain(internalPaths.products)
-    expect(loadingTargets).not.toContain(internalPaths.newProduct)
-  })
-
-  it('hides own-product links when the user lacks market permissions', () => {
-    const can = (permission: string) => permission === 'platform.view'
-    expect(isNavItemVisible(
-      INTERNAL_NAV_SECTIONS.flatMap((section) => section.items).find((item) => item.to === internalPaths.products)!,
-      can,
-      false,
-    )).toBe(false)
-    expect(isNavItemVisible(
-      INTERNAL_NAV_SECTIONS.flatMap((section) => section.items).find((item) => item.to === internalPaths.newProduct)!,
-      can,
-      false,
-    )).toBe(false)
   })
 })
 
@@ -65,7 +51,7 @@ describe('internal breadcrumbs', () => {
 
   it('distinguishes add-product from edit-product crumbs', () => {
     expect(buildInternalBreadcrumbs(internalPaths.newProduct, t).at(-1)?.label).toBe('market.addProduct')
-    expect(buildInternalBreadcrumbs('/account/products/42', t).at(-1)?.label).toBe('market.editProduct')
+    expect(buildInternalBreadcrumbs('/seller/listings/42', t).at(-1)?.label).toBe('market.editProduct')
   })
 })
 

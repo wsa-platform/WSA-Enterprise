@@ -98,12 +98,30 @@ export function isMarketplacePath(pathname?: string | null): boolean {
   if (!pathname) return false
   return pathname === '/market'
     || pathname.startsWith('/market/')
-    || pathname === '/account'
-    || pathname.startsWith('/account/')
+    || pathname === '/seller/listings'
+    || pathname.startsWith('/seller/listings/')
+    || pathname === '/account/products'
+    || pathname.startsWith('/account/products/')
+}
+
+export function canonicalSellerPath(pathname: string): string {
+  if (pathname === '/account/products' || pathname === '/seller/listings') {
+    return internalPaths.products
+  }
+  if (pathname === '/account/products/new' || pathname === '/seller/listings/new') {
+    return internalPaths.newProduct
+  }
+  const listingMatch = pathname.match(/^\/(?:account\/products|seller\/listings)\/([^/]+)$/)
+  if (listingMatch && listingMatch[1] !== 'new') {
+    return internalPaths.editProduct(listingMatch[1])
+  }
+  return pathname
 }
 
 export function marketplaceReturnPath(pathname?: string | null): string {
-  if (pathname && pathname.startsWith('/account')) return pathname
+  if (pathname && isMarketplacePath(pathname) && pathname !== '/market' && !pathname.startsWith('/market/')) {
+    return canonicalSellerPath(pathname)
+  }
   return internalPaths.products
 }
 
@@ -205,7 +223,7 @@ export function destinationForRoles(
     return JOB_SEEKER_HOME
   }
 
-  if (isMarketplacePath(usableNext)) return usableNext
+  if (isMarketplacePath(usableNext)) return canonicalSellerPath(usableNext)
 
   if (roles.isAdmin) {
     if (usableNext.startsWith('/admin')) return usableNext

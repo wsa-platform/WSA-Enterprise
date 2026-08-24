@@ -80,8 +80,6 @@ export const INTERNAL_NAV_SECTIONS: InternalNavSection[] = [
     items: [
       { to: internalPaths.account, labelKey: 'nav.myAccount', end: true },
       { to: internalPaths.profile, labelKey: 'nav.profile' },
-      { to: internalPaths.products, labelKey: 'nav.myProducts', anyPermission: ['market.view', 'market.create', 'market.manage_own'] },
-      { to: internalPaths.newProduct, labelKey: 'nav.addProduct', end: true, anyPermission: ['market.create'] },
       { to: publicPaths.market, labelKey: 'nav.productMarket' },
       { to: internalPaths.settings, labelKey: 'nav.settings', permission: 'platform.view' },
     ],

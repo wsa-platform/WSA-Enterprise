@@ -1755,3 +1755,8 @@
 [dir='rtl'] .gs-hero-actions {
   flex-direction: row-reverse;
 }
+
+.seller-shell-main {
+  flex: 1;
+  padding-block: 1.5rem 3rem;
+}
