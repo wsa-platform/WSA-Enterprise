@@ -1,21 +1,17 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { Outlet } from 'react-router-dom'
 import { PermissionProvider } from '../context/PermissionContext'
-import { marketplaceLoginHref } from '../navigation/roleDestinations'
+import { internalPaths } from '../navigation/paths'
+import { marketplaceLoginHref, marketplaceRegisterHref } from '../navigation/roleDestinations'
 import { PublicHeader } from '../public/PublicHeader'
 
 export function MarketplaceSellerShell() {
-  const { token } = useAuth()
-  const location = useLocation()
-
-  if (!token) {
-    return <Navigate to={marketplaceLoginHref(`${location.pathname}${location.search}`)} replace />
-  }
-
   return (
     <PermissionProvider>
       <div className="public-site seller-shell">
-        <PublicHeader />
+        <PublicHeader
+          loginTo={marketplaceLoginHref(internalPaths.products)}
+          registerTo={marketplaceRegisterHref(internalPaths.products)}
+        />
         <main className="gs-container seller-shell-main">
           <Outlet />
         </main>

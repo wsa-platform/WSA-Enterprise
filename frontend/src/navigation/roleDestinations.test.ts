@@ -19,6 +19,7 @@ import {
   marketplaceLoginHref,
   marketplaceRegisterHref,
   parseAudience,
+  shouldStayOnPlatformAuthPage,
   publicLoginHref,
   publicRegisterHref,
   registerHref,
@@ -169,5 +170,16 @@ describe('marketplace account separation', () => {
     expect(destinationForRoles(jobSeeker, 'job_seeker', internalPaths.products)).toBe(JOB_SEEKER_HOME)
     expect(loginPathForProtectedRoute('/jobs/application')).toContain('audience=job_seeker')
     expect(loginPathForProtectedRoute(internalPaths.products)).not.toContain('audience=job_seeker')
+  })
+
+  it('sends seller login and registration to platform auth pages, then back to listings', () => {
+    expect(marketplaceLoginHref(internalPaths.products)).toBe('/login?next=%2Fseller%2Flistings')
+    expect(marketplaceRegisterHref(internalPaths.products)).toBe('/register?next=%2Fseller%2Flistings')
+    expect(marketplaceLoginHref(internalPaths.products)).not.toContain('audience=')
+    expect(marketplaceRegisterHref(internalPaths.products)).not.toContain('audience=')
+    expect(shouldStayOnPlatformAuthPage(null, '/seller/listings')).toBe(true)
+    expect(shouldStayOnPlatformAuthPage('job_seeker', '/seller/listings')).toBe(false)
+    expect(shouldStayOnPlatformAuthPage('employer', '/employer')).toBe(false)
+    expect(destinationForRoles(roleFlagsFromPermissions([]), null, '/seller/listings')).toBe('/seller/listings')
   })
 })

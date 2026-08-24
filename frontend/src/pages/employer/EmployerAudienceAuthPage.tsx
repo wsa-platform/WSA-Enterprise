@@ -6,6 +6,7 @@ import {
   EMPLOYER_HOME,
   parseAudience,
   shouldOpenEmployerRegisterForm,
+  shouldStayOnPlatformAuthPage,
 } from '../../navigation/roleDestinations'
 import { RoleHomeRedirect } from '../../components/RoleHomeRedirect'
 import { LoginPage } from '../LoginPage'
@@ -19,7 +20,9 @@ export function EmployerAudienceAuthPage({ mode }: { mode: 'login' | 'register' 
   const { role, loading } = useRecruitmentRole()
 
   if (audience !== 'employer') {
-    if (token) return <RoleHomeRedirect />
+    if (token && !shouldStayOnPlatformAuthPage(audience, params.get('next'))) {
+      return <RoleHomeRedirect />
+    }
     return mode === 'login' ? <LoginPage /> : <RegisterPage />
   }
 

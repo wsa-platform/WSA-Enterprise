@@ -15,7 +15,13 @@ import { PUBLIC_TOP_NAV_ITEMS, internalPaths } from '../navigation/paths'
 import { PublicLanguageMenu } from './PublicLanguageMenu'
 
 /** Header — adapted from garden-store/components/Header.tsx */
-export function PublicHeader() {
+export function PublicHeader({
+  loginTo: loginToOverride,
+  registerTo: registerToOverride,
+}: {
+  loginTo?: string
+  registerTo?: string
+} = {}) {
   const { t } = useTranslation()
   const { token } = useAuth()
   const { pathname } = useLocation()
@@ -28,8 +34,10 @@ export function PublicHeader() {
     : isMarketplacePath(pathname)
       ? internalPaths.products
       : JOB_SEEKER_HOME
-  const loginTo = authenticated ? authenticatedHome : publicLoginHref(storedAudience, pathname)
-  const registerTo = authenticated ? authenticatedHome : publicRegisterHref(storedAudience, pathname)
+  const loginTo = loginToOverride
+    ?? (authenticated ? authenticatedHome : publicLoginHref(storedAudience, pathname))
+  const registerTo = registerToOverride
+    ?? (authenticated ? authenticatedHome : publicRegisterHref(storedAudience, pathname))
 
   return (
     <header className="gs-header">

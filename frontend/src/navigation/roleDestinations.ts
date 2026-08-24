@@ -147,6 +147,10 @@ export function marketplaceRegisterHref(next: string = internalPaths.newProduct)
   return registerHref(null, next)
 }
 
+export function shouldStayOnPlatformAuthPage(audience: AuthAudience | null, next?: string | null): boolean {
+  return !audience && Boolean(next && isMarketplacePath(next))
+}
+
 export function employerCreateAccountHref(): string {
   return registerHref('employer', EMPLOYER_HOME)
 }
