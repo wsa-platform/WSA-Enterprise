@@ -34,10 +34,16 @@ export function PublicHeader({
     : isMarketplacePath(pathname)
       ? internalPaths.products
       : JOB_SEEKER_HOME
-  const loginTo = (!authenticated && loginToOverride)
-    ?? (authenticated ? authenticatedHome : publicLoginHref(storedAudience, pathname))
-  const registerTo = (!authenticated && registerToOverride)
-    ?? (authenticated ? authenticatedHome : publicRegisterHref(storedAudience, pathname))
+  const loginTo = !authenticated && loginToOverride
+    ? loginToOverride
+    : authenticated
+      ? authenticatedHome
+      : publicLoginHref(storedAudience, pathname)
+  const registerTo = !authenticated && registerToOverride
+    ? registerToOverride
+    : authenticated
+      ? authenticatedHome
+      : publicRegisterHref(storedAudience, pathname)
   const marketplaceAccount = authenticated && isMarketplacePath(pathname)
 
   return (
