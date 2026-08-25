@@ -1918,3 +1918,159 @@
     grid-template-columns: 1fr;
   }
 }
+
+.seller-shell .seller-listings .page-header {
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.seller-shell .seller-listings .header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.seller-shell .seller-listings .panel {
+  padding: 1.15rem;
+  margin-top: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius);
+}
+
+.seller-shell .seller-product-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.seller-shell .seller-product-card {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.seller-shell .seller-product-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+}
+
+.seller-shell .seller-product-card img,
+.seller-shell .seller-product-photo-fallback {
+  width: 112px;
+  height: 112px;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  background: var(--muted);
+}
+
+.seller-shell .seller-product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  margin: 0.65rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.seller-shell .seller-product-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: stretch;
+  min-width: 10.5rem;
+}
+
+.seller-shell .seller-product-actions .gs-btn {
+  width: 100%;
+  min-height: 2.5rem;
+  white-space: normal;
+  text-align: center;
+}
+
+.seller-shell .gs-btn-danger {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+  box-shadow: none;
+}
+
+.seller-shell .gs-btn-danger:hover {
+  background: #b91c1c;
+}
+
+.seller-shell .gs-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.seller-shell .empty-state {
+  display: grid;
+  justify-items: start;
+  gap: 0.85rem;
+  padding: 1.5rem 1rem;
+  text-align: start;
+}
+
+.seller-shell .seller-empty-products strong {
+  font-size: 1.125rem;
+  color: var(--foreground);
+}
+
+.seller-shell .empty-state .gs-btn {
+  min-height: 2.75rem;
+  padding-inline: 1.4rem;
+}
+
+.seller-shell .seller-inline-editor {
+  max-width: 52rem;
+}
+
+.seller-shell .confirm-dialog {
+  text-align: start;
+}
+
+.seller-shell .confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.seller-shell .confirm-actions .gs-btn,
+.seller-shell .confirm-backdrop .refresh,
+.seller-shell .confirm-backdrop .danger {
+  min-height: 2.5rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: 1rem;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .seller-shell .seller-product-card {
+    grid-template-columns: 1fr;
+  }
+
+  .seller-shell .seller-product-actions {
+    min-width: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .seller-shell .seller-product-actions .gs-btn {
+    width: auto;
+    flex: 1 1 10rem;
+  }
+
+  .seller-shell .seller-listings .page-header {
+    flex-direction: column;
+  }
+}

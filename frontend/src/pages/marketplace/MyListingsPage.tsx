@@ -1,28 +1,40 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, Navigate, useLocation } from 'react-router-dom'
-import { deleteListing, fetchMyListings, submitListing, unpublishListing, type OwnerListing } from '../../api/marketplace'
-import { PaginationBar } from '../../components/DataTable'
-import { PageHeader } from '../../components/PageHeader'
-import { EmptyState, ErrorBanner, StatusBadge } from '../../components/UiPrimitives'
+import { Navigate, useLocation } from 'react-router-dom'
+import {
+  deleteListing,
+  fetchMyListings,
+  submitListing,
+  unpublishListing,
+  type OwnerListing,
+} from '../../api/marketplace'
+import { ErrorBanner } from '../../components/UiPrimitives'
 import { useAuth } from '../../context/AuthContext'
 import { usePermissions } from '../../context/PermissionContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { translateApiError } from '../../i18n/apiErrors'
-import { countryDisplayName } from '../../marketplace/isoCountries'
-import { availabilityI18nKey, formatQuantity, primaryListingImage } from '../../marketplace/productDisplay'
-import { internalPaths, publicPaths } from '../../navigation/paths'
+import { internalPaths } from '../../navigation/paths'
 import { marketplaceLoginHref } from '../../navigation/roleDestinations'
+import { SellerListingsView } from './SellerListingsView'
+import { SellerProductForm } from './SellerProductForm'
+import {
+  closedEditor,
+  deleteSellerListing,
+  openCreateEditor,
+  openEditEditor,
+  type SellerEditorState,
+} from './sellerListingsActions'
 
 export function MyListingsPage() {
   const { t, i18n } = useTranslation()
   const location = useLocation()
-  const { token, organizationId } = useAuth()
+  const { token, organizationId, user } = useAuth()
   const { can, loading: permissionsLoading } = usePermissions()
   const [page, setPage] = useState(1)
   const [notice, setNotice] = useState('')
-  const canCreate = can('market.create')
-  const canManage = can('market.manage_own') || can('market.manage_all') || canCreate
+  const [noticeIsError, setNoticeIsError] = useState(false)
+  const [editor, setEditor] = useState<SellerEditorState>(closedEditor())
+  const [pendingDelete, setPendingDelete] = useState<OwnerListing | null>(null)
   const language = i18n.language ?? 'ar'
 
   const { data: payload, loading, error, reload } = useAsyncData(async () => {
@@ -32,8 +44,14 @@ export function MyListingsPage() {
 
   useEffect(() => {
     const key = (location.state as { productNotice?: string } | null)?.productNotice
-    if (key === 'created') setNotice(t('market.created'))
-    if (key === 'updated') setNotice(t('market.updated'))
+    if (key === 'created') {
+      setNotice(t('market.created'))
+      setNoticeIsError(false)
+    }
+    if (key === 'updated') {
+      setNotice(t('market.updated'))
+      setNoticeIsError(false)
+    }
   }, [location.state, t])
 
   if (!token) {
@@ -48,132 +66,107 @@ export function MyListingsPage() {
     return <ErrorBanner message={t('market.noPermissionView')} />
   }
 
-  const runAction = async (listing: OwnerListing, action: 'submit' | 'delete' | 'hide') => {
-    if (!token) return
-    setNotice('')
+  const showNotice = (message: string, isError = false) => {
+    setNotice(message)
+    setNoticeIsError(isError)
+  }
+
+  const openCreate = () => {
+    setPendingDelete(null)
+    showNotice('')
+    setEditor(openCreateEditor())
+  }
+
+  const openEdit = (listing: OwnerListing) => {
+    setPendingDelete(null)
+    showNotice('')
+    setEditor(openEditEditor(listing))
+  }
+
+  const closeForm = () => {
+    setEditor(closedEditor())
+  }
+
+  const runHideOrPublish = async (listing: OwnerListing, action: 'submit' | 'hide') => {
+    showNotice('')
     try {
-      if (action === 'delete') {
-        if (!window.confirm(t('market.confirmDelete'))) return
-        await deleteListing(token, listing.id, organizationId ?? undefined)
-        setNotice(t('market.deleted'))
-      } else if (action === 'hide') {
+      if (action === 'hide') {
         if (!window.confirm(t('market.confirmHide'))) return
         await unpublishListing(token, listing.id, organizationId ?? undefined)
-        setNotice(t('market.hidden'))
+        showNotice(t('market.hidden'))
       } else {
         await submitListing(token, listing.id, organizationId ?? undefined)
-        setNotice(t('market.submitted'))
+        showNotice(t('market.submitted'))
       }
       await reload()
     } catch (requestError) {
-      setNotice(translateApiError(requestError) || t('market.actionFailed'))
+      showNotice(translateApiError(requestError) || t('market.actionFailed'), true)
     }
   }
 
-  const categoryLabel = (listing: OwnerListing) => {
-    const category = listing.category
-    if (!category) return null
-    return language.startsWith('ar') && category.name_ar ? category.name_ar : category.name ?? null
+  const confirmDelete = async () => {
+    const listing = pendingDelete
+    if (!listing) return
+    setPendingDelete(null)
+    const result = await deleteSellerListing({
+      confirmed: true,
+      token,
+      listingId: listing.id,
+      organizationId: organizationId ?? undefined,
+      deleteListing,
+    })
+    if (!result.ok) {
+      showNotice(translateApiError(result.error) || t('market.actionFailed'), true)
+      return
+    }
+    showNotice(t('market.deleted'))
+    if (editor.status === 'edit' && editor.listing.id === listing.id) {
+      setEditor(closedEditor())
+    }
+    await reload()
   }
 
-  const unitLabel = (listing: OwnerListing) => {
-    const unit = listing.unit
-    if (!unit) return null
-    return language.startsWith('ar') && unit.name_ar ? unit.name_ar : unit.name ?? unit.slug ?? null
-  }
+  const listings = payload?.data ?? []
 
   return (
-    <>
-      <PageHeader
-        eyebrow={t('nav.myAccount')}
-        title={t('accountPage.myProducts')}
-        description={t('accountPage.myProductsDescription')}
-        actions={(
-          <span className="header-actions">
-            <Link className="link-button" to={publicPaths.market}>{t('nav.productMarket')}</Link>
-            {canCreate && (
-              <Link className="refresh" to={internalPaths.newProduct}>{t('nav.addProduct')}</Link>
-            )}
-          </span>
-        )}
-      />
-
-      {error && <ErrorBanner message={error} onRetry={reload} />}
-      {notice && <p className={`notice ${notice === t('market.actionFailed') ? '' : 'success'}`.trim()}>{notice}</p>}
-
-      <section className="panel">
-        {loading ? (
-          <p className="loading">{t('market.loadingListings')}</p>
-        ) : (payload?.data.length ?? 0) === 0 ? (
-          <EmptyState
-            title={t('market.noListings')}
-            description={t('market.noListingsDescription')}
-            action={canCreate ? <Link className="refresh" to={internalPaths.newProduct}>{t('nav.addProduct')}</Link> : undefined}
-          />
-        ) : (
-          <>
-            <div className="seller-product-list">
-              {(payload?.data ?? []).map((row) => {
-                const image = primaryListingImage(row)
-                const availabilityKey = availabilityI18nKey(row.availability)
-                const quantity = formatQuantity(row.available_quantity)
-                const origin = countryDisplayName(row.origin_country, language)
-                const sellerCountry = countryDisplayName(row.country ?? row.seller_country, language)
-                return (
-                  <article key={row.id} className="seller-product-card">
-                    {image
-                      ? <img src={image} alt={row.title} />
-                      : <div className="seller-product-photo-fallback" aria-hidden="true" />}
-                    <div>
-                      <h3 dir="auto">{row.title}</h3>
-                      <StatusBadge status={row.status ?? 'draft'} />
-                      <ul className="seller-product-meta">
-                        {categoryLabel(row) && <li>{t('market.category')}: {categoryLabel(row)}</li>}
-                        {sellerCountry && <li>{t('market.sellerCountry')}: {sellerCountry}</li>}
-                        {row.city && <li>{t('market.city')}: {row.city}</li>}
-                        {row.seller_region && <li>{t('market.sellerRegion')}: {row.seller_region}</li>}
-                        {origin && <li>{t('market.originCountry')}: {origin}</li>}
-                        {availabilityKey && <li>{t('market.availabilityLabel')}: {t(availabilityKey)}</li>}
-                        {unitLabel(row) && <li>{t('market.unit')}: {unitLabel(row)}</li>}
-                        {quantity && <li>{t('market.availableQuantity')}: {quantity}</li>}
-                        {row.wholesale ? <li>{t('market.wholesale')}</li> : null}
-                        {row.retail ? <li>{t('market.retail')}</li> : null}
-                        {row.export_ready ? <li>{t('market.exportReady')}</li> : null}
-                      </ul>
-                    </div>
-                    {canManage ? (
-                      <span className="seller-product-actions">
-                        {(row.status === 'draft' || row.status === 'rejected' || row.status === 'unpublished') && (
-                          <button type="button" className="link-button" onClick={() => void runAction(row, 'submit')}>
-                            {t('market.publishProduct')}
-                          </button>
-                        )}
-                        {row.status === 'published' && (
-                          <>
-                            <Link className="link-button" to={publicPaths.listing(row.id)}>{t('market.viewPublicListing')}</Link>
-                            <button type="button" className="link-button" onClick={() => void runAction(row, 'hide')}>
-                              {t('market.hideProduct')}
-                            </button>
-                          </>
-                        )}
-                        <Link className="link-button" to={internalPaths.editProduct(row.id)}>
-                          {t('common.edit')}
-                        </Link>
-                        <button type="button" className="link-button" onClick={() => void runAction(row, 'delete')}>
-                          {t('common.delete')}
-                        </button>
-                      </span>
-                    ) : null}
-                  </article>
-                )
-              })}
-            </div>
-            {payload && (
-              <PaginationBar page={payload.current_page} lastPage={payload.last_page} total={payload.total} onPageChange={setPage} />
-            )}
-          </>
-        )}
-      </section>
-    </>
+    <SellerListingsView
+      listings={listings}
+      loading={loading}
+      error={error || undefined}
+      onRetry={() => void reload()}
+      page={payload?.current_page ?? page}
+      lastPage={payload?.last_page ?? 1}
+      total={payload?.total ?? 0}
+      onPageChange={setPage}
+      editor={editor}
+      pendingDelete={pendingDelete}
+      notice={notice}
+      noticeIsError={noticeIsError}
+      language={language}
+      onAddProduct={openCreate}
+      onEditProduct={openEdit}
+      onRequestDelete={(listing) => setPendingDelete(listing)}
+      onCancelDelete={() => setPendingDelete(null)}
+      onConfirmDelete={() => void confirmDelete()}
+      onHide={(listing) => void runHideOrPublish(listing, 'hide')}
+      onPublish={(listing) => void runHideOrPublish(listing, 'submit')}
+      form={(
+        <SellerProductForm
+          key={editor.status === 'edit' ? `edit-${editor.listing.id}` : 'create'}
+          listing={editor.status === 'edit' ? editor.listing : null}
+          token={token}
+          organizationId={organizationId}
+          sellerDisplayName={user?.name}
+          saveLabel={t('common.save')}
+          cancelLabel={t('common.cancel')}
+          onCancel={closeForm}
+          onSaved={async (_listing, kind) => {
+            showNotice(kind === 'created' ? t('market.created') : t('market.updated'))
+            setEditor(closedEditor())
+            await reload()
+          }}
+        />
+      )}
+    />
   )
 }
