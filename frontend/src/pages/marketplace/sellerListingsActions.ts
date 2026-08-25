@@ -103,3 +103,26 @@ export async function deleteSellerListing(input: {
     return { ok: false, reason: 'error', error }
   }
 }
+
+export async function publishSellerListing(input: {
+  busy?: boolean
+  token: string
+  listingId: number
+  organizationId?: number
+  submitListing: (token: string, listingId: number, organizationId?: number) => Promise<OwnerListing>
+}): Promise<{ ok: true; listing: OwnerListing } | { ok: false; reason: 'busy' | 'error'; error?: unknown }> {
+  if (input.busy) {
+    return { ok: false, reason: 'busy' }
+  }
+  try {
+    const listing = await input.submitListing(input.token, input.listingId, input.organizationId)
+    return { ok: true, listing }
+  } catch (error) {
+    return { ok: false, reason: 'error', error }
+  }
+}
+
+export function canPublishListing(status?: string | null): boolean {
+  return status === 'draft' || status === 'rejected' || status === 'unpublished' || status === 'pending_review'
+}
+

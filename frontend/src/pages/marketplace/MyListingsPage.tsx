@@ -22,6 +22,7 @@ import {
   deleteSellerListing,
   openCreateEditor,
   openEditEditor,
+  publishSellerListing,
   type SellerEditorState,
 } from './sellerListingsActions'
 
@@ -35,6 +36,7 @@ export function MyListingsPage() {
   const [noticeIsError, setNoticeIsError] = useState(false)
   const [editor, setEditor] = useState<SellerEditorState>(closedEditor())
   const [pendingDelete, setPendingDelete] = useState<OwnerListing | null>(null)
+  const [busy, setBusy] = useState(false)
   const language = i18n.language ?? 'ar'
 
   const { data: payload, loading, error, reload } = useAsyncData(async () => {
@@ -87,27 +89,48 @@ export function MyListingsPage() {
     setEditor(closedEditor())
   }
 
-  const runHideOrPublish = async (listing: OwnerListing, action: 'submit' | 'hide') => {
+  const runHide = async (listing: OwnerListing) => {
+    if (busy) return
     showNotice('')
+    if (!window.confirm(t('market.confirmHide'))) return
+    setBusy(true)
     try {
-      if (action === 'hide') {
-        if (!window.confirm(t('market.confirmHide'))) return
-        await unpublishListing(token, listing.id, organizationId ?? undefined)
-        showNotice(t('market.hidden'))
-      } else {
-        await submitListing(token, listing.id, organizationId ?? undefined)
-        showNotice(t('market.submitted'))
-      }
+      await unpublishListing(token, listing.id, organizationId ?? undefined)
+      showNotice(t('market.hidden'))
       await reload()
     } catch (requestError) {
       showNotice(translateApiError(requestError) || t('market.actionFailed'), true)
+    } finally {
+      setBusy(false)
     }
+  }
+
+  const runPublish = async (listing: OwnerListing) => {
+    if (busy) return
+    showNotice('')
+    setBusy(true)
+    const result = await publishSellerListing({
+      busy: false,
+      token,
+      listingId: listing.id,
+      organizationId: organizationId ?? undefined,
+      submitListing,
+    })
+    setBusy(false)
+    if (!result.ok) {
+      if (result.reason === 'busy') return
+      showNotice(translateApiError(result.error) || t('market.actionFailed'), true)
+      return
+    }
+    showNotice(t('market.published'))
+    await reload()
   }
 
   const confirmDelete = async () => {
     const listing = pendingDelete
-    if (!listing) return
+    if (!listing || busy) return
     setPendingDelete(null)
+    setBusy(true)
     const result = await deleteSellerListing({
       confirmed: true,
       token,
@@ -115,6 +138,7 @@ export function MyListingsPage() {
       organizationId: organizationId ?? undefined,
       deleteListing,
     })
+    setBusy(false)
     if (!result.ok) {
       showNotice(translateApiError(result.error) || t('market.actionFailed'), true)
       return
@@ -148,8 +172,9 @@ export function MyListingsPage() {
       onRequestDelete={(listing) => setPendingDelete(listing)}
       onCancelDelete={() => setPendingDelete(null)}
       onConfirmDelete={() => void confirmDelete()}
-      onHide={(listing) => void runHideOrPublish(listing, 'hide')}
-      onPublish={(listing) => void runHideOrPublish(listing, 'submit')}
+      onHide={(listing) => void runHide(listing)}
+      onPublish={(listing) => void runPublish(listing)}
+      busy={busy}
       form={(
         <SellerProductForm
           key={editor.status === 'edit' ? `edit-${editor.listing.id}` : 'create'}

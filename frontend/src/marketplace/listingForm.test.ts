@@ -119,4 +119,16 @@ describe('listing editor form mapping', () => {
     expect(created.payload.unit_id).toBe(8)
     expect(created.payload).not.toHaveProperty('export_destination')
   })
+
+  it('saves the seller-entered product name as title without publishing', () => {
+    const created = buildListingWritePayload(
+      values({ title: 'أرز مصري', unitId: '3' }),
+      { categories: [{ id: 4, slug: 'vegetables', name: 'Vegetables', name_ar: 'الخضروات' }] },
+    )
+    expect(created.errors).toEqual([])
+    expect(created.payload.title).toBe('أرز مصري')
+    expect(created.payload.unit_id).toBe(3)
+    expect(created.payload).not.toHaveProperty('status')
+    expect(validateListingEditor(values({ title: '   ' }))).toContain('market.productName')
+  })
 })

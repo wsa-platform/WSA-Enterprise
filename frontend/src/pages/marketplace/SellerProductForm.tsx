@@ -5,7 +5,6 @@ import {
   createListing,
   fetchPublicCategories,
   fetchPublicUnits,
-  submitListing,
   updateListing,
   type OwnerListing,
   type ProductAvailability,
@@ -25,6 +24,7 @@ import {
 import { CALLING_CODES, digitsOnly, formatCallingCodeOption } from '../../marketplace/phone'
 import { PRODUCT_CATEGORIES, isProductCategorySlug, productCategoryLabel } from '../../marketplace/productCategories'
 import { listingImageUrl, listingImages, parseSpecificationLines, specificationLines } from '../../marketplace/productDisplay'
+import { mergeMarketUnits, unitOptionLabel } from '../../marketplace/units'
 import { saveSellerListing } from './sellerListingsActions'
 
 type SellerProductFormProps = {
@@ -36,7 +36,6 @@ type SellerProductFormProps = {
   onSaved: (listing: OwnerListing, kind: 'created' | 'updated') => void
   saveLabel: string
   cancelLabel: string
-  showSubmitForReview?: boolean
   readOnly?: boolean
 }
 
@@ -49,7 +48,6 @@ export function SellerProductForm({
   onSaved,
   saveLabel,
   cancelLabel,
-  showSubmitForReview = false,
   readOnly = false,
 }: SellerProductFormProps) {
   const { t, i18n } = useTranslation()
@@ -184,7 +182,7 @@ export function SellerProductForm({
     sellerEmail,
   })
 
-  const save = async (alsoSubmit = false) => {
+  const save = async () => {
     if (busyRef.current || readOnly) return
     const { payload, errors } = buildListingWritePayload(editorValues(), {
       categories,
@@ -218,11 +216,7 @@ export function SellerProductForm({
         setNotice(translateApiError(result.error) || t('market.saveFailed'))
         return
       }
-      let saved = result.listing
-      if (alsoSubmit) {
-        saved = await submitListing(token, saved.id, organizationId ?? undefined)
-      }
-      onSaved(saved, result.kind)
+      onSaved(result.listing, result.kind)
     } catch (requestError) {
       setFieldErrors(apiFieldErrorMessages(requestError))
       setNotice(translateApiError(requestError) || t('market.saveFailed'))
@@ -271,13 +265,13 @@ export function SellerProductForm({
           aria-busy={submitting}
           onSubmit={(event) => {
             event.preventDefault()
-            void save(false)
+            void save()
           }}
         >
           <div className="listing-form-grid">
             <p className="listing-section-title span-2">{t('market.productInformation')}</p>
             <label className="span-2">
-              {t('common.title')}
+              {t('market.productName')}
               <input value={title} onChange={(event) => setTitle(event.target.value)} disabled={disabled} dir="auto" required />
             </label>
             <label>
@@ -373,12 +367,12 @@ export function SellerProductForm({
               {currencyInvalid && <p className="field-error">{t('market.currencyRequired')}</p>}
             </label>
             <label>
-              {t('market.salesUnit')}
+              {t('market.unit')}
               <select value={unitId} onChange={(event) => setUnitId(event.target.value)} disabled={disabled}>
                 <option value="">{t('market.selectUnit')}</option>
-                {units.map((unit) => (
+                {mergeMarketUnits(units).map((unit) => (
                   <option key={unit.id} value={String(unit.id)}>
-                    {language.startsWith('ar') && unit.name_ar ? unit.name_ar : unit.name ?? unit.slug}
+                    {unitOptionLabel(unit, language)}
                   </option>
                 ))}
               </select>
@@ -528,11 +522,6 @@ export function SellerProductForm({
             {!readOnly && (
               <button type="submit" className="gs-btn gs-btn-primary" disabled={submitting}>
                 {submitting ? t('common.saving') : saveLabel}
-              </button>
-            )}
-            {showSubmitForReview && !readOnly && (
-              <button type="button" className="gs-btn gs-btn-ghost" disabled={submitting} onClick={() => void save(true)}>
-                {t('market.publishProduct')}
               </button>
             )}
             <button type="button" className="gs-btn gs-btn-ghost" disabled={submitting} onClick={onCancel}>

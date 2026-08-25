@@ -109,6 +109,18 @@ describe('jobs landing translations', () => {
     expect(i18n.t('auth.entry.seekOpportunity')).not.toContain('website.sections.jobs.features')
   })
 
+  it('uses the approved Arabic seller product-management labels', async () => {
+    await i18n.changeLanguage('ar')
+    expect(i18n.t('market.productName')).toBe('اسم المنتج')
+    expect(i18n.t('market.unit')).toBe('الوحدة')
+    expect(i18n.t('common.save')).toBe('حفظ')
+    expect(i18n.t('common.edit')).toBe('تعديل')
+    expect(i18n.t('common.delete')).toBe('حذف')
+    expect(i18n.t('market.publish')).toBe('نشر')
+    expect(i18n.t('market.showContact')).toBe('إظهار بيانات الاتصال')
+    expect(i18n.t('nav.addProduct')).toBe('إضافة منتج')
+  })
+
   it('does not register obsolete jobs feature or highlight cards', () => {
     const jobs = PUBLIC_SECTIONS.find((section) => section.id === 'jobs')
     expect(jobs?.featureKeys).toEqual([])

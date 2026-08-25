@@ -95,12 +95,7 @@ class M23UserAccountProductsTest extends TestCase
 
         $this->postJson('/api/v1/market/listings/'.$listingId.'/submit', [], $headers)
             ->assertOk()
-            ->assertJsonPath('status', MarketplaceListing::STATUS_PENDING_REVIEW);
-
-        MarketplaceListing::query()->whereKey($listingId)->update([
-            'status' => MarketplaceListing::STATUS_PUBLISHED,
-            'published_at' => now(),
-        ]);
+            ->assertJsonPath('status', MarketplaceListing::STATUS_PUBLISHED);
 
         $this->getJson('/api/v1/public/market/listings')
             ->assertOk()

@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import { ProductCard } from '../marketplace/ProductCard'
 import { countryDisplayName, MARKETPLACE_COUNTRY_CODES } from '../marketplace/isoCountries'
 import { toPublicProduct } from '../marketplace/productDisplay'
+import { publicListingsOnly } from '../marketplace/contactUnlock'
 import { internalPaths } from '../navigation/paths'
 import { marketplaceLoginHref, sellerAddProductHref } from '../navigation/roleDestinations'
 
@@ -57,7 +58,7 @@ export function PublicMarketSection() {
     ])
       .then(([listingRes, categoryRes]) => {
         if (cancelled) return
-        setListings((listingRes.data ?? []).map(toPublicProduct))
+        setListings(publicListingsOnly((listingRes.data ?? []).map(toPublicProduct)))
         setLastPage(listingRes.last_page ?? 1)
         setTotal(listingRes.total ?? listingRes.data?.length ?? 0)
         const rows = Array.isArray(categoryRes) ? categoryRes : categoryRes.data ?? []

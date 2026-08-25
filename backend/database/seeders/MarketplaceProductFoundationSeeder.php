@@ -58,22 +58,7 @@ class MarketplaceProductFoundationSeeder extends Seeder
             );
         }
 
-        $units = [
-            ['slug' => 'ton', 'name' => 'Ton', 'name_ar' => 'طن', 'sort_order' => 1],
-            ['slug' => 'kg', 'name' => 'Kilogram', 'name_ar' => 'كجم', 'sort_order' => 2],
-            ['slug' => 'gram', 'name' => 'Gram', 'name_ar' => 'جرام', 'sort_order' => 3],
-            ['slug' => 'liter', 'name' => 'Liter', 'name_ar' => 'لتر', 'sort_order' => 4],
-            ['slug' => 'box', 'name' => 'Box', 'name_ar' => 'صندوق', 'sort_order' => 5],
-            ['slug' => 'carton', 'name' => 'Carton', 'name_ar' => 'كرتون', 'sort_order' => 6],
-            ['slug' => 'pack', 'name' => 'Pack', 'name_ar' => 'عبوة', 'sort_order' => 7],
-            ['slug' => 'package', 'name' => 'Package', 'name_ar' => 'طرد', 'sort_order' => 8],
-            ['slug' => 'bag', 'name' => 'Bag', 'name_ar' => 'كيس', 'sort_order' => 9],
-            ['slug' => 'bottle', 'name' => 'Bottle', 'name_ar' => 'زجاجة', 'sort_order' => 10],
-            ['slug' => 'piece', 'name' => 'Piece', 'name_ar' => 'قطعة', 'sort_order' => 11],
-            ['slug' => 'crate', 'name' => 'Crate', 'name_ar' => 'قفص', 'sort_order' => 12],
-        ];
-
-        foreach ($units as $unit) {
+        foreach (array_merge(MarketplaceUnit::canonicalUnits(), MarketplaceUnit::additionalUnits()) as $unit) {
             MarketplaceUnit::updateOrCreate(
                 ['slug' => $unit['slug']],
                 $unit + ['is_active' => true],

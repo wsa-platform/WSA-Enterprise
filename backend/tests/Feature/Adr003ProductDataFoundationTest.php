@@ -186,6 +186,10 @@ class Adr003ProductDataFoundationTest extends TestCase
         $this->assertTrue(MarketplaceCategory::query()->where('slug', 'custom-olives')->exists());
 
         $this->assertTrue(MarketplaceUnit::query()->where('slug', 'kg')->exists());
+        MarketplaceUnit::ensureCanonicalUnits();
+        foreach (['metric_ton', 'ml', 'meter', 'barrel', 'other'] as $slug) {
+            $this->assertTrue(MarketplaceUnit::query()->where('slug', $slug)->exists(), "Missing unit {$slug}");
+        }
         MarketplaceUnit::create([
             'slug' => 'sack',
             'name' => 'Sack',

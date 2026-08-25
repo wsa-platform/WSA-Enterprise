@@ -10,9 +10,6 @@ const CONTACT_KEYS = [
   'seller_address',
   'phone',
   'email',
-  'contact_access_required',
-  'contact_access_price',
-  'contact_access_currency',
 ] as const
 
 export function listingImageUrl(path?: string | null): string | null {

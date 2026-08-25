@@ -326,6 +326,10 @@
       "unavailable": "Şu anda mevcut değil"
     },
     "unit": "Birim",
+    "productName": "Ürün adı",
+    "publish": "Yayınla",
+    "published": "Ürün yayınlandı.",
+    "showContact": "İletişim bilgilerini göster",
     "wholesale": "Toptan",
     "retail": "Perakende",
     "exportReady": "İhracata hazır",

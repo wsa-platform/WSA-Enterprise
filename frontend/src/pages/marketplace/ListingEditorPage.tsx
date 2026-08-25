@@ -91,7 +91,6 @@ export function ListingEditorPage() {
           sellerDisplayName={user?.name}
           saveLabel={t('common.save')}
           cancelLabel={t('common.cancel')}
-          showSubmitForReview={canManage && editable}
           readOnly={!canManage || !editable}
           onCancel={() => navigate(internalPaths.products)}
           onSaved={(_saved, kind) => {

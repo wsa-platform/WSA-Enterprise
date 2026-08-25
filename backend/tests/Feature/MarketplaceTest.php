@@ -94,7 +94,11 @@ class MarketplaceTest extends TestCase
 
         $this->postJson("/api/v1/market/listings/{$listingId}/submit", [], $headers)
             ->assertOk()
-            ->assertJsonPath('status', MarketplaceListing::STATUS_PENDING_REVIEW);
+            ->assertJsonPath('status', MarketplaceListing::STATUS_PUBLISHED);
+
+        $this->getJson('/api/v1/public/market/listings')
+            ->assertOk()
+            ->assertJsonFragment(['id' => $listingId, 'title' => 'Test Listing']);
     }
 
     public function test_contact_access_denied_before_payment(): void

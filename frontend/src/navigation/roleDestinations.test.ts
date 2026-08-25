@@ -27,7 +27,7 @@ import {
   registerHref,
   roleFlagsFromPermissions,
 } from './roleDestinations'
-import { loginPathForProtectedRoute, safeReturnPath, unknownRouteFallback } from './routeGuards'
+import { loginPathForProtectedRoute, authQuery, safeReturnPath, unknownRouteFallback } from './routeGuards'
 import { internalPaths } from './paths'
 
 const combinations: Array<{ permissions: string[]; audience: 'job_seeker' | 'employer' | 'admin' | null; next?: string }> = [
@@ -194,6 +194,7 @@ describe('marketplace account separation', () => {
     expect(safeReturnPath('/seller/listings/new')).toBe('/seller/listings/new')
     expect(marketplaceLoginHref('https://evil.example')).toBe('/login?next=%2F')
     expect(marketplaceRegisterHref(internalPaths.newProduct)).toBe('/register?next=%2Fseller%2Flistings%2Fnew')
+    expect(`/register${authQuery({ next: '/seller/listings/new' })}`).toBe('/register?next=%2Fseller%2Flistings%2Fnew')
   })
 
   it('opens the create form only after seller authentication, never a permission error', () => {

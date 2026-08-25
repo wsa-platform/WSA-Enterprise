@@ -8,6 +8,8 @@ import {
   isEditorOpen,
   openCreateEditor,
   openEditEditor,
+  publishSellerListing,
+  canPublishListing,
   saveSellerListing,
 } from './sellerListingsActions'
 
@@ -121,6 +123,22 @@ describe('seller listing save', () => {
 
     expect(result).toEqual({ ok: false, reason: 'error', error })
   })
+
+  it('does not publish when saving a product', async () => {
+    const submitListing = vi.fn()
+    const created = listing({ status: 'draft', title: 'أرز مصري' })
+    const result = await saveSellerListing({
+      busy: false,
+      token: 'tok',
+      mode: 'create',
+      payload: { title: 'أرز مصري' } as MarketplaceListingWrite,
+      createListing: vi.fn().mockResolvedValue(created),
+      updateListing: vi.fn(),
+    })
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.listing.status).toBe('draft')
+    expect(submitListing).not.toHaveBeenCalled()
+  })
 })
 
 describe('seller listing delete', () => {
@@ -162,5 +180,39 @@ describe('seller listing delete', () => {
     })
 
     expect(result).toEqual({ ok: false, reason: 'error', error })
+  })
+})
+
+describe('seller listing publish', () => {
+  it('calls the existing submit API and does not create a duplicate product', async () => {
+    const published = listing({ status: 'published' })
+    const submitListing = vi.fn().mockResolvedValue(published)
+    const result = await publishSellerListing({
+      token: 'tok',
+      listingId: 11,
+      organizationId: 3,
+      submitListing,
+    })
+    expect(result).toEqual({ ok: true, listing: published })
+    expect(submitListing).toHaveBeenCalledOnce()
+    expect(submitListing).toHaveBeenCalledWith('tok', 11, 3)
+  })
+
+  it('prevents duplicate publish while a request is in flight', async () => {
+    const submitListing = vi.fn()
+    const result = await publishSellerListing({
+      busy: true,
+      token: 'tok',
+      listingId: 11,
+      submitListing,
+    })
+    expect(result).toEqual({ ok: false, reason: 'busy' })
+    expect(submitListing).not.toHaveBeenCalled()
+  })
+
+  it('publishes draft and unpublished products but not already live products', () => {
+    expect(canPublishListing('draft')).toBe(true)
+    expect(canPublishListing('unpublished')).toBe(true)
+    expect(canPublishListing('published')).toBe(false)
   })
 })

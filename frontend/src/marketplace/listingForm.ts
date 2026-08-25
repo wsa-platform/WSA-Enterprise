@@ -113,7 +113,7 @@ export function validateListingEditor(
   knownCategorySlugs: string[] = [],
 ): string[] {
   const errors: string[] = []
-  if (!values.title.trim()) errors.push('common.title')
+  if (!values.title.trim()) errors.push('market.productName')
   const slug = values.categorySlug.trim()
   if (!slug || (!isProductCategorySlug(slug) && !knownCategorySlugs.includes(slug))) {
     errors.push('market.categoryRequired')

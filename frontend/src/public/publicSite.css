@@ -797,6 +797,34 @@
   min-width: 0;
 }
 
+.gs-market-name-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8.5rem;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+.gs-market-name-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.45;
+  color: var(--foreground);
+}
+
+.gs-market-contact {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.gs-market-payment {
+  display: grid;
+  gap: 0.85rem;
+}
+
 @media (max-width: 640px) {
   .gs-market-specs {
     grid-template-columns: 1fr;

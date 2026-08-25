@@ -120,31 +120,26 @@ class MarketplaceService
             MarketplaceListing::STATUS_DRAFT,
             MarketplaceListing::STATUS_REJECTED,
             MarketplaceListing::STATUS_UNPUBLISHED,
+            MarketplaceListing::STATUS_PENDING_REVIEW,
         ], true), 422);
         abort_unless($listing->seller_user_id === $actor->id, 403);
 
-        $listing->update(['status' => MarketplaceListing::STATUS_PENDING_REVIEW]);
-        $this->recordStatusChange($listing, MarketplaceListing::STATUS_PENDING_REVIEW, $actor->id, 'Submitted for review');
+        $previous = $listing->status;
+        $listing->update([
+            'status' => MarketplaceListing::STATUS_PUBLISHED,
+            'published_at' => now(),
+        ]);
+        $this->recordStatusChange($listing, MarketplaceListing::STATUS_PUBLISHED, $actor->id, 'Published by owner');
 
         $this->audit->record(
-            'marketplace.listing_submitted',
+            'marketplace.listing_published',
             $organizationId,
             $actor->id,
             $listing,
-            null,
-            ['status' => MarketplaceListing::STATUS_PENDING_REVIEW],
+            ['status' => $previous],
+            ['status' => MarketplaceListing::STATUS_PUBLISHED],
             $request,
         );
-
-        if ($organizationId !== null) {
-            $this->notifications->notifyOrganizationAdmins(
-                $organizationId,
-                'marketplace.listing_pending_review',
-                'إعلان جديد بانتظار المراجعة',
-                sprintf('الإعلان "%s" بانتظار الموافقة.', $listing->title),
-                ['listing_id' => $listing->id],
-            );
-        }
 
         return $listing->fresh(['category', 'images', 'unit']);
     }
@@ -249,6 +244,8 @@ class MarketplaceService
     /** @return list<MarketplaceUnit> */
     public function activeUnits(): array
     {
+        MarketplaceUnit::ensureCanonicalUnits();
+
         return MarketplaceUnit::query()
             ->where('is_active', true)
             ->orderBy('sort_order')

@@ -326,6 +326,10 @@
       "unavailable": "Actuellement indisponible"
     },
     "unit": "Unité",
+    "productName": "Nom du produit",
+    "publish": "Publier",
+    "published": "Produit publié.",
+    "showContact": "Afficher les coordonnées",
     "wholesale": "Gros",
     "retail": "Détail",
     "exportReady": "Prêt à l’export",

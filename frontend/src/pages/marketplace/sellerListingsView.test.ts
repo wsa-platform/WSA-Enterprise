@@ -106,10 +106,11 @@ describe('seller listings product management UI', () => {
     expect(html).not.toContain('لا توجد منتجات بعد')
   })
 
-  it('renders edit and delete as semantic buttons on each product', () => {
+  it('renders edit, delete, and publish as semantic buttons on unpublished products', () => {
     const html = renderView({ listings: [listing()] })
-    expect(html).toContain('تعديل المنتج')
-    expect(html).toContain('حذف المنتج')
+    expect(html).toContain('تعديل')
+    expect(html).toContain('حذف')
+    expect(html).toContain('نشر')
     expect(html).toContain('طماطم')
     expect(html).not.toContain('href="/seller/listings/11"')
   })

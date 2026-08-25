@@ -10,6 +10,7 @@ import { countryDisplayName } from '../../marketplace/isoCountries'
 import { availabilityI18nKey, formatQuantity, primaryListingImage } from '../../marketplace/productDisplay'
 import { publicPaths } from '../../navigation/paths'
 import {
+  canPublishListing,
   isEditorOpen,
   type SellerEditorState,
 } from './sellerListingsActions'
@@ -51,6 +52,7 @@ export function SellerListingsView({
   onConfirmDelete,
   onHide,
   onPublish,
+  busy = false,
 }: {
   listings: OwnerListing[]
   loading: boolean
@@ -73,6 +75,7 @@ export function SellerListingsView({
   onConfirmDelete: () => void
   onHide: (listing: OwnerListing) => void
   onPublish: (listing: OwnerListing) => void
+  busy?: boolean
 }) {
   const { t } = useTranslation()
   const editorOpen = isEditorOpen(editor)
@@ -156,24 +159,24 @@ export function SellerListingsView({
                         </ul>
                       </div>
                       <span className="seller-product-actions">
-                        {(row.status === 'draft' || row.status === 'rejected' || row.status === 'unpublished') && (
-                          <button type="button" className="gs-btn gs-btn-ghost" onClick={() => onPublish(row)}>
-                            {t('market.publishProduct')}
+                        {canPublishListing(row.status) && (
+                          <button type="button" className="gs-btn gs-btn-ghost" disabled={busy} onClick={() => onPublish(row)}>
+                            {t('market.publish')}
                           </button>
                         )}
                         {row.status === 'published' && (
                           <>
                             <Link className="gs-btn gs-btn-ghost" to={publicPaths.listing(row.id)}>{t('market.viewPublicListing')}</Link>
-                            <button type="button" className="gs-btn gs-btn-ghost" onClick={() => onHide(row)}>
+                            <button type="button" className="gs-btn gs-btn-ghost" disabled={busy} onClick={() => onHide(row)}>
                               {t('market.hideProduct')}
                             </button>
                           </>
                         )}
-                        <button type="button" className="gs-btn gs-btn-primary" onClick={() => onEditProduct(row)}>
-                          {t('market.editProduct')}
+                        <button type="button" className="gs-btn gs-btn-primary" disabled={busy} onClick={() => onEditProduct(row)}>
+                          {t('common.edit')}
                         </button>
-                        <button type="button" className="gs-btn gs-btn-danger" onClick={() => onRequestDelete(row)}>
-                          {t('market.deleteProduct')}
+                        <button type="button" className="gs-btn gs-btn-danger" disabled={busy} onClick={() => onRequestDelete(row)}>
+                          {t('common.delete')}
                         </button>
                       </span>
                     </article>

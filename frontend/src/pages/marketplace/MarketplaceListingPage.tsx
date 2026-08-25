@@ -1,46 +1,118 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router-dom'
-import { fetchPublicListing, type PublicListing } from '../../api/marketplace'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import {
+  fetchPublicListing,
+  payContactAccess,
+  requestContactAccess,
+  type PublicListingContact,
+} from '../../api/marketplace'
+import { useAuth } from '../../context/AuthContext'
+import { translateApiError } from '../../i18n/apiErrors'
 import { countryDisplayName } from '../../marketplace/isoCountries'
 import { sellerTypeLabelKey } from '../../marketplace/listingForm'
 import { isProductCategorySlug, productCategoryLabel } from '../../marketplace/productCategories'
 import { availabilityI18nKey, listingImageUrl, listingImages, specificationLines, toPublicProduct } from '../../marketplace/productDisplay'
+import { productNameFromListing } from '../../marketplace/units'
+import {
+  completeContactPayment,
+  listingHasVisibleContact,
+  showContactClickAction,
+} from '../../marketplace/contactUnlock'
 import { publicPaths } from '../../navigation/paths'
 import { PublicLayout } from '../../public/PublicLayout'
+import { useAsyncData } from '../../hooks/useAsyncData'
+
+export function ContactUnlockPanel({
+  authenticated,
+  loginHref,
+  paying,
+  paymentOpen,
+  error,
+  contact,
+  price,
+  currency,
+  onShowContact,
+  onConfirmPayment,
+}: {
+  authenticated: boolean
+  loginHref: string
+  paying: boolean
+  paymentOpen: boolean
+  error: string
+  contact: PublicListingContact | null
+  price?: string | number
+  currency?: string
+  onShowContact: () => void
+  onConfirmPayment: () => void
+}) {
+  const { t } = useTranslation()
+
+  if (contact && (contact.seller_email || contact.seller_phone)) {
+    return (
+      <section className="gs-market-contact" aria-live="polite">
+        <h2>{t('market.contactDetails')}</h2>
+        <dl className="gs-market-specs">
+          {contact.seller_display_name && (
+            <><dt>{t('market.seller')}</dt><dd>{contact.seller_display_name}</dd></>
+          )}
+          {contact.seller_email && (
+            <><dt>{t('market.sellerEmail')}</dt><dd>{contact.seller_email}</dd></>
+          )}
+          {contact.seller_phone && (
+            <><dt>{t('market.sellerPhone')}</dt><dd>{contact.seller_phone}</dd></>
+          )}
+        </dl>
+      </section>
+    )
+  }
+
+  return (
+    <section className="gs-market-contact">
+      {!paymentOpen && (
+        authenticated ? (
+          <button type="button" className="gs-btn gs-btn-primary" disabled={paying} onClick={onShowContact}>
+            {t('market.showContact')}
+          </button>
+        ) : (
+          <Link className="gs-btn gs-btn-primary" to={loginHref}>
+            {t('market.showContact')}
+          </Link>
+        )
+      )}
+      {paymentOpen && (
+        <div className="gs-market-payment">
+          <p>{t('market.contactProtected', { price: price ?? '—', currency: currency ?? '' })}</p>
+          <button type="button" className="gs-btn gs-btn-primary" disabled={paying} onClick={onConfirmPayment}>
+            {paying ? t('market.paying') : t('market.requestContact')}
+          </button>
+        </div>
+      )}
+      {error && <p className="gs-market-status" role="alert">{error}</p>}
+    </section>
+  )
+}
 
 export function MarketplaceListingPage() {
   const { t, i18n } = useTranslation()
   const { id } = useParams()
-  const [listing, setListing] = useState<PublicListing | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const { token } = useAuth()
+  const listingId = Number(id)
   const language = i18n.language ?? 'ar'
+  const [paymentOpen, setPaymentOpen] = useState(false)
+  const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState('')
+  const [unlockedContact, setUnlockedContact] = useState<PublicListingContact | null>(null)
 
-  useEffect(() => {
-    if (!id) return
-    let cancelled = false
-    setLoading(true)
-    fetchPublicListing(Number(id))
-      .then((data) => {
-        if (cancelled) return
-        setListing(toPublicProduct(data))
-        setError(null)
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setError(err instanceof Error ? err.message : t('market.loadProductsFailed'))
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [id, t])
+  const { data: listing, loading, error } = useAsyncData(async () => {
+    if (!Number.isFinite(listingId)) return null
+    return toPublicProduct(await fetchPublicListing(listingId))
+  }, [listingId])
 
-  const product = listing ? toPublicProduct(listing) : null
+  const product = listing
   const images = product ? listingImages(product) : []
+  const name = product ? productNameFromListing(product) : ''
   const category = product?.category
     ? (language.startsWith('ar') && product.category.name_ar ? product.category.name_ar : product.category.name)
       || productCategoryLabel(product.category.slug ?? product.product_type ?? '', language)
@@ -50,6 +122,38 @@ export function MarketplaceListingPage() {
     : null
   const specText = specificationLines(product?.specifications ?? null)
   const availabilityKey = availabilityI18nKey(product?.availability)
+  const showAction = Number.isFinite(listingId) ? showContactClickAction(Boolean(token), listingId) : { kind: 'login' as const, href: '/login' }
+  const visibleContact = unlockedContact
+
+  const openContactFlow = () => {
+    if (showAction.kind === 'login') {
+      navigate(showAction.href)
+      return
+    }
+    setPayError('')
+    setPaymentOpen(true)
+  }
+
+  const confirmPayment = async () => {
+    if (!token || !Number.isFinite(listingId) || paying) return
+    setPaying(true)
+    setPayError('')
+    const result = await completeContactPayment({
+      listingId,
+      token,
+      requestKey: `contact-req-${listingId}-${Date.now()}`,
+      payKey: `contact-pay-${listingId}-${Date.now()}`,
+      requestContactAccess,
+      payContactAccess,
+      fetchEntitledListing: (id, authToken) => fetchPublicListing(id, authToken),
+    })
+    setPaying(false)
+    if (!result.ok) {
+      setPayError(result.reason === 'unpaid' ? t('market.paymentFailed') : (translateApiError(result.error) || t('market.paymentFailed')))
+      return
+    }
+    setUnlockedContact(result.contact)
+  }
 
   return (
     <PublicLayout>
@@ -71,11 +175,11 @@ export function MarketplaceListingPage() {
                 <div className="gs-market-gallery">
                   {images.map((image) => {
                     const src = listingImageUrl(image.path)
-                    return src ? <img key={image.path} src={src} alt={image.alt_text || product.title} /> : null
+                    return src ? <img key={image.path} src={src} alt={image.alt_text || name} /> : null
                   })}
                 </div>
               )}
-              <h1>{product.title}</h1>
+              <h1 dir="auto">{name}</h1>
               {product.brand && <p className="gs-market-brand">{product.brand}</p>}
               {product.description && <p className="gs-market-description">{product.description}</p>}
               {product.video_url && (
@@ -113,6 +217,20 @@ export function MarketplaceListingPage() {
                   <h2>{t('market.specifications')}</h2>
                   <pre className="gs-market-spec-block">{specText}</pre>
                 </section>
+              )}
+              {!listingHasVisibleContact(product) && (
+                <ContactUnlockPanel
+                  authenticated={Boolean(token)}
+                  loginHref={showAction.kind === 'login' ? showAction.href : publicPaths.market}
+                  paying={paying}
+                  paymentOpen={paymentOpen}
+                  error={payError}
+                  contact={visibleContact}
+                  price={product.contact_access_price}
+                  currency={product.contact_access_currency}
+                  onShowContact={openContactFlow}
+                  onConfirmPayment={() => void confirmPayment()}
+                />
               )}
             </article>
           )}

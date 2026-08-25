@@ -54,9 +54,9 @@ describe('productDisplay', () => {
     expect(product).not.toHaveProperty('email')
     expect(product).not.toHaveProperty('phone')
     expect(product).not.toHaveProperty('contact')
-    expect(product).not.toHaveProperty('contact_access_required')
-    expect(product).not.toHaveProperty('contact_access_price')
-    expect(product).not.toHaveProperty('contact_access_currency')
+    expect(product.contact_access_price).toBe(25)
+    expect(product.contact_access_currency).toBe('SAR')
+    expect(product.contact_access_required).toBe(true)
   })
 
   it('parses and serializes specification lines', () => {
