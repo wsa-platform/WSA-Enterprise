@@ -34,8 +34,8 @@ export function toPublicProduct(listing: PublicListing): PublicListing {
     delete (product as Record<string, unknown>)[key]
   }
   if (product.seller) {
-    const { display_name, country, city, region, seller_type, verified } = product.seller
-    product.seller = { display_name, country, city, region, seller_type, verified }
+    const { country, city, region, seller_type, verified } = product.seller
+    product.seller = { country, city, region, seller_type, verified }
   }
   return product
 }
@@ -67,6 +67,28 @@ export function parseSpecificationLines(text: string): Record<string, string> | 
 export function specificationLines(specifications: Record<string, unknown> | null | undefined): string {
   if (!specifications) return ''
   return Object.entries(specifications)
+    .map(([key, value]) => `${key}: ${value == null ? '' : String(value)}`)
+    .join('\n')
+}
+
+function isDescriptionSpecKey(key: string): boolean {
+  const normalized = key.trim().toLowerCase()
+  return normalized === 'description' || normalized === 'desc' || key.trim() === 'الوصف'
+}
+
+/** Public details: omit description keys so "الوصف" is not repeated after the product description. */
+export function specificationLinesForPublicDisplay(
+  specifications: Record<string, unknown> | null | undefined,
+  productDescription?: string | null,
+): string {
+  if (!specifications) return ''
+  const description = (productDescription ?? '').trim()
+  return Object.entries(specifications)
+    .filter(([key, value]) => {
+      if (isDescriptionSpecKey(key)) return false
+      if (description && String(value ?? '').trim() === description) return false
+      return true
+    })
     .map(([key, value]) => `${key}: ${value == null ? '' : String(value)}`)
     .join('\n')
 }

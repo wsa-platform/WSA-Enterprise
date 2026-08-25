@@ -65,6 +65,7 @@ class MarketplaceTest extends TestCase
         $this->assertArrayHasKey('seller', $first);
         $this->assertArrayNotHasKey('email', $first['seller']);
         $this->assertArrayNotHasKey('phone', $first['seller']);
+        $this->assertArrayNotHasKey('display_name', $first['seller']);
     }
 
     public function test_seller_can_create_and_submit_listing(): void
@@ -145,15 +146,19 @@ class MarketplaceTest extends TestCase
 
         $pay->assertOk()
             ->assertJsonPath('order.payment_status', ContactAccessOrder::PAYMENT_PAID)
-            ->assertJsonPath('contact.seller_email', $listing->seller_email);
+            ->assertJsonPath('contact.seller_email', $listing->seller_email)
+            ->assertJsonPath('contact.seller_display_name', $listing->seller_display_name);
 
         $detail = $this->getJson("/api/v1/market/listings/{$listing->id}", $headers);
-        $detail->assertOk()->assertJsonPath('contact.seller_email', $listing->seller_email);
+        $detail->assertOk()
+            ->assertJsonPath('contact.seller_email', $listing->seller_email)
+            ->assertJsonPath('contact.seller_display_name', $listing->seller_display_name);
 
         $this->getJson("/api/v1/market/contact-access-orders/{$orderId}/seller-contact", $headers)
             ->assertOk()
             ->assertJsonPath('seller_email', $listing->seller_email)
-            ->assertJsonPath('seller_phone', $listing->seller_phone);
+            ->assertJsonPath('seller_phone', $listing->seller_phone)
+            ->assertJsonPath('seller_display_name', $listing->seller_display_name);
 
         $this->getJson("/api/v1/public/market/listings/{$listing->id}", $headers)
             ->assertOk()

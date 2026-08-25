@@ -345,6 +345,7 @@
     "viewDetails": "Ayrıntıları gör",
     "backToMarket": "Pazara dön",
     "seller": "Satıcı",
+    "sellerName": "Satıcı adı",
     "contactDetails": "İletişim bilgileri",
     "contactProtected": "İletişim bilgileri korumalıdır. Fiyat: {{price}} {{currency}}",
     "loginToRequest": "İletişim için giriş yapın",

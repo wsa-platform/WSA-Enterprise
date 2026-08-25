@@ -22,8 +22,16 @@ describe('marketplace contact unlock', () => {
     expect(contactFromPaidResult({ order: { payment_status: 'paid' }, contact: {} })).toBeNull()
     expect(contactFromPaidResult({
       order: { payment_status: 'paid' },
-      contact: { seller_email: 'seller@wsa.test', seller_phone: '+966512345678' },
-    })).toEqual({ seller_email: 'seller@wsa.test', seller_phone: '+966512345678' })
+      contact: {
+        seller_display_name: 'Oasis Farm',
+        seller_email: 'seller@wsa.test',
+        seller_phone: '+966512345678',
+      },
+    })).toEqual({
+      seller_display_name: 'Oasis Farm',
+      seller_email: 'seller@wsa.test',
+      seller_phone: '+966512345678',
+    })
   })
 
   it('does not show contact on the initial public product payload', () => {
@@ -43,7 +51,11 @@ describe('marketplace contact unlock', () => {
     const requestContactAccess = vi.fn().mockResolvedValue({ id: 22, payment_status: 'pending' })
     const payContactAccess = vi.fn().mockResolvedValue({
       order: { payment_status: 'paid' },
-      contact: { seller_email: 'seller@wsa.test', seller_phone: '+966500000000' },
+      contact: {
+        seller_display_name: 'Oasis Farm',
+        seller_email: 'seller@wsa.test',
+        seller_phone: '+966500000000',
+      },
     })
     const result = await completeContactPayment({
       listingId: 7,
@@ -55,7 +67,11 @@ describe('marketplace contact unlock', () => {
     })
     expect(result).toEqual({
       ok: true,
-      contact: { seller_email: 'seller@wsa.test', seller_phone: '+966500000000' },
+      contact: {
+        seller_display_name: 'Oasis Farm',
+        seller_email: 'seller@wsa.test',
+        seller_phone: '+966500000000',
+      },
     })
     expect(requestContactAccess).toHaveBeenCalledWith(7, 'tok', 'req-1')
     expect(payContactAccess).toHaveBeenCalledWith(22, 'tok', 'pay-1')

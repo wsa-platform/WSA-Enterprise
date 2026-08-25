@@ -4,6 +4,7 @@ import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeAll, describe, expect, it } from 'vitest'
 import i18n from '../../i18n/config'
+import { specificationLinesForPublicDisplay } from '../../marketplace/productDisplay'
 import { ContactUnlockPanel } from './MarketplaceListingPage'
 
 function renderPanel(overrides: Partial<Parameters<typeof ContactUnlockPanel>[0]> = {}) {
@@ -41,6 +42,8 @@ describe('public product contact gate', () => {
     expect(html).toContain('إظهار بيانات الاتصال')
     expect(html).not.toContain('seller@wsa.test')
     expect(html).not.toContain('+966500000000')
+    expect(html).not.toContain('اسم البائع')
+    expect(html).not.toContain('Oasis Farm')
     expect(html).toContain('href="/login?next=%2Fmarket%2F7"')
   })
 
@@ -48,15 +51,37 @@ describe('public product contact gate', () => {
     const html = renderPanel({ authenticated: true, paymentOpen: true })
     expect(html).toContain('بيانات التواصل محمية')
     expect(html).not.toContain('seller@wsa.test')
+    expect(html).not.toContain('اسم البائع')
+    expect(html).not.toContain('Oasis Farm')
   })
 
   it('shows contact only after a paid unlock result', () => {
     const html = renderPanel({
       authenticated: true,
-      contact: { seller_email: 'seller@wsa.test', seller_phone: '+966500000000' },
+      contact: {
+        seller_display_name: 'Oasis Farm',
+        seller_email: 'seller@wsa.test',
+        seller_phone: '+966500000000',
+      },
     })
+    expect(html).toContain('اسم البائع')
+    expect(html).toContain('Oasis Farm')
     expect(html).toContain('seller@wsa.test')
     expect(html).toContain('+966500000000')
     expect(html).not.toContain('إظهار بيانات الاتصال')
+    expect(html.split('اسم البائع').length - 1).toBe(1)
+  })
+
+  it('keeps the first product description and drops a duplicate الوصف spec', () => {
+    const description = 'طماطم عضوية طازجة من مزارع الرياض.'
+    const specText = specificationLinesForPublicDisplay(
+      { الوصف: description, variety: 'Valencia' },
+      description,
+    )
+    const html = `<p class="gs-market-description">${description}</p><pre>${specText}</pre>`
+    expect(html).toContain('gs-market-description')
+    expect(html.split(description).length - 1).toBe(1)
+    expect(specText).not.toContain('الوصف')
+    expect(i18n.t('market.sellerName')).toBe('اسم البائع')
   })
 })

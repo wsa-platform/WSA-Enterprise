@@ -345,6 +345,7 @@
     "viewDetails": "عرض التفاصيل",
     "backToMarket": "العودة إلى السوق",
     "seller": "البائع",
+    "sellerName": "اسم البائع",
     "contactDetails": "بيانات التواصل",
     "contactProtected": "بيانات التواصل محمية. السعر: {{price}} {{currency}}",
     "loginToRequest": "سجّل الدخول للطلب",

@@ -135,7 +135,7 @@ class MarketplaceContactService
         ];
     }
 
-    /** @return array{seller_email: mixed, seller_phone: mixed}|null */
+    /** @return array{seller_email: mixed, seller_phone: mixed, seller_display_name: mixed}|null */
     public function contactForPaidOrder(User $buyer, ContactAccessOrder $order): ?array
     {
         if ((int) $order->buyer_user_id !== (int) $buyer->id) {
@@ -153,6 +153,7 @@ class MarketplaceContactService
         return [
             'seller_email' => $listing->seller_email,
             'seller_phone' => $listing->seller_phone,
+            'seller_display_name' => $listing->seller_display_name,
         ];
     }
 }

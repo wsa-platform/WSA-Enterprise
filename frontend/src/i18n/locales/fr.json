@@ -345,6 +345,7 @@
     "viewDetails": "Voir les détails",
     "backToMarket": "Retour à la place de marché",
     "seller": "Vendeur",
+    "sellerName": "Nom du vendeur",
     "contactDetails": "Coordonnées",
     "contactProtected": "Les coordonnées sont protégées. Prix : {{price}} {{currency}}",
     "loginToRequest": "Connectez-vous pour demander le contact",

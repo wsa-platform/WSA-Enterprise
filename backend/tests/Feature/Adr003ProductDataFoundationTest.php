@@ -260,6 +260,7 @@ class Adr003ProductDataFoundationTest extends TestCase
         $this->assertArrayNotHasKey('export_destination', $payload);
         $this->assertArrayNotHasKey('email', $payload['seller']);
         $this->assertArrayNotHasKey('phone', $payload['seller']);
+        $this->assertArrayNotHasKey('display_name', $payload['seller']);
         $this->assertArrayHasKey('origin_country', $payload);
         $this->assertArrayHasKey('seller_country', $payload);
         $this->assertArrayNotHasKey('shipping_terms', $payload);

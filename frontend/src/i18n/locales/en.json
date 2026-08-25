@@ -345,6 +345,7 @@
     "viewDetails": "View details",
     "backToMarket": "Back to marketplace",
     "seller": "Seller",
+    "sellerName": "Seller name",
     "contactDetails": "Contact details",
     "contactProtected": "Contact details are protected. Price: {{price}} {{currency}}",
     "loginToRequest": "Sign in to request contact",

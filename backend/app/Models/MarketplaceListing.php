@@ -197,7 +197,6 @@ class MarketplaceListing extends Model
             'published_at' => $this->published_at,
             'category' => $this->category?->only(['id', 'slug', 'name', 'name_ar']),
             'seller' => [
-                'display_name' => $this->seller_display_name,
                 'country' => $this->country,
                 'city' => $this->city,
                 'region' => $this->seller_region,
@@ -211,15 +210,21 @@ class MarketplaceListing extends Model
     /** @return array<string, mixed> */
     public function toOwnerArray(): array
     {
-        return array_merge($this->toPublicArray(), [
+        $payload = array_merge($this->toPublicArray(), [
             'status' => $this->status,
             'seller_email' => $this->seller_email,
             'seller_phone' => $this->seller_phone,
+            'seller_display_name' => $this->seller_display_name,
             'export_metadata' => $this->export_metadata,
             'organization_id' => $this->organization_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ]);
+        $payload['seller'] = array_merge($payload['seller'] ?? [], [
+            'display_name' => $this->seller_display_name,
+        ]);
+
+        return $payload;
     }
 
     /**

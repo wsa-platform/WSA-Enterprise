@@ -12,7 +12,7 @@ import { translateApiError } from '../../i18n/apiErrors'
 import { countryDisplayName } from '../../marketplace/isoCountries'
 import { sellerTypeLabelKey } from '../../marketplace/listingForm'
 import { isProductCategorySlug, productCategoryLabel } from '../../marketplace/productCategories'
-import { availabilityI18nKey, listingImageUrl, listingImages, specificationLines, toPublicProduct } from '../../marketplace/productDisplay'
+import { availabilityI18nKey, listingImageUrl, listingImages, specificationLinesForPublicDisplay, toPublicProduct } from '../../marketplace/productDisplay'
 import { productNameFromListing } from '../../marketplace/units'
 import {
   completeContactPayment,
@@ -54,7 +54,7 @@ export function ContactUnlockPanel({
         <h2>{t('market.contactDetails')}</h2>
         <dl className="gs-market-specs">
           {contact.seller_display_name && (
-            <><dt>{t('market.seller')}</dt><dd>{contact.seller_display_name}</dd></>
+            <><dt>{t('market.sellerName')}</dt><dd>{contact.seller_display_name}</dd></>
           )}
           {contact.seller_email && (
             <><dt>{t('market.sellerEmail')}</dt><dd>{contact.seller_email}</dd></>
@@ -120,7 +120,7 @@ export function MarketplaceListingPage() {
   const unit = product?.unit
     ? (language.startsWith('ar') && product.unit.name_ar ? product.unit.name_ar : product.unit.name)
     : null
-  const specText = specificationLines(product?.specifications ?? null)
+  const specText = specificationLinesForPublicDisplay(product?.specifications ?? null, product?.description)
   const availabilityKey = availabilityI18nKey(product?.availability)
   const showAction = Number.isFinite(listingId) ? showContactClickAction(Boolean(token), listingId) : { kind: 'login' as const, href: '/login' }
   const visibleContact = unlockedContact

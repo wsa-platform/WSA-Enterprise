@@ -4,6 +4,7 @@ import {
   listingImageUrl,
   parseSpecificationLines,
   specificationLines,
+  specificationLinesForPublicDisplay,
   toPublicProduct,
 } from './productDisplay'
 
@@ -43,7 +44,7 @@ describe('productDisplay', () => {
     })
 
     expect(product.title).toBe('Dates')
-    expect(product.seller?.display_name).toBe('Oasis Farm')
+    expect(product.seller).not.toHaveProperty('display_name')
     expect(product.seller).not.toHaveProperty('email')
     expect(product).not.toHaveProperty('seller_email')
     expect(product).not.toHaveProperty('seller_phone')
@@ -64,6 +65,23 @@ describe('productDisplay', () => {
     expect(parsed).toEqual({ variety: 'Valencia', grade: 'A' })
     expect(specificationLines(parsed)).toBe('variety: Valencia\ngrade: A')
     expect(parseSpecificationLines('')).toBeNull()
+  })
+
+  it('omits duplicate description keys from the public specifications display', () => {
+    const description = 'طماطم عضوية طازجة من مزارع الرياض.'
+    const specText = specificationLinesForPublicDisplay(
+      {
+        الوصف: description,
+        description,
+        variety: 'Valencia',
+        grade: 'A',
+      },
+      description,
+    )
+    expect(specText).toBe('variety: Valencia\ngrade: A')
+    expect(specText).not.toContain('الوصف')
+    expect(specText).not.toContain(description)
+    expect(specificationLines({ الوصف: description, variety: 'Valencia' })).toContain('الوصف')
   })
 
   it('maps only approved availability values', () => {
