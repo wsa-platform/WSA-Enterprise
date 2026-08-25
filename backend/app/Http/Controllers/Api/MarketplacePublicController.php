@@ -42,8 +42,9 @@ class MarketplacePublicController extends Controller
 
         $payload = $listing->load(['category', 'images'])->toPublicArray();
 
+        $isPublicCatalog = str_contains($request->path(), 'public/market');
         $user = $request->user();
-        if ($user) {
+        if ($user && ! $isPublicCatalog) {
             $contact = $this->contactService->contactIfEntitled($user, $listing);
             if ($contact) {
                 $payload['contact'] = $contact;
@@ -58,5 +59,10 @@ class MarketplacePublicController extends Controller
     public function categories(): JsonResponse
     {
         return response()->json(['data' => $this->marketplace->activeCategories()]);
+    }
+
+    public function units(): JsonResponse
+    {
+        return response()->json(['data' => $this->marketplace->activeUnits()]);
     }
 }

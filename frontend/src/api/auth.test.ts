@@ -92,6 +92,34 @@ describe('register', () => {
       audience: 'employer',
     })
   })
+
+  it('sends marketplace audience so seller signup uses the existing register endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          token: 'market-token',
+          user: { id: 4, name: 'Seller', email: 'seller@wsa.test' },
+          organization: { id: 12, name: 'Seller Workspace', slug: 'seller-12' },
+        }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const result = await register({
+      name: 'Seller',
+      email: 'seller@wsa.test',
+      password: 'password123',
+      password_confirmation: 'password123',
+      audience: 'marketplace',
+    })
+
+    expect(result.token).toBe('market-token')
+    expect(result.organization?.slug).toBe('seller-12')
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toMatchObject({
+      email: 'seller@wsa.test',
+      audience: 'marketplace',
+    })
+  })
 })
 
 describe('activateEmployerService', () => {

@@ -34,10 +34,11 @@ export function PublicHeader({
     : isMarketplacePath(pathname)
       ? internalPaths.products
       : JOB_SEEKER_HOME
-  const loginTo = loginToOverride
+  const loginTo = (!authenticated && loginToOverride)
     ?? (authenticated ? authenticatedHome : publicLoginHref(storedAudience, pathname))
-  const registerTo = registerToOverride
+  const registerTo = (!authenticated && registerToOverride)
     ?? (authenticated ? authenticatedHome : publicRegisterHref(storedAudience, pathname))
+  const marketplaceAccount = authenticated && isMarketplacePath(pathname)
 
   return (
     <header className="gs-header">
@@ -76,12 +77,20 @@ export function PublicHeader({
 
         <div className="gs-header-actions">
           <PublicLanguageMenu />
-          <Link to={loginTo} className="gs-btn gs-btn-ghost">
-            {t('website.nav.login')}
-          </Link>
-          <Link to={registerTo} className="gs-btn gs-btn-primary">
-            {t('website.nav.register')}
-          </Link>
+          {marketplaceAccount ? (
+            <Link to={internalPaths.products} className="gs-btn gs-btn-primary">
+              {t('nav.myProducts')}
+            </Link>
+          ) : (
+            <>
+              <Link to={loginTo} className="gs-btn gs-btn-ghost">
+                {t('website.nav.login')}
+              </Link>
+              <Link to={registerTo} className="gs-btn gs-btn-primary">
+                {t('website.nav.register')}
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

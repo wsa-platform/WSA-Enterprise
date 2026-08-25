@@ -4,7 +4,7 @@ export const MARKETPLACE_COUNTRY_CODES = [
   'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BN', 'BO', 'BR', 'BS', 'BT', 'BW', 'BY', 'BZ',
   'CA', 'CD', 'CF', 'CG', 'CH', 'CI', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CY', 'CZ',
   'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ',
-  'EC', 'EE', 'EG', 'ER', 'ES', 'ET',
+  'EC', 'EE', 'EG', 'ER', 'ES', 'ET', 'EU',
   'FI', 'FJ', 'FM', 'FR',
   'GA', 'GB', 'GD', 'GE', 'GH', 'GM', 'GN', 'GQ', 'GR', 'GT', 'GW', 'GY',
   'HN', 'HR', 'HT', 'HU',

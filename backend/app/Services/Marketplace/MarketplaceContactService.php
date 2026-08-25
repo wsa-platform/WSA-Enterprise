@@ -134,4 +134,25 @@ class MarketplaceContactService
             'seller_display_name' => $listing->seller_display_name,
         ];
     }
+
+    /** @return array{seller_email: mixed, seller_phone: mixed}|null */
+    public function contactForPaidOrder(User $buyer, ContactAccessOrder $order): ?array
+    {
+        if ((int) $order->buyer_user_id !== (int) $buyer->id) {
+            return null;
+        }
+        if ($order->payment_status !== ContactAccessOrder::PAYMENT_PAID) {
+            return null;
+        }
+
+        $listing = $order->listing;
+        if (! $listing || ! $this->hasEntitlement($buyer, $listing)) {
+            return null;
+        }
+
+        return [
+            'seller_email' => $listing->seller_email,
+            'seller_phone' => $listing->seller_phone,
+        ];
+    }
 }

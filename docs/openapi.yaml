@@ -3336,6 +3336,27 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/MarketplaceCategory'
+  /public/market/units:
+    get:
+      tags: [Marketplace]
+      summary: List active marketplace sales units (public)
+      responses:
+        '200':
+          description: Active sales units
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        slug: { type: string }
+                        name: { type: string }
+                        name_ar: { type: string, nullable: true }
   /market/listings:
     get:
       tags: [Marketplace]
@@ -3551,6 +3572,29 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /market/contact-access-orders/{order}/seller-contact:
+    get:
+      tags: [Marketplace]
+      summary: Return seller contact after the buyer has a paid contact-access order
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+        - name: order
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Private seller contact for the authenticated buyer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  seller_email: { type: string, nullable: true }
+                  seller_phone: { type: string, nullable: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /market/categories:
     get:
       tags: [Marketplace]
@@ -3570,6 +3614,31 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/MarketplaceCategory'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /market/units:
+    get:
+      tags: [Marketplace]
+      summary: List active marketplace sales units
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Active sales units
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        slug: { type: string }
+                        name: { type: string }
+                        name_ar: { type: string, nullable: true }
         '401': { $ref: '#/components/responses/Unauthorized' }
   /market/my-listings:
     get:

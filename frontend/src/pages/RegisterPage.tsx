@@ -11,6 +11,7 @@ import {
   EMPLOYER_ENTER,
   JOB_SEEKER_ENTER,
   JOB_SEEKER_HOME,
+  isMarketplacePath,
   isUserDashboardPath,
   parseAudience,
 } from '../navigation/roleDestinations'
@@ -22,10 +23,12 @@ export function RegisterPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const audience = parseAudience(params.get('audience'))
-  const defaultNext = audience === 'job_seeker' ? JOB_SEEKER_HOME : audience === 'employer' ? '/employer' : '/'
+  const requestedAudience = parseAudience(params.get('audience'))
+  const defaultNext = requestedAudience === 'job_seeker' ? JOB_SEEKER_HOME : requestedAudience === 'employer' ? '/employer' : '/'
   const requestedNext = safeReturnPath(params.get('next'), defaultNext)
   const nextPath = isUserDashboardPath(requestedNext) ? defaultNext : requestedNext
+  const marketplaceSignup = isMarketplacePath(nextPath)
+  const audience = marketplaceSignup ? null : requestedAudience
   const { setSession, setOrganizationId } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -51,18 +54,24 @@ export function RegisterPage() {
     setLoading(true)
     setError('')
 
+    if (password !== passwordConfirmation) {
+      setError(t('auth.errors.passwordMismatch'))
+      setLoading(false)
+      return
+    }
+
     try {
       const result = await register({
         name: name.trim(),
         email: email.trim(),
         password,
         password_confirmation: passwordConfirmation,
-        audience,
+        audience: marketplaceSignup ? 'marketplace' : audience,
       })
       const destination = await completeAuthenticatedSession({
         token: result.token,
         user: result.user,
-        audience,
+        audience: marketplaceSignup ? null : audience,
         next: nextPath,
         setSession,
         setOrganizationId,

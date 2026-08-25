@@ -69,9 +69,9 @@ describe('productDisplay', () => {
   it('maps only approved availability values', () => {
     expect(availabilityI18nKey('available_now')).toBe('market.availability.available_now')
     expect(availabilityI18nKey('seasonal')).toBe('market.availability.seasonal')
-    expect(availabilityI18nKey('on_demand')).toBe('market.availability.on_demand')
+    expect(availabilityI18nKey('made_to_order')).toBe('market.availability.made_to_order')
+    expect(availabilityI18nKey('on_demand')).toBe('market.availability.made_to_order')
     expect(availabilityI18nKey('unavailable')).toBe('market.availability.unavailable')
-    expect(availabilityI18nKey('made_to_order')).toBeNull()
     expect(availabilityI18nKey('new')).toBeNull()
   })
 })

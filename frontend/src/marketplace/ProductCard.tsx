@@ -3,16 +3,9 @@ import { Link } from 'react-router-dom'
 import type { PublicListing } from '../api/marketplace'
 import { publicPaths } from '../navigation/paths'
 import { countryDisplayName } from './isoCountries'
+import { sellerTypeLabelKey } from './listingForm'
+import { productCategoryLabel, isProductCategorySlug } from './productCategories'
 import { availabilityI18nKey, formatQuantity, primaryListingImage, toPublicProduct } from './productDisplay'
-
-function categoryLabel(
-  category: { name?: string; name_ar?: string; slug?: string } | null | undefined,
-  language: string,
-) {
-  if (!category) return null
-  if (language.startsWith('ar') && category.name_ar) return category.name_ar
-  return category.name ?? category.slug ?? null
-}
 
 function unitLabel(listing: PublicListing, language: string) {
   const unit = listing.unit
@@ -26,15 +19,15 @@ export function ProductCard({ listing }: { listing: PublicListing }) {
   const product = toPublicProduct(listing)
   const language = i18n.language ?? 'ar'
   const image = primaryListingImage(product)
-  const category = categoryLabel(product.category, language)
+  const category = product.category
+    ? (language.startsWith('ar') && product.category.name_ar ? product.category.name_ar : product.category.name)
+      || productCategoryLabel(product.category.slug ?? product.product_type ?? '', language)
+    : productCategoryLabel(product.product_type ?? '', language) || null
   const origin = countryDisplayName(product.origin_country, language)
   const sellerTypeValue = product.seller_type ?? product.seller?.seller_type
   const sellerCountry = countryDisplayName(product.seller_country ?? product.country ?? product.seller?.country, language)
-  const sellerType = sellerTypeValue === 'international'
-    ? t('market.sellerInternational')
-    : sellerTypeValue
-      ? t('market.sellerLocal')
-      : null
+  const sellerTypeKey = sellerTypeLabelKey(sellerTypeValue)
+  const sellerType = sellerTypeKey ? t(sellerTypeKey) : null
   const availabilityKey = availabilityI18nKey(product.availability)
   const availability = availabilityKey ? t(availabilityKey) : null
   const unit = unitLabel(product, language)
@@ -58,7 +51,9 @@ export function ProductCard({ listing }: { listing: PublicListing }) {
         {category && <span className="gs-market-meta">{category}</span>}
         <h3>{product.title}</h3>
         {product.brand && <p className="gs-market-brand">{product.brand}</p>}
-        {product.product_type && <p className="gs-market-seller">{t('market.productType')}: {product.product_type}</p>}
+        {product.product_type && !isProductCategorySlug(product.product_type) && (
+          <p className="gs-market-seller">{t('market.productType')}: {product.product_type}</p>
+        )}
         <ul className="gs-market-facts">
           {origin && <li>{t('market.originCountry')}: {origin}</li>}
           {place && <li>{t('market.sellerLocation')}: {place}</li>}

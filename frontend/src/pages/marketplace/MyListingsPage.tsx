@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { deleteListing, fetchMyListings, submitListing, unpublishListing, type OwnerListing } from '../../api/marketplace'
 import { PaginationBar } from '../../components/DataTable'
 import { PageHeader } from '../../components/PageHeader'
@@ -12,6 +12,7 @@ import { translateApiError } from '../../i18n/apiErrors'
 import { countryDisplayName } from '../../marketplace/isoCountries'
 import { availabilityI18nKey, formatQuantity, primaryListingImage } from '../../marketplace/productDisplay'
 import { internalPaths, publicPaths } from '../../navigation/paths'
+import { marketplaceLoginHref } from '../../navigation/roleDestinations'
 
 export function MyListingsPage() {
   const { t, i18n } = useTranslation()
@@ -34,6 +35,10 @@ export function MyListingsPage() {
     if (key === 'created') setNotice(t('market.created'))
     if (key === 'updated') setNotice(t('market.updated'))
   }, [location.state, t])
+
+  if (!token) {
+    return <Navigate to={marketplaceLoginHref(internalPaths.products)} replace />
+  }
 
   if (permissionsLoading) {
     return <p className="loading">{t('errors.checkingAccess')}</p>

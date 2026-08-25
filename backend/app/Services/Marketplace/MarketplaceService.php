@@ -5,6 +5,7 @@ namespace App\Services\Marketplace;
 use App\Models\MarketplaceCategory;
 use App\Models\MarketplaceListing;
 use App\Models\MarketplaceListingStatusHistory;
+use App\Models\MarketplaceUnit;
 use App\Models\User;
 use App\Services\Audit\AuditService;
 use App\Services\Notifications\NotificationService;
@@ -33,7 +34,14 @@ class MarketplaceService
             $query->where('country', $filters['country']);
         }
         if (! empty($filters['seller_type'])) {
-            $query->where('seller_type', $filters['seller_type']);
+            $sellerType = $filters['seller_type'];
+            if ($sellerType === MarketplaceListing::SELLER_LOCAL) {
+                $query->whereIn('seller_type', [MarketplaceListing::SELLER_LOCAL, MarketplaceListing::SELLER_BOTH]);
+            } elseif ($sellerType === MarketplaceListing::SELLER_INTERNATIONAL) {
+                $query->whereIn('seller_type', [MarketplaceListing::SELLER_INTERNATIONAL, MarketplaceListing::SELLER_BOTH]);
+            } else {
+                $query->where('seller_type', $sellerType);
+            }
         }
         if (! empty($filters['search'])) {
             $term = $filters['search'];
@@ -59,7 +67,14 @@ class MarketplaceService
             $query->where('status', $filters['status']);
         }
         if (! empty($filters['seller_type'])) {
-            $query->where('seller_type', $filters['seller_type']);
+            $sellerType = $filters['seller_type'];
+            if ($sellerType === MarketplaceListing::SELLER_LOCAL) {
+                $query->whereIn('seller_type', [MarketplaceListing::SELLER_LOCAL, MarketplaceListing::SELLER_BOTH]);
+            } elseif ($sellerType === MarketplaceListing::SELLER_INTERNATIONAL) {
+                $query->whereIn('seller_type', [MarketplaceListing::SELLER_INTERNATIONAL, MarketplaceListing::SELLER_BOTH]);
+            } else {
+                $query->where('seller_type', $sellerType);
+            }
         }
         if (! empty($filters['search'])) {
             $term = $filters['search'];
@@ -228,6 +243,17 @@ class MarketplaceService
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
+            ->all();
+    }
+
+    /** @return list<MarketplaceUnit> */
+    public function activeUnits(): array
+    {
+        return MarketplaceUnit::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'slug', 'name', 'name_ar'])
             ->all();
     }
 }

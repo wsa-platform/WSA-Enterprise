@@ -7,9 +7,10 @@ export type PublicListingContact = {
   seller_display_name?: string | null
 }
 
-export const PRODUCT_AVAILABILITIES = ['available_now', 'seasonal', 'on_demand', 'unavailable'] as const
+export const PRODUCT_AVAILABILITIES = ['available_now', 'seasonal', 'made_to_order', 'unavailable'] as const
 export type ProductAvailability = (typeof PRODUCT_AVAILABILITIES)[number]
-export type ProductSellerType = 'local' | 'international'
+export type ProductSellerType = 'local' | 'international' | 'both'
+export type ProductSellerTypeFlag = 'local' | 'international'
 
 export type PublicListingImage = {
   id?: number
@@ -32,6 +33,7 @@ export type PublicListing = {
   description?: string | null
   product_type?: string | null
   seller_type?: ProductSellerType | string
+  seller_types?: ProductSellerTypeFlag[]
   availability?: ProductAvailability | string | null
   price?: string | number | null
   currency?: string | null
@@ -47,8 +49,6 @@ export type PublicListing = {
   wholesale?: boolean | null
   retail?: boolean | null
   packaging?: string | null
-  shipping_terms?: string | null
-  lead_time_days?: number | null
   specifications?: Record<string, unknown> | null
   video_url?: string | null
   unit?: PublicListingUnit | null
@@ -66,6 +66,13 @@ export type PublicListing = {
     verified?: boolean
   }
   category?: { id?: number; slug?: string; name?: string; name_ar?: string } | null
+}
+
+export type PublicMarketUnit = {
+  id: number
+  slug?: string
+  name?: string
+  name_ar?: string | null
 }
 
 export type PublicMarketCategory = {
@@ -108,6 +115,10 @@ export async function fetchPublicCategories() {
   return request<{ data: PublicMarketCategory[] }>('/public/market/categories')
 }
 
+export async function fetchPublicUnits() {
+  return request<{ data: PublicMarketUnit[] }>('/public/market/units')
+}
+
 export async function fetchPublicListing(id: number, token?: string | null) {
   const path = token ? `/market/listings/${id}` : `/public/market/listings/${id}`
   return request<PublicListing>(path, {}, token ?? undefined)
@@ -129,6 +140,14 @@ export async function payContactAccess(orderId: number, token: string, idempoten
   )
 }
 
+export async function fetchSellerContact(orderId: number, token: string) {
+  return request<{ seller_email: string | null; seller_phone: string | null }>(
+    `/market/contact-access-orders/${orderId}/seller-contact`,
+    {},
+    token,
+  )
+}
+
 export type OwnerListing = PublicListing & {
   status?: string
   seller_email?: string | null
@@ -142,6 +161,7 @@ export type MarketplaceListingWrite = {
   product_type?: string | null
   brand?: string | null
   seller_type?: ProductSellerType
+  seller_types?: ProductSellerTypeFlag[]
   availability?: ProductAvailability | null
   unit_id?: number | null
   price?: number | null
@@ -158,11 +178,10 @@ export type MarketplaceListingWrite = {
   wholesale?: boolean
   retail?: boolean
   packaging?: string | null
-  shipping_terms?: string | null
-  lead_time_days?: number | null
   specifications?: Record<string, unknown> | null
-  video_url?: string | null
   category_id?: number | null
+  seller_email?: string | null
+  seller_phone?: string | null
 }
 
 export async function fetchMyListings(token: string, organizationId?: number, page = 1, perPage = 15) {

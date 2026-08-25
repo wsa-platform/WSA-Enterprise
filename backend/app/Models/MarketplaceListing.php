@@ -27,10 +27,15 @@ class MarketplaceListing extends Model
 
     public const SELLER_INTERNATIONAL = 'international';
 
+    public const SELLER_BOTH = 'both';
+
     public const AVAILABILITY_AVAILABLE_NOW = 'available_now';
 
     public const AVAILABILITY_SEASONAL = 'seasonal';
 
+    public const AVAILABILITY_MADE_TO_ORDER = 'made_to_order';
+
+    /** Legacy alias stored on older rows; writes are normalized to made_to_order. */
     public const AVAILABILITY_ON_DEMAND = 'on_demand';
 
     public const AVAILABILITY_UNAVAILABLE = 'unavailable';
@@ -39,14 +44,30 @@ class MarketplaceListing extends Model
     public const AVAILABILITIES = [
         self::AVAILABILITY_AVAILABLE_NOW,
         self::AVAILABILITY_SEASONAL,
+        self::AVAILABILITY_MADE_TO_ORDER,
+        self::AVAILABILITY_UNAVAILABLE,
+    ];
+
+    /** @var list<string> */
+    public const AVAILABILITY_INPUTS = [
+        self::AVAILABILITY_AVAILABLE_NOW,
+        self::AVAILABILITY_SEASONAL,
+        self::AVAILABILITY_MADE_TO_ORDER,
         self::AVAILABILITY_ON_DEMAND,
         self::AVAILABILITY_UNAVAILABLE,
+    ];
+
+    /** @var list<string> */
+    public const SELLER_TYPE_FLAGS = [
+        self::SELLER_LOCAL,
+        self::SELLER_INTERNATIONAL,
     ];
 
     /** @var list<string> */
     public const SELLER_TYPES = [
         self::SELLER_LOCAL,
         self::SELLER_INTERNATIONAL,
+        self::SELLER_BOTH,
     ];
 
     protected $fillable = [
@@ -152,6 +173,7 @@ class MarketplaceListing extends Model
             'description' => $this->description,
             'product_type' => $this->product_type,
             'seller_type' => $this->seller_type,
+            'seller_types' => self::sellerTypesFromStored($this->seller_type),
             'availability' => $this->availability,
             'price' => $this->price,
             'currency' => $this->currency,
@@ -167,8 +189,6 @@ class MarketplaceListing extends Model
             'wholesale' => $this->wholesale,
             'retail' => $this->retail,
             'packaging' => $this->packaging,
-            'shipping_terms' => $this->shipping_terms,
-            'lead_time_days' => $this->lead_time_days,
             'specifications' => $this->specifications,
             'video_url' => $this->video_url,
             'unit' => $this->unit?->only(['id', 'slug', 'name', 'name_ar']),
@@ -200,5 +220,65 @@ class MarketplaceListing extends Model
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ]);
+    }
+
+    /**
+     * @param  list<mixed>  $types
+     */
+    public static function sellerTypeFromTypes(array $types): ?string
+    {
+        $normalized = [];
+        foreach ($types as $type) {
+            if (! is_string($type) && ! is_int($type)) {
+                continue;
+            }
+            $value = strtolower(trim((string) $type));
+            if ($value === '') {
+                continue;
+            }
+            $normalized[] = $value;
+        }
+        $normalized = array_values(array_unique($normalized));
+        $hasLocal = in_array(self::SELLER_LOCAL, $normalized, true);
+        $hasInternational = in_array(self::SELLER_INTERNATIONAL, $normalized, true);
+        $unexpected = array_diff($normalized, self::SELLER_TYPE_FLAGS);
+        if ($unexpected !== []) {
+            return null;
+        }
+        if ($hasLocal && $hasInternational) {
+            return self::SELLER_BOTH;
+        }
+        if ($hasLocal) {
+            return self::SELLER_LOCAL;
+        }
+        if ($hasInternational) {
+            return self::SELLER_INTERNATIONAL;
+        }
+
+        return null;
+    }
+
+    /** @return list<string> */
+    public static function sellerTypesFromStored(?string $sellerType): array
+    {
+        return match ($sellerType) {
+            self::SELLER_BOTH => [self::SELLER_LOCAL, self::SELLER_INTERNATIONAL],
+            self::SELLER_LOCAL => [self::SELLER_LOCAL],
+            self::SELLER_INTERNATIONAL => [self::SELLER_INTERNATIONAL],
+            default => [],
+        };
+    }
+
+    public static function canonicalizeAvailability(?string $availability): ?string
+    {
+        if ($availability === null || $availability === '') {
+            return null;
+        }
+        $value = strtolower(trim($availability));
+        if ($value === self::AVAILABILITY_ON_DEMAND) {
+            return self::AVAILABILITY_MADE_TO_ORDER;
+        }
+
+        return $value;
     }
 }

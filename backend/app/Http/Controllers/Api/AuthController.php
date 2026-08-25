@@ -85,30 +85,15 @@ class AuthController extends Controller
             ], 201);
         }
 
+        if (($data['audience'] ?? null) === 'marketplace') {
+            abort_unless(config('app.allow_marketplace_registration'), 403, 'Registration is disabled.');
+
+            return $this->registerServiceOwner($request, $data, 'marketplace');
+        }
+
         abort_unless(config('app.allow_registration'), 403, 'Registration is disabled.');
 
-        $registration = $this->serviceOwnerRegistration->register($data);
-        $user = $registration['user'];
-
-        $this->auditService->record(
-            action: 'auth.register',
-            userId: $user->id,
-            auditable: $user,
-            newValues: [
-                'email' => $user->email,
-                'name' => $user->name,
-                'organization_id' => $registration['organization']->id,
-            ],
-            request: $request,
-        );
-
-        $this->identityService->ensureEmailIdentity($user);
-        $this->welcomeWorkflow->dispatchRegistrationWelcome($user, $registration['organization']->id);
-
-        return response()->json([
-            ...$this->authenticatedPayload($user, $data['device_name'] ?? 'web'),
-            'organization' => $registration['organization']->only(['id', 'name', 'slug']),
-        ], 201);
+        return $this->registerServiceOwner($request, $data);
     }
 
     public function login(LoginRequest $request): JsonResponse
@@ -311,6 +296,36 @@ class AuthController extends Controller
     private function authenticatedResponse(User $user, string $deviceName, Request $request): JsonResponse
     {
         return response()->json($this->authenticatedPayload($user, $deviceName));
+    }
+
+    /**
+     * @param  array{name: string, email: string, password: string, device_name?: string}  $data
+     */
+    private function registerServiceOwner(Request $request, array $data, ?string $audience = null): JsonResponse
+    {
+        $registration = $this->serviceOwnerRegistration->register($data);
+        $user = $registration['user'];
+
+        $this->auditService->record(
+            action: 'auth.register',
+            userId: $user->id,
+            auditable: $user,
+            newValues: array_filter([
+                'email' => $user->email,
+                'name' => $user->name,
+                'audience' => $audience,
+                'organization_id' => $registration['organization']->id,
+            ], fn ($value) => $value !== null),
+            request: $request,
+        );
+
+        $this->identityService->ensureEmailIdentity($user);
+        $this->welcomeWorkflow->dispatchRegistrationWelcome($user, $registration['organization']->id);
+
+        return response()->json([
+            ...$this->authenticatedPayload($user, $data['device_name'] ?? 'web'),
+            'organization' => $registration['organization']->only(['id', 'name', 'slug']),
+        ], 201);
     }
 
     /** @return array{token: string, user: array<string, mixed>} */

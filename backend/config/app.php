@@ -129,4 +129,6 @@ return [
 
     'allow_employer_registration' => filter_var(env('ALLOW_EMPLOYER_REGISTRATION', true), FILTER_VALIDATE_BOOLEAN),
 
+    'allow_marketplace_registration' => filter_var(env('ALLOW_MARKETPLACE_REGISTRATION', true), FILTER_VALIDATE_BOOLEAN),
+
 ];

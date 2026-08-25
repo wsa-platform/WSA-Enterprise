@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { fetchPublicListing, type PublicListing } from '../../api/marketplace'
 import { countryDisplayName } from '../../marketplace/isoCountries'
+import { sellerTypeLabelKey } from '../../marketplace/listingForm'
+import { isProductCategorySlug, productCategoryLabel } from '../../marketplace/productCategories'
 import { availabilityI18nKey, listingImageUrl, listingImages, specificationLines, toPublicProduct } from '../../marketplace/productDisplay'
 import { publicPaths } from '../../navigation/paths'
 import { PublicLayout } from '../../public/PublicLayout'
@@ -41,7 +43,8 @@ export function MarketplaceListingPage() {
   const images = product ? listingImages(product) : []
   const category = product?.category
     ? (language.startsWith('ar') && product.category.name_ar ? product.category.name_ar : product.category.name)
-    : null
+      || productCategoryLabel(product.category.slug ?? product.product_type ?? '', language)
+    : productCategoryLabel(product?.product_type ?? '', language) || null
   const unit = product?.unit
     ? (language.startsWith('ar') && product.unit.name_ar ? product.unit.name_ar : product.unit.name)
     : null
@@ -82,10 +85,12 @@ export function MarketplaceListingPage() {
               )}
               <dl className="gs-market-specs">
                 {category && <><dt>{t('market.category')}</dt><dd>{category}</dd></>}
-                {product.product_type && <><dt>{t('market.productType')}</dt><dd>{product.product_type}</dd></>}
+                {product.product_type && !isProductCategorySlug(product.product_type) && (
+                  <><dt>{t('market.productType')}</dt><dd>{product.product_type}</dd></>
+                )}
                 {product.origin_country && <><dt>{t('market.originCountry')}</dt><dd>{countryDisplayName(product.origin_country, language)}</dd></>}
-                {(product.seller_type ?? product.seller?.seller_type) && (
-                  <><dt>{t('market.sellerType')}</dt><dd>{(product.seller_type ?? product.seller?.seller_type) === 'international' ? t('market.sellerInternational') : t('market.sellerLocal')}</dd></>
+                {(product.seller_type ?? product.seller_types ?? product.seller?.seller_type) && (
+                  <><dt>{t('market.sellerType')}</dt><dd>{t(sellerTypeLabelKey(product.seller_types ?? product.seller_type ?? product.seller?.seller_type) ?? 'market.sellerLocal')}</dd></>
                 )}
                 {(product.seller_country || product.country || product.seller?.country) && (
                   <><dt>{t('market.sellerCountry')}</dt><dd>{countryDisplayName(product.seller_country ?? product.country ?? product.seller?.country, language)}</dd></>
@@ -99,10 +104,8 @@ export function MarketplaceListingPage() {
                 {product.production_capacity != null && <><dt>{t('market.productionCapacity')}</dt><dd>{String(product.production_capacity)}</dd></>}
                 <><dt>{t('market.wholesale')}</dt><dd>{product.wholesale ? t('common.yes') : t('common.no')}</dd></>
                 <><dt>{t('market.retail')}</dt><dd>{product.retail ? t('common.yes') : t('common.no')}</dd></>
-                <><dt>{t('market.exportReady')}</dt><dd>{product.export_ready ? t('common.yes') : t('common.no')}</dd></>
+                <><dt>{t('market.exportAvailable')}</dt><dd>{product.export_ready ? t('common.yes') : t('common.no')}</dd></>
                 {product.packaging && <><dt>{t('market.packaging')}</dt><dd>{product.packaging}</dd></>}
-                {product.shipping_terms && <><dt>{t('market.shippingTerms')}</dt><dd>{product.shipping_terms}</dd></>}
-                {product.lead_time_days != null && <><dt>{t('market.leadTimeDays')}</dt><dd>{product.lead_time_days}</dd></>}
                 {product.price != null && <><dt>{t('market.price')}</dt><dd>{String(product.price)} {product.currency ?? ''}</dd></>}
               </dl>
               {specText && (

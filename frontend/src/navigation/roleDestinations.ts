@@ -147,8 +147,8 @@ export function marketplaceRegisterHref(next: string = internalPaths.newProduct)
   return registerHref(null, next)
 }
 
-export function shouldStayOnPlatformAuthPage(audience: AuthAudience | null, next?: string | null): boolean {
-  return !audience && Boolean(next && isMarketplacePath(next))
+export function shouldStayOnPlatformAuthPage(_audience: AuthAudience | null, next?: string | null): boolean {
+  return Boolean(next && isMarketplacePath(next))
 }
 
 export function employerCreateAccountHref(): string {
@@ -218,6 +218,8 @@ export function destinationForRoles(
   const requested = requestedNext ? safePath(requestedNext, '') : ''
   const usableNext = requested && !isUserDashboardPath(requested) ? requested : ''
 
+  if (isMarketplacePath(usableNext)) return canonicalSellerPath(usableNext)
+
   if (audience === 'employer') {
     return usableNext.startsWith('/employer') ? usableNext : EMPLOYER_HOME
   }
@@ -226,8 +228,6 @@ export function destinationForRoles(
     if (usableNext.startsWith('/jobs/application') || usableNext.startsWith('/jobs/talent')) return usableNext
     return JOB_SEEKER_HOME
   }
-
-  if (isMarketplacePath(usableNext)) return canonicalSellerPath(usableNext)
 
   if (roles.isAdmin) {
     if (usableNext.startsWith('/admin')) return usableNext

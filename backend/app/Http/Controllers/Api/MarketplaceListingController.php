@@ -8,6 +8,8 @@ use App\Models\ContactAccessOrder;
 use App\Models\MarketplaceEntitlement;
 use App\Models\MarketplaceListing;
 use App\Support\IsoCountries;
+use App\Support\InternationalPhone;
+use App\Support\MarketplaceCurrencyCountries;
 use App\Services\Authorization\PermissionService;
 use App\Services\Marketplace\MarketplaceContactService;
 use App\Services\Marketplace\MarketplaceService;
@@ -15,6 +17,7 @@ use App\Services\Ownership\ServiceOwnershipAuthorizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class MarketplaceListingController extends Controller
 {
@@ -152,11 +155,20 @@ class MarketplaceListingController extends Controller
         return response()->json($result);
     }
 
+    public function sellerContact(Request $request, ContactAccessOrder $order): JsonResponse
+    {
+        abort_unless($request->user() !== null, 401);
+        $contact = $this->contactService->contactForPaidOrder($request->user(), $order);
+        abort_unless($contact !== null, 403);
+
+        return response()->json($contact);
+    }
+
     public function myEntitlements(Request $request): JsonResponse
     {
         $this->authorizeAnyPermission($request, ['market.view', 'market.create', 'market.manage_own']);
         $entitlements = MarketplaceEntitlement::query()
-            ->with(['listing:id,title,seller_display_name,country,city'])
+            ->with(['listing:id,title,seller_display_name,country,city,seller_email,seller_phone'])
             ->where('buyer_user_id', $request->user()->id)
             ->whereNull('revoked_at')
             ->latest('granted_at')
@@ -191,26 +203,46 @@ class MarketplaceListingController extends Controller
             }
         }
 
+        $currency = $request->input('currency');
+        if (is_string($currency) && $currency !== '') {
+            $request->merge(['currency' => strtoupper(trim($currency))]);
+        }
+
+        if ($request->exists('seller_types')) {
+            $types = $request->input('seller_types');
+            $mapped = is_array($types) ? MarketplaceListing::sellerTypeFromTypes($types) : null;
+            $request->merge(['seller_type' => $mapped]);
+        }
+
+        if ($request->filled('currency') && ! $request->filled('country')) {
+            $derivedCountry = MarketplaceCurrencyCountries::countryFor((string) $request->input('currency'));
+            if ($derivedCountry !== null) {
+                $request->merge(['country' => $derivedCountry]);
+            }
+        }
+
         $isoCode = ['string', 'size:2', Rule::in(IsoCountries::codes())];
 
-        return $request->validate([
+        $data = $request->validate([
             'title' => [$partial ? 'sometimes' : 'required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'category_id' => ['nullable', 'integer', 'exists:marketplace_categories,id'],
             'product_type' => ['nullable', 'string', 'max:64'],
             'brand' => ['nullable', 'string', 'max:255'],
+            'seller_types' => ['nullable', 'array', 'min:1'],
+            'seller_types.*' => ['string', Rule::in(MarketplaceListing::SELLER_TYPE_FLAGS)],
             'seller_type' => [$partial ? 'sometimes' : 'required', 'string', Rule::in(MarketplaceListing::SELLER_TYPES)],
-            'availability' => ['nullable', 'string', Rule::in(MarketplaceListing::AVAILABILITIES)],
+            'availability' => ['nullable', 'string', Rule::in(MarketplaceListing::AVAILABILITY_INPUTS)],
             'unit_id' => ['nullable', 'integer', 'exists:marketplace_units,id'],
             'price' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['nullable', 'string', 'size:3'],
+            'currency' => ['nullable', 'string', 'size:3', Rule::in(MarketplaceCurrencyCountries::currencyCodes())],
             'country' => array_merge([$partial ? 'sometimes' : 'required'], $isoCode),
             'origin_country' => array_merge(['nullable'], $isoCode),
             'city' => ['nullable', 'string', 'max:100'],
             'seller_region' => ['nullable', 'string', 'max:150'],
             'seller_display_name' => ['nullable', 'string', 'max:255'],
-            'seller_email' => ['nullable', 'email'],
-            'seller_phone' => ['nullable', 'string', 'max:50'],
+            'seller_email' => [$partial ? 'sometimes' : 'required', 'email', 'max:255'],
+            'seller_phone' => [$partial ? 'sometimes' : 'required', 'string', 'regex:/^\+[1-9]\d{7,14}$/'],
             'export_ready' => ['sometimes', 'boolean'],
             'min_order_quantity' => ['nullable', 'numeric', 'min:0'],
             'available_quantity' => ['nullable', 'numeric', 'min:0'],
@@ -218,12 +250,36 @@ class MarketplaceListingController extends Controller
             'wholesale' => ['sometimes', 'boolean'],
             'retail' => ['sometimes', 'boolean'],
             'packaging' => ['nullable', 'string'],
-            'shipping_terms' => ['nullable', 'string'],
-            'lead_time_days' => ['nullable', 'integer', 'min:0'],
             'specifications' => ['nullable', 'array'],
-            'video_url' => ['nullable', 'url', 'max:2048'],
             'contact_access_price' => ['nullable', 'numeric', 'min:0'],
         ]);
+
+        unset($data['seller_types']);
+
+        if (isset($data['availability'])) {
+            $data['availability'] = MarketplaceListing::canonicalizeAvailability($data['availability']);
+        }
+
+        if (! empty($data['currency']) && ! empty($data['country'])) {
+            if (! MarketplaceCurrencyCountries::isValidPair($data['currency'], $data['country'])) {
+                throw ValidationException::withMessages([
+                    'currency' => ['The selected currency and country combination is invalid.'],
+                    'country' => ['The selected currency and country combination is invalid.'],
+                ]);
+            }
+        }
+
+        if (isset($data['seller_email']) && is_string($data['seller_email'])) {
+            $data['seller_email'] = strtolower(trim($data['seller_email']));
+        }
+        if (isset($data['seller_phone']) && is_string($data['seller_phone'])) {
+            $normalized = InternationalPhone::normalize($data['seller_phone']);
+            if ($normalized !== null) {
+                $data['seller_phone'] = $normalized;
+            }
+        }
+
+        return $data;
     }
 
     private function assertOwnListing(Request $request, MarketplaceListing $listing): void

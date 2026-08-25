@@ -76,6 +76,8 @@ class M23UserAccountProductsTest extends TestCase
             'description' => 'Fresh',
             'seller_type' => MarketplaceListing::SELLER_LOCAL,
             'country' => 'SA',
+            'seller_email' => 'tomatoes@wsa.test',
+            'seller_phone' => '+966512345678',
             'seller_user_id' => 999999,
             'status' => 'published',
         ], $headers);

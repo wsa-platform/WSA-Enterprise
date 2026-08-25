@@ -65,6 +65,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/market/listings', [MarketplacePublicController::class, 'listings']);
         Route::get('/market/listings/{listing}', [MarketplacePublicController::class, 'show'])->whereNumber('listing');
         Route::get('/market/categories', [MarketplacePublicController::class, 'categories']);
+        Route::get('/market/units', [MarketplacePublicController::class, 'units']);
     });
 
     Route::middleware('throttle:20,1')->group(function (): void {
@@ -329,13 +330,17 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/listings', [MarketplacePublicController::class, 'listings']);
             Route::get('/listings/{listing}', [MarketplacePublicController::class, 'show'])->whereNumber('listing');
             Route::get('/categories', [MarketplacePublicController::class, 'categories']);
+            Route::get('/units', [MarketplacePublicController::class, 'units']);
             Route::get('/my-listings', [MarketplaceListingController::class, 'myListings']);
+            Route::get('/my-listings/{listing}', [MarketplaceListingController::class, 'showMine'])->whereNumber('listing');
             Route::post('/listings', [MarketplaceListingController::class, 'store']);
             Route::patch('/listings/{listing}', [MarketplaceListingController::class, 'update'])->whereNumber('listing');
             Route::delete('/listings/{listing}', [MarketplaceListingController::class, 'destroy'])->whereNumber('listing');
             Route::post('/listings/{listing}/submit', [MarketplaceListingController::class, 'submit'])->whereNumber('listing');
+            Route::post('/listings/{listing}/unpublish', [MarketplaceListingController::class, 'unpublish'])->whereNumber('listing');
             Route::post('/listings/{listing}/request-contact-access', [MarketplaceListingController::class, 'requestContactAccess'])->whereNumber('listing');
             Route::post('/contact-access-orders/{order}/pay', [MarketplaceListingController::class, 'payContactAccess'])->whereNumber('order');
+            Route::get('/contact-access-orders/{order}/seller-contact', [MarketplaceListingController::class, 'sellerContact'])->whereNumber('order');
             Route::get('/my-entitlements', [MarketplaceListingController::class, 'myEntitlements']);
         });
         Route::prefix('admin/market')->group(function (): void {

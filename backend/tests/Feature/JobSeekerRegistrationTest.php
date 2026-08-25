@@ -134,4 +134,41 @@ class JobSeekerRegistrationTest extends TestCase
             ->assertJsonPath('user.email', 'login-seeker@wsa.test')
             ->assertJsonStructure(['token']);
     }
+
+    public function test_marketplace_can_register_when_generic_registration_is_disabled(): void
+    {
+        Config::set('app.allow_registration', false);
+        Config::set('app.allow_marketplace_registration', true);
+
+        $response = $this->postJson('/api/v1/auth/register', [
+            'name' => 'Market Seller',
+            'email' => 'market-seller@wsa.test',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'audience' => 'marketplace',
+            'device_name' => 'test',
+        ])->assertCreated()
+            ->assertJsonPath('user.email', 'market-seller@wsa.test')
+            ->assertJsonStructure(['token', 'user', 'organization']);
+
+        $user = User::where('email', 'market-seller@wsa.test')->firstOrFail();
+        $this->assertTrue($user->organizations()->exists());
+        $this->assertDatabaseMissing('job_seeker_profiles', ['user_id' => $user->id]);
+    }
+
+    public function test_marketplace_registration_stays_disabled_when_flag_is_off(): void
+    {
+        Config::set('app.allow_registration', false);
+        Config::set('app.allow_marketplace_registration', false);
+
+        $this->postJson('/api/v1/auth/register', [
+            'name' => 'Blocked Seller',
+            'email' => 'blocked-seller@wsa.test',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'audience' => 'marketplace',
+        ])->assertForbidden();
+
+        $this->assertDatabaseMissing('users', ['email' => 'blocked-seller@wsa.test']);
+    }
 }

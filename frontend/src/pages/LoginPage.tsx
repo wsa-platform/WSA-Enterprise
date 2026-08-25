@@ -12,6 +12,7 @@ import {
   EMPLOYER_ENTER,
   JOB_SEEKER_ENTER,
   JOB_SEEKER_HOME,
+  isMarketplacePath,
   isUserDashboardPath,
   parseAudience,
   persistAudience,
@@ -26,10 +27,12 @@ export function LoginPage() {
   const location = useLocation()
   const [params] = useSearchParams()
   const expired = (location.state as { expired?: boolean } | null)?.expired === true
-  const audience = parseAudience(params.get('audience'))
-  const defaultNext = audience === 'job_seeker' ? JOB_SEEKER_HOME : audience === 'employer' ? '/employer' : '/'
+  const requestedAudience = parseAudience(params.get('audience'))
+  const defaultNext = requestedAudience === 'job_seeker' ? JOB_SEEKER_HOME : requestedAudience === 'employer' ? '/employer' : '/'
   const requestedNext = safeReturnPath(params.get('next'), defaultNext)
   const nextPath = isUserDashboardPath(requestedNext) ? defaultNext : requestedNext
+  const marketplaceReturn = isMarketplacePath(nextPath)
+  const audience = marketplaceReturn ? null : requestedAudience
   const { setSession, setOrganizationId } = useAuth()
   const loginDefaults = audience ? { email: '', password: '' } : getLoginDefaults()
   const [email, setEmail] = useState(loginDefaults.email)

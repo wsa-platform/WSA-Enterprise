@@ -13,7 +13,7 @@ export async function register(payload: {
   email: string
   password: string
   password_confirmation: string
-  audience?: 'job_seeker' | 'employer' | 'admin' | null
+  audience?: 'job_seeker' | 'employer' | 'admin' | 'marketplace' | null
 }) {
   return request<{
     token: string

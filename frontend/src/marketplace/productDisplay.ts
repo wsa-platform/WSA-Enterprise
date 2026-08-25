@@ -75,9 +75,20 @@ export function specificationLines(specifications: Record<string, unknown> | nul
 }
 
 export function isProductAvailability(value: string | null | undefined): value is ProductAvailability {
-  return Boolean(value && (PRODUCT_AVAILABILITIES as readonly string[]).includes(value))
+  const normalized = canonicalAvailabilityValue(value)
+  return Boolean(normalized)
+}
+
+function canonicalAvailabilityValue(value: string | null | undefined): ProductAvailability | null {
+  const normalized = (value ?? '').trim().toLowerCase()
+  if (normalized === 'on_demand') return 'made_to_order'
+  if ((PRODUCT_AVAILABILITIES as readonly string[]).includes(normalized)) {
+    return normalized as ProductAvailability
+  }
+  return null
 }
 
 export function availabilityI18nKey(value: string | null | undefined): string | null {
-  return isProductAvailability(value) ? `market.availability.${value}` : null
+  const canonical = canonicalAvailabilityValue(value)
+  return canonical ? `market.availability.${canonical}` : null
 }

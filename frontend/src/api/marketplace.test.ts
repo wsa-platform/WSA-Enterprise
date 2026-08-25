@@ -5,10 +5,12 @@ import {
   fetchMyListing,
   fetchMyListings,
   fetchPublicCategories,
+  fetchPublicUnits,
   fetchPublicListing,
   fetchPublicListings,
   payContactAccess,
   requestContactAccess,
+  fetchSellerContact,
   unpublishListing,
   updateListing,
 } from './marketplace'
@@ -94,6 +96,22 @@ describe('marketplace API', () => {
     expect(init?.headers).not.toHaveProperty('Authorization')
   })
 
+  it('loads public marketplace units without a token', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ data: [{ id: 2, slug: 'kg', name: 'Kilogram', name_ar: 'كجم' }] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const result = await fetchPublicUnits()
+
+    expect(result.data[0]?.slug).toBe('kg')
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(String(url)).toContain('/public/market/units')
+    expect(init?.headers).not.toHaveProperty('Authorization')
+  })
+
   it('uses the public listing path when unauthenticated', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ id: 7, title: 'Tomatoes' }), {
@@ -149,6 +167,21 @@ describe('marketplace API', () => {
     expect(String(fetchMock.mock.calls[0][0])).toContain('/market/listings/7/request-contact-access')
     expect(String(fetchMock.mock.calls[1][0])).toContain('/market/contact-access-orders/22/pay')
     expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ idempotency_key: 'order-key' })
+  })
+
+  it('loads paid seller contact from the private order endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ seller_email: 'seller@wsa.test', seller_phone: '+966512345678' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const contact = await fetchSellerContact(22, 'token-1')
+
+    expect(contact.seller_phone).toBe('+966512345678')
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/market/contact-access-orders/22/seller-contact')
+    expect(String(fetchMock.mock.calls[0][0])).not.toContain('/public/')
   })
 
   it('loads seller listings with the owner token', async () => {

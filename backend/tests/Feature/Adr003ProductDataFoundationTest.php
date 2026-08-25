@@ -38,6 +38,8 @@ class Adr003ProductDataFoundationTest extends TestCase
             'description' => 'Export-grade citrus',
             'seller_type' => MarketplaceListing::SELLER_INTERNATIONAL,
             'country' => 'tr',
+            'seller_email' => 'oranges@wsa.test',
+            'seller_phone' => '+905551234567',
             'city' => 'Istanbul',
             'seller_region' => 'Marmara',
             'origin_country' => 'EG',
@@ -77,6 +79,8 @@ class Adr003ProductDataFoundationTest extends TestCase
         $this->assertArrayNotHasKey('export_destination', $response->json());
         $this->assertArrayNotHasKey('model_number', $response->json());
         $this->assertArrayNotHasKey('condition', $response->json());
+        $this->assertArrayNotHasKey('shipping_terms', $response->json());
+        $this->assertArrayNotHasKey('lead_time_days', $response->json());
         $this->assertArrayNotHasKey('seller_email', $response->json()['seller']);
         $this->assertArrayNotHasKey('seller_phone', $response->json()['seller']);
 
@@ -87,6 +91,9 @@ class Adr003ProductDataFoundationTest extends TestCase
         $this->assertNotSame($listing->country, $listing->origin_country);
         $this->assertSame('Istanbul', $listing->city);
         $this->assertSame('Marmara', $listing->seller_region);
+        $this->assertNull($listing->shipping_terms);
+        $this->assertNull($listing->lead_time_days);
+        $this->assertNull($listing->video_url);
         $this->assertFalse(isset($listing->export_countries));
         $this->assertFalse(isset($listing->model_number));
         $this->assertFalse(isset($listing->condition));
@@ -117,21 +124,27 @@ class Adr003ProductDataFoundationTest extends TestCase
             'title' => 'Dates made_to_order',
             'seller_type' => MarketplaceListing::SELLER_LOCAL,
             'country' => 'SA',
-            'availability' => 'made_to_order',
-        ], $headers)->assertUnprocessable();
+            'seller_email' => 'dates-mto@wsa.test',
+            'seller_phone' => '+966512345678',
+            'availability' => MarketplaceListing::AVAILABILITY_MADE_TO_ORDER,
+        ], $headers)->assertCreated()->assertJsonPath('availability', MarketplaceListing::AVAILABILITY_MADE_TO_ORDER);
 
         $this->postJson('/api/v1/market/listings', [
             'title' => 'Dates on_demand',
             'seller_type' => MarketplaceListing::SELLER_LOCAL,
             'country' => 'SA',
+            'seller_email' => 'dates@wsa.test',
+            'seller_phone' => '+966512345678',
             'availability' => MarketplaceListing::AVAILABILITY_ON_DEMAND,
-        ], $headers)->assertCreated()->assertJsonPath('availability', 'on_demand');
+        ], $headers)->assertCreated()->assertJsonPath('availability', MarketplaceListing::AVAILABILITY_MADE_TO_ORDER);
 
         foreach (MarketplaceListing::AVAILABILITIES as $availability) {
             $this->postJson('/api/v1/market/listings', [
                 'title' => 'Dates '.$availability,
                 'seller_type' => MarketplaceListing::SELLER_LOCAL,
                 'country' => 'SA',
+                'seller_email' => 'dates-'.$availability.'@wsa.test',
+                'seller_phone' => '+966512345678',
                 'availability' => $availability,
             ], $headers)->assertCreated()->assertJsonPath('availability', $availability);
         }
@@ -245,7 +258,114 @@ class Adr003ProductDataFoundationTest extends TestCase
         $this->assertArrayNotHasKey('phone', $payload['seller']);
         $this->assertArrayHasKey('origin_country', $payload);
         $this->assertArrayHasKey('seller_country', $payload);
+        $this->assertArrayNotHasKey('shipping_terms', $payload);
+        $this->assertArrayNotHasKey('lead_time_days', $payload);
         $this->assertSame($payload['country'], $payload['seller_country']);
+    }
+
+    public function test_seller_types_array_accepts_local_international_or_both_and_rejects_invalid(): void
+    {
+        [$org, $seller] = $this->seller();
+        $headers = $this->headers($seller, $org);
+
+        $this->postJson('/api/v1/market/listings', [
+            'title' => 'Local crop',
+            'seller_types' => ['local'],
+            'country' => 'SA',
+            'seller_email' => 'local-types@wsa.test',
+            'seller_phone' => '+966512345678',
+        ], $headers)->assertCreated()
+            ->assertJsonPath('seller_type', MarketplaceListing::SELLER_LOCAL)
+            ->assertJsonPath('seller_types', [MarketplaceListing::SELLER_LOCAL]);
+
+        $this->postJson('/api/v1/market/listings', [
+            'title' => 'International crop',
+            'seller_types' => ['international'],
+            'country' => 'TR',
+            'seller_email' => 'intl-types@wsa.test',
+            'seller_phone' => '+905551234567',
+        ], $headers)->assertCreated()
+            ->assertJsonPath('seller_type', MarketplaceListing::SELLER_INTERNATIONAL)
+            ->assertJsonPath('seller_types', [MarketplaceListing::SELLER_INTERNATIONAL]);
+
+        $this->postJson('/api/v1/market/listings', [
+            'title' => 'Both crop',
+            'seller_types' => ['local', 'international'],
+            'country' => 'EG',
+            'seller_email' => 'both-types@wsa.test',
+            'seller_phone' => '+201012345678',
+        ], $headers)->assertCreated()
+            ->assertJsonPath('seller_type', MarketplaceListing::SELLER_BOTH)
+            ->assertJsonPath('seller_types.0', MarketplaceListing::SELLER_LOCAL)
+            ->assertJsonPath('seller_types.1', MarketplaceListing::SELLER_INTERNATIONAL);
+
+        $this->postJson('/api/v1/market/listings', [
+            'title' => 'Empty types',
+            'seller_types' => [],
+            'country' => 'SA',
+            'seller_email' => 'empty-types@wsa.test',
+            'seller_phone' => '+966512345678',
+        ], $headers)->assertUnprocessable();
+
+        $this->postJson('/api/v1/market/listings', [
+            'title' => 'Invalid types',
+            'seller_types' => ['export'],
+            'country' => 'SA',
+            'seller_email' => 'invalid-types@wsa.test',
+            'seller_phone' => '+966512345678',
+        ], $headers)->assertUnprocessable();
+    }
+
+    public function test_currency_country_pair_must_match_supported_catalog(): void
+    {
+        [$org, $seller] = $this->seller();
+        $headers = $this->headers($seller, $org);
+
+        $this->postJson('/api/v1/market/listings', [
+            'title' => 'Valid pair',
+            'seller_type' => MarketplaceListing::SELLER_LOCAL,
+            'currency' => 'EGP',
+            'country' => 'EG',
+            'seller_email' => 'pair@wsa.test',
+            'seller_phone' => '+201012345678',
+        ], $headers)->assertCreated()
+            ->assertJsonPath('currency', 'EGP')
+            ->assertJsonPath('country', 'EG');
+
+        $this->postJson('/api/v1/market/listings', [
+            'title' => 'Derived country',
+            'seller_type' => MarketplaceListing::SELLER_LOCAL,
+            'currency' => 'TRY',
+            'seller_email' => 'derived@wsa.test',
+            'seller_phone' => '+905551234567',
+        ], $headers)->assertCreated()
+            ->assertJsonPath('currency', 'TRY')
+            ->assertJsonPath('country', 'TR');
+
+        $this->postJson('/api/v1/market/listings', [
+            'title' => 'Mismatched pair',
+            'seller_type' => MarketplaceListing::SELLER_LOCAL,
+            'currency' => 'EGP',
+            'country' => 'TR',
+            'seller_email' => 'mismatch@wsa.test',
+            'seller_phone' => '+905551234567',
+        ], $headers)->assertUnprocessable();
+
+        $this->postJson('/api/v1/market/listings', [
+            'title' => 'Unknown currency',
+            'seller_type' => MarketplaceListing::SELLER_LOCAL,
+            'currency' => 'XXX',
+            'country' => 'SA',
+            'seller_email' => 'unknown-currency@wsa.test',
+            'seller_phone' => '+966512345678',
+        ], $headers)->assertUnprocessable();
+    }
+
+    public function test_public_units_are_listed_without_authentication(): void
+    {
+        $this->getJson('/api/v1/public/market/units')
+            ->assertOk()
+            ->assertJsonStructure(['data' => [['id', 'slug', 'name']]]);
     }
 
     /** @return array{0: Organization, 1: User} */
