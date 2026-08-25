@@ -19,6 +19,8 @@ import {
   marketplaceLoginHref,
   marketplaceRegisterHref,
   parseAudience,
+  sellerAddProductHref,
+  sellerCreatePageGate,
   shouldStayOnPlatformAuthPage,
   publicLoginHref,
   publicRegisterHref,
@@ -181,5 +183,23 @@ describe('marketplace account separation', () => {
     expect(shouldStayOnPlatformAuthPage('job_seeker', '/seller/listings')).toBe(true)
     expect(shouldStayOnPlatformAuthPage('employer', '/employer')).toBe(false)
     expect(destinationForRoles(roleFlagsFromPermissions([]), null, '/seller/listings')).toBe('/seller/listings')
+  })
+
+  it('sends unauthenticated Add Product clicks to seller login with a safe return to create', () => {
+    expect(sellerAddProductHref(false)).toBe('/login?next=%2Fseller%2Flistings%2Fnew')
+    expect(sellerAddProductHref(false)).not.toContain('audience=')
+    expect(sellerAddProductHref(true)).toBe(internalPaths.newProduct)
+    expect(safeReturnPath('https://evil.example/phish')).toBe('/')
+    expect(safeReturnPath('//evil.example')).toBe('/')
+    expect(safeReturnPath('/seller/listings/new')).toBe('/seller/listings/new')
+    expect(marketplaceLoginHref('https://evil.example')).toBe('/login?next=%2F')
+    expect(marketplaceRegisterHref(internalPaths.newProduct)).toBe('/register?next=%2Fseller%2Flistings%2Fnew')
+  })
+
+  it('opens the create form only after seller authentication, never a permission error', () => {
+    expect(sellerCreatePageGate({ authenticated: false, permissionsLoading: false, canCreate: false })).toBe('login')
+    expect(sellerCreatePageGate({ authenticated: true, permissionsLoading: true, canCreate: false })).toBe('loading')
+    expect(sellerCreatePageGate({ authenticated: true, permissionsLoading: false, canCreate: false })).toBe('login')
+    expect(sellerCreatePageGate({ authenticated: true, permissionsLoading: false, canCreate: true })).toBe('form')
   })
 })

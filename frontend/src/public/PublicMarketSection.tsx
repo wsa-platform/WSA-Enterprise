@@ -12,7 +12,7 @@ import { ProductCard } from '../marketplace/ProductCard'
 import { countryDisplayName, MARKETPLACE_COUNTRY_CODES } from '../marketplace/isoCountries'
 import { toPublicProduct } from '../marketplace/productDisplay'
 import { internalPaths } from '../navigation/paths'
-import { marketplaceLoginHref, marketplaceRegisterHref } from '../navigation/roleDestinations'
+import { marketplaceLoginHref, sellerAddProductHref } from '../navigation/roleDestinations'
 
 const PAGE_SIZE = 12
 
@@ -100,12 +100,12 @@ export function PublicMarketSection() {
             {token ? (
               <>
                 <Link className="gs-btn gs-btn-ghost" to={internalPaths.products}>{t('nav.myProducts')}</Link>
-                <Link className="gs-btn gs-btn-primary" to={internalPaths.newProduct}>{t('nav.addProduct')}</Link>
+                <Link className="gs-btn gs-btn-primary" to={sellerAddProductHref(true)}>{t('nav.addProduct')}</Link>
               </>
             ) : (
               <>
                 <Link className="gs-btn gs-btn-ghost" to={marketplaceLoginHref(internalPaths.products)}>{t('website.nav.login')}</Link>
-                <Link className="gs-btn gs-btn-primary" to={marketplaceRegisterHref(internalPaths.newProduct)}>{t('nav.addProduct')}</Link>
+                <Link className="gs-btn gs-btn-primary" to={sellerAddProductHref(false)}>{t('nav.addProduct')}</Link>
               </>
             )}
           </div>

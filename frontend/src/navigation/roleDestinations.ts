@@ -147,6 +147,22 @@ export function marketplaceRegisterHref(next: string = internalPaths.newProduct)
   return registerHref(null, next)
 }
 
+/** Public marketplace Add Product: guests go to seller login, sellers go to the create page. */
+export function sellerAddProductHref(authenticated: boolean): string {
+  return authenticated ? internalPaths.newProduct : marketplaceLoginHref(internalPaths.newProduct)
+}
+
+export function sellerCreatePageGate(input: {
+  authenticated: boolean
+  permissionsLoading: boolean
+  canCreate: boolean
+}): 'login' | 'loading' | 'form' {
+  if (!input.authenticated) return 'login'
+  if (input.permissionsLoading) return 'loading'
+  if (!input.canCreate) return 'login'
+  return 'form'
+}
+
 export function shouldStayOnPlatformAuthPage(_audience: AuthAudience | null, next?: string | null): boolean {
   return Boolean(next && isMarketplacePath(next))
 }

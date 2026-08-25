@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { usePermissions } from '../../context/PermissionContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { internalPaths, publicPaths } from '../../navigation/paths'
-import { marketplaceLoginHref } from '../../navigation/roleDestinations'
+import { marketplaceLoginHref, sellerCreatePageGate } from '../../navigation/roleDestinations'
 import { SellerProductForm } from './SellerProductForm'
 
 export function ListingEditorPage() {
@@ -25,20 +25,28 @@ export function ListingEditorPage() {
     return fetchMyListing(token, numericId, organizationId ?? undefined)
   }, [token, organizationId, numericId, isNew])
 
-  if (!token) {
-    return <Navigate to={marketplaceLoginHref(isNew ? internalPaths.newProduct : internalPaths.editProduct(numericId))} replace />
-  }
-
-  if (permissionsLoading) {
-    return <p className="loading">{t('errors.checkingAccess')}</p>
-  }
-
-  if (!can('market.view')) {
-    return <ErrorBanner message={t('market.noPermissionView')} />
-  }
-
-  if (isNew && !can('market.create')) {
-    return <ErrorBanner message={t('market.noPermissionCreate')} />
+  if (isNew) {
+    const createGate = sellerCreatePageGate({
+      authenticated: Boolean(token),
+      permissionsLoading,
+      canCreate: can('market.create'),
+    })
+    if (createGate === 'login') {
+      return <Navigate to={marketplaceLoginHref(internalPaths.newProduct)} replace />
+    }
+    if (createGate === 'loading') {
+      return <p className="loading">{t('errors.checkingAccess')}</p>
+    }
+  } else {
+    if (!token) {
+      return <Navigate to={marketplaceLoginHref(internalPaths.editProduct(numericId))} replace />
+    }
+    if (permissionsLoading) {
+      return <p className="loading">{t('errors.checkingAccess')}</p>
+    }
+    if (!can('market.view')) {
+      return <ErrorBanner message={t('market.noPermissionView')} />
+    }
   }
 
   const editable = isNew || listing?.status === 'draft' || listing?.status === 'rejected' || listing?.status === 'unpublished'
