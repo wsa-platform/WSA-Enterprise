@@ -1,14 +1,16 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import { sellerAddProductHref } from '../../navigation/roleDestinations'
 import { CropsCategoryMenu } from '../../public/CropsCategoryMenu'
 import { HomeFeaturePanels } from '../../public/HomeFeaturePanels'
 import { PublicLayout } from '../../public/PublicLayout'
-import { HERO_IMAGE, PUBLIC_SECTIONS } from '../../public/sections'
+import { HERO_IMAGE, PRODUCER_CARD_IMAGE, PUBLIC_SECTIONS } from '../../public/sections'
 
 const HERO_PILLS = [
-  { key: 'sustainableFuture', icon: '🌍' },
-  { key: 'lessResources', icon: '💧' },
   { key: 'betterYield', icon: '🌱' },
+  { key: 'lessResources', icon: '💧' },
+  { key: 'sustainableFuture', icon: '🌍' },
 ] as const
 
 const STATS = [
@@ -36,34 +38,56 @@ const CATEGORY_STRIP = [
  */
 export function HomePage() {
   const { t } = useTranslation()
+  const { token } = useAuth()
+  const producerTo = sellerAddProductHref(Boolean(token))
 
   return (
     <PublicLayout>
       <div className="hp-shell">
-        <section className="hp-hero hp-hero--prototype" aria-labelledby="hero-title">
-          <div
-            className="hp-hero-bg"
-            style={{ backgroundImage: `url(${HERO_IMAGE})` }}
-            role="img"
-            aria-label={t('website.hero.imageAlt')}
+        <section className="hp-hero hp-hero--prototype" aria-label="WSA Enterprise Hero" aria-labelledby="hero-title">
+          <img
+            className="hp-hero-media"
+            src={HERO_IMAGE}
+            alt=""
+            aria-hidden="true"
           />
+
           <div className="hp-hero-copy">
-            <span className="hp-hero-kicker">{t('website.hero.eyebrow')}</span>
-            <h1 id="hero-title">
-              <span className="hp-hero-line">{t('website.hero.titleLine1')}</span>
-              <span className="hp-hero-line hp-hero-line--accent">{t('website.hero.titleLine2Full')}</span>
-            </h1>
-            <p className="hp-hero-support">{t('website.hero.supportLine')}</p>
-            <ul className="hp-hero-pills">
-              {HERO_PILLS.map((pill) => (
-                <li key={pill.key}>
-                  <span className="hp-hero-pill-icon" aria-hidden="true">{pill.icon}</span>
-                  {t(`website.hero.pills.${pill.key}`)}
-                </li>
-              ))}
-            </ul>
+            <div className="hp-hero-copy-inner">
+              <span className="hp-hero-kicker">{t('website.hero.eyebrow')}</span>
+              <h1 id="hero-title">
+                <span className="hp-hero-line">{t('website.hero.titleLine1')}</span>
+                <span className="hp-hero-line hp-hero-line--accent">{t('website.hero.titleLine2Full')}</span>
+              </h1>
+              <p className="hp-hero-support">{t('website.hero.supportLine')}</p>
+              <ul className="hp-hero-pills">
+                {HERO_PILLS.map((pill) => (
+                  <li key={pill.key}>
+                    <span className="hp-hero-pill-icon" aria-hidden="true">{pill.icon}</span>
+                    {t(`website.hero.pills.${pill.key}`)}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <div className="hp-hero-reserve" aria-hidden="true" />
+
+          <aside className="hp-hero-producer" aria-label={t('website.homePanels.producerTitle')}>
+            <div className="hp-hero-producer-frame">
+              <img
+                className="hp-hero-producer-img"
+                src={PRODUCER_CARD_IMAGE}
+                alt={t('website.homePanels.producerTitle')}
+              />
+              <div className="hp-hero-producer-shade" aria-hidden="true" />
+              <div className="hp-hero-producer-footer">
+                <p className="hp-hero-producer-title">{t('website.homePanels.producerTitle')}</p>
+                <Link to={producerTo} className="hp-hero-producer-cta">
+                  {t('website.homePanels.producerCta')}
+                  <span aria-hidden="true">←</span>
+                </Link>
+              </div>
+            </div>
+          </aside>
         </section>
 
         <div className="hp-main-grid">
