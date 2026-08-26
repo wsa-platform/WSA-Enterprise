@@ -2338,17 +2338,19 @@ button.gs-crops-menu-trigger:focus-visible {
     radial-gradient(ellipse at 75% 18%, oklch(0.78 0.12 75 / 0.35), transparent 52%);
 }
 
+/* Copy sits visually on the left; reveal warm farm sunrise toward the right. */
 .hp-hero--design .hp-hero-overlay {
   background:
     linear-gradient(
-      to left,
-      oklch(0.99 0.008 95 / 0.96) 0%,
-      oklch(0.99 0.008 95 / 0.9) 34%,
-      oklch(0.95 0.02 85 / 0.55) 58%,
-      oklch(0.55 0.08 75 / 0.22) 78%,
+      to right,
+      oklch(0.99 0.008 95 / 0.94) 0%,
+      oklch(0.99 0.01 95 / 0.78) 22%,
+      oklch(0.96 0.025 85 / 0.42) 42%,
+      oklch(0.72 0.08 75 / 0.22) 62%,
+      oklch(0.45 0.08 70 / 0.12) 82%,
       transparent 100%
     ),
-    radial-gradient(ellipse at 82% 22%, oklch(0.82 0.12 75 / 0.28), transparent 48%);
+    radial-gradient(ellipse at 78% 18%, oklch(0.88 0.14 75 / 0.45), transparent 46%);
 }
 
 [dir='ltr'] .hp-hero-overlay {
@@ -2361,13 +2363,14 @@ button.gs-crops-menu-trigger:focus-visible {
   background:
     linear-gradient(
       to right,
-      oklch(0.99 0.008 95 / 0.96) 0%,
-      oklch(0.99 0.008 95 / 0.9) 34%,
-      oklch(0.95 0.02 85 / 0.55) 58%,
-      oklch(0.55 0.08 75 / 0.22) 78%,
+      oklch(0.99 0.008 95 / 0.94) 0%,
+      oklch(0.99 0.01 95 / 0.78) 22%,
+      oklch(0.96 0.025 85 / 0.42) 42%,
+      oklch(0.72 0.08 75 / 0.22) 62%,
+      oklch(0.45 0.08 70 / 0.12) 82%,
       transparent 100%
     ),
-    radial-gradient(ellipse at 18% 22%, oklch(0.82 0.12 75 / 0.28), transparent 48%);
+    radial-gradient(ellipse at 78% 18%, oklch(0.88 0.14 75 / 0.45), transparent 46%);
 }
 
 .hp-hero-grid {
@@ -2520,9 +2523,9 @@ button.gs-crops-menu-trigger:focus-visible {
 
 .hp-feature-panel {
   display: grid;
-  grid-template-columns: 1fr 6.25rem;
+  grid-template-columns: 1fr 7rem;
   align-items: stretch;
-  min-height: 7.25rem;
+  min-height: 7.75rem;
   overflow: hidden;
   border-radius: 1.15rem;
   color: #fff;
