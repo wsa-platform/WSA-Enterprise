@@ -52,13 +52,15 @@ export function HomePage() {
           <div className="hp-hero-copy">
             <span className="hp-hero-kicker">— {t('website.brand')} —</span>
             <h1 id="hero-title">
-              <span className="hp-hero-line">
+              <span className="hp-hero-line hp-hero-line--primary">
                 {t('website.hero.titleLine1Lead')}
                 <em>{t('website.hero.titleLine1Accent')}</em>
               </span>
-              <span className="hp-hero-line">
-                {t('website.hero.titleLine2Lead')}
-                <em>{t('website.hero.titleLine2Accent')}</em>
+              <span className="hp-hero-line hp-hero-line--accent">
+                {t('website.hero.titleLine2')}
+              </span>
+              <span className="hp-hero-line hp-hero-line--accent">
+                {t('website.hero.titleLine3')}
               </span>
             </h1>
             <p className="hp-hero-support">{t('website.hero.supportLine')}</p>

@@ -11,10 +11,11 @@ export const HOME_FEATURE_PANEL_ROUTES = {
   jobs: JOB_SEEKER_ENTER,
 } as const
 
+/** Reference hero card imagery — vegetable / plant / laptop. */
 const PANEL_IMAGES = {
-  producer: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=640&q=70',
-  smart: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=640&q=70',
-  jobs: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=640&q=70',
+  producer: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=640&q=80',
+  smart: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=640&q=80',
+  jobs: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=640&q=80',
 } as const
 
 export function HomeFeaturePanels() {
@@ -54,9 +55,14 @@ export function HomeFeaturePanels() {
 
   return (
     <aside className="hp-feature-panels" aria-label={t('website.homePanels.ariaLabel')}>
-      <div className="hp-feature-panels-stack">
+      <div className="hp-feature-panels-tray">
         {panels.map((panel) => (
           <article key={panel.id} className={`hp-feature-panel hp-feature-panel--${panel.tone}`}>
+            <div
+              className="hp-feature-panel-visual"
+              style={{ backgroundImage: `url(${panel.image})` }}
+              aria-hidden="true"
+            />
             <div className="hp-feature-panel-copy">
               <h3>{panel.title}</h3>
               <p>{panel.body}</p>
@@ -65,11 +71,6 @@ export function HomeFeaturePanels() {
                 <span aria-hidden="true">←</span>
               </Link>
             </div>
-            <div
-              className="hp-feature-panel-visual"
-              style={{ backgroundImage: `url(${panel.image})` }}
-              aria-hidden="true"
-            />
           </article>
         ))}
       </div>

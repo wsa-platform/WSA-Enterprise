@@ -1434,7 +1434,8 @@
     "hero": {
       "title": "منصة زراعية متكاملة للزراعة الحديثة والمستدامة",
       "titleLine1": "منصة زراعية متكاملة",
-      "titleLine2": "للزراعة الحديثة والمستدامة",
+      "titleLine2": "للزراعة الحديثة",
+      "titleLine3": "والمستدامة",
       "titleLine1Lead": "منصة زراعية ",
       "titleLine1Accent": "متكاملة",
       "titleLine2Lead": "للزراعة الحديثة و",
@@ -1910,7 +1911,7 @@
     "homePanels": {
       "ariaLabel": "مداخل المنصة الرئيسية",
       "producerTitle": "أنت منتج؟ انضم الآن",
-      "producerBody": "أضف منتجاتك إلى سوق WSA Enterprise.",
+      "producerBody": "أضف منتجاتك إلى سوق WSA Enterprise",
       "producerCta": "سجل كمنتج",
       "smartFarmerTitle": "دليل المزارع الذكي",
       "smartFarmerBody": "معرفة زراعية وأدوات تساعد قراراتك في الحقل.",
