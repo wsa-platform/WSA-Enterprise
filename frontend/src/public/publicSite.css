@@ -2728,22 +2728,20 @@ button.gs-crops-menu-trigger:focus-visible {
   inset: 0;
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   transform: none;
   animation: none;
+  filter: none;
+  opacity: 1;
+  mix-blend-mode: normal;
 }
 
 .hp-hero--prototype .hp-hero-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to left, oklch(1 0 0 / 0.78) 0%, oklch(1 0 0 / 0.28) 42%, transparent 72%),
-    linear-gradient(180deg, oklch(1 0 0 / 0.18), oklch(1 0 0 / 0.28));
+  display: none;
 }
 
 [dir='ltr'] .hp-hero--prototype .hp-hero-overlay {
-  background:
-    linear-gradient(to right, oklch(1 0 0 / 0.78) 0%, oklch(1 0 0 / 0.28) 42%, transparent 72%),
-    linear-gradient(180deg, oklch(1 0 0 / 0.18), oklch(1 0 0 / 0.28));
+  display: none;
 }
 
 .hp-hero--prototype .hp-hero-copy {
@@ -2782,7 +2780,7 @@ button.gs-crops-menu-trigger:focus-visible {
   line-height: 1.2;
   font-weight: 800;
   color: #0e2e4e;
-  text-shadow: none;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95), 0 0 18px rgba(255, 255, 255, 0.55);
 }
 
 .hp-hero--prototype .hp-hero-line--accent {
@@ -2796,6 +2794,7 @@ button.gs-crops-menu-trigger:focus-visible {
   font-size: 1.05rem;
   font-weight: 500;
   line-height: 1.8;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95), 0 0 14px rgba(255, 255, 255, 0.5);
 }
 
 .hp-hero--prototype .hp-hero-pills {

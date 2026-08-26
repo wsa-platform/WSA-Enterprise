@@ -47,7 +47,6 @@ export function HomePage() {
             role="img"
             aria-label={t('website.hero.imageAlt')}
           />
-          <div className="hp-hero-overlay" aria-hidden="true" />
           <div className="hp-hero-copy">
             <span className="hp-hero-kicker">{t('website.hero.eyebrow')}</span>
             <h1 id="hero-title">
