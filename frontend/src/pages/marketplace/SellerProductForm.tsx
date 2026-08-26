@@ -23,7 +23,7 @@ import {
 } from '../../marketplace/listingForm'
 import { CALLING_CODES, digitsOnly, formatCallingCodeOption } from '../../marketplace/phone'
 import { PRODUCT_CATEGORIES, isProductCategorySlug, productCategoryLabel } from '../../marketplace/productCategories'
-import { listingImageUrl, listingImages, parseSpecificationLines, specificationLines } from '../../marketplace/productDisplay'
+import { listingImageUrl, listingImages, listingSpecificationsEditorText, parseSpecificationLines } from '../../marketplace/productDisplay'
 import { mergeMarketUnits, unitOptionLabel } from '../../marketplace/units'
 import { saveSellerListing } from './sellerListingsActions'
 
@@ -77,7 +77,6 @@ export function SellerProductForm({
   const [retail, setRetail] = useState(false)
   const [exportReady, setExportReady] = useState(false)
   const [packaging, setPackaging] = useState('')
-  const [specificationsText, setSpecificationsText] = useState('')
   const [callingCode, setCallingCode] = useState('966')
   const [nationalPhone, setNationalPhone] = useState('')
   const [sellerEmail, setSellerEmail] = useState('')
@@ -127,7 +126,7 @@ export function SellerProductForm({
     if (!listing) return
     const hydrated = hydrateListingEditor(listing)
     setTitle(listing.title)
-    setDescription(listing.description ?? '')
+    setDescription(listingSpecificationsEditorText(listing))
     setCategorySlug(isProductCategorySlug(hydrated.categorySlug) ? hydrated.categorySlug : '')
     setLegacyCategorySlug(isProductCategorySlug(hydrated.categorySlug) ? '' : hydrated.categorySlug)
     setProductType(isProductCategorySlug(listing.product_type) ? '' : (listing.product_type ?? ''))
@@ -148,7 +147,6 @@ export function SellerProductForm({
     setRetail(Boolean(listing.retail))
     setExportReady(Boolean(listing.export_ready))
     setPackaging(listing.packaging ?? '')
-    setSpecificationsText(specificationLines(listing.specifications ?? null))
     setCallingCode(hydrated.callingCode || '966')
     setNationalPhone(hydrated.nationalPhone)
     setSellerEmail(hydrated.sellerEmail)
@@ -176,7 +174,7 @@ export function SellerProductForm({
     retail,
     exportReady,
     packaging,
-    specificationsText,
+    specificationsText: description,
     callingCode,
     nationalPhone,
     sellerEmail,
@@ -187,7 +185,7 @@ export function SellerProductForm({
     const { payload, errors } = buildListingWritePayload(editorValues(), {
       categories,
       sellerDisplayName,
-      specifications: parseSpecificationLines(specificationsText),
+      specifications: parseSpecificationLines(description) ?? listing?.specifications ?? null,
     })
     if (errors.length > 0) {
       setFieldErrors(errors.map((key) => t(key)))
@@ -257,10 +255,8 @@ export function SellerProductForm({
         </p>
       )}
       {readOnly && listing && <p className="muted">{t('market.publishedReadOnly')}</p>}
-      {loading ? (
-        <p className="loading">{t('market.loadingListing')}</p>
-      ) : (
-        <form
+      {loading && <p className="muted">{t('market.loadingListing')}</p>}
+      <form
           className="listing-form"
           aria-busy={submitting}
           onSubmit={(event) => {
@@ -301,8 +297,8 @@ export function SellerProductForm({
               {t('market.productType')}
               <input value={productType} onChange={(event) => setProductType(event.target.value)} disabled={disabled} dir="auto" />
             </label>
-            <label className="span-2">
-              {t('common.description')}
+            <label className="span-2" data-field="product-specifications">
+              {t('market.specifications')}
               <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} disabled={disabled} dir="auto" />
             </label>
             <label>
@@ -428,19 +424,6 @@ export function SellerProductForm({
               <input value={packaging} onChange={(event) => setPackaging(event.target.value)} disabled={disabled} dir="auto" />
             </label>
 
-            <p className="listing-section-title span-2">{t('market.specifications')}</p>
-            <label className="span-2">
-              {t('market.specifications')}
-              <textarea
-                value={specificationsText}
-                onChange={(event) => setSpecificationsText(event.target.value)}
-                rows={4}
-                disabled={disabled}
-                dir="auto"
-                placeholder={t('market.specificationsHint')}
-              />
-            </label>
-
             <p className="listing-section-title span-2">{t('market.sellerContact')}</p>
             <div className="phone-row span-2">
               <label>
@@ -529,7 +512,6 @@ export function SellerProductForm({
             </button>
           </div>
         </form>
-      )}
     </section>
   )
 }

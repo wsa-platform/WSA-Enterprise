@@ -71,6 +71,16 @@ export function specificationLines(specifications: Record<string, unknown> | nul
     .join('\n')
 }
 
+/** Single seller-form field: keep saved description text, else existing specification lines. */
+export function listingSpecificationsEditorText(listing: {
+  description?: string | null
+  specifications?: Record<string, unknown> | null
+} | null | undefined): string {
+  const description = listing?.description ?? ''
+  if (description.trim()) return description
+  return specificationLines(listing?.specifications ?? null)
+}
+
 function isDescriptionSpecKey(key: string): boolean {
   const normalized = key.trim().toLowerCase()
   return normalized === 'description' || normalized === 'desc' || key.trim() === 'الوصف'

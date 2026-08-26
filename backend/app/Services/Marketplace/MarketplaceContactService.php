@@ -82,11 +82,7 @@ class MarketplaceContactService
         );
 
         $listing = $order->listing;
-        $contact = [
-            'seller_email' => $listing->seller_email,
-            'seller_phone' => $listing->seller_phone,
-            'seller_display_name' => $listing->seller_display_name,
-        ];
+        $contact = $this->unlockedContact($listing);
 
         $this->audit->record(
             'marketplace.contact_access_granted',
@@ -128,11 +124,7 @@ class MarketplaceContactService
             return null;
         }
 
-        return [
-            'seller_email' => $listing->seller_email,
-            'seller_phone' => $listing->seller_phone,
-            'seller_display_name' => $listing->seller_display_name,
-        ];
+        return $this->unlockedContact($listing);
     }
 
     /** @return array{seller_email: mixed, seller_phone: mixed, seller_display_name: mixed}|null */
@@ -150,10 +142,18 @@ class MarketplaceContactService
             return null;
         }
 
+        return $this->unlockedContact($listing);
+    }
+
+    /** @return array{seller_email: mixed, seller_phone: mixed, seller_display_name: mixed} */
+    private function unlockedContact(MarketplaceListing $listing): array
+    {
+        $listing->loadMissing('seller');
+
         return [
             'seller_email' => $listing->seller_email,
             'seller_phone' => $listing->seller_phone,
-            'seller_display_name' => $listing->seller_display_name,
+            'seller_display_name' => $listing->seller?->name ?: $listing->seller_display_name,
         ];
     }
 }

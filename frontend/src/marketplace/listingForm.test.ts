@@ -131,4 +131,17 @@ describe('listing editor form mapping', () => {
     expect(created.payload).not.toHaveProperty('status')
     expect(validateListingEditor(values({ title: '   ' }))).toContain('market.productName')
   })
+
+  it('keeps saved specifications when the unified editor has free text', () => {
+    const created = buildListingWritePayload(
+      values({ description: 'طحين مح ممتاز' }),
+      {
+        categories: [{ id: 4, slug: 'vegetables', name: 'Vegetables', name_ar: 'الخضروات' }],
+        specifications: { variety: 'Valencia' },
+      },
+    )
+    expect(created.errors).toEqual([])
+    expect(created.payload.description).toBe('طحين مح ممتاز')
+    expect(created.payload.specifications).toEqual({ variety: 'Valencia' })
+  })
 })

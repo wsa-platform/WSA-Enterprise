@@ -65,6 +65,8 @@ describe('public product contact gate', () => {
       },
     })
     expect(html).toContain('اسم البائع')
+    expect(html).toContain('هاتف البائع')
+    expect(html).toContain('بريد البائع')
     expect(html).toContain('Oasis Farm')
     expect(html).toContain('seller@wsa.test')
     expect(html).toContain('+966500000000')

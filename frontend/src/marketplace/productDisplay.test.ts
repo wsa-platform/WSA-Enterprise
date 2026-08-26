@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   availabilityI18nKey,
   listingImageUrl,
+  listingSpecificationsEditorText,
   parseSpecificationLines,
   specificationLines,
   specificationLinesForPublicDisplay,
@@ -65,6 +66,12 @@ describe('productDisplay', () => {
     expect(parsed).toEqual({ variety: 'Valencia', grade: 'A' })
     expect(specificationLines(parsed)).toBe('variety: Valencia\ngrade: A')
     expect(parseSpecificationLines('')).toBeNull()
+  })
+
+  it('loads the unified specifications editor from description or saved specification lines', () => {
+    expect(listingSpecificationsEditorText({ description: 'طحين مح ممتاز', specifications: { variety: 'Valencia' } })).toBe('طحين مح ممتاز')
+    expect(listingSpecificationsEditorText({ description: '', specifications: { variety: 'Valencia', grade: 'A' } })).toBe('variety: Valencia\ngrade: A')
+    expect(listingSpecificationsEditorText({ description: null, specifications: null })).toBe('')
   })
 
   it('omits duplicate description keys from the public specifications display', () => {

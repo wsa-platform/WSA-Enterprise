@@ -56,11 +56,11 @@ export function ContactUnlockPanel({
           {contact.seller_display_name && (
             <><dt>{t('market.sellerName')}</dt><dd>{contact.seller_display_name}</dd></>
           )}
-          {contact.seller_email && (
-            <><dt>{t('market.sellerEmail')}</dt><dd>{contact.seller_email}</dd></>
-          )}
           {contact.seller_phone && (
             <><dt>{t('market.sellerPhone')}</dt><dd>{contact.seller_phone}</dd></>
+          )}
+          {contact.seller_email && (
+            <><dt>{t('market.sellerEmail')}</dt><dd>{contact.seller_email}</dd></>
           )}
         </dl>
       </section>
