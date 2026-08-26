@@ -14,7 +14,7 @@ import {
 import { PUBLIC_TOP_NAV_ITEMS, internalPaths, publicPaths } from '../navigation/paths'
 import { PublicLanguageMenu } from './PublicLanguageMenu'
 
-/** Public site header — modern agricultural platform chrome. */
+/** Public site header — matches approved agricultural homepage chrome. */
 export function PublicHeader({
   loginTo: loginToOverride,
   registerTo: registerToOverride,
@@ -51,21 +51,18 @@ export function PublicHeader({
   const onSearch = (event: FormEvent) => {
     event.preventDefault()
     setMenuOpen(false)
-    // Existing marketplace route — search UI lives on /market (no invented URLs).
     navigate(publicPaths.market)
     setSearchQuery('')
   }
 
   return (
-    <header className="gs-header hp-header">
+    <header className="gs-header hp-header hp-header--design">
       <div className="gs-container gs-header-inner">
         <Link to="/" className="gs-brand" onClick={() => setMenuOpen(false)}>
-          <span className="gs-brand-mark" aria-hidden="true">
-            🌿
-          </span>
+          <span className="gs-brand-mark" aria-hidden="true">🌿</span>
           <span className="gs-brand-text">
             <strong>{t('website.brand')}</strong>
-            <small>{t('website.footer.tagline')}</small>
+            <small>{t('website.brandTagline')}</small>
           </span>
         </Link>
 
@@ -94,22 +91,23 @@ export function PublicHeader({
               {t(item.labelKey)}
             </NavLink>
           ))}
-          <form className="hp-header-search" role="search" onSubmit={onSearch}>
-            <label className="visually-hidden" htmlFor="public-header-search">
-              {t('website.nav.search')}
-            </label>
-            <input
-              id="public-header-search"
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder={t('website.nav.searchPlaceholder')}
-            />
-            <button type="submit" className="gs-btn gs-btn-primary">
-              {t('website.nav.search')}
-            </button>
-          </form>
         </nav>
+
+        <form className="hp-header-search" role="search" onSubmit={onSearch}>
+          <label className="visually-hidden" htmlFor="public-header-search">
+            {t('website.nav.search')}
+          </label>
+          <input
+            id="public-header-search"
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder={t('website.nav.searchPlaceholder')}
+          />
+          <button type="submit" aria-label={t('website.nav.search')}>
+            🔍
+          </button>
+        </form>
 
         <div className="gs-header-actions">
           <PublicLanguageMenu />

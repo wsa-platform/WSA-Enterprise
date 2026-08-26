@@ -1414,6 +1414,7 @@
   },
   "website": {
     "brand": "WSA Enterprise",
+    "brandTagline": "Together for more sustainable farming",
     "nav": {
       "home": "Home",
       "login": "Sign in",
@@ -1428,24 +1429,34 @@
       "projects": "Projects",
       "aboutPlatform": "About the platform",
       "search": "Search",
-      "searchPlaceholder": "Search the marketplace..."
+      "searchPlaceholder": "Search products or services..."
     },
     "hero": {
       "title": "Integrated agricultural platform for modern and sustainable farming",
       "titleLine1": "Integrated agricultural platform",
       "titleLine2": "for modern and sustainable farming",
+      "titleLine1Lead": "Integrated agricultural ",
+      "titleLine1Accent": "platform",
+      "titleLine2Lead": "for modern and ",
+      "titleLine2Accent": "sustainable",
       "subtitle": "Explore crops, training, beekeeping, jobs, and commerce — all in one professional ecosystem built for growers and agricultural businesses.",
       "supportLine": "Knowledge • Market • Services • Projects — in one place",
       "pillars": "Knowledge • Market • Services • Projects",
       "explore": "Explore services",
       "getStarted": "Get started",
       "dashboard": "Open dashboard",
-      "imageAlt": "Green agricultural fields with soft sunrise lighting"
+      "imageAlt": "Agricultural field at sunrise with modern equipment and warm golden light",
+      "pills": {
+        "betterYield": "Better production",
+        "lessResources": "Fewer resources",
+        "sustainableFuture": "More sustainable future"
+      }
     },
     "sections": {
       "title": "Explore our services",
       "subtitle": "Choose a category to browse public information and discover platform capabilities.",
       "explore": "Explore",
+      "exploreAll": "Discover all sections",
       "fieldCrops": {
         "title": "Field Crops",
         "description": "Wheat, corn, grains, and large-scale field farming with planning, monitoring, and crop health support.",
@@ -1900,31 +1911,42 @@
       "ariaLabel": "Primary platform entries",
       "producerTitle": "Are you a producer? Join now",
       "producerBody": "Add your products to the WSA Enterprise marketplace.",
+      "producerCta": "Register as producer",
       "smartFarmerTitle": "Smart farmer guide",
       "smartFarmerBody": "Agricultural knowledge and tools that help your field decisions.",
+      "smartFarmerCta": "Explore the guide",
       "jobsTitle": "Looking for a job?",
-      "jobsBody": "Enter agricultural careers and opportunity pathways."
+      "jobsBody": "Enter agricultural careers and opportunity pathways.",
+      "jobsCta": "Browse jobs"
     },
     "pillars": {
       "title": "One platform for your agricultural needs",
-      "subtitle": "Simple information about platform areas — no fabricated numbers.",
+      "subtitle": "Selected information about platform areas — without clutter",
       "knowledge": "Knowledge",
-      "knowledgeDesc": "Library and agricultural guides to support your decisions.",
+      "knowledgeDesc": "Library and agricultural tools to support your decisions.",
       "market": "Market",
-      "marketDesc": "Browse available agricultural products and services.",
+      "marketDesc": "Browse available agricultural and practical products.",
       "services": "Services",
-      "servicesDesc": "Explore agricultural platform categories and matching services.",
+      "servicesDesc": "Explore agricultural platform categories and available services.",
       "projects": "Projects",
-      "projectsDesc": "Ideas and pathways for available agricultural projects."
+      "projectsDesc": "Ideas and pathways for innovative agricultural projects."
+    },
+    "highlightsBar": {
+      "ariaLabel": "Platform highlights",
+      "products": "Marketplace products",
+      "users": "Platform community",
+      "services": "Agricultural services",
+      "projects": "Projects",
+      "trust": "Trust & sustainability"
     },
     "footer": {
-      "tagline": "Professional agricultural platform for farms, training, commerce, and growth.",
+      "tagline": "Together for more sustainable farming — an integrated platform for knowledge, market, and services.",
       "about": "About us",
       "privacy": "Privacy policy",
       "terms": "Terms & conditions",
       "contact": "Contact us",
       "navigation": "Footer navigation",
-      "rights": "© WSA Enterprise. All rights reserved.",
+      "rights": "All rights reserved © WSA Enterprise",
       "sections": "Main Sections",
       "account": "Account",
       "groups": {
@@ -1978,11 +2000,11 @@
       "unavailable": "This sign-in method is not available yet."
     },
     "newsletter": {
-      "title": "Subscribe to our newsletter",
-      "description": "Receive agricultural news, new articles, farming tips, platform updates, and store highlights.",
+      "title": "Subscribe to our mailing list",
+      "description": "Be the first to know the latest news, agricultural tips, and platform updates.",
       "emailLabel": "Email address",
       "emailPlaceholder": "your@email.com",
-      "subscribe": "Subscribe",
+      "subscribe": "Subscribe now",
       "success": "Thank you! Your subscription request has been received.",
       "hint": "Newsletter only — not a paid subscription."
     },

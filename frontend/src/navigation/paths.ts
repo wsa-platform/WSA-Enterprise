@@ -28,8 +28,8 @@ export const REQUIRED_INTERNAL_NAV_PATHS = [
 
 export const PUBLIC_TOP_NAV_ITEMS = [
   { to: publicPaths.home, labelKey: 'website.nav.home', end: true },
-  { to: publicPaths.market, labelKey: 'website.nav.market', end: true },
   { to: '/#home-categories', labelKey: 'website.nav.services', end: false },
+  { to: publicPaths.market, labelKey: 'website.nav.market', end: true },
   { to: '/sections/small-projects', labelKey: 'website.nav.projects', end: false },
   { to: '/about', labelKey: 'website.nav.aboutPlatform', end: false },
 ] as const

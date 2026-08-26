@@ -92,7 +92,7 @@ describe('CropsCategoryMenu markup', () => {
     expect(html).toContain('دليل المزارع الذكي')
     expect(html).toContain('هل تبحث عن وظيفة؟')
     expect(html).toContain('منصة واحدة لاحتياجاتك الزراعية')
-    expect(html).toContain('معلومات مبسطة عن مجالات المنصة')
+    expect(html).toContain('معلومات مختارة عن مجالات المنصة — دون إرباك')
     expect(html).toContain('href="/jobs/enter"')
     expect(html).toContain('href="/library"')
     expect(html).toContain('next=%2Fseller%2Flistings%2Fnew')

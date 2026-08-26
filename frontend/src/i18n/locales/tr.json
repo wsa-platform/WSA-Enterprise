@@ -1414,6 +1414,7 @@
   },
   "website": {
     "brand": "WSA Enterprise",
+    "brandTagline": "Daha sürdürülebilir tarım için birlikte",
     "nav": {
       "home": "Ana Sayfa",
       "login": "Giriş yap",
@@ -1428,24 +1429,34 @@
       "projects": "Projeler",
       "aboutPlatform": "Platform hakkında",
       "search": "Ara",
-      "searchPlaceholder": "Pazarda ara..."
+      "searchPlaceholder": "Ürün veya hizmet ara..."
     },
     "hero": {
       "title": "Modern ve sürdürülebilir tarım için entegre tarımsal platform",
       "titleLine1": "Entegre tarımsal platform",
       "titleLine2": "modern ve sürdürülebilir tarım için",
+      "titleLine1Lead": "Entegre tarımsal ",
+      "titleLine1Accent": "platform",
+      "titleLine2Lead": "modern ve ",
+      "titleLine2Accent": "sürdürülebilir",
       "subtitle": "Ürünler, eğitim, arıcılık, iş ilanları ve ticareti keşfedin — üreticiler ve tarımsal işletmeler için tasarlanmış tek bir profesyonel ekosistemde.",
       "supportLine": "Bilgi • Pazar • Hizmetler • Projeler — tek yerde",
       "pillars": "Bilgi • Pazar • Hizmetler • Projeler",
       "explore": "Hizmetleri keşfet",
       "getStarted": "Başlayın",
       "dashboard": "Panoyu aç",
-      "imageAlt": "Yumuşak gün doğumu ışığında yeşil tarım alanları"
+      "imageAlt": "Modern ekipmanlarla gün doğumunda tarım alanı",
+      "pills": {
+        "betterYield": "Daha iyi üretim",
+        "lessResources": "Daha az kaynak",
+        "sustainableFuture": "Daha sürdürülebilir gelecek"
+      }
     },
     "sections": {
       "title": "Hizmetlerimizi keşfedin",
       "subtitle": "Genel bilgileri incelemek ve platform yeteneklerini keşfetmek için bir kategori seçin.",
       "explore": "Keşfet",
+      "exploreAll": "Tüm bölümleri keşfedin",
       "fieldCrops": {
         "title": "Tarla Bitkileri",
         "description": "Buğday, mısır, tahıllar ve planlama, izleme ve bitki sağlığı desteğiyle geniş ölçekli tarla tarımı.",
@@ -1900,31 +1911,42 @@
       "ariaLabel": "Birincil platform girişleri",
       "producerTitle": "Üretici misiniz? Hemen katılın",
       "producerBody": "Ürünlerinizi WSA Enterprise pazarına ekleyin.",
+      "producerCta": "Üretici olarak kaydol",
       "smartFarmerTitle": "Akıllı çiftçi rehberi",
       "smartFarmerBody": "Saha kararlarınıza yardımcı olan tarımsal bilgi ve araçlar.",
+      "smartFarmerCta": "Rehberi keşfet",
       "jobsTitle": "İş mi arıyorsunuz?",
-      "jobsBody": "Tarımsal kariyer ve fırsat yollarına girin."
+      "jobsBody": "Tarımsal kariyer ve fırsat yollarına girin.",
+      "jobsCta": "İşleri görüntüle"
     },
     "pillars": {
       "title": "Tarımsal ihtiyaçlarınız için tek platform",
-      "subtitle": "Platform alanları hakkında sade bilgi — uydurma rakam yok.",
+      "subtitle": "Platform alanları hakkında seçilmiş bilgiler — karmaşa olmadan",
       "knowledge": "Bilgi",
-      "knowledgeDesc": "Kararlarınızı destekleyen kütüphane ve tarımsal rehberler.",
+      "knowledgeDesc": "Kararlarınızı destekleyen kütüphane ve tarımsal araçlar.",
       "market": "Pazar",
-      "marketDesc": "Mevcut tarımsal ürünleri ve hizmetleri inceleyin.",
+      "marketDesc": "Mevcut tarımsal ve pratik ürünleri inceleyin.",
       "services": "Hizmetler",
-      "servicesDesc": "Tarımsal platform kategorilerini ve uygun hizmetleri keşfedin.",
+      "servicesDesc": "Tarımsal platform kategorilerini ve mevcut hizmetleri keşfedin.",
       "projects": "Projeler",
-      "projectsDesc": "Mevcut tarımsal projeler için fikirler ve yollar."
+      "projectsDesc": "Yenilikçi tarımsal projeler için fikirler ve yollar."
+    },
+    "highlightsBar": {
+      "ariaLabel": "Platform öne çıkanları",
+      "products": "Pazar ürünleri",
+      "users": "Platform topluluğu",
+      "services": "Tarımsal hizmetler",
+      "projects": "Projeler",
+      "trust": "Güven ve sürdürülebilirlik"
     },
     "footer": {
-      "tagline": "Çiftlikler, eğitim, ticaret ve büyüme için profesyonel tarımsal platform.",
+      "tagline": "Daha sürdürülebilir tarım için birlikte — bilgi, pazar ve hizmetler için entegre platform.",
       "about": "Hakkımızda",
       "privacy": "Gizlilik politikası",
       "terms": "Şartlar ve koşullar",
       "contact": "Bize ulaşın",
       "navigation": "Alt bilgi gezinmesi",
-      "rights": "© WSA Enterprise. Tüm hakları saklıdır.",
+      "rights": "Tüm hakları saklıdır © WSA Enterprise",
       "sections": "Ana bölümler",
       "account": "Hesap",
       "groups": {
@@ -1978,11 +2000,11 @@
       "unavailable": "Bu giriş yöntemi henüz kullanılamıyor."
     },
     "newsletter": {
-      "title": "Bültenimize abone olun",
-      "description": "Tarım haberleri, yeni makaleler, ipuçları, platform güncellemeleri ve mağaza yenilikleri.",
+      "title": "E-posta listemize abone olun",
+      "description": "En son haberler ve tarımsal ipuçlarından ilk siz haberdar olun.",
       "emailLabel": "E-posta adresi",
       "emailPlaceholder": "your@email.com",
-      "subscribe": "Abone ol",
+      "subscribe": "Şimdi abone ol",
       "success": "Teşekkürler! Abonelik talebiniz alındı.",
       "hint": "Yalnızca bülten — ücretli abonelik değildir."
     },

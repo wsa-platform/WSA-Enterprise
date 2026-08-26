@@ -1414,6 +1414,7 @@
   },
   "website": {
     "brand": "WSA Enterprise",
+    "brandTagline": "Ensemble pour une agriculture plus durable",
     "nav": {
       "home": "Accueil",
       "login": "Se connecter",
@@ -1428,24 +1429,34 @@
       "projects": "Projets",
       "aboutPlatform": "À propos de la plateforme",
       "search": "Rechercher",
-      "searchPlaceholder": "Rechercher sur le marché..."
+      "searchPlaceholder": "Rechercher des produits ou services..."
     },
     "hero": {
       "title": "Plateforme agricole intégrée pour une agriculture moderne et durable",
       "titleLine1": "Plateforme agricole intégrée",
       "titleLine2": "pour une agriculture moderne et durable",
+      "titleLine1Lead": "Plateforme agricole ",
+      "titleLine1Accent": "intégrée",
+      "titleLine2Lead": "pour une agriculture moderne et ",
+      "titleLine2Accent": "durable",
       "subtitle": "Explorez les cultures, la formation, l'apiculture, l'emploi et le commerce — le tout dans un écosystème professionnel conçu pour les producteurs et les entreprises agricoles.",
       "supportLine": "Savoir • Marché • Services • Projets — en un seul endroit",
       "pillars": "Savoir • Marché • Services • Projets",
       "explore": "Explorer les services",
       "getStarted": "Commencer",
       "dashboard": "Ouvrir le tableau de bord",
-      "imageAlt": "Champs agricoles verts avec un lever de soleil doux"
+      "imageAlt": "Champ agricole au lever du soleil avec équipements modernes",
+      "pills": {
+        "betterYield": "Meilleure production",
+        "lessResources": "Moins de ressources",
+        "sustainableFuture": "Avenir plus durable"
+      }
     },
     "sections": {
       "title": "Explorez nos services",
       "subtitle": "Choisissez une catégorie pour parcourir les informations publiques et découvrir les capacités de la plateforme.",
       "explore": "Explorer",
+      "exploreAll": "Découvrir toutes les sections",
       "fieldCrops": {
         "title": "Grandes cultures",
         "description": "Blé, maïs, céréales et agriculture de plein champ avec planification, suivi et soutien à la santé des cultures.",
@@ -1900,31 +1911,42 @@
       "ariaLabel": "Entrées principales de la plateforme",
       "producerTitle": "Vous êtes producteur ? Rejoignez-nous",
       "producerBody": "Ajoutez vos produits au marché WSA Enterprise.",
+      "producerCta": "S'inscrire comme producteur",
       "smartFarmerTitle": "Guide de l'agriculteur intelligent",
       "smartFarmerBody": "Savoir agricole et outils qui aident vos décisions au champ.",
+      "smartFarmerCta": "Explorer le guide",
       "jobsTitle": "Vous cherchez un emploi ?",
-      "jobsBody": "Accédez aux parcours d'emploi et aux opportunités agricoles."
+      "jobsBody": "Accédez aux parcours d'emploi et aux opportunités agricoles.",
+      "jobsCta": "Parcourir les emplois"
     },
     "pillars": {
       "title": "Une plateforme pour vos besoins agricoles",
-      "subtitle": "Informations simples sur les domaines de la plateforme — sans chiffres fictifs.",
+      "subtitle": "Informations sélectionnées sur les domaines de la plateforme — sans confusion",
       "knowledge": "Savoir",
-      "knowledgeDesc": "Bibliothèque et guides agricoles pour soutenir vos décisions.",
+      "knowledgeDesc": "Bibliothèque et outils agricoles pour soutenir vos décisions.",
       "market": "Marché",
-      "marketDesc": "Parcourez les produits et services agricoles disponibles.",
+      "marketDesc": "Parcourez les produits agricoles et pratiques disponibles.",
       "services": "Services",
-      "servicesDesc": "Explorez les catégories agricoles et les services adaptés.",
+      "servicesDesc": "Explorez les catégories agricoles et services disponibles.",
       "projects": "Projets",
-      "projectsDesc": "Idées et parcours pour les projets agricoles disponibles."
+      "projectsDesc": "Idées et parcours pour des projets agricoles innovants."
+    },
+    "highlightsBar": {
+      "ariaLabel": "Points forts de la plateforme",
+      "products": "Produits du marché",
+      "users": "Communauté",
+      "services": "Services agricoles",
+      "projects": "Projets",
+      "trust": "Confiance et durabilité"
     },
     "footer": {
-      "tagline": "Plateforme agricole professionnelle pour fermes, formation, commerce et croissance.",
+      "tagline": "Ensemble pour une agriculture plus durable — plateforme intégrée pour le savoir, le marché et les services.",
       "about": "À propos",
       "privacy": "Politique de confidentialité",
       "terms": "Conditions générales",
       "contact": "Nous contacter",
       "navigation": "Navigation du pied de page",
-      "rights": "© WSA Enterprise. Tous droits réservés.",
+      "rights": "Tous droits réservés © WSA Enterprise",
       "sections": "Sections principales",
       "account": "Compte",
       "groups": {
@@ -1978,11 +2000,11 @@
       "unavailable": "Cette méthode de connexion n'est pas encore disponible."
     },
     "newsletter": {
-      "title": "Abonnez-vous à notre newsletter",
-      "description": "Actualités agricoles, nouveaux articles, conseils, mises à jour et nouveautés boutique.",
+      "title": "Abonnez-vous à notre liste",
+      "description": "Soyez les premiers informés des actualités et conseils agricoles.",
       "emailLabel": "Adresse e-mail",
       "emailPlaceholder": "your@email.com",
-      "subscribe": "S'abonner",
+      "subscribe": "S'abonner maintenant",
       "success": "Merci ! Votre demande d’abonnement a été reçue.",
       "hint": "Newsletter uniquement — pas un abonnement payant."
     },

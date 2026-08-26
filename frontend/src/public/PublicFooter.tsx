@@ -4,30 +4,28 @@ import { publicLoginHref, publicRegisterHref, readStoredAudience } from '../navi
 import { publicPaths } from '../navigation/paths'
 import { PUBLIC_SECTIONS } from './sections'
 
-/** Footer — modern agricultural platform with existing real destinations only. */
+/** Footer — dark agricultural design matching approved homepage. */
 export function PublicFooter() {
   const { t } = useTranslation()
   const { pathname } = useLocation()
   const storedAudience = readStoredAudience()
   const loginTo = publicLoginHref(storedAudience, pathname)
   const registerTo = publicRegisterHref(storedAudience, pathname)
-  const serviceSections = PUBLIC_SECTIONS.filter((section) => section.id !== 'store' && section.id !== 'jobs')
+  const serviceSections = PUBLIC_SECTIONS.filter((section) => !['store', 'jobs'].includes(section.id)).slice(0, 6)
   const resourceSections = PUBLIC_SECTIONS.filter((section) => (
-    section.id === 'training' || section.id === 'small-projects' || section.id === 'store'
+    section.id === 'training' || section.id === 'small-projects' || section.id === 'beekeeping'
   ))
 
   return (
-    <footer className="gs-footer hp-footer">
+    <footer className="gs-footer hp-footer hp-footer--design">
       <div className="gs-container gs-footer-main">
         <div className="gs-footer-grid hp-footer-grid">
           <div className="gs-footer-brand">
             <div className="gs-footer-logo">
-              <span className="gs-brand-mark" aria-hidden="true">
-                🌿
-              </span>
+              <span className="gs-brand-mark" aria-hidden="true">🌿</span>
               <div>
                 <strong>{t('website.brand')}</strong>
-                <small>{t('website.footer.tagline')}</small>
+                <small>{t('website.brandTagline')}</small>
               </div>
             </div>
             <p>{t('website.footer.tagline')}</p>
@@ -47,13 +45,14 @@ export function PublicFooter() {
             <ul>
               <li><Link to={publicPaths.market}>{t('website.nav.productMarket')}</Link></li>
               <li><Link to="/sections/store">{t('website.sections.store.title')}</Link></li>
+              <li><Link to="/login?next=%2Fseller%2Flistings%2Fnew">{t('website.homePanels.producerCta')}</Link></li>
             </ul>
           </nav>
 
           <nav aria-label={t('website.footer.groups.services')}>
             <h4>{t('website.footer.groups.services')}</h4>
             <ul>
-              {serviceSections.slice(0, 6).map((section) => (
+              {serviceSections.map((section) => (
                 <li key={section.id}>
                   <Link to={`/sections/${section.id}`}>{t(section.titleKey)}</Link>
                 </li>

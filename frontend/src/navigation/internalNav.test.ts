@@ -72,7 +72,7 @@ describe('route guards', () => {
 describe('public top navigation regression', () => {
   it('places marketplace and existing public destinations next to home and keeps sell/blog out', () => {
     const paths = PUBLIC_TOP_NAV_ITEMS.map((item) => item.to)
-    expect(paths).toEqual(['/', '/market', '/#home-categories', '/sections/small-projects', '/about'])
+    expect(paths).toEqual(['/', '/#home-categories', '/market', '/sections/small-projects', '/about'])
     for (const forbidden of PUBLIC_TOP_NAV_FORBIDDEN_PATHS) {
       expect(paths).not.toContain(forbidden)
     }

@@ -14,12 +14,33 @@ const PILLARS = [
   { key: 'projects', to: '/sections/small-projects', icon: '🏡' },
 ] as const
 
+const HERO_PILLS = ['betterYield', 'lessResources', 'sustainableFuture'] as const
+
+const HIGHLIGHTS = [
+  { key: 'products', to: '/market', icon: '🛒' },
+  { key: 'users', to: '/register', icon: '👥' },
+  { key: 'services', to: '/#home-categories', icon: '🛠️' },
+  { key: 'projects', to: '/sections/small-projects', icon: '🏗️' },
+  { key: 'trust', to: '/about', icon: '✅' },
+] as const
+
+/** Visual strip categories from the approved design (real section routes). */
+const STRIP_SECTION_IDS = [
+  'beekeeping',
+  'ornamental-plants',
+  'medicinal-plants',
+  'fruit-trees',
+  'vegetables',
+  'field-crops',
+  'hydroponic-aquaculture',
+] as const
+
 export function HomePage() {
   const { t } = useTranslation()
 
   return (
     <PublicLayout>
-      <section className="hp-hero" aria-labelledby="hero-title">
+      <section className="hp-hero hp-hero--design" aria-labelledby="hero-title">
         <div
           className="hp-hero-bg"
           style={{ backgroundImage: `url(${HERO_IMAGE})` }}
@@ -29,12 +50,23 @@ export function HomePage() {
         <div className="hp-hero-overlay" aria-hidden="true" />
         <div className="gs-container hp-hero-grid">
           <div className="hp-hero-copy">
-            <span className="hp-hero-badge">{t('website.brand')}</span>
+            <span className="hp-hero-kicker">— {t('website.brand')} —</span>
             <h1 id="hero-title">
-              <span className="hp-hero-line">{t('website.hero.titleLine1')}</span>
-              <span className="hp-hero-line">{t('website.hero.titleLine2')}</span>
+              <span className="hp-hero-line">
+                {t('website.hero.titleLine1Lead')}
+                <em>{t('website.hero.titleLine1Accent')}</em>
+              </span>
+              <span className="hp-hero-line">
+                {t('website.hero.titleLine2Lead')}
+                <em>{t('website.hero.titleLine2Accent')}</em>
+              </span>
             </h1>
             <p className="hp-hero-support">{t('website.hero.supportLine')}</p>
+            <ul className="hp-hero-pills">
+              {HERO_PILLS.map((pill) => (
+                <li key={pill}>{t(`website.hero.pills.${pill}`)}</li>
+              ))}
+            </ul>
             <div className="hp-hero-actions">
               <a href="#home-categories" className="gs-btn gs-btn-hero-primary">
                 {t('website.hero.explore')}
@@ -46,10 +78,36 @@ export function HomePage() {
           </div>
           <HomeFeaturePanels />
         </div>
-        <div className="hp-hero-wave" aria-hidden="true">
-          <svg viewBox="0 0 1440 80" preserveAspectRatio="none">
-            <path d="M0,48 C360,90 720,10 1440,48 L1440,80 L0,80 Z" fill="oklch(0.97 0.015 95)" />
-          </svg>
+      </section>
+
+      <section className="hp-strip" aria-label={t('website.sections.title')}>
+        <div className="gs-container hp-strip-row">
+          {STRIP_SECTION_IDS.map((id) => {
+            const section = PUBLIC_SECTIONS.find((item) => item.id === id)
+            if (!section) return null
+            const to = id === 'field-crops' ? '/crops/field' : `/sections/${id}`
+            return (
+              <Link key={id} to={to} className="hp-strip-card">
+                <span className="hp-strip-media" style={{ backgroundImage: `url(${section.image})` }} />
+                <span className="hp-strip-label">{t(section.titleKey)}</span>
+              </Link>
+            )
+          })}
+          <a href="#home-categories" className="hp-strip-card hp-strip-card--more">
+            <span className="hp-strip-more-icon" aria-hidden="true">▦</span>
+            <span className="hp-strip-label">{t('website.sections.exploreAll')}</span>
+          </a>
+        </div>
+      </section>
+
+      <section className="hp-highlights" aria-label={t('website.highlightsBar.ariaLabel')}>
+        <div className="gs-container hp-highlights-row">
+          {HIGHLIGHTS.map((item) => (
+            <Link key={item.key} to={item.to} className="hp-highlight-item">
+              <span aria-hidden="true">{item.icon}</span>
+              <strong>{t(`website.highlightsBar.${item.key}`)}</strong>
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -92,12 +150,13 @@ export function HomePage() {
           <div className="gs-category-grid hp-category-grid">
             {PUBLIC_SECTIONS.map((section) => (
               section.id === 'field-crops' ? (
-                <CropsCategoryMenu key="crops-menu" />
+                <CropsCategoryMenu key="crops-menu-grid" />
               ) : (
                 <PublicSectionCard
                   key={section.id}
                   section={section}
                   to={`/sections/${section.id}`}
+                  variant="media"
                 />
               )
             ))}
@@ -105,6 +164,8 @@ export function HomePage() {
               key="product-market"
               section={HOME_MARKETPLACE_TILE}
               to={HOME_MARKETPLACE_TILE.to}
+              variant="media"
+              image={PUBLIC_SECTIONS.find((s) => s.id === 'store')?.image}
             />
           </div>
         </div>
