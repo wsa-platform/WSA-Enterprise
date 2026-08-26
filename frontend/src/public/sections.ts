@@ -275,8 +275,8 @@ export function getSectionById(id: string | undefined): PublicSectionConfig | un
   return PUBLIC_SECTIONS.find((section) => section.id === normalized)
 }
 
-/** Homepage hero — approved WSA agricultural background asset. */
-export const HERO_IMAGE = '/assets/wsa/hero_background.jpg'
+/** Homepage hero — approved agricultural landscape background. */
+export const HERO_IMAGE = '/assets/wsa/hero-background.jpg'
 
 export const HIDDEN_PUBLIC_MODULES = new Set(['soil', 'diagnosis', 'ai'])
 
