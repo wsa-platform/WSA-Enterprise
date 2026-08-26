@@ -275,9 +275,8 @@ export function getSectionById(id: string | undefined): PublicSectionConfig | un
   return PUBLIC_SECTIONS.find((section) => section.id === normalized)
 }
 
-/** Homepage hero — warm sunrise agricultural field (controlled gold light). */
-export const HERO_IMAGE =
-  'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=80'
+/** Homepage hero — approved WSA agricultural background asset. */
+export const HERO_IMAGE = '/assets/wsa/hero_background.jpg'
 
 export const HIDDEN_PUBLIC_MODULES = new Set(['soil', 'diagnosis', 'ai'])
 
