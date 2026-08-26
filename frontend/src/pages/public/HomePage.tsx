@@ -62,15 +62,8 @@ export function HomePage() {
                 </li>
               ))}
             </ul>
-            <div className="hp-hero-actions">
-              <a href="#home-categories" className="gs-btn gs-btn-hero-primary">
-                {t('website.hero.explore')}
-              </a>
-              <Link to="/register" className="gs-btn gs-btn-hero-outline">
-                {t('website.hero.getStarted')}
-              </Link>
-            </div>
           </div>
+          <div className="hp-hero-reserve" aria-hidden="true" />
         </section>
 
         <div className="hp-main-grid">
