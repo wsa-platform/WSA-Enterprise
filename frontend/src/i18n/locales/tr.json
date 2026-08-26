@@ -1423,15 +1423,24 @@
       "market": "Pazar yeri",
       "productMarket": "Ürün pazarı",
       "sell": "Sat",
-      "myJobApplication": "İş Başvurum"
+      "myJobApplication": "İş Başvurum",
+      "services": "Hizmetler",
+      "projects": "Projeler",
+      "aboutPlatform": "Platform hakkında",
+      "search": "Ara",
+      "searchPlaceholder": "Pazarda ara..."
     },
     "hero": {
-      "title": "Modern tarım için entegre tarımsal platform",
+      "title": "Modern ve sürdürülebilir tarım için entegre tarımsal platform",
+      "titleLine1": "Entegre tarımsal platform",
+      "titleLine2": "modern ve sürdürülebilir tarım için",
       "subtitle": "Ürünler, eğitim, arıcılık, iş ilanları ve ticareti keşfedin — üreticiler ve tarımsal işletmeler için tasarlanmış tek bir profesyonel ekosistemde.",
+      "supportLine": "Bilgi • Pazar • Hizmetler • Projeler — tek yerde",
+      "pillars": "Bilgi • Pazar • Hizmetler • Projeler",
       "explore": "Hizmetleri keşfet",
       "getStarted": "Başlayın",
       "dashboard": "Panoyu aç",
-      "imageAlt": "Gün doğumunda geniş yeşil tarla"
+      "imageAlt": "Yumuşak gün doğumu ışığında yeşil tarım alanları"
     },
     "sections": {
       "title": "Hizmetlerimizi keşfedin",
@@ -1887,6 +1896,27 @@
       "forage": "Yem bitkileri",
       "placeholderBody": "Seçilen ürün kategorisi için tanıtım sayfasıdır. Ayrıntılı içerik daha sonra eklenecektir."
     },
+    "homePanels": {
+      "ariaLabel": "Birincil platform girişleri",
+      "producerTitle": "Üretici misiniz? Hemen katılın",
+      "producerBody": "Ürünlerinizi WSA Enterprise pazarına ekleyin.",
+      "smartFarmerTitle": "Akıllı çiftçi rehberi",
+      "smartFarmerBody": "Saha kararlarınızı destekleyen tarımsal bilgi ve araçlar.",
+      "jobsTitle": "İş mi arıyorsunuz?",
+      "jobsBody": "Tarımsal kariyer ve yetenek yollarına girin."
+    },
+    "pillars": {
+      "title": "Tarımsal yolculuğunuz için tek platform",
+      "subtitle": "Nötr platform alanları — uydurma istatistik yok.",
+      "knowledge": "Bilgi",
+      "knowledgeDesc": "Kararlarınızı destekleyen kütüphane ve tarımsal rehberler.",
+      "market": "Pazar",
+      "marketDesc": "Yayımlanan tarımsal ve gıda ürünlerini inceleyin.",
+      "services": "Hizmetler",
+      "servicesDesc": "Platformun tarımsal kategorilerini ve hizmetlerini keşfedin.",
+      "projects": "Projeler",
+      "projectsDesc": "Küçük tarımsal projeler için fikirler ve yollar."
+    },
     "footer": {
       "tagline": "Çiftlikler, eğitim, ticaret ve büyüme için profesyonel tarımsal platform.",
       "about": "Hakkımızda",
@@ -1896,7 +1926,15 @@
       "navigation": "Alt bilgi gezinmesi",
       "rights": "© WSA Enterprise. Tüm hakları saklıdır.",
       "sections": "Ana bölümler",
-      "account": "Hesap"
+      "account": "Hesap",
+      "groups": {
+        "platform": "Platform",
+        "market": "Pazar",
+        "services": "Hizmetler",
+        "resources": "Kaynaklar",
+        "support": "Destek ve yardım",
+        "contact": "Bize ulaşın"
+      }
     },
     "cta": {
       "joinTitle": "WSA Enterprise ile büyümeye hazır mısınız?",
@@ -1950,6 +1988,7 @@
     },
     "quickLinks": {
       "title": "Hızlı bağlantılar",
+      "subtitle": "Platform bölümlerine ve temel bilgilere hızlı erişim.",
       "sections": "Ana bölümler",
       "info": "Bilgi"
     },

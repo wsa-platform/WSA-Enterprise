@@ -16,9 +16,9 @@ export function PublicNewsletter() {
 
   return (
     <>
-      <WaveDivider fill="oklch(0.35 0.12 145)" />
-      <section className="gs-newsletter" aria-labelledby="newsletter-title">
-        <div className="gs-container gs-newsletter-inner">
+      <WaveDivider fill="oklch(0.28 0.08 145)" />
+      <section className="gs-newsletter hp-newsletter" aria-labelledby="newsletter-title">
+        <div className="gs-container gs-newsletter-inner hp-newsletter-inner">
           <div className="gs-newsletter-icon" aria-hidden="true">
             🌿
           </div>

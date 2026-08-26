@@ -1423,15 +1423,24 @@
       "market": "Marketplace",
       "productMarket": "Product Marketplace",
       "sell": "Sell",
-      "myJobApplication": "My Application"
+      "myJobApplication": "My Application",
+      "services": "Services",
+      "projects": "Projects",
+      "aboutPlatform": "About the platform",
+      "search": "Search",
+      "searchPlaceholder": "Search the marketplace..."
     },
     "hero": {
-      "title": "Integrated agricultural platform for modern farming",
+      "title": "Integrated agricultural platform for modern and sustainable farming",
+      "titleLine1": "Integrated agricultural platform",
+      "titleLine2": "for modern and sustainable farming",
       "subtitle": "Explore crops, training, beekeeping, jobs, and commerce — all in one professional ecosystem built for growers and agricultural businesses.",
+      "supportLine": "Knowledge • Market • Services • Projects — in one place",
+      "pillars": "Knowledge • Market • Services • Projects",
       "explore": "Explore services",
       "getStarted": "Get started",
       "dashboard": "Open dashboard",
-      "imageAlt": "Wide green agricultural field at sunrise"
+      "imageAlt": "Green agricultural fields with soft sunrise lighting"
     },
     "sections": {
       "title": "Explore our services",
@@ -1887,6 +1896,27 @@
       "forage": "Forage crops",
       "placeholderBody": "This is an introductory page for the selected crops category. Detailed content will be added later."
     },
+    "homePanels": {
+      "ariaLabel": "Primary platform entries",
+      "producerTitle": "Are you a producer? Join now",
+      "producerBody": "Add your products to the WSA Enterprise marketplace.",
+      "smartFarmerTitle": "Smart farmer guide",
+      "smartFarmerBody": "Agricultural knowledge and tools to support field decisions.",
+      "jobsTitle": "Looking for a job?",
+      "jobsBody": "Enter agricultural careers and talent pathways."
+    },
+    "pillars": {
+      "title": "One platform for your agricultural journey",
+      "subtitle": "Neutral platform areas — no fabricated statistics.",
+      "knowledge": "Knowledge",
+      "knowledgeDesc": "Library and agricultural guides to support your decisions.",
+      "market": "Market",
+      "marketDesc": "Browse published agricultural and food products.",
+      "services": "Services",
+      "servicesDesc": "Explore agricultural platform categories and services.",
+      "projects": "Projects",
+      "projectsDesc": "Ideas and pathways for small agricultural projects."
+    },
     "footer": {
       "tagline": "Professional agricultural platform for farms, training, commerce, and growth.",
       "about": "About us",
@@ -1896,7 +1926,15 @@
       "navigation": "Footer navigation",
       "rights": "© WSA Enterprise. All rights reserved.",
       "sections": "Main Sections",
-      "account": "Account"
+      "account": "Account",
+      "groups": {
+        "platform": "Platform",
+        "market": "Market",
+        "services": "Services",
+        "resources": "Resources",
+        "support": "Help & support",
+        "contact": "Contact us"
+      }
     },
     "cta": {
       "joinTitle": "Ready to grow with WSA Enterprise?",
@@ -1950,6 +1988,7 @@
     },
     "quickLinks": {
       "title": "Quick Links",
+      "subtitle": "Quick access to platform sections and essential information.",
       "sections": "Main Sections",
       "info": "Information"
     },

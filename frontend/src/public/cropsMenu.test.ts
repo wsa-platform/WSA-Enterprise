@@ -88,6 +88,14 @@ describe('CropsCategoryMenu markup', () => {
     expect(html).toContain('المحاصيل')
     expect(html).toContain('gs-crops-menu')
     expect(html).toContain('aria-haspopup="menu"')
+    expect(html).toContain('أنت منتج؟ انضم الآن')
+    expect(html).toContain('دليل المزارع الذكي')
+    expect(html).toContain('هل تبحث عن وظيفة؟')
+    expect(html).toContain('href="/jobs/enter"')
+    expect(html).toContain('href="/library"')
+    expect(html).toContain('next=%2Fseller%2Flistings%2Fnew')
+    expect(html).toContain('منصة زراعية متكاملة')
+    expect(html).not.toContain('entry-choice-banner')
   })
 
   it('opens the submenu with exactly three Arabic options and routes', async () => {
@@ -125,5 +133,6 @@ describe('CropsCategoryMenu markup', () => {
     expect(html).toContain('محاصيل الخضروات')
     expect(html).toContain('href="/sections/vegetables"')
     expect(html).toContain('سوق المنتجات')
+    expect(html).toContain('id="home-categories"')
   })
 })

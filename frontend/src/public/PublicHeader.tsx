@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   EMPLOYER_HOME,
@@ -11,10 +11,10 @@ import {
   publicRegisterHref,
   readStoredAudience,
 } from '../navigation/roleDestinations'
-import { PUBLIC_TOP_NAV_ITEMS, internalPaths } from '../navigation/paths'
+import { PUBLIC_TOP_NAV_ITEMS, internalPaths, publicPaths } from '../navigation/paths'
 import { PublicLanguageMenu } from './PublicLanguageMenu'
 
-/** Header — adapted from garden-store/components/Header.tsx */
+/** Public site header — modern agricultural platform chrome. */
 export function PublicHeader({
   loginTo: loginToOverride,
   registerTo: registerToOverride,
@@ -25,7 +25,9 @@ export function PublicHeader({
   const { t } = useTranslation()
   const { token } = useAuth()
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const authenticated = Boolean(token)
   const storedAudience = readStoredAudience()
   const audience = publicHeaderAudience(storedAudience, pathname)
@@ -46,8 +48,16 @@ export function PublicHeader({
       : publicRegisterHref(storedAudience, pathname)
   const marketplaceAccount = authenticated && isMarketplacePath(pathname)
 
+  const onSearch = (event: FormEvent) => {
+    event.preventDefault()
+    setMenuOpen(false)
+    // Existing marketplace route — search UI lives on /market (no invented URLs).
+    navigate(publicPaths.market)
+    setSearchQuery('')
+  }
+
   return (
-    <header className="gs-header">
+    <header className="gs-header hp-header">
       <div className="gs-container gs-header-inner">
         <Link to="/" className="gs-brand" onClick={() => setMenuOpen(false)}>
           <span className="gs-brand-mark" aria-hidden="true">
@@ -75,10 +85,30 @@ export function PublicHeader({
           aria-label={t('website.nav.primary')}
         >
           {PUBLIC_TOP_NAV_ITEMS.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setMenuOpen(false)}>
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              onClick={() => setMenuOpen(false)}
+            >
               {t(item.labelKey)}
             </NavLink>
           ))}
+          <form className="hp-header-search" role="search" onSubmit={onSearch}>
+            <label className="visually-hidden" htmlFor="public-header-search">
+              {t('website.nav.search')}
+            </label>
+            <input
+              id="public-header-search"
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder={t('website.nav.searchPlaceholder')}
+            />
+            <button type="submit" className="gs-btn gs-btn-primary">
+              {t('website.nav.search')}
+            </button>
+          </form>
         </nav>
 
         <div className="gs-header-actions">

@@ -1423,15 +1423,24 @@
       "market": "Place de marché",
       "productMarket": "Marché des produits",
       "sell": "Vendre",
-      "myJobApplication": "Ma candidature"
+      "myJobApplication": "Ma candidature",
+      "services": "Services",
+      "projects": "Projets",
+      "aboutPlatform": "À propos de la plateforme",
+      "search": "Rechercher",
+      "searchPlaceholder": "Rechercher sur le marché..."
     },
     "hero": {
-      "title": "Plateforme agricole intégrée pour l'agriculture moderne",
+      "title": "Plateforme agricole intégrée pour une agriculture moderne et durable",
+      "titleLine1": "Plateforme agricole intégrée",
+      "titleLine2": "pour une agriculture moderne et durable",
       "subtitle": "Explorez les cultures, la formation, l'apiculture, l'emploi et le commerce — le tout dans un écosystème professionnel conçu pour les producteurs et les entreprises agricoles.",
+      "supportLine": "Savoir • Marché • Services • Projets — en un seul endroit",
+      "pillars": "Savoir • Marché • Services • Projets",
       "explore": "Explorer les services",
       "getStarted": "Commencer",
       "dashboard": "Ouvrir le tableau de bord",
-      "imageAlt": "Vaste champ agricole vert au lever du soleil"
+      "imageAlt": "Champs agricoles verts avec un lever de soleil doux"
     },
     "sections": {
       "title": "Explorez nos services",
@@ -1887,6 +1896,27 @@
       "forage": "Cultures fourragères",
       "placeholderBody": "Page d'introduction pour la catégorie de cultures sélectionnée. Le contenu détaillé sera ajouté plus tard."
     },
+    "homePanels": {
+      "ariaLabel": "Entrées principales de la plateforme",
+      "producerTitle": "Vous êtes producteur ? Rejoignez-nous",
+      "producerBody": "Ajoutez vos produits au marché WSA Enterprise.",
+      "smartFarmerTitle": "Guide de l'agriculteur intelligent",
+      "smartFarmerBody": "Savoir agricole et outils pour soutenir vos décisions au champ.",
+      "jobsTitle": "Vous cherchez un emploi ?",
+      "jobsBody": "Accédez aux parcours d'emploi et de talents agricoles."
+    },
+    "pillars": {
+      "title": "Une plateforme pour votre parcours agricole",
+      "subtitle": "Domaines neutres de la plateforme — sans statistiques fictives.",
+      "knowledge": "Savoir",
+      "knowledgeDesc": "Bibliothèque et guides agricoles pour soutenir vos décisions.",
+      "market": "Marché",
+      "marketDesc": "Parcourez les produits agricoles et alimentaires publiés.",
+      "services": "Services",
+      "servicesDesc": "Explorez les catégories et services agricoles de la plateforme.",
+      "projects": "Projets",
+      "projectsDesc": "Idées et parcours pour de petits projets agricoles."
+    },
     "footer": {
       "tagline": "Plateforme agricole professionnelle pour fermes, formation, commerce et croissance.",
       "about": "À propos",
@@ -1896,7 +1926,15 @@
       "navigation": "Navigation du pied de page",
       "rights": "© WSA Enterprise. Tous droits réservés.",
       "sections": "Sections principales",
-      "account": "Compte"
+      "account": "Compte",
+      "groups": {
+        "platform": "Plateforme",
+        "market": "Marché",
+        "services": "Services",
+        "resources": "Ressources",
+        "support": "Aide et support",
+        "contact": "Nous contacter"
+      }
     },
     "cta": {
       "joinTitle": "Prêt à grandir avec WSA Enterprise ?",
@@ -1950,6 +1988,7 @@
     },
     "quickLinks": {
       "title": "Liens rapides",
+      "subtitle": "Accès rapide aux sections de la plateforme et aux informations essentielles.",
       "sections": "Sections principales",
       "info": "Informations"
     },

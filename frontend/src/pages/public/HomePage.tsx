@@ -1,65 +1,91 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { JobEntryChoices } from '../jobs/JobsEnterPage'
+import { useAuth } from '../../context/AuthContext'
 import { CropsCategoryMenu } from '../../public/CropsCategoryMenu'
+import { HomeFeaturePanels } from '../../public/HomeFeaturePanels'
 import { PublicFeatured } from '../../public/PublicFeatured'
 import { PublicLayout } from '../../public/PublicLayout'
 import { PublicSectionCard } from '../../public/PublicSectionCard'
 import { WaveDivider } from '../../public/WaveDivider'
 import { HERO_IMAGE, HOME_MARKETPLACE_TILE, PUBLIC_SECTIONS } from '../../public/sections'
 
+const PILLARS = [
+  { key: 'knowledge', to: '/library', icon: '📚' },
+  { key: 'market', to: '/market', icon: '🛒' },
+  { key: 'services', to: '/#home-categories', icon: '🌱' },
+  { key: 'projects', to: '/sections/small-projects', icon: '🏡' },
+] as const
+
 export function HomePage() {
   const { t } = useTranslation()
+  const { token } = useAuth()
 
   return (
     <PublicLayout>
-      {/* Hero — garden-store Home.tsx hero section */}
-      <section className="gs-hero" aria-labelledby="hero-title">
+      <section className="hp-hero" aria-labelledby="hero-title">
         <div
-          className="gs-hero-bg"
+          className="hp-hero-bg"
           style={{ backgroundImage: `url(${HERO_IMAGE})` }}
           role="img"
           aria-label={t('website.hero.imageAlt')}
         />
-        <div className="gs-container gs-hero-content">
-          <span className="gs-hero-badge">{t('website.brand')}</span>
-          <h1 id="hero-title">{t('website.hero.title')}</h1>
-          <p>{t('website.hero.subtitle')}</p>
-          <div className="gs-hero-actions">
-            <Link to="/sections/field-crops" className="gs-btn gs-btn-hero-primary">
-              {t('website.hero.explore')}
-            </Link>
-            <Link to="/register" className="gs-btn gs-btn-hero-outline">
-              {t('website.hero.getStarted')}
-            </Link>
+        <div className="hp-hero-overlay" aria-hidden="true" />
+        <div className="gs-container hp-hero-grid">
+          <div className="hp-hero-copy">
+            <span className="hp-hero-badge">{t('website.brand')}</span>
+            <h1 id="hero-title">
+              <span className="hp-hero-line">{t('website.hero.titleLine1')}</span>
+              <span className="hp-hero-line">{t('website.hero.titleLine2')}</span>
+            </h1>
+            <p className="hp-hero-support">{t('website.hero.supportLine')}</p>
+            <p className="hp-hero-pillars" aria-hidden="true">{t('website.hero.pillars')}</p>
+            <div className="hp-hero-actions">
+              <a href="#home-categories" className="gs-btn gs-btn-hero-primary">
+                {t('website.hero.explore')}
+              </a>
+              <Link to={token ? '/account' : '/register'} className="gs-btn gs-btn-hero-outline">
+                {token ? t('website.hero.dashboard') : t('website.hero.getStarted')}
+              </Link>
+            </div>
           </div>
+          <HomeFeaturePanels />
         </div>
-        <div className="gs-hero-wave" aria-hidden="true">
-          <svg viewBox="0 0 1440 70" preserveAspectRatio="none">
-            <path d="M0,40 C480,80 960,0 1440,40 L1440,70 L0,70 Z" fill="oklch(0.28 0.10 145)" />
+        <div className="hp-hero-wave" aria-hidden="true">
+          <svg viewBox="0 0 1440 80" preserveAspectRatio="none">
+            <path d="M0,48 C360,90 720,10 1440,48 L1440,80 L0,80 Z" fill="oklch(0.97 0.012 95)" />
           </svg>
         </div>
       </section>
 
-      <div className="gs-container">
-        <JobEntryChoices className="entry-choice-banner-top" />
-      </div>
-
-      {/* Feature strip — garden-store feature-strip */}
-      <section className="gs-feature-strip" aria-hidden="true">
-        <div className="gs-container gs-feature-strip-inner">
-          <span>🌱 {t('website.brand')}</span>
-          <span>🌾 {t('website.sections.fieldCrops.title')}</span>
-          <span>🌸 {t('website.sections.ornamentalPlants.title')}</span>
-          <span>📚 {t('website.sections.training.title')}</span>
+      <section className="hp-pillars" aria-labelledby="pillars-title">
+        <div className="gs-container">
+          <div className="gs-section-header hp-section-header">
+            <div className="gs-section-eyebrow">
+              <span className="gs-section-line" />
+              <span>{t('website.brand')}</span>
+            </div>
+            <h2 id="pillars-title">{t('website.pillars.title')}</h2>
+            <p className="gs-section-subtitle">{t('website.pillars.subtitle')}</p>
+          </div>
+          <div className="hp-pillars-grid">
+            {PILLARS.map((pillar) => (
+              <Link key={pillar.key} to={pillar.to} className="hp-pillar-card">
+                <span className="hp-pillar-icon" aria-hidden="true">{pillar.icon}</span>
+                <h3>{t(`website.pillars.${pillar.key}`)}</h3>
+                <p>{t(`website.pillars.${pillar.key}Desc`)}</p>
+              </Link>
+            ))}
+          </div>
         </div>
-        <WaveDivider fill="oklch(0.965 0.018 90)" />
       </section>
 
-      {/* Category sections — garden-store category grid */}
-      <section className="gs-section gs-section-cream" aria-labelledby="sections-title">
+      <section
+        id="home-categories"
+        className="gs-section gs-section-cream hp-categories"
+        aria-labelledby="sections-title"
+      >
         <div className="gs-container">
-          <div className="gs-section-header">
+          <div className="gs-section-header hp-section-header">
             <div className="gs-section-eyebrow">
               <span className="gs-section-line" />
               <span>{t('website.brand')}</span>
@@ -67,7 +93,7 @@ export function HomePage() {
             <h2 id="sections-title">{t('website.sections.title')}</h2>
             <p className="gs-section-subtitle">{t('website.sections.subtitle')}</p>
           </div>
-          <div className="gs-category-grid">
+          <div className="gs-category-grid hp-category-grid">
             {PUBLIC_SECTIONS.map((section) => (
               section.id === 'field-crops' ? (
                 <CropsCategoryMenu key="crops-menu" />
@@ -89,7 +115,6 @@ export function HomePage() {
       </section>
 
       <WaveDivider fill="oklch(1 0 0)" flip />
-
       <PublicFeatured />
     </PublicLayout>
   )
