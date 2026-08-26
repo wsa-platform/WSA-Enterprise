@@ -15,6 +15,9 @@ export const publicPaths = {
   home: '/',
   market: '/market',
   listing: (id: number | string) => `/market/${id}`,
+  cropsField: '/crops/field',
+  cropsSugar: '/crops/sugar',
+  cropsForage: '/crops/forage',
 } as const
 
 export const REQUIRED_INTERNAL_NAV_PATHS = [

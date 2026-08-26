@@ -1879,6 +1879,14 @@
       "orgHint": "Configure VITE_PUBLIC_ORG_SLUG to browse published training and library content from a specific organization."
     },
     "breadcrumb": "Breadcrumb",
+    "cropsMenu": {
+      "parent": "Crops",
+      "description": "Field, sugar, and forage crops — choose a category.",
+      "field": "Field crops",
+      "sugar": "Sugar crops",
+      "forage": "Forage crops",
+      "placeholderBody": "This is an introductory page for the selected crops category. Detailed content will be added later."
+    },
     "footer": {
       "tagline": "Professional agricultural platform for farms, training, commerce, and growth.",
       "about": "About us",

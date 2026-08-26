@@ -1879,6 +1879,14 @@
       "orgHint": "Belirli bir kuruluştan yayınlanan eğitim ve kütüphane içeriğine göz atmak için VITE_PUBLIC_ORG_SLUG değerini yapılandırın."
     },
     "breadcrumb": "Gezinti yolu",
+    "cropsMenu": {
+      "parent": "Ürünler",
+      "description": "Tarla, şeker ve yem bitkileri — bir kategori seçin.",
+      "field": "Tarla bitkileri",
+      "sugar": "Şeker bitkileri",
+      "forage": "Yem bitkileri",
+      "placeholderBody": "Seçilen ürün kategorisi için tanıtım sayfasıdır. Ayrıntılı içerik daha sonra eklenecektir."
+    },
     "footer": {
       "tagline": "Çiftlikler, eğitim, ticaret ve büyüme için profesyonel tarımsal platform.",
       "about": "Hakkımızda",

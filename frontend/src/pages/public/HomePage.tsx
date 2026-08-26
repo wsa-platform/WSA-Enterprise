@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { JobEntryChoices } from '../jobs/JobsEnterPage'
+import { CropsCategoryMenu } from '../../public/CropsCategoryMenu'
 import { PublicFeatured } from '../../public/PublicFeatured'
 import { PublicLayout } from '../../public/PublicLayout'
 import { PublicSectionCard } from '../../public/PublicSectionCard'
@@ -68,11 +69,15 @@ export function HomePage() {
           </div>
           <div className="gs-category-grid">
             {PUBLIC_SECTIONS.map((section) => (
-              <PublicSectionCard
-                key={section.id}
-                section={section}
-                to={`/sections/${section.id}`}
-              />
+              section.id === 'field-crops' ? (
+                <CropsCategoryMenu key="crops-menu" />
+              ) : (
+                <PublicSectionCard
+                  key={section.id}
+                  section={section}
+                  to={`/sections/${section.id}`}
+                />
+              )
             ))}
             <PublicSectionCard
               key="product-market"

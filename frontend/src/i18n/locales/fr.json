@@ -1879,6 +1879,14 @@
       "orgHint": "Configurez VITE_PUBLIC_ORG_SLUG pour parcourir le contenu de formation et de bibliothèque publié d'une organisation spécifique."
     },
     "breadcrumb": "Fil d'Ariane",
+    "cropsMenu": {
+      "parent": "Cultures",
+      "description": "Cultures de plein champ, sucrières et fourragères — choisissez une catégorie.",
+      "field": "Cultures de plein champ",
+      "sugar": "Cultures sucrières",
+      "forage": "Cultures fourragères",
+      "placeholderBody": "Page d'introduction pour la catégorie de cultures sélectionnée. Le contenu détaillé sera ajouté plus tard."
+    },
     "footer": {
       "tagline": "Plateforme agricole professionnelle pour fermes, formation, commerce et croissance.",
       "about": "À propos",

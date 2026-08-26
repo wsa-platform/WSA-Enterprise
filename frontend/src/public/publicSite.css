@@ -515,6 +515,124 @@
   overflow: hidden;
 }
 
+/* Homepage crops category submenu (المحاصيل) */
+.gs-crops-menu {
+  position: relative;
+  z-index: 1;
+}
+
+.gs-crops-menu.is-open {
+  z-index: 20;
+}
+
+button.gs-crops-menu-trigger {
+  width: 100%;
+  cursor: pointer;
+  font: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  text-align: inherit;
+}
+
+button.gs-crops-menu-trigger:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.gs-crops-menu.is-open .gs-crops-menu-trigger {
+  border-color: oklch(0.35 0.12 145 / 0.35);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.gs-crops-submenu {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  top: calc(100% - 0.35rem);
+  padding-top: 0.5rem;
+  z-index: 30;
+}
+
+.gs-crops-submenu[hidden] {
+  display: none;
+}
+
+.gs-crops-submenu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem;
+  border-radius: 1rem;
+  border: 1px solid oklch(0.88 0.02 90 / 0.7);
+  background: var(--card);
+  box-shadow: var(--shadow-card-hover);
+  display: grid;
+  gap: 0.2rem;
+  animation: gs-crops-submenu-in 0.16s ease-out;
+}
+
+@keyframes gs-crops-submenu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gs-crops-submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: background 0.15s, color 0.15s;
+}
+
+.gs-crops-submenu-item:hover,
+.gs-crops-submenu-item:focus-visible {
+  background: oklch(0.94 0.03 145);
+  color: var(--primary);
+  outline: none;
+}
+
+.gs-crops-submenu-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.gs-crops-placeholder {
+  max-width: 36rem;
+  margin: 1.5rem auto 0;
+  text-align: center;
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+  padding: 2rem 1.25rem;
+  border-radius: 1.5rem;
+  border: 1px solid oklch(0.88 0.02 90 / 0.6);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.gs-crops-placeholder h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.gs-crops-placeholder p {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+
 /* Product cards (ProductCard.tsx / featured) */
 .gs-product-grid {
   display: grid;
