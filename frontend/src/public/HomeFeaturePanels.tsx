@@ -22,7 +22,7 @@ export function HomeFeaturePanels() {
       to: producerTo,
       title: t('website.homePanels.producerTitle'),
       body: t('website.homePanels.producerBody'),
-      icon: '🌾',
+      icon: '🌱',
       tone: 'producer',
     },
     {
@@ -45,19 +45,21 @@ export function HomeFeaturePanels() {
 
   return (
     <aside className="hp-feature-panels" aria-label={t('website.homePanels.ariaLabel')}>
-      {panels.map((panel) => (
-        <Link
-          key={panel.id}
-          to={panel.to}
-          className={`hp-feature-panel hp-feature-panel--${panel.tone}`}
-        >
-          <span className="hp-feature-panel-icon" aria-hidden="true">{panel.icon}</span>
-          <span className="hp-feature-panel-copy">
-            <strong>{panel.title}</strong>
-            <span>{panel.body}</span>
-          </span>
-        </Link>
-      ))}
+      <div className="hp-feature-panels-tray">
+        {panels.map((panel) => (
+          <Link
+            key={panel.id}
+            to={panel.to}
+            className={`hp-feature-panel hp-feature-panel--${panel.tone}`}
+          >
+            <span className="hp-feature-panel-icon" aria-hidden="true">{panel.icon}</span>
+            <span className="hp-feature-panel-copy">
+              <strong>{panel.title}</strong>
+              <span>{panel.body}</span>
+            </span>
+          </Link>
+        ))}
+      </div>
     </aside>
   )
 }

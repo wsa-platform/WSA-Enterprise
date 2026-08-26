@@ -1,12 +1,10 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
 import { CropsCategoryMenu } from '../../public/CropsCategoryMenu'
 import { HomeFeaturePanels } from '../../public/HomeFeaturePanels'
 import { PublicFeatured } from '../../public/PublicFeatured'
 import { PublicLayout } from '../../public/PublicLayout'
 import { PublicSectionCard } from '../../public/PublicSectionCard'
-import { WaveDivider } from '../../public/WaveDivider'
 import { HERO_IMAGE, HOME_MARKETPLACE_TILE, PUBLIC_SECTIONS } from '../../public/sections'
 
 const PILLARS = [
@@ -18,7 +16,6 @@ const PILLARS = [
 
 export function HomePage() {
   const { t } = useTranslation()
-  const { token } = useAuth()
 
   return (
     <PublicLayout>
@@ -38,13 +35,12 @@ export function HomePage() {
               <span className="hp-hero-line">{t('website.hero.titleLine2')}</span>
             </h1>
             <p className="hp-hero-support">{t('website.hero.supportLine')}</p>
-            <p className="hp-hero-pillars" aria-hidden="true">{t('website.hero.pillars')}</p>
             <div className="hp-hero-actions">
               <a href="#home-categories" className="gs-btn gs-btn-hero-primary">
                 {t('website.hero.explore')}
               </a>
-              <Link to={token ? '/account' : '/register'} className="gs-btn gs-btn-hero-outline">
-                {token ? t('website.hero.dashboard') : t('website.hero.getStarted')}
+              <Link to="/register" className="gs-btn gs-btn-hero-outline">
+                {t('website.hero.getStarted')}
               </Link>
             </div>
           </div>
@@ -52,7 +48,7 @@ export function HomePage() {
         </div>
         <div className="hp-hero-wave" aria-hidden="true">
           <svg viewBox="0 0 1440 80" preserveAspectRatio="none">
-            <path d="M0,48 C360,90 720,10 1440,48 L1440,80 L0,80 Z" fill="oklch(0.97 0.012 95)" />
+            <path d="M0,48 C360,90 720,10 1440,48 L1440,80 L0,80 Z" fill="oklch(0.97 0.015 95)" />
           </svg>
         </div>
       </section>
@@ -114,7 +110,6 @@ export function HomePage() {
         </div>
       </section>
 
-      <WaveDivider fill="oklch(1 0 0)" flip />
       <PublicFeatured />
     </PublicLayout>
   )

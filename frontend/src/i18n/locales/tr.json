@@ -1901,21 +1901,21 @@
       "producerTitle": "Üretici misiniz? Hemen katılın",
       "producerBody": "Ürünlerinizi WSA Enterprise pazarına ekleyin.",
       "smartFarmerTitle": "Akıllı çiftçi rehberi",
-      "smartFarmerBody": "Saha kararlarınızı destekleyen tarımsal bilgi ve araçlar.",
+      "smartFarmerBody": "Saha kararlarınıza yardımcı olan tarımsal bilgi ve araçlar.",
       "jobsTitle": "İş mi arıyorsunuz?",
-      "jobsBody": "Tarımsal kariyer ve yetenek yollarına girin."
+      "jobsBody": "Tarımsal kariyer ve fırsat yollarına girin."
     },
     "pillars": {
-      "title": "Tarımsal yolculuğunuz için tek platform",
-      "subtitle": "Nötr platform alanları — uydurma istatistik yok.",
+      "title": "Tarımsal ihtiyaçlarınız için tek platform",
+      "subtitle": "Platform alanları hakkında sade bilgi — uydurma rakam yok.",
       "knowledge": "Bilgi",
       "knowledgeDesc": "Kararlarınızı destekleyen kütüphane ve tarımsal rehberler.",
       "market": "Pazar",
-      "marketDesc": "Yayımlanan tarımsal ve gıda ürünlerini inceleyin.",
+      "marketDesc": "Mevcut tarımsal ürünleri ve hizmetleri inceleyin.",
       "services": "Hizmetler",
-      "servicesDesc": "Platformun tarımsal kategorilerini ve hizmetlerini keşfedin.",
+      "servicesDesc": "Tarımsal platform kategorilerini ve uygun hizmetleri keşfedin.",
       "projects": "Projeler",
-      "projectsDesc": "Küçük tarımsal projeler için fikirler ve yollar."
+      "projectsDesc": "Mevcut tarımsal projeler için fikirler ve yollar."
     },
     "footer": {
       "tagline": "Çiftlikler, eğitim, ticaret ve büyüme için profesyonel tarımsal platform.",

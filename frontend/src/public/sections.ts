@@ -275,9 +275,9 @@ export function getSectionById(id: string | undefined): PublicSectionConfig | un
   return PUBLIC_SECTIONS.find((section) => section.id === normalized)
 }
 
-/** Homepage hero — green fields with controlled sunrise lighting (not over-bright). */
+/** Homepage hero — cinematic agricultural sunrise (warm gold / green fields). */
 export const HERO_IMAGE =
-  'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2000&q=80'
+  'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=2200&q=80'
 
 export const HIDDEN_PUBLIC_MODULES = new Set(['soil', 'diagnosis', 'ai'])
 

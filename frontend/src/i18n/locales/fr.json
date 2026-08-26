@@ -1901,21 +1901,21 @@
       "producerTitle": "Vous êtes producteur ? Rejoignez-nous",
       "producerBody": "Ajoutez vos produits au marché WSA Enterprise.",
       "smartFarmerTitle": "Guide de l'agriculteur intelligent",
-      "smartFarmerBody": "Savoir agricole et outils pour soutenir vos décisions au champ.",
+      "smartFarmerBody": "Savoir agricole et outils qui aident vos décisions au champ.",
       "jobsTitle": "Vous cherchez un emploi ?",
-      "jobsBody": "Accédez aux parcours d'emploi et de talents agricoles."
+      "jobsBody": "Accédez aux parcours d'emploi et aux opportunités agricoles."
     },
     "pillars": {
-      "title": "Une plateforme pour votre parcours agricole",
-      "subtitle": "Domaines neutres de la plateforme — sans statistiques fictives.",
+      "title": "Une plateforme pour vos besoins agricoles",
+      "subtitle": "Informations simples sur les domaines de la plateforme — sans chiffres fictifs.",
       "knowledge": "Savoir",
       "knowledgeDesc": "Bibliothèque et guides agricoles pour soutenir vos décisions.",
       "market": "Marché",
-      "marketDesc": "Parcourez les produits agricoles et alimentaires publiés.",
+      "marketDesc": "Parcourez les produits et services agricoles disponibles.",
       "services": "Services",
-      "servicesDesc": "Explorez les catégories et services agricoles de la plateforme.",
+      "servicesDesc": "Explorez les catégories agricoles et les services adaptés.",
       "projects": "Projets",
-      "projectsDesc": "Idées et parcours pour de petits projets agricoles."
+      "projectsDesc": "Idées et parcours pour les projets agricoles disponibles."
     },
     "footer": {
       "tagline": "Plateforme agricole professionnelle pour fermes, formation, commerce et croissance.",

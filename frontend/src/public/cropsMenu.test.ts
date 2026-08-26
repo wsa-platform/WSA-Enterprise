@@ -91,11 +91,17 @@ describe('CropsCategoryMenu markup', () => {
     expect(html).toContain('أنت منتج؟ انضم الآن')
     expect(html).toContain('دليل المزارع الذكي')
     expect(html).toContain('هل تبحث عن وظيفة؟')
+    expect(html).toContain('منصة واحدة لاحتياجاتك الزراعية')
+    expect(html).toContain('معلومات مبسطة عن مجالات المنصة')
     expect(html).toContain('href="/jobs/enter"')
     expect(html).toContain('href="/library"')
     expect(html).toContain('next=%2Fseller%2Flistings%2Fnew')
     expect(html).toContain('منصة زراعية متكاملة')
+    expect(html).toContain('href="/register"')
+    expect(html).not.toContain('فتح لوحة التحكم')
     expect(html).not.toContain('entry-choice-banner')
+    expect(html).not.toContain('gs-product-card')
+    expect((html.match(/دليل المزارع الذكي/g) ?? []).length).toBe(1)
   })
 
   it('opens the submenu with exactly three Arabic options and routes', async () => {
