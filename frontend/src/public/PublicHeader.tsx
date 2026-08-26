@@ -82,14 +82,24 @@ export function PublicHeader({
           aria-label={t('website.nav.primary')}
         >
           {PUBLIC_TOP_NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              onClick={() => setMenuOpen(false)}
-            >
-              {t(item.labelKey)}
-            </NavLink>
+            item.to.includes('#') ? (
+              <a
+                key={item.to}
+                href={item.to}
+                onClick={() => setMenuOpen(false)}
+              >
+                {t(item.labelKey)}
+              </a>
+            ) : (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                onClick={() => setMenuOpen(false)}
+              >
+                {t(item.labelKey)}
+              </NavLink>
+            )
           ))}
         </nav>
 

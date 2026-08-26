@@ -2602,9 +2602,9 @@ button.gs-crops-menu-trigger:focus-visible {
 .hp-feature-panel {
   direction: ltr;
   display: grid;
-  grid-template-columns: 7.25rem minmax(0, 1fr);
+  grid-template-columns: minmax(8.75rem, 0.4fr) minmax(0, 0.6fr);
   align-items: stretch;
-  min-height: 7.6rem;
+  min-height: 8rem;
   overflow: hidden;
   border-radius: 1rem;
   color: #fff;
@@ -3108,8 +3108,8 @@ button.gs-crops-menu-trigger:focus-visible {
   }
 
   .hp-feature-panel {
-    grid-template-columns: 5.5rem minmax(0, 1fr);
-    min-height: 7rem;
+    grid-template-columns: minmax(5.75rem, 0.36fr) minmax(0, 0.64fr);
+    min-height: 7.25rem;
   }
 }
 
