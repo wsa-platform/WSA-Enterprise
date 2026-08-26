@@ -1436,6 +1436,8 @@
       "titleLine1": "Plateforme agricole intégrée",
       "titleLine2": "pour une agriculture moderne",
       "titleLine3": "et durable",
+      "titleLine2Full": "pour une agriculture moderne et durable",
+      "eyebrow": "WSA Enterprise",
       "titleLine1Lead": "Plateforme agricole ",
       "titleLine1Accent": "intégrée",
       "titleLine2Lead": "pour une agriculture moderne et ",
@@ -1911,14 +1913,17 @@
     "homePanels": {
       "ariaLabel": "Entrées principales de la plateforme",
       "producerTitle": "Vous êtes producteur ? Rejoignez-nous",
-      "producerBody": "Ajoutez vos produits au marché WSA Enterprise.",
+      "producerBody": "Commercialisez vos produits auprès de milliers de clients",
       "producerCta": "S'inscrire comme producteur",
       "smartFarmerTitle": "Guide de l'agriculteur intelligent",
-      "smartFarmerBody": "Savoir agricole et outils qui aident vos décisions au champ.",
+      "smartFarmerBody": "Conseils et recommandations pour gérer votre exploitation intelligemment",
       "smartFarmerCta": "Explorer le guide",
       "jobsTitle": "Vous cherchez un emploi ?",
-      "jobsBody": "Accédez aux parcours d'emploi et aux opportunités agricoles.",
+      "jobsBody": "Découvrez les opportunités professionnelles dans le secteur agricole",
       "jobsCta": "Parcourir les emplois"
+    },
+    "categoriesStrip": {
+      "title": "Découvrez nos principaux services et catégories"
     },
     "pillars": {
       "title": "Une plateforme pour vos besoins agricoles",

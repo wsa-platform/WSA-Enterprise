@@ -11,14 +11,18 @@ export const HOME_FEATURE_PANEL_ROUTES = {
   jobs: JOB_SEEKER_ENTER,
 } as const
 
-/** Reference hero card imagery — vegetable / plant / laptop. */
 const PANEL_IMAGES = {
-  producer: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=640&q=80',
-  smart: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=640&q=80',
-  jobs: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=640&q=80',
+  producer: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=900&q=80',
+  smart: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=900&q=80',
+  jobs: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=900&q=80',
 } as const
 
-export function HomeFeaturePanels() {
+/** Promo sidebar / hero feature panels — three cards, Smart Farmer exactly once. */
+export function HomeFeaturePanels({
+  variant = 'promo',
+}: {
+  variant?: 'promo' | 'hero'
+} = {}) {
   const { t } = useTranslation()
   const { token } = useAuth()
   const producerTo = sellerAddProductHref(Boolean(token))
@@ -54,19 +58,22 @@ export function HomeFeaturePanels() {
   ] as const
 
   return (
-    <aside className="hp-feature-panels" aria-label={t('website.homePanels.ariaLabel')}>
-      <div className="hp-feature-panels-tray">
+    <aside
+      className={`hp-feature-panels hp-feature-panels--${variant}`}
+      aria-label={t('website.homePanels.ariaLabel')}
+    >
+      <div className="hp-feature-panels-stack">
         {panels.map((panel) => (
-          <article key={panel.id} className={`hp-feature-panel hp-feature-panel--${panel.tone}`}>
-            <div
-              className="hp-feature-panel-visual"
-              style={{ backgroundImage: `url(${panel.image})` }}
-              aria-hidden="true"
-            />
-            <div className="hp-feature-panel-copy">
+          <article
+            key={panel.id}
+            className={`hp-promo-card hp-promo-card--${panel.tone}`}
+            style={{ backgroundImage: `url(${panel.image})` }}
+          >
+            <div className="hp-promo-card-shade" aria-hidden="true" />
+            <div className="hp-promo-card-copy">
               <h3>{panel.title}</h3>
               <p>{panel.body}</p>
-              <Link to={panel.to} className="hp-feature-panel-cta">
+              <Link to={panel.to} className="hp-promo-card-cta">
                 {panel.cta}
                 <span aria-hidden="true">←</span>
               </Link>

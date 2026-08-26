@@ -1436,6 +1436,8 @@
       "titleLine1": "Entegre tarımsal platform",
       "titleLine2": "modern tarım için",
       "titleLine3": "ve sürdürülebilir",
+      "titleLine2Full": "modern ve sürdürülebilir tarım için",
+      "eyebrow": "WSA Enterprise",
       "titleLine1Lead": "Entegre tarımsal ",
       "titleLine1Accent": "platform",
       "titleLine2Lead": "modern ve ",
@@ -1911,14 +1913,17 @@
     "homePanels": {
       "ariaLabel": "Birincil platform girişleri",
       "producerTitle": "Üretici misiniz? Hemen katılın",
-      "producerBody": "Ürünlerinizi WSA Enterprise pazarına ekleyin.",
+      "producerBody": "Ürünlerinizi binlerce müşteriye ulaştırın",
       "producerCta": "Üretici olarak kaydol",
       "smartFarmerTitle": "Akıllı çiftçi rehberi",
-      "smartFarmerBody": "Saha kararlarınıza yardımcı olan tarımsal bilgi ve araçlar.",
+      "smartFarmerBody": "Çiftliğinizi akıllıca yönetmek için öneriler ve bilgiler",
       "smartFarmerCta": "Rehberi keşfet",
       "jobsTitle": "İş mi arıyorsunuz?",
-      "jobsBody": "Tarımsal kariyer ve fırsat yollarına girin.",
+      "jobsBody": "Tarım sektöründeki iş fırsatlarını keşfedin",
       "jobsCta": "İşleri görüntüle"
+    },
+    "categoriesStrip": {
+      "title": "Ana hizmetlerimizi ve kategorilerimizi keşfedin"
     },
     "pillars": {
       "title": "Tarımsal ihtiyaçlarınız için tek platform",

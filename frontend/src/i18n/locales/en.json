@@ -1433,15 +1433,17 @@
     },
     "hero": {
       "title": "Integrated agricultural platform for modern and sustainable farming",
+      "eyebrow": "WSA Enterprise",
       "titleLine1": "Integrated agricultural platform",
       "titleLine2": "for modern farming",
       "titleLine3": "and sustainability",
+      "titleLine2Full": "for modern and sustainable farming",
       "titleLine1Lead": "Integrated agricultural ",
       "titleLine1Accent": "platform",
       "titleLine2Lead": "for modern and ",
       "titleLine2Accent": "sustainable",
       "subtitle": "Explore crops, training, beekeeping, jobs, and commerce — all in one professional ecosystem built for growers and agricultural businesses.",
-      "supportLine": "Knowledge • Market • Services • Projects — in one place",
+      "supportLine": "Knowledge .. Market .. Services .. Projects .. in one place",
       "pillars": "Knowledge • Market • Services • Projects",
       "explore": "Explore services",
       "getStarted": "Get started",
@@ -1911,14 +1913,17 @@
     "homePanels": {
       "ariaLabel": "Primary platform entries",
       "producerTitle": "Are you a producer? Join now",
-      "producerBody": "Add your products to the WSA Enterprise marketplace.",
+      "producerBody": "Market your products to thousands of customers",
       "producerCta": "Register as producer",
       "smartFarmerTitle": "Smart farmer guide",
-      "smartFarmerBody": "Agricultural knowledge and tools that help your field decisions.",
+      "smartFarmerBody": "Tips and guidance to manage your farm intelligently",
       "smartFarmerCta": "Explore the guide",
       "jobsTitle": "Looking for a job?",
-      "jobsBody": "Enter agricultural careers and opportunity pathways.",
+      "jobsBody": "Discover career opportunities in agriculture",
       "jobsCta": "Browse jobs"
+    },
+    "categoriesStrip": {
+      "title": "Discover our main services and categories"
     },
     "pillars": {
       "title": "One platform for your agricultural needs",
@@ -1934,11 +1939,11 @@
     },
     "highlightsBar": {
       "ariaLabel": "Platform highlights",
-      "products": "Marketplace products",
-      "users": "Platform community",
-      "services": "Agricultural services",
-      "projects": "Projects",
-      "trust": "Trust & sustainability"
+      "products": "Products in market",
+      "users": "Active users",
+      "services": "Service requests",
+      "projects": "Published projects",
+      "trust": "Customer satisfaction"
     },
     "footer": {
       "tagline": "Together for more sustainable farming — an integrated platform for knowledge, market, and services.",
