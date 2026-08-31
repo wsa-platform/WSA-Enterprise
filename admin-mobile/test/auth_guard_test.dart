@@ -69,6 +69,13 @@ void main() {
       expect(permissionGuard(auth, state), isNull);
     });
 
+    test('allows dashboard when wildcard permission is present', () {
+      client.setPermissionsForTest(['*']);
+      final state = _FakeGoRouterState(AppRoutes.dashboard);
+
+      expect(permissionGuard(auth, state), isNull);
+    });
+
     test('allows access denied route without redirect loop', () {
       client.setPermissionsForTest(['platform.view']);
       final state = _FakeGoRouterState(AppRoutes.accessDenied);

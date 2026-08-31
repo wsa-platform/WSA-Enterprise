@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:wsa_admin/data/api/api_exception.dart';
+import 'package:wsa_admin/data/models/paginated_response.dart';
+import 'package:wsa_admin/l10n/strings.dart';
 
 class HttpClient {
   HttpClient({
@@ -28,8 +31,12 @@ class HttpClient {
   }
 
   Future<Map<String, dynamic>> getJson(String path) async {
-    final response = await _inner.get(Uri.parse('$baseUrl$path'), headers: _headers());
-    return _decodeResponse(response);
+    try {
+      final response = await _inner.get(Uri.parse('$baseUrl$path'), headers: _headers());
+      return _decodeResponse(response);
+    } catch (error) {
+      throw _wrapNetworkError(error);
+    }
   }
 
   Future<List<dynamic>> getList(String path) async {
@@ -37,13 +44,73 @@ class HttpClient {
     return unwrapRows(decoded);
   }
 
+  Future<PaginatedResponse<Map<String, dynamic>>> getPaginated(String path) async {
+    final decoded = await getJson(path);
+    return PaginatedResponse.fromJson(decoded, (row) => row);
+  }
+
   Future<Map<String, dynamic>> postJson(String path, Map<String, dynamic> body) async {
-    final response = await _inner.post(
-      Uri.parse('$baseUrl$path'),
-      headers: _headers(includeJson: true),
-      body: jsonEncode(body),
-    );
+    try {
+      final response = await _inner.post(
+        Uri.parse('$baseUrl$path'),
+        headers: _headers(includeJson: true),
+        body: jsonEncode(body),
+      );
+      return _decodeResponse(response);
+    } catch (error) {
+      throw _wrapNetworkError(error);
+    }
+  }
+
+  Future<Map<String, dynamic>> putJson(String path, Map<String, dynamic> body) async {
+    try {
+      final response = await _inner.put(
+        Uri.parse('$baseUrl$path'),
+        headers: _headers(includeJson: true),
+        body: jsonEncode(body),
+      );
+      return _decodeResponse(response);
+    } catch (error) {
+      throw _wrapNetworkError(error);
+    }
+  }
+
+  Future<Map<String, dynamic>> patchJson(String path, Map<String, dynamic> body) async {
+    try {
+      final response = await _inner.patch(
+        Uri.parse('$baseUrl$path'),
+        headers: _headers(includeJson: true),
+        body: jsonEncode(body),
+      );
+      return _decodeResponse(response);
+    } catch (error) {
+      throw _wrapNetworkError(error);
+    }
+  }
+
+  Future<Map<String, dynamic>> postMultipart(
+    String path, {
+    required String fieldName,
+    required List<int> bytes,
+    required String filename,
+    Map<String, String>? fields,
+  }) async {
+    final request = http.MultipartRequest('POST', Uri.parse('$baseUrl$path'));
+    request.headers.addAll(_headers());
+    request.files.add(http.MultipartFile.fromBytes(fieldName, bytes, filename: filename));
+    if (fields != null) request.fields.addAll(fields);
+
+    final streamed = await _inner.send(request);
+    final response = await http.Response.fromStream(streamed);
     return _decodeResponse(response);
+  }
+
+  Future<String> getText(String path) async {
+    final response = await _inner.get(Uri.parse('$baseUrl$path'), headers: _headers());
+    if (response.statusCode >= 400) {
+      throw _parseError(response);
+    }
+    return response.body;
   }
 
   Future<void> delete(String path) async {
@@ -63,6 +130,18 @@ class HttpClient {
     final decoded = jsonDecode(response.body);
     if (decoded is Map<String, dynamic>) return decoded;
     return {'data': decoded};
+  }
+
+  ApiException _wrapNetworkError(Object error) {
+    if (error is ApiException) return error;
+    if (error is SocketException || error is TimeoutException || error is http.ClientException) {
+      return ApiException(Ar.connectionError);
+    }
+    final message = error.toString();
+    if (message.contains('ClientException') || message.contains('Failed to fetch')) {
+      return ApiException(Ar.connectionError);
+    }
+    return ApiException(Ar.unknownError);
   }
 
   ApiException _parseError(http.Response response) {

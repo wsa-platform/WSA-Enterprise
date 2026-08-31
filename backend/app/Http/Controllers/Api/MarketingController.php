@@ -8,11 +8,13 @@ use App\Models\MarketingAudienceSegment;
 use App\Models\MarketingCampaign;
 use App\Models\MarketingConsent;
 use App\Models\MarketingDelivery;
+use App\Models\MarketingCampaignSnapshot;
 use App\Models\MarketingSuppression;
 use App\Models\MarketingTemplate;
 use App\Services\Marketing\MarketingCampaignService;
 use App\Services\Marketing\MarketingConsentService;
 use App\Services\Ownership\ServiceOwnershipAuthorizer;
+use App\Services\Providers\ProviderStatusService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -26,6 +28,7 @@ class MarketingController extends Controller
     public function __construct(
         private MarketingCampaignService $campaignService,
         private MarketingConsentService $consentService,
+        private ProviderStatusService $providerStatus,
     ) {}
 
     private function ownership(): ServiceOwnershipAuthorizer
@@ -71,6 +74,7 @@ class MarketingController extends Controller
                 ->select('channel', DB::raw('count(*) as total'))
                 ->groupBy('channel')
                 ->pluck('total', 'channel'),
+            'providers' => $this->providerStatus->all(),
         ]);
     }
 
@@ -325,5 +329,17 @@ class MarketingController extends Controller
         }
 
         return response()->json($query->paginate(30));
+    }
+
+    public function snapshots(Request $request, MarketingCampaign $campaign): JsonResponse
+    {
+        $this->authorizePermission($request, 'marketing.view');
+        abort_unless($campaign->organization_id === $this->organization($request), 404);
+
+        return response()->json(
+            MarketingCampaignSnapshot::where('campaign_id', $campaign->id)
+                ->latest('captured_at')
+                ->paginate(20),
+        );
     }
 }

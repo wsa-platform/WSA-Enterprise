@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use App\Models\JobSeekerProfile;
+use App\Models\MarketplaceListing;
+use App\Models\ContactAccessOrder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -25,6 +28,11 @@ class DashboardController extends Controller
                 'open_tasks' => (clone $tasks)->whereNotIn('status', ['done', 'cancelled'])->count(),
                 'completed_tasks' => (clone $tasks)->where('status', 'done')->count(),
                 'overdue_tasks' => (clone $tasks)->whereNotIn('status', ['done', 'cancelled'])->whereDate('due_at', '<', now()->toDateString())->count(),
+                'job_seekers_active' => JobSeekerProfile::where('is_active', true)->count(),
+                'job_seekers_pending_review' => JobSeekerProfile::where('recruitment_status', JobSeekerProfile::STATUS_UNDER_REVIEW)->count(),
+                'marketplace_published' => MarketplaceListing::where('status', MarketplaceListing::STATUS_PUBLISHED)->count(),
+                'marketplace_pending_review' => MarketplaceListing::where('status', MarketplaceListing::STATUS_PENDING_REVIEW)->count(),
+                'marketplace_contact_orders_paid' => ContactAccessOrder::where('payment_status', ContactAccessOrder::PAYMENT_PAID)->count(),
             ],
             'projects' => $organization->projects()
                 ->withCount(['tasks', 'tasks as completed_tasks_count' => fn ($query) => $query->where('status', 'done')])

@@ -55,13 +55,19 @@ class ApiClient {
   List<Map<String, dynamic>> get organizations => List.unmodifiable(_organizations);
   List<String> get permissions => List.unmodifiable(_permissions);
 
+  bool get _hasWildcard => _permissions.contains('*');
+
+  bool get hasWildcardAccess => _hasWildcard;
+
   bool get hasAdminAccess =>
+      _hasWildcard ||
       _permissions.any((permission) => AppConfig.adminPermissions.contains(permission));
 
-  bool hasPermission(String permission) => _permissions.contains(permission);
+  bool hasPermission(String permission) =>
+      _hasWildcard || _permissions.contains(permission);
 
   bool hasAnyPermission(Iterable<String> permissions) =>
-      permissions.any(hasPermission);
+      _hasWildcard || permissions.any(_permissions.contains);
 
   void Function()? onUnauthorized;
 
@@ -91,6 +97,14 @@ class ApiClient {
 
   Future<void> login(String email, String password) async {
     final payload = await auth.login(email, password);
+    await _applyAuthPayload(payload);
+  }
+
+  Future<void> applyAuthPayload(Map<String, dynamic> payload) async {
+    await _applyAuthPayload(payload);
+  }
+
+  Future<void> _applyAuthPayload(Map<String, dynamic> payload) async {
     _token = payload['token'] as String;
     _user = (payload['user'] as Map<String, dynamic>?) ?? {};
 

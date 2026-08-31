@@ -7,6 +7,7 @@ use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Concerns\ScopesOwnedServices;
 use App\Http\Controllers\Controller;
 use App\Models\{AppNotification, Customer, Invoice, Product, SalesOrder, Warehouse};
+use App\Services\Notifications\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -134,5 +135,53 @@ class CommerceController extends Controller
         $notification->update(['read_at' => now()]);
 
         return response()->json($notification);
+    }
+
+    public function storeNotification(Request $request): JsonResponse
+    {
+        $this->authorizePermission($request, 'access.manage');
+        $organizationId = $this->organization($request);
+
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string'],
+            'type' => ['sometimes', 'string', 'max:64'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+
+        if ($data['user_id'] ?? null) {
+            abort_unless(
+                \App\Models\User::query()
+                    ->whereKey($data['user_id'])
+                    ->whereHas('organizations', fn ($q) => $q->whereKey($organizationId))
+                    ->exists(),
+                422,
+                'User is not a member of this organization.',
+            );
+        }
+
+        $notification = app(NotificationService::class)->notify(
+            organizationId: $organizationId,
+            userId: $data['user_id'] ?? null,
+            type: $data['type'] ?? 'admin.broadcast',
+            title: $data['title'],
+            body: $data['body'],
+        );
+
+        return response()->json($notification, 201);
+    }
+
+    public function markAllNotificationsRead(Request $request): JsonResponse
+    {
+        $this->authorizePermission($request, 'platform.view');
+        $organizationId = $this->organization($request);
+        $userId = $request->user()->id;
+
+        $updated = AppNotification::where('organization_id', $organizationId)
+            ->where(fn ($q) => $q->whereNull('user_id')->orWhere('user_id', $userId))
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        return response()->json(['updated' => $updated]);
     }
 }

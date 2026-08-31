@@ -12,7 +12,7 @@ class PlaceholderScreen extends StatelessWidget {
     'roles': Ar.navRoles,
     'agriculture': Ar.navAgriculture,
     'content': Ar.navContent,
-    'store': Ar.navStore,
+    'store': Ar.navProducts,
     'marketing': Ar.navMarketing,
     'communications': Ar.navCommunications,
     'ai': Ar.navAi,

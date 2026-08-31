@@ -94,6 +94,17 @@ void main() {
       expect(client.hasAnyPermission(['access.manage', 'farm.view']), isTrue);
       expect(client.hasAnyPermission(['access.manage', 'ai.use']), isFalse);
     });
+
+    test('wildcard permission grants full admin access', () {
+      final client = ApiClient.inMemory();
+      client.setPermissionsForTest(['*']);
+
+      expect(client.hasAdminAccess, isTrue);
+      expect(client.hasPermission('access.manage'), isTrue);
+      expect(client.hasPermission('platform.view'), isTrue);
+      expect(client.hasAnyPermission(['access.manage', 'farm.view']), isTrue);
+      expect(client.hasAnyPermission(['ai.use']), isTrue);
+    });
   });
 
   group('InMemoryTokenStorage', () {

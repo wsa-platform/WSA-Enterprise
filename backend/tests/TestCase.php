@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Tests\Concerns\ProtectsStagingDatabase;
+use Tests\Support\DatabaseSafety;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -14,7 +15,11 @@ abstract class TestCase extends BaseTestCase
 
     protected function setUp(): void
     {
+        DatabaseSafety::assertProcessEnvWillNotTouchLiveDatabase();
+
         parent::setUp();
+
+        DatabaseSafety::assertTestingDatabaseIsIsolated();
 
         if (app()->environment('testing')) {
             Cache::flush();

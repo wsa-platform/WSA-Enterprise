@@ -96,6 +96,14 @@ class SubscriptionService
                 ],
             );
 
+            if ($userId !== null) {
+                $user = \App\Models\User::find($userId);
+                if ($user !== null) {
+                    app(\App\Services\Welcome\WelcomeWorkflowService::class)
+                        ->dispatchSubscriptionWelcome($user, $organizationId, $plan->name);
+                }
+            }
+
             return $subscription->fresh(['plan.features']);
         });
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:wsa_admin/data/api/api_client.dart';
+import 'package:wsa_admin/l10n/strings.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
 
@@ -36,7 +37,7 @@ class AuthController extends ChangeNotifier {
       bootstrapError = error.toString();
       status = AuthStatus.unauthenticated;
     } catch (error) {
-      bootstrapError = error.toString();
+      bootstrapError = error is ApiException ? error.toString() : Ar.connectionError;
       status = AuthStatus.unauthenticated;
     }
 
@@ -45,6 +46,14 @@ class AuthController extends ChangeNotifier {
 
   Future<void> login(String email, String password) async {
     await client.login(email, password);
+    status = AuthStatus.authenticated;
+    permissionsLoaded = true;
+    permissionDenied = !client.hasAdminAccess;
+    notifyListeners();
+  }
+
+  Future<void> loginWithPayload(Map<String, dynamic> payload) async {
+    await client.applyAuthPayload(payload);
     status = AuthStatus.authenticated;
     permissionsLoaded = true;
     permissionDenied = !client.hasAdminAccess;

@@ -339,6 +339,29 @@ class AccessController extends Controller
         );
     }
 
+    public function permissionsCatalog(Request $request): JsonResponse
+    {
+        $this->authorizePermission($request, 'access.manage');
+
+        $catalog = PermissionService::catalog();
+        $groups = [];
+
+        foreach ($catalog as $permission) {
+            $prefix = explode('.', $permission)[0] ?? 'general';
+            $groups[$prefix][] = [
+                'name' => $permission,
+                'description' => $this->permissionDescription($permission),
+            ];
+        }
+
+        ksort($groups);
+
+        return response()->json([
+            'catalog' => $catalog,
+            'groups' => $groups,
+        ]);
+    }
+
     public function storePermission(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'access.manage');
@@ -501,5 +524,10 @@ class AccessController extends Controller
             'is_active' => (bool) ($membership->is_active ?? true),
             'roles' => $roles,
         ];
+    }
+
+    private function permissionDescription(string $permission): string
+    {
+        return str_replace(['.', '_'], [' — ', ' '], $permission);
     }
 }

@@ -27,24 +27,62 @@ class OperationsController extends Controller
         );
     }
 
+    public function inventoryMovements(Request $request): JsonResponse
+    {
+        $this->authorizePermission($request, 'business.view');
+
+        $query = $this->scopedOwnedQuery($request, InventoryMovement::query())
+            ->with([
+                'warehouse:id,name,code',
+                'product:id,name,sku',
+                'user:id,name,email',
+            ])
+            ->latest();
+
+        if ($productId = $request->query('product_id')) {
+            $query->where('product_id', (int) $productId);
+        }
+
+        $paginator = $query->paginate(min(max((int) $request->query('per_page', 15), 1), 100));
+        $paginator->getCollection()->transform(fn (InventoryMovement $movement) => [
+            ...$movement->only(['id', 'type', 'quantity', 'unit_cost', 'notes', 'created_at']),
+            'warehouse' => $movement->warehouse?->only(['id', 'name', 'code']),
+            'product' => $movement->product?->only(['id', 'name', 'sku']),
+            'user' => $movement->user?->only(['id', 'name', 'email']),
+        ]);
+
+        return response()->json($paginator);
+    }
+
     public function adjustInventory(Request $request): JsonResponse
     {
         $this->authorizePermission($request, 'business.manage');
         $organization = $this->organization($request);
-        $data = $request->validate(['warehouse_id'=>['required','integer'], 'product_id'=>['required','integer'], 'quantity'=>['required','numeric','not_in:0'], 'unit_cost'=>['nullable','numeric','min:0'], 'notes'=>['nullable','string']]);
+        $data = $request->validate([
+            'warehouse_id' => ['required', 'integer'],
+            'product_id' => ['required', 'integer'],
+            'quantity' => ['required', 'numeric', 'not_in:0'],
+            'unit_cost' => ['nullable', 'numeric', 'min:0'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:255'],
+        ]);
         OrganizationScopeValidator::assert($organization, $data, ['warehouse_id' => Warehouse::class, 'product_id' => Product::class]);
 
-        return DB::transaction(function () use ($data, $organization, $request) {
+        $notes = trim(collect([$data['reason'] ?? null, $data['notes'] ?? null])->filter()->implode(' — '));
+
+        return DB::transaction(function () use ($data, $organization, $request, $notes) {
             $balance = $this->findOrCreateOwnedInventoryBalance($request, $organization, (int) $data['warehouse_id'], (int) $data['product_id']);
             $balance->increment('quantity', $data['quantity']);
             $movement = InventoryMovement::unguarded(fn () => InventoryMovement::create([
                 ...$this->assignOwnedPayload($request, $data),
-                'organization_id'=>$organization,
-                'type'=>'adjustment',
-                'unit_cost'=>$data['unit_cost'] ?? 0,
+                'organization_id' => $organization,
+                'user_id' => $request->user()->id,
+                'type' => 'adjustment',
+                'unit_cost' => $data['unit_cost'] ?? 0,
+                'notes' => $notes !== '' ? $notes : null,
             ]));
 
-            return response()->json($movement, 201);
+            return response()->json($movement->load(['warehouse:id,name,code', 'product:id,name,sku', 'user:id,name,email']), 201);
         });
     }
 

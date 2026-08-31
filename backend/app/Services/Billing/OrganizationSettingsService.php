@@ -15,6 +15,10 @@ class OrganizationSettingsService
         'operations.support_email',
         'security.require_mfa',
         'notifications.email_enabled',
+        'appearance.theme',
+        'appearance.primary_color',
+        'appearance.logo_url',
+        'appearance.app_name',
     ];
 
     public function __construct(private AuditService $auditService) {}

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:wsa_admin/data/api/api_client.dart';
 import 'package:wsa_admin/l10n/strings.dart';
+import 'package:wsa_admin/presentation/widgets/chart_widget.dart';
 import 'package:wsa_admin/presentation/widgets/async_state.dart';
 import 'package:wsa_admin/presentation/widgets/metric_card.dart';
+import 'package:wsa_admin/presentation/widgets/partial_failure_banner.dart';
+import 'package:wsa_admin/presentation/widgets/responsive_metric_grid.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key, required this.client});
@@ -21,6 +24,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String? _error;
   bool _partialFailure = false;
   late DashboardMetrics _metrics;
+  Map<String, dynamic> _traffic = {};
 
   @override
   void initState() {
@@ -39,6 +43,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final loader = DashboardScreen.debugLoader ?? DashboardMetrics.load;
       final metrics = await loader(widget.client);
+      Map<String, dynamic> traffic = {};
+      try {
+        traffic = await widget.client.adminModules.analyticsTraffic(days: 7);
+      } catch (_) {}
       if (!mounted) return;
       if (metrics.allSourcesFailed) {
         setState(() {
@@ -49,6 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
       setState(() {
         _metrics = metrics;
+        _traffic = traffic;
         _partialFailure = metrics.hasPartialFailures;
         _loading = false;
       });
@@ -115,26 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (_partialFailure)
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
-                child: Material(
-                  color: Colors.amber.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Row(
-                      children: [
-                        Icon(Icons.warning_amber_rounded, color: Colors.amber.shade800),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            Ar.dashboardPartialFailure,
-                            style: TextStyle(color: Colors.amber.shade900),
-                          ),
-                        ),
-                        TextButton(onPressed: _load, child: const Text(Ar.retry)),
-                      ],
-                    ),
-                  ),
-                ),
+                child: PartialFailureBanner(onRetry: _load),
               ),
             Card(
               child: Padding(
@@ -179,101 +169,107 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final crossAxisCount = constraints.maxWidth >= 1200
-                    ? 4
-                    : constraints.maxWidth >= 800
-                        ? 3
-                        : constraints.maxWidth >= 560
-                            ? 2
-                            : 1;
-
-                return GridView.count(
-                  crossAxisCount: crossAxisCount,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 1.6,
-                  children: [
-                    MetricCard(
-                      label: Ar.metricOrganizations,
-                      value: _metrics.organizations,
-                      icon: Icons.business_outlined,
-                      tone: MetricTone.primary,
-                    ),
-                    MetricCard(
-                      label: Ar.metricActiveUsers,
-                      value: _metrics.activeUsers,
-                      icon: Icons.people_outline,
-                      tone: MetricTone.green,
-                    ),
-                    MetricCard(
-                      label: Ar.metricFarms,
-                      value: _metrics.farms,
-                      icon: Icons.agriculture_outlined,
-                      tone: MetricTone.blue,
-                    ),
-                    MetricCard(
-                      label: Ar.metricCrops,
-                      value: _metrics.crops,
-                      icon: Icons.grass_outlined,
-                      tone: MetricTone.green,
-                    ),
-                    MetricCard(
-                      label: Ar.metricCourses,
-                      value: _metrics.courses,
-                      icon: Icons.school_outlined,
-                      tone: MetricTone.amber,
-                    ),
-                    MetricCard(
-                      label: Ar.metricProducts,
-                      value: _metrics.products,
-                      icon: Icons.inventory_2_outlined,
-                      tone: MetricTone.primary,
-                    ),
-                    MetricCard(
-                      label: Ar.metricCampaigns,
-                      value: _metrics.campaigns,
-                      icon: Icons.campaign_outlined,
-                      tone: MetricTone.amber,
-                    ),
-                    MetricCard(
-                      label: Ar.metricAiUsage,
-                      value: _metrics.aiUsage,
-                      subtitle: _metrics.aiUsageSubtitle,
-                      icon: Icons.smart_toy_outlined,
-                      tone: MetricTone.blue,
-                    ),
-                    MetricCard(
-                      label: Ar.metricRecentActivity,
-                      value: _metrics.recentActivity,
-                      subtitle: _metrics.recentActivitySubtitle,
-                      icon: Icons.history,
-                      tone: MetricTone.primary,
-                    ),
-                    MetricCard(
-                      label: Ar.metricSystemHealth,
-                      value: _metrics.systemHealth,
-                      subtitle: _metrics.systemHealthSubtitle,
-                      icon: Icons.monitor_heart_outlined,
-                      tone: _metrics.systemHealth == Ar.systemHealthy ? MetricTone.green : MetricTone.red,
-                    ),
-                    MetricCard(
-                      label: Ar.metricAlerts,
-                      value: _metrics.alerts,
-                      icon: Icons.notifications_active_outlined,
-                      tone: MetricTone.red,
-                    ),
-                  ],
-                );
-              },
+            ResponsiveMetricGrid(
+              children: [
+                MetricCard(
+                  label: Ar.metricActiveUsers,
+                  value: _metrics.activeUsers,
+                  icon: Icons.people_outline,
+                  tone: MetricTone.green,
+                ),
+                MetricCard(
+                  label: Ar.metricOrganizations,
+                  value: _metrics.organizations,
+                  icon: Icons.business_outlined,
+                  tone: MetricTone.primary,
+                ),
+                MetricCard(
+                  label: Ar.metricProducts,
+                  value: _metrics.products,
+                  icon: Icons.inventory_2_outlined,
+                  tone: MetricTone.primary,
+                ),
+                MetricCard(
+                  label: Ar.metricCrops,
+                  value: _metrics.crops,
+                  icon: Icons.grass_outlined,
+                  tone: MetricTone.green,
+                ),
+                MetricCard(
+                  label: Ar.metricFarms,
+                  value: _metrics.farms,
+                  icon: Icons.agriculture_outlined,
+                  tone: MetricTone.green,
+                ),
+                MetricCard(
+                  label: Ar.metricCommunications,
+                  value: _metrics.communications,
+                  subtitle: _metrics.communicationsSubtitle,
+                  icon: Icons.forum_outlined,
+                  tone: MetricTone.amber,
+                ),
+                MetricCard(
+                  label: Ar.metricReports,
+                  value: _metrics.reports,
+                  subtitle: _metrics.reportsSubtitle,
+                  icon: Icons.analytics_outlined,
+                  tone: MetricTone.blue,
+                ),
+                MetricCard(
+                  label: Ar.metricSystemHealth,
+                  value: _metrics.systemHealth,
+                  subtitle: _metrics.systemHealthSubtitle,
+                  icon: Icons.monitor_heart_outlined,
+                  tone: _metrics.systemHealth == Ar.systemHealthy ? MetricTone.green : MetricTone.red,
+                ),
+                MetricCard(
+                  label: Ar.metricJobSeekers,
+                  value: _metrics.jobSeekers,
+                  icon: Icons.work_outline,
+                  tone: MetricTone.blue,
+                ),
+                MetricCard(
+                  label: Ar.metricMarketplace,
+                  value: _metrics.marketplace,
+                  icon: Icons.storefront_outlined,
+                  tone: MetricTone.amber,
+                ),
+                MetricCard(
+                  label: Ar.metricAlerts,
+                  value: _metrics.alerts,
+                  icon: Icons.notifications_active_outlined,
+                  tone: MetricTone.red,
+                ),
+              ],
             ),
+            if (_traffic.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              ChartWidget(
+                title: Ar.chartTraffic,
+                series: _trafficChartSeries(),
+                loading: false,
+              ),
+            ],
+            if (_metrics.recentAudit.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Text(Ar.dashboardRecentAudit, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              ..._metrics.recentAudit.map((row) => ListTile(
+                leading: const Icon(Icons.history),
+                title: Text(row.action),
+                subtitle: Text('${row.userName} — ${row.createdAt}'),
+              )),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  List<Map<String, dynamic>> _trafficChartSeries() {
+    final charts = _traffic['charts'] as Map<String, dynamic>?;
+    final series = charts?['page_views_over_time'] as List<dynamic>? ?? _traffic['traffic'] as List<dynamic>? ?? [];
+    return series.map((row) => Map<String, dynamic>.from(row as Map)).toList();
   }
 }
 
@@ -283,36 +279,38 @@ class DashboardMetrics {
     required this.activeUsers,
     required this.farms,
     required this.crops,
-    required this.courses,
     required this.products,
-    required this.campaigns,
-    required this.aiUsage,
-    this.aiUsageSubtitle,
-    required this.recentActivity,
-    this.recentActivitySubtitle,
+    required this.communications,
+    this.communicationsSubtitle,
+    required this.reports,
+    this.reportsSubtitle,
     required this.systemHealth,
     this.systemHealthSubtitle,
     required this.alerts,
+    required this.jobSeekers,
+    required this.marketplace,
+    this.recentAudit = const [],
     this.allSourcesFailed = false,
     this.hasPartialFailures = false,
   });
 
-  static const sourceCount = 6;
+  static const sourceCount = 8;
 
   final String organizations;
   final String activeUsers;
   final String farms;
   final String crops;
-  final String courses;
   final String products;
-  final String campaigns;
-  final String aiUsage;
-  final String? aiUsageSubtitle;
-  final String recentActivity;
-  final String? recentActivitySubtitle;
+  final String communications;
+  final String? communicationsSubtitle;
+  final String reports;
+  final String? reportsSubtitle;
   final String systemHealth;
   final String? systemHealthSubtitle;
   final String alerts;
+  final String jobSeekers;
+  final String marketplace;
+  final List<AuditRow> recentAudit;
   final bool allSourcesFailed;
   final bool hasPartialFailures;
 
@@ -321,11 +319,9 @@ class DashboardMetrics {
       activeUsers == Ar.notAvailable &&
       farms == Ar.notAvailable &&
       crops == Ar.notAvailable &&
-      courses == Ar.notAvailable &&
       products == Ar.notAvailable &&
-      campaigns == Ar.notAvailable &&
-      aiUsage == Ar.notAvailable &&
-      recentActivity == Ar.notAvailable &&
+      communications == Ar.notAvailable &&
+      reports == Ar.notAvailable &&
       alerts == Ar.notAvailable;
 
   factory DashboardMetrics.empty() => DashboardMetrics(
@@ -333,13 +329,13 @@ class DashboardMetrics {
         activeUsers: Ar.notAvailable,
         farms: Ar.notAvailable,
         crops: Ar.notAvailable,
-        courses: Ar.notAvailable,
         products: Ar.notAvailable,
-        campaigns: Ar.notAvailable,
-        aiUsage: Ar.notAvailable,
-        recentActivity: Ar.notAvailable,
+        communications: Ar.notAvailable,
+        reports: Ar.notAvailable,
         systemHealth: Ar.systemUnknown,
         alerts: Ar.notAvailable,
+        jobSeekers: Ar.notAvailable,
+        marketplace: Ar.notAvailable,
       );
 
   static Future<DashboardMetrics> load(ApiClient client) async {
@@ -350,6 +346,8 @@ class DashboardMetrics {
       _safe(() => client.platform.analyticsOverview()),
       _safe(() => client.platform.marketingDashboard()),
       _safe(() => client.platform.monitoringHealth()),
+      _safe(() => client.adminModules.reportsOverview(days: 7)),
+      _safe(() => client.platform.dashboard()),
     ]);
 
     final failedCount = results.where((result) => result.failed).length;
@@ -362,12 +360,19 @@ class DashboardMetrics {
     final analytics = results[3].value as Map<String, dynamic>?;
     final marketing = results[4].value as Map<String, dynamic>?;
     final monitoring = results[5].value as Map<String, dynamic>?;
+    final reportsOverview = results[6].value as Map<String, dynamic>?;
+    final dashboard = results[7].value as Map<String, dynamic>?;
 
-    final aiRequests = access?['ai_requests'] as Map<String, dynamic>?;
-    final recentAudit = access?['recent_audit'] as List<dynamic>?;
     final system = access?['system'] as Map<String, dynamic>?;
-
     final notifications = analytics?['notifications'] as Map<String, dynamic>?;
+    final audit = analytics?['audit'] as Map<String, dynamic>?;
+    final catalog = reportsOverview?['catalog'] as Map<String, dynamic>?;
+    final agriculture = reportsOverview?['agriculture'] as Map<String, dynamic>?;
+
+    final auditRaw = access?['recent_audit'] as List<dynamic>?;
+    final recentAudit = auditRaw != null
+        ? auditRaw.map((row) => AuditRow.fromJson(Map<String, dynamic>.from(row as Map))).toList()
+        : <AuditRow>[];
 
     final monitoringStatus = monitoring?['status']?.toString();
     final systemHealth = monitoringStatus == 'healthy'
@@ -376,30 +381,29 @@ class DashboardMetrics {
             ? Ar.systemDegraded
             : system?['api']?.toString() ?? Ar.systemUnknown;
 
-    final auditCount = access?['audit_events_24h'];
-    final recentActivityValue = recentAudit != null && recentAudit.isNotEmpty
-        ? '${recentAudit.length}'
-        : auditCount?.toString() ?? Ar.notAvailable;
+    final unread = notifications?['unread'];
+    final campaigns = marketing?['campaigns'];
+
+    final metrics = dashboard?['metrics'] as Map<String, dynamic>?;
 
     return DashboardMetrics(
       organizations: orgRows != null ? '${orgRows.length}' : Ar.notAvailable,
-      activeUsers: access?['users_count']?.toString() ?? Ar.notAvailable,
-      farms: workflow?['farms']?.toString() ?? Ar.notAvailable,
-      crops: Ar.notAvailable,
-      courses: workflow?['training_courses']?.toString() ?? Ar.notAvailable,
-      products: Ar.notAvailable,
-      campaigns: marketing?['campaigns']?.toString() ?? Ar.notAvailable,
-      aiUsage: aiRequests?['today']?.toString() ?? Ar.notAvailable,
-      aiUsageSubtitle: aiRequests != null
-          ? 'معلق: ${aiRequests['pending'] ?? 0} · مكتمل: ${aiRequests['completed'] ?? 0}'
-          : null,
-      recentActivity: recentActivityValue,
-      recentActivitySubtitle: auditCount != null ? 'أحداث آخر 24 ساعة: $auditCount' : null,
+      activeUsers: access?['users_count']?.toString() ?? analytics?['users']?['total']?.toString() ?? Ar.notAvailable,
+      farms: agriculture?['farms_total']?.toString() ?? workflow?['farms']?.toString() ?? Ar.notAvailable,
+      crops: agriculture?['crop_types_total']?.toString() ?? Ar.notAvailable,
+      products: catalog?['products_total']?.toString() ?? Ar.notAvailable,
+      communications: unread?.toString() ?? campaigns?.toString() ?? Ar.notAvailable,
+      communicationsSubtitle: campaigns != null ? 'حملات: $campaigns' : null,
+      reports: audit?['events_24h']?.toString() ?? access?['audit_events_24h']?.toString() ?? Ar.notAvailable,
+      reportsSubtitle: audit != null ? 'نطاق: ${analytics?['scope'] ?? Ar.notAvailable}' : null,
       systemHealth: systemHealth,
       systemHealthSubtitle: system != null ? 'الطابور: ${system['queue'] ?? Ar.notAvailable}' : null,
-      alerts: notifications?['unread']?.toString() ??
+      alerts: unread?.toString() ??
           marketing?['failed_deliveries']?.toString() ??
           Ar.notAvailable,
+      jobSeekers: metrics?['job_seekers_active']?.toString() ?? Ar.notAvailable,
+      marketplace: metrics?['marketplace_published']?.toString() ?? Ar.notAvailable,
+      recentAudit: recentAudit,
       allSourcesFailed: allFailed,
       hasPartialFailures: partialFailures,
     );
@@ -419,4 +423,21 @@ class _FetchResult<T> {
 
   final T? value;
   final bool failed;
+}
+
+class AuditRow {
+  AuditRow({required this.action, required this.userName, required this.createdAt});
+
+  final String action;
+  final String userName;
+  final String createdAt;
+
+  factory AuditRow.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] as Map<String, dynamic>?;
+    return AuditRow(
+      action: json['action']?.toString() ?? Ar.notAvailable,
+      userName: user?['name']?.toString() ?? Ar.notAvailable,
+      createdAt: json['created_at']?.toString() ?? Ar.notAvailable,
+    );
+  }
 }

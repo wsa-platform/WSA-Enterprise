@@ -4,6 +4,7 @@ namespace App\Services\Marketing;
 
 use App\Models\MarketingCampaign;
 use App\Models\MarketingDelivery;
+use App\Models\MarketingCampaignSnapshot;
 use App\Models\User;
 use App\Services\Audit\AuditService;
 use Illuminate\Http\Request;
@@ -140,6 +141,7 @@ class MarketingCampaignService
             };
 
             $campaign->update(['status' => $status, 'completed_at' => now()]);
+            $this->captureSnapshot($campaign, $sent, $failed);
             $this->audit('marketing.campaign_completed', $campaign, $request);
 
             return $campaign->fresh();
@@ -197,5 +199,23 @@ class MarketingCampaignService
             newValues: ['campaign_id' => $campaign->id, 'status' => $campaign->status],
             request: $request,
         );
+    }
+
+    private function captureSnapshot(MarketingCampaign $campaign, int $sent, int $failed): void
+    {
+        MarketingCampaignSnapshot::create([
+            'organization_id' => $campaign->organization_id,
+            'campaign_id' => $campaign->id,
+            'metrics' => [
+                'status' => $campaign->status,
+                'channel' => $campaign->channel,
+                'sent' => $sent,
+                'failed' => $failed,
+                'deliveries_total' => MarketingDelivery::where('campaign_id', $campaign->id)->count(),
+                'deliveries_delivered' => MarketingDelivery::where('campaign_id', $campaign->id)->where('status', 'delivered')->count(),
+                'deliveries_failed' => MarketingDelivery::where('campaign_id', $campaign->id)->whereIn('status', ['failed', 'rejected'])->count(),
+            ],
+            'captured_at' => now(),
+        ]);
     }
 }

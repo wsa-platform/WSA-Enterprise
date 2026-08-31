@@ -6,7 +6,13 @@
 build/
 android/.gradle/
 ios/Pods/
+*.iml
+.metadata
 
 # IDE
 .idea/
-*.iml
+
+# Platform ephemeral
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+macos/Flutter/ephemeral/

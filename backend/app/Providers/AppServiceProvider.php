@@ -23,9 +23,7 @@ use App\Services\Billing\EntitlementService;
 use App\Services\Billing\MockBillingProvider;
 use App\Services\Jobs\MockJobsPaymentProvider;
 use App\Services\Marketplace\MockMarketplacePaymentProvider;
-use App\Services\Marketing\MockEmailProvider;
-use App\Services\Marketing\MockSmsProvider;
-use App\Services\Marketing\MockWhatsAppProvider;
+use App\Services\Marketing\MarketingProviderResolver;
 use App\Services\Billing\OrganizationSettingsService;
 use App\Services\Billing\SubscriptionService;
 use App\Services\Monitoring\HealthCheckService;
@@ -34,6 +32,8 @@ use App\Services\Monitoring\RemediationService;
 use App\Services\Monitoring\SafeRemediationExecutor;
 use App\Services\Monitoring\StubAiMonitoringAnalyzer;
 use App\Services\Notifications\NotificationService;
+use App\Services\Providers\ProviderStatusService;
+use App\Services\Welcome\WelcomeWorkflowService;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -66,12 +66,15 @@ class AppServiceProvider extends ServiceProvider
             ->give(fn ($app) => new SafeRemediationExecutor($app->make(HealthCheckService::class)));
         $this->app->bind(AiMonitoringAnalyzerInterface::class, StubAiMonitoringAnalyzer::class);
 
+        $this->app->singleton(ProviderStatusService::class);
+        $this->app->singleton(WelcomeWorkflowService::class);
+
         $this->app->bind(BillingProviderInterface::class, MockBillingProvider::class);
         $this->app->bind(JobsPaymentProviderInterface::class, MockJobsPaymentProvider::class);
         $this->app->bind(MarketplacePaymentProviderInterface::class, MockMarketplacePaymentProvider::class);
-        $this->app->bind(SmsProviderInterface::class, MockSmsProvider::class);
-        $this->app->bind(EmailProviderInterface::class, MockEmailProvider::class);
-        $this->app->bind(WhatsAppProviderInterface::class, MockWhatsAppProvider::class);
+        $this->app->bind(SmsProviderInterface::class, fn ($app) => $app->make(MarketingProviderResolver::class)->sms());
+        $this->app->bind(EmailProviderInterface::class, fn ($app) => $app->make(MarketingProviderResolver::class)->email());
+        $this->app->bind(WhatsAppProviderInterface::class, fn ($app) => $app->make(MarketingProviderResolver::class)->whatsapp());
 
         $this->app->bind(AiProviderInterface::class, fn () => app(AiProviderResolver::class)->forOrganization(null));
 
