@@ -1917,6 +1917,14 @@
       "forage": "Forage crops",
       "placeholderBody": "This is an introductory page for the selected crops category. Detailed content will be added later."
     },
+    "plantProduction": {
+      "fieldCrops": "Field crops",
+      "vegetableCrops": "Vegetable crops",
+      "fruitTrees": "Fruit trees",
+      "ornamentalPlants": "Ornamental plants and flowers",
+      "medicinalAromaticPlants": "Medicinal and aromatic plants",
+      "placeholderBody": "A dedicated plant production page. Detailed agricultural content will be added later."
+    },
     "homePanels": {
       "ariaLabel": "Primary platform entries",
       "producerTitle": "Are you a producer? Join now",

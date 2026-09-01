@@ -12,6 +12,7 @@ import {
   readStoredAudience,
 } from '../navigation/roleDestinations'
 import { PUBLIC_TOP_NAV_ITEMS, internalPaths, publicPaths } from '../navigation/paths'
+import { PlantProductionNavDropdown } from './PlantProductionNavDropdown'
 import { PublicLanguageMenu } from './PublicLanguageMenu'
 
 /** Public site header — matches approved agricultural homepage chrome. */
@@ -81,16 +82,29 @@ export function PublicHeader({
           className={`gs-nav ${menuOpen ? 'open' : ''}`}
           aria-label={t('website.nav.primary')}
         >
-          {PUBLIC_TOP_NAV_ITEMS.map((item) => (
-            item.to.includes('#') ? (
-              <a
-                key={item.to}
-                href={item.to}
-                onClick={() => setMenuOpen(false)}
-              >
-                {t(item.labelKey)}
-              </a>
-            ) : (
+          {PUBLIC_TOP_NAV_ITEMS.map((item) => {
+            if (item.kind === 'plantProduction') {
+              return (
+                <PlantProductionNavDropdown
+                  key="plant-production"
+                  onNavigate={() => setMenuOpen(false)}
+                />
+              )
+            }
+
+            if (item.to.includes('#')) {
+              return (
+                <a
+                  key={item.to}
+                  href={item.to}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {t(item.labelKey)}
+                </a>
+              )
+            }
+
+            return (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -100,7 +114,7 @@ export function PublicHeader({
                 {t(item.labelKey)}
               </NavLink>
             )
-          ))}
+          })}
         </nav>
 
         <form className="hp-header-search" role="search" onSubmit={onSearch}>

@@ -7,6 +7,7 @@ import {
   internalPaths,
   publicPaths,
 } from './paths'
+import { PLANT_PRODUCTION_CATEGORY_ITEMS } from '../public/plantProductionMenu'
 import { loginPathForProtectedRoute, safeReturnPath, unknownRouteFallback } from './routeGuards'
 
 describe('internal navigation map', () => {
@@ -71,11 +72,12 @@ describe('route guards', () => {
 
 describe('public top navigation regression', () => {
   it('exposes the approved nine-item public header menu and keeps sell/blog paths out', () => {
-    const paths = PUBLIC_TOP_NAV_ITEMS.map((item) => item.to)
-    expect(paths).toHaveLength(9)
-    expect(paths).toEqual([
+    expect(PUBLIC_TOP_NAV_ITEMS).toHaveLength(9)
+    const linkPaths = PUBLIC_TOP_NAV_ITEMS
+      .filter((item) => item.kind === 'link')
+      .map((item) => item.to)
+    expect(linkPaths).toEqual([
       '/',
-      '/crops/field',
       '/sections/beekeeping',
       '/#home-categories',
       '/sections/training',
@@ -84,8 +86,17 @@ describe('public top navigation regression', () => {
       '/sections/store',
       '/about',
     ])
+    expect(PUBLIC_TOP_NAV_ITEMS.some((item) => item.kind === 'plantProduction')).toBe(true)
+    expect(PLANT_PRODUCTION_CATEGORY_ITEMS).toHaveLength(5)
+    expect(PLANT_PRODUCTION_CATEGORY_ITEMS.map((item) => item.to)).toEqual([
+      '/plant-production/field-crops',
+      '/plant-production/vegetable-crops',
+      '/plant-production/fruit-trees',
+      '/plant-production/ornamental-plants',
+      '/plant-production/medicinal-aromatic-plants',
+    ])
     for (const forbidden of PUBLIC_TOP_NAV_FORBIDDEN_PATHS) {
-      expect(paths).not.toContain(forbidden)
+      expect(linkPaths).not.toContain(forbidden)
     }
   })
 })

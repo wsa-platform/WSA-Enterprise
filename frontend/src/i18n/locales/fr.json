@@ -1917,6 +1917,14 @@
       "forage": "Cultures fourragères",
       "placeholderBody": "Page d'introduction pour la catégorie de cultures sélectionnée. Le contenu détaillé sera ajouté plus tard."
     },
+    "plantProduction": {
+      "fieldCrops": "Cultures de plein champ",
+      "vegetableCrops": "Cultures maraîchères",
+      "fruitTrees": "Arbres fruitiers",
+      "ornamentalPlants": "Plantes et fleurs d'ornement",
+      "medicinalAromaticPlants": "Plantes médicinales et aromatiques",
+      "placeholderBody": "Page dédiée à la production végétale. Le contenu agricole détaillé sera ajouté ultérieurement."
+    },
     "homePanels": {
       "ariaLabel": "Entrées principales de la plateforme",
       "producerTitle": "Vous êtes producteur ? Rejoignez-nous",

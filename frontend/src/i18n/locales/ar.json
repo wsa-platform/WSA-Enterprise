@@ -1917,6 +1917,14 @@
       "forage": "محاصيل أعلاف",
       "placeholderBody": "هذه صفحة تعريفية لفئة المحاصيل المحددة. المحتوى التفصيلي سيُضاف لاحقًا."
     },
+    "plantProduction": {
+      "fieldCrops": "محاصيل الحقل",
+      "vegetableCrops": "محاصيل الخضر",
+      "fruitTrees": "أشجار الفاكهة",
+      "ornamentalPlants": "نباتات و زهور الزينة",
+      "medicinalAromaticPlants": "النباتات الطبية و العطرية",
+      "placeholderBody": "صفحة مخصصة لمحتوى الإنتاج النباتي. سيتم إضافة المحتوى الزراعي التفصيلي لاحقًا."
+    },
     "homePanels": {
       "ariaLabel": "مداخل المنصة الرئيسية",
       "producerTitle": "أنت منتج؟ انضم الآن",

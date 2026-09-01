@@ -1917,6 +1917,14 @@
       "forage": "Yem bitkileri",
       "placeholderBody": "Seçilen ürün kategorisi için tanıtım sayfasıdır. Ayrıntılı içerik daha sonra eklenecektir."
     },
+    "plantProduction": {
+      "fieldCrops": "Tarla bitkileri",
+      "vegetableCrops": "Sebze bitkileri",
+      "fruitTrees": "Meyve ağaçları",
+      "ornamentalPlants": "Süs bitkileri ve çiçekler",
+      "medicinalAromaticPlants": "Tıbbi ve aromatik bitkiler",
+      "placeholderBody": "Bitki üretimi için ayrılmış sayfa. Ayrıntılı tarımsal içerik daha sonra eklenecektir."
+    },
     "homePanels": {
       "ariaLabel": "Birincil platform girişleri",
       "producerTitle": "Üretici misiniz? Hemen katılın",

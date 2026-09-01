@@ -133,6 +133,94 @@
   background: var(--accent);
 }
 
+/* Header plant production dropdown (الإنتاج النباتي) */
+.gs-nav-dropdown {
+  position: relative;
+  z-index: 240;
+}
+
+.gs-nav-dropdown.is-open {
+  z-index: 260;
+}
+
+.gs-nav-dropdown-trigger {
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: oklch(0.22 0.04 60 / 0.75);
+  font-weight: 600;
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.gs-nav-dropdown-trigger:hover,
+.gs-nav-dropdown-trigger.active {
+  color: var(--primary);
+  background: var(--accent);
+}
+
+.gs-nav-dropdown-trigger:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.gs-nav-dropdown-panel {
+  position: absolute;
+  top: 100%;
+  inset-inline-start: 0;
+  min-width: 15rem;
+  padding-top: 0.35rem;
+  z-index: 270;
+}
+
+.gs-nav-dropdown-panel[hidden] {
+  display: none;
+}
+
+.gs-nav-dropdown-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem;
+  border-radius: 0.85rem;
+  border: 1px solid oklch(0.88 0.02 90 / 0.7);
+  background: var(--card);
+  box-shadow: var(--shadow-card-hover);
+  display: grid;
+  gap: 0.15rem;
+  animation: gs-crops-submenu-in 0.16s ease-out;
+}
+
+.gs-nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.65rem;
+  text-decoration: none;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: start;
+  transition: background 0.15s, color 0.15s;
+}
+
+.gs-nav-dropdown-item:hover,
+.gs-nav-dropdown-item:focus-visible {
+  background: oklch(0.94 0.03 145);
+  color: var(--primary);
+  outline: none;
+}
+
+.gs-nav-dropdown-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
 .gs-header-actions {
   display: flex;
   align-items: center;
@@ -1875,6 +1963,20 @@ button.gs-crops-menu-trigger:focus-visible {
     display: flex;
   }
 
+  .gs-nav-dropdown-panel {
+    position: static;
+    min-width: 0;
+    padding-top: 0;
+    padding-inline-start: 0.75rem;
+  }
+
+  .gs-nav-dropdown-list {
+    box-shadow: none;
+    border: none;
+    padding: 0.25rem 0 0.5rem;
+    background: transparent;
+  }
+
   .gs-header-actions {
     order: 3;
   }
@@ -2281,6 +2383,26 @@ button.gs-crops-menu-trigger:focus-visible {
 }
 
 .hp-header--design .gs-nav a.active {
+  color: oklch(0.38 0.13 145);
+  background: transparent;
+  box-shadow: inset 0 -2.5px 0 oklch(0.48 0.15 145);
+}
+
+.hp-header--design .gs-nav-dropdown-trigger {
+  padding: 0.4rem 0.55rem;
+  border-radius: 0;
+  background: transparent;
+  color: oklch(0.28 0.03 145);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.hp-header--design .gs-nav-dropdown-trigger:hover {
+  background: transparent;
+  color: oklch(0.38 0.12 145);
+}
+
+.hp-header--design .gs-nav-dropdown-trigger.active {
   color: oklch(0.38 0.13 145);
   background: transparent;
   box-shadow: inset 0 -2.5px 0 oklch(0.48 0.15 145);

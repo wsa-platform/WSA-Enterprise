@@ -8,6 +8,7 @@ import { AppShell } from './components/AppShell'
 import { MarketplaceSellerShell } from './components/MarketplaceSellerShell'
 import { HomePage } from './pages/public/HomePage'
 import { CropCategoryPage } from './pages/public/CropCategoryPage'
+import { PlantProductionPage } from './pages/public/PlantProductionPage'
 import { SectionPage } from './pages/public/SectionPage'
 import { InfoPage } from './pages/public/InfoPage'
 import { ModulePage, cropCreateFields, cropTabs, farmCreateFields, farmTabs, soilCreateFields, soilTabs } from './pages/ModulePage'
@@ -215,6 +216,7 @@ function AppRoutes() {
       <Route path="/" element={<HomePage />} />
       <Route path="/sections/:sectionId" element={<SectionPage />} />
       <Route path="/crops/:cropCategoryId" element={<CropCategoryPage />} />
+      <Route path="/plant-production/:categoryId" element={<PlantProductionPage />} />
       <Route path="/about" element={<InfoPage page="about" />} />
       <Route path="/privacy" element={<InfoPage page="privacy" />} />
       <Route path="/terms" element={<InfoPage page="terms" />} />
