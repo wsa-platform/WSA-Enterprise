@@ -68,7 +68,6 @@ export function PublicFooter() {
                   <Link to={`/sections/${section.id}`}>{t(section.titleKey)}</Link>
                 </li>
               ))}
-              <li><Link to="/library">{t('website.services.libraryGuides')}</Link></li>
             </ul>
           </nav>
 

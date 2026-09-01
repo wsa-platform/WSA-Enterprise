@@ -51,7 +51,6 @@ export const PUBLIC_TOP_NAV_ITEMS: readonly PublicNavItem[] = [
   { kind: 'link', to: '/sections/beekeeping', labelKey: 'website.nav.honeyBees', end: false },
   { kind: 'servicesPortal', labelKey: 'website.nav.servicesPortal' },
   { kind: 'link', to: '/sections/training', labelKey: 'website.nav.training', end: false },
-  { kind: 'link', to: '/library', labelKey: 'website.nav.library', end: false },
   { kind: 'link', to: '/sections/medicinal-plants', labelKey: 'website.nav.blog', end: false },
   { kind: 'link', to: '/sections/store', labelKey: 'website.nav.store', end: false },
   { kind: 'link', to: '/about', labelKey: 'website.nav.aboutPlatform', end: false },

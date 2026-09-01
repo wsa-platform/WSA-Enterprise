@@ -71,7 +71,6 @@ export const INTERNAL_NAV_SECTIONS: InternalNavSection[] = [
       { to: '/soil', labelKey: 'nav.soil', permission: 'soil.view' },
       { to: '/diagnosis', labelKey: 'nav.diagnosis', permission: 'diagnosis.view' },
       { to: '/training', labelKey: 'nav.training', permission: 'training.view' },
-      { to: '/library', labelKey: 'nav.library', permission: 'library.view' },
       { to: '/business', labelKey: 'nav.business', permission: 'business.view' },
     ],
   },

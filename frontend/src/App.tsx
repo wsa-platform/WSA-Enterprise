@@ -1,4 +1,4 @@
-import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -16,7 +16,6 @@ import { ModulePage, cropCreateFields, cropTabs, farmCreateFields, farmTabs, soi
 import { BusinessPage } from './pages/BusinessPage'
 import { DiagnosisPage } from './pages/DiagnosisPage'
 import { TrainingPage } from './pages/TrainingPage'
-import { LibraryBlankPage } from './pages/LibraryBlankPage'
 import { AiWorkspacePage } from './pages/AiWorkspacePage'
 import { AiRequestDetailPage } from './pages/AiRequestDetailPage'
 import { BillingPage } from './pages/BillingPage'
@@ -134,18 +133,6 @@ function EmployerProtected() {
       <EmployerShell />
     </PermissionProvider>
   )
-}
-
-function AuthRequiredOutlet() {
-  const { token } = useAuth()
-  const location = useLocation()
-
-  if (!token) {
-    const next = `${location.pathname}${location.search}`
-    return <Navigate to={loginPathForProtectedRoute(next)} replace />
-  }
-
-  return <Outlet />
 }
 
 function ProtectedShell() {
@@ -268,9 +255,6 @@ function AppRoutes() {
       <Route path="/account/products" element={<Navigate to="/seller/listings" replace />} />
       <Route path="/account/products/new" element={<Navigate to="/seller/listings/new" replace />} />
       <Route path="/account/products/:listingId" element={<AccountProductRedirect />} />
-      <Route element={<AuthRequiredOutlet />}>
-        <Route path="/library" element={<LibraryBlankPage />} />
-      </Route>
       <Route element={<ProtectedShell />}>
         <Route path="/organization" element={<OrganizationPage />} />
         <Route path="/billing" element={<BillingPage />} />

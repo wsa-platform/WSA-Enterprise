@@ -72,8 +72,8 @@ describe('route guards', () => {
 })
 
 describe('public top navigation regression', () => {
-  it('exposes the approved nine-item public header menu and keeps sell/blog paths out', () => {
-    expect(PUBLIC_TOP_NAV_ITEMS).toHaveLength(9)
+  it('exposes the approved eight-item public header menu and keeps sell/blog paths out', () => {
+    expect(PUBLIC_TOP_NAV_ITEMS).toHaveLength(8)
     const linkPaths = PUBLIC_TOP_NAV_ITEMS
       .filter((item) => item.kind === 'link')
       .map((item) => item.to)
@@ -81,7 +81,6 @@ describe('public top navigation regression', () => {
       '/',
       '/sections/beekeeping',
       '/sections/training',
-      '/library',
       '/sections/medicinal-plants',
       '/sections/store',
       '/about',

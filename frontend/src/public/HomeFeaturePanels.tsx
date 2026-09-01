@@ -8,7 +8,7 @@ import { PRODUCER_CARD_IMAGE } from './sections'
 /** Homepage-only entry panels — links to existing platform routes only. */
 export const HOME_FEATURE_PANEL_ROUTES = {
   producer: internalPaths.newProduct,
-  smartFarmer: '/library',
+  smartFarmer: '/plant-production/field-crops',
   jobs: JOB_SEEKER_ENTER,
 } as const
 
