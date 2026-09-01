@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { internalPaths } from '../navigation/paths'
-import { JOB_SEEKER_ENTER, sellerAddProductHref } from '../navigation/roleDestinations'
-import { PRODUCER_CARD_IMAGE } from './sections'
+import { internalPaths, publicPaths } from '../navigation/paths'
+import { JOB_SEEKER_ENTER } from '../navigation/roleDestinations'
+import { SELLER_PROMO_CARD_IMAGE } from './sections'
 
 /** Homepage-only entry panels — links to existing platform routes only. */
 export const HOME_FEATURE_PANEL_ROUTES = {
@@ -13,7 +12,6 @@ export const HOME_FEATURE_PANEL_ROUTES = {
 } as const
 
 const PANEL_IMAGES = {
-  producer: PRODUCER_CARD_IMAGE,
   smart: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=900&q=80',
   jobs: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=900&q=80',
 } as const
@@ -25,19 +23,8 @@ export function HomeFeaturePanels({
   variant?: 'promo' | 'hero'
 } = {}) {
   const { t } = useTranslation()
-  const { token } = useAuth()
-  const producerTo = sellerAddProductHref(Boolean(token))
 
   const panels = [
-    {
-      id: 'producer',
-      to: producerTo,
-      title: t('website.homePanels.producerTitle'),
-      body: t('website.homePanels.producerBody'),
-      cta: t('website.homePanels.producerCta'),
-      tone: 'producer',
-      image: PANEL_IMAGES.producer,
-    },
     {
       id: 'smart-farmer',
       to: HOME_FEATURE_PANEL_ROUTES.smartFarmer,
@@ -58,12 +45,20 @@ export function HomeFeaturePanels({
     },
   ] as const
 
+  const sellerCardLabel = `${t('website.homePanels.producerTitle')}. ${t('website.homePanels.producerBody')}`
+
   return (
     <aside
       className={`hp-feature-panels hp-feature-panels--${variant}`}
       aria-label={t('website.homePanels.ariaLabel')}
     >
       <div className="hp-feature-panels-stack">
+        <Link
+          to={publicPaths.market}
+          className="hp-promo-card hp-promo-card--producer hp-promo-card--full-image"
+          style={{ backgroundImage: `url(${SELLER_PROMO_CARD_IMAGE})` }}
+          aria-label={sellerCardLabel}
+        />
         {panels.map((panel) => (
           <article
             key={panel.id}

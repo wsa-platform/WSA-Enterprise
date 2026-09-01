@@ -282,6 +282,9 @@ export const HERO_IMAGE = '/assets/wsa/hero-background.jpg'
 export const PRODUCER_CARD_IMAGE =
   'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=900&q=80'
 
+/** Homepage sidebar — approved seller promo card (Arabic artwork). */
+export const SELLER_PROMO_CARD_IMAGE = '/assets/wsa/seller-promo-card.png'
+
 export const HIDDEN_PUBLIC_MODULES = new Set(['soil', 'diagnosis', 'ai'])
 
 export const SECTION_MODULE_MAP: Record<PublicSectionId, string[]> = {

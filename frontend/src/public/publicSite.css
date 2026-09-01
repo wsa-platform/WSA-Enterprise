@@ -3137,6 +3137,17 @@ button.gs-crops-menu-trigger:focus-visible {
   box-shadow: 0 8px 22px oklch(0.25 0.03 145 / 0.16);
 }
 
+a.hp-promo-card--full-image {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+a.hp-promo-card--full-image:focus-visible {
+  outline: 2px solid #16a34a;
+  outline-offset: 2px;
+}
+
 .hp-promo-card-shade {
   position: absolute;
   inset: 0;
