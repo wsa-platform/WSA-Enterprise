@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -136,6 +136,18 @@ function EmployerProtected() {
   )
 }
 
+function AuthRequiredOutlet() {
+  const { token } = useAuth()
+  const location = useLocation()
+
+  if (!token) {
+    const next = `${location.pathname}${location.search}`
+    return <Navigate to={loginPathForProtectedRoute(next)} replace />
+  }
+
+  return <Outlet />
+}
+
 function ProtectedShell() {
   const { token, organizationId } = useAuth()
   const location = useLocation()
@@ -256,6 +268,9 @@ function AppRoutes() {
       <Route path="/account/products" element={<Navigate to="/seller/listings" replace />} />
       <Route path="/account/products/new" element={<Navigate to="/seller/listings/new" replace />} />
       <Route path="/account/products/:listingId" element={<AccountProductRedirect />} />
+      <Route element={<AuthRequiredOutlet />}>
+        <Route path="/library" element={<LibraryPage />} />
+      </Route>
       <Route element={<ProtectedShell />}>
         <Route path="/organization" element={<OrganizationPage />} />
         <Route path="/billing" element={<BillingPage />} />
@@ -291,7 +306,6 @@ function AppRoutes() {
         <Route path="/business" element={<BusinessPage />} />
         <Route path="/diagnosis" element={<DiagnosisPage />} />
         <Route path="/training" element={<TrainingPage />} />
-        <Route path="/library" element={<LibraryPage />} />
       </Route>
       <Route path="*" element={<UnknownRouteFallback />} />
     </Routes>

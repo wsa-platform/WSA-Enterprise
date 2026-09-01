@@ -234,6 +234,8 @@ export function destinationForRoles(
   const requested = requestedNext ? safePath(requestedNext, '') : ''
   const usableNext = requested && !isUserDashboardPath(requested) ? requested : ''
 
+  if (usableNext === '/library') return usableNext
+
   if (isMarketplacePath(usableNext)) return canonicalSellerPath(usableNext)
 
   if (audience === 'employer') {
