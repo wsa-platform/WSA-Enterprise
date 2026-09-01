@@ -279,7 +279,7 @@ export function getSectionById(id: string | undefined): PublicSectionConfig | un
 export const HERO_IMAGE = '/assets/wsa/hero-background.jpg'
 
 /** Homepage hero — second slide (approved agricultural field asset). */
-export const HERO_IMAGE_SECOND = '/assets/wsa/hero_background.jpg'
+export const HERO_IMAGE_SECOND = '/assets/wsa/hero-field.png'
 
 /** Hero producer join card — same visual as the sidebar producer panel. */
 export const PRODUCER_CARD_IMAGE =
