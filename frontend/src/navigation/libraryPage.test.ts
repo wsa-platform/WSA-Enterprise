@@ -11,6 +11,11 @@ import {
   LIBRARY_PLANT_PRODUCTION_CATEGORIES,
   LIBRARY_PLANT_PRODUCTION_SECTION_TITLE,
 } from '../public/library/libraryPlantProductionCategories'
+import {
+  getLibraryCropSectionLabel,
+  getLibraryCropSectionsForCrop,
+} from '../public/library/libraryCropSections'
+import { getLibraryCropsForCategory } from '../public/library/libraryCrops'
 
 function renderLibraryPage() {
   return renderToStaticMarkup(
@@ -91,5 +96,26 @@ describe('library page', () => {
     expect(html).toContain('النخيل')
     expect(html).not.toContain('محاصيل النخيل')
     expect(html.match(/library-page__category-card/g)?.length).toBe(12)
+  })
+
+  it('phase 2: grains category exposes existing wheat corn oats and sorghum crops', () => {
+    const cropIds = getLibraryCropsForCategory('grains').map((crop) => crop.id)
+    expect(cropIds).toEqual(expect.arrayContaining(['wheat', 'corn', 'oats', 'sorghum']))
+  })
+
+  it('phase 2: each crop has four dynamic sections', () => {
+    for (const cropName of ['القمح', 'الذرة', 'الشوفان', 'الذرة الرفيعة']) {
+      const sections = getLibraryCropSectionsForCrop(cropName)
+      expect(sections).toHaveLength(4)
+      expect(sections[0]?.label).toBe('الزراعة والاحتياجات الزراعية')
+      expect(sections[1]?.label).toBe(getLibraryCropSectionLabel('scientific-research', cropName))
+    }
+  })
+
+  it('phase 2: library page has no dashboard workspace or library password UI', () => {
+    const html = renderLibraryPage()
+    expect(html).not.toMatch(/library-dashboard|library-workspace|library-account/i)
+    expect(html).not.toContain('Library Dashboard')
+    expect(html).not.toContain('Library Workspace')
   })
 })

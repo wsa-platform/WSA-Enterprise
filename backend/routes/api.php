@@ -44,6 +44,7 @@ use App\Http\Controllers\Api\ProviderStatusController;
 use App\Http\Controllers\Api\AnalyticsEventsController;
 use App\Http\Controllers\Api\MonitoringLogsController;
 use App\Http\Controllers\Api\PublicFieldCropCultivationController;
+use App\Http\Controllers\Api\PublicCropLibraryFileController;
 use App\Http\Controllers\Api\PublicPlatformController;
 use App\Http\Controllers\Api\ProductImageController;
 use App\Http\Controllers\Api\JobSeekerController;
@@ -62,6 +63,8 @@ Route::prefix('v1')->group(function (): void {
     Route::prefix('public')->middleware('throttle:60,1')->group(function (): void {
         Route::get('/services', [PublicPlatformController::class, 'serviceCatalog']);
         Route::get('/library/items', [PublicPlatformController::class, 'publishedLibraryItems']);
+        Route::get('/library/crop-files', [PublicCropLibraryFileController::class, 'index']);
+        Route::get('/library/crop-files/{fileId}/content', [PublicCropLibraryFileController::class, 'content'])->whereNumber('fileId');
         Route::get('/training/courses', [PublicPlatformController::class, 'publishedTrainingCourses']);
         Route::get('/market/listings', [MarketplacePublicController::class, 'listings']);
         Route::get('/market/listings/{listing}', [MarketplacePublicController::class, 'show'])->whereNumber('listing');
