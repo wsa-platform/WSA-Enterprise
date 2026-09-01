@@ -58,7 +58,8 @@ describe('library page', () => {
       ),
     )
 
-    expect(html).toContain('<main id="main-content"><div></div></main>')
+    expect(html).toMatch(/min-height:\s*calc\(100dvh - 18rem\)/)
+    expect(html).toContain('background-color:#ffffff')
     expect(html).toContain('class="gs-header')
     expect(html).toContain('class="gs-footer')
     expect(html).not.toContain('app-shell')
