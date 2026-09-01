@@ -5,10 +5,12 @@ import { FieldCropSelector } from './FieldCropSelector'
 import {
   EXCLUDED_MEDICINAL_AROMATIC_CROP_NAMES,
   FIELD_CROP_CATEGORIES,
-  FIELD_CROP_OPTIONS,
+  FIELD_CROP_OPTION_IDS,
   FIELD_CROP_SELECTOR_LABELS,
   getFieldCropById,
   getFieldCropOptionById,
+  getFieldCropOptionLabel,
+  getFieldCropOptionsForCrop,
   getFieldCropsForCategory,
   listAllFieldCropNames,
 } from './fieldCropCategories'
@@ -110,18 +112,47 @@ describe('field crop categories data', () => {
 })
 
 describe('field crop options data', () => {
-  it('defines exactly three crop-specific service options', () => {
-    expect(FIELD_CROP_OPTIONS).toHaveLength(3)
-    expect(FIELD_CROP_OPTIONS.map((option) => option.label)).toEqual([
-      'معلومات الإنتاج',
-      'معلومات الأمراض والآفات',
-      'توصيات زراعية',
+  it('defines exactly three crop-specific service option ids', () => {
+    expect(FIELD_CROP_OPTION_IDS).toHaveLength(3)
+    expect(FIELD_CROP_OPTION_IDS).toEqual([
+      'farming-needs',
+      'scientific-research',
+      'industries',
     ])
   })
 
-  it('resolves crop option helpers', () => {
-    expect(getFieldCropOptionById('production')?.label).toBe('معلومات الإنتاج')
-    expect(getFieldCropOptionById('unknown')).toBeUndefined()
+  it('builds exact labels for القمح', () => {
+    expect(getFieldCropOptionsForCrop('القمح').map((option) => option.label)).toEqual([
+      'زراعة واحتياجات المحصول',
+      'الأبحاث العلمية لمحصول القمح',
+      'الصناعات القائمة على القمح',
+    ])
+  })
+
+  it('builds exact labels for الذرة', () => {
+    expect(getFieldCropOptionsForCrop('الذرة').map((option) => option.label)).toEqual([
+      'زراعة واحتياجات المحصول',
+      'الأبحاث العلمية لمحصول الذرة',
+      'الصناعات القائمة على الذرة',
+    ])
+  })
+
+  it('builds exact labels for الأرز', () => {
+    expect(getFieldCropOptionsForCrop('الأرز').map((option) => option.label)).toEqual([
+      'زراعة واحتياجات المحصول',
+      'الأبحاث العلمية لمحصول الأرز',
+      'الصناعات القائمة على الأرز',
+    ])
+  })
+
+  it('resolves crop option helpers with dynamic crop name', () => {
+    expect(getFieldCropOptionLabel('farming-needs', 'الشعير')).toBe('زراعة واحتياجات المحصول')
+    expect(getFieldCropOptionLabel('scientific-research', 'الشعير')).toBe(
+      'الأبحاث العلمية لمحصول الشعير',
+    )
+    expect(getFieldCropOptionLabel('industries', 'الشعير')).toBe('الصناعات القائمة على الشعير')
+    expect(getFieldCropOptionById('industries', 'الشعير')?.label).toBe('الصناعات القائمة على الشعير')
+    expect(getFieldCropOptionById('unknown', 'الشعير')).toBeUndefined()
   })
 })
 
@@ -136,5 +167,7 @@ describe('FieldCropSelector', () => {
     expect(html).toContain('محاصيل الحبوب')
     expect(html).not.toContain('الكمون')
     expect(html).not.toContain('معلومات الإنتاج')
+    expect(html).not.toContain('معلومات الأمراض والآفات')
+    expect(html).not.toContain('توصيات زراعية')
   })
 })

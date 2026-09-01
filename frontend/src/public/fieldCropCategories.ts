@@ -18,36 +18,53 @@ export const FIELD_CROP_SELECTOR_LABELS = {
   cropPlaceholderDisabled: 'اختر التصنيف أولاً',
   cropPlaceholderEnabled: 'اختر المحصول',
   options: 'خدمة المحصول',
-  optionPlaceholder: 'اختر خدمة المحصول',
 } as const
 
-/** Crop-specific services shown after a crop is selected. */
+/** Stable ids for the three crop-specific service options. */
+export const FIELD_CROP_OPTION_IDS = [
+  'farming-needs',
+  'scientific-research',
+  'industries',
+] as const
+
+export type FieldCropOptionId = (typeof FIELD_CROP_OPTION_IDS)[number]
+
 export type FieldCropOption = {
-  id: string
+  id: FieldCropOptionId
   label: string
-  description: string
 }
 
-export const FIELD_CROP_OPTIONS: FieldCropOption[] = [
-  {
-    id: 'production',
-    label: 'معلومات الإنتاج',
-    description: 'تتبع المحاصيل والأصناف ومراحل الإنتاج للمحاصيل الحقلية.',
-  },
-  {
-    id: 'disease-pests',
-    label: 'معلومات الأمراض والآفات',
-    description: 'الوصول إلى إرشادات حول أمراض المحاصيل الحقلية والآفات ومخاطر صحة المحصول.',
-  },
-  {
-    id: 'recommendations',
-    label: 'توصيات زراعية',
-    description: 'توصيات عملية لإنتاج محاصيل حقلية أكثر صحة.',
-  },
-]
+/** Builds the exact visible label for a crop-specific service option. */
+export function getFieldCropOptionLabel(optionId: FieldCropOptionId, cropName: string): string {
+  switch (optionId) {
+    case 'farming-needs':
+      return 'زراعة واحتياجات المحصول'
+    case 'scientific-research':
+      return `الأبحاث العلمية لمحصول ${cropName}`
+    case 'industries':
+      return `الصناعات القائمة على ${cropName}`
+  }
+}
 
-export function getFieldCropOptionById(optionId: string): FieldCropOption | undefined {
-  return FIELD_CROP_OPTIONS.find((option) => option.id === optionId)
+/** Returns the three crop-specific options with labels for the selected crop. */
+export function getFieldCropOptionsForCrop(cropName: string): FieldCropOption[] {
+  return FIELD_CROP_OPTION_IDS.map((id) => ({
+    id,
+    label: getFieldCropOptionLabel(id, cropName),
+  }))
+}
+
+export function getFieldCropOptionById(
+  optionId: string,
+  cropName: string,
+): FieldCropOption | undefined {
+  if (!FIELD_CROP_OPTION_IDS.includes(optionId as FieldCropOptionId)) {
+    return undefined
+  }
+  return {
+    id: optionId as FieldCropOptionId,
+    label: getFieldCropOptionLabel(optionId as FieldCropOptionId, cropName),
+  }
 }
 
 /** Initial field crop taxonomy for the محاصيل الحقل page. */
