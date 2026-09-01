@@ -1,14 +1,10 @@
 import { PublicLayout } from '../../public/PublicLayout'
+import { LibraryPlantProductionBody } from '../../public/library/LibraryPlantProductionBody'
 
 export function LibraryPage() {
   return (
     <PublicLayout>
-      <div
-        style={{
-          minHeight: 'calc(100dvh - 18rem)',
-          backgroundColor: '#ffffff',
-        }}
-      />
+      <LibraryPlantProductionBody />
     </PublicLayout>
   )
 }

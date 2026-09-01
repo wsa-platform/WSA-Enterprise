@@ -7,6 +7,28 @@ import { AuthProvider } from '../context/AuthContext'
 import i18n from '../i18n/config'
 import { PUBLIC_TOP_NAV_ITEMS, publicPaths } from './paths'
 import { LibraryPage } from '../pages/public/LibraryPage'
+import {
+  LIBRARY_PLANT_PRODUCTION_CATEGORIES,
+  LIBRARY_PLANT_PRODUCTION_SECTION_TITLE,
+} from '../public/library/libraryPlantProductionCategories'
+
+function renderLibraryPage() {
+  return renderToStaticMarkup(
+    createElement(
+      AuthProvider,
+      null,
+      createElement(
+        I18nextProvider,
+        { i18n },
+        createElement(
+          MemoryRouter,
+          { initialEntries: [publicPaths.library] },
+          createElement(LibraryPage),
+        ),
+      ),
+    ),
+  )
+}
 
 describe('library page', () => {
   beforeAll(async () => {
@@ -41,31 +63,33 @@ describe('library page', () => {
     expect(i18n.t('website.nav.library')).toBe('المكتبة')
   })
 
-  it('renders public header and footer with an empty body only', () => {
-    const html = renderToStaticMarkup(
-      createElement(
-        AuthProvider,
-        null,
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(
-            MemoryRouter,
-            { initialEntries: [publicPaths.library] },
-            createElement(LibraryPage),
-          ),
-        ),
-      ),
-    )
+  it('renders public header, library body, and footer without workspace chrome', () => {
+    const html = renderLibraryPage()
 
-    expect(html).toMatch(/min-height:\s*calc\(100dvh - 18rem\)/)
-    expect(html).toContain('background-color:#ffffff')
     expect(html).toContain('class="gs-header')
     expect(html).toContain('class="gs-footer')
+    expect(html).toContain('class="library-page"')
+    expect(html).toContain(LIBRARY_PLANT_PRODUCTION_SECTION_TITLE)
     expect(html).not.toContain('app-shell')
     expect(html).not.toContain('dashboard')
     expect(html).not.toContain('workspace')
+    expect(html).not.toContain('password')
     expect(html).not.toContain('إنشاء عنصر مكتبة')
-    expect(html).not.toContain('المكتبة الزراعية')
+  })
+
+  it('shows الإنتاج النباتي as the only sidebar section and all 12 categories', () => {
+    const html = renderLibraryPage()
+    const sidebarMatches = html.match(/library-page__sidebar-item/g) ?? []
+
+    expect(sidebarMatches).toHaveLength(1)
+    expect(LIBRARY_PLANT_PRODUCTION_CATEGORIES).toHaveLength(12)
+
+    for (const category of LIBRARY_PLANT_PRODUCTION_CATEGORIES) {
+      expect(html).toContain(category.name)
+    }
+
+    expect(html).toContain('النخيل')
+    expect(html).not.toContain('محاصيل النخيل')
+    expect(html.match(/library-page__category-card/g)?.length).toBe(12)
   })
 })
