@@ -28,9 +28,13 @@ export const REQUIRED_INTERNAL_NAV_PATHS = [
 
 export const PUBLIC_TOP_NAV_ITEMS = [
   { to: publicPaths.home, labelKey: 'website.nav.home', end: true },
-  { to: publicPaths.market, labelKey: 'website.nav.market', end: true },
-  { to: '/#home-categories', labelKey: 'website.nav.services', end: false },
-  { to: '/sections/small-projects', labelKey: 'website.nav.projects', end: false },
+  { to: publicPaths.cropsField, labelKey: 'website.nav.plantProduction', end: true },
+  { to: '/sections/beekeeping', labelKey: 'website.nav.honeyBees', end: false },
+  { to: '/#home-categories', labelKey: 'website.nav.servicesPortal', end: false },
+  { to: '/sections/training', labelKey: 'website.nav.training', end: false },
+  { to: '/library', labelKey: 'website.nav.library', end: false },
+  { to: '/sections/medicinal-plants', labelKey: 'website.nav.blog', end: false },
+  { to: '/sections/store', labelKey: 'website.nav.store', end: false },
   { to: '/about', labelKey: 'website.nav.aboutPlatform', end: false },
 ] as const
 

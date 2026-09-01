@@ -1427,6 +1427,13 @@
       "myJobApplication": "Ma candidature",
       "services": "Services",
       "projects": "Projets",
+      "plantProduction": "Production végétale",
+      "honeyBees": "Abeilles à miel",
+      "servicesPortal": "Portail des services",
+      "training": "Formation",
+      "library": "Bibliothèque",
+      "blog": "Blog",
+      "store": "Boutique",
       "aboutPlatform": "À propos de la plateforme",
       "search": "Rechercher",
       "searchPlaceholder": "Rechercher des produits ou services..."

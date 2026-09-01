@@ -70,9 +70,20 @@ describe('route guards', () => {
 })
 
 describe('public top navigation regression', () => {
-  it('places marketplace and existing public destinations next to home and keeps sell/blog out', () => {
+  it('exposes the approved nine-item public header menu and keeps sell/blog paths out', () => {
     const paths = PUBLIC_TOP_NAV_ITEMS.map((item) => item.to)
-    expect(paths).toEqual(['/', '/market', '/#home-categories', '/sections/small-projects', '/about'])
+    expect(paths).toHaveLength(9)
+    expect(paths).toEqual([
+      '/',
+      '/crops/field',
+      '/sections/beekeeping',
+      '/#home-categories',
+      '/sections/training',
+      '/library',
+      '/sections/medicinal-plants',
+      '/sections/store',
+      '/about',
+    ])
     for (const forbidden of PUBLIC_TOP_NAV_FORBIDDEN_PATHS) {
       expect(paths).not.toContain(forbidden)
     }

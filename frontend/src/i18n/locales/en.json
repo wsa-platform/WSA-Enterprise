@@ -1427,6 +1427,13 @@
       "myJobApplication": "My Application",
       "services": "Services",
       "projects": "Projects",
+      "plantProduction": "Plant production",
+      "honeyBees": "Honey bees",
+      "servicesPortal": "Services portal",
+      "training": "Training",
+      "library": "Library",
+      "blog": "Blog",
+      "store": "Store",
       "aboutPlatform": "About the platform",
       "search": "Search",
       "searchPlaceholder": "Search products or services..."
