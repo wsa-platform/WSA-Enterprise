@@ -26,15 +26,6 @@ export function HomeFeaturePanels({
 
   const panels = [
     {
-      id: 'smart-farmer',
-      to: HOME_FEATURE_PANEL_ROUTES.smartFarmer,
-      title: t('website.homePanels.smartFarmerTitle'),
-      body: t('website.homePanels.smartFarmerBody'),
-      cta: t('website.homePanels.smartFarmerCta'),
-      tone: 'smart',
-      image: PANEL_IMAGES.smart,
-    },
-    {
       id: 'jobs',
       to: HOME_FEATURE_PANEL_ROUTES.jobs,
       title: t('website.homePanels.jobsTitle'),
@@ -42,6 +33,15 @@ export function HomeFeaturePanels({
       cta: t('website.homePanels.jobsCta'),
       tone: 'jobs',
       image: PANEL_IMAGES.jobs,
+    },
+    {
+      id: 'smart-farmer',
+      to: HOME_FEATURE_PANEL_ROUTES.smartFarmer,
+      title: t('website.homePanels.smartFarmerTitle'),
+      body: t('website.homePanels.smartFarmerBody'),
+      cta: t('website.homePanels.smartFarmerCta'),
+      tone: 'smart',
+      image: PANEL_IMAGES.smart,
     },
   ] as const
 
