@@ -9,6 +9,7 @@ import { MarketplaceSellerShell } from './components/MarketplaceSellerShell'
 import { HomePage } from './pages/public/HomePage'
 import { CropCategoryPage } from './pages/public/CropCategoryPage'
 import { PlantProductionPage } from './pages/public/PlantProductionPage'
+import { AgriculturalMarketPage } from './pages/public/AgriculturalMarketPage'
 import { ServicesPortalPage } from './pages/public/ServicesPortalPage'
 import { SectionPage } from './pages/public/SectionPage'
 import { InfoPage } from './pages/public/InfoPage'
@@ -217,6 +218,7 @@ function AppRoutes() {
       <Route path="/sections/:sectionId" element={<SectionPage />} />
       <Route path="/crops/:cropCategoryId" element={<CropCategoryPage />} />
       <Route path="/plant-production/:categoryId" element={<PlantProductionPage />} />
+      <Route path="/agricultural-market" element={<AgriculturalMarketPage />} />
       <Route path="/services/:serviceId" element={<ServicesPortalPage />} />
       <Route path="/about" element={<InfoPage page="about" />} />
       <Route path="/privacy" element={<InfoPage page="privacy" />} />

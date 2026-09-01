@@ -14,6 +14,7 @@ export const internalPaths = {
 export const publicPaths = {
   home: '/',
   market: '/market',
+  agriculturalMarket: '/agricultural-market',
   listing: (id: number | string) => `/market/${id}`,
   cropsField: '/crops/field',
   cropsSugar: '/crops/sugar',
@@ -51,6 +52,7 @@ export const PUBLIC_TOP_NAV_ITEMS: readonly PublicNavItem[] = [
   { kind: 'link', to: '/sections/beekeeping', labelKey: 'website.nav.honeyBees', end: false },
   { kind: 'servicesPortal', labelKey: 'website.nav.servicesPortal' },
   { kind: 'link', to: '/sections/training', labelKey: 'website.nav.training', end: false },
+  { kind: 'link', to: publicPaths.agriculturalMarket, labelKey: 'website.nav.agriculturalMarket', end: false },
   { kind: 'link', to: '/sections/medicinal-plants', labelKey: 'website.nav.blog', end: false },
   { kind: 'link', to: '/sections/store', labelKey: 'website.nav.store', end: false },
   { kind: 'link', to: '/about', labelKey: 'website.nav.aboutPlatform', end: false },
