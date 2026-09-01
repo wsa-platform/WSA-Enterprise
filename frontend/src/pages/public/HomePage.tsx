@@ -1,11 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import { sellerAddProductHref } from '../../navigation/roleDestinations'
 import { CropsCategoryMenu } from '../../public/CropsCategoryMenu'
 import { HomeFeaturePanels } from '../../public/HomeFeaturePanels'
 import { PublicLayout } from '../../public/PublicLayout'
-import { HERO_IMAGE, PRODUCER_CARD_IMAGE, PUBLIC_SECTIONS } from '../../public/sections'
+import { HERO_IMAGE, PUBLIC_SECTIONS } from '../../public/sections'
 
 const HERO_PILLS = [
   { key: 'betterYield', icon: '🌱' },
@@ -38,8 +36,6 @@ const CATEGORY_STRIP = [
  */
 export function HomePage() {
   const { t } = useTranslation()
-  const { token } = useAuth()
-  const producerTo = sellerAddProductHref(Boolean(token))
 
   return (
     <PublicLayout>
@@ -70,24 +66,6 @@ export function HomePage() {
               </ul>
             </div>
           </div>
-
-          <aside className="hp-hero-producer" aria-label={t('website.homePanels.producerTitle')}>
-            <div className="hp-hero-producer-frame">
-              <img
-                className="hp-hero-producer-img"
-                src={PRODUCER_CARD_IMAGE}
-                alt={t('website.homePanels.producerTitle')}
-              />
-              <div className="hp-hero-producer-shade" aria-hidden="true" />
-              <div className="hp-hero-producer-footer">
-                <p className="hp-hero-producer-title">{t('website.homePanels.producerTitle')}</p>
-                <Link to={producerTo} className="hp-hero-producer-cta">
-                  {t('website.homePanels.producerCta')}
-                  <span aria-hidden="true">←</span>
-                </Link>
-              </div>
-            </div>
-          </aside>
         </section>
 
         <div className="hp-main-grid">

@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { internalPaths, publicPaths } from '../navigation/paths'
-import { JOB_SEEKER_ENTER } from '../navigation/roleDestinations'
-import { SELLER_PROMO_CARD_IMAGE } from './sections'
+import { useAuth } from '../context/AuthContext'
+import { internalPaths } from '../navigation/paths'
+import { JOB_SEEKER_ENTER, sellerAddProductHref } from '../navigation/roleDestinations'
+import { PRODUCER_CARD_IMAGE } from './sections'
 
 /** Homepage-only entry panels — links to existing platform routes only. */
 export const HOME_FEATURE_PANEL_ROUTES = {
@@ -23,6 +24,8 @@ export function HomeFeaturePanels({
   variant?: 'promo' | 'hero'
 } = {}) {
   const { t } = useTranslation()
+  const { token } = useAuth()
+  const producerTo = sellerAddProductHref(Boolean(token))
 
   const panels = [
     {
@@ -45,20 +48,32 @@ export function HomeFeaturePanels({
     },
   ] as const
 
-  const sellerCardLabel = `${t('website.homePanels.producerTitle')}. ${t('website.homePanels.producerBody')}`
-
   return (
     <aside
       className={`hp-feature-panels hp-feature-panels--${variant}`}
       aria-label={t('website.homePanels.ariaLabel')}
     >
       <div className="hp-feature-panels-stack">
-        <Link
-          to={publicPaths.market}
-          className="hp-promo-card hp-promo-card--producer hp-promo-card--full-image"
-          style={{ backgroundImage: `url(${SELLER_PROMO_CARD_IMAGE})` }}
-          aria-label={sellerCardLabel}
-        />
+        <aside
+          className="hp-hero-producer hp-hero-producer--sidebar"
+          aria-label={t('website.homePanels.producerTitle')}
+        >
+          <div className="hp-hero-producer-frame">
+            <img
+              className="hp-hero-producer-img"
+              src={PRODUCER_CARD_IMAGE}
+              alt={t('website.homePanels.producerTitle')}
+            />
+            <div className="hp-hero-producer-shade" aria-hidden="true" />
+            <div className="hp-hero-producer-footer">
+              <p className="hp-hero-producer-title">{t('website.homePanels.producerTitle')}</p>
+              <Link to={producerTo} className="hp-hero-producer-cta">
+                {t('website.homePanels.producerCta')}
+                <span aria-hidden="true">←</span>
+              </Link>
+            </div>
+          </div>
+        </aside>
         {panels.map((panel) => (
           <article
             key={panel.id}
