@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FieldCropFarmingNeedsPanel } from './FieldCropFarmingNeedsPanel'
 import {
   FIELD_CROP_CATEGORIES,
   FIELD_CROP_SELECTOR_LABELS,
@@ -16,6 +17,7 @@ export function FieldCropSelector() {
 
   const crops = getFieldCropsForCategory(categoryId || null)
   const selectedCrop = categoryId && cropId ? getFieldCropById(categoryId, cropId) : undefined
+  const selectedCategory = FIELD_CROP_CATEGORIES.find((category) => category.id === categoryId)
   const cropOptions = selectedCrop ? getFieldCropOptionsForCrop(selectedCrop.name) : []
 
   function handleCategoryChange(nextCategoryId: string) {
@@ -104,6 +106,15 @@ export function FieldCropSelector() {
             ))}
           </div>
         </fieldset>
+      ) : null}
+
+      {optionId === 'farming-needs' && selectedCrop && selectedCategory ? (
+        <FieldCropFarmingNeedsPanel
+          categoryId={categoryId}
+          categoryName={selectedCategory.name}
+          cropId={selectedCrop.id}
+          cropName={selectedCrop.name}
+        />
       ) : null}
     </form>
   )

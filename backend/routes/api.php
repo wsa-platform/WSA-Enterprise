@@ -43,6 +43,7 @@ use App\Http\Controllers\Api\PlatformAdminController;
 use App\Http\Controllers\Api\ProviderStatusController;
 use App\Http\Controllers\Api\AnalyticsEventsController;
 use App\Http\Controllers\Api\MonitoringLogsController;
+use App\Http\Controllers\Api\PublicFieldCropCultivationController;
 use App\Http\Controllers\Api\PublicPlatformController;
 use App\Http\Controllers\Api\ProductImageController;
 use App\Http\Controllers\Api\JobSeekerController;
@@ -66,6 +67,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/market/listings/{listing}', [MarketplacePublicController::class, 'show'])->whereNumber('listing');
         Route::get('/market/categories', [MarketplacePublicController::class, 'categories']);
         Route::get('/market/units', [MarketplacePublicController::class, 'units']);
+        Route::get('/field-crops/farming-needs-profile', [PublicFieldCropCultivationController::class, 'farmingNeedsProfile']);
     });
 
     Route::middleware('throttle:20,1')->group(function (): void {
