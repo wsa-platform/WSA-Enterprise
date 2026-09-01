@@ -6,9 +6,9 @@ import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from '../context/AuthContext'
 import i18n from '../i18n/config'
 import { PUBLIC_TOP_NAV_ITEMS, publicPaths } from './paths'
-import { AgriculturalMarketPage } from '../pages/public/AgriculturalMarketPage'
+import { LibraryPage } from '../pages/public/LibraryPage'
 
-describe('agricultural market page', () => {
+describe('library page', () => {
   beforeAll(async () => {
     const store = new Map<string, string>()
     vi.stubGlobal('localStorage', {
@@ -25,23 +25,23 @@ describe('agricultural market page', () => {
   })
 
   it('registers the public route path', () => {
-    expect(publicPaths.agriculturalMarket).toBe('/agricultural-market')
+    expect(publicPaths.library).toBe('/library')
   })
 
-  it('places السوق الزراعي directly after training in the public header menu', () => {
+  it('places المكتبة directly after training in the public header menu', () => {
     const trainingIndex = PUBLIC_TOP_NAV_ITEMS.findIndex(
       (item) => item.kind === 'link' && item.to === '/sections/training',
     )
-    const agriculturalMarketIndex = PUBLIC_TOP_NAV_ITEMS.findIndex(
-      (item) => item.kind === 'link' && item.to === publicPaths.agriculturalMarket,
+    const libraryIndex = PUBLIC_TOP_NAV_ITEMS.findIndex(
+      (item) => item.kind === 'link' && item.to === publicPaths.library,
     )
 
     expect(trainingIndex).toBeGreaterThanOrEqual(0)
-    expect(agriculturalMarketIndex).toBe(trainingIndex + 1)
-    expect(i18n.t('website.nav.agriculturalMarket')).toBe('السوق الزراعي')
+    expect(libraryIndex).toBe(trainingIndex + 1)
+    expect(i18n.t('website.nav.library')).toBe('المكتبة')
   })
 
-  it('renders a blank public page without workspace or dashboard chrome', () => {
+  it('renders public header and footer with an empty body only', () => {
     const html = renderToStaticMarkup(
       createElement(
         AuthProvider,
@@ -51,16 +51,20 @@ describe('agricultural market page', () => {
           { i18n },
           createElement(
             MemoryRouter,
-            { initialEntries: [publicPaths.agriculturalMarket] },
-            createElement(AgriculturalMarketPage),
+            { initialEntries: [publicPaths.library] },
+            createElement(LibraryPage),
           ),
         ),
       ),
     )
 
-    expect(html).toContain('class="public-site"')
+    expect(html).toContain('<main id="main-content"><div></div></main>')
+    expect(html).toContain('class="gs-header')
+    expect(html).toContain('class="gs-footer')
     expect(html).not.toContain('app-shell')
     expect(html).not.toContain('dashboard')
     expect(html).not.toContain('workspace')
+    expect(html).not.toContain('إنشاء عنصر مكتبة')
+    expect(html).not.toContain('المكتبة الزراعية')
   })
 })

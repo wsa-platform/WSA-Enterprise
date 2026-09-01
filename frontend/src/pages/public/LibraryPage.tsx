@@ -1,6 +1,6 @@
 import { PublicLayout } from '../../public/PublicLayout'
 
-export function AgriculturalMarketPage() {
+export function LibraryPage() {
   return (
     <PublicLayout>
       <div />

@@ -81,7 +81,7 @@ describe('public top navigation regression', () => {
       '/',
       '/sections/beekeeping',
       '/sections/training',
-      '/agricultural-market',
+      '/library',
       '/sections/medicinal-plants',
       '/sections/store',
       '/about',
