@@ -17,7 +17,38 @@ export const FIELD_CROP_SELECTOR_LABELS = {
   crop: 'المحصول',
   cropPlaceholderDisabled: 'اختر التصنيف أولاً',
   cropPlaceholderEnabled: 'اختر المحصول',
+  options: 'خدمة المحصول',
+  optionPlaceholder: 'اختر خدمة المحصول',
 } as const
+
+/** Crop-specific services shown after a crop is selected. */
+export type FieldCropOption = {
+  id: string
+  label: string
+  description: string
+}
+
+export const FIELD_CROP_OPTIONS: FieldCropOption[] = [
+  {
+    id: 'production',
+    label: 'معلومات الإنتاج',
+    description: 'تتبع المحاصيل والأصناف ومراحل الإنتاج للمحاصيل الحقلية.',
+  },
+  {
+    id: 'disease-pests',
+    label: 'معلومات الأمراض والآفات',
+    description: 'الوصول إلى إرشادات حول أمراض المحاصيل الحقلية والآفات ومخاطر صحة المحصول.',
+  },
+  {
+    id: 'recommendations',
+    label: 'توصيات زراعية',
+    description: 'توصيات عملية لإنتاج محاصيل حقلية أكثر صحة.',
+  },
+]
+
+export function getFieldCropOptionById(optionId: string): FieldCropOption | undefined {
+  return FIELD_CROP_OPTIONS.find((option) => option.id === optionId)
+}
 
 /** Initial field crop taxonomy for the محاصيل الحقل page. */
 export const FIELD_CROP_CATEGORIES: FieldCropCategory[] = [

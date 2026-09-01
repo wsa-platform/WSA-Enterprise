@@ -5,8 +5,10 @@ import { FieldCropSelector } from './FieldCropSelector'
 import {
   EXCLUDED_MEDICINAL_AROMATIC_CROP_NAMES,
   FIELD_CROP_CATEGORIES,
+  FIELD_CROP_OPTIONS,
   FIELD_CROP_SELECTOR_LABELS,
   getFieldCropById,
+  getFieldCropOptionById,
   getFieldCropsForCategory,
   listAllFieldCropNames,
 } from './fieldCropCategories'
@@ -107,6 +109,22 @@ describe('field crop categories data', () => {
   })
 })
 
+describe('field crop options data', () => {
+  it('defines exactly three crop-specific service options', () => {
+    expect(FIELD_CROP_OPTIONS).toHaveLength(3)
+    expect(FIELD_CROP_OPTIONS.map((option) => option.label)).toEqual([
+      'معلومات الإنتاج',
+      'معلومات الأمراض والآفات',
+      'توصيات زراعية',
+    ])
+  })
+
+  it('resolves crop option helpers', () => {
+    expect(getFieldCropOptionById('production')?.label).toBe('معلومات الإنتاج')
+    expect(getFieldCropOptionById('unknown')).toBeUndefined()
+  })
+})
+
 describe('FieldCropSelector', () => {
   it('renders both selectors with Arabic labels and placeholders', () => {
     const html = renderToStaticMarkup(createElement(FieldCropSelector))
@@ -117,5 +135,6 @@ describe('FieldCropSelector', () => {
     expect(html).toContain('disabled')
     expect(html).toContain('محاصيل الحبوب')
     expect(html).not.toContain('الكمون')
+    expect(html).not.toContain('معلومات الإنتاج')
   })
 })
