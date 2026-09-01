@@ -98,7 +98,7 @@ describe('public top navigation regression', () => {
     ])
     expect(SERVICES_PORTAL_MENU_ITEMS).toHaveLength(4)
     expect(SERVICES_PORTAL_MENU_ITEMS.map((item) => item.to)).toEqual([
-      '/services/employment',
+      '/jobs/enter',
       '/market',
       '/services/plant-ai-diagnosis',
       '/services/projects',

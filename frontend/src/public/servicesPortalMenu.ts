@@ -1,8 +1,8 @@
-import { publicPaths } from '../navigation/paths'
+import { internalPaths, publicPaths } from '../navigation/paths'
 import { cropsMenuReducer, type CropsMenuAction } from './cropsMenu'
 
 export const SERVICES_PORTAL_ROUTES = {
-  employment: '/services/employment',
+  employment: internalPaths.jobSeekerEnter,
   market: publicPaths.market,
   'plant-ai-diagnosis': '/services/plant-ai-diagnosis',
   projects: '/services/projects',
@@ -11,7 +11,7 @@ export const SERVICES_PORTAL_ROUTES = {
 export type ServicesPortalServiceId = keyof typeof SERVICES_PORTAL_ROUTES
 
 /** Service slugs backed by dedicated ServicesPortalPage components. */
-export type ServicesPortalPageId = 'employment' | 'plant-ai-diagnosis' | 'projects'
+export type ServicesPortalPageId = 'plant-ai-diagnosis' | 'projects'
 
 export type ServicesPortalMenuItem = {
   id: ServicesPortalServiceId
@@ -53,7 +53,7 @@ export { cropsMenuReducer, type CropsMenuAction as ServicesPortalMenuAction }
 export function isServicesPortalPageId(
   value: string | undefined,
 ): value is ServicesPortalPageId {
-  return value === 'employment' || value === 'plant-ai-diagnosis' || value === 'projects'
+  return value === 'plant-ai-diagnosis' || value === 'projects'
 }
 
 export function servicesPortalMenuItem(id: ServicesPortalServiceId): ServicesPortalMenuItem {
@@ -63,5 +63,9 @@ export function servicesPortalMenuItem(id: ServicesPortalServiceId): ServicesPor
 }
 
 export function isServicesPortalPath(pathname: string): boolean {
-  return pathname.startsWith('/services/') || pathname === '/market' || pathname.startsWith('/market/')
+  return pathname === internalPaths.jobSeekerEnter
+    || pathname.startsWith(`${internalPaths.jobSeekerEnter}/`)
+    || pathname.startsWith('/services/')
+    || pathname === publicPaths.market
+    || pathname.startsWith('/market/')
 }

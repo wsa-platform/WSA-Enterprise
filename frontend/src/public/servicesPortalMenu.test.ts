@@ -18,13 +18,13 @@ describe('services portal menu data', () => {
       'projects',
     ])
     expect(SERVICES_PORTAL_MENU_ITEMS.map((item) => item.to)).toEqual([
-      '/services/employment',
+      '/jobs/enter',
       '/market',
       '/services/plant-ai-diagnosis',
       '/services/projects',
     ])
     expect(SERVICES_PORTAL_ROUTES).toEqual({
-      employment: '/services/employment',
+      employment: '/jobs/enter',
       market: '/market',
       'plant-ai-diagnosis': '/services/plant-ai-diagnosis',
       projects: '/services/projects',
@@ -32,11 +32,13 @@ describe('services portal menu data', () => {
   })
 
   it('resolves service helpers and active path detection', () => {
-    expect(isServicesPortalPageId('employment')).toBe(true)
+    expect(isServicesPortalPageId('employment')).toBe(false)
     expect(isServicesPortalPageId('market')).toBe(false)
     expect(isServicesPortalPageId('unknown')).toBe(false)
+    expect(servicesPortalMenuItem('employment').to).toBe('/jobs/enter')
     expect(servicesPortalMenuItem('projects').to).toBe('/services/projects')
-    expect(isServicesPortalPath('/services/employment')).toBe(true)
+    expect(isServicesPortalPath('/jobs/enter')).toBe(true)
+    expect(isServicesPortalPath('/jobs/enter/seeker')).toBe(true)
     expect(isServicesPortalPath('/market')).toBe(true)
     expect(isServicesPortalPath('/market/42')).toBe(true)
     expect(isServicesPortalPath('/sections/jobs')).toBe(false)
