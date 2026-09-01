@@ -2451,8 +2451,8 @@ button.gs-crops-menu-trigger:focus-visible {
     gap: 1.75rem;
   }
 
-  /* Title left / cards right at desktop (physical) */
-  [dir='rtl'] .hp-feature-panels {
+  /* Hero-only: keep title left / cards right at desktop (physical). */
+  [dir='rtl'] .hp-hero-grid .hp-feature-panels {
     order: -1;
   }
 }
