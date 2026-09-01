@@ -16,7 +16,7 @@ import { ModulePage, cropCreateFields, cropTabs, farmCreateFields, farmTabs, soi
 import { BusinessPage } from './pages/BusinessPage'
 import { DiagnosisPage } from './pages/DiagnosisPage'
 import { TrainingPage } from './pages/TrainingPage'
-import { LibraryPage } from './pages/LibraryPage'
+import { LibraryBlankPage } from './pages/LibraryBlankPage'
 import { AiWorkspacePage } from './pages/AiWorkspacePage'
 import { AiRequestDetailPage } from './pages/AiRequestDetailPage'
 import { BillingPage } from './pages/BillingPage'
@@ -269,7 +269,7 @@ function AppRoutes() {
       <Route path="/account/products/new" element={<Navigate to="/seller/listings/new" replace />} />
       <Route path="/account/products/:listingId" element={<AccountProductRedirect />} />
       <Route element={<AuthRequiredOutlet />}>
-        <Route path="/library" element={<LibraryPage />} />
+        <Route path="/library" element={<LibraryBlankPage />} />
       </Route>
       <Route element={<ProtectedShell />}>
         <Route path="/organization" element={<OrganizationPage />} />
