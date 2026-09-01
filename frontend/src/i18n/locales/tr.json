@@ -1925,6 +1925,13 @@
       "medicinalAromaticPlants": "Tıbbi ve aromatik bitkiler",
       "placeholderBody": "Bitki üretimi için ayrılmış sayfa. Ayrıntılı tarımsal içerik daha sonra eklenecektir."
     },
+    "servicesPortal": {
+      "employment": "İstihdam",
+      "market": "Pazar",
+      "plantAiDiagnosis": "Yapay zekâ ile bitki incelemesi",
+      "projects": "Projeler",
+      "placeholderBody": "Hizmetler portalı için ayrılmış sayfa. Ayrıntılı içerik ve işlevler daha sonra eklenecektir."
+    },
     "homePanels": {
       "ariaLabel": "Birincil platform girişleri",
       "producerTitle": "Üretici misiniz? Hemen katılın",

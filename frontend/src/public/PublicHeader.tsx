@@ -13,6 +13,7 @@ import {
 } from '../navigation/roleDestinations'
 import { PUBLIC_TOP_NAV_ITEMS, internalPaths, publicPaths } from '../navigation/paths'
 import { PlantProductionNavDropdown } from './PlantProductionNavDropdown'
+import { ServicesPortalNavDropdown } from './ServicesPortalNavDropdown'
 import { PublicLanguageMenu } from './PublicLanguageMenu'
 
 /** Public site header — matches approved agricultural homepage chrome. */
@@ -87,6 +88,15 @@ export function PublicHeader({
               return (
                 <PlantProductionNavDropdown
                   key="plant-production"
+                  onNavigate={() => setMenuOpen(false)}
+                />
+              )
+            }
+
+            if (item.kind === 'servicesPortal') {
+              return (
+                <ServicesPortalNavDropdown
+                  key="services-portal"
                   onNavigate={() => setMenuOpen(false)}
                 />
               )

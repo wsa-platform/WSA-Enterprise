@@ -8,6 +8,7 @@ import {
   publicPaths,
 } from './paths'
 import { PLANT_PRODUCTION_CATEGORY_ITEMS } from '../public/plantProductionMenu'
+import { SERVICES_PORTAL_MENU_ITEMS } from '../public/servicesPortalMenu'
 import { loginPathForProtectedRoute, safeReturnPath, unknownRouteFallback } from './routeGuards'
 
 describe('internal navigation map', () => {
@@ -79,7 +80,6 @@ describe('public top navigation regression', () => {
     expect(linkPaths).toEqual([
       '/',
       '/sections/beekeeping',
-      '/#home-categories',
       '/sections/training',
       '/library',
       '/sections/medicinal-plants',
@@ -87,6 +87,7 @@ describe('public top navigation regression', () => {
       '/about',
     ])
     expect(PUBLIC_TOP_NAV_ITEMS.some((item) => item.kind === 'plantProduction')).toBe(true)
+    expect(PUBLIC_TOP_NAV_ITEMS.some((item) => item.kind === 'servicesPortal')).toBe(true)
     expect(PLANT_PRODUCTION_CATEGORY_ITEMS).toHaveLength(5)
     expect(PLANT_PRODUCTION_CATEGORY_ITEMS.map((item) => item.to)).toEqual([
       '/plant-production/field-crops',
@@ -94,6 +95,13 @@ describe('public top navigation regression', () => {
       '/plant-production/fruit-trees',
       '/plant-production/ornamental-plants',
       '/plant-production/medicinal-aromatic-plants',
+    ])
+    expect(SERVICES_PORTAL_MENU_ITEMS).toHaveLength(4)
+    expect(SERVICES_PORTAL_MENU_ITEMS.map((item) => item.to)).toEqual([
+      '/services/employment',
+      '/market',
+      '/services/plant-ai-diagnosis',
+      '/services/projects',
     ])
     for (const forbidden of PUBLIC_TOP_NAV_FORBIDDEN_PATHS) {
       expect(linkPaths).not.toContain(forbidden)

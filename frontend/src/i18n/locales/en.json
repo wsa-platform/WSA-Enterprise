@@ -1925,6 +1925,13 @@
       "medicinalAromaticPlants": "Medicinal and aromatic plants",
       "placeholderBody": "A dedicated plant production page. Detailed agricultural content will be added later."
     },
+    "servicesPortal": {
+      "employment": "Employment",
+      "market": "Market",
+      "plantAiDiagnosis": "AI plant inspection",
+      "projects": "Projects",
+      "placeholderBody": "A dedicated services portal page. Detailed content and functionality will be added later."
+    },
     "homePanels": {
       "ariaLabel": "Primary platform entries",
       "producerTitle": "Are you a producer? Join now",

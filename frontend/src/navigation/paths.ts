@@ -38,13 +38,18 @@ export type PublicNavPlantProductionItem = {
   labelKey: 'website.nav.plantProduction'
 }
 
-export type PublicNavItem = PublicNavLinkItem | PublicNavPlantProductionItem
+export type PublicNavServicesPortalItem = {
+  kind: 'servicesPortal'
+  labelKey: 'website.nav.servicesPortal'
+}
+
+export type PublicNavItem = PublicNavLinkItem | PublicNavPlantProductionItem | PublicNavServicesPortalItem
 
 export const PUBLIC_TOP_NAV_ITEMS: readonly PublicNavItem[] = [
   { kind: 'link', to: publicPaths.home, labelKey: 'website.nav.home', end: true },
   { kind: 'plantProduction', labelKey: 'website.nav.plantProduction' },
   { kind: 'link', to: '/sections/beekeeping', labelKey: 'website.nav.honeyBees', end: false },
-  { kind: 'link', to: '/#home-categories', labelKey: 'website.nav.servicesPortal', end: false },
+  { kind: 'servicesPortal', labelKey: 'website.nav.servicesPortal' },
   { kind: 'link', to: '/sections/training', labelKey: 'website.nav.training', end: false },
   { kind: 'link', to: '/library', labelKey: 'website.nav.library', end: false },
   { kind: 'link', to: '/sections/medicinal-plants', labelKey: 'website.nav.blog', end: false },
