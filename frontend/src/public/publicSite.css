@@ -721,6 +721,49 @@ button.gs-crops-menu-trigger:focus-visible {
   line-height: 1.6;
 }
 
+.gs-crops-placeholder--with-selector {
+  max-width: 32rem;
+}
+
+.gs-field-crop-selector {
+  width: 100%;
+  margin-top: 0.25rem;
+  display: grid;
+  gap: 1rem;
+  text-align: start;
+}
+
+.gs-field-crop-selector label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.gs-field-crop-selector select {
+  width: 100%;
+  min-width: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: var(--card);
+  color: inherit;
+  font: inherit;
+  direction: rtl;
+}
+
+.gs-field-crop-selector select:focus-visible {
+  outline: 2px solid oklch(0.55 0.12 145);
+  outline-offset: 2px;
+}
+
+.gs-field-crop-selector select:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: var(--muted);
+}
+
 /* Product cards (ProductCard.tsx / featured) */
 .gs-product-grid {
   display: grid;

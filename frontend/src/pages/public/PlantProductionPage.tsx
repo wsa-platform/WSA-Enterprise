@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { FieldCropSelector } from '../../public/FieldCropSelector'
 import { PublicLayout } from '../../public/PublicLayout'
 import {
   isPlantProductionCategoryId,
@@ -28,12 +29,19 @@ export function PlantProductionPage() {
             <span aria-hidden="true"> / </span>
             <span>{t(item.labelKey)}</span>
           </nav>
-          <div className="gs-crops-placeholder">
+          <div
+            className={
+              categoryId === 'field-crops'
+                ? 'gs-crops-placeholder gs-crops-placeholder--with-selector'
+                : 'gs-crops-placeholder'
+            }
+          >
             <div className="gs-cat-icon-wrap" style={{ ['--icon-bg' as string]: 'oklch(0.88 0.06 145)' }}>
               <span aria-hidden="true">{item.icon}</span>
             </div>
             <h1 id="plant-production-title">{t(item.labelKey)}</h1>
             <p>{t('website.plantProduction.placeholderBody')}</p>
+            {categoryId === 'field-crops' ? <FieldCropSelector /> : null}
           </div>
         </div>
       </section>
