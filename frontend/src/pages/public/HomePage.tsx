@@ -1,9 +1,13 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { CropsCategoryMenu } from '../../public/CropsCategoryMenu'
 import { HomeFeaturePanels } from '../../public/HomeFeaturePanels'
 import { PublicLayout } from '../../public/PublicLayout'
-import { HERO_IMAGE, PUBLIC_SECTIONS } from '../../public/sections'
+import { HERO_IMAGE, HERO_IMAGE_SECOND, PUBLIC_SECTIONS } from '../../public/sections'
+
+const HERO_SLIDES = [HERO_IMAGE, HERO_IMAGE_SECOND] as const
+const HERO_SLIDE_INTERVAL_MS = 6000
 
 const HERO_PILLS = [
   { key: 'betterYield', icon: '🌱' },
@@ -36,17 +40,30 @@ const CATEGORY_STRIP = [
  */
 export function HomePage() {
   const { t } = useTranslation()
+  const [heroSlide, setHeroSlide] = useState(0)
+
+  useEffect(() => {
+    if (HERO_SLIDES.length < 2) return undefined
+    const id = window.setInterval(() => {
+      setHeroSlide((index) => (index + 1) % HERO_SLIDES.length)
+    }, HERO_SLIDE_INTERVAL_MS)
+    return () => window.clearInterval(id)
+  }, [])
 
   return (
     <PublicLayout>
       <div className="hp-shell">
         <section className="hp-hero hp-hero--prototype" aria-label="WSA Enterprise Hero" aria-labelledby="hero-title">
-          <img
-            className="hp-hero-media"
-            src={HERO_IMAGE}
-            alt=""
-            aria-hidden="true"
-          />
+          <div className="hp-hero-media-stack" aria-hidden="true">
+            {HERO_SLIDES.map((src, index) => (
+              <img
+                key={src}
+                className={`hp-hero-media${index === heroSlide ? ' is-active' : ''}`}
+                src={src}
+                alt=""
+              />
+            ))}
+          </div>
 
           <div className="hp-hero-copy">
             <div className="hp-hero-copy-inner">

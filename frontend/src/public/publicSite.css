@@ -2728,6 +2728,14 @@ button.gs-crops-menu-trigger:focus-visible {
   }
 }
 
+.hp-hero--prototype .hp-hero-media-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .hp-hero--prototype .hp-hero-media {
   position: absolute;
   inset-block: 0;
@@ -2740,9 +2748,15 @@ button.gs-crops-menu-trigger:focus-visible {
   object-position: left center;
   transform: none;
   filter: none;
-  opacity: 1;
+  opacity: 0;
   mix-blend-mode: normal;
   pointer-events: none;
+  transition: opacity 0.9s ease-in-out;
+}
+
+.hp-hero--prototype .hp-hero-media.is-active {
+  opacity: 1;
+  z-index: 1;
 }
 
 .hp-hero--prototype .hp-hero-overlay,

@@ -278,6 +278,9 @@ export function getSectionById(id: string | undefined): PublicSectionConfig | un
 /** Homepage hero — approved agricultural landscape background. */
 export const HERO_IMAGE = '/assets/wsa/hero-background.jpg'
 
+/** Homepage hero — second slide (approved agricultural field asset). */
+export const HERO_IMAGE_SECOND = '/assets/wsa/hero_background.jpg'
+
 /** Hero producer join card — same visual as the sidebar producer panel. */
 export const PRODUCER_CARD_IMAGE =
   'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=900&q=80'
