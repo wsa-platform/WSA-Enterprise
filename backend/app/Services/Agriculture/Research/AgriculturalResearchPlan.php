@@ -25,6 +25,7 @@ final class AgriculturalResearchPlan
         public readonly array $sourceClasses,
         public readonly array $researchSequence,
         public readonly array $contextInput = [],
+        public readonly ?KnowledgeQueryPlan $knowledgeQueryPlan = null,
     ) {}
 
     public function isCropProfileIntent(): bool
@@ -35,7 +36,7 @@ final class AgriculturalResearchPlan
     /** @return array<string, mixed> */
     public function toArray(): array
     {
-        return [
+        $payload = [
             'user_query' => $this->userQuery,
             'intent' => $this->intent,
             'agricultural_domain' => $this->agriculturalDomain,
@@ -45,5 +46,13 @@ final class AgriculturalResearchPlan
             'source_classes' => $this->sourceClasses,
             'research_sequence' => $this->researchSequence,
         ];
+
+        if ($this->knowledgeQueryPlan !== null) {
+            $payload['knowledge_query_plan'] = $this->knowledgeQueryPlan->toArray();
+            $payload['primary_research_strategy'] = $this->knowledgeQueryPlan->primaryResearchStrategy;
+            $payload['ambiguity_state'] = $this->knowledgeQueryPlan->ambiguityState;
+        }
+
+        return $payload;
     }
 }

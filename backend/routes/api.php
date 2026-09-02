@@ -74,6 +74,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/market/units', [MarketplacePublicController::class, 'units']);
         Route::get('/field-crops/farming-needs-profile', [PublicFieldCropCultivationController::class, 'farmingNeedsProfile']);
         Route::post('/research-agent/query', [AgriculturalResearchAgentController::class, 'query']);
+        Route::post('/research-agent/plan', [AgriculturalResearchAgentController::class, 'plan']);
     });
 
     Route::middleware('throttle:20,1')->group(function (): void {
