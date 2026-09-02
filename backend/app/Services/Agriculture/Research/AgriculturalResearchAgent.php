@@ -2,15 +2,18 @@
 
 namespace App\Services\Agriculture\Research;
 
+use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
+
 /**
  * Top-level agricultural research orchestration layer.
- * Coordinates query understanding, planning, scientific discovery, validation, library memory, and aggregation.
+ * Coordinates query understanding, planning, scientific search, validation, library memory, and aggregation.
  */
 class AgriculturalResearchAgent
 {
     public function __construct(
         private ResearchPlanner $planner,
         private QueryUnderstandingService $queryUnderstanding,
+        private AgriculturalScientificSearchService $scientificSearchService,
         private AgriculturalScientificKnowledgeEngine $knowledgeEngine,
     ) {}
 
@@ -38,6 +41,37 @@ class AgriculturalResearchAgent
     }
 
     /**
+     * Stage 3 multi-source scientific search — no Stage 4 validation/synthesis.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public function searchResearch(array $input): array
+    {
+        $knowledgePlan = $this->planner->planKnowledgeQuery($input);
+
+        if ($knowledgePlan->needsClarification() && ! filter_var($input['force_execute'] ?? false, FILTER_VALIDATE_BOOL)) {
+            return [
+                'status' => 'needs_clarification',
+                'stage' => 2,
+                'query_understanding' => $knowledgePlan->normalizedQuery->toArray(),
+                'knowledge_query_plan' => $knowledgePlan->toArray(),
+                'scientific_search' => [
+                    'performed' => false,
+                    'reason' => 'ambiguous_query_requires_clarification',
+                ],
+            ];
+        }
+
+        $report = $this->scientificSearchService->search($knowledgePlan);
+
+        return array_merge($report->toArray(), [
+            'query_understanding' => $knowledgePlan->normalizedQuery->toArray(),
+            'knowledge_query_plan' => $knowledgePlan->toArray(),
+        ]);
+    }
+
+    /**
      * Conduct generic agricultural research.
      *
      * @param  array<string, mixed>  $input
@@ -60,6 +94,8 @@ class AgriculturalResearchAgent
             ];
         }
 
+        $scientificSearch = $this->scientificSearchService->search($knowledgePlan);
+
         $plan = $knowledgePlan->toAgriculturalResearchPlan();
         $result = $this->knowledgeEngine->execute($organizationId, $plan);
 
@@ -67,10 +103,11 @@ class AgriculturalResearchAgent
             $legacy = $result->toLegacyProfileResponse();
             $legacy['research_agent'] = [
                 'orchestrated' => true,
-                'stage' => 2,
+                'stage' => 3,
                 'query_understanding' => $knowledgePlan->normalizedQuery->toArray(),
                 'plan' => $plan->toArray(),
                 'knowledge_query_plan' => $knowledgePlan->toArray(),
+                'scientific_search' => $scientificSearch->toArray(),
                 'discovery' => [
                     'discoverers_used' => $result->discoverersUsed,
                     'external_discoverers_used' => $result->externalDiscoverersUsed,
@@ -83,9 +120,10 @@ class AgriculturalResearchAgent
         }
 
         $response = $result->toAgentResponse();
-        $response['stage'] = 2;
+        $response['stage'] = 3;
         $response['query_understanding'] = $knowledgePlan->normalizedQuery->toArray();
         $response['knowledge_query_plan'] = $knowledgePlan->toArray();
+        $response['scientific_search'] = $scientificSearch->toArray();
 
         return $response;
     }
