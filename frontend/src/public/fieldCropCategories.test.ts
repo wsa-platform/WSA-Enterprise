@@ -91,7 +91,11 @@ describe('field crop categories data', () => {
   })
 
   it('resolves a selected crop within its category', () => {
-    expect(getFieldCropById('grains', 'wheat')).toEqual({ id: 'wheat', name: 'القمح' })
+    expect(getFieldCropById('grains', 'wheat')).toEqual({
+      id: 'wheat',
+      name: 'القمح',
+      scientificName: 'Triticum aestivum',
+    })
     expect(getFieldCropById('forage', 'wheat')).toBeUndefined()
   })
 

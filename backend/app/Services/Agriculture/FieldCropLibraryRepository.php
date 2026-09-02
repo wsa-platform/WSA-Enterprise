@@ -7,14 +7,19 @@ use Illuminate\Support\Arr;
 
 class FieldCropLibraryRepository
 {
-    public function slugFor(string $cropId, string $serviceOption = 'farming-needs'): string
+    public function slugFor(string $cropId, string $knowledgeOption = 'farming-needs'): string
     {
-        return sprintf('field-crop-%s-%s', $cropId, $serviceOption);
+        return sprintf('field-crop-%s-%s', $cropId, $knowledgeOption);
     }
 
     public function findFarmingNeedsItem(int $organizationId, string $cropId): ?LibraryItem
     {
-        $slug = $this->slugFor($cropId);
+        return $this->findKnowledgeItem($organizationId, $cropId, 'farming-needs');
+    }
+
+    public function findKnowledgeItem(int $organizationId, string $cropId, string $knowledgeOption): ?LibraryItem
+    {
+        $slug = $this->slugFor($cropId, $knowledgeOption);
 
         $bySlug = LibraryItem::query()
             ->where('organization_id', $organizationId)
@@ -28,7 +33,10 @@ class FieldCropLibraryRepository
         return LibraryItem::query()
             ->where('organization_id', $organizationId)
             ->where('metadata->field_crop_id', $cropId)
-            ->where('metadata->service_option', 'farming-needs')
+            ->where(function ($builder) use ($knowledgeOption): void {
+                $builder->where('metadata->service_option', $knowledgeOption)
+                    ->orWhere('metadata->knowledge_option', $knowledgeOption);
+            })
             ->first();
     }
 
@@ -46,8 +54,9 @@ class FieldCropLibraryRepository
         $cropName = (string) ($cropContext['selected_crop_name'] ?? '');
         $categoryId = (string) ($cropContext['selected_category_id'] ?? '');
         $categoryName = (string) ($cropContext['selected_category_name'] ?? '');
+        $knowledgeOption = (string) ($cropContext['knowledge_option'] ?? $cropContext['service_option'] ?? 'farming-needs');
 
-        $item = $this->findFarmingNeedsItem($organizationId, $cropId) ?? new LibraryItem;
+        $item = $this->findKnowledgeItem($organizationId, $cropId, $knowledgeOption) ?? new LibraryItem;
         $metadata = is_array($item->metadata) ? $item->metadata : [];
         $existingSections = is_array($metadata['cultivation_sections'] ?? null)
             ? $metadata['cultivation_sections']
@@ -79,7 +88,9 @@ class FieldCropLibraryRepository
             'field_crop_category_id' => $categoryId,
             'field_crop_category_name' => $categoryName,
             'field_crop_name' => $cropName,
-            'service_option' => 'farming-needs',
+            'service_option' => $knowledgeOption,
+            'knowledge_option' => $knowledgeOption,
+            'scientific_name' => (string) ($cropContext['scientific_name'] ?? $metadata['scientific_name'] ?? ''),
             'cultivation_sections' => $existingSections,
             'scientific_references' => $references,
         ]);
@@ -88,16 +99,16 @@ class FieldCropLibraryRepository
         if ($ownerUserId !== null && ! $item->exists) {
             $item->owner_user_id = $ownerUserId;
         }
-        $item->slug = $this->slugFor($cropId);
-        $item->title = sprintf('Farming needs profile: %s', $cropId);
-        $item->title_ar = sprintf('زراعة واحتياجات محصول %s', $cropName);
-        $item->summary_ar = sprintf('ملف زراعي علمي لمحصول %s — زراعة واحتياجات المحصول.', $cropName);
+        $item->slug = $this->slugFor($cropId, $knowledgeOption);
+        $item->title = sprintf('Crop knowledge profile: %s / %s', $cropId, $knowledgeOption);
+        $item->title_ar = CropKnowledgeOptionCatalog::titleFor($knowledgeOption, $cropName);
+        $item->summary_ar = sprintf('ملف معرفة زراعية لمحصول %s — %s.', $cropName, $knowledgeOption);
         $item->item_type = 'crop_cultivation_profile';
         $item->locale = 'ar';
         $item->publication_status = 'published';
         $item->published_at = $item->published_at ?? now();
         $item->metadata = $metadata;
-        $item->content_ar = $this->renderMarkdownProfile($cropName, $existingSections, $references);
+        $item->content_ar = $this->renderMarkdownProfile($cropName, $knowledgeOption, $existingSections, $references);
         $item->save();
 
         return $item->fresh();
@@ -107,11 +118,11 @@ class FieldCropLibraryRepository
      * @param  array<string, array{content: string, source?: array<string, mixed>}>  $sections
      * @param  list<array<string, mixed>>  $references
      */
-    private function renderMarkdownProfile(string $cropName, array $sections, array $references): string
+    private function renderMarkdownProfile(string $cropName, string $knowledgeOption, array $sections, array $references): string
     {
-        $lines = ['# زراعة واحتياجات محصول '.$cropName, ''];
+        $lines = ['# '.CropKnowledgeOptionCatalog::titleFor($knowledgeOption, $cropName), ''];
 
-        foreach (FieldCropCultivationSectionCatalog::sections() as $definition) {
+        foreach (CropKnowledgeSectionCatalog::sectionsFor($knowledgeOption) as $definition) {
             $key = $definition['key'];
             $section = $sections[$key] ?? null;
             if (! is_array($section)) {

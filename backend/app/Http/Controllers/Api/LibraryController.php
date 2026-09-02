@@ -105,7 +105,16 @@ class LibraryController extends Controller
                 $builder->where('title', $likeOperator, "%{$term}%")
                     ->orWhere('title_ar', $likeOperator, "%{$term}%")
                     ->orWhere('summary', $likeOperator, "%{$term}%")
-                    ->orWhere('summary_ar', $likeOperator, "%{$term}%");
+                    ->orWhere('summary_ar', $likeOperator, "%{$term}%")
+                    ->orWhere('content', $likeOperator, "%{$term}%")
+                    ->orWhere('content_ar', $likeOperator, "%{$term}%")
+                    ->orWhere('slug', $likeOperator, "%{$term}%")
+                    ->orWhere('metadata->field_crop_name', $likeOperator, "%{$term}%")
+                    ->orWhere('metadata->scientific_name', $likeOperator, "%{$term}%")
+                    ->orWhere('metadata->field_crop_id', $likeOperator, "%{$term}%")
+                    ->orWhere('metadata->knowledge_option', $likeOperator, "%{$term}%")
+                    ->orWhere('metadata->service_option', $likeOperator, "%{$term}%")
+                    ->orWhere('metadata->field_crop_category_name', $likeOperator, "%{$term}%");
             })
             ->with(['tags', 'category:id,name,name_ar', 'cropType:id,code,name']);
 

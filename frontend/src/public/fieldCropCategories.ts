@@ -2,6 +2,7 @@
 export type FieldCrop = {
   id: string
   name: string
+  scientificName?: string
 }
 
 /** Field crop category with dependent crops. */
@@ -73,73 +74,73 @@ export const FIELD_CROP_CATEGORIES: FieldCropCategory[] = [
     id: 'grains',
     name: 'محاصيل الحبوب',
     crops: [
-      { id: 'wheat', name: 'القمح' },
-      { id: 'corn', name: 'الذرة' },
-      { id: 'rice', name: 'الأرز' },
-      { id: 'barley', name: 'الشعير' },
-      { id: 'oats', name: 'الشوفان' },
-      { id: 'sorghum', name: 'الذرة الرفيعة' },
-      { id: 'millet', name: 'الدخن' },
-      { id: 'rye', name: 'الجاودار' },
-      { id: 'triticale', name: 'التريتيكال' },
+      { id: 'wheat', name: 'القمح', scientificName: 'Triticum aestivum' },
+      { id: 'corn', name: 'الذرة', scientificName: 'Zea mays' },
+      { id: 'rice', name: 'الأرز', scientificName: 'Oryza sativa' },
+      { id: 'barley', name: 'الشعير', scientificName: 'Hordeum vulgare' },
+      { id: 'oats', name: 'الشوفان', scientificName: 'Avena sativa' },
+      { id: 'sorghum', name: 'الذرة الرفيعة', scientificName: 'Sorghum bicolor' },
+      { id: 'millet', name: 'الدخن', scientificName: 'Pennisetum glaucum' },
+      { id: 'rye', name: 'الجاودار', scientificName: 'Secale cereale' },
+      { id: 'triticale', name: 'التريتيكال', scientificName: '× Triticosecale' },
     ],
   },
   {
     id: 'sugar',
     name: 'المحاصيل السكرية',
     crops: [
-      { id: 'sugarcane', name: 'قصب السكر' },
-      { id: 'sugar-beet', name: 'بنجر السكر' },
+      { id: 'sugarcane', name: 'قصب السكر', scientificName: 'Saccharum officinarum' },
+      { id: 'sugar-beet', name: 'بنجر السكر', scientificName: 'Beta vulgaris' },
     ],
   },
   {
     id: 'forage',
     name: 'محاصيل الأعلاف',
     crops: [
-      { id: 'alfalfa', name: 'البرسيم' },
-      { id: 'clover', name: 'الفصة' },
-      { id: 'fodder-corn', name: 'الذرة العلفية' },
-      { id: 'fodder-sorghum', name: 'السورجم العلفي' },
-      { id: 'sudan-grass', name: 'حشيشة السودان' },
+      { id: 'alfalfa', name: 'البرسيم', scientificName: 'Medicago sativa' },
+      { id: 'clover', name: 'الفصة', scientificName: 'Trifolium alexandrinum' },
+      { id: 'fodder-corn', name: 'الذرة العلفية', scientificName: 'Zea mays' },
+      { id: 'fodder-sorghum', name: 'السورجم العلفي', scientificName: 'Sorghum bicolor' },
+      { id: 'sudan-grass', name: 'حشيشة السودان', scientificName: 'Sorghum sudanense' },
     ],
   },
   {
     id: 'oil',
     name: 'المحاصيل الزيتية',
     crops: [
-      { id: 'sunflower', name: 'دوار الشمس' },
-      { id: 'soybean', name: 'فول الصويا' },
-      { id: 'sesame', name: 'السمسم' },
-      { id: 'peanut', name: 'الفول السوداني' },
-      { id: 'canola', name: 'الكانولا' },
-      { id: 'castor', name: 'الخروع' },
+      { id: 'sunflower', name: 'دوار الشمس', scientificName: 'Helianthus annuus' },
+      { id: 'soybean', name: 'فول الصويا', scientificName: 'Glycine max' },
+      { id: 'sesame', name: 'السمسم', scientificName: 'Sesamum indicum' },
+      { id: 'peanut', name: 'الفول السوداني', scientificName: 'Arachis hypogaea' },
+      { id: 'canola', name: 'الكانولا', scientificName: 'Brassica napus' },
+      { id: 'castor', name: 'الخروع', scientificName: 'Ricinus communis' },
     ],
   },
   {
     id: 'legumes',
     name: 'المحاصيل البقولية',
     crops: [
-      { id: 'fava-bean', name: 'الفول' },
-      { id: 'lentil', name: 'العدس' },
-      { id: 'chickpea', name: 'الحمص' },
-      { id: 'pea', name: 'البازلاء' },
-      { id: 'cowpea', name: 'اللوبيا' },
+      { id: 'fava-bean', name: 'الفول', scientificName: 'Vicia faba' },
+      { id: 'lentil', name: 'العدس', scientificName: 'Lens culinaris' },
+      { id: 'chickpea', name: 'الحمص', scientificName: 'Cicer arietinum' },
+      { id: 'pea', name: 'البازلاء', scientificName: 'Pisum sativum' },
+      { id: 'cowpea', name: 'اللوبيا', scientificName: 'Vigna unguiculata' },
     ],
   },
   {
     id: 'fiber',
     name: 'محاصيل الألياف',
     crops: [
-      { id: 'cotton', name: 'القطن' },
-      { id: 'flax', name: 'الكتان' },
-      { id: 'hemp', name: 'القنب' },
-      { id: 'jute', name: 'الجوت' },
+      { id: 'cotton', name: 'القطن', scientificName: 'Gossypium hirsutum' },
+      { id: 'flax', name: 'الكتان', scientificName: 'Linum usitatissimum' },
+      { id: 'hemp', name: 'القنب', scientificName: 'Cannabis sativa' },
+      { id: 'jute', name: 'الجوت', scientificName: 'Corchorus olitorius' },
     ],
   },
   {
     id: 'other',
     name: 'محاصيل أخرى',
-    crops: [{ id: 'tobacco', name: 'التبغ' }],
+    crops: [{ id: 'tobacco', name: 'التبغ', scientificName: 'Nicotiana tabacum' }],
   },
 ]
 

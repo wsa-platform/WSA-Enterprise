@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
-use App\Services\Agriculture\FieldCropCultivationProfileService;
+use App\Services\Agriculture\Research\AgriculturalResearchAgent;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 class PublicFieldCropCultivationController extends Controller
 {
     public function __construct(
-        private FieldCropCultivationProfileService $profileService,
+        private AgriculturalResearchAgent $researchAgent,
     ) {}
 
     public function farmingNeedsProfile(Request $request): JsonResponse
@@ -24,6 +24,8 @@ class PublicFieldCropCultivationController extends Controller
             'selected_crop_name' => ['required', 'string', 'max:255'],
             'selected_category_id' => ['nullable', 'string', 'max:64'],
             'selected_category_name' => ['nullable', 'string', 'max:255'],
+            'knowledge_option' => ['nullable', 'string', 'max:64'],
+            'scientific_name' => ['nullable', 'string', 'max:255'],
         ]);
 
         try {
@@ -35,11 +37,13 @@ class PublicFieldCropCultivationController extends Controller
             ], 404);
         }
 
-        $profile = $this->profileService->getProfile($organization->id, [
+        $profile = $this->researchAgent->conductCropProfileResearch($organization->id, [
             'selected_crop_id' => $validated['selected_crop_id'],
             'selected_crop_name' => $validated['selected_crop_name'],
             'selected_category_id' => $validated['selected_category_id'] ?? '',
             'selected_category_name' => $validated['selected_category_name'] ?? '',
+            'knowledge_option' => $validated['knowledge_option'] ?? 'farming-needs',
+            'scientific_name' => $validated['scientific_name'] ?? '',
         ]);
 
         return response()->json($profile);

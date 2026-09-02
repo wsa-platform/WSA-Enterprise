@@ -43,7 +43,9 @@ use App\Http\Controllers\Api\PlatformAdminController;
 use App\Http\Controllers\Api\ProviderStatusController;
 use App\Http\Controllers\Api\AnalyticsEventsController;
 use App\Http\Controllers\Api\MonitoringLogsController;
+use App\Http\Controllers\Api\AgriculturalResearchAgentController;
 use App\Http\Controllers\Api\PublicFieldCropCultivationController;
+use App\Http\Controllers\Api\CropKnowledgeLibraryBrowseController;
 use App\Http\Controllers\Api\PublicCropLibraryFileController;
 use App\Http\Controllers\Api\PublicPlatformController;
 use App\Http\Controllers\Api\ProductImageController;
@@ -71,6 +73,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/market/categories', [MarketplacePublicController::class, 'categories']);
         Route::get('/market/units', [MarketplacePublicController::class, 'units']);
         Route::get('/field-crops/farming-needs-profile', [PublicFieldCropCultivationController::class, 'farmingNeedsProfile']);
+        Route::post('/research-agent/query', [AgriculturalResearchAgentController::class, 'query']);
     });
 
     Route::middleware('throttle:20,1')->group(function (): void {
@@ -267,6 +270,8 @@ Route::prefix('v1')->group(function (): void {
         });
         Route::prefix('library')->group(function (): void {
             Route::get('/search', [LibraryController::class, 'search']);
+            Route::get('/crop-knowledge/tree', [CropKnowledgeLibraryBrowseController::class, 'tree']);
+            Route::get('/crop-knowledge/items/{itemId}', [CropKnowledgeLibraryBrowseController::class, 'show'])->whereNumber('itemId');
             Route::get('/{module}', [LibraryController::class, 'index']);
             Route::post('/{module}', [LibraryController::class, 'store']);
             Route::put('/{module}/{id}', [LibraryController::class, 'update']);

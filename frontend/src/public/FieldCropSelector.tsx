@@ -108,8 +108,9 @@ export function FieldCropSelector() {
         </fieldset>
       ) : null}
 
-      {optionId === 'farming-needs' && selectedCrop && selectedCategory ? (
+      {optionId && selectedCrop && selectedCategory ? (
         <FieldCropFarmingNeedsPanel
+          knowledgeOption={optionId}
           categoryId={categoryId}
           categoryName={selectedCategory.name}
           cropId={selectedCrop.id}
