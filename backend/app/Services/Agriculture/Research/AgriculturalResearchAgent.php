@@ -2,7 +2,9 @@
 
 namespace App\Services\Agriculture\Research;
 
+use App\Services\Agriculture\Research\Persistence\ScientificKnowledgePersistenceService;
 use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
+use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
 use App\Services\Agriculture\Research\Validation\AgriculturalScientificValidationService;
 
 /**
@@ -16,6 +18,8 @@ class AgriculturalResearchAgent
         private QueryUnderstandingService $queryUnderstanding,
         private AgriculturalScientificSearchService $scientificSearchService,
         private AgriculturalScientificValidationService $scientificValidationService,
+        private AnswerComposer $answerComposer,
+        private ScientificKnowledgePersistenceService $knowledgePersistenceService,
         private AgriculturalScientificKnowledgeEngine $knowledgeEngine,
     ) {}
 
@@ -112,6 +116,73 @@ class AgriculturalResearchAgent
     }
 
     /**
+     * Stage 5 synthesis + verified knowledge persistence — full pipeline through Stage 4.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public function synthesizeResearch(int $organizationId, array $input): array
+    {
+        $knowledgePlan = $this->planner->planKnowledgeQuery($input);
+
+        if ($knowledgePlan->needsClarification() && ! filter_var($input['force_execute'] ?? false, FILTER_VALIDATE_BOOL)) {
+            return [
+                'status' => 'needs_clarification',
+                'stage' => 2,
+                'query_understanding' => $knowledgePlan->normalizedQuery->toArray(),
+                'knowledge_query_plan' => $knowledgePlan->toArray(),
+                'synthesis' => [
+                    'performed' => false,
+                    'reason' => 'ambiguous_query_requires_clarification',
+                ],
+                'library_persistence' => [
+                    'performed' => false,
+                    'reason' => 'ambiguous_query_requires_clarification',
+                ],
+            ];
+        }
+
+        $searchReport = $this->scientificSearchService->search(
+            $knowledgePlan,
+            (int) ($input['limit'] ?? 10),
+        );
+        $validationReport = $this->scientificValidationService->validate($knowledgePlan, $searchReport);
+        $synthesisReport = $this->answerComposer->compose($knowledgePlan, $validationReport);
+        $persistenceReport = $this->knowledgePersistenceService->persist(
+            $organizationId,
+            $knowledgePlan,
+            $synthesisReport,
+            $validationReport,
+        );
+
+        return array_merge(
+            $synthesisReport->toArray(),
+            $persistenceReport->toArray(),
+            [
+                'status' => $synthesisReport->status,
+                'persistence_status' => $persistenceReport->status,
+                'observability' => array_merge(
+                    $synthesisReport->observability,
+                    $persistenceReport->observability,
+                ),
+                'query_understanding' => $knowledgePlan->normalizedQuery->toArray(),
+                'knowledge_query_plan' => $knowledgePlan->toArray(),
+                'scientific_search' => $searchReport->toArray(),
+                'scientific_validation' => $validationReport->toArray(),
+                'validated_evidence' => array_map(
+                    static fn ($item): array => $item->toArray(),
+                    $validationReport->validatedEvidence,
+                ),
+                'rejected_evidence' => array_map(
+                    static fn ($item): array => $item->toArray(),
+                    $validationReport->rejectedEvidence,
+                ),
+                'internet_first' => $searchReport->internetFirst,
+            ],
+        );
+    }
+
+    /**
      * Conduct generic agricultural research.
      *
      * @param  array<string, mixed>  $input
@@ -136,6 +207,13 @@ class AgriculturalResearchAgent
 
         $scientificSearch = $this->scientificSearchService->search($knowledgePlan);
         $scientificValidation = $this->scientificValidationService->validate($knowledgePlan, $scientificSearch);
+        $synthesisReport = $this->answerComposer->compose($knowledgePlan, $scientificValidation);
+        $persistenceReport = $this->knowledgePersistenceService->persist(
+            $organizationId,
+            $knowledgePlan,
+            $synthesisReport,
+            $scientificValidation,
+        );
 
         $plan = $knowledgePlan->toAgriculturalResearchPlan();
         $result = $this->knowledgeEngine->execute($organizationId, $plan);
@@ -144,12 +222,14 @@ class AgriculturalResearchAgent
             $legacy = $result->toLegacyProfileResponse();
             $legacy['research_agent'] = [
                 'orchestrated' => true,
-                'stage' => 3,
+                'stage' => 5,
                 'query_understanding' => $knowledgePlan->normalizedQuery->toArray(),
                 'plan' => $plan->toArray(),
                 'knowledge_query_plan' => $knowledgePlan->toArray(),
                 'scientific_search' => $scientificSearch->toArray(),
                 'scientific_validation' => $scientificValidation->toArray(),
+                'synthesis' => $synthesisReport->toArray(),
+                'library_persistence' => $persistenceReport->toArray(),
                 'discovery' => [
                     'discoverers_used' => $result->discoverersUsed,
                     'external_discoverers_used' => $result->externalDiscoverersUsed,
@@ -162,13 +242,20 @@ class AgriculturalResearchAgent
         }
 
         $response = $result->toAgentResponse();
-        $response['stage'] = 3;
+        $response['stage'] = 5;
         $response['query_understanding'] = $knowledgePlan->normalizedQuery->toArray();
         $response['knowledge_query_plan'] = $knowledgePlan->toArray();
         $response['scientific_search'] = $scientificSearch->toArray();
         $response['scientific_validation'] = $scientificValidation->toArray();
 
-        return $response;
+        return array_merge($response, $synthesisReport->toArray(), $persistenceReport->toArray(), [
+            'status' => $response['status'] ?? $synthesisReport->status,
+            'persistence_status' => $persistenceReport->status,
+            'observability' => array_merge(
+                $synthesisReport->observability,
+                $persistenceReport->observability,
+            ),
+        ]);
     }
 
     /**

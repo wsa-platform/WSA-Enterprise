@@ -158,6 +158,52 @@ class AgriculturalResearchAgentController extends Controller
         return response()->json($result);
     }
 
+    public function synthesize(Request $request): JsonResponse
+    {
+        if (! config('wsa.research_agent.enabled', true)) {
+            return response()->json([
+                'status' => 'disabled',
+                'message' => 'Agricultural research agent is disabled.',
+            ], 503);
+        }
+
+        $validated = $request->validate([
+            'organization' => ['required_without:organization_id', 'string', 'max:255'],
+            'organization_id' => ['required_without:organization', 'integer'],
+            'query' => ['required', 'string', 'max:2000'],
+            'domain' => ['nullable', 'string', 'max:128'],
+            'agricultural_domain' => ['nullable', 'string', 'max:128'],
+            'entities' => ['nullable', 'array'],
+            'entities.*.type' => ['required_with:entities', 'string', 'max:64'],
+            'entities.*.value' => ['required_with:entities', 'string', 'max:255'],
+            'entities.*.label' => ['nullable', 'string', 'max:255'],
+            'selected_crop_id' => ['nullable', 'string', 'max:64'],
+            'selected_crop_name' => ['nullable', 'string', 'max:255'],
+            'selected_category_id' => ['nullable', 'string', 'max:64'],
+            'selected_category_name' => ['nullable', 'string', 'max:255'],
+            'knowledge_option' => ['nullable', 'string', 'max:64'],
+            'scientific_name' => ['nullable', 'string', 'max:255'],
+            'constraints' => ['nullable', 'array'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'research_intent' => ['nullable', 'string', 'max:64'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:10'],
+            'force_execute' => ['nullable', 'boolean'],
+        ]);
+
+        try {
+            $organization = $this->resolveOrganization($validated);
+        } catch (ModelNotFoundException) {
+            return response()->json([
+                'status' => 'organization_not_found',
+                'message' => 'Organization not found.',
+            ], 404);
+        }
+
+        $result = $this->researchAgent->synthesizeResearch($organization->id, $validated);
+
+        return response()->json($result);
+    }
+
     /**
      * @param  array<string, mixed>  $validated
      */
