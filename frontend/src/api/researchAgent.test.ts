@@ -6,7 +6,7 @@ import { queryPublicResearchAgent as queryFromBarrel } from './index'
 describe('researchAgent API', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
-    vi.stubEnv('VITE_PUBLIC_ORG_SLUG', 'wsa-demo')
+    vi.unstubAllEnvs()
   })
 
   it('is re-exported from the API barrel', () => {
@@ -33,7 +33,7 @@ describe('researchAgent API', () => {
     expect(String(url)).toContain('/public/research-agent/query')
     expect(init?.method).toBe('POST')
     expect(JSON.parse(String(init?.body))).toEqual({
-      organization: 'wsa-demo',
+      organization: 'wsa-enterprise',
       query: 'ما ري الذرة؟',
     })
   })

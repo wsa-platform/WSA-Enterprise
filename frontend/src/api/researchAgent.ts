@@ -25,7 +25,7 @@ export type ResearchAgentQueryResponse = {
 }
 
 function publicOrganizationSlug(): string {
-  return (import.meta.env.VITE_PUBLIC_ORG_SLUG as string | undefined) ?? 'wsa-demo'
+  return (import.meta.env.VITE_PUBLIC_ORG_SLUG as string | undefined) ?? 'wsa-enterprise'
 }
 
 /** POST /public/research-agent/query — Laravel proxy only; browser never calls OpenAlex/Crossref. */
