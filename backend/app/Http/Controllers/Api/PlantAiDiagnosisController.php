@@ -5,19 +5,22 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Services\Agriculture\Diagnosis\DiagnosisStatus;
+use App\Services\Agriculture\Diagnosis\KnowledgeBase\DiagnosisKnowledgeQuery;
+use App\Services\Agriculture\Diagnosis\KnowledgeBase\DiagnosisKnowledgeRetrievalService;
 use App\Services\Agriculture\Diagnosis\PlantAiDiagnosisEngine;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Public Stage 6 Plant AI Diagnosis API.
- * Invokes PlantAiDiagnosisEngine only — never the Research Agent stack.
+ * Public Plant AI Diagnosis API (Stage 6 engine + Stage 7 knowledge retrieval).
+ * Invokes PlantAiDiagnosisEngine / diagnosis KB only — never the Research Agent stack.
  */
 class PlantAiDiagnosisController extends Controller
 {
     public function __construct(
         private PlantAiDiagnosisEngine $engine,
+        private DiagnosisKnowledgeRetrievalService $knowledgeRetrieval,
     ) {}
 
     public function analyze(Request $request): JsonResponse
@@ -88,6 +91,56 @@ class PlantAiDiagnosisController extends Controller
         };
 
         return response()->json($result->toArray(), $statusCode);
+    }
+
+    /**
+     * Stage 7 scoped diagnosis knowledge retrieval (no Research Agent).
+     */
+    public function knowledge(Request $request): JsonResponse
+    {
+        if (! config('wsa.plant_diagnosis.enabled', true)
+            || ! config('wsa.plant_diagnosis.knowledge_base.enabled', true)) {
+            return response()->json([
+                'status' => 'disabled',
+                'message' => 'Plant diagnosis knowledge base is disabled.',
+            ], 503);
+        }
+
+        $validated = $request->validate([
+            'organization' => ['nullable', 'string', 'max:255'],
+            'crop' => ['nullable', 'string', 'max:255'],
+            'crop_type' => ['nullable', 'string', 'max:255'],
+            'plant_name' => ['nullable', 'string', 'max:255'],
+            'common_name' => ['nullable', 'string', 'max:255'],
+            'scientific_name' => ['nullable', 'string', 'max:255'],
+            'plant_part' => ['nullable', 'string', 'max:128'],
+            'disease' => ['nullable', 'string', 'max:255'],
+            'pathogen' => ['nullable', 'string', 'max:255'],
+            'pest' => ['nullable', 'string', 'max:255'],
+            'nutrient' => ['nullable', 'string', 'max:255'],
+            'abiotic_stress' => ['nullable', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:128'],
+            'causal_class' => ['nullable', 'string', 'max:128'],
+            'symptoms' => ['nullable', 'array', 'max:30'],
+            'symptoms.*' => ['string', 'max:255'],
+            'aliases' => ['nullable', 'array', 'max:20'],
+            'aliases.*' => ['string', 'max:255'],
+            'verified_only' => ['nullable', 'boolean'],
+        ]);
+
+        $matches = $this->knowledgeRetrieval->retrieve(DiagnosisKnowledgeQuery::fromInput($validated));
+
+        return response()->json([
+            'status' => 'ok',
+            'stage' => 7,
+            'engine' => 'plant_ai_diagnosis_knowledge_base',
+            'independent_of_research_agent' => true,
+            'match_count' => count($matches),
+            'matches' => array_map(
+                static fn ($match): array => $match->toArray(),
+                $matches,
+            ),
+        ]);
     }
 
     /**

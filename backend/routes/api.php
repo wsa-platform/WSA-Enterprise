@@ -80,6 +80,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/research-agent/validate', [AgriculturalResearchAgentController::class, 'validate']);
         Route::post('/research-agent/synthesize', [AgriculturalResearchAgentController::class, 'synthesize']);
         Route::post('/plant-diagnosis/analyze', [PlantAiDiagnosisController::class, 'analyze']);
+        Route::post('/plant-diagnosis/knowledge', [PlantAiDiagnosisController::class, 'knowledge']);
     });
 
     Route::middleware('throttle:20,1')->group(function (): void {

@@ -9,5 +9,9 @@ return [
     'plant_diagnosis' => [
         'enabled' => filter_var(env('WSA_PLANT_DIAGNOSIS_ENABLED', true), FILTER_VALIDATE_BOOL),
         'max_image_bytes' => (int) env('WSA_PLANT_DIAGNOSIS_MAX_IMAGE_BYTES', 5242880),
+        'knowledge_base' => [
+            'enabled' => filter_var(env('WSA_PLANT_DIAGNOSIS_KB_ENABLED', true), FILTER_VALIDATE_BOOL),
+            'seed_on_boot' => filter_var(env('WSA_PLANT_DIAGNOSIS_KB_SEED', true), FILTER_VALIDATE_BOOL),
+        ],
     ],
 ];

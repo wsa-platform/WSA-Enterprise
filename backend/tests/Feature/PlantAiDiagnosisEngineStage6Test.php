@@ -243,8 +243,9 @@ class PlantAiDiagnosisEngineStage6Test extends TestCase
             $this->assertContains($candidate->confidenceBand, DiagnosisConfidenceBand::all());
             $this->assertLessThanOrEqual($previous + 0.0001, $candidate->confidenceScore);
             $previous = $candidate->confidenceScore;
-            $this->assertFalse($candidate->scientificNameVerified);
-            $this->assertNull($candidate->scientificName);
+            if ($candidate->scientificNameVerified) {
+                $this->assertNotNull($candidate->scientificName);
+            }
         }
     }
 
@@ -413,6 +414,7 @@ class PlantAiDiagnosisEngineStage6Test extends TestCase
 
     public function test_knowledge_support_is_abstracted_and_default_heuristic_bound(): void
     {
+        // Stage 7 KB adapter extends heuristic support for fallback compatibility.
         $this->assertInstanceOf(
             HeuristicDiagnosisKnowledgeSupport::class,
             app(DiagnosisKnowledgeSupportInterface::class),
@@ -432,8 +434,9 @@ class PlantAiDiagnosisEngineStage6Test extends TestCase
         );
 
         $this->assertNotEmpty($candidates);
-        $this->assertNull($candidates[0]->scientificName);
-        $this->assertFalse($candidates[0]->scientificNameVerified);
+        if ($candidates[0]->scientificNameVerified) {
+            $this->assertNotNull($candidates[0]->scientificName);
+        }
     }
 
     public function test_mock_ai_provider_supports_plant_vision_analysis(): void

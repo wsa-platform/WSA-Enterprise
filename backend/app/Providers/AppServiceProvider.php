@@ -12,7 +12,14 @@ use App\Contracts\Marketing\WhatsAppProviderInterface;
 use App\Contracts\MarketplacePaymentProviderInterface;
 use App\Services\Agriculture\Diagnosis\Image\DiagnosisImageValidator;
 use App\Services\Agriculture\Diagnosis\Knowledge\DiagnosisKnowledgeSupportInterface;
-use App\Services\Agriculture\Diagnosis\Knowledge\HeuristicDiagnosisKnowledgeSupport;
+use App\Services\Agriculture\Diagnosis\KnowledgeBase\DiagnosisKnowledgeIngestionService;
+use App\Services\Agriculture\Diagnosis\KnowledgeBase\DiagnosisKnowledgeMatcher;
+use App\Services\Agriculture\Diagnosis\KnowledgeBase\DiagnosisKnowledgeObservabilityLogger;
+use App\Services\Agriculture\Diagnosis\KnowledgeBase\DiagnosisKnowledgeRecordValidator;
+use App\Services\Agriculture\Diagnosis\KnowledgeBase\DiagnosisKnowledgeRetrievalService;
+use App\Services\Agriculture\Diagnosis\KnowledgeBase\InMemoryDiagnosisKnowledgeStore;
+use App\Services\Agriculture\Diagnosis\KnowledgeBase\KnowledgeBaseDiagnosisKnowledgeSupport;
+use App\Services\Agriculture\Diagnosis\KnowledgeBase\SeededDiagnosisKnowledgeCatalog;
 use App\Services\Agriculture\Diagnosis\Vision\AiProviderVisionAdapter;
 use App\Services\Agriculture\Diagnosis\Vision\VisionAnalysisProviderInterface;
 use App\Services\Ai\AiProviderResolver;
@@ -89,7 +96,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(VisionAnalysisProviderInterface::class, function ($app) {
             return new AiProviderVisionAdapter($app->make(AiProviderInterface::class));
         });
-        $this->app->bind(DiagnosisKnowledgeSupportInterface::class, HeuristicDiagnosisKnowledgeSupport::class);
+
+        $this->app->singleton(InMemoryDiagnosisKnowledgeStore::class);
+        $this->app->singleton(DiagnosisKnowledgeRecordValidator::class);
+        $this->app->singleton(DiagnosisKnowledgeObservabilityLogger::class);
+        $this->app->singleton(SeededDiagnosisKnowledgeCatalog::class);
+        $this->app->singleton(DiagnosisKnowledgeMatcher::class);
+        $this->app->singleton(DiagnosisKnowledgeIngestionService::class);
+        $this->app->singleton(DiagnosisKnowledgeRetrievalService::class);
+        $this->app->bind(DiagnosisKnowledgeSupportInterface::class, KnowledgeBaseDiagnosisKnowledgeSupport::class);
+
         $this->app->singleton(DiagnosisImageValidator::class, function () {
             return new DiagnosisImageValidator(
                 maxBytes: max(1, (int) config('wsa.plant_diagnosis.max_image_bytes', 5_242_880)),
