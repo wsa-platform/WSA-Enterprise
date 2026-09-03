@@ -19,6 +19,7 @@ export * from './marketing'
 export * from './marketplace'
 export * from './communications'
 export * from './modules'
+export * from './researchAgent'
 
 // Backward-compatible aliases used by existing pages.
 export { unwrapModuleRows, modulePaginationMeta } from './client'

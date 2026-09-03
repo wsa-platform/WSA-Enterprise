@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { CropsCategoryMenu } from '../../public/CropsCategoryMenu'
 import { HomeFeaturePanels } from '../../public/HomeFeaturePanels'
+import { HomeScientificResearchSearch } from '../../public/HomeScientificResearchSearch'
 import { PublicLayout } from '../../public/PublicLayout'
 import { HERO_IMAGE, HERO_IMAGE_SECOND, PUBLIC_SECTIONS } from '../../public/sections'
 
@@ -84,6 +85,8 @@ export function HomePage() {
             </div>
           </div>
         </section>
+
+        <HomeScientificResearchSearch />
 
         <div className="hp-main-grid">
           <div className="hp-main-primary">
