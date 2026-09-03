@@ -121,8 +121,17 @@ class HttpClient {
     if (response.statusCode >= 400) {
       throw _parseError(response);
     }
-    final decoded = jsonDecode(response.body);
+    Object? decoded;
+    try {
+      decoded = jsonDecode(response.body);
+    } on FormatException {
+      throw ApiException(
+        'Unable to complete the request.',
+        statusCode: response.statusCode,
+      );
+    }
     if (decoded is Map<String, dynamic>) return decoded;
+    if (decoded is Map) return Map<String, dynamic>.from(decoded);
     return {'data': decoded};
   }
 

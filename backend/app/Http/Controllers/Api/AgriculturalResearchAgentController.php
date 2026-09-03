@@ -213,7 +213,16 @@ class AgriculturalResearchAgentController extends Controller
             return Organization::query()->findOrFail($validated['organization_id']);
         }
 
-        $slug = (string) ($validated['organization'] ?? config('wsa.public_organization_slug', 'wsa-demo'));
+        if (isset($validated['organization'])) {
+            $organization = Organization::query()->where('slug', (string) $validated['organization'])->first();
+            if ($organization === null) {
+                throw (new ModelNotFoundException)->setModel(Organization::class);
+            }
+
+            return $organization;
+        }
+
+        $slug = (string) config('wsa.public_organization_slug', 'wsa-demo');
         $organization = Organization::query()->where('slug', $slug)->first();
         if ($organization !== null) {
             return $organization;

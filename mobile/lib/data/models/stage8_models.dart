@@ -259,13 +259,16 @@ class PlantDiagnosisResult {
 
   factory PlantDiagnosisResult.fromJson(Map<String, dynamic> json) {
     final observations = <String>[];
-    for (final item in json['observations'] as List<dynamic>? ?? const []) {
-      if (item is Map) {
-        observations.add(
-          item['description']?.toString() ??
-              item['label']?.toString() ??
-              item.toString(),
-        );
+    final rawObservations = json['observations'];
+    if (rawObservations is List) {
+      for (final item in rawObservations) {
+        if (item is Map) {
+          observations.add(
+            item['description']?.toString() ??
+                item['label']?.toString() ??
+                item.toString(),
+          );
+        }
       }
     }
 
