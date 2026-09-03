@@ -1,4 +1,10 @@
 .env
+.env.*
 vendor
 node_modules
 storage/logs
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+auth.json

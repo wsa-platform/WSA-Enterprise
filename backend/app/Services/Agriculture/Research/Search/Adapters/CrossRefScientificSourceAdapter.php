@@ -5,6 +5,7 @@ namespace App\Services\Agriculture\Research\Search\Adapters;
 use App\Contracts\ScientificSourceAdapterInterface;
 use App\Services\Agriculture\Research\Search\ScientificResultNormalizer;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
+use App\Support\ScientificHttp;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -35,7 +36,7 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
         }
 
         try {
-            $response = Http::timeout(15)
+            $response = Http::timeout(ScientificHttp::timeoutSeconds())
                 ->acceptJson()
                 ->withHeaders([
                     'User-Agent' => (string) config('wsa.crossref_mailto', 'wsa-platform/1.0 (mailto:wsa-platform@example.com)'),

@@ -1,6 +1,6 @@
 # WSA-Enterprise Production Readiness Report
 
-**Last updated:** M19 security hardening (2026-08-18)
+**Last updated:** Stage 10 production hardening (2026-09-03)
 
 ## Executive summary
 
@@ -11,6 +11,8 @@ Phase 12 (M12.1–M12.5) adds production Docker + TLS, deployment automation, se
 Phase 13 (M13.1–M13.4) closes M12.4 observability deferrals, adds scheduler heartbeat and ops runbook, wires frontend Vitest in CI, and hardens production web/mobile clients (no embedded demo credentials). See [phase-13-roadmap.md](phase-13-roadmap.md).
 
 M19 adds production-safe CORS (configurable origins only; no localhost inheritance in production) and service-ownership isolation for committed owned-service APIs. See [security.md](security.md).
+
+**Stage 10** adds production exception safety (no API stack traces), compose `APP_DEBUG=false`, bounded scholarly HTTP timeouts, Stage 10 CI gate, and ops env-name documentation. See [stage-10-production.md](stage-10-production.md). Research Agent Internet-First and Plant AI Diagnosis independence are unchanged.
 
 **Phase 12 additions:** See [phase-12-roadmap.md](phase-12-roadmap.md), [deploy-production.md](deploy-production.md), [tls-production.md](tls-production.md).
 
@@ -29,6 +31,7 @@ M19 adds production-safe CORS (configurable origins only; no localhost inheritan
 | Frontend build | Ready | Vite production build via CI |
 | Mobile API URL | Configurable | `--dart-define=API_URL=https://api.example.com/api/v1` |
 | HTTPS / TLS | **Implemented (M12.1)** | Let's Encrypt via nginx + certbot; see [tls-production.md](tls-production.md) |
+| Stage 10 prod flags | **Implemented** | Compose production override sets `APP_DEBUG=false`; API 500s omit traces |
 | GHCR deploy | **Implemented (M12.2)** | See [deploy-production.md](deploy-production.md) |
 | Production backup/rollback | **Implemented (M12.5)** | `scripts/backup-production.sh`, `rollback-production.sh`, `verify-production.sh` |
 | Health monitoring | **Implemented (M12.4)** | `/health/live`, `/health/ready`, `monitoring_events` |
@@ -157,6 +160,7 @@ Phase 6 added performance indexes on high-traffic tables (diagnosis, library, AI
 | openapi | `swagger-cli validate docs/openapi.yaml` | Required |
 | security | `php artisan test --group=security` | Required |
 | docker-validate | prod + GHCR compose config | Required |
+| stage10 | `php artisan test --group=stage10` | Required |
 
 **Phase 12 deploy workflows:**
 

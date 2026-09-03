@@ -23,8 +23,20 @@ class AppConfig {
       'PUBLIC_ORG_SLUG',
       defaultValue: 'wsa-demo',
     ),
-    requestTimeout: Duration(seconds: 30),
-    researchTimeout: Duration(seconds: 60),
-    diagnosisTimeout: Duration(seconds: 60),
+    requestTimeout: Duration(
+      seconds: int.fromEnvironment('API_TIMEOUT_SECONDS', defaultValue: 30),
+    ),
+    researchTimeout: Duration(
+      seconds: int.fromEnvironment(
+        'RESEARCH_TIMEOUT_SECONDS',
+        defaultValue: 60,
+      ),
+    ),
+    diagnosisTimeout: Duration(
+      seconds: int.fromEnvironment(
+        'DIAGNOSIS_TIMEOUT_SECONDS',
+        defaultValue: 60,
+      ),
+    ),
   );
 }

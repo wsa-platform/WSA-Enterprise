@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture;
 
+use App\Support\ScientificHttp;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -15,7 +16,7 @@ class CrossRefScientificClient
     public function searchWorks(string $query, int $perPage = 5): array
     {
         try {
-            $response = Http::timeout(15)
+            $response = Http::timeout(ScientificHttp::timeoutSeconds())
                 ->acceptJson()
                 ->withHeaders([
                     'User-Agent' => (string) config('wsa.crossref_mailto', 'wsa-platform/1.0 (mailto:wsa-platform@example.com)'),

@@ -5,6 +5,7 @@ use App\Exceptions\AiProviderTimeoutException;
 use App\Exceptions\AiProviderUnavailableException;
 use App\Exceptions\PlanRestrictionException;
 use App\Exceptions\SubscriptionInactiveException;
+use App\Support\ProductionSafeApiExceptionRenderer;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -50,6 +51,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->shouldRenderJsonWhen(function (Request $request): bool {
+            return app(ProductionSafeApiExceptionRenderer::class)->shouldRenderJson($request);
+        });
+
         $exceptions->render(function (AiQuotaExceededException $exception, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
@@ -124,5 +129,9 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => $exception->getMessage() ?: 'Request could not be processed.',
                 ], $exception->getStatusCode());
             }
+        });
+
+        $exceptions->render(function (\Throwable $exception, Request $request) {
+            return app(ProductionSafeApiExceptionRenderer::class)->render($exception, $request);
         });
     })->create();

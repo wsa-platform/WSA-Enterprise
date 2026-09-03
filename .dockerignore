@@ -12,6 +12,10 @@ backend/storage/framework/views/*
 !backend/storage/framework/views/.gitignore
 backend/.env
 backend/.env.*
+**/*.pem
+**/*.key
+**/id_rsa
+**/auth.json
 frontend/dist
 *-output.txt
 docker-ps-out.txt

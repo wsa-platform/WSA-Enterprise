@@ -419,6 +419,7 @@ See `docs/deployment.md` for production checklist. **Production stack (M12–M13
 | `docs/e2e-testing.md` | Test procedures |
 | `docs/testing.md` | Isolated PHPUnit, CI, staging smoke tests |
 | `docs/production-readiness.md` | Staging vs production gaps |
+| `docs/stage-10-production.md` | Stage 10 production/ops hardening (env names only) |
 | `docs/phase8.md` | Phase 8 delivery notes |
 | `docs/api-conventions.md` | HTTP API response and auth conventions |
 | `docs/openapi.yaml` | OpenAPI 3.1 foundation for key endpoints |

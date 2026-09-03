@@ -3,6 +3,7 @@
 return [
     'public_organization_slug' => env('WSA_PUBLIC_ORG_SLUG', 'wsa-demo'),
     'openalex_mailto' => env('OPENALEX_MAILTO', 'wsa-platform@example.com'),
+    'scientific_http_timeout' => max(1, min(60, (int) env('SCIENTIFIC_HTTP_TIMEOUT', 15))),
     'research_agent' => [
         'enabled' => filter_var(env('WSA_RESEARCH_AGENT_ENABLED', true), FILTER_VALIDATE_BOOL),
     ],
