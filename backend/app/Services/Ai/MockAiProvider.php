@@ -83,6 +83,33 @@ class MockAiProvider implements AiProviderInterface
                 'requires_more_information' => true,
                 'escalate_to_expert' => true,
             ],
+            'plant_vision_analysis' => [
+                'status' => 'completed',
+                'image_quality' => 'adequate',
+                'plant_visible' => true,
+                'symptoms_visible' => true,
+                'quality_notes' => [],
+                'observations' => [
+                    [
+                        'id' => 'obs-1',
+                        'type' => 'leaf_spot',
+                        'description' => 'Brown circular lesions with yellow halos on lower leaves.',
+                        'location' => 'lower leaves',
+                        'severity_hint' => 'moderate',
+                        'observation_confidence' => 0.72,
+                        'supporting_cues' => ['spot', 'lesion', 'yellow halo'],
+                    ],
+                    [
+                        'id' => 'obs-2',
+                        'type' => 'chlorosis',
+                        'description' => 'Mild yellowing surrounding lesion margins.',
+                        'location' => 'foliage',
+                        'severity_hint' => 'low',
+                        'observation_confidence' => 0.55,
+                        'supporting_cues' => ['yellowing', 'chlorosis'],
+                    ],
+                ],
+            ],
             default => [
                 'message' => 'Mock AI response for '.$requestType,
             ],

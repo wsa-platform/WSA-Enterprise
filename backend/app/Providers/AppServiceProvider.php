@@ -6,10 +6,15 @@ use App\Contracts\AiMonitoringAnalyzerInterface;
 use App\Contracts\AiProviderInterface;
 use App\Contracts\BillingProviderInterface;
 use App\Contracts\JobsPaymentProviderInterface;
-use App\Contracts\MarketplacePaymentProviderInterface;
 use App\Contracts\Marketing\EmailProviderInterface;
 use App\Contracts\Marketing\SmsProviderInterface;
 use App\Contracts\Marketing\WhatsAppProviderInterface;
+use App\Contracts\MarketplacePaymentProviderInterface;
+use App\Services\Agriculture\Diagnosis\Image\DiagnosisImageValidator;
+use App\Services\Agriculture\Diagnosis\Knowledge\DiagnosisKnowledgeSupportInterface;
+use App\Services\Agriculture\Diagnosis\Knowledge\HeuristicDiagnosisKnowledgeSupport;
+use App\Services\Agriculture\Diagnosis\Vision\AiProviderVisionAdapter;
+use App\Services\Agriculture\Diagnosis\Vision\VisionAnalysisProviderInterface;
 use App\Services\Ai\AiProviderResolver;
 use App\Services\Ai\AiQuotaService;
 use App\Services\Ai\AiRequestValidator;
@@ -21,11 +26,11 @@ use App\Services\Audit\AuditService;
 use App\Services\Billing\BillingUsageService;
 use App\Services\Billing\EntitlementService;
 use App\Services\Billing\MockBillingProvider;
-use App\Services\Jobs\MockJobsPaymentProvider;
-use App\Services\Marketplace\MockMarketplacePaymentProvider;
-use App\Services\Marketing\MarketingProviderResolver;
 use App\Services\Billing\OrganizationSettingsService;
 use App\Services\Billing\SubscriptionService;
+use App\Services\Jobs\MockJobsPaymentProvider;
+use App\Services\Marketing\MarketingProviderResolver;
+use App\Services\Marketplace\MockMarketplacePaymentProvider;
 use App\Services\Monitoring\HealthCheckService;
 use App\Services\Monitoring\MonitoringEventService;
 use App\Services\Monitoring\RemediationService;
@@ -33,6 +38,7 @@ use App\Services\Monitoring\SafeRemediationExecutor;
 use App\Services\Monitoring\StubAiMonitoringAnalyzer;
 use App\Services\Notifications\NotificationService;
 use App\Services\Providers\ProviderStatusService;
+use App\Services\Tenancy\TenantContext;
 use App\Services\Welcome\WelcomeWorkflowService;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -41,7 +47,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(\App\Services\Tenancy\TenantContext::class);
+        $this->app->singleton(TenantContext::class);
 
         $this->app->singleton(AiProviderResolver::class);
         $this->app->singleton(AiUsageRecorder::class);
@@ -79,6 +85,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(AiProviderInterface::class, fn () => app(AiProviderResolver::class)->forOrganization(null));
 
         $this->app->bind(MockAiProvider::class);
+
+        $this->app->bind(VisionAnalysisProviderInterface::class, function ($app) {
+            return new AiProviderVisionAdapter($app->make(AiProviderInterface::class));
+        });
+        $this->app->bind(DiagnosisKnowledgeSupportInterface::class, HeuristicDiagnosisKnowledgeSupport::class);
+        $this->app->singleton(DiagnosisImageValidator::class, function () {
+            return new DiagnosisImageValidator(
+                maxBytes: max(1, (int) config('wsa.plant_diagnosis.max_image_bytes', 5_242_880)),
+            );
+        });
 
         $this->app->singleton(AiService::class, fn ($app) => new AiService(
             $app->make(AiProviderResolver::class),

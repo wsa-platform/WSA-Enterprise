@@ -39,6 +39,7 @@ use App\Http\Controllers\Api\MonitoringController;
 use App\Http\Controllers\Api\MonitoringLogsController;
 use App\Http\Controllers\Api\OperationsController;
 use App\Http\Controllers\Api\OrganizationController;
+use App\Http\Controllers\Api\PlantAiDiagnosisController;
 use App\Http\Controllers\Api\PlatformAdminController;
 use App\Http\Controllers\Api\PlatformController;
 use App\Http\Controllers\Api\ProductImageController;
@@ -78,6 +79,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/research-agent/search', [AgriculturalResearchAgentController::class, 'search']);
         Route::post('/research-agent/validate', [AgriculturalResearchAgentController::class, 'validate']);
         Route::post('/research-agent/synthesize', [AgriculturalResearchAgentController::class, 'synthesize']);
+        Route::post('/plant-diagnosis/analyze', [PlantAiDiagnosisController::class, 'analyze']);
     });
 
     Route::middleware('throttle:20,1')->group(function (): void {
