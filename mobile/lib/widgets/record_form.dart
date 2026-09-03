@@ -66,7 +66,8 @@ class _RecordFormState extends State<RecordForm> {
     });
     try {
       final values = {
-        for (final field in widget.fields) field.name: _controllers[field.name]!.text.trim(),
+        for (final field in widget.fields)
+          field.name: _controllers[field.name]!.text.trim(),
       };
       await widget.onSubmit(values);
       for (final controller in _controllers.values) {
@@ -97,7 +98,8 @@ class _RecordFormState extends State<RecordForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(widget.title, style: Theme.of(context).textTheme.titleMedium),
+              Text(widget.title,
+                  style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
               for (final field in widget.fields)
                 Padding(
@@ -107,7 +109,9 @@ class _RecordFormState extends State<RecordForm> {
                     decoration: InputDecoration(labelText: field.label),
                     maxLines: field.maxLines,
                     validator: field.required
-                        ? (value) => (value == null || value.trim().isEmpty) ? '${field.label} is required' : null
+                        ? (value) => (value == null || value.trim().isEmpty)
+                            ? '${field.label} is required'
+                            : null
                         : null,
                   ),
                 ),

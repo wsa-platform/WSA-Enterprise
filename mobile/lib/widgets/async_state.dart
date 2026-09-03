@@ -8,6 +8,7 @@ class AsyncState extends StatelessWidget {
     this.forbidden = false,
     this.empty = false,
     this.emptyMessage = 'No records found.',
+    this.retryLabel = 'Retry',
     this.onRetry,
     required this.child,
   });
@@ -17,12 +18,13 @@ class AsyncState extends StatelessWidget {
   final bool forbidden;
   final bool empty;
   final String emptyMessage;
+  final String retryLabel;
   final VoidCallback? onRetry;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    if (loading && empty) {
+    if (loading) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -53,10 +55,12 @@ class AsyncState extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+              Text(error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red)),
               if (onRetry != null) ...[
                 const SizedBox(height: 16),
-                FilledButton(onPressed: onRetry, child: const Text('Retry')),
+                FilledButton(onPressed: onRetry, child: Text(retryLabel)),
               ],
             ],
           ),

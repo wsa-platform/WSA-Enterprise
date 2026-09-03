@@ -54,7 +54,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final organization = dashboard?['organization'] as Map<String, dynamic>? ?? {};
+    final organization =
+        dashboard?['organization'] as Map<String, dynamic>? ?? {};
     final metrics = dashboard?['metrics'] as Map<String, dynamic>? ?? {};
 
     return AsyncState(
@@ -66,7 +67,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(organization['name']?.toString() ?? 'Dashboard', style: Theme.of(context).textTheme.headlineSmall),
+            Text(organization['name']?.toString() ?? 'Dashboard',
+                style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
             Text('Signed in as ${widget.client.user?['name'] ?? 'User'}'),
             const SizedBox(height: 16),
@@ -74,12 +76,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
               spacing: 12,
               runSpacing: 12,
               children: [
-                _MetricCard(label: 'Open tasks', value: '${metrics['open_tasks'] ?? 0}'),
+                _MetricCard(
+                    label: 'Open tasks',
+                    value: '${metrics['open_tasks'] ?? 0}'),
                 _MetricCard(label: 'Farms', value: '${summary?['farms'] ?? 0}'),
-                _MetricCard(label: 'Diagnosis', value: '${summary?['diagnosis_requests'] ?? 0}'),
-                _MetricCard(label: 'Library', value: '${summary?['library_items'] ?? 0}'),
-                _MetricCard(label: 'Courses', value: '${summary?['training_courses'] ?? 0}'),
-                _MetricCard(label: 'Enrollments', value: '${summary?['active_enrollments'] ?? 0}'),
+                _MetricCard(
+                    label: 'Diagnosis',
+                    value: '${summary?['diagnosis_requests'] ?? 0}'),
+                _MetricCard(
+                    label: 'Library',
+                    value: '${summary?['library_items'] ?? 0}'),
+                _MetricCard(
+                    label: 'Courses',
+                    value: '${summary?['training_courses'] ?? 0}'),
+                _MetricCard(
+                    label: 'Enrollments',
+                    value: '${summary?['active_enrollments'] ?? 0}'),
               ],
             ),
           ],

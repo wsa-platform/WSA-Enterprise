@@ -4,13 +4,26 @@ import 'package:wsa_enterprise/api/api_client.dart';
 void main() {
   group('ApiClient.unwrapRows', () {
     test('returns list payloads directly', () {
-      expect(ApiClient.unwrapRows([{'id': 1}]), [{'id': 1}]);
+      expect(
+          ApiClient.unwrapRows([
+            {'id': 1}
+          ]),
+          [
+            {'id': 1}
+          ]);
     });
 
     test('unwraps paginated payloads', () {
       expect(
-        ApiClient.unwrapRows({'data': [{'id': 2}], 'current_page': 1}),
-        [{'id': 2}],
+        ApiClient.unwrapRows({
+          'data': [
+            {'id': 2}
+          ],
+          'current_page': 1
+        }),
+        [
+          {'id': 2}
+        ],
       );
     });
 
@@ -34,7 +47,8 @@ void main() {
 
     test('uses default forbidden message for 403 without body message', () {
       final error = ApiException('', statusCode: 403);
-      expect(error.toString(), 'You do not have permission to perform this action.');
+      expect(error.toString(),
+          'You do not have permission to perform this action.');
     });
   });
 }

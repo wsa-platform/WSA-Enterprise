@@ -8,11 +8,15 @@ class NotificationsApi {
 
   Future<List<ApiNotification>> list({int page = 1}) async {
     final rows = await http.getList('/notifications?page=$page');
-    return rows.map((row) => notificationFromJson(Map<String, dynamic>.from(row as Map))).toList();
+    return rows
+        .map((row) =>
+            notificationFromJson(Map<String, dynamic>.from(row as Map)))
+        .toList();
   }
 
   Future<ApiNotification> markRead(int notificationId) async {
-    final payload = await http.postJson('/notifications/$notificationId/read', {});
+    final payload =
+        await http.postJson('/notifications/$notificationId/read', {});
     return notificationFromJson(payload);
   }
 }

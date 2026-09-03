@@ -82,7 +82,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget get screen {
-    final key = ValueKey('$module-$reloadToken-${widget.client.organizationId}');
+    final key =
+        ValueKey('$module-$reloadToken-${widget.client.organizationId}');
     switch (module) {
       case AppModule.dashboard:
         return DashboardScreen(key: key, client: widget.client);
@@ -118,16 +119,22 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('WSA $title'),
         actions: [
           OrgSwitcher(client: widget.client, onChanged: reloadAll),
-          IconButton(onPressed: () => signOut(), icon: const Icon(Icons.logout), tooltip: 'Sign out'),
+          IconButton(
+              onPressed: () => signOut(),
+              icon: const Icon(Icons.logout),
+              tooltip: 'Sign out'),
         ],
       ),
       drawer: Drawer(
         child: ListView(
           children: [
             UserAccountsDrawerHeader(
-              accountName: Text(widget.client.user?['name']?.toString() ?? 'WSA User'),
-              accountEmail: Text(widget.client.user?['email']?.toString() ?? ''),
-              currentAccountPicture: const CircleAvatar(child: Icon(Icons.person)),
+              accountName:
+                  Text(widget.client.user?['name']?.toString() ?? 'WSA User'),
+              accountEmail:
+                  Text(widget.client.user?['email']?.toString() ?? ''),
+              currentAccountPicture:
+                  const CircleAvatar(child: Icon(Icons.person)),
             ),
             for (final entry in _drawerItems)
               ListTile(
@@ -153,10 +160,14 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() => module = _bottomModules[index]);
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), label: 'Dashboard'),
-          NavigationDestination(icon: Icon(Icons.agriculture_outlined), label: 'Farms'),
-          NavigationDestination(icon: Icon(Icons.grass_outlined), label: 'Crops'),
-          NavigationDestination(icon: Icon(Icons.biotech_outlined), label: 'Diagnosis'),
+          NavigationDestination(
+              icon: Icon(Icons.dashboard_outlined), label: 'Dashboard'),
+          NavigationDestination(
+              icon: Icon(Icons.agriculture_outlined), label: 'Farms'),
+          NavigationDestination(
+              icon: Icon(Icons.grass_outlined), label: 'Crops'),
+          NavigationDestination(
+              icon: Icon(Icons.biotech_outlined), label: 'Diagnosis'),
           NavigationDestination(icon: Icon(Icons.menu_outlined), label: 'More'),
         ],
       ),
@@ -164,7 +175,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   int get _bottomIndex {
-    const quick = [AppModule.dashboard, AppModule.farms, AppModule.crops, AppModule.diagnosis];
+    const quick = [
+      AppModule.dashboard,
+      AppModule.farms,
+      AppModule.crops,
+      AppModule.diagnosis
+    ];
     if (quick.contains(module)) return quick.indexOf(module);
     return 4;
   }
@@ -195,7 +211,8 @@ const _drawerItems = [
   _DrawerItem(AppModule.library, 'Library', Icons.menu_book_outlined),
   _DrawerItem(AppModule.ai, 'AI Services', Icons.psychology_outlined),
   _DrawerItem(AppModule.business, 'Business', Icons.storefront_outlined),
-  _DrawerItem(AppModule.notifications, 'Notifications', Icons.notifications_outlined),
+  _DrawerItem(
+      AppModule.notifications, 'Notifications', Icons.notifications_outlined),
   _DrawerItem(AppModule.profile, 'Profile', Icons.account_circle_outlined),
   _DrawerItem(AppModule.settings, 'Settings', Icons.settings_outlined),
 ];

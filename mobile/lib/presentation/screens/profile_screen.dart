@@ -39,7 +39,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = widget.client.typedUser;
-    final permissions = (me?['permissions'] as List<dynamic>?)?.map((item) => '$item').toList() ?? const <String>[];
+    final permissions = (me?['permissions'] as List<dynamic>?)
+            ?.map((item) => '$item')
+            .toList() ??
+        const <String>[];
     final roles = (me?['roles'] as List<dynamic>?) ?? const [];
 
     return AsyncState(
@@ -52,8 +55,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Card(
             child: ListTile(
               leading: const CircleAvatar(child: Icon(Icons.person)),
-              title: Text(user?.name ?? me?['user']?['name']?.toString() ?? 'User'),
-              subtitle: Text(user?.email ?? me?['user']?['email']?.toString() ?? ''),
+              title: Text(
+                  user?.name ?? me?['user']?['name']?.toString() ?? 'User'),
+              subtitle:
+                  Text(user?.email ?? me?['user']?['email']?.toString() ?? ''),
             ),
           ),
           const SizedBox(height: 12),
@@ -63,9 +68,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Organization', style: Theme.of(context).textTheme.titleMedium),
+                  Text('Organization',
+                      style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
-                  Text('Organization ID: ${me?['organization_id'] ?? widget.client.organizationId ?? '—'}'),
+                  Text(
+                      'Organization ID: ${me?['organization_id'] ?? widget.client.organizationId ?? '—'}'),
                   Text('Membership role: ${me?['membership_role'] ?? '—'}'),
                 ],
               ),
@@ -94,7 +101,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Permissions', style: Theme.of(context).textTheme.titleMedium),
+                  Text('Permissions',
+                      style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
                   if (permissions.isEmpty) const Text('No permissions loaded.'),
                   for (final permission in permissions) Text('• $permission'),

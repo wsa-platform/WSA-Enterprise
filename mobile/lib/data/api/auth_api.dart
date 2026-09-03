@@ -6,11 +6,12 @@ class AuthApi {
 
   final HttpClient http;
 
-  Future<Map<String, dynamic>> login(String email, String password) => http.postJson('/auth/login', {
-    'email': email,
-    'password': password,
-    'device_name': 'wsa-mobile',
-  });
+  Future<Map<String, dynamic>> login(String email, String password) =>
+      http.postJson('/auth/login', {
+        'email': email,
+        'password': password,
+        'device_name': 'wsa-mobile',
+      });
 
   Future<void> logout() async {
     await http.postJson('/auth/logout', {});

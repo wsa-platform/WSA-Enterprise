@@ -47,7 +47,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       });
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -66,10 +67,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           itemBuilder: (context, index) {
             final notification = rows[index];
             return ListTile(
-              leading: Icon(notification.isRead ? Icons.mark_email_read_outlined : Icons.mark_email_unread_outlined),
+              leading: Icon(notification.isRead
+                  ? Icons.mark_email_read_outlined
+                  : Icons.mark_email_unread_outlined),
               title: Text(notification.title),
               subtitle: Text(notification.body),
-              trailing: notification.isRead ? null : const Icon(Icons.circle, size: 10, color: Colors.deepPurple),
+              trailing: notification.isRead
+                  ? null
+                  : const Icon(Icons.circle,
+                      size: 10, color: Colors.deepPurple),
               onTap: () => markRead(notification),
             );
           },

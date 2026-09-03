@@ -52,10 +52,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Session', style: Theme.of(context).textTheme.titleMedium),
+                  Text('Session',
+                      style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
                   Text('API: ${widget.client.baseUrl}'),
-                  Text('Organization ID: ${widget.client.organizationId ?? '—'}'),
+                  Text(
+                      'Organization ID: ${widget.client.organizationId ?? '—'}'),
                 ],
               ),
             ),
@@ -67,7 +69,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('AI quota', style: Theme.of(context).textTheme.titleMedium),
+                  Text('AI quota',
+                      style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
                   if (quota == null) const Text('Quota summary unavailable.'),
                   if (quota != null) ...[

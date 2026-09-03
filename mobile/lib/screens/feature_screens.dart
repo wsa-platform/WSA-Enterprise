@@ -20,7 +20,8 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
 
   Future<void> submitRequest(Map<String, String> values) async {
     await widget.client.createDiagnosisRequest(
-      reference: values['reference'] ?? 'DX-MOB-${DateTime.now().millisecondsSinceEpoch}',
+      reference: values['reference'] ??
+          'DX-MOB-${DateTime.now().millisecondsSinceEpoch}',
       notes: values['notes'],
     );
     setState(() => reloadToken++);
@@ -34,8 +35,13 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
           title: 'Submit diagnosis case',
           submitLabel: 'Submit case',
           fields: const [
-            FormFieldConfig(name: 'reference', label: 'Reference', required: true),
-            FormFieldConfig(name: 'notes', label: 'Symptom notes', maxLines: 3, initialValue: 'بقع بنية على أوراق الطماطم'),
+            FormFieldConfig(
+                name: 'reference', label: 'Reference', required: true),
+            FormFieldConfig(
+                name: 'notes',
+                label: 'Symptom notes',
+                maxLines: 3,
+                initialValue: 'بقع بنية على أوراق الطماطم'),
           ],
           onSubmit: submitRequest,
         ),
@@ -48,7 +54,8 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
         ),
         Expanded(
           child: TabbedModuleScreen(
-            key: ValueKey('diagnosis-$reloadToken-${widget.client.organizationId}'),
+            key: ValueKey(
+                'diagnosis-$reloadToken-${widget.client.organizationId}'),
             client: widget.client,
             tabs: diagnosisTabs,
           ),
@@ -86,7 +93,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
       searchError = null;
     });
     try {
-      searchRows = await widget.client.searchLibrary(queryController.text.trim());
+      searchRows =
+          await widget.client.searchLibrary(queryController.text.trim());
     } on ApiException catch (e) {
       searchError = e.toString();
       searchRows = [];
@@ -127,12 +135,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 Expanded(
                   child: TextField(
                     controller: queryController,
-                    decoration: const InputDecoration(labelText: 'Search library'),
+                    decoration:
+                        const InputDecoration(labelText: 'Search library'),
                     textDirection: TextDirection.rtl,
                   ),
                 ),
                 const SizedBox(width: 8),
-                FilledButton(onPressed: searching ? null : runSearch, child: const Text('Search')),
+                FilledButton(
+                    onPressed: searching ? null : runSearch,
+                    child: const Text('Search')),
               ],
             ),
           ),
@@ -149,13 +160,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
             child: TabBarView(
               children: [
                 ModuleListScreen(
-                  key: ValueKey('library-published-$reloadToken-${widget.client.organizationId}'),
+                  key: ValueKey(
+                      'library-published-$reloadToken-${widget.client.organizationId}'),
                   client: widget.client,
                   title: 'Published',
                   path: '/library/items?publication_status=published',
                 ),
                 ModuleListScreen(
-                  key: ValueKey('library-categories-${widget.client.organizationId}'),
+                  key: ValueKey(
+                      'library-categories-${widget.client.organizationId}'),
                   client: widget.client,
                   title: 'Categories',
                   path: '/library/categories',
@@ -177,8 +190,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     itemBuilder: (context, index) {
                       final row = searchRows[index] as Map<String, dynamic>;
                       return ListTile(
-                        title: Text('${row['title_ar'] ?? row['title'] ?? 'Item'}', textDirection: TextDirection.rtl),
-                        subtitle: Text('${row['summary'] ?? ''}', textDirection: TextDirection.rtl),
+                        title: Text(
+                            '${row['title_ar'] ?? row['title'] ?? 'Item'}',
+                            textDirection: TextDirection.rtl),
+                        subtitle: Text('${row['summary'] ?? ''}',
+                            textDirection: TextDirection.rtl),
                       );
                     },
                   ),
@@ -263,14 +279,17 @@ class _AiScreenState extends State<AiScreen> {
               ? const SizedBox.shrink()
               : Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(provider!['decision_support_notice']?.toString() ?? 'AI decision support only.'),
+                  child: Text(
+                      provider!['decision_support_notice']?.toString() ??
+                          'AI decision support only.'),
                 ),
         ),
         RecordForm(
           title: 'Ask the agricultural library',
           submitLabel: 'Submit AI request',
           fields: const [
-            FormFieldConfig(name: 'question', label: 'Question', required: true),
+            FormFieldConfig(
+                name: 'question', label: 'Question', required: true),
           ],
           onSubmit: submitRequest,
         ),

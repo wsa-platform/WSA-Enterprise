@@ -30,9 +30,11 @@ void main() {
         fetch: (id) async {
           calls++;
           if (calls < 3) {
-            return ApiAiRequest(id: id, status: 'pending', requestType: 'library_qa');
+            return ApiAiRequest(
+                id: id, status: 'pending', requestType: 'library_qa');
           }
-          return ApiAiRequest(id: id, status: 'completed', requestType: 'library_qa');
+          return ApiAiRequest(
+              id: id, status: 'completed', requestType: 'library_qa');
         },
         interval: const Duration(milliseconds: 1),
         timeout: const Duration(seconds: 2),

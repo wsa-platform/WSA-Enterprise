@@ -26,7 +26,9 @@ class AiApi {
 
   Future<List<ApiAiRequest>> listRequests() async {
     final rows = await http.getList('/ai/requests');
-    return rows.map((row) => aiRequestFromJson(Map<String, dynamic>.from(row as Map))).toList();
+    return rows
+        .map((row) => aiRequestFromJson(Map<String, dynamic>.from(row as Map)))
+        .toList();
   }
 
   Future<Map<String, dynamic>> usageSummary() => http.getJson('/ai/usage');

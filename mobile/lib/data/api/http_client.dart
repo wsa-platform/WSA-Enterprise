@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:wsa_enterprise/data/api/api_exception.dart';
@@ -7,12 +8,16 @@ import 'package:wsa_enterprise/data/api/api_exception.dart';
 class HttpClient {
   HttpClient({
     required this.baseUrl,
+    http.Client? httpClient,
+    this.timeout = const Duration(seconds: 30),
     this.getToken,
     this.getOrganizationId,
     this.onUnauthorized,
-  });
+  }) : _http = httpClient ?? http.Client();
 
   final String baseUrl;
+  final http.Client _http;
+  final Duration timeout;
   final String? Function()? getToken;
   final int? Function()? getOrganizationId;
   void Function()? onUnauthorized;
@@ -25,38 +30,87 @@ class HttpClient {
     return [];
   }
 
-  Future<Map<String, dynamic>> getJson(String path) async {
-    final response = await http.get(Uri.parse('$baseUrl$path'), headers: _headers());
+  Future<Map<String, dynamic>> getJson(String path,
+      {Map<String, String>? query, Duration? timeout}) async {
+    final uri = _uri(path, query);
+    final response = await _send(
+        () => _http.get(uri, headers: _headers()), timeout ?? this.timeout);
     return _decodeResponse(response);
   }
 
-  Future<List<dynamic>> getList(String path) async {
-    final decoded = await getJson(path);
+  Future<List<dynamic>> getList(String path,
+      {Map<String, String>? query}) async {
+    final decoded = await getJson(path, query: query);
     return unwrapRows(decoded);
   }
 
-  Future<Map<String, dynamic>> postJson(String path, Map<String, dynamic> body) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl$path'),
-      headers: _headers(includeJson: true),
-      body: jsonEncode(body),
+  Future<Map<String, dynamic>> postJson(
+    String path,
+    Map<String, dynamic> body, {
+    Duration? timeout,
+  }) async {
+    final response = await _send(
+      () => _http.post(
+        _uri(path),
+        headers: _headers(includeJson: true),
+        body: jsonEncode(body),
+      ),
+      timeout ?? this.timeout,
     );
     return _decodeResponse(response);
   }
 
-  Future<Map<String, dynamic>> putJson(String path, Map<String, dynamic> body) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl$path'),
-      headers: _headers(includeJson: true),
-      body: jsonEncode(body),
+  Future<Map<String, dynamic>> putJson(
+      String path, Map<String, dynamic> body) async {
+    final response = await _send(
+      () => _http.put(
+        _uri(path),
+        headers: _headers(includeJson: true),
+        body: jsonEncode(body),
+      ),
+      timeout,
     );
     return _decodeResponse(response);
   }
 
   Future<void> delete(String path) async {
-    final response = await http.delete(Uri.parse('$baseUrl$path'), headers: _headers());
+    final response = await _send(
+        () => _http.delete(_uri(path), headers: _headers()), timeout);
     if (response.statusCode >= 400) {
       throw _parseError(response);
+    }
+  }
+
+  Future<List<int>> getBytes(String path, {Map<String, String>? query}) async {
+    final response = await _send(
+        () => _http.get(_uri(path, query), headers: _headers()), timeout);
+    if (response.statusCode >= 400) {
+      throw _parseError(response);
+    }
+    return response.bodyBytes;
+  }
+
+  Uri _uri(String path, [Map<String, String>? query]) {
+    final parsed = Uri.parse('$baseUrl$path');
+    if (query == null || query.isEmpty) return parsed;
+    return parsed.replace(queryParameters: {
+      ...parsed.queryParameters,
+      ...query,
+    });
+  }
+
+  Future<http.Response> _send(
+      Future<http.Response> Function() request, Duration timeout) async {
+    try {
+      return await request().timeout(timeout);
+    } on TimeoutException {
+      throw ApiException.network();
+    } on SocketException {
+      throw ApiException.network();
+    } on http.ClientException {
+      throw ApiException.network();
+    } on HandshakeException {
+      throw ApiException.network();
     }
   }
 
@@ -90,8 +144,14 @@ class HttpClient {
       });
     }
 
-    final message = payload?['message']?.toString() ?? 'Unable to complete the request.';
-    final exception = ApiException(message, statusCode: response.statusCode, errors: errors);
+    final message =
+        payload?['message']?.toString() ?? 'Unable to complete the request.';
+    final exception = ApiException(
+      message,
+      statusCode: response.statusCode,
+      errors: errors,
+      payload: payload,
+    );
 
     if (response.statusCode == 401 && getToken?.call() != null) {
       onUnauthorized?.call();

@@ -6,7 +6,8 @@ class ApiUser {
 }
 
 class ApiOrganization {
-  const ApiOrganization({required this.id, required this.name, required this.slug, this.role});
+  const ApiOrganization(
+      {required this.id, required this.name, required this.slug, this.role});
   final int id;
   final String name;
   final String slug;
@@ -34,7 +35,8 @@ class ApiAiRequest {
   final String? errorMessage;
 
   bool get isPending => status == 'pending' || status == 'processing';
-  bool get isTerminal => status == 'completed' || status == 'failed' || status == 'cancelled';
+  bool get isTerminal =>
+      status == 'completed' || status == 'failed' || status == 'cancelled';
 }
 
 class ApiNotification {
@@ -55,35 +57,39 @@ class ApiNotification {
 }
 
 ApiUser userFromJson(Map<String, dynamic> json) => ApiUser(
-  id: json['id'] as int,
-  name: json['name'] as String,
-  email: json['email'] as String,
-);
+      id: json['id'] as int,
+      name: json['name'] as String,
+      email: json['email'] as String,
+    );
 
-ApiOrganization organizationFromJson(Map<String, dynamic> json) => ApiOrganization(
-  id: json['id'] as int,
-  name: json['name'] as String,
-  slug: json['slug'] as String,
-  role: json['role'] as String?,
-);
+ApiOrganization organizationFromJson(Map<String, dynamic> json) =>
+    ApiOrganization(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      slug: json['slug'] as String,
+      role: json['role'] as String?,
+    );
 
 ApiDashboard dashboardFromJson(Map<String, dynamic> json) => ApiDashboard(
-  organization: Map<String, dynamic>.from(json['organization'] as Map),
-  metrics: Map<String, dynamic>.from(json['metrics'] as Map),
-);
+      organization: Map<String, dynamic>.from(json['organization'] as Map),
+      metrics: Map<String, dynamic>.from(json['metrics'] as Map),
+    );
 
 ApiAiRequest aiRequestFromJson(Map<String, dynamic> json) => ApiAiRequest(
-  id: json['id'] as int,
-  status: json['status'] as String,
-  requestType: json['request_type'] as String,
-  output: json['output'] == null ? null : Map<String, dynamic>.from(json['output'] as Map),
-  errorMessage: json['error_message'] as String?,
-);
+      id: json['id'] as int,
+      status: json['status'] as String,
+      requestType: json['request_type'] as String,
+      output: json['output'] == null
+          ? null
+          : Map<String, dynamic>.from(json['output'] as Map),
+      errorMessage: json['error_message'] as String?,
+    );
 
-ApiNotification notificationFromJson(Map<String, dynamic> json) => ApiNotification(
-  id: json['id'] as int,
-  title: json['title']?.toString() ?? 'Notification',
-  body: json['body']?.toString() ?? json['message']?.toString() ?? '',
-  readAt: json['read_at']?.toString(),
-  createdAt: json['created_at']?.toString(),
-);
+ApiNotification notificationFromJson(Map<String, dynamic> json) =>
+    ApiNotification(
+      id: json['id'] as int,
+      title: json['title']?.toString() ?? 'Notification',
+      body: json['body']?.toString() ?? json['message']?.toString() ?? '',
+      readAt: json['read_at']?.toString(),
+      createdAt: json['created_at']?.toString(),
+    );

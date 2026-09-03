@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
+import 'package:wsa_enterprise/config/app_config.dart';
 import 'package:wsa_enterprise/data/api/ai_api.dart';
 import 'package:wsa_enterprise/data/api/api_exception.dart';
 import 'package:wsa_enterprise/data/api/auth_api.dart';
@@ -8,6 +10,8 @@ import 'package:wsa_enterprise/data/api/http_client.dart';
 import 'package:wsa_enterprise/data/api/module_api.dart';
 import 'package:wsa_enterprise/data/api/notifications_api.dart';
 import 'package:wsa_enterprise/data/api/platform_api.dart';
+import 'package:wsa_enterprise/data/api/public_api.dart';
+import 'package:wsa_enterprise/data/media/diagnosis_image.dart';
 import 'package:wsa_enterprise/data/models/models.dart';
 import 'package:wsa_enterprise/data/storage/shared_preferences_token_storage.dart';
 import 'package:wsa_enterprise/data/storage/token_storage.dart';
@@ -20,11 +24,18 @@ class ApiClient {
   ApiClient({
     String? baseUrl,
     TokenStorage? tokenStorage,
-  })  : baseUrl = baseUrl ??
-            const String.fromEnvironment('API_URL', defaultValue: 'http://localhost:8081/api/v1'),
+    http.Client? httpClient,
+    AppConfig config = AppConfig.current,
+    DiagnosisImagePicker? diagnosisImagePicker,
+  })  : baseUrl = baseUrl ?? config.apiBaseUrl,
+        config = config,
+        diagnosisImagePicker =
+            diagnosisImagePicker ?? const UnavailableDiagnosisImagePicker(),
         _tokenStorage = tokenStorage ?? SharedPreferencesTokenStorage() {
     _http = HttpClient(
       baseUrl: this.baseUrl,
+      httpClient: httpClient,
+      timeout: config.requestTimeout,
       getToken: () => _token,
       getOrganizationId: () => _organizationId,
       onUnauthorized: _handleUnauthorized,
@@ -34,9 +45,12 @@ class ApiClient {
     ai = AiApi(_http);
     modules = ModuleApi(_http);
     notifications = NotificationsApi(_http);
+    publicApi = PublicPlatformApi(_http, config: config);
   }
 
   final String baseUrl;
+  final AppConfig config;
+  final DiagnosisImagePicker diagnosisImagePicker;
   final TokenStorage _tokenStorage;
 
   late final HttpClient _http;
@@ -45,6 +59,7 @@ class ApiClient {
   late final AiApi ai;
   late final ModuleApi modules;
   late final NotificationsApi notifications;
+  late final PublicPlatformApi publicApi;
 
   String? _token;
   int? _organizationId;
@@ -54,7 +69,8 @@ class ApiClient {
   String? get token => _token;
   int? get organizationId => _organizationId;
   Map<String, dynamic>? get user => _user;
-  List<Map<String, dynamic>> get organizations => List.unmodifiable(_organizations);
+  List<Map<String, dynamic>> get organizations =>
+      List.unmodifiable(_organizations);
 
   ApiUser? get typedUser => _user == null ? null : userFromJson(_user!);
 
@@ -109,8 +125,10 @@ class ApiClient {
         .toList();
 
     if (_organizationId != null &&
-        !_organizations.any((organization) => organization['id'] == _organizationId)) {
-      _organizationId = _organizations.isNotEmpty ? _organizations.first['id'] as int? : null;
+        !_organizations
+            .any((organization) => organization['id'] == _organizationId)) {
+      _organizationId =
+          _organizations.isNotEmpty ? _organizations.first['id'] as int? : null;
       if (_organizationId != null) {
         await _tokenStorage.writeOrganizationId(_organizationId!);
       } else {
@@ -141,36 +159,44 @@ class ApiClient {
     };
   }
 
-  Future<Map<String, dynamic>> fetchWorkflowSummary() => platform.workflowSummary();
+  Future<Map<String, dynamic>> fetchWorkflowSummary() =>
+      platform.workflowSummary();
 
   Future<Map<String, dynamic>> fetchAiProvider() => ai.provider();
 
   Future<List<dynamic>> fetchList(String path) => modules.fetchList(path);
 
-  static List<dynamic> unwrapRows(dynamic decoded) => HttpClient.unwrapRows(decoded);
+  static List<dynamic> unwrapRows(dynamic decoded) =>
+      HttpClient.unwrapRows(decoded);
 
-  Future<Map<String, dynamic>> createRecord(String path, Map<String, dynamic> payload) =>
+  Future<Map<String, dynamic>> createRecord(
+          String path, Map<String, dynamic> payload) =>
       modules.createRecord(path, payload);
 
-  Future<Map<String, dynamic>> updateRecord(String path, int id, Map<String, dynamic> payload) =>
+  Future<Map<String, dynamic>> updateRecord(
+          String path, int id, Map<String, dynamic> payload) =>
       modules.updateRecord(path, id, payload);
 
-  Future<void> deleteRecord(String path, int id) => modules.deleteRecord(path, id);
+  Future<void> deleteRecord(String path, int id) =>
+      modules.deleteRecord(path, id);
 
   Future<Map<String, dynamic>> createDiagnosisRequest({
     required String reference,
     String? notes,
     int? cropTypeId,
   }) =>
-      modules.createDiagnosisRequest(reference: reference, notes: notes, cropTypeId: cropTypeId);
+      modules.createDiagnosisRequest(
+          reference: reference, notes: notes, cropTypeId: cropTypeId);
 
-  Future<List<dynamic>> searchLibrary(String query) => modules.searchLibrary(query);
+  Future<List<dynamic>> searchLibrary(String query) =>
+      modules.searchLibrary(query);
 
   Future<Map<String, dynamic>> createAiRequest({
     required String requestType,
     required Map<String, dynamic> input,
   }) async {
-    final request = await ai.createRequest(requestType: requestType, input: input);
+    final request =
+        await ai.createRequest(requestType: requestType, input: input);
     return {
       'id': request.id,
       'status': request.status,
@@ -193,9 +219,11 @@ class ApiClient {
 
   Future<Map<String, dynamic>> fetchHealth() => _http.getJson('/health');
 
-  Future<List<ApiNotification>> fetchNotifications({int page = 1}) => notifications.list(page: page);
+  Future<List<ApiNotification>> fetchNotifications({int page = 1}) =>
+      notifications.list(page: page);
 
-  Future<ApiNotification> markNotificationRead(int notificationId) => notifications.markRead(notificationId);
+  Future<ApiNotification> markNotificationRead(int notificationId) =>
+      notifications.markRead(notificationId);
 
   Future<void> _clearSession() async {
     _token = null;

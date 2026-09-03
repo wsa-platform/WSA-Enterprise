@@ -20,7 +20,8 @@ class ModuleTab {
 }
 
 class TabbedModuleScreen extends StatelessWidget {
-  const TabbedModuleScreen({super.key, required this.client, required this.tabs});
+  const TabbedModuleScreen(
+      {super.key, required this.client, required this.tabs});
 
   final ApiClient client;
   final List<ModuleTab> tabs;
@@ -129,10 +130,15 @@ class _ModuleListScreenState extends State<ModuleListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete record'),
-        content: const Text('This action cannot be undone. Delete this record?'),
+        content:
+            const Text('This action cannot be undone. Delete this record?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete')),
         ],
       ),
     );
@@ -149,7 +155,8 @@ class _ModuleListScreenState extends State<ModuleListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final showEmptyOnly = !loading && rows.isEmpty && widget.createFields.isEmpty;
+    final showEmptyOnly =
+        !loading && rows.isEmpty && widget.createFields.isEmpty;
 
     return AsyncState(
       loading: loading && rows.isEmpty && widget.createFields.isEmpty,
@@ -190,7 +197,8 @@ class _ModuleListScreenState extends State<ModuleListScreen> {
 }
 
 class _RecordTile extends StatelessWidget {
-  const _RecordTile({required this.row, required this.allowDelete, this.onDelete});
+  const _RecordTile(
+      {required this.row, required this.allowDelete, this.onDelete});
 
   final Map<String, dynamic> row;
   final bool allowDelete;
@@ -198,7 +206,13 @@ class _RecordTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = row['title_ar'] ?? row['title'] ?? row['reference'] ?? row['name'] ?? row['code'] ?? row['request_type'] ?? 'Record';
+    final title = row['title_ar'] ??
+        row['title'] ??
+        row['reference'] ??
+        row['name'] ??
+        row['code'] ??
+        row['request_type'] ??
+        'Record';
     final subtitle = row['summary_ar'] ??
         row['summary'] ??
         row['notes'] ??
@@ -206,10 +220,15 @@ class _RecordTile extends StatelessWidget {
         row['output']?['summary'] ??
         row['output']?['answer'] ??
         '';
-    final meta = [row['provider'], row['status'], row['confidence_score']].where((value) => value != null).join(' · ');
+    final meta = [row['provider'], row['status'], row['confidence_score']]
+        .where((value) => value != null)
+        .join(' · ');
     return ListTile(
       title: Text('$title', textDirection: TextDirection.rtl),
-      subtitle: '$subtitle'.isEmpty ? (meta.isEmpty ? null : Text(meta)) : Text('$subtitle${meta.isEmpty ? '' : ' · $meta'}', textDirection: TextDirection.rtl),
+      subtitle: '$subtitle'.isEmpty
+          ? (meta.isEmpty ? null : Text(meta))
+          : Text('$subtitle${meta.isEmpty ? '' : ' · $meta'}',
+              textDirection: TextDirection.rtl),
       trailing: allowDelete && row['id'] != null
           ? IconButton(
               icon: const Icon(Icons.delete_outline),
@@ -233,10 +252,14 @@ class _RecordTile extends StatelessWidget {
 }
 
 const farmTabs = [
-  ModuleTab(label: 'Farms', path: '/farm/farms', allowDelete: true, createFields: [
-    FormFieldConfig(name: 'code', label: 'Code', required: true),
-    FormFieldConfig(name: 'name', label: 'Name', required: true),
-  ]),
+  ModuleTab(
+      label: 'Farms',
+      path: '/farm/farms',
+      allowDelete: true,
+      createFields: [
+        FormFieldConfig(name: 'code', label: 'Code', required: true),
+        FormFieldConfig(name: 'name', label: 'Name', required: true),
+      ]),
   ModuleTab(label: 'Regions', path: '/farm/regions'),
   ModuleTab(label: 'Fields', path: '/farm/fields'),
   ModuleTab(label: 'Blocks', path: '/farm/blocks'),
@@ -258,8 +281,10 @@ const cropTabs = [
 
 const soilTabs = [
   ModuleTab(label: 'Analyses', path: '/soil/analyses', createFields: [
-    FormFieldConfig(name: 'sample_reference', label: 'Sample reference', required: true),
-    FormFieldConfig(name: 'sampled_at', label: 'Sampled at (YYYY-MM-DD)', required: true),
+    FormFieldConfig(
+        name: 'sample_reference', label: 'Sample reference', required: true),
+    FormFieldConfig(
+        name: 'sampled_at', label: 'Sampled at (YYYY-MM-DD)', required: true),
   ]),
   ModuleTab(label: 'Nutrients', path: '/soil/nutrients'),
   ModuleTab(label: 'Recommendations', path: '/soil/recommendations'),
@@ -283,7 +308,8 @@ const trainingTabs = [
 ];
 
 const libraryTabs = [
-  ModuleTab(label: 'Published', path: '/library/items?publication_status=published'),
+  ModuleTab(
+      label: 'Published', path: '/library/items?publication_status=published'),
   ModuleTab(label: 'Categories', path: '/library/categories'),
   ModuleTab(label: 'Tags', path: '/library/tags'),
 ];
@@ -308,26 +334,30 @@ class FarmsScreen extends StatelessWidget {
   const FarmsScreen({super.key, required this.client});
   final ApiClient client;
   @override
-  Widget build(BuildContext context) => TabbedModuleScreen(client: client, tabs: farmTabs);
+  Widget build(BuildContext context) =>
+      TabbedModuleScreen(client: client, tabs: farmTabs);
 }
 
 class CropsScreen extends StatelessWidget {
   const CropsScreen({super.key, required this.client});
   final ApiClient client;
   @override
-  Widget build(BuildContext context) => TabbedModuleScreen(client: client, tabs: cropTabs);
+  Widget build(BuildContext context) =>
+      TabbedModuleScreen(client: client, tabs: cropTabs);
 }
 
 class SoilScreen extends StatelessWidget {
   const SoilScreen({super.key, required this.client});
   final ApiClient client;
   @override
-  Widget build(BuildContext context) => TabbedModuleScreen(client: client, tabs: soilTabs);
+  Widget build(BuildContext context) =>
+      TabbedModuleScreen(client: client, tabs: soilTabs);
 }
 
 class BusinessScreen extends StatelessWidget {
   const BusinessScreen({super.key, required this.client});
   final ApiClient client;
   @override
-  Widget build(BuildContext context) => TabbedModuleScreen(client: client, tabs: businessTabs);
+  Widget build(BuildContext context) =>
+      TabbedModuleScreen(client: client, tabs: businessTabs);
 }

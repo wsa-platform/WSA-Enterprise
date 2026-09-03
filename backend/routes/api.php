@@ -47,6 +47,7 @@ use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ProviderStatusController;
 use App\Http\Controllers\Api\PublicCropLibraryFileController;
 use App\Http\Controllers\Api\PublicFieldCropCultivationController;
+use App\Http\Controllers\Api\PublicFieldCropTaxonomyController;
 use App\Http\Controllers\Api\PublicPlatformController;
 use App\Http\Controllers\Api\ReportsController;
 use App\Http\Controllers\Api\SoilController;
@@ -73,6 +74,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/market/listings/{listing}', [MarketplacePublicController::class, 'show'])->whereNumber('listing');
         Route::get('/market/categories', [MarketplacePublicController::class, 'categories']);
         Route::get('/market/units', [MarketplacePublicController::class, 'units']);
+        Route::get('/field-crops/taxonomy', [PublicFieldCropTaxonomyController::class, 'index']);
         Route::get('/field-crops/farming-needs-profile', [PublicFieldCropCultivationController::class, 'farmingNeedsProfile']);
         Route::post('/research-agent/query', [AgriculturalResearchAgentController::class, 'query']);
         Route::post('/research-agent/plan', [AgriculturalResearchAgentController::class, 'plan']);

@@ -4,7 +4,8 @@ import 'package:wsa_enterprise/data/models/models.dart';
 void main() {
   group('model parsers', () {
     test('userFromJson maps user fields', () {
-      final user = userFromJson({'id': 1, 'name': 'Admin', 'email': 'admin@wsa.test'});
+      final user =
+          userFromJson({'id': 1, 'name': 'Admin', 'email': 'admin@wsa.test'});
       expect(user.id, 1);
       expect(user.name, 'Admin');
       expect(user.email, 'admin@wsa.test');
