@@ -389,8 +389,13 @@ class AgriculturalResearchAgentStage3Test extends TestCase
 
     public function test_rate_limit_and_timeout_handling(): void
     {
+        $openAlexCalls = 0;
         Http::fake([
-            'api.openalex.org/works*' => Http::response(['results' => []], 429),
+            'api.openalex.org/works*' => function () use (&$openAlexCalls) {
+                $openAlexCalls++;
+
+                return Http::response(['results' => []], 429);
+            },
             'api.crossref.org/works*' => function (): never {
                 throw new ConnectionException('timeout');
             },
@@ -402,6 +407,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
 
         $this->assertContains('openalex', $report->failedSources);
         $this->assertContains('crossref', $report->failedSources);
+        $this->assertSame(1, $openAlexCalls, 'OpenAlex must not retry variants after first 429');
     }
 
     public function test_structured_research_result_contract(): void

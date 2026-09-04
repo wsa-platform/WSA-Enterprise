@@ -68,8 +68,13 @@ class MultiSourceScientificSearchOrchestrator
             $key = $adapter->sourceKey();
             $attempted[] = $key;
             $adapterStatus[$key] = 'empty';
+            $skipRemainingVariants = false;
 
             foreach ($variants as $variant) {
+                if ($skipRemainingVariants) {
+                    continue;
+                }
+
                 $outcome = $adapter->search($variant, $limit);
                 $outcomes[] = $outcome;
 
@@ -88,9 +93,15 @@ class MultiSourceScientificSearchOrchestrator
                     continue;
                 }
 
-                // failed / unavailable / rate-limited / timeout
+                // failed / unavailable / rate-limited / timeout — provider-partial only
                 if ($adapterStatus[$key] !== 'success') {
                     $adapterStatus[$key] = 'failed';
+                }
+
+                // After first OpenAlex (or any provider) 429, skip remaining variants for
+                // that provider in this request; other providers still run all variants.
+                if ($this->isRateLimitedOutcome($outcome)) {
+                    $skipRemainingVariants = true;
                 }
             }
         }
@@ -135,6 +146,12 @@ class MultiSourceScientificSearchOrchestrator
             internetFirst: $plan->isInternetFirst(),
             searchQueries: $variants,
         );
+    }
+
+    private function isRateLimitedOutcome(ScientificSourceSearchOutcome $outcome): bool
+    {
+        return $outcome->status === ScientificSourceSearchOutcome::STATUS_UNAVAILABLE
+            && ($outcome->httpStatus === 429 || $outcome->error === 'rate_limited');
     }
 
     /**

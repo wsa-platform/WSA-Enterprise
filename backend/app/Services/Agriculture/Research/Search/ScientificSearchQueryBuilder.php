@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Research\Search;
 
+use App\Services\Agriculture\FieldCropTaxonomyCatalog;
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 
@@ -31,6 +32,7 @@ class ScientificSearchQueryBuilder
     {
         $query = $plan->normalizedQuery;
         $entity = $this->resolveEntityTerm($plan);
+        $commonLabels = $this->resolveCommonEntityLabels($plan);
         $topics = $this->resolveTopicTerms($plan);
         $sense = trim((string) ($query->constraints['scientific_sense'] ?? ''));
         $qualifier = trim((string) ($query->constraints['scientific_intent_qualifier'] ?? ''));
@@ -41,12 +43,61 @@ class ScientificSearchQueryBuilder
         $senseTerms = $sense !== ''
             ? AgriculturalEntityCatalog::senseQueryTerms($sense)
             : [];
+        $primaryCommon = $commonLabels[0] ?? null;
+        $wantsCultivationProduction = $this->wantsCultivationProductionVariants($plan);
+        $mentionsRhizome = $this->mentionsRhizome($plan);
 
         $variants = [];
 
         if ($entity !== null) {
+            // Rhizome questions: lead with rhizome variants so ranking is not hijacked by
+            // accidental irrigation topic matches from Arabic "ري" inside "ريزوم".
+            if ($mentionsRhizome) {
+                $variants[] = $this->joinTerms([$entity, 'rhizome']);
+                if ($primaryCommon !== null) {
+                    $variants[] = $this->joinTerms([$primaryCommon, 'rhizome']);
+                }
+                $topics = array_values(array_filter(
+                    $topics,
+                    static fn (string $topic): bool => ! in_array(mb_strtolower($topic), ['irrigation', 'water'], true),
+                ));
+                $factors = array_values(array_filter(
+                    $factors,
+                    static fn ($factor): bool => ! in_array(mb_strtolower((string) $factor), ['irrigation', 'water'], true),
+                ));
+                // Arabic "ريزوم" can false-match irrigation intent/sense; prefer growth terms.
+                $senseTerms = array_values(array_filter(
+                    $senseTerms,
+                    static fn (string $term): bool => ! in_array(mb_strtolower($term), [
+                        'irrigation', 'evapotranspiration', 'water use', 'water',
+                    ], true),
+                ));
+                if ($senseTerms === []) {
+                    $senseTerms = ['growth', 'physiology', 'cultivation'];
+                }
+            }
+
             $primaryTopic = $topics[0] ?? ($senseTerms[0] ?? null);
             $variants[] = $this->joinTerms([$entity, $primaryTopic, $senseTerms[0] ?? null]);
+
+            // Context-aware diversification: common crop labels + cultivation/production.
+            if ($primaryCommon !== null && strcasecmp($primaryCommon, $entity) !== 0) {
+                $variants[] = $this->joinTerms([$primaryCommon, $primaryTopic, $senseTerms[0] ?? null]);
+            }
+
+            if ($wantsCultivationProduction) {
+                if ($primaryCommon !== null) {
+                    $variants[] = $this->joinTerms([$primaryCommon, 'cultivation']);
+                    $variants[] = $this->joinTerms([$primaryCommon, 'production']);
+                }
+                $variants[] = $this->joinTerms([$entity, 'cultivation']);
+                $variants[] = $this->joinTerms([$entity, 'production']);
+
+                $genus = $this->genusFromScientificName($entity);
+                if ($genus !== null) {
+                    $variants[] = $this->joinTerms([$genus, 'cultivation']);
+                }
+            }
 
             foreach ($this->synonymTopicPairs($factors, $sense) as $pair) {
                 $variants[] = $this->joinTerms([$entity, $pair[0], $pair[1] ?? ($senseTerms[0] ?? null)]);
@@ -90,6 +141,85 @@ class ScientificSearchQueryBuilder
         }
 
         return $unique !== [] ? $unique : ['agriculture'];
+    }
+
+    /**
+     * English common / genus labels for the resolved crop (catalog-driven, not crop-hardcoded).
+     *
+     * @return list<string>
+     */
+    private function resolveCommonEntityLabels(KnowledgeQueryPlan $plan): array
+    {
+        $query = $plan->normalizedQuery;
+        $cropId = trim((string) ($query->cropId ?? ''));
+        if ($cropId === '') {
+            return [];
+        }
+
+        $scientific = trim((string) ($query->scientificName ?? ''));
+        $labels = [];
+        $idLabel = str_replace('-', ' ', $cropId);
+        if ($idLabel !== '') {
+            $labels[] = $idLabel;
+        }
+
+        foreach (FieldCropTaxonomyCatalog::searchTermsFor($cropId) as $term) {
+            $label = trim((string) $term);
+            if ($label === '' || ($scientific !== '' && strcasecmp($label, $scientific) === 0)) {
+                continue;
+            }
+            if (preg_match('/\p{Arabic}/u', $label) === 1) {
+                continue;
+            }
+            if (! in_array($label, $labels, true)) {
+                $labels[] = $label;
+            }
+        }
+
+        usort($labels, static fn (string $a, string $b): int => mb_strlen($a) <=> mb_strlen($b));
+
+        return array_values($labels);
+    }
+
+    private function wantsCultivationProductionVariants(KnowledgeQueryPlan $plan): bool
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if (in_array($sense, ['plant_growth'], true)) {
+            return true;
+        }
+
+        return in_array($plan->researchIntent, [
+            'cultivation',
+            'environmental_requirements',
+            'productivity',
+        ], true);
+    }
+
+    private function mentionsRhizome(KnowledgeQueryPlan $plan): bool
+    {
+        $query = $plan->normalizedQuery;
+        $haystack = mb_strtolower(trim(
+            $query->originalQuestion.' '.$query->normalizedQuestion.' '.implode(' ', $plan->topics)
+        ));
+
+        foreach (['rhizome', 'rhizomes', 'ريزوم', 'الريزوم', 'جذمور', 'الجذمور'] as $marker) {
+            if ($marker !== '' && mb_strpos($haystack, mb_strtolower($marker)) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function genusFromScientificName(string $scientificName): ?string
+    {
+        $parts = preg_split('/\s+/u', trim($scientificName)) ?: [];
+        $genus = trim((string) ($parts[0] ?? ''));
+        if ($genus === '' || strcasecmp($genus, $scientificName) === 0) {
+            return null;
+        }
+
+        return $genus;
     }
 
     /**
