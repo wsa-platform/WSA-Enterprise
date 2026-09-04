@@ -480,6 +480,9 @@ class AgriculturalResearchAgentStage3Test extends TestCase
 
         $response->assertOk();
         $this->assertSame(['openalex', 'crossref'], $response->json('selected_sources'));
-        Http::assertSentCount(2);
+        // Multi-query retrieval issues one request per variant × provider (Internet-First only).
+        Http::assertSentCount(count($response->json('search_queries') ?? [1]) * 2);
+        Http::assertSent(fn ($request): bool => str_contains($request->url(), 'api.openalex.org')
+            || str_contains($request->url(), 'api.crossref.org'));
     }
 }

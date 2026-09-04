@@ -38,7 +38,13 @@ class QueryUnderstandingService
 
         $language = $this->detectLanguage($originalQuestion);
         $normalizedQuestion = $this->normalizeQuestion($originalQuestion);
-        $researchIntent = $this->detectResearchIntent($normalizedQuestion, $input);
+        $topicFactors = AgriculturalEntityCatalog::extractTopicFactors($normalizedQuestion);
+        if ($topicFactors !== []) {
+            $constraints['scientific_factors'] = $topicFactors;
+            $constraints['scientific_topics'] = AgriculturalEntityCatalog::englishLabelsForFactors($topicFactors);
+        }
+
+        $researchIntent = $this->detectResearchIntent($normalizedQuestion, $input, $topicFactors);
         $agriculturalDomain = $this->detectDomain($normalizedQuestion, $explicitDomain, $researchIntent);
         $cropRecognition = AgriculturalEntityCatalog::recognizeCrop($normalizedQuestion);
         $subject = $this->detectSubject($normalizedQuestion, $input, $cropRecognition, $researchIntent);
@@ -47,8 +53,15 @@ class QueryUnderstandingService
         $cropLabel = is_array($cropRecognition) ? ($cropRecognition['label'] ?? null) : null;
         $scientificName = $this->resolveScientificName($cropIdResolved, $scientificNameInput, $normalizedQuestion);
 
-        [$topic, $subtopic] = $this->resolveTopicAndSubtopic($researchIntent, $agriculturalDomain, $subject);
-        $requestedInformation = $this->resolveRequestedInformation($researchIntent, $normalizedQuestion);
+        $intentQualifier = $this->detectIntentQualifier($normalizedQuestion);
+        $scientificSense = $this->resolveScientificSense($researchIntent, $topicFactors, $normalizedQuestion);
+        $domainBranch = $this->resolveDomainBranch($researchIntent, $scientificSense, $agriculturalDomain);
+        $constraints['scientific_intent_qualifier'] = $intentQualifier;
+        $constraints['scientific_sense'] = $scientificSense;
+        $constraints['scientific_domain_branch'] = $domainBranch;
+
+        [$topic, $subtopic] = $this->resolveTopicAndSubtopic($researchIntent, $topicFactors, $subject);
+        $requestedInformation = $this->resolveRequestedInformation($researchIntent, $normalizedQuestion, $topicFactors);
         $clarificationRequirements = [];
         $ambiguityState = AgriculturalKnowledgeQuery::AMBIGUITY_CLEAR;
         $hasExplicitEntities = is_array($input['entities'] ?? null) && $input['entities'] !== [];
@@ -116,11 +129,27 @@ class QueryUnderstandingService
             ? $this->normalizeQuestion($originalQuestion)
             : $this->normalizeQuestion(sprintf('%s %s', $cropName, $knowledgeOption));
 
+        $topicFactors = AgriculturalEntityCatalog::extractTopicFactors($normalizedQuestion);
+        if ($topicFactors !== []) {
+            $constraints['scientific_factors'] = $topicFactors;
+            $constraints['scientific_topics'] = AgriculturalEntityCatalog::englishLabelsForFactors($topicFactors);
+        }
+
         $researchIntent = match ($knowledgeOption) {
             'scientific-research' => 'scientific_literature',
             'industries' => 'agricultural_industry',
             default => 'cultivation',
         };
+
+        if ($topicFactors !== []) {
+            foreach ($topicFactors as $factor) {
+                $mapped = AgriculturalEntityCatalog::intentForTopicFactor($factor);
+                if ($mapped !== null) {
+                    $researchIntent = $mapped;
+                    break;
+                }
+            }
+        }
 
         $agriculturalDomain = $explicitDomain !== ''
             ? AgriculturalDomainCatalog::normalize($explicitDomain)
@@ -131,6 +160,15 @@ class QueryUnderstandingService
             };
 
         $scientificName = FieldCropTaxonomyCatalog::resolveScientificName($cropId, $scientificNameInput);
+        $intentQualifier = $this->detectIntentQualifier($normalizedQuestion);
+        $scientificSense = $this->resolveScientificSense($researchIntent, $topicFactors, $normalizedQuestion);
+        $constraints['scientific_intent_qualifier'] = $intentQualifier;
+        $constraints['scientific_sense'] = $scientificSense;
+        $constraints['scientific_domain_branch'] = $this->resolveDomainBranch(
+            $researchIntent,
+            $scientificSense,
+            $agriculturalDomain,
+        );
 
         return new AgriculturalKnowledgeQuery(
             originalQuestion: $originalQuestion !== '' ? $originalQuestion : $normalizedQuestion,
@@ -173,8 +211,9 @@ class QueryUnderstandingService
 
     /**
      * @param  array<string, mixed>  $input
+     * @param  list<string>  $topicFactors
      */
-    private function detectResearchIntent(string $normalizedQuestion, array $input): string
+    private function detectResearchIntent(string $normalizedQuestion, array $input, array $topicFactors = []): string
     {
         $explicitIntent = trim((string) ($input['research_intent'] ?? $input['intent'] ?? ''));
         if ($explicitIntent !== '' && in_array($explicitIntent, AgriculturalEntityCatalog::researchIntents(), true)) {
@@ -194,6 +233,21 @@ class QueryUnderstandingService
             if ($score > $bestScore) {
                 $bestScore = $score;
                 $bestIntent = $intent;
+            }
+        }
+
+        foreach ($topicFactors as $factor) {
+            $mapped = AgriculturalEntityCatalog::intentForTopicFactor($factor);
+            if ($mapped === null) {
+                continue;
+            }
+            // Prefer post-harvest / industry senses when the question names them explicitly.
+            $factorScore = in_array($factor, ['drying', 'storage', 'extraction'], true)
+                ? 80 + mb_strlen($factor)
+                : 40 + mb_strlen($factor);
+            if ($factorScore > $bestScore || ($bestIntent === 'general_knowledge' && $factorScore >= $bestScore)) {
+                $bestScore = $factorScore;
+                $bestIntent = $mapped;
             }
         }
 
@@ -222,6 +276,7 @@ class QueryUnderstandingService
             'agricultural_industry' => AgriculturalDomainCatalog::AGRICULTURAL_INDUSTRIES,
             'scientific_literature' => AgriculturalDomainCatalog::AGRICULTURAL_RESEARCH,
             'cultivation' => AgriculturalDomainCatalog::FIELD_CROPS,
+            'environmental_requirements' => AgriculturalDomainCatalog::FIELD_CROPS,
         ];
 
         $intentDomain = $intentDomainMap[$researchIntent] ?? AgriculturalDomainCatalog::GENERAL_AGRICULTURE;
@@ -229,7 +284,7 @@ class QueryUnderstandingService
             'irrigation', 'fertilization', 'soil_management', 'plant_nutrition',
             'disease', 'pest', 'beekeeping', 'aquaculture', 'poultry_production',
             'animal_production', 'feed', 'agricultural_economics', 'agricultural_industry',
-            'scientific_literature',
+            'scientific_literature', 'environmental_requirements',
         ];
 
         if (in_array($researchIntent, $operationalIntents, true)) {
@@ -336,24 +391,37 @@ class QueryUnderstandingService
             return trim($matches[1]);
         }
 
+        // Scientific names are lowercased by normalizeQuestion — recover binomial patterns.
+        if (preg_match('/\b([a-z]+)\s+(officinale|aestivum|mays|sativum|annuum|lycopersicum|vulgare)\b/u', $normalizedQuestion, $matches) === 1) {
+            return ucfirst($matches[1]).' '.$matches[2];
+        }
+
         return null;
     }
 
     /**
+     * @param  list<string>  $topicFactors
      * @param  array{type: string, value: string, label?: string}|null  $subject
      * @return array{0: string, 1: string|null}
      */
-    private function resolveTopicAndSubtopic(string $researchIntent, string $domain, ?array $subject): array
+    private function resolveTopicAndSubtopic(string $researchIntent, array $topicFactors, ?array $subject): array
     {
-        $subtopic = is_array($subject) ? (string) ($subject['value'] ?? null) : null;
+        $primaryTopic = $topicFactors[0] ?? $researchIntent;
+        $subtopic = $topicFactors[1] ?? (is_array($subject) ? (string) ($subject['value'] ?? null) : null);
 
-        return [$researchIntent, $subtopic];
+        return [$primaryTopic, $subtopic];
     }
 
-    /** @return list<string> */
-    private function resolveRequestedInformation(string $researchIntent, string $normalizedQuestion): array
+    /**
+     * @param  list<string>  $topicFactors
+     * @return list<string>
+     */
+    private function resolveRequestedInformation(string $researchIntent, string $normalizedQuestion, array $topicFactors): array
     {
         $requested = [$researchIntent, 'evidence_backed_guidance'];
+        foreach (AgriculturalEntityCatalog::englishLabelsForFactors($topicFactors) as $label) {
+            $requested[] = $label;
+        }
 
         if (str_contains($normalizedQuestion, 'best') || str_contains($normalizedQuestion, 'أفضل')) {
             $requested[] = 'recommendations';
@@ -441,11 +509,102 @@ class QueryUnderstandingService
     {
         return in_array($researchIntent, [
             'cultivation',
+            'environmental_requirements',
             'fertilization',
             'irrigation',
             'disease',
             'pest',
             'varieties',
+            'plant_nutrition',
         ], true);
+    }
+
+    private function detectIntentQualifier(string $normalizedQuestion): string
+    {
+        $best = 'general';
+        $bestScore = 0;
+
+        foreach (AgriculturalEntityCatalog::intentQualifierSignals() as $qualifier => $keywords) {
+            $score = 0;
+            foreach ($keywords as $keyword) {
+                if (AgriculturalEntityCatalog::containsTerm($normalizedQuestion, $keyword)) {
+                    $score += mb_strlen($keyword);
+                }
+            }
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $best = $qualifier;
+            }
+        }
+
+        return $best;
+    }
+
+    /**
+     * @param  list<string>  $topicFactors
+     */
+    private function resolveScientificSense(string $researchIntent, array $topicFactors, string $normalizedQuestion): string
+    {
+        if (in_array('germination', $topicFactors, true)) {
+            return 'seed_germination';
+        }
+        if (in_array('drying', $topicFactors, true)) {
+            return 'drying_processing';
+        }
+        if (in_array('storage', $topicFactors, true)) {
+            return 'storage';
+        }
+        // Extension/adoption overrides irrigation keyword noise (e.g. "adoption of irrigation").
+        if (AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'إرشاد')
+            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'extension')
+            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'تبني')
+            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'adoption')) {
+            return 'agricultural_extension';
+        }
+        if ($researchIntent === 'agricultural_economics'
+            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'جدوى')
+            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'اقتصاد زراعي')
+            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'اقتصادية')) {
+            return 'agricultural_economics';
+        }
+        if (in_array('salinity', $topicFactors, true)) {
+            return 'salinity_physiology';
+        }
+        if (in_array('water', $topicFactors, true) || $researchIntent === 'irrigation') {
+            return 'crop_water_requirement';
+        }
+        if (in_array($researchIntent, ['plant_nutrition'], true)
+            || in_array('potassium', $topicFactors, true)
+            || in_array('nitrogen', $topicFactors, true)
+            || in_array('phosphorus', $topicFactors, true)) {
+            return 'plant_nutrition';
+        }
+        if ($researchIntent === 'agricultural_industry') {
+            return 'agricultural_industry';
+        }
+        if (in_array($researchIntent, ['environmental_requirements', 'cultivation', 'productivity'], true)
+            || in_array('temperature', $topicFactors, true)) {
+            return 'plant_growth';
+        }
+
+        return $researchIntent !== '' ? $researchIntent : 'general';
+    }
+
+    private function resolveDomainBranch(string $researchIntent, string $scientificSense, string $agriculturalDomain): string
+    {
+        return match (true) {
+            $scientificSense === 'seed_germination',
+            $scientificSense === 'plant_growth',
+            $scientificSense === 'salinity_physiology' => 'plant_physiology',
+            $scientificSense === 'crop_water_requirement' => 'irrigation_agronomy',
+            $scientificSense === 'plant_nutrition' => 'plant_nutrition',
+            $scientificSense === 'drying_processing',
+            $scientificSense === 'storage',
+            $scientificSense === 'agricultural_industry' => 'food_science',
+            $scientificSense === 'agricultural_economics',
+            $researchIntent === 'agricultural_economics' => 'agricultural_economics',
+            $scientificSense === 'agricultural_extension' => 'agricultural_extension',
+            default => $agriculturalDomain !== '' ? $agriculturalDomain : 'crop_science',
+        };
     }
 }

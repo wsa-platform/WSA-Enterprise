@@ -65,6 +65,7 @@ class ScientificEvidenceRelevanceGate
         );
         $offDomain = $domainAssessment['hard_reject'];
         $blockedSenses = $this->blockedNegativeSenses($plan, $domainHaystack);
+        $crossDomainBlocked = $this->blockedCrossDomainProductionSenses($plan, $domainHaystack);
 
         $contextAdequate = ! $requiresEntity || ! $requiresTopic
             || $contextMatched
@@ -93,6 +94,11 @@ class ScientificEvidenceRelevanceGate
         if ($blockedSenses !== []) {
             $rejectionReasons[] = 'negative_context_sense';
             $score -= 45.0 * count($blockedSenses);
+        }
+
+        if ($crossDomainBlocked !== []) {
+            $rejectionReasons[] = 'cross_domain_production_sense';
+            $score -= 50.0;
         }
 
         if ($domainAssessment['penalty'] > 0.0) {
@@ -124,6 +130,7 @@ class ScientificEvidenceRelevanceGate
             || ($requiresTopic && ! $topicMatched)
             || $offDomain
             || $blockedSenses !== []
+            || $crossDomainBlocked !== []
             || ($requiresEntity && $requiresTopic && ! $contextAdequate)
             || ($requiresEntity && $requiresTopic && $score < self::MIN_SCORE_CROP_TOPIC);
 
@@ -137,6 +144,7 @@ class ScientificEvidenceRelevanceGate
             'context_matched' => $contextMatched,
             'context_adequate' => $contextAdequate,
             'blocked_senses' => $blockedSenses,
+            'cross_domain_blocked' => $crossDomainBlocked,
             'research_intent' => $plan->researchIntent,
             'domain_class' => $domainAssessment['domain_class'],
             'domain_penalty' => $domainAssessment['penalty'],
@@ -402,6 +410,61 @@ class ScientificEvidenceRelevanceGate
         }
 
         return false;
+    }
+
+    /**
+     * Plant-growth / germination / irrigation questions must not accept livestock/poultry
+     * feed trials that merely mention the crop name + temperature.
+     *
+     * @return list<string>
+     */
+    private function blockedCrossDomainProductionSenses(KnowledgeQueryPlan $plan, string $haystack): array
+    {
+        if ($haystack === '') {
+            return [];
+        }
+
+        if (in_array($plan->researchIntent, [
+            'animal_production',
+            'poultry_production',
+            'feed',
+            'aquaculture',
+            'beekeeping',
+        ], true)) {
+            return [];
+        }
+
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $plantSenses = [
+            'plant_growth',
+            'seed_germination',
+            'salinity_physiology',
+            'crop_water_requirement',
+            'plant_nutrition',
+        ];
+        if ($sense !== '' && ! in_array($sense, $plantSenses, true)) {
+            return [];
+        }
+        if ($sense === '' && ! $this->requiresEntity($plan)) {
+            return [];
+        }
+
+        $markers = [
+            'broiler' => ['broiler', 'broilers'],
+            'poultry' => ['poultry', 'chicken', 'chickens', 'hen ', ' hens'],
+            'livestock_feed' => ['livestock feed', 'animal feed', 'cattle diet', 'dairy cow', 'pig diet', 'swine diet'],
+        ];
+        $blocked = [];
+        foreach ($markers as $label => $needles) {
+            foreach ($needles as $needle) {
+                if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim($needle)))) {
+                    $blocked[] = $label;
+                    break;
+                }
+            }
+        }
+
+        return array_values(array_unique($blocked));
     }
 
     /**

@@ -17,6 +17,7 @@ final class ScientificSearchExecutionReport
      * @param  list<ScientificSearchResult>  $results
      * @param  list<ScientificSearchResult>  $deduplicatedResults
      * @param  array<string, mixed>  $planSummary
+     * @param  list<string>  $searchQueries
      */
     public function __construct(
         public readonly string $status,
@@ -31,6 +32,7 @@ final class ScientificSearchExecutionReport
         public readonly array $deduplicatedResults,
         public readonly array $planSummary,
         public readonly bool $internetFirst = true,
+        public readonly array $searchQueries = [],
     ) {}
 
     /** @return array<string, mixed> */
@@ -41,6 +43,7 @@ final class ScientificSearchExecutionReport
             'stage' => 3,
             'internet_first' => $this->internetFirst,
             'search_query' => $this->searchQuery,
+            'search_queries' => $this->searchQueries !== [] ? $this->searchQueries : [$this->searchQuery],
             'selected_sources' => $this->selectedSources,
             'attempted_sources' => $this->attemptedSources,
             'successful_sources' => $this->successfulSources,

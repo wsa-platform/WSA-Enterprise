@@ -6,6 +6,9 @@ use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 
 /**
  * Stage 3 multi-source scientific search orchestration layer.
+ *
+ * Runs all controlled query variants across selected Internet-First providers,
+ * then normalize → deduplicate → query-aware rank → relevance filter.
  */
 class MultiSourceScientificSearchOrchestrator
 {
@@ -19,22 +22,26 @@ class MultiSourceScientificSearchOrchestrator
 
     public function execute(KnowledgeQueryPlan $plan, int $limit = 10): ScientificSearchExecutionReport
     {
+        $variants = $this->queryBuilder->buildVariantsFromPlan($plan);
+        $searchQuery = $variants[0] ?? $this->queryBuilder->buildFromPlan($plan);
+
         $selectedSources = $this->sourceSelector->selectSources($plan);
         if ($selectedSources === []) {
             return $this->emptyReport(
                 plan: $plan,
                 status: $plan->needsClarification() ? 'needs_clarification' : 'no_sources_selected',
-                searchQuery: $this->queryBuilder->buildFromPlan($plan),
+                searchQuery: $searchQuery,
+                searchQueries: $variants,
             );
         }
 
-        $searchQuery = $this->queryBuilder->buildFromPlan($plan);
         if (trim($searchQuery) === '') {
             return $this->emptyReport(
                 plan: $plan,
                 status: 'empty_query',
                 searchQuery: '',
                 selectedSources: $selectedSources,
+                searchQueries: $variants,
             );
         }
 
@@ -45,6 +52,7 @@ class MultiSourceScientificSearchOrchestrator
                 status: 'unsupported_sources',
                 searchQuery: $searchQuery,
                 selectedSources: $selectedSources,
+                searchQueries: $variants,
             );
         }
 
@@ -54,33 +62,57 @@ class MultiSourceScientificSearchOrchestrator
         $successful = [];
         $failed = [];
         $empty = [];
+        $adapterStatus = [];
 
         foreach ($adapters as $adapter) {
-            $attempted[] = $adapter->sourceKey();
-            $outcome = $adapter->search($searchQuery, $limit);
-            $outcomes[] = $outcome;
+            $key = $adapter->sourceKey();
+            $attempted[] = $key;
+            $adapterStatus[$key] = 'empty';
 
-            if ($outcome->status === ScientificSourceSearchOutcome::STATUS_SUCCESS) {
-                $successful[] = $adapter->sourceKey();
-                $allResults = array_merge($allResults, $outcome->results);
+            foreach ($variants as $variant) {
+                $outcome = $adapter->search($variant, $limit);
+                $outcomes[] = $outcome;
 
-                continue;
+                if ($outcome->status === ScientificSourceSearchOutcome::STATUS_SUCCESS) {
+                    $adapterStatus[$key] = 'success';
+                    $allResults = array_merge($allResults, $outcome->results);
+
+                    continue;
+                }
+
+                if ($outcome->status === ScientificSourceSearchOutcome::STATUS_EMPTY) {
+                    if ($adapterStatus[$key] !== 'success' && $adapterStatus[$key] !== 'failed') {
+                        $adapterStatus[$key] = 'empty';
+                    }
+
+                    continue;
+                }
+
+                // failed / unavailable / rate-limited / timeout
+                if ($adapterStatus[$key] !== 'success') {
+                    $adapterStatus[$key] = 'failed';
+                }
             }
+        }
 
-            if ($outcome->status === ScientificSourceSearchOutcome::STATUS_EMPTY) {
-                $empty[] = $adapter->sourceKey();
-
-                continue;
+        foreach ($adapterStatus as $key => $status) {
+            if ($status === 'success') {
+                $successful[] = $key;
+            } elseif ($status === 'failed') {
+                $failed[] = $key;
+            } else {
+                $empty[] = $key;
             }
-
-            $failed[] = $adapter->sourceKey();
         }
 
         $deduplicated = $this->deduplicator->deduplicate($allResults);
-        $ranked = $this->ranker->rank($searchQuery, $deduplicated);
+        $ranked = $this->ranker->rank($searchQuery, $deduplicated, $plan);
+        $ranked = $this->ranker->filterRelevant($ranked);
+        $ranked = $this->ranker->diversifyByProviderJournalInstitution($ranked);
 
         $status = match (true) {
-            $successful !== [] => 'search_completed',
+            $successful !== [] && $ranked !== [] => 'search_completed',
+            $successful !== [] && $ranked === [] => 'no_results',
             $failed !== [] && $empty !== [] => 'partial_source_failure',
             $failed !== [] => 'all_sources_failed',
             default => 'no_results',
@@ -97,19 +129,24 @@ class MultiSourceScientificSearchOrchestrator
             sourceOutcomes: $outcomes,
             results: $allResults,
             deduplicatedResults: $ranked,
-            planSummary: $plan->toArray(),
+            planSummary: array_merge($plan->toArray(), [
+                'search_queries' => $variants,
+            ]),
             internetFirst: $plan->isInternetFirst(),
+            searchQueries: $variants,
         );
     }
 
     /**
      * @param  list<string>  $selectedSources
+     * @param  list<string>  $searchQueries
      */
     private function emptyReport(
         KnowledgeQueryPlan $plan,
         string $status,
         string $searchQuery,
         array $selectedSources = [],
+        array $searchQueries = [],
     ): ScientificSearchExecutionReport {
         return new ScientificSearchExecutionReport(
             status: $status,
@@ -124,6 +161,7 @@ class MultiSourceScientificSearchOrchestrator
             deduplicatedResults: [],
             planSummary: $plan->toArray(),
             internetFirst: $plan->isInternetFirst(),
+            searchQueries: $searchQueries,
         );
     }
 }

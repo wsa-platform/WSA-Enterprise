@@ -3,6 +3,7 @@
 namespace App\Services\Agriculture\Research\Validation;
 
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
+use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
 use App\Services\Agriculture\Research\Search\ScientificSearchExecutionReport;
 use App\Services\Agriculture\Research\Search\ScientificSearchResult;
 
@@ -32,6 +33,7 @@ class AgriculturalScientificValidationService
         private ClaimEvidenceMatcher $claimMatcher,
         private EvidenceConflictDetector $conflictDetector,
         private EvidenceQualityRanker $qualityRanker,
+        private ScientificEvidenceDirectnessAssessor $directnessAssessor,
     ) {}
 
     public function validate(
@@ -80,7 +82,42 @@ class AgriculturalScientificValidationService
             ),
         ));
 
-        $evidenceSufficient = $supportedCount >= 1;
+        $directCount = count(array_filter(
+            $validated,
+            static fn (ScientificEvidenceItem $item): bool => ($item->qualityFactors['evidence_directness'] ?? null)
+                === ScientificEvidenceDirectnessAssessor::DIRECT,
+        ));
+        $supportingCount = count(array_filter(
+            $validated,
+            static fn (ScientificEvidenceItem $item): bool => ($item->qualityFactors['evidence_directness'] ?? null)
+                === ScientificEvidenceDirectnessAssessor::SUPPORTING,
+        ));
+        $backgroundCount = count(array_filter(
+            $validated,
+            static fn (ScientificEvidenceItem $item): bool => ($item->qualityFactors['evidence_directness'] ?? null)
+                === ScientificEvidenceDirectnessAssessor::BACKGROUND,
+        ));
+        $maxConfidence = 0.0;
+        foreach ($validated as $item) {
+            $maxConfidence = max($maxConfidence, $item->confidence);
+        }
+
+        $requiresCropTopic = ($plan->normalizedQuery->cropId !== null
+                || $plan->normalizedQuery->scientificName !== null)
+            && is_array($plan->normalizedQuery->constraints['scientific_factors'] ?? null)
+            && ($plan->normalizedQuery->constraints['scientific_factors'] ?? []) !== [];
+
+        // Capability-based sufficiency: one DIRECT can suffice; sole BACKGROUND on
+        // crop+topic questions cannot; rigid minimum citation count is not required.
+        $evidenceSufficient = match (true) {
+            $directCount >= 1 => true,
+            $requiresCropTopic && $backgroundCount > 0 && $directCount === 0 && $supportingCount === 0 => false,
+            $supportingCount >= 1 && $supportedCount >= 1 => true,
+            $supportedCount >= 1 && ! $requiresCropTopic => true,
+            $supportedCount >= 2 => true,
+            default => false,
+        };
+
         $status = match (true) {
             $validated !== [] => 'validation_completed',
             $items !== [] => 'validation_completed_with_rejections',
@@ -105,9 +142,14 @@ class AgriculturalScientificValidationService
                 'search_status' => $searchReport->status,
                 'internet_first' => $searchReport->internetFirst,
                 'search_query' => $searchReport->searchQuery,
+                'search_queries' => $searchReport->searchQueries !== []
+                    ? $searchReport->searchQueries
+                    : [$searchReport->searchQuery],
                 'selected_sources' => $searchReport->selectedSources,
                 'attempted_sources' => $searchReport->attemptedSources,
                 'successful_sources' => $searchReport->successfulSources,
+                'direct_evidence_count' => $directCount,
+                'supporting_evidence_count' => $supportingCount,
             ],
             observability: [
                 'failure_reasons' => $this->collectFailureReasons($items),
@@ -116,6 +158,10 @@ class AgriculturalScientificValidationService
                     $items,
                 )))),
                 'validation_status_counts' => $this->statusCounts($items),
+                'evidence_directness_counts' => [
+                    'direct' => $directCount,
+                    'supporting' => $supportingCount,
+                ],
             ],
         );
     }
@@ -176,6 +222,23 @@ class AgriculturalScientificValidationService
             $isDuplicate,
         );
 
+        $directness = $this->directnessAssessor->assess(
+            $plan,
+            $result->title,
+            $extraction['text'] ?? $result->abstract,
+            $result->doi,
+        );
+        $qualityScore['factors']['evidence_directness'] = $directness['directness'];
+        $qualityScore['factors']['directness_score'] = $directness['score'];
+        $qualityScore['factors']['directness_reasons'] = $directness['reasons'];
+        if ($directness['directness'] === ScientificEvidenceDirectnessAssessor::DIRECT) {
+            $qualityScore['score'] = min(100.0, $qualityScore['score'] + 8.0);
+        } elseif ($directness['directness'] === ScientificEvidenceDirectnessAssessor::SUPPORTING) {
+            $qualityScore['score'] = min(100.0, $qualityScore['score'] + 3.0);
+        } elseif ($directness['directness'] === ScientificEvidenceDirectnessAssessor::BACKGROUND) {
+            $qualityScore['score'] = max(0.0, $qualityScore['score'] - 15.0);
+        }
+
         $source = is_array($quality['source'] ?? null) ? $quality['source'] : [];
         $sourceId = (string) ($result->sourceIdentifier ?? $result->doi ?? $result->canonicalUrl ?? md5($result->title));
         $evidenceId = md5($sourceId.'|'.$result->title);
@@ -210,6 +273,7 @@ class AgriculturalScientificValidationService
                 'source_type' => $source['source_type'] ?? null,
                 'found_by_sources' => $result->foundBySources,
                 'confidence_level' => $quality['confidence_level'] ?? null,
+                'evidence_directness' => $directness['directness'],
             ],
             cropOrEntity: is_string($cropOrEntity) ? $cropOrEntity : null,
         );

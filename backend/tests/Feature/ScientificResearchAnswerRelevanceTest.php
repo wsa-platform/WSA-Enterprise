@@ -288,12 +288,20 @@ class ScientificResearchAnswerRelevanceTest extends TestCase
         ]);
         $variants = app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan);
 
-        $this->assertLessThanOrEqual(3, count($variants));
+        $this->assertLessThanOrEqual(5, count($variants));
+        $this->assertGreaterThanOrEqual(2, count($variants));
         $this->assertNotEmpty($variants);
         foreach ($variants as $variant) {
             $this->assertStringNotContainsString('الزنجبيل', $variant);
             $this->assertMatchesRegularExpression('/[A-Za-z]/', $variant);
         }
+        $joined = implode(' | ', $variants);
+        $this->assertStringContainsString('Zingiber officinale', $joined);
+        $this->assertTrue(
+            str_contains($joined, 'temperature')
+            || str_contains($joined, 'thermal')
+            || str_contains($joined, 'growth'),
+        );
     }
 
     /** A — growth/climate ginger prefers cultivation sense, rejects MAE extraction. */

@@ -88,6 +88,15 @@ class ResearchPlanner
     private function buildGenericKnowledgePlan(AgriculturalKnowledgeQuery $query, array $input): KnowledgeQueryPlan
     {
         $topics = [$query->topic];
+        $factorTopics = $query->constraints['scientific_topics'] ?? [];
+        if (is_array($factorTopics)) {
+            foreach ($factorTopics as $factorTopic) {
+                $label = trim((string) $factorTopic);
+                if ($label !== '' && ! in_array($label, $topics, true)) {
+                    $topics[] = $label;
+                }
+            }
+        }
         $subtopics = $query->subtopic !== null ? [$query->subtopic] : [];
 
         return new KnowledgeQueryPlan(

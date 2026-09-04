@@ -92,7 +92,10 @@ final class AgriculturalEntityCatalog
             'beekeeping' => ['beekeeping', 'apiculture', 'نحل', 'تربية نحل'],
             'aquaculture' => ['aquaculture', 'fish farming', 'استزراع', 'أسماك'],
             'feed' => ['animal feed', 'feed formulation', 'علف', 'تغذية'],
-            'agricultural_economics' => ['farm economics', 'profitability', 'agricultural economics', 'اقتصاد زراعي'],
+            'agricultural_economics' => [
+                'farm economics', 'profitability', 'agricultural economics', 'اقتصاد زراعي',
+                'economic feasibility', 'feasibility', 'جدوى', 'اقتصادية', 'اقتصادي',
+            ],
             'agricultural_industry' => [
                 'processing', 'value chain', 'agricultural industry', 'صناعة',
                 'drying', 'storage', 'extraction', 'تجفيف', 'تخزين', 'استخلاص',
@@ -268,6 +271,71 @@ final class AgriculturalEntityCatalog
     }
 
     /**
+     * Intent qualifiers (effect / optimal / requirement) — not crop-specific.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function intentQualifierSignals(): array
+    {
+        return [
+            'optimal_range' => ['optimal', 'optimum', 'best', 'أفضل', 'مناسبة', 'مناسب'],
+            'effect' => ['effect', 'impact', 'influence', 'تأثير', 'اثر', 'أثر'],
+            'requirement' => ['requirement', 'need', 'needs', 'احتياج', 'احتياجات', 'متطلبات'],
+            'economic_feasibility' => ['feasibility', 'profitability', 'جدوى', 'ربحية'],
+            'extension_adoption' => ['extension', 'adoption', 'إرشاد', 'تبني'],
+        ];
+    }
+
+    /**
+     * Sense-aware scientific synonym expansions for controlled query variants.
+     * Synonyms are not always equivalent — callers pick by sense.
+     *
+     * @return list<string>
+     */
+    public static function scientificSynonymsForFactor(string $factor, ?string $sense = null): array
+    {
+        return match ($factor) {
+            'temperature' => match ($sense) {
+                'seed_germination' => ['temperature', 'germination temperature', 'thermal'],
+                'drying_processing' => ['drying temperature', 'temperature', 'thermal'],
+                'storage' => ['storage temperature', 'temperature'],
+                default => ['temperature', 'thermal', 'heat stress', 'thermal stress'],
+            },
+            'water' => ['water', 'crop water requirement', 'irrigation requirement', 'evapotranspiration', 'water use'],
+            'salinity' => ['salinity', 'salt stress', 'salinity tolerance', 'saline'],
+            'germination' => ['germination', 'seed germination', 'emergence', 'seedling emergence'],
+            'potassium' => ['potassium', 'potassium deficiency', 'K deficiency'],
+            'nitrogen' => ['nitrogen', 'nitrogen deficiency'],
+            'phosphorus' => ['phosphorus', 'phosphate'],
+            'drying' => ['drying', 'dehydration', 'hot air drying'],
+            'storage' => ['storage', 'postharvest storage', 'shelf life'],
+            default => $factor !== '' ? [$factor] : [],
+        };
+    }
+
+    /**
+     * Query terms that encode scientific sense (growth / germination / irrigation…).
+     *
+     * @return list<string>
+     */
+    public static function senseQueryTerms(string $sense): array
+    {
+        return match ($sense) {
+            'plant_growth' => ['growth', 'physiology', 'cultivation', 'yield'],
+            'seed_germination' => ['seed germination', 'germination'],
+            'crop_water_requirement' => ['irrigation', 'evapotranspiration', 'water use'],
+            'salinity_physiology' => ['growth', 'yield', 'physiology'],
+            'drying_processing' => ['drying', 'dehydration'],
+            'storage' => ['storage', 'postharvest'],
+            'plant_nutrition' => ['plant nutrition', 'nutrient deficiency'],
+            'agricultural_economics' => ['agricultural economics', 'farm profitability'],
+            'agricultural_extension' => ['agricultural extension', 'farmer adoption'],
+            'agricultural_industry' => ['processing', 'value chain'],
+            default => ['agriculture'],
+        };
+    }
+
+    /**
      * English topic terms used for scientific query construction and evidence matching.
      *
      * @return list<string>
@@ -286,6 +354,8 @@ final class AgriculturalEntityCatalog
             'productivity' => ['yield', 'productivity', 'agriculture'],
             'varieties' => ['cultivar', 'variety', 'agriculture'],
             'scientific_literature' => ['scientific literature', 'agriculture'],
+            'agricultural_economics' => ['agricultural economics', 'farm economics', 'agriculture'],
+            'agricultural_industry' => ['processing', 'postharvest', 'agriculture'],
             'general_knowledge' => ['agriculture', 'farming'],
             default => ['agriculture'],
         };
