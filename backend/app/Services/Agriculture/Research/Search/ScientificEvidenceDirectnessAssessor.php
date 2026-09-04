@@ -81,6 +81,7 @@ class ScientificEvidenceDirectnessAssessor
         $factorCoverage = $factors === [] ? 1.0 : ($factorHits / max(count($factors), 1));
 
         $senseCoverage = $sense === '' || $this->sensePresentInHaystack($sense, $haystack);
+        // Intent qualifier answerability is required for DIRECT — never auto-true.
         $qualifierCoverage = $qualifier === '' || $qualifier === 'general'
             || $this->qualifierPresentInHaystack($qualifier, $haystack);
 
@@ -92,14 +93,50 @@ class ScientificEvidenceDirectnessAssessor
 
         // Wrong primary sense factor present in query but missing in paper → not DIRECT.
         $requiredSenseFactorMissing = $this->requiredSenseFactorMissing($factors, $haystack);
+        $oilDemotion = $this->essentialOilPrimaryDemotion($plan, $haystack);
 
         if ($entityMatched && $topicMatched && $senseCoverage && ! $requiredSenseFactorMissing
             && ($senseMatched || $contextMatched || $factorCoverage >= 0.99)
-            && ($qualifierCoverage || $factorCoverage >= 0.99)) {
+            && $qualifierCoverage) {
+            // Germination / growth+temperature: essential-oil papers are not primary DIRECT answers.
+            if ($oilDemotion === 'supporting') {
+                return [
+                    'directness' => self::SUPPORTING,
+                    'score' => 14.0 + (8.0 * $factorCoverage),
+                    'reasons' => [$this->essentialOilDemotionReason($plan, 'supporting')],
+                    'factor_coverage' => round($factorCoverage, 3),
+                    'sense_coverage' => $senseCoverage,
+                    'entity_matched' => true,
+                    'topic_matched' => true,
+                ];
+            }
+            if ($oilDemotion === 'background') {
+                return [
+                    'directness' => self::BACKGROUND,
+                    'score' => 4.0,
+                    'reasons' => [$this->essentialOilDemotionReason($plan, 'background')],
+                    'factor_coverage' => round($factorCoverage, 3),
+                    'sense_coverage' => $senseCoverage,
+                    'entity_matched' => true,
+                    'topic_matched' => true,
+                ];
+            }
+
+            $directScore = 40.0 + (20.0 * $factorCoverage);
+            $reasons = ['entity_topic_sense_aligned'];
+            if ($this->isGerminationIntent($plan) && $this->hasGerminationEvidenceSignals($haystack)) {
+                $directScore += 6.0;
+                $reasons[] = 'germination_evidence_preferred';
+            }
+            if ($this->isPlantGrowthTemperatureIntent($plan) && $this->hasPlantGrowthEvidenceSignals($haystack)) {
+                $directScore += 6.0;
+                $reasons[] = 'growth_evidence_preferred';
+            }
+
             return [
                 'directness' => self::DIRECT,
-                'score' => 40.0 + (20.0 * $factorCoverage),
-                'reasons' => ['entity_topic_sense_aligned'],
+                'score' => $directScore,
+                'reasons' => $reasons,
                 'factor_coverage' => round($factorCoverage, 3),
                 'sense_coverage' => $senseCoverage,
                 'entity_matched' => true,
@@ -108,11 +145,28 @@ class ScientificEvidenceDirectnessAssessor
         }
 
         if ($entityMatched && $topicMatched && ! $requiredSenseFactorMissing) {
-            $reasons[] = 'entity_topic_partial_sense';
+            if ($oilDemotion === 'background') {
+                return [
+                    'directness' => self::BACKGROUND,
+                    'score' => 3.0,
+                    'reasons' => [$this->essentialOilDemotionReason($plan, 'background')],
+                    'factor_coverage' => round($factorCoverage, 3),
+                    'sense_coverage' => $senseCoverage,
+                    'entity_matched' => true,
+                    'topic_matched' => true,
+                ];
+            }
+
+            $reasons[] = $qualifierCoverage
+                ? 'entity_topic_partial_sense'
+                : 'missing_qualifier_answerability';
+            if ($oilDemotion === 'supporting') {
+                $reasons[] = $this->essentialOilDemotionReason($plan, 'supporting');
+            }
 
             return [
                 'directness' => self::SUPPORTING,
-                'score' => 18.0 + (12.0 * $factorCoverage),
+                'score' => 18.0 + (12.0 * $factorCoverage) - ($oilDemotion === 'supporting' ? 6.0 : 0.0),
                 'reasons' => $reasons,
                 'factor_coverage' => round($factorCoverage, 3),
                 'sense_coverage' => $senseCoverage,
@@ -122,6 +176,21 @@ class ScientificEvidenceDirectnessAssessor
         }
 
         if ($entityMatched && $topicMatched && $requiredSenseFactorMissing) {
+            if ($oilDemotion === 'background' || $oilDemotion === 'supporting') {
+                return [
+                    'directness' => $oilDemotion === 'background' ? self::BACKGROUND : self::SUPPORTING,
+                    'score' => $oilDemotion === 'background' ? 3.0 : 8.0,
+                    'reasons' => [
+                        'missing_required_sense_factor',
+                        $this->essentialOilDemotionReason($plan, $oilDemotion),
+                    ],
+                    'factor_coverage' => round($factorCoverage, 3),
+                    'sense_coverage' => false,
+                    'entity_matched' => true,
+                    'topic_matched' => true,
+                ];
+            }
+
             return [
                 'directness' => self::SUPPORTING,
                 'score' => 12.0,
@@ -229,17 +298,220 @@ class ScientificEvidenceDirectnessAssessor
 
     private function qualifierPresentInHaystack(string $qualifier, string $haystack): bool
     {
+        if ($haystack === '') {
+            return false;
+        }
+
         $signals = AgriculturalEntityCatalog::intentQualifierSignals()[$qualifier] ?? [];
         foreach ($signals as $signal) {
-            if (preg_match('/\p{Arabic}/u', $signal) === 1) {
+            $normalized = mb_strtolower(trim($signal));
+            if ($normalized === '') {
                 continue;
             }
+            if ($this->signalPresentPositively($haystack, $normalized)) {
+                return true;
+            }
+        }
+
+        // Semantic answerability — never auto-true for effect/requirement/optimal_range.
+        return match ($qualifier) {
+            'optimal_range' => $this->hasOptimalRangeAnswerability($haystack),
+            'effect' => $this->hasEffectAnswerability($haystack),
+            'requirement' => $this->hasRequirementAnswerability($haystack),
+            default => false,
+        };
+    }
+
+    /**
+     * True when $signal appears and is not under local negation
+     * ("without … optima", "no optimal", "not reporting °C", etc.).
+     */
+    private function signalPresentPositively(string $haystack, string $signal): bool
+    {
+        if (! AgriculturalEntityCatalog::containsTerm($haystack, $signal)
+            && mb_strpos($haystack, $signal) === false) {
+            return false;
+        }
+
+        $quoted = preg_quote($signal, '/');
+        if (preg_match(
+            '/\b(?:without|no|not|never|lacks?|absent|missing|neither|nor)\b[\s\w\-,]{0,48}'.$quoted.'/u',
+            $haystack,
+        ) === 1) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function hasOptimalRangeAnswerability(string $haystack): bool
+    {
+        // Temperature / numeric range signals (°C, C, ranges, between X and Y).
+        if (preg_match('/\d+(?:[.,]\d+)?\s*(?:°\s*)?[cCfF]\b/u', $haystack) === 1
+            && preg_match('/\b(?:without|no|not|never)\b[\s\w\-,]{0,40}\d+(?:[.,]\d+)?\s*(?:°\s*)?[cCfF]\b/u', $haystack) !== 1) {
+            return true;
+        }
+        if (preg_match('/\b(?:celsius|centigrade|fahrenheit)\b/u', $haystack) === 1) {
+            return true;
+        }
+        if (preg_match('/\b\d+(?:[.,]\d+)?\s*[-–—]\s*\d+(?:[.,]\d+)?/u', $haystack) === 1) {
+            return true;
+        }
+        if (preg_match('/\bbetween\s+\d+(?:[.,]\d+)?\s+and\s+\d+(?:[.,]\d+)?/u', $haystack) === 1) {
+            return true;
+        }
+        if ($this->signalPresentPositively($haystack, 'temperature range')
+            || $this->signalPresentPositively($haystack, 'thermal range')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function hasEffectAnswerability(string $haystack): bool
+    {
+        return preg_match(
+            '/\b(?:affect(?:s|ed|ing)?|effect(?:s)?|impact(?:s|ed|ing)?|influenc(?:e|es|ed|ing)|respons(?:e|es)|increas(?:e|es|ed|ing)|decreas(?:e|es|ed|ing)|reduc(?:e|es|ed|ing)|improv(?:e|es|ed|ing)|inhibit(?:s|ed|ing)?)\b/u',
+            $haystack,
+        ) === 1;
+    }
+
+    private function hasRequirementAnswerability(string $haystack): bool
+    {
+        return preg_match(
+            '/\b(?:requirement(?:s)?|required|requir(?:e|es|ing)|need(?:s|ed|ing)?|demand(?:s)?|evapotranspiration|crop\s+water)\b/u',
+            $haystack,
+        ) === 1;
+    }
+
+    /**
+     * Demote essential-oil primary papers for germination and plant_growth+temperature intents.
+     * Oils questions are never demoted.
+     *
+     * @return 'supporting'|'background'|null
+     */
+    private function essentialOilPrimaryDemotion(KnowledgeQueryPlan $plan, string $haystack): ?string
+    {
+        if ($haystack === '') {
+            return null;
+        }
+
+        $isGermination = $this->isGerminationIntent($plan);
+        $isGrowthTemp = $this->isPlantGrowthTemperatureIntent($plan);
+        if (! $isGermination && ! $isGrowthTemp) {
+            return null;
+        }
+
+        $questionHay = mb_strtolower(trim(implode(' ', array_filter([
+            $plan->normalizedQuery->normalizedQuestion,
+            $plan->normalizedQuery->originalQuestion,
+        ]))));
+        if (AgriculturalEntityCatalog::userAskedAboutOils($questionHay)) {
+            return null;
+        }
+
+        if (! $this->hasEssentialOilPrimary($haystack)) {
+            return null;
+        }
+
+        // Soft demote when on-intent evidence is also present; background when oil-only / off-topic.
+        if ($isGermination) {
+            return $this->hasGerminationEvidenceSignals($haystack) ? 'supporting' : 'background';
+        }
+
+        return $this->hasPlantGrowthEvidenceSignals($haystack) ? 'supporting' : 'background';
+    }
+
+    private function essentialOilDemotionReason(KnowledgeQueryPlan $plan, string $level): string
+    {
+        if ($this->isGerminationIntent($plan)) {
+            return $level === 'background'
+                ? 'essential_oil_off_topic_for_germination'
+                : 'essential_oil_primary_demoted_for_germination';
+        }
+
+        return $level === 'background'
+            ? 'essential_oil_off_topic_for_growth'
+            : 'essential_oil_primary_demoted_for_growth';
+    }
+
+    private function isGerminationIntent(KnowledgeQueryPlan $plan): bool
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if ($sense === 'seed_germination') {
+            return true;
+        }
+
+        $factors = is_array($plan->normalizedQuery->constraints['scientific_factors'] ?? null)
+            ? $plan->normalizedQuery->constraints['scientific_factors']
+            : [];
+
+        return in_array('germination', $factors, true);
+    }
+
+    private function isPlantGrowthTemperatureIntent(KnowledgeQueryPlan $plan): bool
+    {
+        // Germination owns its demotion path; do not double-apply growth rules.
+        if ($this->isGerminationIntent($plan)) {
+            return false;
+        }
+
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $factors = is_array($plan->normalizedQuery->constraints['scientific_factors'] ?? null)
+            ? $plan->normalizedQuery->constraints['scientific_factors']
+            : [];
+
+        return $sense === 'plant_growth' && in_array('temperature', $factors, true);
+    }
+
+    private function hasGerminationEvidenceSignals(string $haystack): bool
+    {
+        foreach (AgriculturalEntityCatalog::germinationEvidenceSignals() as $signal) {
             if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim($signal)))) {
                 return true;
             }
         }
 
-        // English scholarly abstracts rarely repeat "optimal"; effect/requirement language is enough.
-        return in_array($qualifier, ['effect', 'requirement', 'optimal_range'], true);
+        return false;
+    }
+
+    /**
+     * Growth/physiology evidence (excludes bare "yield" which oil-yield papers often contain).
+     */
+    private function hasPlantGrowthEvidenceSignals(string $haystack): bool
+    {
+        foreach ([
+            'plant growth', 'rhizome growth', 'vegetative growth', 'shoot growth',
+            'root growth', 'growth rate', 'physiology', 'cultivation',
+            'biomass accumulation', 'plant physiology',
+        ] as $signal) {
+            if (AgriculturalEntityCatalog::containsTerm($haystack, $signal)
+                || mb_strpos($haystack, $signal) !== false) {
+                return true;
+            }
+        }
+
+        // Standalone "growth" that is not oil/yield framing.
+        if (AgriculturalEntityCatalog::containsTerm($haystack, 'growth')
+            && ! preg_match('/\b(?:oil|essential|volatile)\s+growth\b/u', $haystack)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function hasEssentialOilPrimary(string $haystack): bool
+    {
+        foreach (AgriculturalEntityCatalog::essentialOilPrimaryMarkers() as $marker) {
+            $normalized = mb_strtolower(trim($marker));
+            if ($normalized !== '' && (
+                AgriculturalEntityCatalog::containsTerm($haystack, $normalized)
+                || mb_strpos($haystack, $normalized) !== false
+            )) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
