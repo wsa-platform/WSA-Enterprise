@@ -109,11 +109,8 @@ class EvidenceVerificationLayer
 
     public function isPrimaryCitationEligible(string $directness): bool
     {
-        return in_array($directness, [
-            ScientificEvidenceDirectnessAssessor::DIRECT,
-            ScientificEvidenceDirectnessAssessor::SUPPORTING,
-            ScientificEvidenceDirectnessAssessor::SUPPORTED,
-        ], true);
+        // Primary citations[]: DIRECT only. SUPPORTING/SUPPORTED remain usable internally elsewhere.
+        return $directness === ScientificEvidenceDirectnessAssessor::DIRECT;
     }
 
     /**
@@ -184,11 +181,12 @@ class EvidenceVerificationLayer
             ];
         }
 
-        // Environment: open-field vs greenhouse/polyhouse/hydroponics mismatch demotes DIRECT.
+        // Environment: open-field vs greenhouse/polyhouse/hydroponics mismatch demotes DIRECT → RELATED
+        // (not SUPPORTING; GEOGRAPHIC_MISMATCH path above is unchanged).
         if (($base['directness'] ?? '') === ScientificEvidenceDirectnessAssessor::DIRECT
             && $this->hasEnvironmentMismatch($plan, $haystack)) {
             return [
-                'directness' => ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                'directness' => ScientificEvidenceDirectnessAssessor::RELATED,
                 'score' => min(16.0, (float) ($base['score'] ?? 0.0)),
                 'reasons' => array_values(array_unique(array_merge(
                     $base['reasons'] ?? [],
