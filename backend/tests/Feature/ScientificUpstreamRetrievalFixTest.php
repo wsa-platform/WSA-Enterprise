@@ -161,4 +161,110 @@ class ScientificUpstreamRetrievalFixTest extends TestCase
 
         return implode(' | ', $variants);
     }
+
+    /** TEST1 — Egypt land types retain land classification + Egypt (not bare cultivation). */
+    public function test_stage3_egypt_land_types_retain_classification_and_geo(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما هي أنواع الأراضي الزراعية في مصر؟',
+        ]);
+        $this->assertSame('land_classification', $plan->normalizedQuery->constraints['scientific_sense'] ?? null);
+        $this->assertSame('Egypt', $plan->normalizedQuery->location);
+
+        $variants = app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan);
+        $joined = mb_strtolower(implode(' | ', $variants));
+
+        $this->assertTrue(
+            str_contains($joined, 'land classification')
+            || str_contains($joined, 'land types')
+            || str_contains($joined, 'soil classification')
+            || str_contains($joined, 'agricultural land'),
+            'Variants must retain land classification terms: '.$joined,
+        );
+        $this->assertStringContainsString('egypt', $joined);
+        foreach ($variants as $variant) {
+            $this->assertStringContainsString('Egypt', $variant);
+            $this->assertNotSame('cultivation field_crops agriculture', $variant);
+            $this->assertFalse(
+                (bool) preg_match('/^cultivation\s+field_crops\s+agriculture(\s+Egypt)?$/i', $variant),
+                'Must not emit bare cultivation/domain agriculture variant: '.$variant,
+            );
+        }
+    }
+
+    /** TEST2 — Saudi Arabia land types retain geography. */
+    public function test_stage3_saudi_land_types_retain_geo(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما هي أنواع الأراضي الزراعية في السعودية؟',
+        ]);
+        $this->assertSame('Saudi Arabia', $plan->normalizedQuery->location);
+        $this->assertSame('land_classification', $plan->normalizedQuery->constraints['scientific_sense'] ?? null);
+
+        $variants = app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan);
+        $joined = mb_strtolower(implode(' | ', $variants));
+        $this->assertStringContainsString('saudi arabia', $joined);
+        $this->assertTrue(
+            str_contains($joined, 'land') || str_contains($joined, 'soil'),
+        );
+    }
+
+    /** TEST3 — Turkey land types retain geography. */
+    public function test_stage3_turkey_land_types_retain_geo(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما هي أنواع الأراضي الزراعية في تركيا؟',
+        ]);
+        $this->assertSame('Turkey', $plan->normalizedQuery->location);
+        $this->assertSame('land_classification', $plan->normalizedQuery->constraints['scientific_sense'] ?? null);
+
+        $variants = app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan);
+        $joined = mb_strtolower(implode(' | ', $variants));
+        $this->assertStringContainsString('turkey', $joined);
+        $this->assertTrue(
+            str_contains($joined, 'land') || str_contains($joined, 'soil'),
+        );
+    }
+
+    /** TEST4 — Tomato suitable land Egypt retains entity + land suitability + Egypt. */
+    public function test_stage3_tomato_land_suitability_egypt_retains_entity_geo(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما هي الأراضي المناسبة لزراعة الطماطم في مصر؟',
+        ]);
+        $this->assertSame('Egypt', $plan->normalizedQuery->location);
+        $this->assertSame('tomato', $plan->normalizedQuery->cropId);
+
+        $variants = app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan);
+        $joined = mb_strtolower(implode(' | ', $variants));
+
+        $this->assertTrue(
+            str_contains($joined, 'tomato') || str_contains($joined, 'solanum lycopersicum'),
+            'Variants must retain tomato entity: '.$joined,
+        );
+        $this->assertTrue(
+            str_contains($joined, 'land suitability') || str_contains($joined, 'soil suitability'),
+            'Variants must include land/soil suitability: '.$joined,
+        );
+        $this->assertStringContainsString('egypt', $joined);
+    }
+
+    /** TEST5 — Fish/aquaculture Egypt retains aquaculture + Egypt. */
+    public function test_stage3_fish_egypt_retains_aquaculture_and_geo(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما أنواع الأسماك المستزرعة في مصر؟',
+        ]);
+        $this->assertSame('Egypt', $plan->normalizedQuery->location);
+        $this->assertSame('aquaculture', $plan->researchIntent);
+
+        $variants = app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan);
+        $joined = mb_strtolower(implode(' | ', $variants));
+
+        $this->assertTrue(
+            str_contains($joined, 'aquaculture') || str_contains($joined, 'fish'),
+            'Variants must retain fish/aquaculture: '.$joined,
+        );
+        $this->assertStringContainsString('egypt', $joined);
+    }
 }

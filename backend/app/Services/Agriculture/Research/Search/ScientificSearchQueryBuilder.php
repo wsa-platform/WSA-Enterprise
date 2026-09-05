@@ -46,6 +46,24 @@ class ScientificSearchQueryBuilder
         $primaryCommon = $commonLabels[0] ?? null;
         $wantsCultivationProduction = $this->wantsCultivationProductionVariants($plan);
         $mentionsRhizome = $this->mentionsRhizome($plan);
+        $location = $this->resolveAskedLocation($plan);
+        $isLandClassification = $sense === 'land_classification';
+        $landSuitabilityTerms = $this->resolveLandSuitabilityTerms($plan);
+        $primaryTopic = $topics[0] ?? ($senseTerms[0] ?? null);
+
+        // Land classification must keep land/soil topics — never degrade to bare cultivation.
+        if ($isLandClassification) {
+            $landTerms = $this->landClassificationTopicTerms($plan);
+            $topics = $landTerms;
+            $senseTerms = $landTerms;
+            $intentTerms = ['agriculture'];
+            $primaryTopic = $landTerms[0] ?? 'land classification';
+            $wantsCultivationProduction = false;
+        } elseif ($landSuitabilityTerms !== []) {
+            // Crop + land suitability: lead with suitability terms, not bare cultivation-only.
+            $wantsCultivationProduction = false;
+            $primaryTopic = $landSuitabilityTerms[0];
+        }
 
         $variants = [];
 
@@ -75,9 +93,19 @@ class ScientificSearchQueryBuilder
                 if ($senseTerms === []) {
                     $senseTerms = ['growth', 'physiology', 'cultivation'];
                 }
+                $primaryTopic = $topics[0] ?? ($senseTerms[0] ?? null);
             }
 
-            $primaryTopic = $topics[0] ?? ($senseTerms[0] ?? null);
+            // Entity + land/soil suitability (from plan topics or question markers).
+            if ($landSuitabilityTerms !== []) {
+                foreach (array_slice($landSuitabilityTerms, 0, 2) as $suitabilityTerm) {
+                    $variants[] = $this->joinTerms([$entity, $suitabilityTerm, $location]);
+                    if ($primaryCommon !== null && strcasecmp($primaryCommon, $entity) !== 0) {
+                        $variants[] = $this->joinTerms([$primaryCommon, $suitabilityTerm, $location]);
+                    }
+                }
+            }
+
             $variants[] = $this->joinTerms([$entity, $primaryTopic, $senseTerms[0] ?? null]);
 
             // Context-aware diversification: common crop labels + cultivation/production.
@@ -119,6 +147,29 @@ class ScientificSearchQueryBuilder
 
             $variants[] = $this->joinTerms([$entity, ...array_slice($topics, 0, 2), ...array_slice($intentTerms, 0, 1)]);
             $variants[] = $this->joinTerms([$entity, $plan->researchIntent, 'agriculture']);
+        } elseif ($isLandClassification) {
+            // Prefer plan scientific land/soil topics + asked geography; never bare cultivation.
+            $landTerms = $this->landClassificationTopicTerms($plan);
+            $variants[] = $this->joinTerms([
+                $landTerms[0] ?? 'land classification',
+                $landTerms[1] ?? 'soil classification',
+                $location,
+            ]);
+            $variants[] = $this->joinTerms(['agricultural land types', $location]);
+            $variants[] = $this->joinTerms([
+                $landTerms[2] ?? 'land types',
+                'land classification',
+                $location,
+            ]);
+            $variants[] = $this->joinTerms(['soil classification', 'agriculture', $location]);
+        } elseif ($this->isGeoAquacultureQuestion($plan)) {
+            $variants[] = $this->joinTerms(['aquaculture', 'fish', $location]);
+            $variants[] = $this->joinTerms(['fish farming', $location]);
+            $variants[] = $this->joinTerms([
+                $topics[0] ?? 'aquaculture',
+                'aquaculture',
+                $location,
+            ]);
         } else {
             $latinQuestion = $this->latinScientificFragment($query->normalizedQuestion);
             $variants[] = $this->joinTerms([...$topics, ...array_slice($senseTerms, 0, 2), ...array_slice($intentTerms, 0, 2)]);
@@ -128,9 +179,33 @@ class ScientificSearchQueryBuilder
             $variants[] = $this->joinTerms([$plan->researchIntent, $plan->agriculturalDomain, 'agriculture']);
         }
 
+        // Hydroponics / production-system variants (no country filter).
+        $productionSystem = trim((string) ($query->constraints['production_system'] ?? ''));
+        if ($productionSystem === 'hydroponics') {
+            $variants[] = $this->joinTerms([$entity, 'hydroponics', 'soilless culture']);
+            $variants[] = $this->joinTerms(['hydroponics', 'agriculture', $primaryTopic ?? ($topics[0] ?? null)]);
+        }
+
+        // Aquaculture geo variants when location asked (study location — never publisher country).
+        if ($location !== null && $this->isGeoAquacultureQuestion($plan) && $entity !== null) {
+            $variants[] = $this->joinTerms([
+                $entity,
+                'aquaculture',
+                $location,
+            ]);
+            $variants[] = $this->joinTerms(['fish farming', $location]);
+        }
+
         $unique = [];
         foreach ($variants as $variant) {
             $trimmed = trim($variant);
+            if ($trimmed === '') {
+                continue;
+            }
+            // Retain explicit plan geography on every emitted variant when present.
+            if ($location !== null && ! $this->variantMentionsLocation($trimmed, $location)) {
+                $trimmed = $this->joinTerms([$trimmed, $location]);
+            }
             if ($trimmed === '' || in_array($trimmed, $unique, true)) {
                 continue;
             }
@@ -209,6 +284,123 @@ class ScientificSearchQueryBuilder
         $fromConstraints = trim((string) ($plan->normalizedQuery->constraints['location'] ?? ''));
 
         return $fromConstraints !== '' ? $fromConstraints : null;
+    }
+
+    private function isGeoAquacultureQuestion(KnowledgeQueryPlan $plan): bool
+    {
+        if (in_array($plan->researchIntent, ['aquaculture'], true)) {
+            return true;
+        }
+
+        $subjectType = is_array($plan->subjectEntity) ? (string) ($plan->subjectEntity['type'] ?? '') : '';
+        if ($subjectType === 'fish') {
+            return true;
+        }
+
+        $haystack = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+
+        foreach (['aquaculture', 'fish farming', 'استزراع', 'أسماك', 'fish'] as $marker) {
+            if ($marker !== '' && mb_strpos($haystack, mb_strtolower($marker)) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Land/soil classification terms from plan scientific topics (fallback when catalog has no sense list).
+     *
+     * @return list<string>
+     */
+    private function landClassificationTopicTerms(KnowledgeQueryPlan $plan): array
+    {
+        $preferred = [
+            'land types',
+            'soil classification',
+            'land classification',
+            'agricultural land types',
+        ];
+        $resolved = $this->resolveTopicTerms($plan);
+        $ordered = [];
+
+        foreach ($preferred as $term) {
+            foreach ($resolved as $topic) {
+                if (strcasecmp($topic, $term) === 0 && ! in_array($topic, $ordered, true)) {
+                    $ordered[] = $topic;
+                }
+            }
+        }
+
+        foreach ($resolved as $topic) {
+            $lower = mb_strtolower($topic);
+            if ((str_contains($lower, 'land') || str_contains($lower, 'soil'))
+                && ! in_array($topic, $ordered, true)) {
+                $ordered[] = $topic;
+            }
+        }
+
+        return $ordered !== []
+            ? $ordered
+            : ['land classification', 'soil classification', 'land types'];
+    }
+
+    /**
+     * Land/soil suitability terms when the plan or question asks crop land suitability
+     * (distinct from land_classification type inventories).
+     *
+     * @return list<string>
+     */
+    private function resolveLandSuitabilityTerms(KnowledgeQueryPlan $plan): array
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if ($sense === 'land_classification') {
+            return [];
+        }
+
+        $fromTopics = [];
+        foreach ($this->resolveTopicTerms($plan) as $topic) {
+            $lower = mb_strtolower($topic);
+            if (str_contains($lower, 'land suitability')
+                || str_contains($lower, 'soil suitability')
+                || str_contains($lower, 'suitable land')
+                || str_contains($lower, 'land capability')) {
+                $fromTopics[] = $topic;
+            }
+        }
+        if ($fromTopics !== []) {
+            $merged = array_values(array_unique([...$fromTopics, 'land suitability', 'soil suitability']));
+
+            return array_slice($merged, 0, 3);
+        }
+
+        $hay = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+        if ($hay === '') {
+            return [];
+        }
+
+        if (preg_match(
+            '/land\s*suitability|soil\s*suitability|suitable\s+lands?|land\s+capability|الأراضي\s*المناسبة|أرض\s*مناسبة|ملاءمة\s*(?:ال)?أراضي|صلاحية\s*(?:ال)?أراضي/u',
+            $hay,
+        ) === 1) {
+            return ['land suitability', 'soil suitability'];
+        }
+
+        return [];
+    }
+
+    private function variantMentionsLocation(string $variant, string $location): bool
+    {
+        $location = trim($location);
+        if ($location === '' || $variant === '') {
+            return false;
+        }
+
+        return mb_stripos($variant, $location) !== false;
     }
 
     /**
