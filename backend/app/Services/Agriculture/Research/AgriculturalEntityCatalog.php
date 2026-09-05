@@ -278,11 +278,61 @@ final class AgriculturalEntityCatalog
     public static function intentQualifierSignals(): array
     {
         return [
-            'optimal_range' => ['optimal', 'optimum', 'best', 'أفضل', 'مناسبة', 'مناسب'],
-            'effect' => ['effect', 'impact', 'influence', 'تأثير', 'اثر', 'أثر'],
-            'requirement' => ['requirement', 'need', 'needs', 'احتياج', 'احتياجات', 'متطلبات'],
+            'optimal_range' => [
+                'optimal', 'optimum', 'optima', 'best', 'ideal', 'suitable', 'preferred',
+                'temperature range', 'thermal range',
+                'أفضل', 'مناسبة', 'مناسب', 'مثلى', 'مثالي',
+            ],
+            'effect' => [
+                'effect', 'effects', 'impact', 'influence', 'affect', 'affects', 'affected',
+                'response', 'responses', 'تأثير', 'اثر', 'أثر',
+            ],
+            'requirement' => [
+                'requirement', 'requirements', 'need', 'needs', 'required', 'require',
+                'احتياج', 'احتياجات', 'متطلبات',
+            ],
             'economic_feasibility' => ['feasibility', 'profitability', 'جدوى', 'ربحية'],
             'extension_adoption' => ['extension', 'adoption', 'إرشاد', 'تبني'],
+        ];
+    }
+
+    /**
+     * Production-system signals (hydroponics, etc.) — not crop-specific.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function productionSystemSignals(): array
+    {
+        return [
+            'hydroponics' => [
+                'hydroponics', 'hydroponic', 'soilless culture', 'soilless',
+                'الزراعة المائية', 'زراعة مائية', 'هيدروبون', 'هيدروبونيك',
+            ],
+        ];
+    }
+
+    /**
+     * Multilingual country/region aliases → English location labels for geo questions.
+     *
+     * @return array<string, string>
+     */
+    public static function locationAliases(): array
+    {
+        return [
+            'مصر' => 'Egypt',
+            'egyptian' => 'Egypt',
+            'egypt' => 'Egypt',
+            'ليبيا' => 'Libya',
+            'libya' => 'Libya',
+            'libyan' => 'Libya',
+            'السودان' => 'Sudan',
+            'sudan' => 'Sudan',
+            'تونس' => 'Tunisia',
+            'tunisia' => 'Tunisia',
+            'الجزائر' => 'Algeria',
+            'algeria' => 'Algeria',
+            'المغرب' => 'Morocco',
+            'morocco' => 'Morocco',
         ];
     }
 
@@ -322,7 +372,10 @@ final class AgriculturalEntityCatalog
     {
         return match ($sense) {
             'plant_growth' => ['growth', 'physiology', 'cultivation', 'yield'],
-            'seed_germination' => ['seed germination', 'germination'],
+            'seed_germination' => [
+                'seed germination', 'germination', 'germination temperature',
+                'germination rate', 'germination percentage', 'seedling emergence', 'emergence',
+            ],
             'crop_water_requirement' => ['irrigation', 'evapotranspiration', 'water use'],
             'salinity_physiology' => ['growth', 'yield', 'physiology'],
             'drying_processing' => ['drying', 'dehydration'],
@@ -333,6 +386,79 @@ final class AgriculturalEntityCatalog
             'agricultural_industry' => ['processing', 'value chain'],
             default => ['agriculture'],
         };
+    }
+
+    /**
+     * Evidence signals that directly answer seed-germination questions.
+     *
+     * @return list<string>
+     */
+    public static function germinationEvidenceSignals(): array
+    {
+        return [
+            'seed germination', 'germination temperature', 'germination rate',
+            'germination percentage', 'germination percent', 'seedling emergence',
+            'emergence', 'seed temperature requirement', 'germination',
+        ];
+    }
+
+    /**
+     * Essential-oil / volatile-oil primary markers (demote for germination unless oils asked).
+     *
+     * @return list<string>
+     */
+    public static function essentialOilPrimaryMarkers(): array
+    {
+        return [
+            'essential oil', 'essential oils', 'essential-oil', 'oil yield',
+            'volatile oil', 'volatile oils', 'essential oil composition',
+            'essential-oil composition', 'essential oil content',
+        ];
+    }
+
+    /**
+     * Secondary productivity metrics that must not lead temperature/germination answers.
+     *
+     * @return list<string>
+     */
+    public static function secondaryMetricMarkers(): array
+    {
+        return [
+            'oil yield', 'essential oil', 'volatile oil', 'biomass', 'productivity',
+            'yield', 'fruit yield', 'grain yield', 'weight yield',
+        ];
+    }
+
+    /**
+     * Temperature-answer signals preferred in grounded snippets for thermal questions.
+     *
+     * @return list<string>
+     */
+    public static function temperatureAnswerSignals(): array
+    {
+        return [
+            'temperature', 'optimal temperature', 'optimum temperature',
+            'germination temperature', 'thermal', 'heat stress', '°c', '° c',
+        ];
+    }
+
+    /**
+     * True when the user question explicitly asks about oils / essential oils.
+     */
+    public static function userAskedAboutOils(string $questionHaystack): bool
+    {
+        $hay = mb_strtolower(trim($questionHaystack));
+        if ($hay === '') {
+            return false;
+        }
+
+        foreach (['essential oil', 'essential oils', 'oil yield', 'volatile oil', 'زيوت عطرية', 'زيت عطري', 'زيت طيار'] as $marker) {
+            if (self::containsTerm($hay, $marker) || mb_strpos($hay, $marker) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
