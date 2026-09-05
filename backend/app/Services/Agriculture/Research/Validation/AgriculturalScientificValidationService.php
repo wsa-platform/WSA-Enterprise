@@ -23,6 +23,7 @@ class AgriculturalScientificValidationService
         'claim_evidence_matcher',
         'evidence_conflict_detector',
         'evidence_quality_ranker',
+        'evidence_verification_layer',
     ];
 
     public function __construct(
@@ -34,6 +35,7 @@ class AgriculturalScientificValidationService
         private EvidenceConflictDetector $conflictDetector,
         private EvidenceQualityRanker $qualityRanker,
         private ScientificEvidenceDirectnessAssessor $directnessAssessor,
+        private EvidenceVerificationLayer $evidenceVerificationLayer,
     ) {}
 
     public function validate(
@@ -222,21 +224,42 @@ class AgriculturalScientificValidationService
             $isDuplicate,
         );
 
-        $directness = $this->directnessAssessor->assess(
+        $directness = $this->evidenceVerificationLayer->assess(
             $plan,
-            $result->title,
+            $result,
             $extraction['text'] ?? $result->abstract,
             $result->doi,
         );
+        // Directness usefulness is scored inside EvidenceQualityRanker; keep factors authoritative.
         $qualityScore['factors']['evidence_directness'] = $directness['directness'];
+        $qualityScore['factors']['verification_label'] = $directness['verification_label'] ?? null;
         $qualityScore['factors']['directness_score'] = $directness['score'];
         $qualityScore['factors']['directness_reasons'] = $directness['reasons'];
-        if ($directness['directness'] === ScientificEvidenceDirectnessAssessor::DIRECT) {
-            $qualityScore['score'] = min(100.0, $qualityScore['score'] + 8.0);
-        } elseif ($directness['directness'] === ScientificEvidenceDirectnessAssessor::SUPPORTING) {
-            $qualityScore['score'] = min(100.0, $qualityScore['score'] + 3.0);
-        } elseif ($directness['directness'] === ScientificEvidenceDirectnessAssessor::BACKGROUND) {
-            $qualityScore['score'] = max(0.0, $qualityScore['score'] - 15.0);
+        // Re-rank score after authoritative Stage-3/verification directness (claimMatch may have run first).
+        if ($directness['directness'] === ScientificEvidenceDirectnessAssessor::DIRECT
+            && ($claimMatch['factors']['evidence_directness'] ?? null) !== ScientificEvidenceDirectnessAssessor::DIRECT) {
+            $qualityScore['score'] = min(100.0, $qualityScore['score'] + 18.0);
+        } elseif (in_array($directness['directness'], [
+            ScientificEvidenceDirectnessAssessor::BACKGROUND,
+            ScientificEvidenceDirectnessAssessor::RELATED,
+        ], true)) {
+            $qualityScore['score'] = max(0.0, $qualityScore['score'] - 12.0);
+        } elseif ($directness['directness'] === ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH) {
+            $qualityScore['score'] = max(0.0, $qualityScore['score'] - 40.0);
+            if ($claimMatch['relationship'] !== ClaimEvidenceRelationship::NOT_VALIDATED) {
+                $claimMatch['relationship'] = ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE;
+                $claimMatch['confidence'] = min((float) $claimMatch['confidence'], 0.08);
+                $claimMatch['factors']['evidence_directness'] = ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH;
+            }
+        }
+
+        // Semantic score is a weak ranking aid only — never upgrades to DIRECT.
+        $semantic = is_array($result->relevanceMetadata) ? ($result->relevanceMetadata['semantic_score'] ?? null) : null;
+        if (is_numeric($semantic) && $directness['directness'] !== ScientificEvidenceDirectnessAssessor::DIRECT
+            && $directness['directness'] !== ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH
+            && $directness['directness'] !== ScientificEvidenceDirectnessAssessor::IRRELEVANT) {
+            $qualityScore['score'] = min(100.0, $qualityScore['score'] + min(4.0, ((float) $semantic) * 0.5));
+            $qualityScore['factors']['semantic_score_boost'] = min(4.0, ((float) $semantic) * 0.5);
         }
 
         $source = is_array($quality['source'] ?? null) ? $quality['source'] : [];
@@ -274,6 +297,7 @@ class AgriculturalScientificValidationService
                 'found_by_sources' => $result->foundBySources,
                 'confidence_level' => $quality['confidence_level'] ?? null,
                 'evidence_directness' => $directness['directness'],
+                'verification_label' => $directness['verification_label'] ?? null,
             ],
             cropOrEntity: is_string($cropOrEntity) ? $cropOrEntity : null,
         );

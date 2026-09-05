@@ -25,7 +25,10 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
         return 'Crossref';
     }
 
-    public function search(string $query, int $limit = 10): ScientificSourceSearchOutcome
+    /**
+     * @param  array<string, mixed>  $options  Unused — Crossref has no Consensus-style domain/country filters here.
+     */
+    public function search(string $query, int $limit = 10, array $options = []): ScientificSourceSearchOutcome
     {
         if (trim($query) === '') {
             return new ScientificSourceSearchOutcome(

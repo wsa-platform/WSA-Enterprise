@@ -75,12 +75,27 @@ class MultiSourceScientificSearchOrchestrator
                     continue;
                 }
 
-                $outcome = $adapter->search($variant, $limit);
+                $outcome = $adapter->search(
+                    $variant,
+                    $limit,
+                    $this->queryBuilder->buildConsensusRequestOptions($plan),
+                );
                 $outcomes[] = $outcome;
 
                 if ($outcome->status === ScientificSourceSearchOutcome::STATUS_SUCCESS) {
                     $adapterStatus[$key] = 'success';
                     $allResults = array_merge($allResults, $outcome->results);
+
+                    continue;
+                }
+
+                // Missing Consensus key: unavailable but not a provider failure — OA+CR continue.
+                if ($outcome->status === ScientificSourceSearchOutcome::STATUS_UNAVAILABLE
+                    && $outcome->error === 'missing_api_key') {
+                    if ($adapterStatus[$key] !== 'success' && $adapterStatus[$key] !== 'failed') {
+                        $adapterStatus[$key] = 'skipped';
+                    }
+                    $skipRemainingVariants = true;
 
                     continue;
                 }
@@ -111,6 +126,9 @@ class MultiSourceScientificSearchOrchestrator
                 $successful[] = $key;
             } elseif ($status === 'failed') {
                 $failed[] = $key;
+            } elseif ($status === 'skipped') {
+                // Intentionally omitted from empty/failed aggregates.
+                continue;
             } else {
                 $empty[] = $key;
             }

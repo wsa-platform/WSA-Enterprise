@@ -144,6 +144,74 @@ class ScientificSearchQueryBuilder
     }
 
     /**
+     * Consensus HTTP query options from the structured plan.
+     * domain=agri for agricultural questions; country only when location asked (study country).
+     * Never maps publisher to geo.
+     *
+     * @return array{domain?: string, country?: string, include_semantic_score: bool}
+     */
+    public function buildConsensusRequestOptions(KnowledgeQueryPlan $plan): array
+    {
+        $options = [
+            'include_semantic_score' => true,
+        ];
+
+        if ($this->shouldUseAgriDomain($plan)) {
+            $options['domain'] = 'agri';
+        }
+
+        $location = $this->resolveAskedLocation($plan);
+        if ($location !== null) {
+            $iso = AgriculturalEntityCatalog::locationToIsoCountryCode($location);
+            if ($iso !== null) {
+                $options['country'] = $iso;
+            }
+        }
+
+        return $options;
+    }
+
+    private function shouldUseAgriDomain(KnowledgeQueryPlan $plan): bool
+    {
+        $domain = mb_strtolower(trim((string) $plan->agriculturalDomain));
+        if ($domain !== '' && (
+            str_contains($domain, 'agricultur')
+            || str_contains($domain, 'crop')
+            || str_contains($domain, 'plant')
+            || str_contains($domain, 'horticult')
+            || str_contains($domain, 'aquacultur')
+            || str_contains($domain, 'livestock')
+            || str_contains($domain, 'soil')
+        )) {
+            return true;
+        }
+
+        if (in_array($plan->researchIntent, [
+            'cultivation', 'irrigation', 'fertilization', 'soil_management', 'plant_nutrition',
+            'disease', 'pest', 'aquaculture', 'animal_production', 'poultry_production',
+            'beekeeping', 'feed', 'general_knowledge',
+        ], true)) {
+            return true;
+        }
+
+        $branch = trim((string) ($plan->normalizedQuery->constraints['scientific_domain_branch'] ?? ''));
+
+        return $branch !== '';
+    }
+
+    private function resolveAskedLocation(KnowledgeQueryPlan $plan): ?string
+    {
+        $fromQuery = trim((string) ($plan->normalizedQuery->location ?? ''));
+        if ($fromQuery !== '') {
+            return $fromQuery;
+        }
+
+        $fromConstraints = trim((string) ($plan->normalizedQuery->constraints['location'] ?? ''));
+
+        return $fromConstraints !== '' ? $fromConstraints : null;
+    }
+
+    /**
      * English common / genus labels for the resolved crop (catalog-driven, not crop-hardcoded).
      *
      * @return list<string>

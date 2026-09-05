@@ -71,8 +71,11 @@ class EvidenceQualityRanker
         $directness = (string) ($claimFactors['evidence_directness'] ?? '');
         $directnessScore = match ($directness) {
             ScientificEvidenceDirectnessAssessor::DIRECT => 30.0,
-            ScientificEvidenceDirectnessAssessor::SUPPORTING => 12.0,
-            ScientificEvidenceDirectnessAssessor::BACKGROUND => -18.0,
+            ScientificEvidenceDirectnessAssessor::SUPPORTING,
+            ScientificEvidenceDirectnessAssessor::SUPPORTED => 12.0,
+            ScientificEvidenceDirectnessAssessor::BACKGROUND,
+            ScientificEvidenceDirectnessAssessor::RELATED => -18.0,
+            ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH => -40.0,
             ScientificEvidenceDirectnessAssessor::IRRELEVANT => -28.0,
             default => 0.0,
         };
@@ -142,8 +145,11 @@ class EvidenceQualityRanker
             $directnessOrder = [
                 ScientificEvidenceDirectnessAssessor::DIRECT => 0,
                 ScientificEvidenceDirectnessAssessor::SUPPORTING => 1,
+                ScientificEvidenceDirectnessAssessor::SUPPORTED => 1,
+                ScientificEvidenceDirectnessAssessor::RELATED => 2,
                 ScientificEvidenceDirectnessAssessor::BACKGROUND => 2,
-                ScientificEvidenceDirectnessAssessor::IRRELEVANT => 3,
+                ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH => 3,
+                ScientificEvidenceDirectnessAssessor::IRRELEVANT => 4,
             ];
             $aDir = $directnessOrder[$a->qualityFactors['evidence_directness'] ?? ''] ?? 9;
             $bDir = $directnessOrder[$b->qualityFactors['evidence_directness'] ?? ''] ?? 9;

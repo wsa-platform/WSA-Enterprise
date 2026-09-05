@@ -14,5 +14,8 @@ interface ScientificSourceAdapterInterface
 
     public function displayName(): string;
 
-    public function search(string $query, int $limit = 10): ScientificSourceSearchOutcome;
+    /**
+     * @param  array<string, mixed>  $options  Provider-specific filters (Consensus: domain, country, …)
+     */
+    public function search(string $query, int $limit = 10, array $options = []): ScientificSourceSearchOutcome;
 }

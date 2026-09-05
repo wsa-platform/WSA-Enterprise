@@ -350,7 +350,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
         $plan = app(ResearchPlanner::class)->planKnowledgeQuery(['query' => 'irrigation scheduling for wheat']);
         $sources = app(ScientificSourceSelector::class)->selectSources($plan);
 
-        $this->assertSame(['openalex', 'crossref'], $sources);
+        $this->assertSame(['openalex', 'crossref', 'consensus'], $sources);
         $this->assertSame(KnowledgeQueryPlan::STRATEGY_INTERNET_FIRST, $plan->primaryResearchStrategy);
     }
 
@@ -368,7 +368,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
         );
 
         $this->assertTrue($report->internetFirst);
-        $this->assertSame(['openalex', 'crossref'], $report->selectedSources);
+        $this->assertSame(['openalex', 'crossref', 'consensus'], $report->selectedSources);
         $this->assertSame('openalex', $report->attemptedSources[0]);
     }
 
@@ -485,7 +485,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
         ]);
 
         $response->assertOk();
-        $this->assertSame(['openalex', 'crossref'], $response->json('selected_sources'));
+        $this->assertSame(['openalex', 'crossref', 'consensus'], $response->json('selected_sources'));
         // Multi-query retrieval issues one request per variant × provider (Internet-First only).
         Http::assertSentCount(count($response->json('search_queries') ?? [1]) * 2);
         Http::assertSent(fn ($request): bool => str_contains($request->url(), 'api.openalex.org')

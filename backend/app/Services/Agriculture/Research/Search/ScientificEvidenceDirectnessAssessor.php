@@ -19,9 +19,18 @@ class ScientificEvidenceDirectnessAssessor
 
     public const SUPPORTING = 'supporting';
 
+    /** Verification-layer alias of SUPPORTING (DIRECT/SUPPORTED/RELATED labels). */
+    public const SUPPORTED = 'supported';
+
     public const BACKGROUND = 'background';
 
+    /** Verification-layer alias of BACKGROUND. */
+    public const RELATED = 'related';
+
     public const IRRELEVANT = 'irrelevant';
+
+    /** Study-country mismatch vs asked location (publisher geo must not trigger this alone). */
+    public const GEOGRAPHIC_MISMATCH = 'geographic_mismatch';
 
     public function __construct(
         private ScientificEvidenceRelevanceGate $relevanceGate,

@@ -19,6 +19,7 @@ class ClaimEvidenceMatcher
     public function __construct(
         private ScientificEvidenceRelevanceGate $relevanceGate,
         private ScientificEvidenceDirectnessAssessor $directnessAssessor,
+        private EvidenceVerificationLayer $verificationLayer,
     ) {}
 
     /**
@@ -173,20 +174,23 @@ class ClaimEvidenceMatcher
             $evidenceText,
             $result->doi,
         );
-        $directness = $this->directnessAssessor->assess(
+        $directness = $this->verificationLayer->assess(
             $plan,
-            $result->title,
+            $result,
             $evidenceText,
             $result->doi,
         );
 
         if (! $assessment['relevant']
-            || $directness['directness'] === ScientificEvidenceDirectnessAssessor::IRRELEVANT) {
+            || $directness['directness'] === ScientificEvidenceDirectnessAssessor::IRRELEVANT
+            || $directness['directness'] === ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH) {
             return [
                 'relationship' => ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE,
                 'confidence' => 0.05,
                 'factors' => [
-                    'reason' => 'relevance_gate_rejected',
+                    'reason' => $directness['directness'] === ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH
+                        ? 'geographic_mismatch'
+                        : 'relevance_gate_rejected',
                     'rejection_reasons' => $assessment['rejection_reasons'],
                     'entity_matched' => $assessment['entity_matched'],
                     'topic_matched' => $assessment['topic_matched'],
@@ -196,7 +200,10 @@ class ClaimEvidenceMatcher
             ];
         }
 
-        if ($directness['directness'] === ScientificEvidenceDirectnessAssessor::BACKGROUND) {
+        if (in_array($directness['directness'], [
+            ScientificEvidenceDirectnessAssessor::BACKGROUND,
+            ScientificEvidenceDirectnessAssessor::RELATED,
+        ], true)) {
             // Background leftovers must not answer crop+topic questions; general queries keep partial path.
             if ($assessment['requires_entity'] && $assessment['requires_topic']) {
                 return [

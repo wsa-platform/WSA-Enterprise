@@ -322,6 +322,15 @@ final class AgriculturalEntityCatalog
             'مصر' => 'Egypt',
             'egyptian' => 'Egypt',
             'egypt' => 'Egypt',
+            'السعودية' => 'Saudi Arabia',
+            'السعوديه' => 'Saudi Arabia',
+            'saudi arabia' => 'Saudi Arabia',
+            'saudi' => 'Saudi Arabia',
+            'ksa' => 'Saudi Arabia',
+            'تركيا' => 'Turkey',
+            'turkey' => 'Turkey',
+            'türkiye' => 'Turkey',
+            'turkiye' => 'Turkey',
             'ليبيا' => 'Libya',
             'libya' => 'Libya',
             'libyan' => 'Libya',
@@ -333,7 +342,51 @@ final class AgriculturalEntityCatalog
             'algeria' => 'Algeria',
             'المغرب' => 'Morocco',
             'morocco' => 'Morocco',
+            'الأردن' => 'Jordan',
+            'jordan' => 'Jordan',
+            'الإمارات' => 'United Arab Emirates',
+            'uae' => 'United Arab Emirates',
+            'india' => 'India',
+            'الهند' => 'India',
         ];
+    }
+
+
+    /**
+     * Map catalog location labels to ISO 3166-1 alpha-2 for Consensus study-country filter.
+     */
+    public static function locationToIsoCountryCode(string $location): ?string
+    {
+        $normalized = mb_strtolower(trim($location));
+        if ($normalized === '') {
+            return null;
+        }
+
+        $canonical = self::locationAliases()[$normalized] ?? null;
+        if ($canonical === null) {
+            foreach (self::locationAliases() as $alias => $label) {
+                if (mb_strtolower($label) === $normalized) {
+                    $canonical = $label;
+                    break;
+                }
+            }
+        }
+        $canonical = $canonical ?? $location;
+
+        return match (mb_strtolower(trim($canonical))) {
+            'egypt' => 'eg',
+            'saudi arabia' => 'sa',
+            'turkey', 'türkiye', 'turkiye' => 'tr',
+            'libya' => 'ly',
+            'sudan' => 'sd',
+            'tunisia' => 'tn',
+            'algeria' => 'dz',
+            'morocco' => 'ma',
+            'jordan' => 'jo',
+            'united arab emirates' => 'ae',
+            'india' => 'in',
+            default => null,
+        };
     }
 
     /**

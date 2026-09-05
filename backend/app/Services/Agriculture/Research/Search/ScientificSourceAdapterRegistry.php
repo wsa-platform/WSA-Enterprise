@@ -3,6 +3,7 @@
 namespace App\Services\Agriculture\Research\Search;
 
 use App\Contracts\ScientificSourceAdapterInterface;
+use App\Services\Agriculture\Research\Search\Adapters\ConsensusScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\CrossRefScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\OpenAlexScientificSourceAdapter;
 
@@ -17,10 +18,12 @@ class ScientificSourceAdapterRegistry
     public function __construct(
         OpenAlexScientificSourceAdapter $openAlex,
         CrossRefScientificSourceAdapter $crossRef,
+        ConsensusScientificSourceAdapter $consensus,
     ) {
         $this->adapters = [
             $openAlex->sourceKey() => $openAlex,
             $crossRef->sourceKey() => $crossRef,
+            $consensus->sourceKey() => $consensus,
         ];
     }
 

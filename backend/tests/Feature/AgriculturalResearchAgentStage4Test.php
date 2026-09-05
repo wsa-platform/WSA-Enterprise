@@ -540,7 +540,7 @@ class AgriculturalResearchAgentStage4Test extends TestCase
 
         $payload = $this->validateQuery('field crop production research');
         $this->assertTrue($payload['internet_first']);
-        $this->assertSame(['openalex', 'crossref'], $payload['search_summary']['selected_sources']);
+        $this->assertSame(['openalex', 'crossref', 'consensus'], $payload['search_summary']['selected_sources']);
     }
 
     public function test_stage_4_does_not_synthesize_final_answer(): void
