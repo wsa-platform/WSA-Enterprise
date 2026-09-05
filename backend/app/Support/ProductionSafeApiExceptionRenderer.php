@@ -7,6 +7,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
@@ -16,6 +17,10 @@ use Throwable;
  */
 final class ProductionSafeApiExceptionRenderer
 {
+    private const TEMP_THROWABLE_EVENT = 'WSA_STAGE4_PRODUCTION_THROWABLE';
+
+    private const TEMP_TRACE_MAX_CHARS = 4000;
+
     public function shouldRenderJson(Request $request): bool
     {
         return $request->is('api/*') || $request->expectsJson();
@@ -35,9 +40,57 @@ final class ProductionSafeApiExceptionRenderer
             return null;
         }
 
+        // TEMPORARY diagnostic: surface uncaught throwables in Render Application Logs
+        // before the opaque production JSON body. Does not alter the HTTP response.
+        $this->logTemporaryProductionThrowable($exception, $request);
+
         return response()->json([
             'message' => 'Server error.',
         ], 500);
+    }
+
+    /**
+     * TEMPORARY: log exception metadata to stderr (+ default channel) for production diagnosis.
+     * Never throws. Does not log request payloads, query text, secrets, or auth headers.
+     */
+    private function logTemporaryProductionThrowable(Throwable $exception, Request $request): void
+    {
+        try {
+            $requestId = $request->attributes->get('request_id');
+            if (! is_string($requestId) || $requestId === '') {
+                $headerId = $request->header('X-Request-Id');
+                $requestId = is_string($headerId) && $headerId !== '' ? $headerId : null;
+            }
+
+            $trace = $exception->getTraceAsString();
+            if (strlen($trace) > self::TEMP_TRACE_MAX_CHARS) {
+                $trace = substr($trace, 0, self::TEMP_TRACE_MAX_CHARS).'...[truncated]';
+            }
+
+            $context = [
+                'event' => self::TEMP_THROWABLE_EVENT,
+                'request_id' => $requestId,
+                'exception_class' => $exception::class,
+                'exception_message' => $exception->getMessage(),
+                'exception_file' => $exception->getFile(),
+                'exception_line' => $exception->getLine(),
+                'exception_trace' => $trace,
+            ];
+
+            try {
+                Log::channel('stderr')->error(self::TEMP_THROWABLE_EVENT, $context);
+            } catch (Throwable) {
+                // stderr channel must not break opaque rendering
+            }
+
+            try {
+                Log::error(self::TEMP_THROWABLE_EVENT, $context);
+            } catch (Throwable) {
+                // default channel must not break opaque rendering
+            }
+        } catch (Throwable) {
+            // Diagnostic logging must never affect the HTTP response path
+        }
     }
 
     /**
