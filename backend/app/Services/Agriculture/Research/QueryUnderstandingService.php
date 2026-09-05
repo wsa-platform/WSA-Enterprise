@@ -60,6 +60,42 @@ class QueryUnderstandingService
         $constraints['scientific_sense'] = $scientificSense;
         $constraints['scientific_domain_branch'] = $domainBranch;
 
+        if ($scientificSense === 'land_classification') {
+            $topics = is_array($constraints['scientific_topics'] ?? null) ? $constraints['scientific_topics'] : [];
+            foreach (['land types', 'soil classification', 'land classification'] as $landTopic) {
+                if (! in_array($landTopic, $topics, true)) {
+                    $topics[] = $landTopic;
+                }
+            }
+            $constraints['scientific_topics'] = $topics;
+        }
+
+        $productionSystem = $this->detectProductionSystem($normalizedQuestion);
+        if ($productionSystem !== null) {
+            $constraints['production_system'] = $productionSystem;
+            $topics = is_array($constraints['scientific_topics'] ?? null) ? $constraints['scientific_topics'] : [];
+            if (! in_array($productionSystem, $topics, true)) {
+                $topics[] = $productionSystem;
+                $constraints['scientific_topics'] = $topics;
+            }
+            if ($subject === null) {
+                $subject = [
+                    'type' => 'production_system',
+                    'value' => $productionSystem,
+                    'label' => $productionSystem,
+                ];
+            }
+            if ($productionSystem === 'hydroponics'
+                && ($researchIntent === 'general_knowledge' || $researchIntent === 'cultivation')) {
+                // Keep cultivation intent but ensure hydroponics is first-class topic.
+                $researchIntent = 'cultivation';
+            }
+        }
+
+        if ($location !== null) {
+            $constraints['location'] = $location;
+        }
+
         [$topic, $subtopic] = $this->resolveTopicAndSubtopic($researchIntent, $topicFactors, $subject);
         $requestedInformation = $this->resolveRequestedInformation($researchIntent, $normalizedQuestion, $topicFactors);
         $clarificationRequirements = [];
@@ -198,6 +234,27 @@ class QueryUnderstandingService
         $normalized = preg_replace('/\s+/u', ' ', $normalized) ?? $normalized;
 
         return trim($normalized);
+    }
+
+    /**
+     * Stable Arabic orthography fold for sense matching (hamza/alef/ya/ta-marbuta).
+     * Does not replace normalizeQuestion output stored on the query.
+     */
+    private function normalizeArabicOrthography(string $text): string
+    {
+        $normalized = mb_strtolower(trim($text));
+        // Tatweel + common Arabic diacritics / Quranic marks.
+        $normalized = str_replace("\u{0640}", '', $normalized);
+        $normalized = preg_replace('/[\x{064B}-\x{065F}\x{0670}\x{06D6}-\x{06ED}]/u', '', $normalized) ?? $normalized;
+        // Alef with hamza / madda / wasla → bare alef.
+        $normalized = str_replace(['أ', 'إ', 'آ', 'ٱ'], 'ا', $normalized);
+        // Waw/yeh hamza and alif maqsura.
+        $normalized = str_replace(['ؤ'], 'و', $normalized);
+        $normalized = str_replace(['ئ', 'ى'], 'ي', $normalized);
+        // Ta marbuta → ha so تربة/تربه match equivalently.
+        $normalized = str_replace('ة', 'ه', $normalized);
+
+        return $normalized;
     }
 
     private function detectLanguage(string $text): string
@@ -462,8 +519,43 @@ class QueryUnderstandingService
             return $explicit;
         }
 
+        $haystack = mb_strtolower(trim($question));
+        // Prefer longer aliases first (e.g. egyptian before egypt).
+        $aliases = AgriculturalEntityCatalog::locationAliases();
+        uksort($aliases, static fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
+        foreach ($aliases as $alias => $canonical) {
+            if ($alias !== '' && AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower($alias))) {
+                return $canonical;
+            }
+            // Arabic aliases may not tokenize via containsTerm the same way — substring check.
+            if (preg_match('/\p{Arabic}/u', $alias) === 1 && mb_strpos($haystack, mb_strtolower($alias)) !== false) {
+                return $canonical;
+            }
+        }
+
         if (preg_match('/\b(in|at|near)\s+([a-z\s]{3,40})/i', $question, $matches) === 1) {
-            return trim($matches[2]);
+            $candidate = trim($matches[2]);
+            foreach ($aliases as $alias => $canonical) {
+                if (strcasecmp($candidate, $alias) === 0 || strcasecmp($candidate, $canonical) === 0) {
+                    return $canonical;
+                }
+            }
+
+            return $candidate;
+        }
+
+        return null;
+    }
+
+    private function detectProductionSystem(string $normalizedQuestion): ?string
+    {
+        foreach (AgriculturalEntityCatalog::productionSystemSignals() as $system => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (AgriculturalEntityCatalog::containsTerm($normalizedQuestion, $keyword)
+                    || mb_strpos($normalizedQuestion, mb_strtolower($keyword)) !== false) {
+                    return $system;
+                }
+            }
         }
 
         return null;
@@ -545,6 +637,14 @@ class QueryUnderstandingService
      */
     private function resolveScientificSense(string $researchIntent, array $topicFactors, string $normalizedQuestion): string
     {
+        // Match land-type inventory on orthography-folded Arabic so انواع/أنواع + اراضي/أراضي agree.
+        $senseHaystack = $this->normalizeArabicOrthography($normalizedQuestion);
+        if (preg_match(
+            '/land\s*types?|soil\s*classification|land\s*classification|انواع\s*(?:ال)?اراضي|تصنيف\s*(?:ال)?اراضي|انواع\s*(?:ال)?تربه/u',
+            $senseHaystack,
+        ) === 1) {
+            return 'land_classification';
+        }
         if (in_array('germination', $topicFactors, true)) {
             return 'seed_germination';
         }

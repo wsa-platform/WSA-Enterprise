@@ -192,6 +192,44 @@ class ScientificUpstreamRetrievalFixTest extends TestCase
         }
     }
 
+    /** TEST1b — Unhamza Egypt land types (انواع الاراضي) same sense + geo as hamza form. */
+    public function test_stage3_egypt_land_types_unhamza_retain_classification_and_geo(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما هي انواع الاراضي الزراعية في مصر',
+        ]);
+        $this->assertSame('land_classification', $plan->normalizedQuery->constraints['scientific_sense'] ?? null);
+        $this->assertSame('Egypt', $plan->normalizedQuery->location);
+        $this->assertSame('Egypt', $plan->normalizedQuery->constraints['location'] ?? null);
+
+        $variants = app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan);
+        $joined = mb_strtolower(implode(' | ', $variants));
+
+        $this->assertTrue(
+            str_contains($joined, 'land classification')
+            || str_contains($joined, 'land types')
+            || str_contains($joined, 'soil classification')
+            || str_contains($joined, 'agricultural land'),
+            'Variants must retain land classification terms: '.$joined,
+        );
+        $this->assertStringContainsString('egypt', $joined);
+        $this->assertFalse(
+            str_contains($joined, 'growth physiology'),
+            'Must not primary plant_growth variants: '.$joined,
+        );
+        foreach ($variants as $variant) {
+            $this->assertStringContainsString('Egypt', $variant);
+            $this->assertFalse(
+                (bool) preg_match('/^cultivation\s+field_crops\s+agriculture(\s+Egypt)?$/i', $variant),
+                'Must not emit bare cultivation/domain agriculture variant: '.$variant,
+            );
+            $this->assertFalse(
+                (bool) preg_match('/\b(greenhouse|polyhouse)\b/i', $variant),
+                'Must not leak greenhouse/polyhouse: '.$variant,
+            );
+        }
+    }
+
     /** TEST2 — Saudi Arabia land types retain geography. */
     public function test_stage3_saudi_land_types_retain_geo(): void
     {
