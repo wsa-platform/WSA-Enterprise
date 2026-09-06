@@ -181,6 +181,25 @@ class ClaimEvidenceMatcher
             $result->doi,
         );
 
+        $haystack = mb_strtolower(trim(implode(' ', array_filter([
+            $result->title,
+            $evidenceText,
+        ], static fn ($part): bool => is_string($part) && trim($part) !== ''))));
+
+        // Land classification ≠ greenhouse/cultivation/ornamental unless real land claims present.
+        if ($this->isLandClassificationQuestion($plan) && $this->isLandOfftopicEvidence($haystack)) {
+            return [
+                'relationship' => ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE,
+                'confidence' => 0.05,
+                'factors' => [
+                    'reason' => 'land_classification_offtopic_environment_or_crop',
+                    'evidence_directness' => ScientificEvidenceDirectnessAssessor::IRRELEVANT,
+                    'entity_matched' => $assessment['entity_matched'],
+                    'topic_matched' => false,
+                ],
+            ];
+        }
+
         if (! $assessment['relevant']
             || $directness['directness'] === ScientificEvidenceDirectnessAssessor::IRRELEVANT
             || $directness['directness'] === ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH) {
@@ -576,5 +595,53 @@ class ClaimEvidenceMatcher
             $parts,
             static fn (string $part): bool => mb_strlen($part) >= 3,
         )));
+    }
+
+    private function isLandClassificationQuestion(KnowledgeQueryPlan $plan): bool
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if ($sense === 'land_classification') {
+            return true;
+        }
+
+        $hay = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+
+        return preg_match(
+            '/land\s*types?|soil\s*classification|land\s*classification|أنواع\s*(?:ال)?أراضي|انواع\s*(?:ال)?اراضي/u',
+            $hay,
+        ) === 1;
+    }
+
+    private function isLandOfftopicEvidence(string $haystack): bool
+    {
+        $hasLandClaim = false;
+        foreach ([
+            'land type', 'land types', 'soil classification', 'land classification',
+            'soil type', 'soil types', 'soil taxonomy', 'soil survey', 'pedology',
+        ] as $signal) {
+            if (AgriculturalEntityCatalog::containsTerm($haystack, $signal)
+                || mb_strpos($haystack, $signal) !== false) {
+                $hasLandClaim = true;
+                break;
+            }
+        }
+        if ($hasLandClaim) {
+            return false;
+        }
+
+        foreach ([
+            'greenhouse', 'greenhouses', 'polyhouse', 'polyhouses',
+            'protected cultivation', 'hydroponics', 'hydroponic', 'soilless',
+            'ornamental', 'gerbera', 'rose', 'roses', 'cucumber',
+        ] as $marker) {
+            if (AgriculturalEntityCatalog::containsTerm($haystack, $marker)
+                || mb_strpos($haystack, $marker) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

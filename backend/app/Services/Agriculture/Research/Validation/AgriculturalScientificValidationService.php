@@ -109,10 +109,13 @@ class AgriculturalScientificValidationService
             && is_array($plan->normalizedQuery->constraints['scientific_factors'] ?? null)
             && ($plan->normalizedQuery->constraints['scientific_factors'] ?? []) !== [];
 
+        $requiresFactualDirect = $this->requiresFactualDirectEvidence($plan);
+
         // Capability-based sufficiency: one DIRECT can suffice; sole BACKGROUND on
-        // crop+topic questions cannot; rigid minimum citation count is not required.
+        // crop+topic questions cannot; many SUPPORTING alone must not satisfy factual/direct questions.
         $evidenceSufficient = match (true) {
             $directCount >= 1 => true,
+            $requiresFactualDirect && $directCount === 0 => false,
             $requiresCropTopic && $backgroundCount > 0 && $directCount === 0 && $supportingCount === 0 => false,
             $supportingCount >= 1 && $supportedCount >= 1 => true,
             $supportedCount >= 1 && ! $requiresCropTopic => true,
@@ -373,6 +376,57 @@ class AgriculturalScientificValidationService
                 'validation_status_counts' => [],
             ],
         );
+    }
+
+    /**
+     * Classification / temperature / timing / requirement / recommended-range questions
+     * require DIRECT evidence; piles of SUPPORTING alone are not sufficient.
+     * Entity-less general/industry questions may still use supporting evidence.
+     */
+    private function requiresFactualDirectEvidence(KnowledgeQueryPlan $plan): bool
+    {
+        $hasEntity = $plan->normalizedQuery->cropId !== null
+            || $plan->normalizedQuery->scientificName !== null
+            || ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null) === 'crop');
+        $factors = is_array($plan->normalizedQuery->constraints['scientific_factors'] ?? null)
+            ? $plan->normalizedQuery->constraints['scientific_factors']
+            : [];
+        if ($hasEntity && $factors !== []) {
+            return true;
+        }
+
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if ($sense === 'land_classification') {
+            return true;
+        }
+
+        if (! $hasEntity) {
+            return false;
+        }
+
+        if (in_array($sense, [
+            'seed_germination',
+            'crop_water_requirement',
+            'salinity_physiology',
+            'drying_processing',
+            'storage',
+            'plant_growth',
+        ], true)) {
+            return true;
+        }
+
+        $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
+        if (in_array($qualifier, ['optimal_range', 'requirement'], true)) {
+            return true;
+        }
+
+        foreach (['temperature', 'germination', 'water', 'salinity', 'drying', 'storage'] as $factualFactor) {
+            if (in_array($factualFactor, $factors, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

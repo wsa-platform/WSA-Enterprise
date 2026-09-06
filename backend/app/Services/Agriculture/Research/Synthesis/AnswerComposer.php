@@ -8,6 +8,7 @@ use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssesso
 use App\Services\Agriculture\Research\Search\ScientificEvidenceRelevanceGate;
 use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
 use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionReport;
+use App\Services\Agriculture\Research\Validation\EvidenceVerificationLayer;
 use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
 use App\Services\Agriculture\ScientificSourceValidator;
 
@@ -23,6 +24,7 @@ class AnswerComposer
         private ScientificSourceValidator $sourceValidator,
         private ScientificEvidenceRelevanceGate $relevanceGate,
         private ScientificEvidenceDirectnessAssessor $directnessAssessor,
+        private EvidenceVerificationLayer $evidenceVerificationLayer,
     ) {}
 
     public function compose(
@@ -86,8 +88,14 @@ class AnswerComposer
         $conflicts = $this->buildConflicts($usable, $language);
         $keyFindings = $this->buildKeyFindings($claims, $language);
         $limitations = $this->buildLimitations($validationReport, $usable, $language, $sufficiency);
-        $uncertainty = $this->resolveUncertainty($validationReport, $usable, $conflicts, $language, $sufficiency);
-        $confidence = $this->overallConfidence($claims, $validationReport);
+        $uncertainty = $this->resolveUncertainty(
+            $validationReport,
+            $usable,
+            $conflicts,
+            $language,
+            $sufficiency,
+        );
+        $confidence = $this->overallConfidence($claims, $validationReport, $sufficiency);
         $evidenceReferences = array_map(
             static fn (ScientificEvidenceItem $item): array => [
                 'evidence_id' => $item->evidenceId,
@@ -102,13 +110,20 @@ class AnswerComposer
             $usable,
         );
 
-        $conciseSummary = $this->buildConciseSummary($keyFindings, $uncertainty, $language);
+        $conciseSummary = $this->buildConciseSummary($keyFindings, $uncertainty, $language, $sufficiency);
         $detailedExplanation = $this->buildDetailedExplanation($usable, $citations, $conflicts, $language, $plan);
         $answer = $this->buildAnswer($conciseSummary, $detailedExplanation, $uncertainty, $language);
 
+        $supportingOnly = in_array((string) ($sufficiency['reason'] ?? ''), [
+            'supporting_only',
+            'supporting_evidence_only',
+            'multiple_supporting_evidence',
+            'general_query_usable_evidence',
+        ], true) && ((int) ($sufficiency['direct_count'] ?? 0)) === 0;
         $status = match (true) {
             $conflicts !== [] && count($claims) <= count($conflicts) => 'synthesis_completed_with_conflicts',
             $conflicts !== [] => 'synthesis_completed_with_partial_conflicts',
+            $supportingOnly || ($sufficiency['partial'] ?? false) => 'synthesis_completed_partial',
             count($claims) < count($usable) => 'synthesis_completed_partial',
             default => 'synthesis_completed',
         };
@@ -137,11 +152,13 @@ class AnswerComposer
                 'scientific_intent_qualifier' => $plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? null,
                 'subject_entity' => $plan->subjectEntity,
                 'validation_status' => $validationReport->status,
-                'evidence_sufficient' => $validationReport->evidenceSufficient && $sufficiency['sufficient'],
+                'evidence_sufficient' => $validationReport->evidenceSufficient && $sufficiency['sufficient']
+                    && ((int) ($sufficiency['direct_count'] ?? 0)) >= 1,
                 'internet_first' => $plan->isInternetFirst(),
                 'synthesized_at' => now()->toIso8601String(),
                 'direct_evidence_count' => $sufficiency['direct_count'],
                 'supporting_evidence_count' => $sufficiency['supporting_count'],
+                'sufficiency_mode' => $sufficiency['mode'] ?? $sufficiency['reason'],
             ],
             observability: [
                 'usable_evidence_count' => count($usable),
@@ -184,10 +201,19 @@ class AnswerComposer
         if ($strict && in_array($directness, [
             ScientificEvidenceDirectnessAssessor::IRRELEVANT,
             ScientificEvidenceDirectnessAssessor::BACKGROUND,
+            ScientificEvidenceDirectnessAssessor::RELATED,
+            ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH,
         ], true)) {
             return false;
         }
-        if ($directness === ScientificEvidenceDirectnessAssessor::IRRELEVANT) {
+
+        // Synthesis may use DIRECT / SUPPORTING / SUPPORTED internally.
+        // Primary citations[] stay DIRECT-only via isPrimaryCitationEligible().
+        if (! in_array($directness, [
+            ScientificEvidenceDirectnessAssessor::DIRECT,
+            ScientificEvidenceDirectnessAssessor::SUPPORTING,
+            ScientificEvidenceDirectnessAssessor::SUPPORTED,
+        ], true)) {
             return false;
         }
 
@@ -205,11 +231,63 @@ class AnswerComposer
     }
 
     /**
+     * Factual / direct questions must not become confident answers from SUPPORTING-only piles.
+     * Covers classification, temperature, timing, requirement, and recommended-range intents.
+     * Entity-less general/industry/hydro questions stay eligible for limited supporting-only framing.
+     */
+    private function requiresFactualDirectEvidence(KnowledgeQueryPlan $plan): bool
+    {
+        if ($this->requiresStrictGrounding($plan)) {
+            return true;
+        }
+
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if ($sense === 'land_classification') {
+            return true;
+        }
+
+        $hasEntity = $plan->normalizedQuery->cropId !== null
+            || $plan->normalizedQuery->scientificName !== null
+            || ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null) === 'crop');
+        if (! $hasEntity) {
+            return false;
+        }
+
+        if (in_array($sense, [
+            'seed_germination',
+            'crop_water_requirement',
+            'salinity_physiology',
+            'drying_processing',
+            'storage',
+            'plant_growth',
+        ], true)) {
+            return true;
+        }
+
+        $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
+        if (in_array($qualifier, ['optimal_range', 'requirement'], true)) {
+            return true;
+        }
+
+        $factors = is_array($plan->normalizedQuery->constraints['scientific_factors'] ?? null)
+            ? $plan->normalizedQuery->constraints['scientific_factors']
+            : [];
+        foreach (['temperature', 'germination', 'water', 'salinity', 'drying', 'storage'] as $factualFactor) {
+            if (in_array($factualFactor, $factors, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @param  list<ScientificEvidenceItem>  $usable
      * @return array{
      *     sufficient: bool,
      *     partial: bool,
      *     reason: string,
+     *     mode: string,
      *     direct_count: int,
      *     supporting_count: int
      * }
@@ -222,66 +300,58 @@ class AnswerComposer
         $directCount = 0;
         $supportingCount = 0;
         foreach ($usable as $item) {
-            $directness = (string) ($item->qualityFactors['evidence_directness']
-                ?? $item->sourceAttribution['evidence_directness']
-                ?? ScientificEvidenceDirectnessAssessor::SUPPORTING);
+            $directness = $this->resolveDirectness($item, $plan);
             if ($directness === ScientificEvidenceDirectnessAssessor::DIRECT) {
                 $directCount++;
-            } elseif ($directness === ScientificEvidenceDirectnessAssessor::SUPPORTING) {
+            } elseif (in_array($directness, [
+                ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                ScientificEvidenceDirectnessAssessor::SUPPORTED,
+            ], true)) {
                 $supportingCount++;
             }
         }
 
+        // Never treat many SUPPORTING as DIRECT.
         if ($directCount >= 1) {
             return [
                 'sufficient' => true,
                 'partial' => false,
-                'reason' => 'direct_evidence_present',
+                'reason' => 'sufficient_direct_evidence',
+                'mode' => 'sufficient_direct_evidence',
                 'direct_count' => $directCount,
                 'supporting_count' => $supportingCount,
             ];
         }
 
-        if (! $this->requiresStrictGrounding($plan) && $usable !== []) {
+        // Factual/direct questions: SUPPORTING-only is insufficient for a confident narrative.
+        if ($this->requiresFactualDirectEvidence($plan)) {
+            return [
+                'sufficient' => false,
+                'partial' => false,
+                'reason' => $supportingCount >= 1 ? 'supporting_only' : 'insufficient_evidence',
+                'mode' => $supportingCount >= 1 ? 'supporting_only' : 'insufficient_evidence',
+                'direct_count' => $directCount,
+                'supporting_count' => $supportingCount,
+            ];
+        }
+
+        // Non-factual (e.g. hydroponics benefits): allow limited supporting-only framing, never full confidence.
+        if ($supportingCount >= 1 || $usable !== []) {
             return [
                 'sufficient' => true,
-                'partial' => $directCount === 0,
-                'reason' => 'general_query_usable_evidence',
+                'partial' => true,
+                'reason' => 'supporting_only',
+                'mode' => 'supporting_only',
                 'direct_count' => $directCount,
                 'supporting_count' => max($supportingCount, count($usable)),
-            ];
-        }
-
-        $strongSupporting = count(array_filter(
-            $usable,
-            static fn (ScientificEvidenceItem $item): bool => $item->claimRelationship === ClaimEvidenceRelationship::SUPPORTED
-                || $item->confidence >= 0.55,
-        ));
-
-        if ($supportingCount >= 1 && $strongSupporting >= 1) {
-            return [
-                'sufficient' => true,
-                'partial' => true,
-                'reason' => 'supporting_evidence_only',
-                'direct_count' => $directCount,
-                'supporting_count' => $supportingCount,
-            ];
-        }
-
-        if ($supportingCount >= 2 || (count($usable) >= 2 && $validationReport->evidenceSufficient)) {
-            return [
-                'sufficient' => true,
-                'partial' => true,
-                'reason' => 'multiple_supporting_evidence',
-                'direct_count' => $directCount,
-                'supporting_count' => $supportingCount,
             ];
         }
 
         return [
             'sufficient' => false,
             'partial' => false,
-            'reason' => 'background_or_weak_evidence_only',
+            'reason' => 'insufficient_evidence',
+            'mode' => 'insufficient_evidence',
             'direct_count' => $directCount,
             'supporting_count' => $supportingCount,
         ];
@@ -324,6 +394,14 @@ class AnswerComposer
 
     private function citationFromEvidence(ScientificEvidenceItem $item): ?ResearchAnswerCitation
     {
+        $directness = (string) ($item->qualityFactors['evidence_directness']
+            ?? $item->sourceAttribution['evidence_directness']
+            ?? '');
+        // Primary citations[]: DIRECT only (SUPPORTING/SUPPORTED usable in synthesis, not cited).
+        if (! $this->evidenceVerificationLayer->isPrimaryCitationEligible($directness)) {
+            return null;
+        }
+
         $reference = [
             'source_type' => $item->sourceType ?? 'supporting_verified',
             'organization' => $item->institution ?? ($item->sourceAttribution['organization'] ?? ''),
@@ -580,10 +658,16 @@ class AnswerComposer
                 : sprintf('%d source(s) provide partial support only.', $partialCount);
         }
 
-        if (($sufficiency['partial'] ?? false) === true) {
+        if (($sufficiency['partial'] ?? false) === true
+            || in_array((string) ($sufficiency['mode'] ?? $sufficiency['reason'] ?? ''), [
+                'supporting_only',
+                'supporting_evidence_only',
+                'multiple_supporting_evidence',
+                'general_query_usable_evidence',
+            ], true)) {
             $limitations[] = $language === 'ar'
-                ? 'الأدلة داعمة جزئيًا وليست مباشرة بالكامل للسؤال.'
-                : 'Evidence is supporting rather than fully direct for the question.';
+                ? 'الأدلة داعمة جزئيًا وليست مباشرة بالكامل للسؤال؛ لا تُعامل كإجابة علمية مؤكدة.'
+                : 'Evidence is supporting rather than fully direct; it must not be treated as a confident scientific answer.';
         }
 
         if ($validationReport->conflictingCount > 0) {
@@ -621,8 +705,8 @@ class AnswerComposer
 
         if (($sufficiency['direct_count'] ?? 0) === 0 && ($sufficiency['supporting_count'] ?? 0) >= 1) {
             return $language === 'ar'
-                ? 'الأدلة المتاحة داعمة جزئيًا؛ قد لا تحدد قيمة مثلى أو استنتاجًا مباشرًا بمفردها.'
-                : 'Available evidence is supporting only; it may not alone establish an optimal value or direct conclusion.';
+                ? 'الأدلة المتاحة داعمة فقط (supporting-only)؛ لا تكفي لإجابة علمية مؤكدة أو قيمة مثلى مباشرة.'
+                : 'Available evidence is supporting-only; it is insufficient for a confident scientific answer or direct optimum.';
         }
 
         $supported = count(array_filter(
@@ -641,27 +725,58 @@ class AnswerComposer
 
     /**
      * @param  list<ResearchAnswerClaim>  $claims
+     * @param  array<string, mixed>  $sufficiency
      */
-    private function overallConfidence(array $claims, EvidenceValidationExecutionReport $validationReport): float
-    {
+    private function overallConfidence(
+        array $claims,
+        EvidenceValidationExecutionReport $validationReport,
+        array $sufficiency = [],
+    ): float {
         if ($claims === []) {
             return 0.0;
         }
 
         $total = array_sum(array_map(fn (ResearchAnswerClaim $claim): float => $claim->confidence, $claims));
+        $confidence = min(0.95, $total / count($claims));
 
-        return round(min(0.95, $total / count($claims)), 3);
+        // Supporting-only must never look like a high-confidence DIRECT answer.
+        if (((int) ($sufficiency['direct_count'] ?? 0)) === 0) {
+            $confidence = min($confidence, 0.42);
+        }
+
+        return round($confidence, 3);
     }
 
     /**
      * @param  list<string>  $keyFindings
+     * @param  array<string, mixed>  $sufficiency
      */
-    private function buildConciseSummary(array $keyFindings, ?string $uncertainty, string $language): string
-    {
+    private function buildConciseSummary(
+        array $keyFindings,
+        ?string $uncertainty,
+        string $language,
+        array $sufficiency = [],
+    ): string {
+        $supportingOnly = ((int) ($sufficiency['direct_count'] ?? 0)) === 0
+            && in_array((string) ($sufficiency['mode'] ?? $sufficiency['reason'] ?? ''), [
+                'supporting_only',
+                'supporting_evidence_only',
+                'multiple_supporting_evidence',
+                'general_query_usable_evidence',
+            ], true);
+
         if ($keyFindings === []) {
             return $uncertainty ?? ($language === 'ar'
                 ? 'لا تتوفر أدلة علمية معتمدة كافية.'
                 : 'Insufficient validated scientific evidence is available.');
+        }
+
+        if ($supportingOnly) {
+            $frame = $language === 'ar'
+                ? 'أدلة داعمة محدودة فقط (ليست مباشرة): '
+                : 'Limited supporting evidence only (not direct): ';
+
+            return $frame.$keyFindings[0];
         }
 
         return $keyFindings[0];

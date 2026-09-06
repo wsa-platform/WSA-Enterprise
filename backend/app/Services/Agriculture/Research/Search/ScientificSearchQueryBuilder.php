@@ -301,7 +301,7 @@ class ScientificSearchQueryBuilder
             $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
         ));
 
-        foreach (['aquaculture', 'fish farming', 'استزراع', 'أسماك', 'fish'] as $marker) {
+        foreach (['aquaculture', 'fish farming', 'استزراع', 'أسماك', 'اسماك', 'fish'] as $marker) {
             if ($marker !== '' && mb_strpos($haystack, mb_strtolower($marker)) !== false) {
                 return true;
             }

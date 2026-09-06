@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
-use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\QueryUnderstandingService;
 use App\Services\Agriculture\Research\ResearchPlanner;
 use App\Services\Agriculture\Research\Search\Adapters\ConsensusScientificSourceAdapter;
@@ -15,8 +14,11 @@ use App\Services\Agriculture\Research\Search\ScientificSearchResult;
 use App\Services\Agriculture\Research\Search\ScientificSourceAdapterRegistry;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
 use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
-use App\Services\Agriculture\Research\Validation\AgriculturalScientificValidationService;
+use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
+use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionReport;
+use App\Services\Agriculture\Research\Validation\EvidenceValidationStatus;
 use App\Services\Agriculture\Research\Validation\EvidenceVerificationLayer;
+use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Config;
@@ -344,12 +346,13 @@ class ConsensusScientificSourceAndEvidenceVerificationTest extends TestCase
         $this->assertContains(
             $assessment['directness'],
             [
+                ScientificEvidenceDirectnessAssessor::IRRELEVANT,
                 ScientificEvidenceDirectnessAssessor::RELATED,
                 ScientificEvidenceDirectnessAssessor::BACKGROUND,
-                ScientificEvidenceDirectnessAssessor::SUPPORTING,
-                ScientificEvidenceDirectnessAssessor::IRRELEVANT,
             ],
         );
+        $this->assertNotSame(ScientificEvidenceDirectnessAssessor::SUPPORTING, $assessment['directness']);
+        $this->assertNotSame(ScientificEvidenceDirectnessAssessor::DIRECT, $assessment['directness']);
     }
 
     public function test_environment_open_field_vs_greenhouse_demotes_direct(): void
@@ -379,10 +382,11 @@ class ConsensusScientificSourceAndEvidenceVerificationTest extends TestCase
         // When base assessor would have returned DIRECT, verification demotes with this reason;
         // otherwise relevance already blocked DIRECT — either path is acceptable.
         if (in_array('production_environment_mismatch', $assessment['reasons'], true)) {
-            $this->assertContains($assessment['directness'], [
-                ScientificEvidenceDirectnessAssessor::SUPPORTING,
-                ScientificEvidenceDirectnessAssessor::SUPPORTED,
-            ]);
+            // Env mismatch → RELATED (not SUPPORTING); never primary-citation eligible.
+            $this->assertSame(ScientificEvidenceDirectnessAssessor::RELATED, $assessment['directness']);
+            $this->assertFalse($layer->isPrimaryCitationEligible($assessment['directness']));
+            $this->assertNotSame(ScientificEvidenceDirectnessAssessor::SUPPORTING, $assessment['directness']);
+            $this->assertNotSame(ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH, $assessment['directness']);
         }
     }
 
@@ -431,32 +435,484 @@ class ConsensusScientificSourceAndEvidenceVerificationTest extends TestCase
             'query' => 'soil classification in Egypt',
         ]);
 
-        Http::fake([
-            'api.openalex.org/works*' => Http::response(['results' => []], 200),
-            'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
-        ]);
-
-        // Build a minimal validation path via search+validate when possible;
-        // assert label mapping helpers remain strict for citation eligibility.
         $layer = app(EvidenceVerificationLayer::class);
+        // Primary-citation eligibility matrix: DIRECT only.
+        $this->assertTrue($layer->isPrimaryCitationEligible(
+            ScientificEvidenceDirectnessAssessor::DIRECT,
+        ));
         $this->assertFalse($layer->isPrimaryCitationEligible(
-            ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH,
+            ScientificEvidenceDirectnessAssessor::SUPPORTING,
+        ));
+        $this->assertFalse($layer->isPrimaryCitationEligible(
+            ScientificEvidenceDirectnessAssessor::SUPPORTED,
+        ));
+        $this->assertFalse($layer->isPrimaryCitationEligible(
+            ScientificEvidenceDirectnessAssessor::RELATED,
+        ));
+        $this->assertFalse($layer->isPrimaryCitationEligible(
+            ScientificEvidenceDirectnessAssessor::BACKGROUND,
         ));
         $this->assertFalse($layer->isPrimaryCitationEligible(
             ScientificEvidenceDirectnessAssessor::IRRELEVANT,
         ));
-        $this->assertTrue($layer->isPrimaryCitationEligible(
-            ScientificEvidenceDirectnessAssessor::DIRECT,
+        $this->assertFalse($layer->isPrimaryCitationEligible(
+            ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH,
         ));
-        $this->assertTrue($layer->isPrimaryCitationEligible(
-            ScientificEvidenceDirectnessAssessor::SUPPORTING,
-        ));
+        $this->assertFalse($layer->isPrimaryCitationEligible('unknown_label'));
 
-        $this->assertInstanceOf(AnswerComposer::class, app(AnswerComposer::class));
-        $this->assertInstanceOf(
-            AgriculturalScientificValidationService::class,
-            app(AgriculturalScientificValidationService::class),
+        $composer = app(AnswerComposer::class);
+        $geoOnly = $composer->compose($plan, $this->composerValidationReport([
+            $this->composerUsableEvidence(
+                'geo-india',
+                'Soil classification survey conducted in India across arid zones.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Soil classification study in India',
+                    'directness' => ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH,
+                    'claimTopic' => 'soil classification',
+                ],
+            ),
+        ]));
+        $this->assertContains($geoOnly->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertSame([], $geoOnly->citations);
+
+        $mixed = $composer->compose($plan, $this->composerValidationReport([
+            $this->composerUsableEvidence(
+                'geo-india',
+                'Soil classification survey conducted in India across arid zones.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Soil classification study in India',
+                    'directness' => ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH,
+                    'claimTopic' => 'soil classification',
+                ],
+            ),
+            $this->composerUsableEvidence(
+                'egypt-direct',
+                'Land classification of Egyptian soils under arid climates shows distinct soil types.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Egyptian soil land types survey',
+                    'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
+                    'claimTopic' => 'soil classification Egypt',
+                ],
+            ),
+        ]));
+        $this->assertNotContains($mixed->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertCount(1, $mixed->citations);
+        $this->assertSame('egypt-direct', $mixed->citations[0]->evidenceId);
+        $this->assertSame(1, $mixed->researchMetadata['direct_evidence_count'] ?? 0);
+    }
+
+    public function test_composer_direct_survives_with_irrelevant_and_geo_excluded(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'tomato heat stress open field',
+        ]);
+        $composer = app(AnswerComposer::class);
+
+        $report = $composer->compose($plan, $this->composerValidationReport([
+            $this->composerUsableEvidence(
+                'irrelevant',
+                'Marine plankton salinity dynamics unrelated to crops.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Ocean salinity plankton survey',
+                    'directness' => ScientificEvidenceDirectnessAssessor::IRRELEVANT,
+                ],
+            ),
+            $this->composerUsableEvidence(
+                'geo',
+                'Tomato heat stress trials conducted exclusively in Brazil field sites.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Tomato heat stress Brazil',
+                    'directness' => ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH,
+                    'claimTopic' => 'tomato heat',
+                ],
+            ),
+            $this->composerUsableEvidence(
+                'support',
+                'Tomato physiology notes under heat without open-field trial specifics.',
+                ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+                [
+                    'publicationTitle' => 'Tomato heat physiology supporting notes',
+                    'directness' => ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                    'claimTopic' => 'tomato heat stress',
+                ],
+            ),
+            $this->composerUsableEvidence(
+                'direct',
+                'Tomato plants in open-field conditions showed reduced growth under heat stress above 35 C.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Tomato heat stress physiology in open field systems',
+                    'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
+                    'claimTopic' => 'tomato heat stress',
+                ],
+            ),
+        ]));
+
+        $this->assertNotContains($report->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertCount(1, $report->citations);
+        $this->assertSame('direct', $report->citations[0]->evidenceId);
+        $this->assertSame(1, $report->researchMetadata['direct_evidence_count'] ?? 0);
+        $citedIds = array_map(static fn ($c) => $c->evidenceId, $report->citations);
+        $this->assertNotContains('irrelevant', $citedIds);
+        $this->assertNotContains('geo', $citedIds);
+        $this->assertNotContains('support', $citedIds);
+        foreach ($report->citations as $citation) {
+            $this->assertSame('direct', $citation->evidenceId);
+        }
+    }
+
+    public function test_composer_supporting_cannot_force_direct_or_invent_answer(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'optimal tomato germination temperature',
+        ]);
+        $composer = app(AnswerComposer::class);
+
+        $supportingOnly = $composer->compose($plan, $this->composerValidationReport([
+            $this->composerUsableEvidence(
+                'support',
+                'Tomato seed treatments with rhizobacteria improved germination percentage under laboratory trays.',
+                ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+                [
+                    'publicationTitle' => 'Rhizobacteria tomato germination without thermal optima',
+                    'directness' => ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                    'claimTopic' => 'tomato germination',
+                    'confidence' => 0.4,
+                ],
+            ),
+        ]));
+        // Weak supporting alone must not invent a DIRECT answer for a strict crop+factor query.
+        $this->assertContains($supportingOnly->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertSame(0, (int) ($supportingOnly->researchMetadata['direct_evidence_count'] ?? 0));
+
+        $strongSupporting = $composer->compose($plan, $this->composerValidationReport([
+            $this->composerUsableEvidence(
+                'support-strong',
+                'Tomato germination responds to thermal regimes near 25 C under controlled seed testing.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Tomato seed germination thermal regimes',
+                    'directness' => ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                    'claimTopic' => 'tomato germination temperature',
+                    'confidence' => 0.7,
+                ],
+            ),
+        ]));
+        // Strong SUPPORTING may synthesize partially, but must not be counted as DIRECT
+        // and must not appear in primary citations[] (DIRECT-only eligibility).
+        if (! in_array($strongSupporting->status, ['no_validated_evidence', 'insufficient_evidence'], true)) {
+            $this->assertSame(0, (int) ($strongSupporting->researchMetadata['direct_evidence_count'] ?? 0));
+            $this->assertGreaterThanOrEqual(1, (int) ($strongSupporting->researchMetadata['supporting_evidence_count'] ?? 0));
+            foreach ($strongSupporting->evidenceReferences as $ref) {
+                $this->assertNotSame(ScientificEvidenceDirectnessAssessor::DIRECT, $ref['evidence_directness'] ?? null);
+            }
+            $this->assertSame([], $strongSupporting->citations);
+            $citedIds = array_map(static fn ($c) => $c->evidenceId, $strongSupporting->citations);
+            $this->assertNotContains('support-strong', $citedIds);
+        } else {
+            $this->assertSame([], $strongSupporting->citations);
+        }
+
+        // SUPPORTED directness may feed synthesis, but never primary citations[].
+        $supportedDirectness = $composer->compose($plan, $this->composerValidationReport([
+            $this->composerUsableEvidence(
+                'supported-label',
+                'Tomato germination thermal optima near 25 C are documented in seed physiology reviews.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Tomato germination temperature supported review',
+                    'directness' => ScientificEvidenceDirectnessAssessor::SUPPORTED,
+                    'claimTopic' => 'tomato germination temperature',
+                    'confidence' => 0.75,
+                ],
+            ),
+        ]));
+        $this->assertSame([], $supportedDirectness->citations);
+        $this->assertSame(0, (int) ($supportedDirectness->researchMetadata['direct_evidence_count'] ?? 0));
+        if (! in_array($supportedDirectness->status, ['no_validated_evidence', 'insufficient_evidence'], true)) {
+            $this->assertGreaterThanOrEqual(1, (int) ($supportedDirectness->researchMetadata['supporting_evidence_count'] ?? 0));
+        }
+    }
+
+    public function test_composer_insufficient_when_only_background_or_related(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'optimal tomato germination temperature',
+        ]);
+        $composer = app(AnswerComposer::class);
+
+        $report = $composer->compose($plan, $this->composerValidationReport([
+            $this->composerUsableEvidence(
+                'bg',
+                'This overview will briefly discuss general horticulture history.',
+                ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+                [
+                    'publicationTitle' => 'General horticulture overview',
+                    'directness' => ScientificEvidenceDirectnessAssessor::BACKGROUND,
+                ],
+            ),
+            $this->composerUsableEvidence(
+                'related',
+                'Related crop physiology notes without tomato germination optima.',
+                ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+                [
+                    'publicationTitle' => 'Related physiology notes',
+                    'directness' => ScientificEvidenceDirectnessAssessor::RELATED,
+                ],
+            ),
+        ]));
+
+        $this->assertContains($report->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertSame([], $report->citations);
+        $this->assertSame([], $report->keyFindings);
+        $this->assertTrue(
+            str_contains(mb_strtolower($report->answer), 'insufficient')
+            || str_contains(mb_strtolower($report->answer), 'not sufficiently relevant'),
         );
-        $this->assertInstanceOf(KnowledgeQueryPlan::class, $plan);
+    }
+
+    public function test_composer_egypt_geo_mismatch_excluded_from_primary(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'land types in Egypt',
+        ]);
+        $layer = app(EvidenceVerificationLayer::class);
+        $composer = app(AnswerComposer::class);
+
+        $indiaResult = new ScientificSearchResult(
+            'consensus',
+            'c-india',
+            'Soil classification study in India',
+            ['A'],
+            2020,
+            '10.1000/india-soil-composer',
+            null,
+            'A soil classification survey conducted in India across arid zones.',
+            'J',
+            ['consensus'],
+            ['countries_of_study' => ['in']],
+            ['consensus' => [
+                'countries_of_study' => ['in'],
+                'title' => 'Soil classification study in India',
+                'abstract' => 'A soil classification survey conducted in India across arid zones.',
+            ]],
+        );
+        $assessment = $layer->assess($plan, $indiaResult);
+        $this->assertSame(ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH, $assessment['directness']);
+
+        $report = $composer->compose($plan, $this->composerValidationReport([
+            $this->composerUsableEvidence(
+                'india-geo',
+                'A soil classification survey conducted in India across arid zones.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Soil classification study in India',
+                    'directness' => $assessment['directness'],
+                    'claimTopic' => 'land types',
+                ],
+            ),
+        ]));
+        $this->assertContains($report->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertSame([], $report->citations);
+    }
+
+    public function test_composer_open_field_vs_greenhouse_and_hydroponics_not_direct_primary(): void
+    {
+        $openFieldPlan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'tomato heat stress in open field cultivation',
+        ]);
+        $this->assertSame('open_field', $openFieldPlan->normalizedQuery->constraints['production_system'] ?? null);
+
+        $layer = app(EvidenceVerificationLayer::class);
+        $composer = app(AnswerComposer::class);
+
+        $greenhouseResult = new ScientificSearchResult(
+            'openalex',
+            'W-gh',
+            'Tomato heat stress under greenhouse protected cultivation',
+            ['A'],
+            2022,
+            '10.1000/gh-tomato-composer',
+            null,
+            'Tomato heat stress physiology was evaluated in greenhouse polyhouse protected cultivation systems.',
+            'J',
+            ['openalex'],
+        );
+        $ghAssessment = $layer->assess($openFieldPlan, $greenhouseResult);
+        $this->assertNotSame(ScientificEvidenceDirectnessAssessor::DIRECT, $ghAssessment['directness']);
+        if (in_array('production_environment_mismatch', $ghAssessment['reasons'], true)) {
+            $this->assertSame(ScientificEvidenceDirectnessAssessor::RELATED, $ghAssessment['directness']);
+        }
+        $this->assertFalse($layer->isPrimaryCitationEligible($ghAssessment['directness']));
+
+        $ghReport = $composer->compose($openFieldPlan, $this->composerValidationReport([
+            $this->composerUsableEvidence(
+                'gh-only',
+                'Tomato heat stress physiology was evaluated in greenhouse polyhouse protected cultivation systems.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Tomato heat stress under greenhouse protected cultivation',
+                    'directness' => $ghAssessment['directness'],
+                    'claimTopic' => 'tomato heat stress',
+                ],
+            ),
+        ]));
+        $this->assertSame([], $ghReport->citations);
+        if (! in_array($ghReport->status, ['no_validated_evidence', 'insufficient_evidence'], true)) {
+            $this->assertSame(0, (int) ($ghReport->researchMetadata['direct_evidence_count'] ?? 0));
+            foreach ($ghReport->evidenceReferences as $ref) {
+                $this->assertNotSame(ScientificEvidenceDirectnessAssessor::DIRECT, $ref['evidence_directness'] ?? null);
+            }
+        }
+
+        $hydroPlan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'tomato growth in hydroponics systems',
+        ]);
+        $openFieldEvidence = new ScientificSearchResult(
+            'openalex',
+            'W-of',
+            'Tomato growth under open field rainfed cultivation',
+            ['A'],
+            2021,
+            '10.1000/of-tomato-composer',
+            null,
+            'Tomato vegetative growth was measured in open-field outdoor cultivation without hydroponics.',
+            'J',
+            ['openalex'],
+        );
+        $hydroAssessment = $layer->assess($hydroPlan, $openFieldEvidence);
+        $this->assertNotSame(ScientificEvidenceDirectnessAssessor::DIRECT, $hydroAssessment['directness']);
+        if (in_array('production_environment_mismatch', $hydroAssessment['reasons'], true)) {
+            $this->assertSame(ScientificEvidenceDirectnessAssessor::RELATED, $hydroAssessment['directness']);
+        }
+        $this->assertFalse($layer->isPrimaryCitationEligible($hydroAssessment['directness']));
+
+        $hydroReport = $composer->compose($hydroPlan, $this->composerValidationReport([
+            $this->composerUsableEvidence(
+                'of-for-hydro',
+                'Tomato vegetative growth was measured in open-field outdoor cultivation without hydroponics.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Tomato growth under open field rainfed cultivation',
+                    'directness' => $hydroAssessment['directness'],
+                    'claimTopic' => 'tomato hydroponics',
+                ],
+            ),
+        ]));
+        $this->assertSame([], $hydroReport->citations);
+        if (! in_array($hydroReport->status, ['no_validated_evidence', 'insufficient_evidence'], true)) {
+            $this->assertSame(0, (int) ($hydroReport->researchMetadata['direct_evidence_count'] ?? 0));
+        }
+    }
+
+    public function test_composer_ginger_growth_excludes_essential_oil_irrelevant_from_primary(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ginger growth temperature requirements',
+        ]);
+        $composer = app(AnswerComposer::class);
+
+        $report = $composer->compose($plan, $this->composerValidationReport([
+            $this->composerUsableEvidence(
+                'oil',
+                'Ginger essential oil chemical composition and antimicrobial activity of Zingiber officinale extracts.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Essential oil composition of Zingiber officinale',
+                    'directness' => ScientificEvidenceDirectnessAssessor::IRRELEVANT,
+                    'claimTopic' => 'ginger essential oil',
+                ],
+            ),
+            $this->composerUsableEvidence(
+                'growth',
+                'Zingiber officinale rhizome growth responds optimally near 25-30 C under field temperature regimes.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Ginger rhizome growth temperature optima',
+                    'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
+                    'claimTopic' => 'ginger growth temperature',
+                ],
+            ),
+        ]));
+
+        $this->assertNotContains($report->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertCount(1, $report->citations);
+        $this->assertSame('growth', $report->citations[0]->evidenceId);
+        $citedIds = array_map(static fn ($c) => $c->evidenceId, $report->citations);
+        $this->assertNotContains('oil', $citedIds);
+        $this->assertSame(1, $report->researchMetadata['direct_evidence_count'] ?? 0);
+    }
+
+    /**
+     * @param  list<ScientificEvidenceItem>  $items
+     */
+    private function composerValidationReport(array $items): EvidenceValidationExecutionReport
+    {
+        return new EvidenceValidationExecutionReport(
+            status: 'validation_completed',
+            validatedEvidence: $items,
+            rejectedEvidence: [],
+            sourcesReceived: count($items),
+            validatedCount: count($items),
+            rejectedCount: 0,
+            duplicateCount: 0,
+            conflictingCount: 0,
+            evidenceSufficient: $items !== [],
+            validatorsUsed: [],
+            qualityDistribution: [],
+            searchSummary: [],
+            observability: [],
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function composerUsableEvidence(
+        string $evidenceId,
+        string $text,
+        string $relationship,
+        array $overrides = [],
+    ): ScientificEvidenceItem {
+        $directness = $overrides['directness'] ?? ScientificEvidenceDirectnessAssessor::DIRECT;
+        $confidence = (float) ($overrides['confidence'] ?? 0.8);
+
+        return new ScientificEvidenceItem(
+            evidenceId: $evidenceId,
+            sourceId: (string) ($overrides['sourceId'] ?? 'source-'.$evidenceId),
+            sourceKey: 'openalex',
+            sourceType: (string) ($overrides['sourceType'] ?? 'university_research'),
+            publicationTitle: (string) ($overrides['publicationTitle'] ?? 'Scientific publication title'),
+            authors: ['Dr Researcher'],
+            institution: (string) ($overrides['institution'] ?? 'University of Agriculture'),
+            journal: 'Journal of Agronomy',
+            doi: array_key_exists('doi', $overrides) ? $overrides['doi'] : '10.1000/'.$evidenceId,
+            url: array_key_exists('url', $overrides) ? $overrides['url'] : 'https://doi.org/10.1000/'.$evidenceId,
+            publicationYear: 2023,
+            retrievedAt: now()->toIso8601String(),
+            agriculturalDomain: 'field_crops',
+            claimTopic: (string) ($overrides['claimTopic'] ?? 'topic'),
+            evidenceText: $text,
+            validationStatus: EvidenceValidationStatus::EVIDENCE_USABLE,
+            validationFailures: [],
+            claimRelationship: $relationship,
+            confidence: $confidence,
+            qualityScore: 75.0,
+            qualityFactors: [
+                'not_scientific_certainty' => true,
+                'evidence_directness' => $directness,
+                'verification_label' => app(EvidenceVerificationLayer::class)->toVerificationLabel((string) $directness),
+            ],
+            sourceAttribution: [
+                'organization' => 'University of Agriculture',
+                'source_type' => 'university_research',
+                'evidence_directness' => $directness,
+            ],
+        );
     }
 }

@@ -90,7 +90,7 @@ final class AgriculturalEntityCatalog
             'animal_production' => ['livestock', 'animal production', 'cattle', 'إنتاج حيواني'],
             'poultry_production' => ['poultry', 'broiler', 'layer', 'دواجن'],
             'beekeeping' => ['beekeeping', 'apiculture', 'نحل', 'تربية نحل'],
-            'aquaculture' => ['aquaculture', 'fish farming', 'استزراع', 'أسماك'],
+            'aquaculture' => ['aquaculture', 'fish farming', 'استزراع', 'أسماك', 'اسماك'],
             'feed' => ['animal feed', 'feed formulation', 'علف', 'تغذية'],
             'agricultural_economics' => [
                 'farm economics', 'profitability', 'agricultural economics', 'اقتصاد زراعي',
@@ -307,6 +307,14 @@ final class AgriculturalEntityCatalog
             'hydroponics' => [
                 'hydroponics', 'hydroponic', 'soilless culture', 'soilless',
                 'الزراعة المائية', 'زراعة مائية', 'هيدروبون', 'هيدروبونيك',
+            ],
+            'open_field' => [
+                'open field', 'open-field', 'openfield', 'field cultivation',
+                'field-grown', 'outdoor cultivation', 'rainfed', 'rain-fed',
+                'حقل مفتوح', 'الحقل المفتوح', 'زراعة مكشوفة', 'زراعة حقلية',
+                'الزراعة الحقلية', 'الأرض المكشوفة', 'الارض المكشوفة',
+                'الأراضي المكشوفة', 'الاراضي المكشوفة',
+                'الزراعة في الأرض المكشوفة', 'الزراعة في الارض المكشوفة',
             ],
         ];
     }

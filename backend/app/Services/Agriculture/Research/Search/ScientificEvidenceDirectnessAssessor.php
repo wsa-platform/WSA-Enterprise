@@ -103,6 +103,48 @@ class ScientificEvidenceDirectnessAssessor
         // Wrong primary sense factor present in query but missing in paper → not DIRECT.
         $requiredSenseFactorMissing = $this->requiredSenseFactorMissing($factors, $haystack);
         $oilDemotion = $this->essentialOilPrimaryDemotion($plan, $haystack);
+        $landClassification = $this->isLandClassificationQuestion($plan);
+
+        // Entity-less land/agriculture domain: greenhouse/ornamental/protected without land
+        // classification signals must not auto-SUPPORTING.
+        if ($landClassification) {
+            if ($this->hasLandOfftopicWithoutLandSignals($haystack)) {
+                return [
+                    'directness' => self::IRRELEVANT,
+                    'score' => 0.0,
+                    'reasons' => ['land_classification_offtopic_environment_or_crop'],
+                    'factor_coverage' => round($factorCoverage, 3),
+                    'sense_coverage' => $senseCoverage,
+                    'entity_matched' => $entityMatched,
+                    'topic_matched' => false,
+                ];
+            }
+            if (! $this->hasLandClassificationSignals($haystack)) {
+                return [
+                    'directness' => self::IRRELEVANT,
+                    'score' => 0.0,
+                    'reasons' => ['land_classification_topic_not_aligned'],
+                    'factor_coverage' => round($factorCoverage, 3),
+                    'sense_coverage' => false,
+                    'entity_matched' => $entityMatched,
+                    'topic_matched' => false,
+                ];
+            }
+        }
+
+        // Pathogen/fungal/aflatoxin growth on a crop is not plant-growth DIRECT.
+        if ($this->isPlantGrowthTemperatureIntent($plan) && $this->hasNonPlantGrowthPrimary($haystack)
+            && ! $this->hasPlantGrowthEvidenceSignals($haystack)) {
+            return [
+                'directness' => self::IRRELEVANT,
+                'score' => 0.0,
+                'reasons' => ['non_plant_growth_pathogen_or_contaminant'],
+                'factor_coverage' => round($factorCoverage, 3),
+                'sense_coverage' => $senseCoverage,
+                'entity_matched' => $entityMatched,
+                'topic_matched' => $topicMatched,
+            ];
+        }
 
         if ($entityMatched && $topicMatched && $senseCoverage && ! $requiredSenseFactorMissing
             && ($senseMatched || $contextMatched || $factorCoverage >= 0.99)
@@ -124,6 +166,20 @@ class ScientificEvidenceDirectnessAssessor
                     'directness' => self::BACKGROUND,
                     'score' => 4.0,
                     'reasons' => [$this->essentialOilDemotionReason($plan, 'background')],
+                    'factor_coverage' => round($factorCoverage, 3),
+                    'sense_coverage' => $senseCoverage,
+                    'entity_matched' => true,
+                    'topic_matched' => true,
+                ];
+            }
+
+            // Generic DIRECT protection: entity + intent/claim answerability already required above;
+            // growth+temperature also requires on-intent plant growth snippet (not oil-only leftovers).
+            if ($this->isPlantGrowthTemperatureIntent($plan) && ! $this->hasPlantGrowthEvidenceSignals($haystack)) {
+                return [
+                    'directness' => self::SUPPORTING,
+                    'score' => 12.0 + (8.0 * $factorCoverage),
+                    'reasons' => ['growth_temperature_lacks_plant_growth_snippet'],
                     'factor_coverage' => round($factorCoverage, 3),
                     'sense_coverage' => $senseCoverage,
                     'entity_matched' => true,
@@ -211,8 +267,23 @@ class ScientificEvidenceDirectnessAssessor
             ];
         }
 
+        // Land classification with land signals but incomplete alignment → SUPPORTING (not auto via general).
+        if ($landClassification && $this->hasLandClassificationSignals($haystack)) {
+            return [
+                'directness' => self::SUPPORTING,
+                'score' => 14.0 + (8.0 * $factorCoverage),
+                'reasons' => ['land_classification_partial_alignment'],
+                'factor_coverage' => round($factorCoverage, 3),
+                'sense_coverage' => $senseCoverage,
+                'entity_matched' => $entityMatched,
+                'topic_matched' => true,
+            ];
+        }
+
         // General (non crop+topic) relevant hits are usable supporting evidence — not BACKGROUND.
-        if ($relevance['relevant'] && (! $relevance['requires_entity'] || ! $relevance['requires_topic'])) {
+        // Skip for land_classification (handled above) so entity-less land never auto-SUPPORTING junk.
+        if ($relevance['relevant'] && ! $landClassification
+            && (! $relevance['requires_entity'] || ! $relevance['requires_topic'])) {
             return [
                 'directness' => self::SUPPORTING,
                 'score' => 16.0 + (10.0 * $factorCoverage),
@@ -489,6 +560,24 @@ class ScientificEvidenceDirectnessAssessor
      */
     private function hasPlantGrowthEvidenceSignals(string $haystack): bool
     {
+        // Pathogen/contaminant growth must not count as plant growth.
+        if ($this->hasNonPlantGrowthPrimary($haystack)) {
+            $hasExplicitPlant = false;
+            foreach ([
+                'plant growth', 'rhizome growth', 'vegetative growth', 'shoot growth',
+                'root growth', 'plant physiology', 'biomass accumulation',
+            ] as $signal) {
+                if (AgriculturalEntityCatalog::containsTerm($haystack, $signal)
+                    || mb_strpos($haystack, $signal) !== false) {
+                    $hasExplicitPlant = true;
+                    break;
+                }
+            }
+            if (! $hasExplicitPlant) {
+                return false;
+            }
+        }
+
         foreach ([
             'plant growth', 'rhizome growth', 'vegetative growth', 'shoot growth',
             'root growth', 'growth rate', 'physiology', 'cultivation',
@@ -500,10 +589,79 @@ class ScientificEvidenceDirectnessAssessor
             }
         }
 
-        // Standalone "growth" that is not oil/yield framing.
+        // Standalone "growth" that is not oil/yield/pathogen framing.
         if (AgriculturalEntityCatalog::containsTerm($haystack, 'growth')
-            && ! preg_match('/\b(?:oil|essential|volatile)\s+growth\b/u', $haystack)) {
+            && ! preg_match('/\b(?:oil|essential|volatile)\s+growth\b/u', $haystack)
+            && ! $this->hasNonPlantGrowthPrimary($haystack)) {
             return true;
+        }
+
+        return false;
+    }
+
+    private function hasNonPlantGrowthPrimary(string $haystack): bool
+    {
+        foreach ([
+            'aflatoxin', 'aspergillus', 'fungal growth', 'mycotoxin', 'pathogen growth',
+            'microbial growth', 'bacterial growth', 'mold growth', 'contamination',
+        ] as $marker) {
+            if (AgriculturalEntityCatalog::containsTerm($haystack, $marker)
+                || mb_strpos($haystack, $marker) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function isLandClassificationQuestion(KnowledgeQueryPlan $plan): bool
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if ($sense === 'land_classification') {
+            return true;
+        }
+
+        $hay = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+
+        return preg_match(
+            '/land\s*types?|soil\s*classification|land\s*classification|أنواع\s*(?:ال)?أراضي|انواع\s*(?:ال)?اراضي|تصنيف\s*(?:ال)?أراضي|تصنيف\s*(?:ال)?اراضي/u',
+            $hay,
+        ) === 1;
+    }
+
+    private function hasLandClassificationSignals(string $haystack): bool
+    {
+        foreach ([
+            'land type', 'land types', 'soil classification', 'land classification',
+            'soil type', 'soil types', 'soil taxonomy', 'soil survey',
+            'pedology', 'edaphic', 'soil mapping',
+        ] as $signal) {
+            if (AgriculturalEntityCatalog::containsTerm($haystack, $signal)
+                || mb_strpos($haystack, $signal) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function hasLandOfftopicWithoutLandSignals(string $haystack): bool
+    {
+        if ($this->hasLandClassificationSignals($haystack)) {
+            return false;
+        }
+
+        foreach ([
+            'greenhouse', 'greenhouses', 'polyhouse', 'polyhouses',
+            'protected cultivation', 'protected agriculture', 'hydroponics', 'hydroponic',
+            'soilless', 'ornamental', 'gerbera', 'rose', 'roses', 'cucumber',
+        ] as $marker) {
+            if (AgriculturalEntityCatalog::containsTerm($haystack, $marker)
+                || mb_strpos($haystack, $marker) !== false) {
+                return true;
+            }
         }
 
         return false;

@@ -136,7 +136,7 @@ final class AgriculturalDomainCatalog
             self::ANIMAL_PRODUCTION => ['livestock', 'animal production', 'cattle', 'إنتاج حيواني', 'ماشية'],
             self::POULTRY => ['poultry', 'broiler', 'layer hen', 'دواجن', 'فراخ'],
             self::BEEKEEPING => ['beekeeping', 'apiculture', 'pollination', 'نحل', 'تربية نحل'],
-            self::AQUACULTURE => ['aquaculture', 'fish farming', 'fisheries', 'استزراع', 'أسماك'],
+            self::AQUACULTURE => ['aquaculture', 'fish farming', 'fisheries', 'استزراع', 'أسماك', 'اسماك'],
             self::AGRICULTURAL_ECONOMICS => ['agricultural economics', 'farm profitability', 'economics', 'اقتصاد زراعي', 'ربحية'],
             self::AGRICULTURAL_INDUSTRIES => ['agricultural industry', 'value chain', 'processing', 'صناعات زراعية', 'تصنيع'],
             self::AGRICULTURAL_RESEARCH => ['scientific literature', 'peer reviewed', 'research publication', 'أبحاث علمية', 'منشورات علمية'],

@@ -45,7 +45,10 @@ class EvidenceVerificationLayer
     /** @var list<string> */
     private const OPEN_FIELD_MARKERS = [
         'open field', 'open-field', 'openfield', 'field cultivation', 'field-grown',
-        'rainfed', 'rain-fed', 'outdoor cultivation', 'حقل مفتوح', 'زراعة مكشوفة',
+        'rainfed', 'rain-fed', 'outdoor cultivation',
+        'حقل مفتوح', 'الحقل المفتوح', 'زراعة مكشوفة', 'زراعة حقلية', 'الزراعة الحقلية',
+        'الأرض المكشوفة', 'الارض المكشوفة', 'الأراضي المكشوفة', 'الاراضي المكشوفة',
+        'الزراعة في الأرض المكشوفة', 'الزراعة في الارض المكشوفة',
     ];
 
     public function __construct(
