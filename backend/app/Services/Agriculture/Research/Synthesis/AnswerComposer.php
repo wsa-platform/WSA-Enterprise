@@ -62,6 +62,18 @@ class AnswerComposer
 
         $sufficiency = $this->assessSynthesisSufficiency($usable, $validationReport, $plan);
         if (! $sufficiency['sufficient']) {
+            // Supporting-only: clear insufficient-direct framing + optional additional info (never a confident main answer).
+            if ($this->isSupportingOnlySufficiency($sufficiency)) {
+                return $this->supportingOnlyInsufficientReport(
+                    $plan,
+                    $usable,
+                    $validationReport,
+                    $sufficiency,
+                    $language,
+                    $query,
+                );
+            }
+
             return $this->insufficientReport(
                 status: 'insufficient_evidence',
                 reason: $sufficiency['reason'],
@@ -86,6 +98,8 @@ class AnswerComposer
         }
 
         $conflicts = $this->buildConflicts($usable, $language);
+        $supportingOnly = $this->isSupportingOnlySufficiency($sufficiency);
+        // Findings may include supporting for metadata/additional; main answer body gates DIRECT-only.
         $keyFindings = $this->buildKeyFindings($claims, $usable, $plan, $language);
         $limitations = $this->buildLimitations($validationReport, $usable, $language, $sufficiency);
         $uncertainty = $this->resolveUncertainty(
@@ -111,20 +125,35 @@ class AnswerComposer
             $usable,
         );
 
+        $mainAnswerBody = $this->buildMainAnswerBody($keyFindings, $plan, $language, $sufficiency);
         $conciseSummary = $this->buildConciseSummary($keyFindings, $uncertainty, $language, $sufficiency);
-        $detailedExplanation = $this->buildDetailedExplanation($usable, $citations, $conflicts, $language, $plan);
-        $answer = $this->buildAnswer($conciseSummary, $detailedExplanation, $uncertainty, $language);
+        $additionalSection = $this->buildAdditionalInformationSection(
+            $usable,
+            // Supporting-only: main answer is the insufficient-direct message, so do not suppress additional against supporting findings.
+            $supportingOnly ? [] : $keyFindings,
+            $plan,
+            $language,
+            $supportingOnly,
+        );
+        $primarySourcesSection = $this->formatPrimarySourcesSection($citations, $language);
+        $detailedExplanation = $this->buildDetailedExplanation(
+            $primarySourcesSection,
+            $additionalSection,
+            $conflicts,
+            $language,
+        );
+        $answer = $this->buildAnswer(
+            $mainAnswerBody,
+            $primarySourcesSection,
+            $additionalSection,
+            $uncertainty,
+            $language,
+        );
 
         $nonConflictClaims = count(array_filter(
             $claims,
             static fn (ResearchAnswerClaim $claim): bool => $claim->claimRelationship !== ClaimEvidenceRelationship::CONFLICTING,
         ));
-        $supportingOnly = in_array((string) ($sufficiency['reason'] ?? ''), [
-            'supporting_only',
-            'supporting_evidence_only',
-            'multiple_supporting_evidence',
-            'general_query_usable_evidence',
-        ], true) && ((int) ($sufficiency['direct_count'] ?? 0)) === 0;
         $status = match (true) {
             $conflicts !== [] && $nonConflictClaims === 0 && $keyFindings === [] => 'synthesis_completed_with_conflicts',
             $conflicts !== [] && $nonConflictClaims === 0 => 'synthesis_completed_with_partial_conflicts',
@@ -165,6 +194,7 @@ class AnswerComposer
                 'direct_evidence_count' => $sufficiency['direct_count'],
                 'supporting_evidence_count' => $sufficiency['supporting_count'],
                 'sufficiency_mode' => $sufficiency['mode'] ?? $sufficiency['reason'],
+                'answer_presentation_mode' => $this->resolvePresentationMode($plan),
             ],
             observability: [
                 'usable_evidence_count' => count($usable),
@@ -755,10 +785,15 @@ class AnswerComposer
             return $b->confidence <=> $a->confidence;
         });
 
+        $hasDirect = in_array(ScientificEvidenceDirectnessAssessor::DIRECT, $directnessByEvidenceId, true);
+
         $findings = [];
-        // Pass 1: non-conflicting claims (DIRECT first via sort).
+        // Pass 1: non-conflicting claims. When DIRECT exists, main answer uses DIRECT only.
         foreach ($ordered as $claim) {
             if ($claim->claimRelationship === ClaimEvidenceRelationship::CONFLICTING) {
+                continue;
+            }
+            if ($hasDirect && ! $this->claimIsDirect($claim, $directnessByEvidenceId)) {
                 continue;
             }
             $sentence = $this->firstSentence($claim->claimText);
@@ -780,8 +815,8 @@ class AnswerComposer
             }
         }
 
-        // Pass 3: any remaining substantive claim text before generic boilerplate.
-        if ($findings === []) {
+        // Pass 3: no DIRECT — keep supporting findings for metadata/additional (main answer still gated).
+        if ($findings === [] && ! $hasDirect) {
             foreach ($ordered as $claim) {
                 $sentence = $this->firstSentence($claim->claimText);
                 if ($sentence !== '' && ! in_array($sentence, $findings, true)) {
@@ -791,7 +826,7 @@ class AnswerComposer
         }
 
         // Genuine no-usable-substance path only — never prefer meta conflict line when DIRECT exists.
-        if ($findings === []) {
+        if ($findings === [] && $hasDirect) {
             $findings[] = $language === 'ar'
                 ? 'تتوفر أدلة علمية محدودة أو متعارضة؛ راجع التفاصيل والمصادر.'
                 : 'Limited or conflicting scientific evidence is available; review details and sources.';
@@ -953,96 +988,546 @@ class AnswerComposer
      * @param  list<string>  $keyFindings
      * @param  array<string, mixed>  $sufficiency
      */
-    private function buildConciseSummary(
-        array $keyFindings,
-        ?string $uncertainty,
-        string $language,
-        array $sufficiency = [],
-    ): string {
-        $supportingOnly = ((int) ($sufficiency['direct_count'] ?? 0)) === 0
+    /**
+     * @param  array<string, mixed>  $sufficiency
+     */
+    private function isSupportingOnlySufficiency(array $sufficiency): bool
+    {
+        return ((int) ($sufficiency['direct_count'] ?? 0)) === 0
             && in_array((string) ($sufficiency['mode'] ?? $sufficiency['reason'] ?? ''), [
                 'supporting_only',
                 'supporting_evidence_only',
                 'multiple_supporting_evidence',
                 'general_query_usable_evidence',
             ], true);
+    }
 
-        if ($keyFindings === []) {
-            return $uncertainty ?? ($language === 'ar'
-                ? 'لا تتوفر أدلة علمية معتمدة كافية.'
-                : 'Insufficient validated scientific evidence is available.');
+    private function insufficientDirectMessage(string $language): string
+    {
+        return $language === 'ar'
+            ? 'لم يتم العثور على دليل علمي مباشر كافٍ للإجابة بشكل مؤكد.'
+            : 'No sufficiently direct scientific evidence was found for a confident answer.';
+    }
+
+    /**
+     * @param  list<string>  $keyFindings
+     * @param  array<string, mixed>  $sufficiency
+     */
+    private function buildConciseSummary(
+        array $keyFindings,
+        ?string $uncertainty,
+        string $language,
+        array $sufficiency = [],
+    ): string {
+        if ($this->isSupportingOnlySufficiency($sufficiency)) {
+            return $this->insufficientDirectMessage($language);
         }
 
-        if ($supportingOnly) {
-            $frame = $language === 'ar'
-                ? 'أدلة داعمة محدودة فقط (ليست مباشرة): '
-                : 'Limited supporting evidence only (not direct): ';
-
-            return $frame.$keyFindings[0];
+        if ($keyFindings === []) {
+            return $uncertainty ?? $this->insufficientDirectMessage($language);
         }
 
         return $keyFindings[0];
     }
 
     /**
-     * @param  list<ScientificEvidenceItem>  $items
-     * @param  list<ResearchAnswerCitation>  $citations
-     * @param  list<array<string, mixed>>  $conflicts
+     * @param  list<string>  $keyFindings
+     * @param  array<string, mixed>  $sufficiency
      */
-    private function buildDetailedExplanation(
-        array $items,
-        array $citations,
-        array $conflicts,
-        string $language,
+    private function buildMainAnswerBody(
+        array $keyFindings,
         KnowledgeQueryPlan $plan,
+        string $language,
+        array $sufficiency,
     ): string {
-        $parts = [];
+        // Supporting-only must never become a confident main answer narrative.
+        if ($this->isSupportingOnlySufficiency($sufficiency)) {
+            return $this->insufficientDirectMessage($language);
+        }
 
+        if ($keyFindings === []) {
+            return $this->insufficientDirectMessage($language);
+        }
+
+        $mode = $this->resolvePresentationMode($plan);
+        $heading = $this->mainAnswerHeading($plan, $language);
+
+        return match ($mode) {
+            'list' => $this->formatAsNumberedList($keyFindings, $heading),
+            'process' => $this->formatAsNumberedSteps($keyFindings, $heading, $language),
+            'range' => $this->formatAsLabeledRange($keyFindings, $plan, $language),
+            'comparison' => $this->formatAsComparison($keyFindings, $heading, $language),
+            default => $this->formatAsExplanatory($keyFindings, $heading),
+        };
+    }
+
+    private function resolvePresentationMode(KnowledgeQueryPlan $plan): string
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
+        $intent = trim((string) $plan->researchIntent);
+        $question = mb_strtolower(trim($plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion));
+
+        if ($sense === 'land_classification'
+            || preg_match('/\b(?:types?|categories|species|classes|kinds?|inventory)\b/u', $question) === 1
+            || preg_match('/(?:انواع|أنواع|تصنيف|اصناف|أصناف|اجناس|أجناس)/u', $question) === 1) {
+            return 'list';
+        }
+
+        if (preg_match('/\b(?:steps?|procedure|process|protocol|how\s+to)\b/u', $question) === 1
+            || preg_match('/(?:خطوات|طريقة|كيفية|اجراء|إجراء)/u', $question) === 1) {
+            return 'process';
+        }
+
+        if (preg_match('/\b(?:compar(?:e|ison)|versus|vs\.?)\b/u', $question) === 1
+            || preg_match('/(?:مقارنة|مقابل)/u', $question) === 1) {
+            return 'comparison';
+        }
+
+        if (in_array($qualifier, ['optimal_range', 'requirement'], true)
+            || in_array($sense, ['seed_germination', 'crop_water_requirement'], true)
+            || preg_match('/\b(?:rate|range|temperature|optimum|optimal)\b/u', $question) === 1
+            || preg_match('/(?:درجة حرارة|معدل|احتياج|نطاق|مثلى|مثالي)/u', $question) === 1) {
+            return 'range';
+        }
+
+        if (in_array($intent, ['cultivation', 'plant_nutrition', 'irrigation'], true)
+            && preg_match('/\b(?:guide|practice|management)\b/u', $question) === 1) {
+            return 'process';
+        }
+
+        return 'explanatory';
+    }
+
+    private function mainAnswerHeading(KnowledgeQueryPlan $plan, string $language): string
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
+        $topic = is_array($topics) && $topics !== [] ? trim((string) $topics[0]) : '';
+
+        if ($sense === 'land_classification') {
+            return $language === 'ar' ? 'أنواع الأراضي' : 'Land types';
+        }
+
+        if ($topic !== '') {
+            return $topic;
+        }
+
+        if ($sense !== '') {
+            return str_replace('_', ' ', $sense);
+        }
+
+        return $language === 'ar' ? 'الإجابة' : 'Answer';
+    }
+
+    /**
+     * @param  list<string>  $keyFindings
+     */
+    private function formatAsNumberedList(array $keyFindings, string $heading): string
+    {
+        $items = $this->extractListItems($keyFindings);
+        $lines = ['### '.$heading];
         foreach ($items as $index => $item) {
-            if ($item->evidenceText === null || trim($item->evidenceText) === '') {
+            $lines[] = ($index + 1).'. **'.$item.'**';
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * @param  list<string>  $keyFindings
+     */
+    private function formatAsNumberedSteps(array $keyFindings, string $heading, string $language): string
+    {
+        $items = $this->extractListItems($keyFindings);
+        $stepLabel = $language === 'ar' ? 'الخطوة' : 'Step';
+        $lines = ['### '.$heading];
+        foreach ($items as $index => $item) {
+            $lines[] = ($index + 1).'. '.$stepLabel.' '.($index + 1).': '.$item;
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * @param  list<string>  $keyFindings
+     */
+    private function formatAsLabeledRange(array $keyFindings, KnowledgeQueryPlan $plan, string $language): string
+    {
+        $lead = $keyFindings[0];
+        $values = $this->extractNumericalValues($lead);
+        $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
+        $label = match (true) {
+            $qualifier === 'optimal_range' => $language === 'ar' ? 'القيمة/النطاق الأمثل' : 'Optimal value/range',
+            $qualifier === 'requirement' => $language === 'ar' ? 'الاحتياج' : 'Requirement',
+            default => $language === 'ar' ? 'القيمة المدعومة' : 'Supported value',
+        };
+
+        $lines = [];
+        if ($values !== []) {
+            $lines[] = $label.': '.implode(', ', array_slice($values, 0, 4));
+        }
+        $lines[] = $lead;
+        if (count($keyFindings) > 1) {
+            $lines[] = '';
+            $lines[] = ($language === 'ar' ? 'توضيح: ' : 'Explanation: ').$keyFindings[1];
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * @param  list<string>  $keyFindings
+     */
+    private function formatAsComparison(array $keyFindings, string $heading, string $language): string
+    {
+        $lines = ['### '.$heading];
+        foreach ($keyFindings as $index => $finding) {
+            $prefix = $language === 'ar' ? 'جانب' : 'Aspect';
+            $lines[] = ($index + 1).'. '.$prefix.' '.($index + 1).': '.$finding;
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * @param  list<string>  $keyFindings
+     */
+    private function formatAsExplanatory(array $keyFindings, string $heading): string
+    {
+        $lines = [$keyFindings[0]];
+        if (count($keyFindings) > 1) {
+            $lines[] = '';
+            $lines[] = $keyFindings[1];
+        }
+        if ($heading !== '' && $heading !== 'Answer' && $heading !== 'الإجابة') {
+            array_unshift($lines, '### '.$heading, '');
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * @param  list<string>  $keyFindings
+     * @return list<string>
+     */
+    private function extractListItems(array $keyFindings): array
+    {
+        if (count($keyFindings) > 1) {
+            return array_values(array_filter(array_map(
+                fn (string $finding): string => trim($this->stripListPrefix($finding)),
+                $keyFindings,
+            )));
+        }
+
+        $text = trim($keyFindings[0] ?? '');
+        if ($text === '') {
+            return [];
+        }
+
+        // Split prose enumerations: "A, B, C, and D" / "A؛ B؛ C" / "A و B و C".
+        if (preg_match('/\b(?:include|includes|are|comprise|comprising)\b[:\s]+(.+)$/iu', $text, $m) === 1) {
+            $text = trim($m[1]);
+        }
+
+        $parts = preg_split('/\s*(?:,|;|؛|،|\band\b|\bor\b| و )\s*/u', $text) ?: [$text];
+        $items = [];
+        foreach ($parts as $part) {
+            $clean = trim($this->stripListPrefix((string) $part), " \t\n\r\0\x0B.");
+            if ($clean !== '' && mb_strlen($clean) >= 2) {
+                $items[] = $clean;
+            }
+        }
+
+        // Avoid oversplitting a normal sentence into tiny fragments.
+        if (count($items) < 2) {
+            return [$this->stripListPrefix($keyFindings[0])];
+        }
+
+        return array_slice($items, 0, 12);
+    }
+
+    private function stripListPrefix(string $text): string
+    {
+        return trim((string) preg_replace('/^(?:\d+[\.\):\-]\s*|[\-\*•]\s*)/u', '', trim($text)));
+    }
+
+    /**
+     * @param  list<ResearchAnswerCitation>  $citations
+     */
+    private function formatPrimarySourcesSection(array $citations, string $language): string
+    {
+        if ($citations === []) {
+            return '';
+        }
+
+        $heading = count($citations) === 1
+            ? ($language === 'ar' ? '### المصدر الأساسي' : '### Primary source')
+            : ($language === 'ar' ? '### المصادر الأساسية' : '### Primary sources');
+
+        $lines = [$heading];
+        foreach ($citations as $index => $citation) {
+            $lines[] = ($index + 1).'. '.$this->formatCitationBlock($citation, $language);
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function formatCitationBlock(ResearchAnswerCitation $citation, string $language): string
+    {
+        $parts = [];
+        $titleLabel = $language === 'ar' ? 'العنوان' : 'Title';
+        $parts[] = $titleLabel.': '.$citation->title;
+
+        if ($citation->authors !== []) {
+            $authorsLabel = $language === 'ar' ? 'المؤلفون' : 'Authors';
+            $parts[] = $authorsLabel.': '.implode(', ', array_slice($citation->authors, 0, 8));
+        }
+
+        if ($citation->journal !== null && trim($citation->journal) !== '') {
+            $journalLabel = $language === 'ar' ? 'المجلة' : 'Journal';
+            $parts[] = $journalLabel.': '.$citation->journal;
+        } elseif ($citation->organization !== null && trim($citation->organization) !== '') {
+            $orgLabel = $language === 'ar' ? 'الجهة' : 'Organization';
+            $parts[] = $orgLabel.': '.$citation->organization;
+        }
+
+        if ($citation->publicationYear !== null) {
+            $yearLabel = $language === 'ar' ? 'السنة' : 'Year';
+            $parts[] = $yearLabel.': '.$citation->publicationYear;
+        }
+
+        if ($citation->doi !== null && trim($citation->doi) !== '') {
+            $parts[] = 'DOI: '.$citation->doi;
+        }
+
+        // Never invent URLs — only display an original URL already present on the evidence model.
+        if ($citation->url !== null && trim($citation->url) !== '') {
+            $urlLabel = $language === 'ar' ? 'الرابط الأصلي' : 'Original URL';
+            $parts[] = $urlLabel.': '.$citation->url;
+        }
+
+        return implode("\n   ", $parts);
+    }
+
+    /**
+     * @param  list<ScientificEvidenceItem>  $usable
+     * @param  list<string>  $mainFindings
+     */
+    private function buildAdditionalInformationSection(
+        array $usable,
+        array $mainFindings,
+        KnowledgeQueryPlan $plan,
+        string $language,
+        bool $supportingOnlyContext,
+    ): string {
+        $entries = [];
+        foreach ($usable as $item) {
+            if (! $this->isUsefulAdditionalEvidence($item, $mainFindings, $plan)) {
                 continue;
             }
 
-            $snippet = $this->selectGroundedSnippet($item->evidenceText, $plan, $item->publicationTitle);
+            $snippet = $this->selectGroundedSnippet((string) $item->evidenceText, $plan, $item->publicationTitle);
             if ($snippet === '') {
                 continue;
             }
 
-            $citationLabel = $this->citationLabel($item, $language);
-            $parts[] = ($index + 1).'. '.$snippet.($citationLabel !== '' ? ' ('.$citationLabel.')' : '');
+            $sourceBits = array_values(array_filter([
+                $item->publicationTitle !== '' ? $item->publicationTitle : null,
+                $item->publicationYear !== null ? (string) $item->publicationYear : null,
+                ($item->doi !== null && $item->doi !== '') ? 'DOI: '.$item->doi : null,
+                ($item->url !== null && $item->url !== '') ? $item->url : null,
+            ]));
+
+            $label = $language === 'ar'
+                ? 'معلومة داعمة/سياقية'
+                : 'Supporting/contextual information';
+            $sourceLabel = $language === 'ar' ? 'المصدر' : 'Source';
+            $entries[] = '- '.$label.': '.$snippet
+                .($sourceBits !== [] ? "\n  ".$sourceLabel.': '.implode(' | ', $sourceBits) : '');
         }
 
-        if ($conflicts !== []) {
-            $parts[] = '';
-            $parts[] = $language === 'ar'
-                ? 'ملاحظة حول التعارض: '.($conflicts[0]['message'] ?? '')
-                : 'Conflict note: '.($conflicts[0]['message'] ?? '');
+        if ($entries === []) {
+            return '';
         }
 
-        return implode("\n", $parts);
+        $heading = $language === 'ar' ? '### معلومات إضافية' : '### Additional information';
+        $intro = $supportingOnlyContext
+            ? ($language === 'ar'
+                ? 'المعلومات التالية داعمة فقط وليست إجابة مباشرة مؤكدة:'
+                : 'The following is supporting/contextual only and is not a confident direct answer:')
+            : ($language === 'ar'
+                ? 'معلومات مرتبطة مفيدة من أدلة غير مباشرة:'
+                : 'Related useful information from non-primary evidence:');
+
+        return implode("\n", array_merge([$heading, $intro], $entries));
     }
 
-    private function buildAnswer(string $conciseSummary, string $detailedExplanation, ?string $uncertainty, string $language): string
-    {
-        $sections = [$conciseSummary, '', $detailedExplanation];
-        if ($uncertainty !== null) {
+    /**
+     * @param  list<string>  $mainFindings
+     */
+    private function isUsefulAdditionalEvidence(
+        ScientificEvidenceItem $item,
+        array $mainFindings,
+        KnowledgeQueryPlan $plan,
+    ): bool {
+        $directness = $this->resolveDirectness($item, $plan);
+        if ($directness === ScientificEvidenceDirectnessAssessor::DIRECT) {
+            return false;
+        }
+        if (! in_array($directness, [
+            ScientificEvidenceDirectnessAssessor::SUPPORTING,
+            ScientificEvidenceDirectnessAssessor::SUPPORTED,
+        ], true)) {
+            return false;
+        }
+        if (! in_array($item->claimRelationship, [
+            ClaimEvidenceRelationship::SUPPORTED,
+            ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+        ], true)) {
+            return false;
+        }
+        if ($item->evidenceText === null || trim($item->evidenceText) === '') {
+            return false;
+        }
+
+        $snippet = $this->selectGroundedSnippet($item->evidenceText, $plan, $item->publicationTitle);
+        if ($snippet === '') {
+            return false;
+        }
+
+        $snippetNorm = mb_strtolower(trim($snippet));
+        foreach ($mainFindings as $finding) {
+            $findingNorm = mb_strtolower(trim($finding));
+            if ($findingNorm !== '' && (
+                $snippetNorm === $findingNorm
+                || str_contains($snippetNorm, $findingNorm)
+                || str_contains($findingNorm, $snippetNorm)
+            )) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $conflicts
+     */
+    private function buildDetailedExplanation(
+        string $primarySourcesSection,
+        string $additionalSection,
+        array $conflicts,
+        string $language,
+    ): string {
+        $parts = array_values(array_filter([
+            $primarySourcesSection,
+            $additionalSection,
+        ], static fn (string $part): bool => trim($part) !== ''));
+
+        if ($conflicts !== []) {
+            $parts[] = ($language === 'ar'
+                ? 'ملاحظة حول التعارض: '
+                : 'Conflict note: ').($conflicts[0]['message'] ?? '');
+        }
+
+        return implode("\n\n", $parts);
+    }
+
+    private function buildAnswer(
+        string $mainAnswerBody,
+        string $primarySourcesSection,
+        string $additionalSection,
+        ?string $uncertainty,
+        string $language,
+    ): string {
+        $sections = [$mainAnswerBody];
+
+        if ($primarySourcesSection !== '') {
+            $sections[] = '';
+            $sections[] = $primarySourcesSection;
+        }
+
+        if ($additionalSection !== '') {
+            $sections[] = '';
+            $sections[] = $additionalSection;
+        }
+
+        if ($uncertainty !== null && trim($uncertainty) !== '') {
             $sections[] = '';
             $sections[] = ($language === 'ar' ? 'درجة اليقين: ' : 'Uncertainty: ').$uncertainty;
         }
 
-        return trim(implode("\n", array_filter($sections, fn (?string $part): bool => $part !== null)));
+        return trim(implode("\n", $sections));
     }
 
-    private function citationLabel(ScientificEvidenceItem $item, string $language): string
-    {
-        $org = $item->institution ?? ($item->sourceAttribution['organization'] ?? '');
-        $year = $item->publicationYear !== null ? (string) $item->publicationYear : '';
+    /**
+     * Factual/supporting-only insufficient path: never a confident main answer; optional معلومات إضافية.
+     *
+     * @param  list<ScientificEvidenceItem>  $usable
+     * @param  array<string, mixed>  $sufficiency
+     */
+    private function supportingOnlyInsufficientReport(
+        KnowledgeQueryPlan $plan,
+        array $usable,
+        EvidenceValidationExecutionReport $validationReport,
+        array $sufficiency,
+        string $language,
+        string $query,
+    ): AnswerSynthesisExecutionReport {
+        $message = $this->insufficientDirectMessage($language);
+        $additionalSection = $this->buildAdditionalInformationSection($usable, [], $plan, $language, true);
+        $answer = $this->buildAnswer($message, '', $additionalSection, $message, $language);
 
-        if ($org === '' && $year === '') {
-            return '';
-        }
-
-        return trim($org.($year !== '' ? ', '.$year : ''));
+        return new AnswerSynthesisExecutionReport(
+            status: 'insufficient_evidence',
+            performed: true,
+            answer: $answer,
+            conciseSummary: $message,
+            detailedExplanation: $additionalSection !== '' ? $additionalSection : $message,
+            keyFindings: [],
+            claims: [],
+            citations: [],
+            evidenceReferences: array_map(
+                static fn (ScientificEvidenceItem $item): array => [
+                    'evidence_id' => $item->evidenceId,
+                    'source_id' => $item->sourceId,
+                    'publication_title' => $item->publicationTitle,
+                    'claim_relationship' => $item->claimRelationship,
+                    'validation_status' => $item->validationStatus,
+                    'has_conflict' => $item->hasConflict,
+                    'evidence_directness' => $item->qualityFactors['evidence_directness']
+                        ?? ($item->sourceAttribution['evidence_directness'] ?? null),
+                ],
+                $usable,
+            ),
+            confidence: 0.0,
+            limitations: $this->buildLimitations($validationReport, $usable, $language, $sufficiency),
+            uncertainty: $message,
+            conflicts: [],
+            language: $language,
+            researchMetadata: [
+                'query' => $query,
+                'research_intent' => $plan->researchIntent,
+                'agricultural_domain' => $plan->agriculturalDomain,
+                'failure_reason' => (string) ($sufficiency['reason'] ?? 'supporting_only'),
+                'internet_first' => $plan->isInternetFirst(),
+                'direct_evidence_count' => (int) ($sufficiency['direct_count'] ?? 0),
+                'supporting_evidence_count' => (int) ($sufficiency['supporting_count'] ?? 0),
+                'sufficiency_mode' => $sufficiency['mode'] ?? $sufficiency['reason'] ?? 'supporting_only',
+                'evidence_sufficient' => false,
+                'answer_presentation_mode' => $this->resolvePresentationMode($plan),
+            ],
+            observability: [
+                'usable_evidence_count' => count($usable),
+                'claims_generated' => 0,
+                'citations_mapped' => 0,
+                'conflicts_detected' => 0,
+                'independent_search' => false,
+                'validation_bypassed' => false,
+                'failure_reason' => (string) ($sufficiency['reason'] ?? 'supporting_only'),
+            ],
+        );
     }
 
     private function firstSentence(string $text): string

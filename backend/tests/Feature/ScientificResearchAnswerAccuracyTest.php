@@ -1097,6 +1097,307 @@ class ScientificResearchAnswerAccuracyTest extends TestCase
         $this->assertContains($report->status, ['no_validated_evidence', 'insufficient_evidence']);
         $this->assertSame(0, (int) ($report->researchMetadata['direct_evidence_count'] ?? 0));
         $this->assertSame([], $report->citations);
+        $this->assertStringContainsString('لم يتم العثور على دليل علمي مباشر كافٍ', $report->conciseSummary);
+        $this->assertStringContainsString('معلومات إضافية', $report->answer);
+    }
+
+    /** Format A — land types Egypt: numbered list + primary sources; greenhouse not main answer. */
+    public function test_format_a_land_egypt_list_and_sources(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما هي أنواع الأراضي الزراعية في مصر؟',
+        ]);
+        $this->assertSame('land_classification', $plan->normalizedQuery->constraints['scientific_sense'] ?? null);
+        $this->assertSame('Egypt', $plan->normalizedQuery->location);
+
+        $composer = app(AnswerComposer::class);
+        $direct = $this->usableEvidence(
+            'land-direct',
+            'Agricultural land types in Egypt include alluvial soils, sandy soils, calcareous soils, and saline soils across Nile and desert regions.',
+            ClaimEvidenceRelationship::SUPPORTED,
+            [
+                'publicationTitle' => 'Classification of agricultural land types in Egypt',
+                'doi' => '10.1000/egypt-land-types',
+                'url' => 'https://doi.org/10.1000/egypt-land-types',
+                'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
+                'claimTopic' => 'land classification',
+            ],
+        );
+        $greenhouse = $this->usableEvidence(
+            'land-gh',
+            'Gerbera rose cucumber production under polyhouse greenhouse hydroponics in Egypt.',
+            ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+            [
+                'publicationTitle' => 'Gerbera cultivation in polyhouse greenhouse Egypt',
+                'doi' => '10.1000/gerbera-land-format',
+                'directness' => ScientificEvidenceDirectnessAssessor::IRRELEVANT,
+                'claimTopic' => 'greenhouse',
+            ],
+        );
+
+        $report = $composer->compose($plan, $this->validationReport([$greenhouse, $direct]));
+        $this->assertNotContains($report->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertMatchesRegularExpression('/1\.\s+\*\*.+\*\*/u', $report->answer);
+        $this->assertTrue(
+            str_contains($report->answer, 'المصادر الأساسية')
+            || str_contains($report->answer, 'المصدر الأساسي'),
+        );
+        $this->assertStringContainsString('10.1000/egypt-land-types', $report->answer);
+        $this->assertStringContainsString('https://doi.org/10.1000/egypt-land-types', $report->answer);
+        $this->assertStringNotContainsString('Gerbera', $report->answer);
+        $this->assertStringNotContainsString('polyhouse', mb_strtolower($report->answer));
+        $this->assertNotEmpty($report->citations);
+        $this->assertSame('10.1000/egypt-land-types', $report->citations[0]->doi);
+        $this->assertSame('https://doi.org/10.1000/egypt-land-types', $report->citations[0]->url);
+        $primaryPos = strpos($report->answer, 'المصدر');
+        $listPos = strpos($report->answer, '1.');
+        $this->assertNotFalse($primaryPos);
+        $this->assertNotFalse($listPos);
+        $this->assertLessThan($primaryPos, $listPos);
+    }
+
+    /** Format B — tomato germination temperature: labeled range + sources; unrelated cultivation not main. */
+    public function test_format_b_tomato_germination_temp_format(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما هي أفضل درجة حرارة لإنبات بذور الطماطم؟',
+        ]);
+        $composer = app(AnswerComposer::class);
+        $report = $composer->compose($plan, $this->validationReport([
+            $this->usableEvidence(
+                'cult-only',
+                'Tomato open-field cultivation practices vary across Mediterranean climates without germination optima.',
+                ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+                [
+                    'publicationTitle' => 'Tomato cultivation practices Mediterranean',
+                    'doi' => '10.1000/tomato-cult-format',
+                    'directness' => ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                ],
+            ),
+            $this->usableEvidence(
+                'germ-direct',
+                'Solanum lycopersicum seed germination is optimal near 25 °C under controlled temperature regimes.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Effect of temperature on tomato seed germination',
+                    'doi' => '10.1000/tomato-germ-format',
+                    'url' => 'https://doi.org/10.1000/tomato-germ-format',
+                    'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
+                ],
+            ),
+        ]));
+
+        $this->assertNotContains($report->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertStringContainsString('25', $report->answer);
+        $this->assertTrue(
+            str_contains(mb_strtolower($report->answer), 'germination')
+            || str_contains($report->answer, '°C')
+            || str_contains($report->answer, '25'),
+        );
+        $this->assertTrue(
+            str_contains($report->answer, 'المصادر الأساسية')
+            || str_contains($report->answer, 'المصدر الأساسي'),
+        );
+        $this->assertStringContainsString('10.1000/tomato-germ-format', $report->answer);
+        $sourcesPos = strpos($report->answer, 'المصدر');
+        $valuePos = strpos($report->answer, '25');
+        $this->assertNotFalse($sourcesPos);
+        $this->assertNotFalse($valuePos);
+        $this->assertTrue($valuePos < $sourcesPos, 'Main answer value must appear before primary sources');
+        $lead = mb_strtolower((string) ($report->keyFindings[0] ?? ''));
+        $this->assertStringContainsString('germination', $lead);
+        $this->assertStringNotContainsString('mediterranean', $lead);
+    }
+
+    /** Format C — wheat seed rate primary; plastic residue not primary for seed quantity. */
+    public function test_format_c_wheat_seed_rate_vs_plastic(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما كمية تقاوي القمح؟',
+        ]);
+        $composer = app(AnswerComposer::class);
+        $report = $composer->compose($plan, $this->validationReport([
+            $this->usableEvidence(
+                'plastic',
+                'Plastic mulch residues affect Triticum aestivum shoot growth and biomass under field pollution stress.',
+                ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+                [
+                    'publicationTitle' => 'Plastic residues affecting wheat growth',
+                    'doi' => '10.1000/wheat-plastic-format',
+                    'directness' => ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                    'claimTopic' => 'plastic wheat',
+                ],
+            ),
+            $this->usableEvidence(
+                'seed-rate',
+                'Recommended wheat seed rate is 120 kg/ha for dryland Triticum aestivum production systems.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Wheat seed rate recommendations dryland',
+                    'doi' => '10.1000/wheat-seed-rate-format',
+                    'url' => 'https://doi.org/10.1000/wheat-seed-rate-format',
+                    'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
+                    'claimTopic' => 'seed rate',
+                ],
+            ),
+        ]));
+
+        $this->assertNotContains($report->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertStringContainsString('120', $report->answer);
+        $this->assertStringContainsString('kg/ha', mb_strtolower($report->answer));
+        $this->assertStringContainsString('10.1000/wheat-seed-rate-format', $report->answer);
+        $this->assertCount(1, $report->citations);
+        $this->assertSame('10.1000/wheat-seed-rate-format', $report->citations[0]->doi);
+        $lead = mb_strtolower((string) ($report->keyFindings[0] ?? $report->conciseSummary));
+        $this->assertTrue(str_contains($lead, 'seed rate') || str_contains($lead, '120'));
+        $this->assertStringNotContainsString('plastic', $lead);
+        if (str_contains(mb_strtolower($report->answer), 'plastic')) {
+            $this->assertStringContainsString('معلومات إضافية', $report->answer);
+            $this->assertTrue(
+                strpos($report->answer, '120') < strpos($report->answer, 'معلومات إضافية'),
+                'Seed-rate answer must appear before additional information',
+            );
+        }
+    }
+
+    /** Format D — freshwater fish list only from DIRECT; heavy-metal papers not main answer. */
+    public function test_format_d_freshwater_fish_list_not_pollution(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما هي أنواع أسماك المياه العذبة الشائعة؟',
+        ]);
+        $composer = app(AnswerComposer::class);
+
+        $pollutionOnly = $composer->compose($plan, $this->validationReport([
+            $this->usableEvidence(
+                'metals',
+                'Heavy metal bioaccumulation and antibiotic resistance in freshwater fish pathogens alter water quality.',
+                ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+                [
+                    'publicationTitle' => 'Heavy metals in freshwater fish pathogens',
+                    'doi' => '10.1000/fish-metals',
+                    'directness' => ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                    'claimTopic' => 'water quality',
+                ],
+            ),
+        ]));
+        $this->assertTrue(
+            in_array($pollutionOnly->status, ['insufficient_evidence', 'no_validated_evidence', 'synthesis_completed_partial'], true),
+        );
+        $this->assertStringContainsString('لم يتم العثور على دليل علمي مباشر كافٍ', $pollutionOnly->answer);
+        $this->assertSame([], $pollutionOnly->citations);
+        $this->assertStringNotContainsString('1. **Tilapia**', $pollutionOnly->answer);
+
+        $withDirect = $composer->compose($plan, $this->validationReport([
+            $this->usableEvidence(
+                'metals-2',
+                'Heavy metal bioaccumulation in freshwater aquaculture systems.',
+                ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+                [
+                    'publicationTitle' => 'Heavy metals freshwater aquaculture',
+                    'doi' => '10.1000/fish-metals-2',
+                    'directness' => ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                ],
+            ),
+            $this->usableEvidence(
+                'fish-list',
+                'Common freshwater fish species include tilapia, carp, catfish, and trout in aquaculture inventories.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Freshwater aquaculture species inventory',
+                    'doi' => '10.1000/fish-species-list',
+                    'url' => 'https://doi.org/10.1000/fish-species-list',
+                    'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
+                    'claimTopic' => 'freshwater species',
+                ],
+            ),
+        ]));
+        $this->assertNotContains($withDirect->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertMatchesRegularExpression('/1\.\s+\*\*.+\*\*/u', $withDirect->answer);
+        $this->assertTrue(
+            str_contains($withDirect->answer, 'المصادر الأساسية')
+            || str_contains($withDirect->answer, 'المصدر الأساسي'),
+        );
+        $this->assertStringContainsString('10.1000/fish-species-list', $withDirect->answer);
+        $lead = mb_strtolower((string) ($withDirect->keyFindings[0] ?? ''));
+        $this->assertTrue(
+            str_contains($lead, 'tilapia')
+            || str_contains($lead, 'carp')
+            || str_contains($lead, 'freshwater'),
+        );
+        $this->assertStringNotContainsString('heavy metal', $lead);
+    }
+
+    /** Format E — ginger cultivation primary; essential-oil papers not primary cultivation evidence. */
+    public function test_format_e_ginger_cultivation_vs_oil(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما أفضل الظروف لزراعة الزنجبيل؟',
+        ]);
+        $composer = app(AnswerComposer::class);
+        $report = $composer->compose($plan, $this->validationReport([
+            $this->usableEvidence(
+                'oil-bg',
+                'Essential oil yield of Zingiber officinale increased under warm extraction temperatures.',
+                ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+                [
+                    'publicationTitle' => 'Essential oil composition of Zingiber officinale',
+                    'doi' => '10.1000/ginger-oil-format-e',
+                    'directness' => ScientificEvidenceDirectnessAssessor::BACKGROUND,
+                ],
+            ),
+            $this->usableEvidence(
+                'cult-direct',
+                'Zingiber officinale cultivation requires warm moist conditions and well-drained soils for rhizome production.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Cultivation requirements of Zingiber officinale',
+                    'doi' => '10.1000/ginger-cult-format-e',
+                    'url' => 'https://doi.org/10.1000/ginger-cult-format-e',
+                    'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
+                ],
+            ),
+        ]));
+
+        $this->assertNotContains($report->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertStringContainsString('Zingiber', $report->answer);
+        $this->assertStringContainsString('cultivation', mb_strtolower($report->answer));
+        $this->assertStringContainsString('https://doi.org/10.1000/ginger-cult-format-e', $report->answer);
+        $this->assertNotEmpty($report->citations);
+        $this->assertSame('10.1000/ginger-cult-format-e', $report->citations[0]->doi);
+        $lead = mb_strtolower((string) ($report->keyFindings[0] ?? ''));
+        $this->assertStringContainsString('cultivation', $lead);
+        $this->assertStringNotContainsString('essential oil', $lead);
+    }
+
+    /** Format F — ginger oil benefits allowed; not demoted by cultivation-specific framing. */
+    public function test_format_f_ginger_oil_benefits_allowed(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما هي فوائد زيت الزنجبيل؟',
+        ]);
+        $composer = app(AnswerComposer::class);
+        $report = $composer->compose($plan, $this->validationReport([
+            $this->usableEvidence(
+                'oil-benefits',
+                'Ginger essential oil provides bioactive compounds with antimicrobial and anti-inflammatory benefits in pharmacological studies.',
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Bioactive benefits of Zingiber officinale essential oil',
+                    'doi' => '10.1000/ginger-oil-benefits-format',
+                    'url' => 'https://doi.org/10.1000/ginger-oil-benefits-format',
+                    'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
+                    'claimTopic' => 'essential oil',
+                ],
+            ),
+        ]));
+
+        $this->assertNotContains($report->status, ['no_validated_evidence', 'insufficient_evidence']);
+        $this->assertStringContainsString('oil', mb_strtolower($report->answer));
+        $this->assertStringContainsString('10.1000/ginger-oil-benefits-format', $report->answer);
+        $this->assertNotEmpty($report->citations);
+        $this->assertSame('10.1000/ginger-oil-benefits-format', $report->citations[0]->doi);
+        $this->assertStringNotContainsString('لم يتم العثور على دليل علمي مباشر كافٍ', $report->answer);
     }
 
     /** A — open-field Arabic phrases map to open_field production system. */
@@ -1207,12 +1508,16 @@ class ScientificResearchAnswerAccuracyTest extends TestCase
             $this->assertSame(0, (int) ($report->researchMetadata['direct_evidence_count'] ?? 0));
             $this->assertLessThanOrEqual(0.42, (float) $report->confidence);
             $this->assertTrue(
-                str_contains(mb_strtolower($report->conciseSummary), 'supporting')
+                str_contains($report->conciseSummary, 'لم يتم العثور على دليل علمي مباشر')
+                || str_contains(mb_strtolower($report->conciseSummary), 'no sufficiently direct')
+                || str_contains(mb_strtolower($report->conciseSummary), 'supporting')
                 || str_contains(mb_strtolower($report->conciseSummary), 'داعمة')
-                || str_contains(mb_strtolower((string) $report->uncertainty), 'supporting'),
+                || str_contains(mb_strtolower((string) $report->uncertainty), 'supporting')
+                || str_contains((string) $report->uncertainty, 'داعمة'),
             );
             $this->assertSame([], $report->citations);
             $this->assertFalse((bool) ($report->researchMetadata['evidence_sufficient'] ?? true));
+            $this->assertStringContainsString('معلومات إضافية', $report->answer);
         }
     }
 
