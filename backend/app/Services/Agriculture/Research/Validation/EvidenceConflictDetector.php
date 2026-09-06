@@ -2,11 +2,19 @@
 
 namespace App\Services\Agriculture\Research\Validation;
 
+use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
+
 /**
  * Detects conflicting evidence across validated items.
+ *
+ * Conservative: requires meaningful positive-vs-negative contradiction with
+ * sufficient polarity strength. Does not wipe an entire topic group on weak
+ * polarity noise, and preserves DIRECT evidence when only secondary items conflict.
  */
 class EvidenceConflictDetector
 {
+    private const MIN_STRENGTH = 2;
+
     /**
      * @param  list<ScientificEvidenceItem>  $items
      * @return list<ScientificEvidenceItem>
@@ -37,11 +45,8 @@ class EvidenceConflictDetector
                 $polarities[$index] = $this->polarity($items[$index]->evidenceText ?? '');
             }
 
-            $uniquePolarities = array_unique(array_values($polarities));
-            if (count($uniquePolarities) > 1) {
-                foreach ($indices as $index) {
-                    $conflictIndices[$index] = true;
-                }
+            foreach ($this->conflictingPairs($indices, $polarities, $items) as $index) {
+                $conflictIndices[$index] = true;
             }
         }
 
@@ -92,6 +97,95 @@ class EvidenceConflictDetector
         return $updated;
     }
 
+    /**
+     * @param  list<int>  $indices
+     * @param  array<int, array{label: string, strength: int, pos: int, neg: int}>  $polarities
+     * @param  list<ScientificEvidenceItem>  $items
+     * @return list<int>
+     */
+    private function conflictingPairs(array $indices, array $polarities, array $items): array
+    {
+        $marked = [];
+
+        for ($i = 0; $i < count($indices); $i++) {
+            for ($j = $i + 1; $j < count($indices); $j++) {
+                $a = $indices[$i];
+                $b = $indices[$j];
+                if (! $this->isMeaningfulContradiction($polarities[$a], $polarities[$b])) {
+                    continue;
+                }
+
+                $aDirect = $this->isDirect($items[$a]);
+                $bDirect = $this->isDirect($items[$b]);
+                $aStrong = $polarities[$a]['strength'] >= self::MIN_STRENGTH;
+                $bStrong = $polarities[$b]['strength'] >= self::MIN_STRENGTH;
+
+                // Both DIRECT with strong opposing polarity → genuine conflict pair.
+                if ($aDirect && $bDirect && $aStrong && $bStrong) {
+                    $marked[$a] = true;
+                    $marked[$b] = true;
+
+                    continue;
+                }
+
+                // Preserve DIRECT when only a secondary/weaker claim contradicts it.
+                if ($aDirect && ! $bDirect) {
+                    $marked[$b] = true;
+
+                    continue;
+                }
+                if ($bDirect && ! $aDirect) {
+                    $marked[$a] = true;
+
+                    continue;
+                }
+
+                // Non-direct pair: mark only items with strong polarity on both sides.
+                if ($aStrong && $bStrong) {
+                    $marked[$a] = true;
+                    $marked[$b] = true;
+                }
+            }
+        }
+
+        return array_map('intval', array_keys($marked));
+    }
+
+    /**
+     * @param  array{label: string, strength: int, pos: int, neg: int}  $a
+     * @param  array{label: string, strength: int, pos: int, neg: int}  $b
+     */
+    private function isMeaningfulContradiction(array $a, array $b): bool
+    {
+        // Neutral never contradicts; weak single-keyword polarity is not enough.
+        if ($a['label'] === 'neutral' || $b['label'] === 'neutral') {
+            return false;
+        }
+
+        if ($a['label'] === $b['label']) {
+            return false;
+        }
+
+        // Require opposing positive vs negative with meaningful strength on both sides.
+        $opposing = ($a['label'] === 'positive' && $b['label'] === 'negative')
+            || ($a['label'] === 'negative' && $b['label'] === 'positive');
+
+        if (! $opposing) {
+            return false;
+        }
+
+        return $a['strength'] >= self::MIN_STRENGTH && $b['strength'] >= self::MIN_STRENGTH;
+    }
+
+    private function isDirect(ScientificEvidenceItem $item): bool
+    {
+        $directness = $item->qualityFactors['evidence_directness']
+            ?? $item->sourceAttribution['evidence_directness']
+            ?? null;
+
+        return $directness === ScientificEvidenceDirectnessAssessor::DIRECT;
+    }
+
     private function topicKey(ScientificEvidenceItem $item): string
     {
         $base = mb_strtolower(trim(($item->claimTopic ?? '').' '.($item->agriculturalDomain ?? '')));
@@ -99,11 +193,14 @@ class EvidenceConflictDetector
         return md5($base);
     }
 
-    private function polarity(string $text): string
+    /**
+     * @return array{label: string, strength: int, pos: int, neg: int}
+     */
+    private function polarity(string $text): array
     {
         $lower = mb_strtolower($text);
-        $negative = ['not ', 'no ', 'without ', 'reduce', 'decrease', 'avoid', 'limit', 'harm', 'risk'];
-        $positive = ['improve', 'increase', 'enhance', 'benefit', 'effective', 'support', 'recommend'];
+        $negative = ['not ', 'no ', 'without ', 'reduce', 'decrease', 'avoid', 'limit', 'harm', 'risk', 'inhibit', 'suppress', 'adverse'];
+        $positive = ['improve', 'increase', 'enhance', 'benefit', 'effective', 'support', 'recommend', 'optimal', 'promote', 'favor'];
 
         $negScore = 0;
         $posScore = 0;
@@ -118,13 +215,38 @@ class EvidenceConflictDetector
             }
         }
 
-        if ($negScore > $posScore) {
-            return 'negative';
-        }
-        if ($posScore > $negScore) {
-            return 'positive';
+        // Ambiguous mixed cues without clear dominance → neutral (not a conflict trigger).
+        if ($posScore > 0 && $negScore > 0 && abs($posScore - $negScore) <= 1) {
+            return [
+                'label' => 'neutral',
+                'strength' => max($posScore, $negScore),
+                'pos' => $posScore,
+                'neg' => $negScore,
+            ];
         }
 
-        return 'neutral';
+        if ($negScore > $posScore) {
+            return [
+                'label' => 'negative',
+                'strength' => $negScore,
+                'pos' => $posScore,
+                'neg' => $negScore,
+            ];
+        }
+        if ($posScore > $negScore) {
+            return [
+                'label' => 'positive',
+                'strength' => $posScore,
+                'pos' => $posScore,
+                'neg' => $negScore,
+            ];
+        }
+
+        return [
+            'label' => 'neutral',
+            'strength' => 0,
+            'pos' => $posScore,
+            'neg' => $negScore,
+        ];
     }
 }

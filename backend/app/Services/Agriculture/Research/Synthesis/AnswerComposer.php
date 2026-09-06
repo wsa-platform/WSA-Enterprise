@@ -86,7 +86,7 @@ class AnswerComposer
         }
 
         $conflicts = $this->buildConflicts($usable, $language);
-        $keyFindings = $this->buildKeyFindings($claims, $language);
+        $keyFindings = $this->buildKeyFindings($claims, $usable, $plan, $language);
         $limitations = $this->buildLimitations($validationReport, $usable, $language, $sufficiency);
         $uncertainty = $this->resolveUncertainty(
             $validationReport,
@@ -94,6 +94,7 @@ class AnswerComposer
             $conflicts,
             $language,
             $sufficiency,
+            $keyFindings,
         );
         $confidence = $this->overallConfidence($claims, $validationReport, $sufficiency);
         $evidenceReferences = array_map(
@@ -114,6 +115,10 @@ class AnswerComposer
         $detailedExplanation = $this->buildDetailedExplanation($usable, $citations, $conflicts, $language, $plan);
         $answer = $this->buildAnswer($conciseSummary, $detailedExplanation, $uncertainty, $language);
 
+        $nonConflictClaims = count(array_filter(
+            $claims,
+            static fn (ResearchAnswerClaim $claim): bool => $claim->claimRelationship !== ClaimEvidenceRelationship::CONFLICTING,
+        ));
         $supportingOnly = in_array((string) ($sufficiency['reason'] ?? ''), [
             'supporting_only',
             'supporting_evidence_only',
@@ -121,7 +126,8 @@ class AnswerComposer
             'general_query_usable_evidence',
         ], true) && ((int) ($sufficiency['direct_count'] ?? 0)) === 0;
         $status = match (true) {
-            $conflicts !== [] && count($claims) <= count($conflicts) => 'synthesis_completed_with_conflicts',
+            $conflicts !== [] && $nonConflictClaims === 0 && $keyFindings === [] => 'synthesis_completed_with_conflicts',
+            $conflicts !== [] && $nonConflictClaims === 0 => 'synthesis_completed_with_partial_conflicts',
             $conflicts !== [] => 'synthesis_completed_with_partial_conflicts',
             $supportingOnly || ($sufficiency['partial'] ?? false) => 'synthesis_completed_partial',
             count($claims) < count($usable) => 'synthesis_completed_partial',
@@ -489,6 +495,8 @@ class AnswerComposer
         }
 
         $needles = $this->groundingNeedles($plan);
+        $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
+        $preferTemperatureAnswer = $this->prefersTemperatureAnswerSnippet($plan);
         $sentences = preg_split('/(?<=[.!?؟])\s+/u', $text) ?: [$text];
         $best = '';
         $bestScore = -1.0;
@@ -511,6 +519,50 @@ class AnswerComposer
                     $score += 1.0;
                 }
             }
+
+            // Optimal / range questions: prefer numeric °C / range findings over study-aim lead-ins.
+            if ($qualifier === 'optimal_range') {
+                if (preg_match('/\d+(?:[.,]\d+)?\s*(?:°\s*)?[cCfF]\b/u', $hay) === 1
+                    || preg_match('/\b\d+(?:[.,]\d+)?\s*[-–—]\s*\d+(?:[.,]\d+)?/u', $hay) === 1
+                    || preg_match('/\b(?:optimal|optimum|optima|ideal|range)\b/u', $hay) === 1) {
+                    $score += 28.0;
+                }
+            }
+
+            if ($qualifier === 'effect'
+                && preg_match('/\b(?:affect|effect|impact|influenc|increas|decreas|reduc|improv|respons)\w*\b/u', $hay) === 1) {
+                $score += 10.0;
+            }
+
+            // Temperature / optimal / germination: prefer thermal answer sentences over yield/oil/biomass.
+            if ($preferTemperatureAnswer) {
+                $hasTempAnswer = $this->sentenceHasTemperatureAnswer($hay);
+                $hasSecondaryMetric = $this->sentenceHasSecondaryMetric($hay);
+                if ($hasTempAnswer) {
+                    $score += 36.0;
+                    if (preg_match('/\b(?:optimal|optimum|optima|germination\s+temperature)\b/u', $hay) === 1) {
+                        $score += 12.0;
+                    }
+                    if (preg_match('/\d+(?:[.,]\d+)?\s*(?:°\s*)?[cCfF]\b/u', $hay) === 1) {
+                        $score += 14.0;
+                    }
+                }
+                if ($hasSecondaryMetric && ! $hasTempAnswer) {
+                    $score -= 30.0;
+                } elseif ($hasSecondaryMetric && $hasTempAnswer) {
+                    // Keep temperature evidence but demote yield/oil-led framing.
+                    $score -= 8.0;
+                }
+            }
+
+            // Prefer findings over study-aim / overview lead-ins for all scientific answers.
+            if (preg_match('/\b(?:this study|the (?:aim|objective|purpose)|aimed to|were (?:investigated|evaluated|examined)|we (?:investigated|examined)|the (?:current|present) (?:overview|review|study)|will briefly discuss)\b/u', $hay) === 1) {
+                $score -= 14.0;
+            }
+            if (preg_match('/\b(?:result(?:s)?|found|showed|concluded|significantly|increased|decreased|reduced|improved)\b/u', $hay) === 1) {
+                $score += 8.0;
+            }
+
             if ($score > $bestScore) {
                 $bestScore = $score;
                 $best = $sentence;
@@ -524,6 +576,55 @@ class AnswerComposer
         }
 
         return $best !== '' ? $best : $this->firstSentence($text);
+    }
+
+    private function prefersTemperatureAnswerSnippet(KnowledgeQueryPlan $plan): bool
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
+        $factors = is_array($plan->normalizedQuery->constraints['scientific_factors'] ?? null)
+            ? $plan->normalizedQuery->constraints['scientific_factors']
+            : [];
+
+        if ($sense === 'seed_germination' || in_array('germination', $factors, true)) {
+            return true;
+        }
+        if (in_array($qualifier, ['optimal_range', 'effect', 'requirement'], true)
+            && in_array('temperature', $factors, true)) {
+            return true;
+        }
+
+        return in_array('temperature', $factors, true);
+    }
+
+    private function sentenceHasTemperatureAnswer(string $hay): bool
+    {
+        foreach (AgriculturalEntityCatalog::temperatureAnswerSignals() as $signal) {
+            $normalized = mb_strtolower(trim($signal));
+            if ($normalized !== '' && (
+                AgriculturalEntityCatalog::containsTerm($hay, $normalized)
+                || mb_strpos($hay, $normalized) !== false
+            )) {
+                return true;
+            }
+        }
+
+        return preg_match('/\d+(?:[.,]\d+)?\s*(?:°\s*)?[cCfF]\b/u', $hay) === 1;
+    }
+
+    private function sentenceHasSecondaryMetric(string $hay): bool
+    {
+        foreach (AgriculturalEntityCatalog::secondaryMetricMarkers() as $marker) {
+            $normalized = mb_strtolower(trim($marker));
+            if ($normalized !== '' && (
+                AgriculturalEntityCatalog::containsTerm($hay, $normalized)
+                || mb_strpos($hay, $normalized) !== false
+            )) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -604,13 +705,59 @@ class AnswerComposer
     }
 
     /**
+     * Prefer DIRECT / non-conflicting claims. When usable DIRECT evidence exists for
+     * the user intent, surface it even if secondary items are marked conflicting.
+     * Generic conflict boilerplate is used only when no substantive finding remains.
+     *
      * @param  list<ResearchAnswerClaim>  $claims
+     * @param  list<ScientificEvidenceItem>  $usable
      * @return list<string>
      */
-    private function buildKeyFindings(array $claims, string $language): array
+    private function buildKeyFindings(array $claims, array $usable, KnowledgeQueryPlan $plan, string $language): array
     {
+        if ($claims === []) {
+            return [];
+        }
+
+        $directnessByEvidenceId = [];
+        foreach ($usable as $item) {
+            $directnessByEvidenceId[$item->evidenceId] = $this->resolveDirectness($item, $plan);
+        }
+
+        $ordered = $claims;
+        $preferTemperature = $this->prefersTemperatureAnswerSnippet($plan);
+        usort($ordered, function (ResearchAnswerClaim $a, ResearchAnswerClaim $b) use ($directnessByEvidenceId, $preferTemperature): int {
+            $aDirect = $this->claimIsDirect($a, $directnessByEvidenceId);
+            $bDirect = $this->claimIsDirect($b, $directnessByEvidenceId);
+            if ($aDirect !== $bDirect) {
+                return $aDirect ? -1 : 1;
+            }
+
+            $aConflict = $a->claimRelationship === ClaimEvidenceRelationship::CONFLICTING;
+            $bConflict = $b->claimRelationship === ClaimEvidenceRelationship::CONFLICTING;
+            if ($aConflict !== $bConflict) {
+                return $aConflict ? 1 : -1;
+            }
+
+            if ($preferTemperature) {
+                $aTemp = $this->sentenceHasTemperatureAnswer(mb_strtolower($a->claimText));
+                $bTemp = $this->sentenceHasTemperatureAnswer(mb_strtolower($b->claimText));
+                if ($aTemp !== $bTemp) {
+                    return $aTemp ? -1 : 1;
+                }
+                $aSecondary = $this->sentenceHasSecondaryMetric(mb_strtolower($a->claimText));
+                $bSecondary = $this->sentenceHasSecondaryMetric(mb_strtolower($b->claimText));
+                if ($aSecondary !== $bSecondary) {
+                    return $aSecondary ? 1 : -1;
+                }
+            }
+
+            return $b->confidence <=> $a->confidence;
+        });
+
         $findings = [];
-        foreach ($claims as $claim) {
+        // Pass 1: non-conflicting claims (DIRECT first via sort).
+        foreach ($ordered as $claim) {
             if ($claim->claimRelationship === ClaimEvidenceRelationship::CONFLICTING) {
                 continue;
             }
@@ -620,13 +767,51 @@ class AnswerComposer
             }
         }
 
-        if ($findings === [] && $claims !== []) {
+        // Pass 2: usable DIRECT claims even if marked conflicting (secondary noise).
+        if ($findings === []) {
+            foreach ($ordered as $claim) {
+                if (! $this->claimIsDirect($claim, $directnessByEvidenceId)) {
+                    continue;
+                }
+                $sentence = $this->firstSentence($claim->claimText);
+                if ($sentence !== '' && ! in_array($sentence, $findings, true)) {
+                    $findings[] = $sentence;
+                }
+            }
+        }
+
+        // Pass 3: any remaining substantive claim text before generic boilerplate.
+        if ($findings === []) {
+            foreach ($ordered as $claim) {
+                $sentence = $this->firstSentence($claim->claimText);
+                if ($sentence !== '' && ! in_array($sentence, $findings, true)) {
+                    $findings[] = $sentence;
+                }
+            }
+        }
+
+        // Genuine no-usable-substance path only — never prefer meta conflict line when DIRECT exists.
+        if ($findings === []) {
             $findings[] = $language === 'ar'
                 ? 'تتوفر أدلة علمية محدودة أو متعارضة؛ راجع التفاصيل والمصادر.'
                 : 'Limited or conflicting scientific evidence is available; review details and sources.';
         }
 
         return array_slice($findings, 0, 5);
+    }
+
+    /**
+     * @param  array<string, string>  $directnessByEvidenceId
+     */
+    private function claimIsDirect(ResearchAnswerClaim $claim, array $directnessByEvidenceId): bool
+    {
+        foreach ($claim->evidenceIds as $evidenceId) {
+            if (($directnessByEvidenceId[$evidenceId] ?? null) === ScientificEvidenceDirectnessAssessor::DIRECT) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -683,6 +868,7 @@ class AnswerComposer
      * @param  list<ScientificEvidenceItem>  $usable
      * @param  list<array<string, mixed>>  $conflicts
      * @param  array<string, mixed>  $sufficiency
+     * @param  list<string>  $keyFindings
      */
     private function resolveUncertainty(
         EvidenceValidationExecutionReport $validationReport,
@@ -690,11 +876,27 @@ class AnswerComposer
         array $conflicts,
         string $language,
         array $sufficiency,
+        array $keyFindings = [],
     ): ?string {
         if (! $validationReport->evidenceSufficient || ! ($sufficiency['sufficient'] ?? false)) {
             return $language === 'ar'
                 ? 'الأدلة العلمية المتاحة غير كافية لإعطاء نتيجة مؤكدة.'
                 : 'Available scientific evidence is insufficient for a definitive conclusion.';
+        }
+
+        $hasDirect = ((int) ($sufficiency['direct_count'] ?? 0)) >= 1;
+        $usableNonConflict = count(array_filter(
+            $usable,
+            static fn (ScientificEvidenceItem $item): bool => ! $item->hasConflict
+                && $item->claimRelationship !== ClaimEvidenceRelationship::CONFLICTING,
+        ));
+
+        // Partial secondary conflicts with usable non-conflicting DIRECT findings → softer uncertainty.
+        // When every usable item is conflicting, keep the hard conflict framing.
+        if ($conflicts !== [] && $hasDirect && $usableNonConflict > 0) {
+            return $language === 'ar'
+                ? 'توجد بعض التعارضات الثانوية بين المصادر؛ الاستنتاج الرئيسي مدعوم بأدلة مباشرة.'
+                : 'Some secondary sources disagree; the primary conclusion is supported by direct evidence.';
         }
 
         if ($conflicts !== []) {

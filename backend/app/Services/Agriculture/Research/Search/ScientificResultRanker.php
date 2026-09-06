@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Research\Search;
 
+use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 
 /**
@@ -52,6 +53,8 @@ class ScientificResultRanker
                 $score += $assessment['score'];
                 $score += $directness['score'];
                 $score += $this->qualityMetadataBonus($result);
+                $score += $this->topicDirectnessBonus($assessment, $directness);
+                $score += $this->germinationIntentRankingAdjust($plan, $result);
 
                 $metadata['entity_matched'] = $assessment['entity_matched'];
                 $metadata['topic_matched'] = $assessment['topic_matched'];
@@ -71,6 +74,11 @@ class ScientificResultRanker
                         : $directness['reasons'];
                     $score *= 0.05;
                 }
+            }
+
+            if ($this->isPeerReviewNoise($result)) {
+                $metadata['peer_review_noise'] = true;
+                $score *= 0.08;
             }
 
             $ranked[] = $result->withRelevanceScore($score, $metadata);
@@ -102,16 +110,25 @@ class ScientificResultRanker
 
     /**
      * Drop results rejected by the relevance gate when a plan is available.
+     * Also drop OpenAlex "Peer Review #N" wrappers when primary literature remains.
      *
      * @param  list<ScientificSearchResult>  $results
      * @return list<ScientificSearchResult>
      */
     public function filterRelevant(array $results): array
     {
-        return array_values(array_filter(
+        $filtered = array_values(array_filter(
             $results,
             static fn (ScientificSearchResult $result): bool => ! ($result->relevanceMetadata['rejected_by_relevance_gate'] ?? false),
         ));
+
+        $withoutPeerNoise = array_values(array_filter(
+            $filtered,
+            static fn (ScientificSearchResult $result): bool => ! ($result->relevanceMetadata['peer_review_noise'] ?? false),
+        ));
+
+        // Prefer primary literature; keep peer-review wrappers only if nothing else remains.
+        return $withoutPeerNoise !== [] ? $withoutPeerNoise : $filtered;
     }
 
     /**
@@ -225,6 +242,106 @@ class ScientificResultRanker
         }
 
         return $bonus;
+    }
+
+    /**
+     * Boost query-topic relevance and directness; never uses country.
+     *
+     * @param  array<string, mixed>  $assessment
+     * @param  array<string, mixed>  $directness
+     */
+    private function topicDirectnessBonus(array $assessment, array $directness): float
+    {
+        $bonus = 0.0;
+        if (($assessment['entity_matched'] ?? false) && ($assessment['topic_matched'] ?? false)) {
+            $bonus += 8.0;
+        }
+        if (($assessment['sense_matched'] ?? false) || ($assessment['context_matched'] ?? false)) {
+            $bonus += 4.0;
+        }
+
+        $directnessLabel = (string) ($directness['directness'] ?? '');
+        $bonus += match ($directnessLabel) {
+            ScientificEvidenceDirectnessAssessor::DIRECT => 12.0,
+            ScientificEvidenceDirectnessAssessor::SUPPORTING => 4.0,
+            ScientificEvidenceDirectnessAssessor::BACKGROUND => -2.0,
+            default => 0.0,
+        };
+
+        return $bonus;
+    }
+
+    /**
+     * Germination questions: boost seed-germination/temperature evidence; demote essential-oil primary.
+     * Never applies country preference.
+     */
+    private function germinationIntentRankingAdjust(KnowledgeQueryPlan $plan, ScientificSearchResult $result): float
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $factors = is_array($plan->normalizedQuery->constraints['scientific_factors'] ?? null)
+            ? $plan->normalizedQuery->constraints['scientific_factors']
+            : [];
+        $isGermination = $sense === 'seed_germination' || in_array('germination', $factors, true);
+        if (! $isGermination) {
+            return 0.0;
+        }
+
+        $questionHay = mb_strtolower(trim(implode(' ', array_filter([
+            $plan->normalizedQuery->normalizedQuestion,
+            $plan->normalizedQuery->originalQuestion,
+        ]))));
+        if (AgriculturalEntityCatalog::userAskedAboutOils($questionHay)) {
+            return 0.0;
+        }
+
+        $haystack = mb_strtolower(trim(implode(' ', array_filter([
+            $result->title,
+            $result->abstract,
+            $this->extraTextFromResult($result),
+        ], static fn ($part): bool => is_string($part) && trim($part) !== ''))));
+
+        $adjust = 0.0;
+        $hasGerm = false;
+        foreach (AgriculturalEntityCatalog::germinationEvidenceSignals() as $signal) {
+            if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim($signal)))) {
+                $hasGerm = true;
+                break;
+            }
+        }
+        if ($hasGerm) {
+            $adjust += 10.0;
+        }
+
+        $hasOil = false;
+        foreach (AgriculturalEntityCatalog::essentialOilPrimaryMarkers() as $marker) {
+            $normalized = mb_strtolower(trim($marker));
+            if ($normalized !== '' && (
+                AgriculturalEntityCatalog::containsTerm($haystack, $normalized)
+                || mb_strpos($haystack, $normalized) !== false
+            )) {
+                $hasOil = true;
+                break;
+            }
+        }
+        if ($hasOil) {
+            $adjust -= $hasGerm ? 18.0 : 28.0;
+        }
+
+        return $adjust;
+    }
+
+    /**
+     * OpenAlex often indexes "Peer Review #N of …" wrappers that dilute ranking.
+     */
+    private function isPeerReviewNoise(ScientificSearchResult $result): bool
+    {
+        $title = trim($result->title);
+        if ($title === '') {
+            return false;
+        }
+
+        return preg_match('/^\s*peer\s*reviews?\s*#?\s*\d+/iu', $title) === 1
+            || preg_match('/\bpeer\s*reviews?\s*#\s*\d+/iu', $title) === 1;
     }
 
     private function institutionFromResult(ScientificSearchResult $result): ?string

@@ -308,6 +308,11 @@ final class AgriculturalEntityCatalog
                 'hydroponics', 'hydroponic', 'soilless culture', 'soilless',
                 'الزراعة المائية', 'زراعة مائية', 'هيدروبون', 'هيدروبونيك',
             ],
+            'greenhouse' => [
+                'greenhouse', 'greenhouses', 'polyhouse', 'polyhouses',
+                'protected cultivation', 'protected agriculture', 'glasshouse',
+                'صوبة', 'بيوت محمية', 'زراعة محمية',
+            ],
             'open_field' => [
                 'open field', 'open-field', 'openfield', 'field cultivation',
                 'field-grown', 'outdoor cultivation', 'rainfed', 'rain-fed',
@@ -358,7 +363,6 @@ final class AgriculturalEntityCatalog
             'الهند' => 'India',
         ];
     }
-
 
     /**
      * Map catalog location labels to ISO 3166-1 alpha-2 for Consensus study-country filter.
