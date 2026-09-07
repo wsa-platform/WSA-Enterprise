@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\ResearchPlanner;
 use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
 use App\Services\Agriculture\Research\Search\ScientificSearchQueryBuilder;
@@ -161,6 +162,45 @@ class ScientificUpstreamRetrievalFixTest extends TestCase
         $this->assertSame(count($variants), count(array_unique($variants)));
 
         return implode(' | ', $variants);
+    }
+
+    /**
+     * SURGICAL #1 — Catalog land helpers must exist so QueryBuilder does not 500
+     * (Call to undefined method isLandOrSoilClassificationMethodQuestion).
+     */
+    public function test_catalog_land_helpers_exist_and_egypt_land_query_builds_variants(): void
+    {
+        $this->assertTrue(
+            method_exists(AgriculturalEntityCatalog::class, 'isLandOrSoilClassificationMethodQuestion'),
+            'AgriculturalEntityCatalog::isLandOrSoilClassificationMethodQuestion must exist',
+        );
+        $this->assertTrue(
+            method_exists(AgriculturalEntityCatalog::class, 'asksLandOrSoilTypesInventory'),
+            'AgriculturalEntityCatalog::asksLandOrSoilTypesInventory must exist',
+        );
+
+        $inventoryHay = 'ما هي أنواع الأراضي الزراعية في مصر؟';
+        $this->assertTrue(AgriculturalEntityCatalog::asksLandOrSoilTypesInventory($inventoryHay));
+        $this->assertFalse(
+            AgriculturalEntityCatalog::isLandOrSoilClassificationMethodQuestion($inventoryHay),
+            'Inventory/types questions must not be classified as method questions',
+        );
+
+        $methodHay = 'What methods are used for soil classification?';
+        $this->assertTrue(AgriculturalEntityCatalog::isLandOrSoilClassificationMethodQuestion($methodHay));
+        $this->assertFalse(AgriculturalEntityCatalog::asksLandOrSoilTypesInventory($methodHay));
+
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery(['query' => $inventoryHay]);
+        $variants = app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan);
+
+        $this->assertNotEmpty($variants, 'Egypt land types must produce QueryBuilder variants');
+        $this->assertSame(count($variants), count(array_unique($variants)));
+        $joined = mb_strtolower(implode(' | ', $variants));
+        $this->assertTrue(
+            str_contains($joined, 'land') || str_contains($joined, 'soil'),
+            'Variants must mention land/soil: '.$joined,
+        );
+        $this->assertStringContainsString('egypt', $joined);
     }
 
     /** TEST1 — Egypt land types retain land classification + Egypt (not bare cultivation). */

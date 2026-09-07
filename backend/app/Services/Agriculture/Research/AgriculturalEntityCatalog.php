@@ -365,6 +365,60 @@ final class AgriculturalEntityCatalog
     }
 
     /**
+     * User asks how soil/land classification is done (methods/models/frameworks),
+     * not for a types/classes inventory.
+     */
+    public static function isLandOrSoilClassificationMethodQuestion(string $haystack): bool
+    {
+        $haystack = mb_strtolower(trim($haystack));
+        if ($haystack === '') {
+            return false;
+        }
+
+        $mentionsClassification = preg_match(
+            '/(?:soil|land)\s*classification|classification\s+of\s+(?:soils?|lands?)|تصنيف\s*(?:ال)?(?:تربة|اراضي|أراضي)/u',
+            $haystack,
+        ) === 1;
+        if (! $mentionsClassification) {
+            return false;
+        }
+
+        // Inventory/types questions win over method framing.
+        if (self::asksLandOrSoilTypesInventory($haystack)) {
+            return false;
+        }
+
+        return preg_match(
+            '/\b(?:what\s+methods?|which\s+methods?|methods?\s+(?:are\s+)?used|methods?\s+for|'
+            .'methodology|techniques?\s+for|approaches?\s+for|frameworks?\s+for|'
+            .'how\s+(?:do(?:es)?\s+one|to|is|are)\s+(?:classify|classify(?:ing)?))\b|'
+            .'(?:ما\s+هي\s+)?(?:طرق|منهج(?:يات)?|اساليب|أساليب)\s*.{0,40}تصنيف|'
+            .'كيفية\s+تصنيف/u',
+            $haystack,
+        ) === 1;
+    }
+
+    /**
+     * User asks for land/soil types or a classification inventory (not methods).
+     */
+    public static function asksLandOrSoilTypesInventory(string $haystack): bool
+    {
+        $haystack = mb_strtolower(trim($haystack));
+        if ($haystack === '') {
+            return false;
+        }
+
+        return preg_match(
+            '/(?:types?\s+of\s+(?:agricultural\s+)?(?:land|soil)|(?:agricultural\s+)?land\s+types?|'
+            .'soil\s+types?|types?\s+de\s+terres?\s+agricoles|'
+            .'tar[ıi]m\s+arazilerinin\s+t[üu]rleri|'
+            .'انواع\s*(?:ال)?(?:اراضي|أراضي|تربه|تربة)|أنواع\s*(?:ال)?(?:أراضي|اراضي|تربة)|'
+            .'تصنيف\s*(?:ال)?(?:اراضي|أراضي|تربة).{0,20}(?:انواع|أنواع|اصناف|أصناف))/u',
+            $haystack,
+        ) === 1;
+    }
+
+    /**
      * Map catalog location labels to ISO 3166-1 alpha-2 for Consensus study-country filter.
      */
     public static function locationToIsoCountryCode(string $location): ?string
