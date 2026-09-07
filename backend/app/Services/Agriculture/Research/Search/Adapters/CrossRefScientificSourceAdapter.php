@@ -11,6 +11,14 @@ use Illuminate\Support\Facades\Log;
 
 class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterface
 {
+    /**
+     * Crossref relevance often places on-topic national inventory works past the first page.
+     * Fetch a deeper page than the Stage-3 caller limit so normalization can keep those hits.
+     */
+    private const MIN_FETCH_ROWS = 50;
+
+    private const MAX_FETCH_ROWS = 100;
+
     public function __construct(
         private ScientificResultNormalizer $normalizer,
     ) {}
@@ -46,7 +54,7 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
                 ])
                 ->get('https://api.crossref.org/works', [
                     'query' => $query,
-                    'rows' => max(1, min($limit, 10)),
+                    'rows' => $this->fetchRows($limit),
                 ]);
         } catch (\Throwable $exception) {
             Log::warning('Crossref Stage 3 search request failed', [
@@ -111,5 +119,13 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
             status: ScientificSourceSearchOutcome::STATUS_SUCCESS,
             results: $results,
         );
+    }
+
+    /**
+     * Country-agnostic fetch depth: at least MIN_FETCH_ROWS, capped at MAX_FETCH_ROWS.
+     */
+    private function fetchRows(int $limit): int
+    {
+        return max(1, min(max($limit, self::MIN_FETCH_ROWS), self::MAX_FETCH_ROWS));
     }
 }
