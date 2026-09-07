@@ -13,7 +13,7 @@ class ScientificSourceSelector
     public const DEFAULT_INTERNET_FIRST_SOURCES = [
         'openalex',
         'crossref',
-        'consensus',
+        'semantic_scholar',
     ];
 
     /** @return list<string> */

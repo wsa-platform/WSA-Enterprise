@@ -11,7 +11,7 @@ WSA Enterprise requires a generic agricultural scientific research capability th
 ## Decision
 
 1. **Internet-First Scientific Research** is the primary discovery strategy.
-2. **External scientific/official sources** (OpenAlex, Crossref, future adapters) are searched **before** library discovery.
+2. **External scientific/official sources** (OpenAlex, Crossref, Semantic Scholar; Consensus optional/legacy) are searched **before** library discovery.
 3. The **WSA Knowledge Library** is **not** the primary first-search source. It serves as:
    - Knowledge memory
    - Evidence repository
@@ -24,7 +24,7 @@ WSA Enterprise requires a generic agricultural scientific research capability th
 5. **`ResearchPlanner`** performs deterministic v1 research planning.
 6. **`AgriculturalScientificKnowledgeEngine`** is the central scientific evidence/knowledge substrate.
 7. **`CropKnowledgeEngine`** functionality is preserved and evolved behind the knowledge engine.
-8. OpenAlex and Crossref are **source adapters**, not the central research engine.
+8. OpenAlex, Crossref, and Semantic Scholar are **source adapters**, not the central research engine. Consensus is optional/legacy and not required on the Internet-First path.
 9. **Plant AI Diagnosis** remains completely independent.
 10. Existing AI/RAG/PostgreSQL/pgvector infrastructure is reused. No parallel stacks.
 
@@ -35,7 +35,7 @@ User Query
     → AgriculturalResearchAgent
     → ResearchPlanner
     → AgriculturalScientificKnowledgeEngine
-    → External Scientific Search (OpenAlex, Crossref, …)
+    → External Scientific Search (OpenAlex, Crossref, Semantic Scholar)
     → Source Validation
     → Evidence Extraction
     → WSA Library Memory (recall, enrichment, gap-fill)

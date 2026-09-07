@@ -65,9 +65,37 @@ class ScientificSearchQueryBuilder
             $primaryTopic = $landSuitabilityTerms[0];
         }
 
+        $isMethodClassification = $this->isClassificationMethodQuestion($plan);
+        $isInventoryClassification = ! $isMethodClassification && $this->isInventoryClassificationQuestion($plan);
+        $isVarietyInventory = $this->isCropVarietyInventoryQuestion($plan);
+        $plantFamily = $this->resolveBotanicalFamily($plan);
+
         $variants = [];
 
+        // Plant-family member inventory (e.g. Cucurbitaceae) — keep family + species/members, not greenhouse crop culture.
+        if ($plantFamily !== null) {
+            foreach ($this->buildPlantFamilyMemberVariants($plantFamily) as $familyVariant) {
+                $variants[] = $familyVariant;
+            }
+            $wantsCultivationProduction = false;
+        }
+
         if ($entity !== null) {
+            // Crop variety/cultivar inventory: prefer varieties/cultivars; do not drift to disease/oil/storage.
+            if ($isVarietyInventory) {
+                $wantsCultivationProduction = false;
+                foreach ($this->buildCropVarietyInventoryVariants($entity, $primaryCommon, $location) as $varietyVariant) {
+                    $variants[] = $varietyVariant;
+                }
+            }
+
+            // National inventory for crop/livestock entities (varieties / breeds) before generic topics.
+            if ($isInventoryClassification && $location !== null && $this->isCountryLocation($location)) {
+                foreach ($this->buildEntityNationalInventoryVariants($plan, $entity, $primaryCommon, $location) as $inventoryVariant) {
+                    $variants[] = $inventoryVariant;
+                }
+            }
+
             // Rhizome questions: lead with rhizome variants so ranking is not hijacked by
             // accidental irrigation topic matches from Arabic "ري" inside "ريزوم".
             if ($mentionsRhizome) {
@@ -147,21 +175,10 @@ class ScientificSearchQueryBuilder
 
             $variants[] = $this->joinTerms([$entity, ...array_slice($topics, 0, 2), ...array_slice($intentTerms, 0, 1)]);
             $variants[] = $this->joinTerms([$entity, $plan->researchIntent, 'agriculture']);
-        } elseif ($isLandClassification) {
-            // Prefer plan scientific land/soil topics + asked geography; never bare cultivation.
-            $landTerms = $this->landClassificationTopicTerms($plan);
-            $variants[] = $this->joinTerms([
-                $landTerms[0] ?? 'land classification',
-                $landTerms[1] ?? 'soil classification',
-                $location,
-            ]);
-            $variants[] = $this->joinTerms(['agricultural land types', $location]);
-            $variants[] = $this->joinTerms([
-                $landTerms[2] ?? 'land types',
-                'land classification',
-                $location,
-            ]);
-            $variants[] = $this->joinTerms(['soil classification', 'agriculture', $location]);
+        } elseif ($isMethodClassification) {
+            foreach ($this->buildClassificationMethodVariants($plan, $location) as $methodVariant) {
+                $variants[] = $methodVariant;
+            }
         } elseif ($this->isGeoAquacultureQuestion($plan)) {
             $variants[] = $this->joinTerms(['aquaculture', 'fish', $location]);
             $variants[] = $this->joinTerms(['fish farming', $location]);
@@ -170,6 +187,11 @@ class ScientificSearchQueryBuilder
                 'aquaculture',
                 $location,
             ]);
+        } elseif ($isLandClassification || ($isInventoryClassification && $this->isLandSoilInventorySubject($plan))) {
+            // National-first inventory when location is a country; regional stays regional-primary.
+            foreach ($this->buildLandSoilInventoryVariants($plan, $location) as $inventoryVariant) {
+                $variants[] = $inventoryVariant;
+            }
         } else {
             $latinQuestion = $this->latinScientificFragment($query->normalizedQuestion);
             $variants[] = $this->joinTerms([...$topics, ...array_slice($senseTerms, 0, 2), ...array_slice($intentTerms, 0, 2)]);
@@ -310,6 +332,325 @@ class ScientificSearchQueryBuilder
         return false;
     }
 
+    private function isCountryLocation(string $location): bool
+    {
+        return AgriculturalEntityCatalog::locationToIsoCountryCode($location) !== null;
+    }
+
+    /**
+     * Inventory/classification intent from plan semantics (and light land/soil phrasing fallback).
+     * Method questions are excluded by the caller.
+     */
+    private function isInventoryClassificationQuestion(KnowledgeQueryPlan $plan): bool
+    {
+        $query = $plan->normalizedQuery;
+        $sense = trim((string) ($query->constraints['scientific_sense'] ?? ''));
+        $questionType = trim((string) ($query->constraints['question_type'] ?? ''));
+        $required = trim((string) ($query->constraints['required_evidence_type'] ?? ''));
+
+        if ($sense === 'land_classification') {
+            return true;
+        }
+
+        if ($questionType === 'classification' && in_array($required, [
+            'classification_or_types_inventory',
+            'species_list_or_taxonomy',
+        ], true)) {
+            return true;
+        }
+
+        if ($required === 'classification_or_types_inventory') {
+            return true;
+        }
+
+        if (in_array('classification_inventory', $plan->subtopics, true)
+            || in_array('classification_inventory', $plan->requestedInformation, true)
+            || in_array('types_or_classification', $plan->requestedInformation, true)) {
+            return true;
+        }
+
+        return $this->questionImpliesLandSoilInventory($plan);
+    }
+
+    /**
+     * True when the inventory question is about land/soil types (not fish species / generic lists).
+     */
+    private function isLandSoilInventorySubject(KnowledgeQueryPlan $plan): bool
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if ($sense === 'land_classification' || $plan->researchIntent === 'land_classification') {
+            return true;
+        }
+
+        $subjectType = is_array($plan->subjectEntity) ? (string) ($plan->subjectEntity['type'] ?? '') : '';
+        if (in_array($subjectType, ['land', 'soil'], true)) {
+            return true;
+        }
+
+        if ($this->isGeoAquacultureQuestion($plan)) {
+            return false;
+        }
+
+        $domain = mb_strtolower(trim((string) $plan->agriculturalDomain));
+        if (str_contains($domain, 'soil') || str_contains($domain, 'land')) {
+            return true;
+        }
+
+        return $this->questionImpliesLandSoilInventory($plan);
+    }
+
+    private function isClassificationMethodQuestion(KnowledgeQueryPlan $plan): bool
+    {
+        $haystack = trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        );
+
+        return AgriculturalEntityCatalog::isLandOrSoilClassificationMethodQuestion($haystack);
+    }
+
+    private function questionImpliesLandSoilInventory(KnowledgeQueryPlan $plan): bool
+    {
+        $haystack = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+        if ($haystack === '') {
+            return false;
+        }
+
+        if (AgriculturalEntityCatalog::asksLandOrSoilTypesInventory($haystack)) {
+            return true;
+        }
+
+        // Covers "soil classes" / "land categories" when Stage 2 under-tags question_type.
+        return preg_match(
+            '/\b(?:soil|land)\s+(?:classes?|categories|taxonomy|associations|inventory)\b|'
+            .'soil\s+map\s+of|national\s+soil\s+classification|'
+            .'أصناف\s*(?:ال)?(?:تربة|أراضي|اراضي)|فئات\s*(?:ال)?(?:تربة|أراضي|اراضي)/u',
+            $haystack,
+        ) === 1;
+    }
+
+    /**
+     * National-first land/soil inventory variants, or regional-primary when location is not a country.
+     *
+     * @return list<string>
+     */
+    private function buildLandSoilInventoryVariants(KnowledgeQueryPlan $plan, ?string $location): array
+    {
+        if ($location !== null && $this->isCountryLocation($location)) {
+            return $this->buildNationalLandSoilInventoryVariants($location);
+        }
+
+        return $this->buildRegionalOrGenericLandSoilInventoryVariants($location);
+    }
+
+    /**
+     * NATIONAL INVENTORY → NATIONAL SYNONYMS → REGIONAL fallback → GENERIC.
+     * Precise distinct variants; country preserved on every national variant.
+     *
+     * @return list<string>
+     */
+    private function buildNationalLandSoilInventoryVariants(string $country): array
+    {
+        $gentilic = $this->countryGentilicAdjective($country);
+        $variants = [
+            // 1. National inventory (primary emission window)
+            $this->joinTerms(['agricultural land types', $country]),
+            $this->joinTerms(['land types', 'agricultural', $country]),
+            $this->joinTerms(['soil types', $country]),
+            $this->joinTerms(['soil classification', $country]),
+            $this->joinTerms(['land classification', $country]),
+            $this->joinTerms(['soil classification', $country, 'agriculture']),
+            $this->joinTerms(['land resources', $country, 'agriculture']),
+            // 2. National synonyms / scientific terminology (still ahead of regional/generic)
+            $this->joinTerms(['Soil Map of', $country]),
+            $this->joinTerms([$gentilic, 'soil types', $country]),
+            $this->joinTerms(['national soil classification', $country]),
+            $this->joinTerms(['soil associations', $country]),
+            $this->joinTerms([$gentilic, 'agricultural land classification', $country]),
+            $this->joinTerms([$gentilic, 'Soil Taxonomy', $country]),
+            $this->joinTerms(['types of soils', $country]),
+            // 3. Regional within country (fallback — not primary)
+            $this->joinTerms(['soil classification', 'regions', $country]),
+            // 4. Generic scientific context (still country-scoped)
+            $this->joinTerms(['soil taxonomy', 'agriculture', $country]),
+        ];
+
+        return array_values(array_filter($variants, static fn (string $v): bool => trim($v) !== ''));
+    }
+
+    /**
+     * Regional inventory: preserve region as primary; do not force national-only strategy.
+     *
+     * @return list<string>
+     */
+    private function buildRegionalOrGenericLandSoilInventoryVariants(?string $location): array
+    {
+        $variants = [
+            $this->joinTerms(['soil types', $location]),
+            $this->joinTerms(['soil classification', $location]),
+            $this->joinTerms(['land classification', $location]),
+            $this->joinTerms(['agricultural land types', $location]),
+            $this->joinTerms(['types of soils', $location]),
+            $this->joinTerms(['soil associations', $location]),
+            $this->joinTerms(['land types', 'soil types', $location]),
+        ];
+
+        return array_values(array_filter($variants, static fn (string $v): bool => trim($v) !== ''));
+    }
+
+    /**
+     * Method-oriented variants; inventory must not be primary.
+     *
+     * @return list<string>
+     */
+    private function buildClassificationMethodVariants(KnowledgeQueryPlan $plan, ?string $location): array
+    {
+        $variants = [
+            $this->joinTerms(['soil classification', 'method', $location]),
+            $this->joinTerms(['soil classification', 'methodology', $location]),
+            $this->joinTerms(['land classification', 'method', $location]),
+            $this->joinTerms(['soil classification', 'technique', $location]),
+            $this->joinTerms(['classification method', 'soils', $location]),
+            $this->joinTerms(['soil mapping', 'method', $location]),
+        ];
+
+        return array_values(array_filter($variants, static fn (string $v): bool => trim($v) !== ''));
+    }
+
+    /**
+     * Crop varieties / livestock breeds national inventory when entity + country + inventory intent.
+     *
+     * @return list<string>
+     */
+    private function buildEntityNationalInventoryVariants(
+        KnowledgeQueryPlan $plan,
+        string $entity,
+        ?string $primaryCommon,
+        string $country,
+    ): array {
+        $subjectType = is_array($plan->subjectEntity) ? (string) ($plan->subjectEntity['type'] ?? '') : '';
+        $intent = $plan->researchIntent;
+        $label = $primaryCommon ?? $entity;
+
+        if (in_array($subjectType, ['livestock', 'animal', 'poultry'], true)
+            || in_array($intent, ['animal_production', 'poultry_production', 'livestock'], true)) {
+            return [
+                $this->joinTerms([$label, 'breeds', $country]),
+                $this->joinTerms([$entity, 'breeds', $country]),
+                $this->joinTerms(['livestock breeds', $country]),
+            ];
+        }
+
+        return [
+            $this->joinTerms([$label, 'varieties', $country]),
+            $this->joinTerms([$entity, 'cultivars', $country]),
+            $this->joinTerms([$label, 'cultivars', $country]),
+            $this->joinTerms([$entity, 'varieties', $country]),
+        ];
+    }
+
+    /**
+     * Crop variety questions without requiring a country (potato cultivars / Solanum tuberosum cultivars).
+     *
+     * @return list<string>
+     */
+    private function buildCropVarietyInventoryVariants(
+        string $entity,
+        ?string $primaryCommon,
+        ?string $location,
+    ): array {
+        $label = $primaryCommon ?? $entity;
+        $variants = [
+            $this->joinTerms([$label, 'varieties', $location]),
+            $this->joinTerms([$entity, 'cultivars', $location]),
+            $this->joinTerms([$label, 'cultivars', $location]),
+            $this->joinTerms([$entity, 'variety', 'classification', $location]),
+            $this->joinTerms([$entity, 'cultivar classification', $location]),
+        ];
+
+        return array_values(array_filter($variants, static fn (string $v): bool => trim($v) !== ''));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function buildPlantFamilyMemberVariants(string $family): array
+    {
+        return [
+            $this->joinTerms([$family, 'plants']),
+            $this->joinTerms([$family, 'species']),
+            $this->joinTerms([$family, 'family members']),
+            $this->joinTerms([$family, 'classification']),
+            $this->joinTerms(['plants of', $family, 'family']),
+        ];
+    }
+
+    private function isCropVarietyInventoryQuestion(KnowledgeQueryPlan $plan): bool
+    {
+        if ($plan->researchIntent === 'varieties') {
+            return true;
+        }
+
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        $required = trim((string) ($plan->normalizedQuery->constraints['required_evidence_type'] ?? ''));
+        if ($questionType === 'classification' && $required === 'classification_or_types_inventory') {
+            $subjectType = is_array($plan->subjectEntity) ? (string) ($plan->subjectEntity['type'] ?? '') : '';
+            if ($subjectType === 'crop' || $plan->normalizedQuery->cropId !== null) {
+                return true;
+            }
+        }
+
+        $haystack = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+
+        return preg_match('/\b(?:varieties|cultivars|cultivar)\b|اصناف|أصناف|صنف/u', $haystack) === 1
+            && ($plan->normalizedQuery->cropId !== null || $plan->normalizedQuery->scientificName !== null);
+    }
+
+    private function resolveBotanicalFamily(KnowledgeQueryPlan $plan): ?string
+    {
+        $haystack = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+        foreach (AgriculturalEntityCatalog::botanicalFamilyAliases() as $family => $aliases) {
+            foreach ($aliases as $alias) {
+                $alias = mb_strtolower(trim((string) $alias));
+                if ($alias !== '' && mb_strpos($haystack, $alias) !== false) {
+                    return $family;
+                }
+            }
+        }
+
+        $subject = is_array($plan->subjectEntity) ? $plan->subjectEntity : null;
+        if ($subject !== null && ($subject['type'] ?? null) === 'plant_family') {
+            $value = trim((string) ($subject['value'] ?? $subject['label'] ?? ''));
+
+            return $value !== '' ? $value : null;
+        }
+
+        return null;
+    }
+
+    private function countryGentilicAdjective(string $country): ?string
+    {
+        return match (mb_strtolower(trim($country))) {
+            'egypt' => 'Egyptian',
+            'saudi arabia' => 'Saudi',
+            'turkey', 'türkiye', 'turkiye' => 'Turkish',
+            'libya' => 'Libyan',
+            'sudan' => 'Sudanese',
+            'tunisia' => 'Tunisian',
+            'algeria' => 'Algerian',
+            'morocco' => 'Moroccan',
+            'jordan' => 'Jordanian',
+            'united arab emirates' => 'Emirati',
+            'india' => 'Indian',
+            default => null,
+        };
+    }
+
     /**
      * Land/soil classification terms from plan scientific topics (fallback when catalog has no sense list).
      *
@@ -400,7 +741,17 @@ class ScientificSearchQueryBuilder
             return false;
         }
 
-        return mb_stripos($variant, $location) !== false;
+        if (mb_stripos($variant, $location) !== false) {
+            return true;
+        }
+
+        // Gentilic forms (Egyptian → Egypt) count as preserving the country constraint.
+        $gentilic = $this->countryGentilicAdjective($location);
+        if ($gentilic !== null && mb_stripos($variant, $gentilic) !== false) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

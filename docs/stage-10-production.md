@@ -8,7 +8,7 @@ This document lists **environment variable names only**. Never commit real passw
 
 ## Principles preserved
 
-- Internet-First scientific research (external OpenAlex/Crossref before library memory).
+- Internet-First scientific research (external OpenAlex/Crossref/Semantic Scholar before library memory).
 - Plant AI Diagnosis remains independent of the Research Agent.
 - External scholarly payloads are **data**, not invented citations. Missing DOI stays unset; engines must not fabricate DOIs.
 - Library public UI and crop-file reading contracts are unchanged.
@@ -25,7 +25,9 @@ This document lists **environment variable names only**. Never commit real passw
 | `LOG_LEVEL` | `warning` or `error` |
 | `FRONTEND_URL` | SPA origin for CORS |
 | `CORS_ALLOWED_ORIGINS` | Optional extra origins (no `*`) |
-| `SCIENTIFIC_HTTP_TIMEOUT` | Outbound OpenAlex/Crossref timeout seconds (default `15`, max `60`) |
+| `SCIENTIFIC_HTTP_TIMEOUT` | Outbound OpenAlex/Crossref/Semantic Scholar timeout seconds (default `15`, max `60`) |
+| `OPENALEX_API_KEY` | Optional OpenAlex API key (empty = polite pool via mailto) |
+| `SEMANTIC_SCHOLAR_API_KEY` | Optional Semantic Scholar `x-api-key` (empty = unauthenticated access) |
 
 Unhandled API exceptions render JSON `{ "message": "Server error." }` without traces, files, or exception class names when debug is off or the app is in production.
 
@@ -39,7 +41,9 @@ TLS security headers (nginx production): `Strict-Transport-Security`, `X-Content
 
 ## C–E. Research, sources, library
 
-- Treat OpenAlex/Crossref bodies as untrusted **data**.
+- Treat OpenAlex/Crossref/Semantic Scholar bodies as untrusted **data**.
+- Provider failures are isolated; one provider 429/failure must not stop the others.
+- Semantic Scholar is an optional third provider (API key optional); Consensus is not required on the new path.
 - Do not invent DOI/URL/title/year.
 - Library persistence keeps pipeline provenance from Stage 5; Stage 10 does not change Library pages.
 

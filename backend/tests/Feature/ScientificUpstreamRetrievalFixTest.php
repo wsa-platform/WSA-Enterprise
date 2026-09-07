@@ -42,6 +42,7 @@ class ScientificUpstreamRetrievalFixTest extends TestCase
 
                 return Http::response(['results' => []], 429);
             },
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => function () use (&$crossrefCalls) {
                 $crossrefCalls++;
 
@@ -63,7 +64,7 @@ class ScientificUpstreamRetrievalFixTest extends TestCase
 
         $report = app(AgriculturalScientificSearchService::class)->search($plan);
 
-        $this->assertSame(1, $openAlexCalls, 'OpenAlex must short-circuit after first 429');
+        $this->assertSame(3, $openAlexCalls, 'OpenAlex must retry up to 3 attempts on 429 then stop');
         $this->assertSame(count($variants), $crossrefCalls, 'Crossref must still run for all variants');
         $this->assertContains('openalex', $report->failedSources);
         $this->assertContains('crossref', $report->successfulSources);

@@ -104,6 +104,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
                     '10.1000/stage3-'.md5($query),
                 ),
             ]], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
         ]);
 
@@ -155,6 +156,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
                     '10.1000/openalex-success',
                 ),
             ]], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
         ]);
 
@@ -171,6 +173,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
     {
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => []], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
         ]);
 
@@ -185,6 +188,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
     {
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => []], 500),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => [
                 $this->crossRefWork(
                     'Soil fertility management fallback',
@@ -207,6 +211,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
     {
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => []], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => [
                 $this->crossRefWork(
                     'Poultry feed nutrition formulation',
@@ -228,6 +233,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
     {
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => []], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
         ]);
 
@@ -241,6 +247,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
     {
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => []], 500),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['error' => 'fail'], 500),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 500),
         ]);
 
@@ -250,12 +257,14 @@ class AgriculturalResearchAgentStage3Test extends TestCase
         $this->assertSame('all_sources_failed', $allFailed->status);
         $this->assertContains('openalex', $allFailed->failedSources);
         $this->assertContains('crossref', $allFailed->failedSources);
+        $this->assertContains('semantic_scholar', $allFailed->failedSources);
     }
 
     public function test_one_source_failure_and_another_success(): void
     {
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => []], 500),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => [
                 $this->crossRefWork(
                     'Livestock animal production husbandry',
@@ -285,6 +294,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
                     'Economist One',
                 ),
             ]], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
         ]);
 
@@ -350,7 +360,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
         $plan = app(ResearchPlanner::class)->planKnowledgeQuery(['query' => 'irrigation scheduling for wheat']);
         $sources = app(ScientificSourceSelector::class)->selectSources($plan);
 
-        $this->assertSame(['openalex', 'crossref', 'consensus'], $sources);
+        $this->assertSame(['openalex', 'crossref', 'semantic_scholar'], $sources);
         $this->assertSame(KnowledgeQueryPlan::STRATEGY_INTERNET_FIRST, $plan->primaryResearchStrategy);
     }
 
@@ -360,6 +370,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
             'api.openalex.org/works*' => Http::response(['results' => [
                 $this->openAlexWork('Internet first paper', 'Internet first agricultural research abstract.', '10.1000/first'),
             ]], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
         ]);
 
@@ -368,7 +379,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
         );
 
         $this->assertTrue($report->internetFirst);
-        $this->assertSame(['openalex', 'crossref', 'consensus'], $report->selectedSources);
+        $this->assertSame(['openalex', 'crossref', 'semantic_scholar'], $report->selectedSources);
         $this->assertSame('openalex', $report->attemptedSources[0]);
     }
 
@@ -376,6 +387,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
     {
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => [['display_name' => '']]], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => [['title' => ['']]]]], 200),
         ]);
 
@@ -396,6 +408,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
 
                 return Http::response(['results' => []], 429);
             },
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => function (): never {
                 throw new ConnectionException('timeout');
             },
@@ -407,7 +420,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
 
         $this->assertContains('openalex', $report->failedSources);
         $this->assertContains('crossref', $report->failedSources);
-        $this->assertSame(1, $openAlexCalls, 'OpenAlex must not retry variants after first 429');
+        $this->assertSame(3, $openAlexCalls, 'OpenAlex adapter retries up to 3 attempts on first 429 then orchestrator skips variants');
     }
 
     public function test_structured_research_result_contract(): void
@@ -420,6 +433,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
                     '10.1000/contract',
                 ),
             ]], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
         ]);
 
@@ -438,6 +452,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
     {
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => []], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
         ]);
 
@@ -477,6 +492,7 @@ class AgriculturalResearchAgentStage3Test extends TestCase
             'api.openalex.org/works*' => Http::response(['results' => [
                 $this->openAlexWork('External only', 'External only abstract.', '10.1000/external-only'),
             ]], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
         ]);
 
@@ -485,10 +501,11 @@ class AgriculturalResearchAgentStage3Test extends TestCase
         ]);
 
         $response->assertOk();
-        $this->assertSame(['openalex', 'crossref', 'consensus'], $response->json('selected_sources'));
+        $this->assertSame(['openalex', 'crossref', 'semantic_scholar'], $response->json('selected_sources'));
         // Multi-query retrieval issues one request per variant × provider (Internet-First only).
-        Http::assertSentCount(count($response->json('search_queries') ?? [1]) * 2);
+        Http::assertSentCount(count($response->json('search_queries') ?? [1]) * 3);
         Http::assertSent(fn ($request): bool => str_contains($request->url(), 'api.openalex.org')
-            || str_contains($request->url(), 'api.crossref.org'));
+            || str_contains($request->url(), 'api.crossref.org')
+            || str_contains($request->url(), 'api.semanticscholar.org'));
     }
 }

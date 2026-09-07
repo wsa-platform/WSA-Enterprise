@@ -98,6 +98,9 @@ class FieldCropTaxonomyCatalog
             'jute' => ['scientific_name' => 'Corchorus olitorius', 'synonyms' => ['jute']],
             'tobacco' => ['scientific_name' => 'Nicotiana tabacum', 'synonyms' => ['tobacco']],
             'tomato' => ['scientific_name' => 'Solanum lycopersicum', 'synonyms' => ['tomato', 'tomatoes', 'lycopersicon esculentum']],
+            'potato' => ['scientific_name' => 'Solanum tuberosum', 'synonyms' => [
+                'potato', 'potatoes', 'بطاطا', 'البطاطا', 'بطاطس', 'البطاطس',
+            ]],
             'pepper' => ['scientific_name' => 'Capsicum annuum', 'synonyms' => ['pepper', 'bell pepper', 'chili', 'chilli', 'chili pepper', 'sweet pepper']],
             'ginger' => ['scientific_name' => 'Zingiber officinale', 'synonyms' => ['ginger', 'ginger root']],
         ];

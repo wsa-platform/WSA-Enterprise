@@ -79,6 +79,7 @@ class AgriculturalResearchAgentStage4Test extends TestCase
     {
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => $openAlexResults], 200),
+            'api.semanticscholar.org/graph/v1/paper/search*' => Http::response(['data' => []], 200),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => $crossRefItems]], 200),
         ]);
     }
@@ -540,7 +541,7 @@ class AgriculturalResearchAgentStage4Test extends TestCase
 
         $payload = $this->validateQuery('field crop production research');
         $this->assertTrue($payload['internet_first']);
-        $this->assertSame(['openalex', 'crossref', 'consensus'], $payload['search_summary']['selected_sources']);
+        $this->assertSame(['openalex', 'crossref', 'semantic_scholar'], $payload['search_summary']['selected_sources']);
     }
 
     public function test_stage_4_does_not_synthesize_final_answer(): void

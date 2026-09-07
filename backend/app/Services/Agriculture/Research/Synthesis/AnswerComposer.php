@@ -31,7 +31,8 @@ class AnswerComposer
         KnowledgeQueryPlan $plan,
         EvidenceValidationExecutionReport $validationReport,
     ): AnswerSynthesisExecutionReport {
-        $language = $plan->normalizedQuery->language;
+        $language = trim((string) ($plan->normalizedQuery->constraints['answer_language'] ?? ''))
+            ?: $plan->normalizedQuery->language;
         $query = $plan->normalizedQuery->originalQuestion;
 
         if (in_array($validationReport->status, ['needs_clarification', 'no_search_results'], true)) {
@@ -84,7 +85,7 @@ class AnswerComposer
             );
         }
 
-        $citations = $this->buildCitations($usable);
+        $citations = $this->buildCitations($usable, $sufficiency);
         $claims = $this->buildClaims($usable, $plan);
         if ($claims === []) {
             return $this->insufficientReport(
@@ -135,7 +136,11 @@ class AnswerComposer
             $language,
             $supportingOnly,
         );
-        $primarySourcesSection = $this->formatPrimarySourcesSection($citations, $language);
+        $primarySourcesSection = $this->formatPrimarySourcesSection(
+            $citations,
+            $language,
+            ($sufficiency['mode'] ?? '') === 'supported_answer',
+        );
         $detailedExplanation = $this->buildDetailedExplanation(
             $primarySourcesSection,
             $additionalSection,
@@ -188,13 +193,35 @@ class AnswerComposer
                 'subject_entity' => $plan->subjectEntity,
                 'validation_status' => $validationReport->status,
                 'evidence_sufficient' => $validationReport->evidenceSufficient && $sufficiency['sufficient']
-                    && ((int) ($sufficiency['direct_count'] ?? 0)) >= 1,
+                    && (
+                        ((int) ($sufficiency['direct_count'] ?? 0)) >= 1
+                        || ($sufficiency['mode'] ?? '') === 'supported_answer'
+                    ),
                 'internet_first' => $plan->isInternetFirst(),
                 'synthesized_at' => now()->toIso8601String(),
                 'direct_evidence_count' => $sufficiency['direct_count'],
                 'supporting_evidence_count' => $sufficiency['supporting_count'],
+                'answer_eligible_count' => $sufficiency['answer_eligible_count'] ?? 0,
                 'sufficiency_mode' => $sufficiency['mode'] ?? $sufficiency['reason'],
                 'answer_presentation_mode' => $this->resolvePresentationMode($plan),
+                'question_type' => $plan->normalizedQuery->constraints['question_type'] ?? null,
+                'required_evidence_type' => $plan->normalizedQuery->constraints['required_evidence_type'] ?? null,
+                'direct_evidence_gate' => ((int) ($sufficiency['direct_count'] ?? 0)) >= 1
+                    ? 'PASSED'
+                    : (($sufficiency['mode'] ?? '') === 'supported_answer'
+                        ? 'SUPPORTED_ANSWER_ELIGIBLE'
+                        : 'INSUFFICIENT_DIRECT_EVIDENCE'),
+                'primary_evidence' => array_map(
+                    static fn (ResearchAnswerCitation $citation): array => [
+                        'title' => $citation->title,
+                        'authors' => $citation->authors,
+                        'year' => $citation->publicationYear,
+                        'doi' => $citation->doi,
+                        'url' => $citation->url,
+                        'provider' => $citation->sourceType,
+                    ],
+                    $citations,
+                ),
             ],
             observability: [
                 'usable_evidence_count' => count($usable),
@@ -277,6 +304,28 @@ class AnswerComposer
             return true;
         }
 
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        if (in_array($questionType, [
+            'classification', 'quantity', 'range', 'timing', 'causes', 'symptoms',
+            'comparison', 'species', 'definition', 'requirements',
+        ], true)) {
+            return true;
+        }
+
+        $requiredEvidence = trim((string) ($plan->normalizedQuery->constraints['required_evidence_type'] ?? ''));
+        if (in_array($requiredEvidence, [
+            'classification_or_types_inventory',
+            'numeric_rate_or_quantity',
+            'numeric_range_or_optimal_value',
+            'temporal_window_or_season',
+            'causal_relationship',
+            'symptom_description',
+            'species_list_or_taxonomy',
+            'requirement_specification',
+        ], true)) {
+            return true;
+        }
+
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
         if ($sense === 'land_classification') {
             return true;
@@ -335,6 +384,7 @@ class AnswerComposer
     ): array {
         $directCount = 0;
         $supportingCount = 0;
+        $answerEligibleSupporting = 0;
         foreach ($usable as $item) {
             $directness = $this->resolveDirectness($item, $plan);
             if ($directness === ScientificEvidenceDirectnessAssessor::DIRECT) {
@@ -344,6 +394,9 @@ class AnswerComposer
                 ScientificEvidenceDirectnessAssessor::SUPPORTED,
             ], true)) {
                 $supportingCount++;
+                if ($this->isAnswerEligibleSupportingItem($item, $plan)) {
+                    $answerEligibleSupporting++;
+                }
             }
         }
 
@@ -356,18 +409,32 @@ class AnswerComposer
                 'mode' => 'sufficient_direct_evidence',
                 'direct_count' => $directCount,
                 'supporting_count' => $supportingCount,
+                'answer_eligible_count' => $directCount + $answerEligibleSupporting,
             ];
         }
 
-        // Factual/direct questions: SUPPORTING-only is insufficient for a confident narrative.
+        // Factual questions: multiple answer-eligible SUPPORTING → supported_answer (not DIRECT).
         if ($this->requiresFactualDirectEvidence($plan)) {
+            if ($answerEligibleSupporting >= 2) {
+                return [
+                    'sufficient' => true,
+                    'partial' => true,
+                    'reason' => 'sufficient_supporting_evidence',
+                    'mode' => 'supported_answer',
+                    'direct_count' => $directCount,
+                    'supporting_count' => $supportingCount,
+                    'answer_eligible_count' => $answerEligibleSupporting,
+                ];
+            }
+
             return [
                 'sufficient' => false,
                 'partial' => false,
-                'reason' => $supportingCount >= 1 ? 'supporting_only' : 'insufficient_evidence',
-                'mode' => $supportingCount >= 1 ? 'supporting_only' : 'insufficient_evidence',
+                'reason' => $supportingCount >= 1 ? 'insufficient_direct_evidence' : 'insufficient_evidence',
+                'mode' => $supportingCount >= 1 ? 'insufficient_direct_evidence' : 'insufficient_evidence',
                 'direct_count' => $directCount,
                 'supporting_count' => $supportingCount,
+                'answer_eligible_count' => $answerEligibleSupporting,
             ];
         }
 
@@ -380,6 +447,7 @@ class AnswerComposer
                 'mode' => 'supporting_only',
                 'direct_count' => $directCount,
                 'supporting_count' => max($supportingCount, count($usable)),
+                'answer_eligible_count' => $answerEligibleSupporting,
             ];
         }
 
@@ -390,7 +458,71 @@ class AnswerComposer
             'mode' => 'insufficient_evidence',
             'direct_count' => $directCount,
             'supporting_count' => $supportingCount,
+            'answer_eligible_count' => $answerEligibleSupporting,
         ];
+    }
+
+    private function isAnswerEligibleSupportingItem(ScientificEvidenceItem $item, KnowledgeQueryPlan $plan): bool
+    {
+        if (($item->qualityFactors['answer_eligible'] ?? null) === true
+            && ($item->qualityFactors['evidence_directness'] ?? null) !== ScientificEvidenceDirectnessAssessor::DIRECT) {
+            return true;
+        }
+
+        $directness = $this->resolveDirectness($item, $plan);
+        if (! in_array($directness, [
+            ScientificEvidenceDirectnessAssessor::SUPPORTING,
+            ScientificEvidenceDirectnessAssessor::SUPPORTED,
+        ], true)) {
+            return false;
+        }
+        if (! in_array($item->claimRelationship, [
+            ClaimEvidenceRelationship::SUPPORTED,
+            ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+        ], true)) {
+            return false;
+        }
+        if ($item->evidenceText === null || trim($item->evidenceText) === '') {
+            return false;
+        }
+
+        $assessment = [
+            'entity_matched' => (bool) ($item->qualityFactors['entity_matched'] ?? false),
+            'topic_matched' => (bool) ($item->qualityFactors['topic_matched'] ?? false),
+            'sense_coverage' => (bool) ($item->qualityFactors['sense_coverage'] ?? false),
+            'factor_coverage' => (float) ($item->qualityFactors['factor_coverage'] ?? 0.0),
+            'verification_label' => $item->qualityFactors['verification_label'] ?? null,
+        ];
+
+        // When match flags were not persisted (fixture tests), re-assess from title/text.
+        if (! array_key_exists('entity_matched', $item->qualityFactors)
+            && ! array_key_exists('topic_matched', $item->qualityFactors)) {
+            $reassessed = $this->evidenceVerificationLayer->assess(
+                $plan,
+                $item->publicationTitle,
+                $item->evidenceText,
+                $item->doi,
+            );
+            $assessment = [
+                'entity_matched' => (bool) ($reassessed['entity_matched'] ?? false),
+                'topic_matched' => (bool) ($reassessed['topic_matched'] ?? false),
+                'sense_coverage' => (bool) ($reassessed['sense_coverage'] ?? false),
+                'factor_coverage' => (float) ($reassessed['factor_coverage'] ?? 0.0),
+                'verification_label' => $reassessed['verification_label'] ?? null,
+            ];
+            // Reassessed SUPPORTING that Directness marks for missing answerability is not answer-eligible.
+            if (in_array('missing_required_evidence_answerability', $reassessed['reasons'] ?? [], true)
+                || in_array('missing_intent_qualifier_answerability', $reassessed['reasons'] ?? [], true)
+                || in_array('missing_qualifier_answerability', $reassessed['reasons'] ?? [], true)
+                || ($reassessed['directness'] ?? '') === ScientificEvidenceDirectnessAssessor::RELATED
+                || ($reassessed['directness'] ?? '') === ScientificEvidenceDirectnessAssessor::IRRELEVANT
+                || ($reassessed['directness'] ?? '') === ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH
+                || ($reassessed['directness'] ?? '') === ScientificEvidenceDirectnessAssessor::BACKGROUND) {
+                return false;
+            }
+        }
+
+        return $this->evidenceVerificationLayer->isAnswerEligibleSupporting($directness, $assessment);
     }
 
     private function resolveDirectness(ScientificEvidenceItem $item, KnowledgeQueryPlan $plan): string
@@ -414,11 +546,12 @@ class AnswerComposer
      * @param  list<ScientificEvidenceItem>  $items
      * @return list<ResearchAnswerCitation>
      */
-    private function buildCitations(array $items): array
+    private function buildCitations(array $items, array $sufficiency = []): array
     {
+        $supportedAnswer = (($sufficiency['mode'] ?? '') === 'supported_answer');
         $citations = [];
         foreach ($items as $item) {
-            $reference = $this->citationFromEvidence($item);
+            $reference = $this->citationFromEvidence($item, $supportedAnswer);
             if ($reference === null) {
                 continue;
             }
@@ -428,13 +561,17 @@ class AnswerComposer
         return $citations;
     }
 
-    private function citationFromEvidence(ScientificEvidenceItem $item): ?ResearchAnswerCitation
+    private function citationFromEvidence(ScientificEvidenceItem $item, bool $supportedAnswer = false): ?ResearchAnswerCitation
     {
         $directness = (string) ($item->qualityFactors['evidence_directness']
             ?? $item->sourceAttribution['evidence_directness']
             ?? '');
-        // Primary citations[]: DIRECT only (SUPPORTING/SUPPORTED usable in synthesis, not cited).
-        if (! $this->evidenceVerificationLayer->isPrimaryCitationEligible($directness)) {
+        // Primary citations[]: DIRECT only, unless supported_answer mode allows eligible SUPPORTING.
+        if ($supportedAnswer) {
+            if (! $this->evidenceVerificationLayer->isSupportedAnswerCitationEligible($directness)) {
+                return null;
+            }
+        } elseif (! $this->evidenceVerificationLayer->isPrimaryCitationEligible($directness)) {
             return null;
         }
 
@@ -884,6 +1021,9 @@ class AnswerComposer
                 'supporting_evidence_only',
                 'multiple_supporting_evidence',
                 'general_query_usable_evidence',
+                'insufficient_direct_evidence',
+                'supported_answer',
+                'sufficient_supporting_evidence',
             ], true)) {
             $limitations[] = $language === 'ar'
                 ? 'الأدلة داعمة جزئيًا وليست مباشرة بالكامل للسؤال؛ لا تُعامل كإجابة علمية مؤكدة.'
@@ -938,6 +1078,12 @@ class AnswerComposer
             return $language === 'ar'
                 ? 'توجد أدلة متعارضة؛ لا ينبغي افتراض قيمة أو استنتاج واحد universal.'
                 : 'Conflicting evidence exists; a single universal value or conclusion should not be assumed.';
+        }
+
+        if (in_array((string) ($sufficiency['mode'] ?? ''), ['supported_answer', 'sufficient_supporting_evidence'], true)) {
+            return $language === 'ar'
+                ? 'الإجابة مبنية على تجميع أدلة داعمة متعددة؛ لا يوجد مصدر مباشر واحد يغطي السؤال بالكامل.'
+                : 'The answer aggregates multiple supporting sources; no single direct source fully covers the question.';
         }
 
         if (($sufficiency['direct_count'] ?? 0) === 0 && ($sufficiency['supporting_count'] ?? 0) >= 1) {
@@ -999,14 +1145,18 @@ class AnswerComposer
                 'supporting_evidence_only',
                 'multiple_supporting_evidence',
                 'general_query_usable_evidence',
+                'insufficient_direct_evidence',
             ], true);
     }
 
     private function insufficientDirectMessage(string $language): string
     {
-        return $language === 'ar'
-            ? 'لم يتم العثور على دليل علمي مباشر كافٍ للإجابة بشكل مؤكد.'
-            : 'No sufficiently direct scientific evidence was found for a confident answer.';
+        return match ($language) {
+            'ar' => 'لم يتم العثور على دليل علمي مباشر كافٍ للإجابة بشكل مؤكد.',
+            'fr' => "Aucune preuve scientifique directe suffisante n'a été trouvée pour une réponse certaine.",
+            'tr' => 'Kesin bir yanıt için yeterli doğrudan bilimsel kanıt bulunamadı.',
+            default => 'Insufficient direct scientific evidence was found for a definitive answer.',
+        };
     }
 
     /**
@@ -1255,15 +1405,49 @@ class AnswerComposer
     /**
      * @param  list<ResearchAnswerCitation>  $citations
      */
-    private function formatPrimarySourcesSection(array $citations, string $language): string
-    {
+    private function formatPrimarySourcesSection(
+        array $citations,
+        string $language,
+        bool $supportedAnswer = false,
+    ): string {
         if ($citations === []) {
             return '';
         }
 
+        if ($supportedAnswer) {
+            $heading = match ($language) {
+                'ar' => '### المصادر',
+                'fr' => '### Sources',
+                'tr' => '### Kaynaklar',
+                default => '### Sources',
+            };
+            $disclaimer = match ($language) {
+                'ar' => 'الإجابة مبنية على تجميع الأدلة العلمية المتاحة من المصادر التالية.',
+                'fr' => 'La réponse est basée sur l’agrégation des preuves scientifiques disponibles provenant des sources suivantes.',
+                'tr' => 'Yanıt, aşağıdaki kaynaklardan elde edilen bilimsel kanıtların birleştirilmesine dayanır.',
+                default => 'The answer is based on aggregating available scientific evidence from the following sources.',
+            };
+            $lines = [$heading, $disclaimer];
+            foreach ($citations as $index => $citation) {
+                $lines[] = ($index + 1).'. '.$this->formatCitationBlock($citation, $language);
+            }
+
+            return implode("\n", $lines);
+        }
+
         $heading = count($citations) === 1
-            ? ($language === 'ar' ? '### المصدر الأساسي' : '### Primary source')
-            : ($language === 'ar' ? '### المصادر الأساسية' : '### Primary sources');
+            ? match ($language) {
+                'ar' => '### المصدر الأساسي',
+                'fr' => '### Source principale',
+                'tr' => '### Birincil kaynak',
+                default => '### Primary source',
+            }
+            : match ($language) {
+                'ar' => '### المصادر الأساسية',
+                'fr' => '### Sources principales',
+                'tr' => '### Birincil kaynaklar',
+                default => '### Primary sources',
+            };
 
         $lines = [$heading];
         foreach ($citations as $index => $citation) {
@@ -1351,7 +1535,12 @@ class AnswerComposer
             return '';
         }
 
-        $heading = $language === 'ar' ? '### معلومات إضافية' : '### Additional information';
+        $heading = match ($language) {
+            'ar' => '### معلومات إضافية',
+            'fr' => '### Informations supplémentaires',
+            'tr' => '### Ek bilgiler',
+            default => '### Additional information',
+        };
         $intro = $supportingOnlyContext
             ? ($language === 'ar'
                 ? 'المعلومات التالية داعمة فقط وليست إجابة مباشرة مؤكدة:'
@@ -1514,8 +1703,10 @@ class AnswerComposer
                 'internet_first' => $plan->isInternetFirst(),
                 'direct_evidence_count' => (int) ($sufficiency['direct_count'] ?? 0),
                 'supporting_evidence_count' => (int) ($sufficiency['supporting_count'] ?? 0),
-                'sufficiency_mode' => $sufficiency['mode'] ?? $sufficiency['reason'] ?? 'supporting_only',
+                'sufficiency_mode' => $sufficiency['mode'] ?? $sufficiency['reason'] ?? 'insufficient_direct_evidence',
                 'evidence_sufficient' => false,
+                'direct_evidence_gate' => 'INSUFFICIENT_DIRECT_EVIDENCE',
+                'failure_status' => 'INSUFFICIENT_DIRECT_EVIDENCE',
                 'answer_presentation_mode' => $this->resolvePresentationMode($plan),
             ],
             observability: [

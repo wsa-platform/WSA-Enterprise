@@ -686,6 +686,30 @@ final class AgriculturalEntityCatalog
         return $entries;
     }
 
+    // --- CURRENT TASK: Semantic Scholar / QueryBuilder family+potato ---
+
+    /**
+     * Botanical family aliases for QueryBuilder / understanding (country-agnostic).
+     *
+     * @return array<string, list<string>> canonical Latin family => aliases
+     */
+    public static function botanicalFamilyAliases(): array
+    {
+        return [
+            'Cucurbitaceae' => [
+                'cucurbitaceae',
+                'cucurbit',
+                'cucurbits',
+                'cucurbit family',
+                'القرعية',
+                'العائلة القرعية',
+                'عائلة القرعيات',
+                'نبات العائلة القرعية',
+                'نباتات العائلة القرعية',
+            ],
+        ];
+    }
+
     /**
      * @return list<string>
      */
@@ -697,7 +721,7 @@ final class AgriculturalEntityCatalog
             'sunflower', 'soybean', 'sesame', 'peanut', 'canola', 'castor',
             'fava-bean', 'lentil', 'chickpea', 'pea', 'cowpea',
             'cotton', 'flax', 'hemp', 'jute', 'tobacco',
-            'tomato', 'pepper', 'ginger',
+            'tomato', 'potato', 'pepper', 'ginger',
         ];
     }
 
@@ -724,10 +748,13 @@ final class AgriculturalEntityCatalog
             'peanut' => ['الفول السوداني'],
             'canola' => ['الكانولا'],
             'tomato' => ['الطماطم', 'طماطم'],
+            'potato' => ['البطاطا', 'بطاطا', 'البطاطس', 'بطاطس'],
             'pepper' => ['الفلفل', 'فلفل'],
             'ginger' => ['الزنجبيل', 'زنجبيل'],
         ];
     }
+
+    // --- END CURRENT TASK: Semantic Scholar / QueryBuilder family+potato ---
 
     /**
      * @return list<string>

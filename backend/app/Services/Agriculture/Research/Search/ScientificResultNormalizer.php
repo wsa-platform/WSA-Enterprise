@@ -160,6 +160,80 @@ class ScientificResultNormalizer
     }
 
     /**
+     * Normalize a Semantic Scholar paper hit into the Stage 3 result contract.
+     * Missing DOI/abstract stay null — never fabricate. citationCount is metadata only.
+     *
+     * @param  array<string, mixed>  $work
+     */
+    public function fromSemanticScholarWork(array $work): ?ScientificSearchResult
+    {
+        $title = trim(strip_tags((string) ($work['title'] ?? '')));
+        if ($title === '') {
+            return null;
+        }
+
+        $externalIds = is_array($work['externalIds'] ?? null) ? $work['externalIds'] : [];
+        $doi = $this->normalizeDoi(trim((string) ($externalIds['DOI'] ?? $externalIds['doi'] ?? '')) ?: null);
+        $url = trim((string) ($work['url'] ?? ''));
+        $openAccessPdf = is_array($work['openAccessPdf'] ?? null) ? $work['openAccessPdf'] : [];
+        $pdfUrl = trim((string) ($openAccessPdf['url'] ?? ''));
+        $canonicalUrl = $url !== ''
+            ? $url
+            : ($doi !== null ? 'https://doi.org/'.$doi : ($pdfUrl !== '' ? $pdfUrl : null));
+
+        $abstract = trim(strip_tags((string) ($work['abstract'] ?? '')));
+        $journal = trim((string) ($work['venue'] ?? ''));
+        $year = is_numeric($work['year'] ?? null) ? (int) $work['year'] : null;
+        $paperId = trim((string) ($work['paperId'] ?? ''));
+
+        $sourceIdentifier = $doi
+            ?? ($paperId !== '' ? $paperId : null)
+            ?? ($url !== '' ? $url : null)
+            ?? ('semantic_scholar:'.md5(mb_strtolower($title).'|'.($year ?? 'unknown')));
+
+        $authors = [];
+        $rawAuthors = is_array($work['authors'] ?? null) ? $work['authors'] : [];
+        foreach ($rawAuthors as $author) {
+            $name = trim(is_array($author) ? (string) ($author['name'] ?? '') : (string) $author);
+            if ($name !== '') {
+                $authors[] = $name;
+            }
+        }
+
+        $relevanceMetadata = [];
+        if (isset($work['citationCount']) && is_numeric($work['citationCount'])) {
+            $relevanceMetadata['citation_count'] = (int) $work['citationCount'];
+        }
+        if (is_array($work['publicationTypes'] ?? null) && $work['publicationTypes'] !== []) {
+            $relevanceMetadata['publication_types'] = array_values(array_filter(
+                array_map(static fn ($t): string => trim((string) $t), $work['publicationTypes']),
+                static fn (string $t): bool => $t !== '',
+            ));
+        }
+        if ($pdfUrl !== '') {
+            $relevanceMetadata['open_access_pdf_url'] = $pdfUrl;
+        }
+        if ($externalIds !== []) {
+            $relevanceMetadata['external_ids'] = $externalIds;
+        }
+
+        return new ScientificSearchResult(
+            sourceKey: 'semantic_scholar',
+            sourceIdentifier: $sourceIdentifier,
+            title: $title,
+            authors: array_values(array_unique($authors)),
+            publicationYear: $year,
+            doi: $doi,
+            canonicalUrl: $canonicalUrl,
+            abstract: $abstract !== '' ? $abstract : null,
+            journal: $journal !== '' ? $journal : null,
+            foundBySources: ['semantic_scholar'],
+            relevanceMetadata: $relevanceMetadata !== [] ? $relevanceMetadata : null,
+            rawMetadata: ['semantic_scholar' => $work],
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $work
      * @return list<string>
      */

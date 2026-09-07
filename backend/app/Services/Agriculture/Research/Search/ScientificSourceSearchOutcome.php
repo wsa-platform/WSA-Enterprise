@@ -17,6 +17,7 @@ final class ScientificSourceSearchOutcome
 
     /**
      * @param  list<ScientificSearchResult>  $results
+     * @param  array<string, mixed>|null  $observability  Safe provider metrics only (never secrets).
      */
     public function __construct(
         public readonly string $sourceKey,
@@ -24,6 +25,7 @@ final class ScientificSourceSearchOutcome
         public readonly array $results = [],
         public readonly ?string $error = null,
         public readonly ?int $httpStatus = null,
+        public readonly ?array $observability = null,
     ) {}
 
     /** @return array<string, mixed> */
@@ -35,6 +37,7 @@ final class ScientificSourceSearchOutcome
             'result_count' => count($this->results),
             'error' => $this->error,
             'http_status' => $this->httpStatus,
+            'observability' => $this->observability,
             'results' => array_map(static fn (ScientificSearchResult $r): array => $r->toArray(), $this->results),
         ];
     }

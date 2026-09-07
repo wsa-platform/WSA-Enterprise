@@ -116,6 +116,70 @@ class EvidenceVerificationLayer
         return $directness === ScientificEvidenceDirectnessAssessor::DIRECT;
     }
 
+    // --- CURRENT TASK: Semantic Scholar / supported_answer eligibility ---
+
+    /**
+     * Answer eligibility for SUPPORTING evidence — does NOT convert SUPPORTING → DIRECT.
+     * Eligible only when entity/topic/intent are covered and geo/domain are compatible.
+     *
+     * @param  array{
+     *     directness?: string,
+     *     entity_matched?: bool,
+     *     topic_matched?: bool,
+     *     sense_coverage?: bool,
+     *     factor_coverage?: float,
+     *     verification_label?: string,
+     *     reasons?: list<string>
+     * }  $assessment
+     */
+    public function isAnswerEligibleSupporting(string $directness, array $assessment = []): bool
+    {
+        if (! in_array($directness, [
+            ScientificEvidenceDirectnessAssessor::SUPPORTING,
+            ScientificEvidenceDirectnessAssessor::SUPPORTED,
+        ], true)) {
+            return false;
+        }
+
+        $label = (string) ($assessment['verification_label'] ?? $this->toVerificationLabel($directness));
+        if (in_array($label, [self::LABEL_IRRELEVANT, self::LABEL_GEOGRAPHIC_MISMATCH, self::LABEL_RELATED], true)) {
+            return false;
+        }
+
+        if (($assessment['entity_matched'] ?? false) !== true) {
+            return false;
+        }
+        if (($assessment['topic_matched'] ?? false) !== true) {
+            return false;
+        }
+
+        // Prefer explicit sense coverage when reported — keyword entity alone is not enough.
+        if (array_key_exists('sense_coverage', $assessment) && $assessment['sense_coverage'] !== true) {
+            return false;
+        }
+
+        if (array_key_exists('factor_coverage', $assessment)
+            && (float) $assessment['factor_coverage'] < 0.2) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Citations for supported (aggregated) answers may include answer-eligible SUPPORTING.
+     */
+    public function isSupportedAnswerCitationEligible(string $directness): bool
+    {
+        return $this->isPrimaryCitationEligible($directness)
+            || in_array($directness, [
+                ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                ScientificEvidenceDirectnessAssessor::SUPPORTED,
+            ], true);
+    }
+
+    // --- END CURRENT TASK: Semantic Scholar / supported_answer eligibility ---
+
     /**
      * @param  array{
      *     directness: string,

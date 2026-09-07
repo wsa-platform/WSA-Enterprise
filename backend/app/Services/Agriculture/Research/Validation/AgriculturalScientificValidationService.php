@@ -94,6 +94,11 @@ class AgriculturalScientificValidationService
             static fn (ScientificEvidenceItem $item): bool => ($item->qualityFactors['evidence_directness'] ?? null)
                 === ScientificEvidenceDirectnessAssessor::SUPPORTING,
         ));
+        $answerEligibleSupportingCount = count(array_filter(
+            $validated,
+            static fn (ScientificEvidenceItem $item): bool => ($item->qualityFactors['answer_eligible'] ?? false) === true
+                && ($item->qualityFactors['evidence_directness'] ?? null) !== ScientificEvidenceDirectnessAssessor::DIRECT,
+        ));
         $backgroundCount = count(array_filter(
             $validated,
             static fn (ScientificEvidenceItem $item): bool => ($item->qualityFactors['evidence_directness'] ?? null)
@@ -111,10 +116,11 @@ class AgriculturalScientificValidationService
 
         $requiresFactualDirect = $this->requiresFactualDirectEvidence($plan);
 
-        // Capability-based sufficiency: one DIRECT can suffice; sole BACKGROUND on
-        // crop+topic questions cannot; many SUPPORTING alone must not satisfy factual/direct questions.
+        // Capability-based sufficiency: DIRECT wins; multiple answer-eligible SUPPORTING may
+        // satisfy as supported_answer without converting SUPPORTING → DIRECT.
         $evidenceSufficient = match (true) {
             $directCount >= 1 => true,
+            $requiresFactualDirect && $answerEligibleSupportingCount >= 2 => true,
             $requiresFactualDirect && $directCount === 0 => false,
             $requiresCropTopic && $backgroundCount > 0 && $directCount === 0 && $supportingCount === 0 => false,
             $supportingCount >= 1 && $supportedCount >= 1 => true,
@@ -155,6 +161,7 @@ class AgriculturalScientificValidationService
                 'successful_sources' => $searchReport->successfulSources,
                 'direct_evidence_count' => $directCount,
                 'supporting_evidence_count' => $supportingCount,
+                'answer_eligible_supporting_count' => $answerEligibleSupportingCount,
             ],
             observability: [
                 'failure_reasons' => $this->collectFailureReasons($items),
@@ -166,6 +173,7 @@ class AgriculturalScientificValidationService
                 'evidence_directness_counts' => [
                     'direct' => $directCount,
                     'supporting' => $supportingCount,
+                    'answer_eligible_supporting' => $answerEligibleSupportingCount,
                 ],
             ],
         );
@@ -238,6 +246,15 @@ class AgriculturalScientificValidationService
         $qualityScore['factors']['verification_label'] = $directness['verification_label'] ?? null;
         $qualityScore['factors']['directness_score'] = $directness['score'];
         $qualityScore['factors']['directness_reasons'] = $directness['reasons'];
+        $qualityScore['factors']['entity_matched'] = (bool) ($directness['entity_matched'] ?? false);
+        $qualityScore['factors']['topic_matched'] = (bool) ($directness['topic_matched'] ?? false);
+        $qualityScore['factors']['sense_coverage'] = (bool) ($directness['sense_coverage'] ?? false);
+        $qualityScore['factors']['factor_coverage'] = (float) ($directness['factor_coverage'] ?? 0.0);
+        $qualityScore['factors']['answer_eligible'] = $directness['directness'] === ScientificEvidenceDirectnessAssessor::DIRECT
+            || $this->evidenceVerificationLayer->isAnswerEligibleSupporting(
+                (string) $directness['directness'],
+                $directness,
+            );
         // Re-rank score after authoritative Stage-3/verification directness (claimMatch may have run first).
         if ($directness['directness'] === ScientificEvidenceDirectnessAssessor::DIRECT
             && ($claimMatch['factors']['evidence_directness'] ?? null) !== ScientificEvidenceDirectnessAssessor::DIRECT) {
