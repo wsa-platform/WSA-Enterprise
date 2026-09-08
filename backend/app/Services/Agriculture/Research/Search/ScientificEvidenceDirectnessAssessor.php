@@ -187,6 +187,21 @@ class ScientificEvidenceDirectnessAssessor
                 ];
             }
 
+            // THIS-TASK: required-evidence answerability for typed factual questions
+            // (includes species_list_or_taxonomy for plant_family).
+            if ($this->requiresTypedEvidenceAnswerability($plan)
+                && ! $this->hasRequiredEvidenceAnswerability($plan, $haystack)) {
+                return [
+                    'directness' => self::SUPPORTING,
+                    'score' => 14.0 + (8.0 * $factorCoverage),
+                    'reasons' => ['missing_required_evidence_answerability'],
+                    'factor_coverage' => round($factorCoverage, 3),
+                    'sense_coverage' => $senseCoverage,
+                    'entity_matched' => true,
+                    'topic_matched' => true,
+                ];
+            }
+
             $directScore = 40.0 + (20.0 * $factorCoverage);
             $reasons = ['entity_topic_sense_aligned'];
             if ($this->isGerminationIntent($plan) && $this->hasGerminationEvidenceSignals($haystack)) {
@@ -666,6 +681,89 @@ class ScientificEvidenceDirectnessAssessor
 
         return false;
     }
+
+    /**
+     * Typed factual questions need concrete required-evidence shapes for DIRECT.
+     * Generic effect/growth claims keep qualifier-based answerability only.
+     */
+    private function requiresTypedEvidenceAnswerability(KnowledgeQueryPlan $plan): bool
+    {
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        if (in_array($questionType, [
+            'classification', 'quantity', 'range', 'timing', 'symptoms', 'species', 'comparison',
+        ], true)) {
+            return true;
+        }
+
+        $required = trim((string) ($plan->normalizedQuery->constraints['required_evidence_type'] ?? ''));
+
+        return in_array($required, [
+            'classification_or_types_inventory',
+            'numeric_rate_or_quantity',
+            'numeric_range_or_optimal_value',
+            'temporal_window_or_season',
+            'symptom_description',
+            'species_list_or_taxonomy',
+            'comparative_evidence',
+        ], true);
+    }
+
+    /**
+     * Required-evidence content must be present for DIRECT — not keyword overlap alone.
+     */
+    private function hasRequiredEvidenceAnswerability(KnowledgeQueryPlan $plan, string $haystack): bool
+    {
+        $required = trim((string) ($plan->normalizedQuery->constraints['required_evidence_type'] ?? ''));
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        if ($required === '' && $questionType !== '') {
+            $required = AgriculturalEntityCatalog::requiredEvidenceTypeForQuestionType($questionType);
+        }
+        if ($required === '' || $required === 'topic_aligned_scientific_claim') {
+            return true;
+        }
+
+        return match ($required) {
+            'classification_or_types_inventory' => preg_match(
+                '/\b(?:types?|categories|classes|varieties|cultivars|classification|inventory)\b/u',
+                $haystack,
+            ) === 1,
+            'numeric_rate_or_quantity' => preg_match(
+                '/\b\d+(?:[.,]\d+)?\s*(?:kg\/ha|kg|g\/|t\/ha|%|ppm|mg)\b/u',
+                $haystack,
+            ) === 1,
+            'numeric_range_or_optimal_value' => $this->hasOptimalRangeAnswerability($haystack),
+            'temporal_window_or_season' => preg_match(
+                '/\b(?:season|month|week|planting\s+date|sowing\s+date|timing|period)\b/u',
+                $haystack,
+            ) === 1,
+            'causal_relationship' => $this->hasEffectAnswerability($haystack)
+                || preg_match('/\b(?:cause|causes|because|due\s+to|resulting)\b/u', $haystack) === 1,
+            'symptom_description' => preg_match(
+                '/\b(?:symptom|symptoms|yellowing|chlorosis|wilting|necrosis|lesion)\b/u',
+                $haystack,
+            ) === 1,
+            'comparative_evidence' => preg_match(
+                '/\b(?:compar(?:e|ed|ison)|versus|vs\.?|higher\s+than|lower\s+than)\b/u',
+                $haystack,
+            ) === 1,
+            'species_list_or_taxonomy' => preg_match(
+                '/\b(?:species|taxonomy|genus|genera|family\s+members?|botanical\s+family|'
+                .'members?\s+of\s+the|plants?\s+of\s+the|tilapia|carp|catfish|trout)\b/u',
+                $haystack,
+            ) === 1,
+            'definitional_statement' => preg_match(
+                '/\b(?:defined\s+as|definition|is\s+a|refers\s+to)\b/u',
+                $haystack,
+            ) === 1,
+            'recommendation_or_best_practice' => preg_match(
+                '/\b(?:recommend(?:ed|ation)?|best\s+practice|method|approach)\b/u',
+                $haystack,
+            ) === 1,
+            'requirement_specification' => $this->hasRequirementAnswerability($haystack),
+            default => true,
+        };
+    }
+
 
     private function hasEssentialOilPrimary(string $haystack): bool
     {

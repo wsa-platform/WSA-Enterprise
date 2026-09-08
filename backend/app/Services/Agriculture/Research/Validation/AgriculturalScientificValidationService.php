@@ -402,9 +402,11 @@ class AgriculturalScientificValidationService
      */
     private function requiresFactualDirectEvidence(KnowledgeQueryPlan $plan): bool
     {
+        $subjectType = is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null;
         $hasEntity = $plan->normalizedQuery->cropId !== null
             || $plan->normalizedQuery->scientificName !== null
-            || ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null) === 'crop');
+            || $subjectType === 'crop'
+            || $subjectType === 'plant_family';
         $factors = is_array($plan->normalizedQuery->constraints['scientific_factors'] ?? null)
             ? $plan->normalizedQuery->constraints['scientific_factors']
             : [];
@@ -413,6 +415,10 @@ class AgriculturalScientificValidationService
         }
 
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        // Sequential checks keep plant_family staging separable from land WIP.
+        if ($sense === 'plant_family_members') {
+            return true;
+        }
         if ($sense === 'land_classification') {
             return true;
         }
@@ -428,6 +434,7 @@ class AgriculturalScientificValidationService
             'drying_processing',
             'storage',
             'plant_growth',
+            'varieties',
         ], true)) {
             return true;
         }

@@ -25,6 +25,7 @@ final class AgriculturalEntityCatalog
             'diagnosis_scientific',
             'productivity',
             'varieties',
+            'plant_family_members',
             'animal_production',
             'poultry_production',
             'beekeeping',
@@ -42,6 +43,7 @@ final class AgriculturalEntityCatalog
     {
         return [
             'crop',
+            'plant_family',
             'animal',
             'insect',
             'fish',
@@ -491,6 +493,11 @@ final class AgriculturalEntityCatalog
     {
         return match ($sense) {
             'plant_growth' => ['growth', 'physiology', 'cultivation', 'yield'],
+            'varieties' => ['varieties', 'cultivars', 'cultivar classification', 'variety classification'],
+            'plant_family_members' => [
+                'family members', 'species', 'taxonomy', 'classification',
+                'botanical family', 'plants of', 'genera', 'genus',
+            ],
             'seed_germination' => [
                 'seed germination', 'germination', 'germination temperature',
                 'germination rate', 'germination percentage', 'seedling emergence', 'emergence',
@@ -598,6 +605,10 @@ final class AgriculturalEntityCatalog
             'pest' => ['pest management', 'agriculture'],
             'productivity' => ['yield', 'productivity', 'agriculture'],
             'varieties' => ['cultivar', 'variety', 'agriculture'],
+            'plant_family_members' => [
+                'species', 'family members', 'taxonomy', 'botanical family',
+                'classification', 'agriculture',
+            ],
             'scientific_literature' => ['scientific literature', 'agriculture'],
             'agricultural_economics' => ['agricultural economics', 'farm economics', 'agriculture'],
             'agricultural_industry' => ['processing', 'postharvest', 'agriculture'],
@@ -742,8 +753,190 @@ final class AgriculturalEntityCatalog
 
     // --- CURRENT TASK: Semantic Scholar / QueryBuilder family+potato ---
 
+    // --- Typed factual question / evidence-type helpers (entity-family + varieties) ---
+    /**
+     * Question-type keyword signals (classification / quantity / timing…).
+     *
+     * @return array<string, list<string>>
+     */
+    public static function questionTypeSignals(): array
+    {
+        return [
+            'classification' => [
+                'types', 'type', 'classification', 'classify', 'categories', 'kinds',
+                'varieties', 'variety', 'cultivars', 'cultivar',
+                'أنواع', 'انواع', 'تصنيف', 'صنف', 'أصناف', 'اصناف',
+                'types de', 'classification des', 'catégories',
+                'türleri', 'türler', 'sınıflandırma', 'siniflandirma',
+            ],
+            'quantity' => [
+                'quantity', 'rate', 'amount', 'dose', 'dosage', 'kg/ha', 'how much',
+                'كمية', 'معدل', 'جرعة', 'كم',
+                'quantité', 'dose', 'combien',
+                'miktar', 'oran', 'ne kadar',
+            ],
+            'range' => [
+                'optimal', 'optimum', 'best temperature', 'range', 'between',
+                'أفضل درجة', 'النطاق', 'مثلى',
+                'plage', 'optimale', 'température optimale',
+                'en uygun', 'aralık', 'optimal',
+            ],
+            'timing' => [
+                'when', 'timing', 'season', 'period', 'schedule', 'planting date',
+                'متى', 'موعد', 'موسم', 'توقيت',
+                'quand', 'saison', 'période',
+                'ne zaman', 'mevsim', 'dönem',
+            ],
+            'causes' => [
+                'why', 'cause', 'causes', 'reason', 'because',
+                'لماذا', 'سبب', 'أسباب',
+                'pourquoi', 'cause', 'raisons',
+                'neden', 'sebep', 'nedenleri',
+            ],
+            'symptoms' => [
+                'symptom', 'symptoms', 'signs', 'turn yellow', 'yellowing',
+                'أعراض', 'اصفرار', 'تصفر',
+                'symptômes', 'jaunissement',
+                'belirtiler', 'sararma',
+            ],
+            'comparison' => [
+                'compare', 'comparison', 'versus', 'vs', 'difference between',
+                'مقارنة', 'مقابل', 'الفرق بين',
+                'comparer', 'différence',
+                'karşılaştır', 'fark',
+            ],
+            'species' => [
+                'species', 'species of', 'kinds of fish', 'freshwater fish',
+                'أنواع أسماك', 'انواع اسماك', 'أسماك', 'اسماك',
+                'espèces', 'poissons',
+                'balık türleri', 'türler',
+            ],
+            'definition' => [
+                'define', 'definition', 'meaning of',
+                'تعريف',
+                "qu'est-ce", 'définition',
+                'nedir', 'tanım',
+            ],
+            'recommendation' => [
+                'best method', 'recommend', 'recommendation', 'how to', 'best way',
+                'أفضل طريقة', 'توصية', 'كيف',
+                'meilleure méthode', 'recommandation', 'comment',
+                'en iyi yöntem', 'öneri', 'nasıl',
+            ],
+            'requirements' => [
+                'requirement', 'requirements', 'needs', 'conditions required',
+                'متطلبات', 'احتياجات', 'شروط',
+                'exigences', 'besoins',
+                'gereksinimler', 'şartlar',
+            ],
+        ];
+    }
+    /**
+     * What DIRECT evidence must contain for each question type.
+     *
+     * @return array<string, string>
+     */
+    public static function requiredEvidenceTypeForQuestionType(string $questionType): string
+    {
+        return match ($questionType) {
+            'classification' => 'classification_or_types_inventory',
+            'quantity' => 'numeric_rate_or_quantity',
+            'range' => 'numeric_range_or_optimal_value',
+            'timing' => 'temporal_window_or_season',
+            'causes' => 'causal_relationship',
+            'symptoms' => 'symptom_description',
+            'comparison' => 'comparative_evidence',
+            'species' => 'species_list_or_taxonomy',
+            'definition' => 'definitional_statement',
+            'recommendation' => 'recommendation_or_best_practice',
+            'requirements' => 'requirement_specification',
+            default => 'topic_aligned_scientific_claim',
+        };
+    }
+    /**
+     * English search terms that encode required evidence content.
+     *
+     * @return list<string>
+     */
+    public static function requiredEvidenceQueryTerms(string $requiredEvidenceType): array
+    {
+        return match ($requiredEvidenceType) {
+            'classification_or_types_inventory' => [
+                'types', 'classification', 'categories', 'inventory',
+                'varieties', 'cultivars',
+            ],
+            'numeric_rate_or_quantity' => ['rate', 'kg/ha', 'quantity', 'dosage'],
+            'numeric_range_or_optimal_value' => ['optimal', 'temperature range', 'optimum'],
+            'temporal_window_or_season' => ['planting date', 'season', 'timing'],
+            'causal_relationship' => ['cause', 'effect', 'because'],
+            'symptom_description' => ['symptoms', 'yellowing', 'chlorosis'],
+            'comparative_evidence' => ['comparison', 'versus', 'compared'],
+            'species_list_or_taxonomy' => [
+                'species', 'taxonomy', 'family members', 'botanical family', 'genera',
+            ],
+            'definitional_statement' => ['definition', 'defined as'],
+            'recommendation_or_best_practice' => ['recommended', 'best practice', 'method'],
+            'requirement_specification' => ['requirements', 'required', 'needs'],
+            default => [],
+        };
+    }
+    /**
+     * What the answer body must contain for a required evidence type (generic, not geography-specific).
+     *
+     * @return list<string>
+     */
+    public static function requiredEvidenceCharacteristics(string $requiredEvidenceType): array
+    {
+        return match ($requiredEvidenceType) {
+            'classification_or_types_inventory' => [
+                'explicit_types_or_classes_inventory',
+                'named_classes_or_types',
+                'classification_system_with_listed_types',
+            ],
+            'numeric_rate_or_quantity' => ['numeric_quantity_or_rate'],
+            'numeric_range_or_optimal_value' => ['numeric_range_or_optimum'],
+            'temporal_window_or_season' => ['temporal_window_or_season'],
+            'causal_relationship' => ['stated_cause_or_mechanism'],
+            'symptom_description' => ['described_symptoms'],
+            'species_list_or_taxonomy' => ['species_or_taxa_list'],
+            'recommendation_or_best_practice' => ['stated_recommendation_or_practice'],
+            'requirement_specification' => ['stated_requirement'],
+            'comparative_evidence' => ['comparative_statement'],
+            'definitional_statement' => ['definitional_statement'],
+            default => ['topic_aligned_claim'],
+        };
+    }
+    /**
+     * Negative constraints: evidence shapes that must not alone satisfy DIRECT.
+     *
+     * @return list<string>
+     */
+    public static function negativeConstraintsForEvidenceType(string $requiredEvidenceType): array
+    {
+        return match ($requiredEvidenceType) {
+            'classification_or_types_inventory' => [
+                'methodology_only',
+                'machine_learning_model_only',
+                'gis_mapping_only',
+                'remote_sensing_only',
+                'land_evaluation_without_types',
+                'cultivation_without_inventory',
+                'greenhouse_or_protected_culture',
+                'groundwater_or_microbial_focus',
+                'crop_production_without_types',
+            ],
+            'species_list_or_taxonomy' => [
+                'methodology_only',
+                'cultivation_without_inventory',
+                'greenhouse_or_protected_culture',
+            ],
+            default => [],
+        };
+    }
+
     /**
      * Botanical family aliases for QueryBuilder / understanding (country-agnostic).
+     * QUS and QueryBuilder both resolve through resolveBotanicalFamily() — do not duplicate.
      *
      * @return array<string, list<string>> canonical Latin family => aliases
      */
@@ -761,7 +954,108 @@ final class AgriculturalEntityCatalog
                 'نبات العائلة القرعية',
                 'نباتات العائلة القرعية',
             ],
+            // Second catalog entry proves resolution is table-driven (not cucurbit-only).
+            'Fabaceae' => [
+                'fabaceae',
+                'leguminosae',
+                'legume family',
+                'legumes family',
+                'bean family',
+                'العائلة البقولية',
+                'عائلة البقوليات',
+                'النباتات البقولية',
+            ],
         ];
+    }
+    /**
+     * Resolve a botanical family from free text via botanicalFamilyAliases().
+     * Longest alias wins so nested phrases prefer the most specific match.
+     */
+    public static function resolveBotanicalFamily(string $text): ?string
+    {
+        $haystack = mb_strtolower(trim($text));
+        if ($haystack === '') {
+            return null;
+        }
+
+        $bestFamily = null;
+        $bestLength = 0;
+        foreach (self::botanicalFamilyAliases() as $family => $aliases) {
+            foreach ($aliases as $alias) {
+                $alias = mb_strtolower(trim((string) $alias));
+                if ($alias === '') {
+                    continue;
+                }
+                if (! self::containsTerm($haystack, $alias) && mb_strpos($haystack, $alias) === false) {
+                    continue;
+                }
+                $length = mb_strlen($alias);
+                if ($length > $bestLength) {
+                    $bestLength = $length;
+                    $bestFamily = $family;
+                }
+            }
+        }
+
+        return $bestFamily;
+    }
+    /**
+     * Labels / aliases usable for entity matching against evidence text.
+     *
+     * @return list<string>
+     */
+    public static function recognitionLabelsForBotanicalFamily(string $family): array
+    {
+        $canonical = trim($family);
+        if ($canonical === '') {
+            return [];
+        }
+
+        $aliases = self::botanicalFamilyAliases()[$canonical] ?? [];
+        $labels = array_merge([$canonical], array_map(
+            static fn ($alias): string => (string) $alias,
+            $aliases,
+        ));
+
+        return array_values(array_unique(array_filter(
+            array_map(static fn (string $label): string => trim($label), $labels),
+            static fn (string $label): bool => $label !== '',
+        )));
+    }
+    /**
+     * True when the question asks for members/plants/species of a botanical family
+     * (inventory), not merely a one-line definition of the family name.
+     */
+    public static function asksPlantFamilyMemberInventory(string $normalizedQuestion): bool
+    {
+        $hay = mb_strtolower(trim($normalizedQuestion));
+        if ($hay === '') {
+            return false;
+        }
+
+        if (preg_match(
+            '/\b(?:plants?\s+(?:belong(?:ing)?\s+to|of|in)|members?\s+of|species\s+(?:of|in)|'
+            .'family\s+members?|kinds?\s+of\s+plants?|types?\s+of\s+plants?)\b/u',
+            $hay,
+        ) === 1) {
+            return true;
+        }
+
+        foreach ([
+            'نبات العائلة', 'نباتات العائلة', 'اعضاء العائلة', 'أعضاء العائلة',
+            'انواع نباتات', 'أنواع نباتات', 'نباتات من العائلة',
+        ] as $marker) {
+            if (self::containsTerm($hay, $marker) || mb_strpos($hay, $marker) !== false) {
+                return true;
+            }
+        }
+
+        // "ما هي نبات/نباتات العائلة …" / Latin family + members/plants framing.
+        return preg_match('/(?:ما\s+هي\s+نبات|ما\s+هي\s+نباتات)/u', $hay) === 1
+            || (
+                self::resolveBotanicalFamily($hay) !== null
+                && preg_match('/\b(?:plants?|species|members?|taxonomy|genera|genus)\b/u', $hay) === 1
+            );
     }
 
     /**

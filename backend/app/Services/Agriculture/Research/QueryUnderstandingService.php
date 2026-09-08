@@ -55,10 +55,36 @@ class QueryUnderstandingService
 
         $intentQualifier = $this->detectIntentQualifier($normalizedQuestion);
         $scientificSense = $this->resolveScientificSense($researchIntent, $topicFactors, $normalizedQuestion);
-        $domainBranch = $this->resolveDomainBranch($researchIntent, $scientificSense, $agriculturalDomain);
         $constraints['scientific_intent_qualifier'] = $intentQualifier;
         $constraints['scientific_sense'] = $scientificSense;
-        $constraints['scientific_domain_branch'] = $domainBranch;
+
+        // Botanical-family subjects: propagate entity + sense + inventory topics so
+        // validation receives matchable signals (QueryBuilder already searches families).
+        if (is_array($subject) && ($subject['type'] ?? '') === 'plant_family') {
+            $familyValue = trim((string) ($subject['value'] ?? $subject['label'] ?? ''));
+            $researchIntent = 'plant_family_members';
+            $scientificSense = 'plant_family_members';
+            $constraints['scientific_sense'] = $scientificSense;
+            $topics = is_array($constraints['scientific_topics'] ?? null) ? $constraints['scientific_topics'] : [];
+            $topics = array_values(array_filter(
+                $topics,
+                static fn ($topic): bool => ! in_array(mb_strtolower(trim((string) $topic)), [
+                    'cultivation', 'crop production', 'agriculture', 'farming',
+                ], true),
+            ));
+            foreach (['family members', 'species', 'botanical classification', 'taxonomy'] as $familyTopic) {
+                if (! in_array($familyTopic, $topics, true)) {
+                    $topics[] = $familyTopic;
+                }
+            }
+            if ($familyValue !== '' && ! in_array($familyValue, $topics, true)) {
+                array_unshift($topics, $familyValue);
+            }
+            $constraints['scientific_topics'] = array_values(array_unique($topics));
+            if ($agriculturalDomain === AgriculturalDomainCatalog::GENERAL_AGRICULTURE) {
+                $agriculturalDomain = AgriculturalDomainCatalog::FIELD_CROPS;
+            }
+        }
 
         if ($scientificSense === 'land_classification') {
             $topics = is_array($constraints['scientific_topics'] ?? null) ? $constraints['scientific_topics'] : [];
@@ -69,6 +95,9 @@ class QueryUnderstandingService
             }
             $constraints['scientific_topics'] = $topics;
         }
+
+        $domainBranch = $this->resolveDomainBranch($researchIntent, $scientificSense, $agriculturalDomain);
+        $constraints['scientific_domain_branch'] = $domainBranch;
 
         $productionSystem = $this->detectProductionSystem($normalizedQuestion);
         if ($productionSystem !== null) {
@@ -97,7 +126,36 @@ class QueryUnderstandingService
         }
 
         [$topic, $subtopic] = $this->resolveTopicAndSubtopic($researchIntent, $topicFactors, $subject);
-        $requestedInformation = $this->resolveRequestedInformation($researchIntent, $normalizedQuestion, $topicFactors);
+        if ($scientificSense === 'plant_family_members') {
+            $topic = 'plant family members';
+            if ($subtopic === null || $subtopic === 'general_knowledge' || $subtopic === 'cultivation') {
+                $subtopic = is_array($subject) ? (string) ($subject['value'] ?? 'family_members') : 'family_members';
+            }
+        }
+        $questionType = $this->detectQuestionType(
+            $normalizedQuestion,
+            $originalQuestion,
+            $scientificSense,
+            $intentQualifier,
+            $researchIntent,
+        );
+        $requestedInformation = $this->resolveRequestedInformation(
+            $researchIntent,
+            $normalizedQuestion,
+            $topicFactors,
+            $questionType,
+            $scientificSense,
+        );
+        $requiredEvidenceType = AgriculturalEntityCatalog::requiredEvidenceTypeForQuestionType($questionType);
+        $constraints['question_type'] = $questionType;
+        $constraints['requested_information'] = $requestedInformation;
+        $constraints['required_evidence_type'] = $requiredEvidenceType;
+        $constraints['required_evidence_characteristics'] = AgriculturalEntityCatalog::requiredEvidenceCharacteristics(
+            $requiredEvidenceType,
+        );
+        $negativeConstraints = AgriculturalEntityCatalog::negativeConstraintsForEvidenceType($requiredEvidenceType);
+        $constraints['negative_constraints'] = $negativeConstraints;
+        $constraints['exclusions'] = $negativeConstraints;
         $clarificationRequirements = [];
         $ambiguityState = AgriculturalKnowledgeQuery::AMBIGUITY_CLEAR;
         $hasExplicitEntities = is_array($input['entities'] ?? null) && $input['entities'] !== [];
@@ -372,6 +430,88 @@ class QueryUnderstandingService
      * @param  array{crop_id: string, label: string}|null  $cropRecognition
      * @return array{type: string, value: string, label?: string}|null
      */
+    /**
+     * @param  list<string>  $topicFactors
+     */
+    private function detectQuestionType(
+        string $normalizedQuestion,
+        string $originalQuestion,
+        string $scientificSense,
+        string $intentQualifier,
+        string $researchIntent,
+    ): string {
+        $haystack = mb_strtolower(trim($normalizedQuestion.' '.$originalQuestion));
+
+        // Entity-family inventory first.
+        if ($scientificSense === 'plant_family_members'
+            || $researchIntent === 'plant_family_members') {
+            if (AgriculturalEntityCatalog::asksPlantFamilyMemberInventory($haystack)
+                || preg_match('/(?:انواع|أنواع|types?|kinds?|categories|تصنيف)/u', $haystack) === 1) {
+                return AgriculturalEntityCatalog::asksPlantFamilyMemberInventory($haystack)
+                    ? 'species'
+                    : 'classification';
+            }
+        }
+
+        if ($researchIntent === 'varieties'
+            || preg_match('/(?:اصناف|أصناف|varieties|cultivars)/u', $haystack) === 1) {
+            return 'classification';
+        }
+
+        // Causal "why" questions about symptoms are causes, not symptom inventories.
+        if (preg_match('/\b(why|cause|causes|reason)\b/u', $haystack) === 1
+            || AgriculturalEntityCatalog::containsTerm($haystack, 'لماذا')
+            || AgriculturalEntityCatalog::containsTerm($haystack, 'سبب')
+            || mb_strpos($haystack, 'لماذا') !== false) {
+            return 'causes';
+        }
+
+        $best = 'general';
+        $bestScore = 0;
+        foreach (AgriculturalEntityCatalog::questionTypeSignals() as $type => $keywords) {
+            $score = 0;
+            foreach ($keywords as $keyword) {
+                if ($keyword !== '' && (
+                    AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower($keyword))
+                    || mb_strpos($haystack, mb_strtolower($keyword)) !== false
+                )) {
+                    $score += mb_strlen($keyword);
+                }
+            }
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $best = $type;
+            }
+        }
+
+        if ($bestScore > 0) {
+            return $best;
+        }
+
+        if (preg_match('/\bwhat\s+is\b/u', $haystack) === 1
+            || preg_match('/\bwhat\s+are\b/u', $haystack) === 1
+            || AgriculturalEntityCatalog::containsTerm($haystack, 'ما هو')
+            || AgriculturalEntityCatalog::containsTerm($haystack, 'ما هي')
+            || mb_strpos($haystack, 'ما هو') !== false
+            || mb_strpos($haystack, 'ما هي') !== false) {
+            return 'definition';
+        }
+
+        $factors = AgriculturalEntityCatalog::extractTopicFactors($normalizedQuestion);
+
+        return match (true) {
+            $scientificSense === 'plant_family_members' => 'plant_taxonomy',
+            $intentQualifier === 'optimal_range'
+                && (in_array('temperature', $factors, true) || $scientificSense === 'seed_germination') => 'range',
+            $intentQualifier === 'optimal_range' => 'recommendation',
+            $intentQualifier === 'requirement' => 'requirements',
+            $intentQualifier === 'effect' => 'causes',
+            $researchIntent === 'disease' => 'symptoms',
+            default => 'general',
+        };
+    }
+
+
     private function detectSubject(
         string $normalizedQuestion,
         array $input,
@@ -401,6 +541,17 @@ class QueryUnderstandingService
                 'type' => 'crop',
                 'value' => $cropRecognition['crop_id'],
                 'label' => $cropRecognition['label'],
+            ];
+        }
+
+
+        // Botanical / entity-family subjects (table-driven via Catalog aliases).
+        $botanicalFamily = AgriculturalEntityCatalog::resolveBotanicalFamily($normalizedQuestion);
+        if ($botanicalFamily !== null) {
+            return [
+                'type' => 'plant_family',
+                'value' => $botanicalFamily,
+                'label' => $botanicalFamily,
             ];
         }
 
@@ -473,11 +624,37 @@ class QueryUnderstandingService
      * @param  list<string>  $topicFactors
      * @return list<string>
      */
-    private function resolveRequestedInformation(string $researchIntent, string $normalizedQuestion, array $topicFactors): array
-    {
+    private function resolveRequestedInformation(
+        string $researchIntent,
+        string $normalizedQuestion,
+        array $topicFactors,
+        string $questionType = 'general',
+        string $scientificSense = '',
+    ): array {
         $requested = [$researchIntent, 'evidence_backed_guidance'];
         foreach (AgriculturalEntityCatalog::englishLabelsForFactors($topicFactors) as $label) {
             $requested[] = $label;
+        }
+
+        $requested[] = match ($questionType) {
+            'classification' => 'types_or_classification',
+            'quantity' => 'quantity_or_rate',
+            'range' => 'optimal_value_or_range',
+            'timing' => 'timing_or_season',
+            'causes' => 'causes',
+            'symptoms' => 'symptoms',
+            'comparison' => 'comparison',
+            'species' => 'species_list',
+            'definition' => 'definition',
+            'recommendation' => 'recommendations',
+            'requirements' => 'requirements',
+            default => 'topic_answer',
+        };
+
+        if ($scientificSense === 'plant_family_members') {
+            $requested[] = 'species_list';
+            $requested[] = 'family_members_inventory';
+            $requested[] = 'types_or_classification';
         }
 
         if (str_contains($normalizedQuestion, 'best') || str_contains($normalizedQuestion, 'أفضل')) {
@@ -607,6 +784,7 @@ class QueryUnderstandingService
             'disease',
             'pest',
             'varieties',
+            'plant_family_members',
             'plant_nutrition',
         ], true);
     }

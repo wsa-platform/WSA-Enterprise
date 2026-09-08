@@ -285,10 +285,17 @@ class AnswerComposer
 
     private function requiresStrictGrounding(KnowledgeQueryPlan $plan): bool
     {
+        $subjectType = is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null;
         $hasEntity = $plan->normalizedQuery->cropId !== null
             || $plan->normalizedQuery->scientificName !== null
-            || ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null) === 'crop');
+            || $subjectType === 'crop'
+            || $subjectType === 'plant_family';
         $factors = $plan->normalizedQuery->constraints['scientific_factors'] ?? [];
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+
+        if ($sense === 'plant_family_members' || $subjectType === 'plant_family') {
+            return true;
+        }
 
         return $hasEntity && is_array($factors) && $factors !== [];
     }
@@ -333,7 +340,8 @@ class AnswerComposer
 
         $hasEntity = $plan->normalizedQuery->cropId !== null
             || $plan->normalizedQuery->scientificName !== null
-            || ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null) === 'crop');
+            || ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null) === 'crop')
+            || ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null) === 'plant_family');
         if (! $hasEntity) {
             return false;
         }
@@ -345,6 +353,8 @@ class AnswerComposer
             'drying_processing',
             'storage',
             'plant_growth',
+            'plant_family_members',
+            'varieties',
         ], true)) {
             return true;
         }
@@ -1254,6 +1264,16 @@ class AnswerComposer
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
         $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
         $topic = is_array($topics) && $topics !== [] ? trim((string) $topics[0]) : '';
+
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        $intent = trim((string) $plan->researchIntent);
+
+        // Entity-family member inventory heading (stage separately from land/timing).
+        if ($sense === 'plant_family_members'
+            || $intent === 'plant_family_members'
+            || $questionType === 'species') {
+            return $language === 'ar' ? 'أفراد العائلة النباتية' : 'Plant family members';
+        }
 
         if ($sense === 'land_classification') {
             return $language === 'ar' ? 'أنواع الأراضي' : 'Land types';

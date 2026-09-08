@@ -514,6 +514,8 @@ class ClaimEvidenceMatcher
             $plan->agriculturalDomain,
             $plan->normalizedQuery->cropId,
             $plan->normalizedQuery->scientificName,
+            is_array($plan->subjectEntity) ? ($plan->subjectEntity['value'] ?? null) : null,
+            is_array($plan->subjectEntity) ? ($plan->subjectEntity['label'] ?? null) : null,
             $topicText,
             $sense,
             $productionSystem !== '' ? $productionSystem : null,

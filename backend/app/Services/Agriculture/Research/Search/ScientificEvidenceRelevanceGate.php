@@ -202,16 +202,30 @@ class ScientificEvidenceRelevanceGate
 
     private function requiresEntity(KnowledgeQueryPlan $plan): bool
     {
+        $subjectType = is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null;
+
         return $plan->normalizedQuery->cropId !== null
             || $plan->normalizedQuery->scientificName !== null
-            || ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null) === 'crop');
+            || $subjectType === 'crop'
+            || $subjectType === 'plant_family';
     }
 
     private function requiresTopic(KnowledgeQueryPlan $plan): bool
     {
         $factors = $plan->normalizedQuery->constraints['scientific_factors'] ?? [];
+        if (is_array($factors) && $factors !== []) {
+            return true;
+        }
 
-        return is_array($factors) && $factors !== [];
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if ($sense === 'plant_family_members') {
+            return true;
+        }
+
+        $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
+
+        return is_array($topics) && $topics !== []
+            && ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null) === 'plant_family');
     }
 
     private function matchesEntity(KnowledgeQueryPlan $plan, string $haystack): bool
@@ -241,6 +255,16 @@ class ScientificEvidenceRelevanceGate
             $needles[] = (string) ($plan->subjectEntity['label'] ?? '');
         }
 
+        if (is_array($plan->subjectEntity) && ($plan->subjectEntity['type'] ?? '') === 'plant_family') {
+            $family = trim((string) ($plan->subjectEntity['value'] ?? $plan->subjectEntity['label'] ?? ''));
+            if ($family !== '') {
+                $needles = array_merge(
+                    $needles,
+                    AgriculturalEntityCatalog::recognitionLabelsForBotanicalFamily($family),
+                );
+            }
+        }
+
         foreach (array_unique(array_filter($needles)) as $needle) {
             if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim((string) $needle)))) {
                 return true;
@@ -261,6 +285,39 @@ class ScientificEvidenceRelevanceGate
 
         $factors = $plan->normalizedQuery->constraints['scientific_factors'] ?? [];
         if (! is_array($factors) || $factors === []) {
+            $best = 'none';
+            $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+            if ($sense !== '') {
+                foreach (AgriculturalEntityCatalog::senseQueryTerms($sense) as $term) {
+                    if (in_array(mb_strtolower(trim($term)), ['agriculture', 'farming'], true)) {
+                        continue;
+                    }
+                    if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim($term)))) {
+                        return 'strong';
+                    }
+                }
+            }
+            $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
+            if (is_array($topics)) {
+                foreach ($topics as $topic) {
+                    $normalized = mb_strtolower(trim((string) $topic));
+                    if ($normalized === '' || in_array($normalized, ['agriculture', 'farming'], true)) {
+                        continue;
+                    }
+                    // Skip Latin family names here — those are entity needles, not topics.
+                    if ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? '') : '') === 'plant_family'
+                        && strcasecmp($normalized, (string) ($plan->subjectEntity['value'] ?? '')) === 0) {
+                        continue;
+                    }
+                    if (AgriculturalEntityCatalog::containsTerm($haystack, $normalized)) {
+                        $best = 'strong';
+                        break;
+                    }
+                }
+            }
+            if ($best !== 'none') {
+                return $best;
+            }
             foreach (AgriculturalEntityCatalog::englishTermsForIntent($plan->researchIntent) as $term) {
                 if (in_array($term, ['agriculture', 'farming'], true)) {
                     continue;

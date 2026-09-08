@@ -614,13 +614,9 @@ class ScientificSearchQueryBuilder
         $haystack = mb_strtolower(trim(
             $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
         ));
-        foreach (AgriculturalEntityCatalog::botanicalFamilyAliases() as $family => $aliases) {
-            foreach ($aliases as $alias) {
-                $alias = mb_strtolower(trim((string) $alias));
-                if ($alias !== '' && mb_strpos($haystack, $alias) !== false) {
-                    return $family;
-                }
-            }
+        $fromText = AgriculturalEntityCatalog::resolveBotanicalFamily($haystack);
+        if ($fromText !== null) {
+            return $fromText;
         }
 
         $subject = is_array($plan->subjectEntity) ? $plan->subjectEntity : null;
@@ -795,6 +791,10 @@ class ScientificSearchQueryBuilder
     private function wantsCultivationProductionVariants(KnowledgeQueryPlan $plan): bool
     {
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        // Entity-family / variety inventory: no cultivation-production drift.
+        if (in_array($sense, ['varieties', 'plant_family_members'], true)) {
+            return false;
+        }
         if (in_array($sense, ['plant_growth'], true)) {
             return true;
         }
