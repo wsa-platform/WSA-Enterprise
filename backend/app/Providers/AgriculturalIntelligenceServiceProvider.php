@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\Agriculture\McpToolClientInterface;
 use App\Contracts\Agriculture\WebSearchProviderInterface;
 use App\Services\Agriculture\Intelligence\Adapters\Disease\FarmAdvisorDiseaseAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\Disease\FarmGuardDiseaseAdapter;
@@ -19,7 +20,10 @@ use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatResultNorma
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\ScientificAdapterBridgeProvider;
 use App\Services\Agriculture\Intelligence\Adapters\Web\ConfigurableWebSearchProvider;
+use App\Services\Agriculture\Intelligence\Adapters\Web\FreeSearchMcpAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\Web\WebSearchAgriculturalProvider;
+use App\Services\Agriculture\Intelligence\Mcp\LaravelStdioMcpToolClient;
+use App\Services\Agriculture\Intelligence\Normalization\FreeSearchMcpResultNormalizer;
 use App\Services\Agriculture\Intelligence\Fusion\EvidenceFusionService;
 use App\Services\Agriculture\Intelligence\Fusion\WebConsensusService;
 use App\Services\Agriculture\Intelligence\Health\ProviderHealthChecker;
@@ -46,6 +50,7 @@ class AgriculturalIntelligenceServiceProvider extends ServiceProvider
     {
         $this->app->singleton(UnitNormalizationService::class);
         $this->app->singleton(WebResultNormalizer::class);
+        $this->app->singleton(FreeSearchMcpResultNormalizer::class);
         $this->app->singleton(DiseaseResultNormalizer::class);
         $this->app->singleton(EnvironmentalResultNormalizer::class);
         $this->app->singleton(AgriculturalResultNormalizer::class);
@@ -56,8 +61,17 @@ class AgriculturalIntelligenceServiceProvider extends ServiceProvider
         $this->app->singleton(CapabilityDrivenSourceSelector::class);
         $this->app->singleton(ProviderHealthChecker::class);
 
-        $this->app->singleton(WebSearchProviderInterface::class, ConfigurableWebSearchProvider::class);
+        $this->app->singleton(LaravelStdioMcpToolClient::class);
+        $this->app->singleton(McpToolClientInterface::class, LaravelStdioMcpToolClient::class);
+        $this->app->singleton(FreeSearchMcpAdapter::class);
         $this->app->singleton(ConfigurableWebSearchProvider::class);
+        $this->app->singleton(WebSearchProviderInterface::class, function ($app) {
+            if (filter_var(config('agricultural_intelligence.mcp.free_search.enabled', false), FILTER_VALIDATE_BOOL)) {
+                return $app->make(FreeSearchMcpAdapter::class);
+            }
+
+            return $app->make(ConfigurableWebSearchProvider::class);
+        });
         $this->app->singleton(WebSearchAgriculturalProvider::class);
         $this->app->singleton(FaoStatScientificSourceAdapter::class);
 

@@ -30,22 +30,26 @@ final class WebSearchAgriculturalProvider implements AgriculturalProviderInterfa
             capabilities: ['web_search', 'general_knowledge'],
             version: '1.0.0',
             priority: 50,
-            timeoutSeconds: (int) config('agricultural_intelligence.web_search.timeout', 15),
+            timeoutSeconds: $this->timeoutSeconds(),
             health: $this->webSearch->isConfigured() ? ProviderHealthState::HEALTHY : ProviderHealthState::NOT_CONFIGURED,
             auth: [
-                'mode' => 'required_key',
+                'mode' => $this->authMode(),
                 'configured' => $this->webSearch->isConfigured(),
             ],
-            confidenceMeta: ['family' => 'web', 'not_scientific' => true],
+            confidenceMeta: [
+                'family' => 'web',
+                'not_scientific' => true,
+                'adapter' => $this->webSearch->providerId(),
+            ],
             evidenceCapable: true,
             limitations: [
                 'Not a scholarly source',
                 'Distinct from Semantic Scholar / OpenAlex / Crossref / FAO',
             ],
             config: [
-                'enabled' => (bool) config('agricultural_intelligence.web_search.enabled', false),
+                'enabled' => $this->webFamilyEnabled(),
             ],
-            enabled: (bool) config('agricultural_intelligence.web_search.enabled', false),
+            enabled: $this->webFamilyEnabled(),
         );
     }
 
@@ -86,5 +90,29 @@ final class WebSearchAgriculturalProvider implements AgriculturalProviderInterfa
             limitations: ['general_web_evidence_not_scientifically_verified'],
             meta: $outcome->observability,
         );
+    }
+
+    private function webFamilyEnabled(): bool
+    {
+        return (bool) config('agricultural_intelligence.web_search.enabled', false)
+            || (bool) config('agricultural_intelligence.mcp.free_search.enabled', false);
+    }
+
+    private function timeoutSeconds(): int
+    {
+        if ((bool) config('agricultural_intelligence.mcp.free_search.enabled', false)) {
+            $raw = (int) config('agricultural_intelligence.mcp.free_search.timeout', 30000);
+
+            return $raw >= 1000 ? max(1, min(120, (int) round($raw / 1000))) : max(1, min(120, $raw));
+        }
+
+        return (int) config('agricultural_intelligence.web_search.timeout', 15);
+    }
+
+    private function authMode(): string
+    {
+        return (bool) config('agricultural_intelligence.mcp.free_search.enabled', false)
+            ? 'none'
+            : 'required_key';
     }
 }

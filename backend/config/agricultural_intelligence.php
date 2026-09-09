@@ -57,6 +57,13 @@ return [
             'token' => env('AGRICULTURE_MCP_TOKEN'),
             'timeout' => max(1, min(60, (int) env('AGRICULTURE_MCP_TIMEOUT', 20))),
         ],
+        'free_search' => [
+            'enabled' => filter_var(env('FREE_SEARCH_MCP_ENABLED', false), FILTER_VALIDATE_BOOL),
+            'command' => env('FREE_SEARCH_MCP_COMMAND', 'uvx'),
+            'arguments' => env('FREE_SEARCH_MCP_ARGUMENTS', 'free-search-mcp'),
+            'timeout' => max(1, min(120000, (int) env('FREE_SEARCH_MCP_TIMEOUT', 30000))),
+            'display_name' => env('FREE_SEARCH_MCP_DISPLAY_NAME', 'Free Search MCP'),
+        ],
     ],
 
     'disease' => [
