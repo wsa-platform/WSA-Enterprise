@@ -370,6 +370,8 @@ See `docs/deployment.md` for production checklist. **Production stack (M12–M13
 
 ## 18. Architectural decisions (ADR summary)
 
+> **ID namespace note:** The ADR-00N IDs in this table are the **historical Phase 9 modular-monolith decisions** recorded in this architecture document. They are **not** the same records as the current Universal Agricultural Intelligence ADRs under [`docs/adr/`](../adr/README.md) (e.g. `docs/adr/ADR-001-provider-adapter-architecture.md` = provider/adapter architecture; `docs/adr/ADR-002-universal-answer-orchestrator.md` = universal answer orchestrator). Do not conflate the two numbering sequences.
+
 | ID | Decision | Rationale |
 |----|----------|-----------|
 | ADR-001 | Modular monolith over microservices | Faster delivery, simpler ops for MVP |

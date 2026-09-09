@@ -1,0 +1,435 @@
+<?php
+
+namespace App\Services\Agriculture\Intelligence\Orchestration;
+
+use App\Contracts\Agriculture\WebSearchProviderInterface;
+use App\Services\Agriculture\Intelligence\DTO\AnswerEligibility;
+use App\Services\Agriculture\Intelligence\DTO\CanonicalAgriculturalResult;
+use App\Services\Agriculture\Intelligence\DTO\ProviderQueryInput;
+use App\Services\Agriculture\Intelligence\DTO\UniversalAnswerResult;
+use App\Services\Agriculture\Intelligence\DTO\WebSearchOutcome;
+use App\Services\Agriculture\Intelligence\Fusion\EvidenceFusionService;
+use App\Services\Agriculture\Research\KnowledgeQueryPlan;
+use App\Services\Agriculture\Research\QueryUnderstandingService;
+use App\Services\Agriculture\Research\ResearchPlanner;
+use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
+use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
+use App\Services\Agriculture\Research\Validation\AgriculturalScientificValidationService;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * Universal Agricultural Answer Orchestrator (ADR-002).
+ *
+ * QUS → plan → select providers → retrieve → normalize → dedupe → rank/conflict
+ * → web consensus → scientific fusion → validation → eligibility → compose.
+ *
+ * Reuses existing Research pipeline for scientific validation; does not weaken ASVS/Matcher.
+ */
+final class UniversalAnswerOrchestrator
+{
+    public function __construct(
+        private QueryUnderstandingService $queryUnderstanding,
+        private ResearchPlanner $planner,
+        private CapabilityDrivenSourceSelector $sourceSelector,
+        private EvidenceFusionService $fusionService,
+        private AnswerEligibilityResolver $eligibilityResolver,
+        private WebSearchProviderInterface $webSearch,
+        private AgriculturalScientificSearchService $scientificSearchService,
+        private AgriculturalScientificValidationService $scientificValidationService,
+        private AnswerComposer $answerComposer,
+    ) {}
+
+    /**
+     * Full multi-source answer path.
+     *
+     * @param  array<string, mixed>  $input
+     */
+    public function answer(array $input): UniversalAnswerResult
+    {
+        $started = microtime(true);
+        $understood = $this->queryUnderstanding->understand($input);
+        $plan = $this->planner->planKnowledgeQuery($input);
+
+        if ($plan->needsClarification() && ! filter_var($input['force_execute'] ?? false, FILTER_VALIDATE_BOOL)) {
+            $eligibility = AnswerEligibility::resolve(false, false, ['needs_clarification']);
+
+            return new UniversalAnswerResult(
+                eligibility: $eligibility,
+                answer: null,
+                conciseSummary: null,
+                limitations: ['needs_clarification'],
+                status: 'needs_clarification',
+                observability: [
+                    'stage' => 'clarification',
+                    'query_understanding' => $understood->toArray(),
+                ],
+                legacy: [
+                    'query_understanding' => $understood->toArray(),
+                    'knowledge_query_plan' => $plan->toArray(),
+                ],
+            );
+        }
+
+        $providerInput = $this->buildProviderInput($plan, $input);
+        $providers = $this->sourceSelector->select($plan, $providerInput);
+
+        $providerResults = [];
+        $providersAttempted = [];
+        foreach ($providers as $provider) {
+            $id = $provider->descriptor()->id;
+            $providersAttempted[] = $id;
+            // Scientific scholarly adapters are executed via the existing Stage 3 path below
+            // to preserve ranking/dedupe/validation. Registry retrieve still used for non-scientific.
+            if ($provider->descriptor()->type === 'scientific') {
+                continue;
+            }
+            $providerResults[] = $provider->retrieve($providerInput);
+        }
+
+        // Dedicated web retrieve (even if registry web provider disabled, check config path)
+        $webResult = $this->retrieveWeb($providerInput);
+        if ($webResult !== null) {
+            $providerResults[] = $webResult;
+            $providersAttempted[] = $webResult->providerId;
+        }
+
+        // Scientific path — reuse strict validation (ClaimEvidenceMatcher / ASVS / gates)
+        $searchReport = $this->scientificSearchService->search(
+            $plan,
+            (int) ($input['limit'] ?? 10),
+        );
+        $validationReport = $this->scientificValidationService->validate($plan, $searchReport);
+        $synthesisReport = $this->answerComposer->compose($plan, $validationReport);
+
+        $scientificEligible = (bool) ($synthesisReport->researchMetadata['evidence_sufficient'] ?? false);
+        if (! $scientificEligible) {
+            // Also treat successful synthesis statuses as scientifically eligible.
+            $scientificEligible = in_array($synthesisReport->status, [
+                'synthesis_completed',
+                'synthesis_completed_partial',
+                'synthesis_completed_with_partial_conflicts',
+            ], true) && $synthesisReport->answer !== null
+                && ! str_contains(strtolower((string) ($synthesisReport->researchMetadata['direct_evidence_gate'] ?? '')), 'insufficient');
+        }
+
+        $scientificPartial = ! $scientificEligible
+            && ($synthesisReport->performed ?? false)
+            && ($synthesisReport->keyFindings !== [] || $synthesisReport->citations !== []);
+
+        // Bridge scientific validated evidence into canonical results for fusion
+        $scientificCanonical = $this->scientificToCanonical($searchReport->toArray(), $validationReport->toArray());
+        $providerResults[] = $scientificCanonical;
+
+        $fusion = $this->fusionService->fuse($providerResults);
+        $eligibility = $this->eligibilityResolver->resolve(
+            $fusion,
+            $scientificEligible,
+            $scientificPartial,
+        );
+
+        $answer = $synthesisReport->answer;
+        $summary = $synthesisReport->conciseSummary;
+        $limitations = $synthesisReport->limitations;
+        $citations = array_map(
+            static fn ($c) => is_object($c) && method_exists($c, 'toArray') ? $c->toArray() : (array) $c,
+            $synthesisReport->citations,
+        );
+        $scientificCitations = $citations;
+        $webCitations = [];
+
+        foreach ($fusion->results as $result) {
+            foreach ($result->webEvidence as $w) {
+                if (is_array($w)) {
+                    $webCitations[] = $w;
+                }
+            }
+        }
+
+        // GENERAL_WEB fallback: scientific insufficient + web sufficient → still display answer
+        if (! $eligibility->scientificAnswerEligible && $eligibility->webAnswerEligible) {
+            $answer = $this->composeGeneralWebAnswer($plan, $fusion, $providerInput->language);
+            $summary = $answer;
+            $limitations = array_values(array_unique(array_merge($limitations, [
+                'Answer based on general web evidence; not scientifically verified',
+                'scientific_answer_eligible=false does not suppress overall eligibility when web is sufficient',
+            ])));
+            $citations = array_merge($webCitations, $citations);
+        }
+
+        if (! $eligibility->overallAnswerEligible) {
+            $answer = $answer ?? $this->insufficientMessage($providerInput->language);
+            $summary = $summary ?? $answer;
+        }
+
+        $providersUsed = array_values(array_unique(array_merge(
+            $fusion->providersUsed,
+            $providersAttempted,
+            $searchReport->attemptedSources,
+        )));
+
+        $legacy = array_merge($synthesisReport->toArray(), [
+            'query_understanding' => $understood->toArray(),
+            'knowledge_query_plan' => $plan->toArray(),
+            'scientific_search' => $searchReport->toArray(),
+            'scientific_validation' => $validationReport->toArray(),
+        ]);
+
+        return new UniversalAnswerResult(
+            eligibility: $eligibility,
+            answer: $answer,
+            conciseSummary: $summary,
+            providersUsed: $providersUsed,
+            limitations: $limitations,
+            citations: $citations,
+            webCitations: $webCitations,
+            scientificCitations: $scientificCitations,
+            evidenceSummary: [
+                'web' => [
+                    'eligible' => $eligibility->webAnswerEligible,
+                    'consensus' => $fusion->webConsensus?->toArray(),
+                    'count' => count($webCitations),
+                ],
+                'scientific' => [
+                    'eligible' => $eligibility->scientificAnswerEligible,
+                    'status' => $synthesisReport->status,
+                    'count' => count($scientificCitations),
+                ],
+            ],
+            fusion: $fusion,
+            legacy: $legacy,
+            observability: [
+                'latency_ms' => (int) round((microtime(true) - $started) * 1000),
+                'providers_attempted' => $providersAttempted,
+                'general_web_fallback' => $this->eligibilityResolver->assertGeneralWebFallbackWorks($eligibility),
+            ],
+            status: $eligibility->overallAnswerEligible
+                ? ($eligibility->answerStatus === 'GENERAL_WEB' ? 'general_web_answer' : $synthesisReport->status)
+                : 'insufficient_evidence',
+        );
+    }
+
+    /**
+     * Enrich an existing AgriculturalResearchAgent synthesis payload with eligibility fields.
+     *
+     * @param  array<string, mixed>  $synthesisPayload
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public function enrichLegacySynthesis(array $synthesisPayload, array $input = []): array
+    {
+        $scientificEligible = (bool) (($synthesisPayload['research_metadata']['evidence_sufficient'] ?? false));
+        if (! $scientificEligible) {
+            $gate = (string) ($synthesisPayload['research_metadata']['direct_evidence_gate'] ?? '');
+            $scientificEligible = ($synthesisPayload['answer'] ?? null) !== null
+                && $gate !== ''
+                && ! str_contains($gate, 'INSUFFICIENT');
+        }
+
+        $webOutcome = $this->webSearch->search(
+            (string) ($input['query'] ?? $synthesisPayload['research_metadata']['query'] ?? ''),
+            (int) ($input['limit'] ?? 5),
+        );
+
+        $webResults = [];
+        if ($webOutcome->status === WebSearchOutcome::STATUS_SUCCESS) {
+            $webResults = $webOutcome->results;
+        }
+
+        $canonical = [];
+        if ($webResults !== []) {
+            $canonical[] = new CanonicalAgriculturalResult(
+                providerId: $webOutcome->providerId,
+                status: 'success',
+                webEvidence: $webResults,
+                confidence: 0.45,
+                source: $webOutcome->providerId,
+                timestamp: now()->toIso8601String(),
+            );
+        }
+
+        $fusion = $this->fusionService->fuse($canonical);
+        $eligibility = $this->eligibilityResolver->resolve($fusion, $scientificEligible, false);
+
+        $payload = array_merge($synthesisPayload, (new UniversalAnswerResult(
+            eligibility: $eligibility,
+            answer: $synthesisPayload['answer'] ?? null,
+            conciseSummary: $synthesisPayload['concise_summary'] ?? null,
+            providersUsed: array_values(array_unique(array_merge(
+                $fusion->providersUsed,
+                ['openalex', 'crossref', 'semantic_scholar'],
+            ))),
+            limitations: is_array($synthesisPayload['limitations'] ?? null) ? $synthesisPayload['limitations'] : [],
+            citations: is_array($synthesisPayload['citations'] ?? null) ? $synthesisPayload['citations'] : [],
+            webCitations: $webResults,
+            scientificCitations: is_array($synthesisPayload['citations'] ?? null) ? $synthesisPayload['citations'] : [],
+            evidenceSummary: [
+                'web' => ['eligible' => $eligibility->webAnswerEligible, 'count' => count($webResults)],
+                'scientific' => ['eligible' => $eligibility->scientificAnswerEligible],
+            ],
+            fusion: $fusion,
+            legacy: [],
+            status: (string) ($synthesisPayload['status'] ?? 'completed'),
+        ))->toArray());
+
+        // CRITICAL: GENERAL_WEB must display answer when web eligible even if scientific is not
+        if ($eligibility->webAnswerEligible && ! $eligibility->scientificAnswerEligible) {
+            if (empty($payload['answer'])) {
+                $lang = (string) ($input['language'] ?? 'en');
+                $payload['answer'] = $this->composeGeneralWebAnswerFromItems($webResults, $lang);
+                $payload['concise_summary'] = $payload['answer'];
+            }
+            $payload['status'] = 'general_web_answer';
+            $payload['answer_status'] = 'GENERAL_WEB';
+            $payload['overall_answer_eligible'] = true;
+            $payload['web_answer_eligible'] = true;
+            $payload['scientific_answer_eligible'] = false;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    private function buildProviderInput(KnowledgeQueryPlan $plan, array $input): ProviderQueryInput
+    {
+        $nq = $plan->normalizedQuery;
+        $entities = array_values(array_filter([
+            is_array($nq->subject) ? (string) ($nq->subject['value'] ?? $nq->subject['label'] ?? '') : null,
+            $nq->crop,
+            $nq->scientificName,
+            is_array($plan->subjectEntity) ? (string) ($plan->subjectEntity['value'] ?? $plan->subjectEntity['label'] ?? '') : null,
+        ], static fn ($v): bool => is_string($v) && trim($v) !== ''));
+
+        return new ProviderQueryInput(
+            query: $nq->originalQuestion !== '' ? $nq->originalQuestion : (string) ($input['query'] ?? ''),
+            language: $nq->language ?: (string) ($input['language'] ?? 'en'),
+            entities: $entities,
+            requiredCapabilities: is_array($input['required_capabilities'] ?? null)
+                ? $input['required_capabilities']
+                : [],
+            constraints: array_merge($nq->constraints ?? [], is_array($input['constraints'] ?? null) ? $input['constraints'] : []),
+            context: is_array($input['context'] ?? null) ? $input['context'] : [],
+            limit: (int) ($input['limit'] ?? 10),
+            intent: $plan->researchIntent,
+        );
+    }
+
+    private function retrieveWeb(ProviderQueryInput $input): ?CanonicalAgriculturalResult
+    {
+        try {
+            $outcome = $this->webSearch->search($input->query, $input->limit, $input->constraints);
+        } catch (\Throwable $e) {
+            Log::warning('Web search isolated failure', ['error' => $e::class]);
+
+            return CanonicalAgriculturalResult::failed('web_search', 'isolated_failure');
+        }
+
+        if ($outcome->status === WebSearchOutcome::STATUS_NOT_CONFIGURED) {
+            return CanonicalAgriculturalResult::notConfigured('web_search');
+        }
+        if ($outcome->status === WebSearchOutcome::STATUS_FAILED) {
+            return CanonicalAgriculturalResult::failed('web_search', $outcome->error ?? 'failed');
+        }
+        if ($outcome->status !== WebSearchOutcome::STATUS_SUCCESS || $outcome->results === []) {
+            return CanonicalAgriculturalResult::empty('web_search', $outcome->error ?? 'empty');
+        }
+
+        return new CanonicalAgriculturalResult(
+            providerId: $outcome->providerId,
+            status: 'success',
+            webEvidence: $outcome->results,
+            confidence: 0.45,
+            source: $outcome->providerId,
+            timestamp: now()->toIso8601String(),
+            limitations: ['general_web_evidence_not_scientifically_verified'],
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $search
+     * @param  array<string, mixed>  $validation
+     */
+    private function scientificToCanonical(array $search, array $validation): CanonicalAgriculturalResult
+    {
+        $evidence = [];
+        foreach ($validation['validated_evidence'] ?? $search['results'] ?? [] as $item) {
+            if (is_array($item)) {
+                $evidence[] = array_merge($item, ['evidence_family' => 'scientific']);
+            }
+        }
+
+        $status = $evidence !== [] ? 'success' : 'empty';
+
+        return new CanonicalAgriculturalResult(
+            providerId: 'scientific_pipeline',
+            status: $status,
+            scientificEvidence: $evidence,
+            confidence: $evidence !== [] ? 0.8 : null,
+            source: 'scientific_pipeline',
+            timestamp: now()->toIso8601String(),
+        );
+    }
+
+    private function composeGeneralWebAnswer(KnowledgeQueryPlan $plan, $fusion, string $language): string
+    {
+        $items = [];
+        foreach ($fusion->results as $result) {
+            foreach ($result->webEvidence as $w) {
+                if (is_array($w)) {
+                    $items[] = $w;
+                }
+            }
+        }
+
+        return $this->composeGeneralWebAnswerFromItems($items, $language, $fusion->webConsensus?->representativeValue);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     */
+    private function composeGeneralWebAnswerFromItems(array $items, string $language, mixed $representative = null): string
+    {
+        $isAr = str_starts_with(strtolower($language), 'ar');
+        $lines = [];
+        if ($representative !== null && $representative !== '') {
+            $lines[] = $isAr
+                ? 'ملخص من مصادر الويب العامة: '.$representative
+                : 'General web consensus summary: '.$representative;
+        }
+
+        $n = 0;
+        foreach ($items as $item) {
+            if ($n >= 3) {
+                break;
+            }
+            $title = trim((string) ($item['title'] ?? ''));
+            $snippet = trim((string) ($item['snippet'] ?? ''));
+            $url = trim((string) ($item['url'] ?? ''));
+            $bit = trim($title.($snippet !== '' ? ' — '.$snippet : ''));
+            if ($bit !== '') {
+                $lines[] = $bit.($url !== '' ? ' ('.$url.')' : '');
+                $n++;
+            }
+        }
+
+        if ($lines === []) {
+            return $isAr
+                ? 'تتوفر معلومات عامة من الويب، لكنها غير متحققة علمياً.'
+                : 'General web information is available but not scientifically verified.';
+        }
+
+        $header = $isAr
+            ? "إجابة عامة من الويب (غير متحققة علمياً):\n"
+            : "General web answer (not scientifically verified):\n";
+
+        return $header.implode("\n", $lines);
+    }
+
+    private function insufficientMessage(string $language): string
+    {
+        return str_starts_with(strtolower($language), 'ar')
+            ? 'الأدلة غير كافية لتقديم إجابة موثوقة.'
+            : 'Insufficient evidence to provide a reliable answer.';
+    }
+}

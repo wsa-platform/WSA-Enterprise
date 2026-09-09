@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Research;
 
+use App\Services\Agriculture\Intelligence\Orchestration\UniversalAnswerOrchestrator;
 use App\Services\Agriculture\Research\Persistence\ScientificKnowledgePersistenceService;
 use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
 use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
@@ -10,6 +11,7 @@ use App\Services\Agriculture\Research\Validation\AgriculturalScientificValidatio
 /**
  * Top-level agricultural research orchestration layer.
  * Coordinates query understanding, planning, scientific search, validation, library memory, and aggregation.
+ * When UNIVERSAL_ANSWER_ORCHESTRATOR_ENABLED, synthesizes via UniversalAnswerOrchestrator (ADR-002).
  */
 class AgriculturalResearchAgent
 {
@@ -21,6 +23,7 @@ class AgriculturalResearchAgent
         private AnswerComposer $answerComposer,
         private ScientificKnowledgePersistenceService $knowledgePersistenceService,
         private AgriculturalScientificKnowledgeEngine $knowledgeEngine,
+        private ?UniversalAnswerOrchestrator $universalAnswerOrchestrator = null,
     ) {}
 
     /**
@@ -155,7 +158,7 @@ class AgriculturalResearchAgent
             $validationReport,
         );
 
-        return array_merge(
+        $payload = array_merge(
             $synthesisReport->toArray(),
             $persistenceReport->toArray(),
             [
@@ -180,6 +183,8 @@ class AgriculturalResearchAgent
                 'internet_first' => $searchReport->internetFirst,
             ],
         );
+
+        return $this->maybeEnrichWithUniversalOrchestrator($payload, $input);
     }
 
     /**
@@ -248,7 +253,7 @@ class AgriculturalResearchAgent
         $response['scientific_search'] = $scientificSearch->toArray();
         $response['scientific_validation'] = $scientificValidation->toArray();
 
-        return array_merge($response, $synthesisReport->toArray(), $persistenceReport->toArray(), [
+        $merged = array_merge($response, $synthesisReport->toArray(), $persistenceReport->toArray(), [
             'status' => $response['status'] ?? $synthesisReport->status,
             'persistence_status' => $persistenceReport->status,
             'observability' => array_merge(
@@ -256,6 +261,8 @@ class AgriculturalResearchAgent
                 $persistenceReport->observability,
             ),
         ]);
+
+        return $this->maybeEnrichWithUniversalOrchestrator($merged, $input);
     }
 
     /**
@@ -265,5 +272,69 @@ class AgriculturalResearchAgent
     public function conductCropProfileResearch(int $organizationId, array $cropContextInput): array
     {
         return $this->conductResearch($organizationId, $cropContextInput);
+    }
+
+    /**
+     * Full ADR-002 multi-source answer path (feature-flagged).
+     * Gated by UNIVERSAL_ANSWER_ORCHESTRATOR_ENABLED / agricultural_intelligence.orchestrator_enabled.
+     * HTTP surface remains legacy synthesize/query enrichment (no dedicated route).
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public function answerUniversal(array $input): array
+    {
+        if (! $this->isUniversalOrchestratorEnabled()) {
+            return [
+                'status' => 'disabled',
+                'answer' => null,
+                'concise_summary' => null,
+                'answer_status' => 'INSUFFICIENT',
+                'web_answer_eligible' => false,
+                'scientific_answer_eligible' => false,
+                'overall_answer_eligible' => false,
+                'providers_used' => [],
+                'limitations' => ['universal_orchestrator_disabled'],
+                'citations' => [],
+                'universal_orchestrator' => [
+                    'enabled' => false,
+                    'version' => '1.0.0',
+                ],
+            ];
+        }
+
+        $orchestrator = $this->universalAnswerOrchestrator ?? app(UniversalAnswerOrchestrator::class);
+
+        return $orchestrator->answer($input)->toArray();
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    private function maybeEnrichWithUniversalOrchestrator(array $payload, array $input): array
+    {
+        if (! $this->isUniversalOrchestratorEnabled()) {
+            return $payload;
+        }
+
+        if (! filter_var(config('agricultural_intelligence.enrich_legacy_synthesis', true), FILTER_VALIDATE_BOOL)) {
+            return $payload;
+        }
+
+        try {
+            $orchestrator = $this->universalAnswerOrchestrator ?? app(UniversalAnswerOrchestrator::class);
+
+            return $orchestrator->enrichLegacySynthesis($payload, $input);
+        } catch (\Throwable) {
+            // Backward-compatible: enrichment failures must not break existing consumers.
+            return $payload;
+        }
+    }
+
+    private function isUniversalOrchestratorEnabled(): bool
+    {
+        return filter_var(config('agricultural_intelligence.orchestrator_enabled', true), FILTER_VALIDATE_BOOL);
     }
 }

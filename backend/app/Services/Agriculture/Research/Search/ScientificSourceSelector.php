@@ -27,6 +27,23 @@ class ScientificSourceSelector
             return [];
         }
 
-        return self::DEFAULT_INTERNET_FIRST_SOURCES;
+        $sources = self::DEFAULT_INTERNET_FIRST_SOURCES;
+
+        // Capability / feature-flag driven FAO inclusion — no crop-specific branches.
+        if (filter_var(config('agricultural_intelligence.fao.enabled', false), FILTER_VALIDATE_BOOL)) {
+            $sources[] = 'fao_stat';
+        }
+
+        if (! filter_var(config('agricultural_intelligence.openalex.enabled', true), FILTER_VALIDATE_BOOL)) {
+            $sources = array_values(array_filter($sources, static fn (string $s): bool => $s !== 'openalex'));
+        }
+        if (! filter_var(config('agricultural_intelligence.crossref.enabled', true), FILTER_VALIDATE_BOOL)) {
+            $sources = array_values(array_filter($sources, static fn (string $s): bool => $s !== 'crossref'));
+        }
+        if (! filter_var(config('agricultural_intelligence.semantic_scholar.enabled', true), FILTER_VALIDATE_BOOL)) {
+            $sources = array_values(array_filter($sources, static fn (string $s): bool => $s !== 'semantic_scholar'));
+        }
+
+        return $sources;
     }
 }

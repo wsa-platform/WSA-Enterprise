@@ -3,6 +3,7 @@
 namespace App\Services\Agriculture\Research\Search;
 
 use App\Contracts\ScientificSourceAdapterInterface;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\ConsensusScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\CrossRefScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\OpenAlexScientificSourceAdapter;
@@ -11,7 +12,7 @@ use App\Services\Agriculture\Research\Search\Adapters\SemanticScholarScientificS
 /**
  * Registry of Stage 3 scientific source adapters.
  *
- * Internet-First path selects OpenAlex + Crossref + Semantic Scholar.
+ * Internet-First path selects OpenAlex + Crossref + Semantic Scholar (+ FAO when enabled).
  * Consensus remains registered for optional/legacy use but is not required.
  */
 class ScientificSourceAdapterRegistry
@@ -24,12 +25,14 @@ class ScientificSourceAdapterRegistry
         CrossRefScientificSourceAdapter $crossRef,
         SemanticScholarScientificSourceAdapter $semanticScholar,
         ConsensusScientificSourceAdapter $consensus,
+        FaoStatScientificSourceAdapter $faoStat,
     ) {
         $this->adapters = [
             $openAlex->sourceKey() => $openAlex,
             $crossRef->sourceKey() => $crossRef,
             $semanticScholar->sourceKey() => $semanticScholar,
             $consensus->sourceKey() => $consensus,
+            $faoStat->sourceKey() => $faoStat,
         ];
     }
 
