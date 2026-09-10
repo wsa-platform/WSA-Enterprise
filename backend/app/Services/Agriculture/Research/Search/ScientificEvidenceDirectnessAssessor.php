@@ -295,6 +295,29 @@ class ScientificEvidenceDirectnessAssessor
             ];
         }
 
+        // Entity-less scientific questions (soil, physiology, microbiology): topic+factor
+        // alignment can be DIRECT when the question does not require a crop entity.
+        // Full factor coverage may represent the scientific sense when sense labels are absent.
+        $entityLessDirect = $relevance['relevant']
+            && ! $landClassification
+            && ! ($relevance['requires_entity'] ?? false)
+            && $topicMatched
+            && $qualifierCoverage
+            && $factorCoverage >= 0.99
+            && ! $requiredSenseFactorMissing
+            && ($senseCoverage || $factors !== []);
+        if ($entityLessDirect) {
+            return [
+                'directness' => self::DIRECT,
+                'score' => 36.0 + (16.0 * $factorCoverage),
+                'reasons' => ['topic_sense_aligned_without_required_entity'],
+                'factor_coverage' => round($factorCoverage, 3),
+                'sense_coverage' => $senseCoverage,
+                'entity_matched' => $entityMatched,
+                'topic_matched' => true,
+            ];
+        }
+
         // General (non crop+topic) relevant hits are usable supporting evidence — not BACKGROUND.
         // Skip for land_classification (handled above) so entity-less land never auto-SUPPORTING junk.
         if ($relevance['relevant'] && ! $landClassification

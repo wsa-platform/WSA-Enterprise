@@ -214,6 +214,17 @@ class EvidenceVerificationLayer
             $extraText,
         ], static fn ($part): bool => is_string($part) && trim($part) !== ''))));
 
+        // Crossref remains citation metadata — never scientific DIRECT proof.
+        if ($result !== null
+            && strtolower($result->sourceKey) === 'crossref'
+            && ($base['directness'] ?? '') === ScientificEvidenceDirectnessAssessor::DIRECT) {
+            $base['directness'] = ScientificEvidenceDirectnessAssessor::SUPPORTING;
+            $base['reasons'] = array_values(array_unique(array_merge(
+                $base['reasons'] ?? [],
+                ['crossref_citation_metadata_not_scientific_proof'],
+            )));
+        }
+
         // Geo: study-country mismatch → GEOGRAPHIC_MISMATCH (publisher ≠ study country).
         if ($this->hasGeographicMismatch($plan, $haystack, $result)) {
             return [
