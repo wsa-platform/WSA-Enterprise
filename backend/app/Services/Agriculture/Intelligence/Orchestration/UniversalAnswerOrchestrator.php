@@ -3,6 +3,7 @@
 namespace App\Services\Agriculture\Intelligence\Orchestration;
 
 use App\Contracts\Agriculture\WebSearchProviderInterface;
+use App\Services\Agriculture\Intelligence\Contracts\SourceRole;
 use App\Services\Agriculture\Intelligence\DTO\AnswerEligibility;
 use App\Services\Agriculture\Intelligence\DTO\CanonicalAgriculturalResult;
 use App\Services\Agriculture\Intelligence\DTO\ProviderQueryInput;
@@ -31,6 +32,7 @@ final class UniversalAnswerOrchestrator
         private QueryUnderstandingService $queryUnderstanding,
         private ResearchPlanner $planner,
         private CapabilityDrivenSourceSelector $sourceSelector,
+        private RequiredCapabilityResolver $capabilityResolver,
         private EvidenceFusionService $fusionService,
         private AnswerEligibilityResolver $eligibilityResolver,
         private WebSearchProviderInterface $webSearch,
@@ -71,33 +73,50 @@ final class UniversalAnswerOrchestrator
         }
 
         $providerInput = $this->buildProviderInput($plan, $input);
-        $providers = $this->sourceSelector->select($plan, $providerInput);
+        $selection = $this->sourceSelector->selectWithTrace($plan, $providerInput);
+        $providers = $selection->selected;
 
         $providerResults = [];
         $providersAttempted = [];
+        $scientificSourceKeys = [];
         foreach ($providers as $provider) {
             $id = $provider->descriptor()->id;
             $providersAttempted[] = $id;
-            // Scientific scholarly adapters are executed via the existing Stage 3 path below
-            // to preserve ranking/dedupe/validation. Registry retrieve still used for non-scientific.
+            // Scientific scholarly/official adapters run via Stage 3 to preserve ranking/dedupe/validation.
             if ($provider->descriptor()->type === 'scientific') {
+                $scientificSourceKeys[] = $id;
+
+                continue;
+            }
+            // Web is retrieved once via retrieveWeb() to avoid duplicate hits.
+            if ($provider->descriptor()->type === 'web') {
                 continue;
             }
             $providerResults[] = $provider->retrieve($providerInput);
         }
 
-        // Dedicated web retrieve (even if registry web provider disabled, check config path)
-        $webResult = $this->retrieveWeb($providerInput);
+        $webResult = null;
+        if (in_array('web_search', $selection->requiredCapabilities, true)
+            || in_array('general_knowledge', $selection->requiredCapabilities, true)
+            || $selection->requiredCapabilities === []) {
+            $webResult = $this->retrieveWeb($providerInput);
+        }
         if ($webResult !== null) {
             $providerResults[] = $webResult;
             $providersAttempted[] = $webResult->providerId;
         }
 
-        // Scientific path — reuse strict validation (ClaimEvidenceMatcher / ASVS / gates)
-        $searchReport = $this->scientificSearchService->search(
-            $plan,
-            (int) ($input['limit'] ?? 10),
-        );
+        $wantsScientific = array_intersect(
+            $selection->requiredCapabilities,
+            ['scientific_search', 'scholarly_evidence', 'citation_metadata', 'official_agricultural_data', 'agricultural_statistics'],
+        ) !== [];
+        $searchReport = $wantsScientific
+            ? $this->scientificSearchService->search(
+                $plan,
+                (int) ($input['limit'] ?? 10),
+                $scientificSourceKeys,
+            )
+            : $this->scientificSearchService->search($plan, (int) ($input['limit'] ?? 10), []);
         $validationReport = $this->scientificValidationService->validate($plan, $searchReport);
         $synthesisReport = $this->answerComposer->compose($plan, $validationReport);
 
@@ -200,6 +219,10 @@ final class UniversalAnswerOrchestrator
             observability: [
                 'latency_ms' => (int) round((microtime(true) - $started) * 1000),
                 'providers_attempted' => $providersAttempted,
+                'required_capabilities' => $selection->requiredCapabilities,
+                'selected_providers' => $selection->selectedIds(),
+                'skipped_providers' => $selection->skipped,
+                'scientific_sources' => $searchReport->selectedSources,
                 'general_web_fallback' => $this->eligibilityResolver->assertGeneralWebFallbackWorks($eligibility),
             ],
             status: $eligibility->overallAnswerEligible
@@ -301,13 +324,13 @@ final class UniversalAnswerOrchestrator
             is_array($plan->subjectEntity) ? (string) ($plan->subjectEntity['value'] ?? $plan->subjectEntity['label'] ?? '') : null,
         ], static fn ($v): bool => is_string($v) && trim($v) !== ''));
 
+        $capabilities = $this->capabilityResolver->resolve($plan, $input);
+
         return new ProviderQueryInput(
             query: $nq->originalQuestion !== '' ? $nq->originalQuestion : (string) ($input['query'] ?? ''),
             language: $nq->language ?: (string) ($input['language'] ?? 'en'),
             entities: $entities,
-            requiredCapabilities: is_array($input['required_capabilities'] ?? null)
-                ? $input['required_capabilities']
-                : [],
+            requiredCapabilities: $capabilities,
             constraints: array_merge($nq->constraints ?? [], is_array($input['constraints'] ?? null) ? $input['constraints'] : []),
             context: is_array($input['context'] ?? null) ? $input['context'] : [],
             limit: (int) ($input['limit'] ?? 10),
@@ -343,6 +366,7 @@ final class UniversalAnswerOrchestrator
             source: $outcome->providerId,
             timestamp: now()->toIso8601String(),
             limitations: ['general_web_evidence_not_scientifically_verified'],
+            meta: ['source_role' => SourceRole::WEB_SOURCE],
         );
     }
 
@@ -352,23 +376,57 @@ final class UniversalAnswerOrchestrator
      */
     private function scientificToCanonical(array $search, array $validation): CanonicalAgriculturalResult
     {
-        $evidence = [];
+        $scientific = [];
+        $official = [];
         foreach ($validation['validated_evidence'] ?? $search['results'] ?? [] as $item) {
-            if (is_array($item)) {
-                $evidence[] = array_merge($item, ['evidence_family' => 'scientific']);
+            if (! is_array($item)) {
+                continue;
+            }
+            $source = strtolower((string) ($item['source'] ?? $item['source_key'] ?? $item['provider_id'] ?? ''));
+            $role = $this->sourceRoleForScientificSource($source, $item);
+            $family = match ($role) {
+                SourceRole::OFFICIAL_AGRICULTURAL_DATA => 'official',
+                SourceRole::CITATION_METADATA => 'citation_metadata',
+                default => 'scientific',
+            };
+            $tagged = array_merge($item, [
+                'evidence_family' => $family,
+                'source_role' => $role,
+            ]);
+            if ($role === SourceRole::OFFICIAL_AGRICULTURAL_DATA) {
+                $official[] = $tagged;
+            } else {
+                $scientific[] = $tagged;
             }
         }
 
-        $status = $evidence !== [] ? 'success' : 'empty';
+        $status = ($scientific !== [] || $official !== []) ? 'success' : 'empty';
 
         return new CanonicalAgriculturalResult(
             providerId: 'scientific_pipeline',
             status: $status,
-            scientificEvidence: $evidence,
-            confidence: $evidence !== [] ? 0.8 : null,
+            scientificEvidence: $scientific,
+            stats: $official,
+            confidence: $scientific !== [] ? 0.8 : ($official !== [] ? 0.7 : null),
             source: 'scientific_pipeline',
             timestamp: now()->toIso8601String(),
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     */
+    private function sourceRoleForScientificSource(string $source, array $item): string
+    {
+        if (isset($item['source_role']) && is_string($item['source_role']) && $item['source_role'] !== '') {
+            return $item['source_role'];
+        }
+
+        return match ($source) {
+            'fao_stat', 'fao', 'faostat' => SourceRole::OFFICIAL_AGRICULTURAL_DATA,
+            'crossref' => SourceRole::CITATION_METADATA,
+            default => SourceRole::SCIENTIFIC_EVIDENCE,
+        };
     }
 
     private function composeGeneralWebAnswer(KnowledgeQueryPlan $plan, $fusion, string $language): string

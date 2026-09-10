@@ -143,5 +143,68 @@ class AnswerEligibilityAndFusionTest extends TestCase
 
         $this->assertSame('web', $n['evidence_family']);
         $this->assertSame(12.5, $n['numeric_value']);
+        $this->assertSame('mm', $n['unit']);
+        $this->assertSame('Value 12.5 mm noted', $n['context']);
+        $this->assertSame(\App\Services\Agriculture\Intelligence\Contracts\SourceRole::WEB_SOURCE, $n['source_role']);
+    }
+
+    public function test_web_result_normalizer_preserves_range_without_inventing_midpoint(): void
+    {
+        $n = app(WebResultNormalizer::class)->normalize([
+            'title' => 'Range note',
+            'url' => 'https://example.com/r',
+            'snippet' => 'Recommended window 24-28 °C under controlled conditions',
+        ], 'web_search');
+
+        $this->assertSame(24.0, $n['range_min']);
+        $this->assertSame(28.0, $n['range_max']);
+        $this->assertSame('c', $n['unit']);
+        $this->assertNull($n['numeric_value']);
+        $this->assertStringContainsString('controlled conditions', (string) $n['context']);
+    }
+
+    public function test_fusion_keeps_official_and_weather_and_does_not_treat_citation_doi_as_scientific(): void
+    {
+        $fusion = app(EvidenceFusionService::class)->fuse([
+            new CanonicalAgriculturalResult(
+                providerId: 'fao_stat',
+                status: 'success',
+                stats: [[
+                    'title' => 'Official production',
+                    'source_role' => \App\Services\Agriculture\Intelligence\Contracts\SourceRole::OFFICIAL_AGRICULTURAL_DATA,
+                    'evidence_family' => 'official',
+                    'confidence' => 0.7,
+                    'url' => 'https://www.fao.org/faostat/',
+                ]],
+            ),
+            new CanonicalAgriculturalResult(
+                providerId: 'open_meteo',
+                status: 'success',
+                weather: [[
+                    'temperature_c' => 18.2,
+                    'source_role' => \App\Services\Agriculture\Intelligence\Contracts\SourceRole::ENVIRONMENTAL_DATA,
+                    'evidence_family' => 'environmental',
+                    'confidence' => 0.6,
+                    'location' => ['latitude' => 30.0, 'longitude' => 31.0],
+                ]],
+            ),
+            new CanonicalAgriculturalResult(
+                providerId: 'crossref',
+                status: 'success',
+                scientificEvidence: [[
+                    'doi' => '10.1/meta-only',
+                    'title' => 'Metadata record',
+                    'source_role' => \App\Services\Agriculture\Intelligence\Contracts\SourceRole::CITATION_METADATA,
+                    'evidence_family' => 'citation_metadata',
+                    'confidence' => 0.9,
+                ]],
+            ),
+        ]);
+
+        $roles = array_column($fusion->dedupedEvidence, 'source_role');
+        $this->assertContains(\App\Services\Agriculture\Intelligence\Contracts\SourceRole::OFFICIAL_AGRICULTURAL_DATA, $roles);
+        $this->assertContains(\App\Services\Agriculture\Intelligence\Contracts\SourceRole::ENVIRONMENTAL_DATA, $roles);
+        $this->assertContains(\App\Services\Agriculture\Intelligence\Contracts\SourceRole::CITATION_METADATA, $roles);
+        $this->assertNull($fusion->confidence['scientific']);
     }
 }

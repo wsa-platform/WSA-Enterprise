@@ -13,7 +13,7 @@ class AgriculturalScientificSearchService
         private MultiSourceScientificSearchOrchestrator $orchestrator,
     ) {}
 
-    public function search(KnowledgeQueryPlan $plan, int $limit = 10): ScientificSearchExecutionReport
+    public function search(KnowledgeQueryPlan $plan, int $limit = 10, ?array $sourceKeys = null): ScientificSearchExecutionReport
     {
         if ($plan->needsClarification() || ! $plan->readyForStage3) {
             return new ScientificSearchExecutionReport(
@@ -32,6 +32,6 @@ class AgriculturalScientificSearchService
             );
         }
 
-        return $this->orchestrator->execute($plan, $limit);
+        return $this->orchestrator->execute($plan, $limit, $sourceKeys);
     }
 }

@@ -61,6 +61,8 @@ class UniversalAnswerOrchestratorFeatureTest extends TestCase
         $this->assertSame(AnswerStatus::GENERAL_WEB, $result['answer_status']);
         $this->assertNotEmpty($result['answer']);
         $this->assertStringContainsStringIgnoringCase('web', (string) $result['answer']);
+        $this->assertArrayHasKey('required_capabilities', $result['universal_orchestrator']['observability'] ?? []);
+        $this->assertArrayHasKey('skipped_providers', $result['universal_orchestrator']['observability'] ?? []);
     }
 
     public function test_enrich_legacy_synthesis_preserves_general_web_contract(): void

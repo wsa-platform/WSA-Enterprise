@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Intelligence\Fusion;
 
+use App\Services\Agriculture\Intelligence\Contracts\SourceRole;
 use App\Services\Agriculture\Intelligence\DTO\CanonicalAgriculturalResult;
 use App\Services\Agriculture\Intelligence\DTO\FusedEvidenceBundle;
 use App\Services\Agriculture\Intelligence\DTO\WebConsensusResult;
@@ -38,7 +39,7 @@ final class EvidenceFusionService
                 $providerScores[] = $result->confidence;
             }
 
-            foreach (array_merge($result->scientificEvidence, $result->webEvidence, $result->claims) as $item) {
+            foreach ($this->evidenceStreams($result) as $item) {
                 if (! is_array($item)) {
                     continue;
                 }
@@ -59,7 +60,14 @@ final class EvidenceFusionService
                 $deduped[] = $item;
 
                 if (isset($item['confidence']) && is_numeric($item['confidence'])) {
-                    if (($item['evidence_family'] ?? '') === 'scientific' || isset($item['doi'])) {
+                    $role = (string) ($item['source_role'] ?? '');
+                    if ($role === SourceRole::SCIENTIFIC_EVIDENCE) {
+                        $scientificScores[] = (float) $item['confidence'];
+                    } elseif ($role === SourceRole::CITATION_METADATA
+                        || $role === SourceRole::OFFICIAL_AGRICULTURAL_DATA
+                        || $role === SourceRole::WEB_SOURCE) {
+                        $archScores[] = (float) $item['confidence'];
+                    } elseif (($item['evidence_family'] ?? '') === 'scientific' && $role !== SourceRole::CITATION_METADATA) {
                         $scientificScores[] = (float) $item['confidence'];
                     } else {
                         $archScores[] = (float) $item['confidence'];
@@ -161,5 +169,35 @@ final class EvidenceFusionService
         }
 
         return round(array_sum($scores) / count($scores), 4);
+    }
+
+    /**
+     * Preserve all canonical buckets. Do not drop official/weather/disease/measurements.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function evidenceStreams(CanonicalAgriculturalResult $result): array
+    {
+        $streams = [];
+        foreach ([
+            $result->scientificEvidence,
+            $result->webEvidence,
+            $result->claims,
+            $result->stats,
+            $result->weather,
+            $result->disease,
+            $result->measurements,
+            $result->entities,
+        ] as $bucket) {
+            foreach ($bucket as $item) {
+                if (is_array($item)) {
+                    $streams[] = $item;
+                } elseif (is_object($item) && method_exists($item, 'toArray')) {
+                    $streams[] = $item->toArray();
+                }
+            }
+        }
+
+        return $streams;
     }
 }

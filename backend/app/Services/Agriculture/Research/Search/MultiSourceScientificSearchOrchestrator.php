@@ -20,12 +20,14 @@ class MultiSourceScientificSearchOrchestrator
         private ScientificResultRanker $ranker,
     ) {}
 
-    public function execute(KnowledgeQueryPlan $plan, int $limit = 10): ScientificSearchExecutionReport
+    public function execute(KnowledgeQueryPlan $plan, int $limit = 10, ?array $sourceKeys = null): ScientificSearchExecutionReport
     {
         $variants = $this->queryBuilder->buildVariantsFromPlan($plan);
         $searchQuery = $variants[0] ?? $this->queryBuilder->buildFromPlan($plan);
 
-        $selectedSources = $this->sourceSelector->selectSources($plan);
+        $selectedSources = $sourceKeys !== null
+            ? $this->filterEnabledSources($sourceKeys)
+            : $this->sourceSelector->selectSources($plan);
         if ($selectedSources === []) {
             return $this->emptyReport(
                 plan: $plan,
@@ -170,6 +172,33 @@ class MultiSourceScientificSearchOrchestrator
     {
         return $outcome->status === ScientificSourceSearchOutcome::STATUS_UNAVAILABLE
             && ($outcome->httpStatus === 429 || $outcome->error === 'rate_limited');
+    }
+
+    /**
+     * @param  list<string>  $sourceKeys
+     * @return list<string>
+     */
+    private function filterEnabledSources(array $sourceKeys): array
+    {
+        $enabled = [];
+        foreach ($sourceKeys as $key) {
+            $key = strtolower(trim((string) $key));
+            if ($key === '') {
+                continue;
+            }
+            $flag = match ($key) {
+                'openalex' => (bool) config('agricultural_intelligence.openalex.enabled', true),
+                'crossref' => (bool) config('agricultural_intelligence.crossref.enabled', true),
+                'semantic_scholar' => (bool) config('agricultural_intelligence.semantic_scholar.enabled', true),
+                'fao_stat' => (bool) config('agricultural_intelligence.fao.enabled', false),
+                default => true,
+            };
+            if ($flag) {
+                $enabled[] = $key;
+            }
+        }
+
+        return array_values(array_unique($enabled));
     }
 
     /**

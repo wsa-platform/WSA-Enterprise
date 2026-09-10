@@ -79,6 +79,40 @@ final class AgriculturalProviderRegistry
         return $selected;
     }
 
+    /**
+     * Select enabled providers whose type is allowed and whose capabilities
+     * intersect the required set (ANY match). Empty requiredCapabilities
+     * means type-only filtering.
+     *
+     * @param  list<string>  $types
+     * @param  list<string>  $requiredCapabilities
+     * @return list<AgriculturalProviderInterface>
+     */
+    public function selectMatchingAnyCapability(array $types = [], array $requiredCapabilities = [], bool $enabledOnly = true): array
+    {
+        $selected = [];
+        foreach ($this->providers as $provider) {
+            $d = $provider->descriptor();
+            if ($enabledOnly && ! $d->enabled) {
+                continue;
+            }
+            if ($types !== [] && ! in_array($d->type, $types, true)) {
+                continue;
+            }
+            if ($requiredCapabilities !== [] && array_intersect($requiredCapabilities, $d->capabilities) === []) {
+                continue;
+            }
+            $selected[] = $provider;
+        }
+
+        usort(
+            $selected,
+            static fn (AgriculturalProviderInterface $a, AgriculturalProviderInterface $b): int => $a->descriptor()->priority <=> $b->descriptor()->priority,
+        );
+
+        return $selected;
+    }
+
     /** @return list<string> */
     public function ids(): array
     {

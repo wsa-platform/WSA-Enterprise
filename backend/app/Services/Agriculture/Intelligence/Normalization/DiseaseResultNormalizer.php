@@ -2,6 +2,8 @@
 
 namespace App\Services\Agriculture\Intelligence\Normalization;
 
+use App\Services\Agriculture\Intelligence\Contracts\SourceRole;
+
 final class DiseaseResultNormalizer
 {
     /**
@@ -11,6 +13,8 @@ final class DiseaseResultNormalizer
     public function normalize(array $raw, string $providerId): array
     {
         return [
+            'evidence_family' => 'diagnostic',
+            'source_role' => SourceRole::DIAGNOSTIC_RESULT,
             'provider_id' => $providerId,
             'disease_name' => $raw['disease_name'] ?? $raw['label'] ?? $raw['name'] ?? null,
             'confidence' => isset($raw['confidence']) && is_numeric($raw['confidence'])
