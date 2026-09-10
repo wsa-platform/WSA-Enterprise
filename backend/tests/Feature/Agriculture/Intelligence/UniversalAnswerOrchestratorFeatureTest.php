@@ -137,6 +137,44 @@ class UniversalAnswerOrchestratorFeatureTest extends TestCase
         $this->assertStringContainsString('الويب', (string) $ar['answer']);
     }
 
+    public function test_partial_scientific_support_does_not_become_scientific_verified(): void
+    {
+        config([
+            'agricultural_intelligence.web_search.enabled' => true,
+            'agricultural_intelligence.web_search.api_key' => 'k',
+            'agricultural_intelligence.web_search.endpoint' => 'https://web.search.test/v1',
+        ]);
+
+        Http::fake([
+            'web.search.test/*' => Http::response([
+                'results' => [
+                    ['title' => 'Web note', 'url' => 'https://example.com/n', 'snippet' => 'Field practice overview'],
+                ],
+            ], 200),
+        ]);
+
+        $enriched = app(UniversalAnswerOrchestrator::class)->enrichLegacySynthesis([
+            'status' => 'synthesis_completed_partial',
+            'answer' => 'Partial notes from mixed sources',
+            'concise_summary' => 'Partial notes',
+            'citations' => [
+                ['title' => 'Related paper', 'doi' => '10.1/example'],
+            ],
+            'limitations' => ['evidence_not_sufficient'],
+            'research_metadata' => [
+                'query' => 'generic agricultural question',
+                'evidence_sufficient' => false,
+                'direct_evidence_gate' => 'PASSED',
+            ],
+        ], ['query' => 'generic agricultural question', 'language' => 'en']);
+
+        $this->assertFalse($enriched['scientific_answer_eligible']);
+        $this->assertTrue($enriched['web_answer_eligible']);
+        $this->assertTrue($enriched['overall_answer_eligible']);
+        $this->assertSame(AnswerStatus::WEB_SUPPORTED_SCIENTIFIC_LIMITED, $enriched['answer_status']);
+        $this->assertNotSame(AnswerStatus::SCIENTIFIC_VERIFIED, $enriched['answer_status']);
+    }
+
     public function test_agent_answer_universal_method_exists_and_returns_eligibility_keys(): void
     {
         config([

@@ -3,6 +3,7 @@
 namespace App\Services\Agriculture\Intelligence\Orchestration;
 
 use App\Contracts\Agriculture\WebSearchProviderInterface;
+use App\Services\Agriculture\Intelligence\Contracts\AnswerStatus;
 use App\Services\Agriculture\Intelligence\Contracts\SourceRole;
 use App\Services\Agriculture\Intelligence\DTO\AnswerEligibility;
 use App\Services\Agriculture\Intelligence\DTO\CanonicalAgriculturalResult;
@@ -121,16 +122,6 @@ final class UniversalAnswerOrchestrator
         $synthesisReport = $this->answerComposer->compose($plan, $validationReport);
 
         $scientificEligible = (bool) ($synthesisReport->researchMetadata['evidence_sufficient'] ?? false);
-        if (! $scientificEligible) {
-            // Also treat successful synthesis statuses as scientifically eligible.
-            $scientificEligible = in_array($synthesisReport->status, [
-                'synthesis_completed',
-                'synthesis_completed_partial',
-                'synthesis_completed_with_partial_conflicts',
-            ], true) && $synthesisReport->answer !== null
-                && ! str_contains(strtolower((string) ($synthesisReport->researchMetadata['direct_evidence_gate'] ?? '')), 'insufficient');
-        }
-
         $scientificPartial = ! $scientificEligible
             && ($synthesisReport->performed ?? false)
             && ($synthesisReport->keyFindings !== [] || $synthesisReport->citations !== []);
@@ -241,12 +232,9 @@ final class UniversalAnswerOrchestrator
     public function enrichLegacySynthesis(array $synthesisPayload, array $input = []): array
     {
         $scientificEligible = (bool) (($synthesisPayload['research_metadata']['evidence_sufficient'] ?? false));
-        if (! $scientificEligible) {
-            $gate = (string) ($synthesisPayload['research_metadata']['direct_evidence_gate'] ?? '');
-            $scientificEligible = ($synthesisPayload['answer'] ?? null) !== null
-                && $gate !== ''
-                && ! str_contains($gate, 'INSUFFICIENT');
-        }
+        $scientificPartial = ! $scientificEligible
+            && (($synthesisPayload['answer'] ?? null) !== null)
+            && ((($synthesisPayload['citations'] ?? []) !== []) || (($synthesisPayload['key_findings'] ?? []) !== []));
 
         $webOutcome = $this->webSearch->search(
             (string) ($input['query'] ?? $synthesisPayload['research_metadata']['query'] ?? ''),
@@ -271,7 +259,7 @@ final class UniversalAnswerOrchestrator
         }
 
         $fusion = $this->fusionService->fuse($canonical);
-        $eligibility = $this->eligibilityResolver->resolve($fusion, $scientificEligible, false);
+        $eligibility = $this->eligibilityResolver->resolve($fusion, $scientificEligible, $scientificPartial);
 
         $payload = array_merge($synthesisPayload, (new UniversalAnswerResult(
             eligibility: $eligibility,
@@ -294,15 +282,17 @@ final class UniversalAnswerOrchestrator
             status: (string) ($synthesisPayload['status'] ?? 'completed'),
         ))->toArray());
 
-        // CRITICAL: GENERAL_WEB must display answer when web eligible even if scientific is not
+        // Web-eligible fallback must still display an answer without claiming scientific verification.
         if ($eligibility->webAnswerEligible && ! $eligibility->scientificAnswerEligible) {
             if (empty($payload['answer'])) {
                 $lang = (string) ($input['language'] ?? 'en');
                 $payload['answer'] = $this->composeGeneralWebAnswerFromItems($webResults, $lang);
                 $payload['concise_summary'] = $payload['answer'];
             }
-            $payload['status'] = 'general_web_answer';
-            $payload['answer_status'] = 'GENERAL_WEB';
+            $payload['status'] = $eligibility->answerStatus === AnswerStatus::WEB_SUPPORTED_SCIENTIFIC_LIMITED
+                ? 'web_supported_scientific_limited'
+                : 'general_web_answer';
+            $payload['answer_status'] = $eligibility->answerStatus;
             $payload['overall_answer_eligible'] = true;
             $payload['web_answer_eligible'] = true;
             $payload['scientific_answer_eligible'] = false;

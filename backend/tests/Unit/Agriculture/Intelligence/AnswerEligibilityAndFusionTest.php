@@ -81,15 +81,72 @@ class AnswerEligibilityAndFusionTest extends TestCase
     public function test_web_consensus_is_not_first_hit(): void
     {
         $consensus = app(WebConsensusService::class)->build([
-            ['numeric_value' => 10, 'quality' => 0.2, 'provider_id' => 'a', 'snippet' => 'low'],
-            ['numeric_value' => 20, 'quality' => 0.9, 'provider_id' => 'b', 'snippet' => 'high'],
+            ['numeric_value' => 20, 'quality' => 0.2, 'provider_id' => 'a', 'snippet' => 'low'],
+            ['numeric_value' => 21, 'quality' => 0.9, 'provider_id' => 'b', 'snippet' => 'high'],
             ['numeric_value' => 22, 'quality' => 0.8, 'provider_id' => 'c', 'snippet' => 'also'],
         ]);
 
-        $this->assertNotSame(10.0, (float) $consensus->representativeValue);
-        $this->assertGreaterThan(10.0, (float) $consensus->representativeValue);
-        $this->assertSame(10.0, $consensus->rangeMin);
+        $this->assertNotSame(20.0, (float) $consensus->representativeValue);
+        $this->assertGreaterThan(20.0, (float) $consensus->representativeValue);
+        $this->assertSame(20.0, $consensus->rangeMin);
         $this->assertSame(22.0, $consensus->rangeMax);
+        $this->assertTrue($consensus->hasConsensus);
+        $this->assertSame('consensus', $consensus->status);
+    }
+
+    public function test_web_consensus_excludes_unrelated_numeric_context(): void
+    {
+        $consensus = app(WebConsensusService::class)->build([
+            ['numeric_value' => 31, 'quality' => 0.9, 'provider_id' => 'a', 'snippet' => 'Oct 31, 2025 · overview'],
+            ['numeric_value' => 3.5, 'quality' => 0.9, 'provider_id' => 'b', 'snippet' => '3.5 million records indexed'],
+            ['numeric_value' => 10, 'quality' => 0.9, 'provider_id' => 'c', 'snippet' => 'wait 10 days after application'],
+            ['numeric_value' => 123, 'quality' => 0.9, 'provider_id' => 'd', 'snippet' => 'see page 123 for methods'],
+            ['range_min' => 2010, 'range_max' => 2024, 'quality' => 0.8, 'provider_id' => 'e', 'snippet' => 'coverage 2010-2024'],
+        ]);
+
+        $this->assertFalse($consensus->hasConsensus);
+        $this->assertNotSame(7.333333, $consensus->representativeValue);
+        $this->assertNull($consensus->rangeMin);
+        $this->assertNull($consensus->rangeMax);
+        $this->assertSame('textual', $consensus->status);
+    }
+
+    public function test_web_consensus_preserves_compatible_range_without_midpoint(): void
+    {
+        $consensus = app(WebConsensusService::class)->build([
+            ['range_min' => 25, 'range_max' => 30, 'unit' => 'c', 'quality' => 0.8, 'provider_id' => 'a', 'snippet' => 'typical range 25-30 c'],
+            ['range_min' => 24, 'range_max' => 28, 'unit' => 'c', 'quality' => 0.7, 'provider_id' => 'b', 'snippet' => 'observed 24-28 c'],
+        ]);
+
+        $this->assertTrue($consensus->hasConsensus);
+        $this->assertSame(25.0, $consensus->rangeMin);
+        $this->assertSame(28.0, $consensus->rangeMax);
+        $this->assertSame('25–28', $consensus->representativeValue);
+        $this->assertNotSame(26.5, $consensus->representativeValue);
+        $this->assertNotSame(27.5, $consensus->representativeValue);
+    }
+
+    public function test_web_consensus_does_not_average_incompatible_units_or_conflicts(): void
+    {
+        $incompatible = app(WebConsensusService::class)->build([
+            ['numeric_value' => 25, 'unit' => 'c', 'quality' => 0.9, 'provider_id' => 'a', 'snippet' => '25 c'],
+            ['numeric_value' => 80, 'unit' => 'kg', 'quality' => 0.9, 'provider_id' => 'b', 'snippet' => '80 kg'],
+        ]);
+
+        $this->assertNotEquals(
+            (25 * 0.9 + 80 * 0.9) / 1.8,
+            (float) $incompatible->representativeValue
+        );
+
+        $conflicted = app(WebConsensusService::class)->build([
+            ['range_min' => 10, 'range_max' => 12, 'unit' => 'c', 'quality' => 0.8, 'provider_id' => 'a', 'snippet' => '10-12 c'],
+            ['range_min' => 40, 'range_max' => 50, 'unit' => 'c', 'quality' => 0.8, 'provider_id' => 'b', 'snippet' => '40-50 c'],
+        ]);
+
+        $this->assertFalse($conflicted->hasConsensus);
+        $this->assertSame('conflicted', $conflicted->status);
+        $this->assertNull($conflicted->representativeValue);
+        $this->assertNotEmpty($conflicted->conflicts);
     }
 
     public function test_fusion_dedupes_by_doi_and_detects_conflicts(): void
