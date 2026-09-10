@@ -6,7 +6,10 @@ use App\Contracts\Agriculture\WebSearchProviderInterface;
 use App\Services\Agriculture\Intelligence\Adapters\Execution\OctoPusExecutionAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\Web\ConfigurableWebSearchProvider;
+use App\Services\Agriculture\Intelligence\Adapters\Web\FreeSearchMcpAdapter;
+use App\Services\Agriculture\Intelligence\Adapters\Web\WebSearchAgriculturalProvider;
 use App\Services\Agriculture\Intelligence\Contracts\ProviderHealthState;
+use App\Services\Agriculture\Intelligence\Contracts\ProviderType;
 use App\Services\Agriculture\Intelligence\DTO\ProviderQueryInput;
 use App\Services\Agriculture\Intelligence\DTO\WebSearchOutcome;
 use App\Services\Agriculture\Intelligence\Health\ProviderHealthChecker;
@@ -22,7 +25,25 @@ class ProviderRegistryAndAdaptersTest extends TestCase
         $registry = app(AgriculturalProviderRegistry::class);
         $ids = $registry->ids();
 
-        $this->assertContains('web_search', $ids);
+        $webDescriptors = array_values(array_filter(
+            $registry->descriptors(),
+            static fn ($descriptor): bool => $descriptor->type === ProviderType::WEB,
+        ));
+        $this->assertNotEmpty($webDescriptors);
+        $web = $webDescriptors[0];
+        $this->assertContains('web_search', $web->capabilities);
+        $this->assertSame('web', $web->confidenceMeta['family'] ?? null);
+        $this->assertTrue((bool) ($web->confidenceMeta['not_scientific'] ?? false));
+
+        $mcpEnabled = (bool) config('agricultural_intelligence.mcp.free_search.enabled');
+        if ($mcpEnabled) {
+            $this->assertSame(FreeSearchMcpAdapter::PROVIDER_ID, $web->id);
+            $this->assertContains(FreeSearchMcpAdapter::PROVIDER_ID, $ids);
+        } else {
+            $this->assertSame('web_search', $web->id);
+            $this->assertContains('web_search', $ids);
+        }
+
         $this->assertContains('openalex', $ids);
         $this->assertContains('crossref', $ids);
         $this->assertContains('semantic_scholar', $ids);
@@ -36,19 +57,46 @@ class ProviderRegistryAndAdaptersTest extends TestCase
         $this->assertContains('octopus_execution', $ids);
     }
 
-    public function test_web_search_not_configured_without_key(): void
+    public function test_generic_http_web_search_not_configured_without_key(): void
     {
         config([
+            'agricultural_intelligence.mcp.free_search.enabled' => false,
             'agricultural_intelligence.web_search.enabled' => true,
             'agricultural_intelligence.web_search.api_key' => '',
             'agricultural_intelligence.web_search.endpoint' => '',
         ]);
+        $this->refreshWebBindings();
 
         $provider = app(WebSearchProviderInterface::class);
+        $this->assertInstanceOf(ConfigurableWebSearchProvider::class, $provider);
         $this->assertFalse($provider->isConfigured());
         $outcome = $provider->search('irrigation scheduling');
         $this->assertSame(WebSearchOutcome::STATUS_NOT_CONFIGURED, $outcome->status);
         $this->assertSame('NOT_CONFIGURED', $outcome->error);
+    }
+
+    public function test_free_search_mcp_does_not_require_web_search_api_key(): void
+    {
+        config([
+            'agricultural_intelligence.mcp.free_search.enabled' => true,
+            'agricultural_intelligence.mcp.free_search.command' => 'uvx',
+            'agricultural_intelligence.mcp.free_search.arguments' => 'free-search-mcp',
+            'agricultural_intelligence.web_search.enabled' => false,
+            'agricultural_intelligence.web_search.api_key' => '',
+            'agricultural_intelligence.web_search.endpoint' => '',
+        ]);
+        $this->refreshWebBindings();
+
+        $provider = app(WebSearchProviderInterface::class);
+        $this->assertInstanceOf(FreeSearchMcpAdapter::class, $provider);
+        $this->assertTrue($provider->isConfigured());
+        $this->assertSame(FreeSearchMcpAdapter::PROVIDER_ID, $provider->providerId());
+
+        $web = app(WebSearchAgriculturalProvider::class)->descriptor();
+        $this->assertSame(ProviderType::WEB, $web->type);
+        $this->assertSame('web', $web->confidenceMeta['family'] ?? null);
+        $this->assertTrue((bool) ($web->confidenceMeta['not_scientific'] ?? false));
+        $this->assertSame('none', $web->auth['mode'] ?? null);
     }
 
     public function test_web_search_success_with_mocked_http(): void
@@ -150,5 +198,14 @@ class ProviderRegistryAndAdaptersTest extends TestCase
         $this->assertNotNull($gs);
         $result = $gs->retrieve(new ProviderQueryInput(query: 'leaf spots'));
         $this->assertSame('not_configured', $result->status);
+    }
+
+    private function refreshWebBindings(): void
+    {
+        $this->app->forgetInstance(WebSearchProviderInterface::class);
+        $this->app->forgetInstance(ConfigurableWebSearchProvider::class);
+        $this->app->forgetInstance(FreeSearchMcpAdapter::class);
+        $this->app->forgetInstance(WebSearchAgriculturalProvider::class);
+        $this->app->forgetInstance(AgriculturalProviderRegistry::class);
     }
 }

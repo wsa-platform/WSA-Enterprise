@@ -964,7 +964,7 @@ Concrete implementation landed on branch `phase-18-m18-ai-marketing-communicatio
    - **Canonical Agricultural Result** DTO (provider-agnostic)
 2. **Reuse** existing Semantic Scholar / OpenAlex / Crossref adapters via `ScientificAdapterBridgeProvider` — do not duplicate SS.
 3. **FAO/FAOSTAT** is a real `ScientificSourceAdapterInterface` implementation (`FaoStatScientificSourceAdapter`) using `https://fenixservices.fao.org/faostat/api/v1`. Codes are never fabricated; invalid lookups are skipped.
-4. **Web search is a separate family** from scholarly sources. Without `WEB_SEARCH_ENABLED` + key + endpoint → `NOT_CONFIGURED` (no fake results).
+4. **Web search is a separate family** from scholarly sources. The intended general web-search provider is **Free Search MCP** (`FREE_SEARCH_MCP_ENABLED`, stdio `uvx free-search-mcp`). Generic HTTP web search (`WEB_SEARCH_ENABLED` + key + endpoint) remains available as a fallback adapter. Either path disabled/unconfigured → `NOT_CONFIGURED` (no fake results). Free Search MCP is general web evidence, not scientific verification.
 5. Disease / MCP / FieldSense / OctoPus adapters are implemented as REST abstractions; missing infra → `NOT_CONFIGURED` / `BLOCKED` (OctoPus license not assumed commercial-OK).
 6. Open-Meteo is the **primary weather** provider; MCP adapters do not duplicate weather logic.
 7. Normalization services: Agricultural / Web / Disease / Environmental + safe unit normalization (original + normalized, or refuse unsafe conversion).
