@@ -1069,7 +1069,7 @@ final class AgriculturalEntityCatalog
             'sunflower', 'soybean', 'sesame', 'peanut', 'canola', 'castor',
             'fava-bean', 'lentil', 'chickpea', 'pea', 'cowpea',
             'cotton', 'flax', 'hemp', 'jute', 'tobacco',
-            'tomato', 'potato', 'pepper', 'ginger',
+            'tomato', 'potato', 'sweet-potato', 'pepper', 'ginger',
         ];
     }
 
@@ -1097,6 +1097,11 @@ final class AgriculturalEntityCatalog
             'canola' => ['الكانولا'],
             'tomato' => ['الطماطم', 'طماطم'],
             'potato' => ['البطاطا', 'بطاطا', 'البطاطس', 'بطاطس'],
+            // Longer than bare potato aliases so "بطاطا الحلوة" resolves to sweet potato.
+            'sweet-potato' => [
+                'البطاطا الحلوة', 'بطاطا الحلوة', 'بطاطا حلوة',
+                'البطاطس الحلوة', 'بطاطس حلوة',
+            ],
             'pepper' => ['الفلفل', 'فلفل'],
             'ginger' => ['الزنجبيل', 'زنجبيل'],
         ];

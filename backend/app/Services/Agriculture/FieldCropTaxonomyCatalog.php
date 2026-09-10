@@ -101,6 +101,11 @@ class FieldCropTaxonomyCatalog
             'potato' => ['scientific_name' => 'Solanum tuberosum', 'synonyms' => [
                 'potato', 'potatoes', 'بطاطا', 'البطاطا', 'بطاطس', 'البطاطس',
             ]],
+            'sweet-potato' => ['scientific_name' => 'Ipomoea batatas', 'synonyms' => [
+                'sweet potato', 'sweet potatoes', 'sweetpotato', 'batata',
+                'بطاطا حلوة', 'البطاطا الحلوة', 'بطاطا الحلوة',
+                'بطاطس حلوة', 'البطاطس الحلوة',
+            ]],
             'pepper' => ['scientific_name' => 'Capsicum annuum', 'synonyms' => ['pepper', 'bell pepper', 'chili', 'chilli', 'chili pepper', 'sweet pepper']],
             'ginger' => ['scientific_name' => 'Zingiber officinale', 'synonyms' => ['ginger', 'ginger root']],
         ];

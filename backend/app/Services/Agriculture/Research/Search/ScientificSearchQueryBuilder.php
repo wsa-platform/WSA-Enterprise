@@ -783,7 +783,8 @@ class ScientificSearchQueryBuilder
             }
         }
 
-        usort($labels, static fn (string $a, string $b): int => mb_strlen($a) <=> mb_strlen($b));
+        // Prefer longer common names (e.g. "sweet potato" over short aliases like "batata").
+        usort($labels, static fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
 
         return array_values($labels);
     }
