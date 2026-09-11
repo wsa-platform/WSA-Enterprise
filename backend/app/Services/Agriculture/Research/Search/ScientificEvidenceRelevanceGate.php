@@ -16,6 +16,14 @@ class ScientificEvidenceRelevanceGate
 {
     private const MIN_SCORE_CROP_TOPIC = 70.0;
 
+    private const SPECIES_EXACT = 'exact_species';
+
+    private const SPECIES_GENUS_ONLY = 'genus_only';
+
+    private const SPECIES_DIFFERENT = 'different_species';
+
+    private const SPECIES_ENTITY_LESS = 'entity_less';
+
     /**
      * @return array{
      *     relevant: bool,
@@ -27,6 +35,8 @@ class ScientificEvidenceRelevanceGate
      *     context_adequate: bool,
      *     requires_entity: bool,
      *     requires_topic: bool,
+     *     species_relation: string,
+     *     exact_species_matched: bool,
      *     rejection_reasons: list<string>,
      *     factors: array<string, mixed>
      * }
@@ -151,6 +161,18 @@ class ScientificEvidenceRelevanceGate
             'domain_hard_reject' => $offDomain,
         ];
 
+        $species = $this->classifySpeciesRelation(
+            $plan,
+            $fullHaystack !== '' ? $fullHaystack : $senseHaystack,
+            trim(implode(' ', array_filter(
+                [$title, $abstract, $extraText],
+                static fn ($part): bool => is_string($part) && trim($part) !== '',
+            ))),
+            $entityMatched,
+        );
+        $factors['species_relation'] = $species['relation'];
+        $factors['exact_species_matched'] = $species['exact'];
+
         if ($hardReject) {
             return [
                 'relevant' => false,
@@ -162,6 +184,8 @@ class ScientificEvidenceRelevanceGate
                 'context_adequate' => $contextAdequate,
                 'requires_entity' => $requiresEntity,
                 'requires_topic' => $requiresTopic,
+                'species_relation' => $species['relation'],
+                'exact_species_matched' => $species['exact'],
                 'rejection_reasons' => array_values(array_unique($rejectionReasons)),
                 'factors' => $factors,
             ];
@@ -177,6 +201,8 @@ class ScientificEvidenceRelevanceGate
             'context_adequate' => $contextAdequate,
             'requires_entity' => $requiresEntity,
             'requires_topic' => $requiresTopic,
+            'species_relation' => $species['relation'],
+            'exact_species_matched' => $species['exact'],
             'rejection_reasons' => [],
             'factors' => $factors,
         ];
@@ -269,6 +295,178 @@ class ScientificEvidenceRelevanceGate
             if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim((string) $needle)))) {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    /**
+     * Broad entity_matched may include genus relevance. Species identity is separate.
+     *
+     * @return array{relation: string, exact: bool}
+     */
+    private function classifySpeciesRelation(
+        KnowledgeQueryPlan $plan,
+        string $haystack,
+        string $originalHaystack,
+        bool $entityMatched,
+    ): array {
+        if (! $this->requiresEntity($plan)) {
+            return ['relation' => self::SPECIES_ENTITY_LESS, 'exact' => false];
+        }
+
+        $scientific = mb_strtolower(trim((string) ($plan->normalizedQuery->scientificName ?? '')));
+        if (preg_match('/^([a-z]{3,})\s+([a-z]{2,})$/u', $scientific, $target) !== 1) {
+            return [
+                'relation' => $entityMatched ? self::SPECIES_EXACT : self::SPECIES_ENTITY_LESS,
+                'exact' => $entityMatched,
+            ];
+        }
+
+        $genus = $target[1];
+        $epithet = $target[2];
+        $source = $originalHaystack !== '' ? $originalHaystack : $haystack;
+
+        if ($this->mentionsHybridOfTarget($source, $genus, $epithet)) {
+            return ['relation' => self::SPECIES_GENUS_ONLY, 'exact' => false];
+        }
+
+        $blob = mb_strtolower($source);
+        if ($this->mentionsExactScientificName($blob, $genus, $epithet)) {
+            return ['relation' => self::SPECIES_EXACT, 'exact' => true];
+        }
+
+        foreach ($this->sameGenusEpithets($source, $genus) as $foundEpithet) {
+            if (! in_array($foundEpithet, [$epithet, 'spp', 'sp', 'ssp', 'var'], true)) {
+                return ['relation' => self::SPECIES_GENUS_ONLY, 'exact' => false];
+            }
+            if (in_array($foundEpithet, ['spp', 'sp'], true)) {
+                return ['relation' => self::SPECIES_GENUS_ONLY, 'exact' => false];
+            }
+        }
+
+        if ($this->mentionsForeignBinomial($source, $genus, $plan)) {
+            return ['relation' => self::SPECIES_DIFFERENT, 'exact' => false];
+        }
+
+        if ($this->mentionsExactCommonName($blob, $plan, $genus, $epithet)) {
+            return ['relation' => self::SPECIES_EXACT, 'exact' => true];
+        }
+
+        if (AgriculturalEntityCatalog::containsTerm($haystack, $genus)) {
+            return ['relation' => self::SPECIES_GENUS_ONLY, 'exact' => false];
+        }
+
+        return [
+            'relation' => $entityMatched ? self::SPECIES_GENUS_ONLY : self::SPECIES_ENTITY_LESS,
+            'exact' => false,
+        ];
+    }
+
+    private function mentionsExactScientificName(string $blob, string $genus, string $epithet): bool
+    {
+        return AgriculturalEntityCatalog::containsTerm($blob, $genus.' '.$epithet)
+            || preg_match('/\b'.preg_quote($genus[0], '/').'\.\s*'.preg_quote($epithet, '/').'\b/u', $blob) === 1;
+    }
+
+    private function mentionsExactCommonName(
+        string $blob,
+        KnowledgeQueryPlan $plan,
+        string $genus,
+        string $epithet,
+    ): bool {
+        $cropId = $plan->normalizedQuery->cropId;
+        if ($cropId === null || $cropId === '') {
+            return false;
+        }
+
+        $labels = array_merge(
+            AgriculturalEntityCatalog::recognitionLabelsForCrop($cropId),
+            FieldCropTaxonomyCatalog::searchTermsFor($cropId),
+        );
+        foreach ($labels as $label) {
+            $normalized = mb_strtolower(trim((string) $label));
+            if ($normalized === '' || $normalized === $genus || $normalized === $genus.' '.$epithet) {
+                continue;
+            }
+            if (AgriculturalEntityCatalog::containsTerm($blob, $normalized)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function mentionsHybridOfTarget(string $text, string $genus, string $epithet): bool
+    {
+        $core = preg_quote($genus, '/').'\s+'.preg_quote($epithet, '/');
+        $blob = mb_strtolower($text);
+
+        return preg_match('/\b'.$core.'\s*[×x]\s+/u', $blob) === 1
+            || preg_match('/\b[×x]\s+'.$core.'\b/u', $blob) === 1;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function sameGenusEpithets(string $text, string $genus): array
+    {
+        $blob = mb_strtolower($text);
+        $epithets = [];
+        $patterns = [
+            '/\b'.preg_quote($genus, '/').'\s+([a-z]+|spp\.?|sp\.?)\b/u',
+            '/\b'.preg_quote($genus[0], '/').'\.\s*([a-z]+)\b/u',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match_all($pattern, $blob, $matches) === false) {
+                continue;
+            }
+            foreach ($matches[1] as $found) {
+                $epithets[] = rtrim(mb_strtolower((string) $found), '.');
+            }
+        }
+
+        return array_values(array_unique(array_filter($epithets)));
+    }
+
+    private function mentionsForeignBinomial(string $original, string $targetGenus, KnowledgeQueryPlan $plan): bool
+    {
+        if (preg_match_all('/\b([A-Z][a-z]{3,})\s+([a-z]{4,})\b/u', $original, $matches, PREG_SET_ORDER) === false) {
+            return false;
+        }
+
+        $targetLabels = [];
+        $cropId = $plan->normalizedQuery->cropId;
+        if ($cropId !== null && $cropId !== '') {
+            foreach (array_merge(
+                AgriculturalEntityCatalog::recognitionLabelsForCrop($cropId),
+                FieldCropTaxonomyCatalog::searchTermsFor($cropId),
+            ) as $label) {
+                $targetLabels[mb_strtolower(trim((string) $label))] = true;
+            }
+        }
+
+        $skip = [
+            'temperature' => true, 'germination' => true, 'characteristics' => true,
+            'requirements' => true, 'conditions' => true, 'evidence' => true,
+            'optimal' => true, 'effect' => true, 'effects' => true, 'study' => true,
+            'growth' => true, 'light' => true, 'seed' => true, 'seeds' => true,
+            'plant' => true, 'plants' => true, 'range' => true, 'under' => true,
+            'controlled' => true, 'measured' => true, 'availability' => true,
+            'determination' => true, 'cardinal' => true, 'japanese' => true,
+            'sweet' => true, 'white' => true, 'common' => true, 'wild' => true,
+        ];
+        foreach ($matches as $match) {
+            $genus = mb_strtolower($match[1]);
+            $epithet = mb_strtolower($match[2]);
+            if ($genus === $targetGenus || isset($skip[$genus]) || isset($skip[$epithet])) {
+                continue;
+            }
+            if (isset($targetLabels[$genus.' '.$epithet])) {
+                continue;
+            }
+
+            return true;
         }
 
         return false;

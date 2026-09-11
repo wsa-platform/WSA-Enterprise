@@ -219,6 +219,22 @@ class ClaimEvidenceMatcher
             ];
         }
 
+        // Genus-level relevance is not exact species support for binomial crop claims.
+        if ($this->rejectsSpeciesIdentityMismatch($plan, $assessment)) {
+            return [
+                'relationship' => ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE,
+                'confidence' => 0.08,
+                'factors' => [
+                    'reason' => 'species_identity_mismatch',
+                    'entity_matched' => $assessment['entity_matched'],
+                    'topic_matched' => $assessment['topic_matched'],
+                    'exact_species_matched' => (bool) ($assessment['exact_species_matched'] ?? false),
+                    'species_relation' => $assessment['species_relation'] ?? null,
+                    'evidence_directness' => $directness['directness'],
+                ],
+            ];
+        }
+
         if (in_array($directness['directness'], [
             ScientificEvidenceDirectnessAssessor::BACKGROUND,
             ScientificEvidenceDirectnessAssessor::RELATED,
@@ -490,6 +506,23 @@ class ClaimEvidenceMatcher
                 'evidence_directness' => $directness['directness'],
             ],
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $assessment
+     */
+    private function rejectsSpeciesIdentityMismatch(KnowledgeQueryPlan $plan, array $assessment): bool
+    {
+        if (! ($assessment['requires_entity'] ?? false) || ! ($assessment['requires_topic'] ?? false)) {
+            return false;
+        }
+
+        $scientific = trim((string) ($plan->normalizedQuery->scientificName ?? ''));
+        if (preg_match('/^[A-Za-z]{3,}\s+[A-Za-z]{2,}$/', $scientific) !== 1) {
+            return false;
+        }
+
+        return in_array((string) ($assessment['species_relation'] ?? ''), ['genus_only', 'different_species'], true);
     }
 
     private function queryText(KnowledgeQueryPlan $plan): string
