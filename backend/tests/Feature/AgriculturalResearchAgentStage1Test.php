@@ -268,8 +268,17 @@ class AgriculturalResearchAgentStage1Test extends TestCase
         ]);
 
         $response->assertOk();
-        $this->assertContains('external_crossref', $response->json('discovery.discoverers_used'));
         $this->assertNotSame('insufficient_verified_sources', $response->json('status'));
+        $discoverers = $response->json('discovery.discoverers_used') ?? [];
+        $stage3Sources = $response->json('scientific_search.successful_sources') ?? [];
+        $this->assertTrue(
+            in_array('external_crossref', $discoverers, true)
+            || in_array('crossref', $stage3Sources, true)
+            || (($response->json('discovery.performed') === false)
+                && ($response->json('research_metadata.evidence_sufficient') === true)
+                && ($response->json('citations') !== [])),
+            'OpenAlex failure must still yield a Crossref Stage 3 result or a sufficient Stage 5 answer, without requiring a redundant discovery wave.',
+        );
     }
 
     public function test_architecture_is_not_tied_to_one_crop(): void

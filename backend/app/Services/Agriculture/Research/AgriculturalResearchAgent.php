@@ -3,10 +3,14 @@
 namespace App\Services\Agriculture\Research;
 
 use App\Services\Agriculture\Intelligence\Orchestration\UniversalAnswerOrchestrator;
+use App\Services\Agriculture\Research\Persistence\KnowledgePersistenceExecutionReport;
 use App\Services\Agriculture\Research\Persistence\ScientificKnowledgePersistenceService;
 use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
+use App\Services\Agriculture\Research\Search\ScientificSearchExecutionReport;
 use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
+use App\Services\Agriculture\Research\Synthesis\AnswerSynthesisExecutionReport;
 use App\Services\Agriculture\Research\Validation\AgriculturalScientificValidationService;
+use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionReport;
 
 /**
  * Top-level agricultural research orchestration layer.
@@ -221,6 +225,18 @@ class AgriculturalResearchAgent
         );
 
         $plan = $knowledgePlan->toAgriculturalResearchPlan();
+
+        if (! $this->shouldRunLegacyPostProcessing($plan, $synthesisReport)) {
+            return $this->stage5ResponseWithoutBlockingPostProcessing(
+                $knowledgePlan,
+                $plan,
+                $scientificSearch,
+                $scientificValidation,
+                $synthesisReport,
+                $persistenceReport,
+            );
+        }
+
         $result = $this->knowledgeEngine->execute($organizationId, $plan);
 
         if ($plan->isCropProfileIntent()) {
@@ -315,6 +331,10 @@ class AgriculturalResearchAgent
      */
     private function maybeEnrichWithUniversalOrchestrator(array $payload, array $input): array
     {
+        if ($this->payloadHasSufficientScientificResult($payload)) {
+            return $payload;
+        }
+
         if (! $this->isUniversalOrchestratorEnabled()) {
             return $payload;
         }
@@ -331,6 +351,118 @@ class AgriculturalResearchAgent
             // Backward-compatible: enrichment failures must not break existing consumers.
             return $payload;
         }
+    }
+
+    /**
+     * Crop-profile HTTP contract is engine-built. Generic research skips blocking
+     * legacy discovery/MCP when Stage 5 already produced a sufficient scientific answer.
+     */
+    private function shouldRunLegacyPostProcessing(
+        AgriculturalResearchPlan $plan,
+        AnswerSynthesisExecutionReport $synthesisReport,
+    ): bool {
+        if ($plan->isCropProfileIntent()) {
+            return true;
+        }
+
+        return ! $this->hasSufficientScientificSynthesis($synthesisReport);
+    }
+
+    /**
+     * Canonical Stage 5 sufficiency: composer research_metadata.evidence_sufficient,
+     * plus a non-empty synthesized answer and citations. Does not invent a parallel
+     * quality system and does not inspect query text.
+     */
+    private function hasSufficientScientificSynthesis(AnswerSynthesisExecutionReport $synthesis): bool
+    {
+        if (! $synthesis->performed) {
+            return false;
+        }
+
+        if (trim((string) $synthesis->answer) === '') {
+            return false;
+        }
+
+        if ($synthesis->citations === []) {
+            return false;
+        }
+
+        return ($synthesis->researchMetadata['evidence_sufficient'] ?? false) === true;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function payloadHasSufficientScientificResult(array $payload): bool
+    {
+        if (trim((string) ($payload['answer'] ?? '')) === '') {
+            return false;
+        }
+
+        if (($payload['citations'] ?? []) === []) {
+            return false;
+        }
+
+        return ($payload['research_metadata']['evidence_sufficient'] ?? false) === true;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function stage5ResponseWithoutBlockingPostProcessing(
+        KnowledgeQueryPlan $knowledgePlan,
+        AgriculturalResearchPlan $plan,
+        ScientificSearchExecutionReport $scientificSearch,
+        EvidenceValidationExecutionReport $scientificValidation,
+        AnswerSynthesisExecutionReport $synthesisReport,
+        KnowledgePersistenceExecutionReport $persistenceReport,
+    ): array {
+        $synthesis = $synthesisReport->toArray();
+        $persistence = $persistenceReport->toArray();
+        $citations = is_array($synthesis['citations'] ?? null) ? $synthesis['citations'] : [];
+
+        return array_merge($synthesis, $persistence, [
+            'status' => 'scientific_generated',
+            'stage' => 5,
+            'plan' => $plan->toArray(),
+            'research' => [
+                'query' => $plan->userQuery,
+                'agricultural_domain' => $plan->agriculturalDomain,
+                'intent' => $plan->intent,
+                'entities' => $plan->entities,
+                'sections' => [],
+                'references' => $citations,
+                'load_state' => 'scientific_generated',
+                'library' => [
+                    'discoverers_used' => [],
+                    'retrieval_failed' => false,
+                    'legacy_discovery_skipped' => true,
+                ],
+            ],
+            'discovery' => [
+                'performed' => false,
+                'reason' => 'sufficient_scientific_result',
+                'discoverers_used' => [],
+                'external_discoverers_used' => [],
+                'library_discoverers_used' => [],
+                'internet_first' => $knowledgePlan->isInternetFirst(),
+            ],
+            'query_understanding' => $knowledgePlan->normalizedQuery->toArray(),
+            'knowledge_query_plan' => $knowledgePlan->toArray(),
+            'scientific_search' => $scientificSearch->toArray(),
+            'scientific_validation' => $scientificValidation->toArray(),
+            'persistence_status' => $persistenceReport->status,
+            'internet_first' => $scientificSearch->internetFirst,
+            'observability' => array_merge(
+                $synthesisReport->observability,
+                $persistenceReport->observability,
+                [
+                    'legacy_post_processing' => 'skipped',
+                    'legacy_post_processing_reason' => 'sufficient_scientific_result',
+                    'synthesis_status' => $synthesisReport->status,
+                ],
+            ),
+        ]);
     }
 
     private function isUniversalOrchestratorEnabled(): bool
