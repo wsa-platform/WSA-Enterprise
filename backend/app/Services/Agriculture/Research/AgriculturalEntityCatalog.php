@@ -54,6 +54,7 @@ final class AgriculturalEntityCatalog
             'agricultural_material',
             'production_system',
             'research_topic',
+            'crop_category',
             'other',
         ];
     }
@@ -120,7 +121,8 @@ final class AgriculturalEntityCatalog
                 'temperature requirement', 'temperature regime', 'درجة الحرارة', 'حرارة',
             ],
             'salinity' => [
-                'salinity', 'salt stress', 'saline', 'ملوحة', 'ملح',
+                'salinity', 'salt stress', 'saline', 'saline water', 'saline soil',
+                'ملوحة', 'الملوحة', 'ملح', 'مالحة', 'مالح', 'المالحة',
             ],
             'water' => [
                 'water requirement', 'water use', 'moisture', 'drought', 'الماء', 'مياه', 'irrigation water',
@@ -177,7 +179,8 @@ final class AgriculturalEntityCatalog
                 'temperature regime', 'heat stress', 'thermal regime', 'درجة الحرارة المناسبة',
             ],
             'salinity' => [
-                'salt stress', 'salinity stress', 'salinity tolerance', 'saline irrigation', 'تأثير الملوحة',
+                'salt stress', 'salinity stress', 'salinity tolerance', 'saline irrigation',
+                'saline water', 'تأثير الملوحة', 'مياه مالحة',
             ],
             'water' => [
                 'water requirement', 'water use', 'irrigation water', 'water stress', 'drought stress', 'احتياج',
@@ -283,11 +286,11 @@ final class AgriculturalEntityCatalog
             'optimal_range' => [
                 'optimal', 'optimum', 'optima', 'best', 'ideal', 'suitable', 'preferred',
                 'temperature range', 'thermal range',
-                'أفضل', 'مناسبة', 'مناسب', 'مثلى', 'مثالي',
+                'أفضل', 'أنسب', 'انسب', 'مناسبة', 'مناسب', 'مثلى', 'مثالي',
             ],
             'effect' => [
                 'effect', 'effects', 'impact', 'influence', 'affect', 'affects', 'affected',
-                'response', 'responses', 'تأثير', 'اثر', 'أثر',
+                'response', 'responses', 'تأثير', 'تؤثر', 'اثر', 'أثر',
             ],
             'requirement' => [
                 'requirement', 'requirements', 'need', 'needs', 'required', 'require',
@@ -1131,7 +1134,7 @@ final class AgriculturalEntityCatalog
         $matched = [];
         foreach (self::topicFactorSignals() as $factor => $keywords) {
             foreach ($keywords as $keyword) {
-                if (self::containsTerm($normalizedQuestion, $keyword)) {
+                if (self::matchesSemanticToken($normalizedQuestion, $keyword)) {
                     $matched[] = $factor;
                     break;
                 }
@@ -1201,5 +1204,437 @@ final class AgriculturalEntityCatalog
         }
 
         return str_contains($haystack, $needle);
+    }
+
+    /**
+     * Concept match: exact containsTerm plus Arabic morphology / families.
+     * Used for intent, factors, and constraints — not for crop-id recognition.
+     */
+    public static function matchesSemanticToken(string $haystack, string $needle): bool
+    {
+        if (self::matchesLexical($haystack, $needle)) {
+            return true;
+        }
+
+        $foldedNeedle = self::foldArabicMorphology($needle);
+        foreach (self::morphologicalFamilies() as $members) {
+            if (! self::tokenInFamily($needle, $foldedNeedle, $members)) {
+                continue;
+            }
+            foreach ($members as $member) {
+                if (self::matchesLexical($haystack, $member)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Phrase/token match without morphological-family expansion.
+     */
+    public static function matchesLexical(string $haystack, string $needle): bool
+    {
+        if (self::containsTerm($haystack, $needle)) {
+            return true;
+        }
+
+        $foldedHay = self::foldArabicMorphology($haystack);
+        $foldedNeedle = self::foldArabicMorphology($needle);
+        if ($foldedNeedle === '') {
+            return false;
+        }
+        if (mb_strlen($foldedNeedle) <= 3) {
+            $tokens = preg_split('/\s+/u', $foldedHay) ?: [];
+
+            return in_array($foldedNeedle, $tokens, true);
+        }
+
+        return str_contains($foldedHay, $foldedNeedle);
+    }
+
+    /**
+     * Light Arabic fold: hamza, ta-marbuta/clitic, definite article, common suffixes.
+     */
+    public static function foldArabicMorphology(string $text): string
+    {
+        $normalized = mb_strtolower(trim($text));
+        if ($normalized === '') {
+            return '';
+        }
+
+        $normalized = str_replace("\u{0640}", '', $normalized);
+        $normalized = preg_replace('/[\x{064B}-\x{065F}\x{0670}\x{06D6}-\x{06ED}]/u', '', $normalized) ?? $normalized;
+        $normalized = str_replace(['أ', 'إ', 'آ', 'ٱ'], 'ا', $normalized);
+        $normalized = str_replace(['ؤ'], 'و', $normalized);
+        $normalized = str_replace(['ئ', 'ى'], 'ي', $normalized);
+        $normalized = preg_replace('/تها(?=$|\s)/u', 'ه', $normalized) ?? $normalized;
+        $normalized = str_replace('ة', 'ه', $normalized);
+
+        $tokens = preg_split('/\s+/u', $normalized) ?: [];
+        $folded = [];
+        foreach ($tokens as $token) {
+            $token = preg_replace('/^ال/u', '', $token) ?? $token;
+            $token = preg_replace('/تها$/u', 'ه', $token) ?? $token;
+            $token = str_replace('ة', 'ه', $token);
+            if (mb_strlen($token) > 4) {
+                $token = preg_replace('/(ها|هم|هن|كما)$/u', '', $token) ?? $token;
+            }
+            if ($token !== '') {
+                $folded[] = $token;
+            }
+        }
+
+        return trim(implode(' ', $folded));
+    }
+
+    /**
+     * @return list<list<string>>
+     */
+    public static function morphologicalFamilies(): array
+    {
+        return [
+            ['محصول', 'المحصول', 'محاصيل', 'المحاصيل', 'crop', 'crops'],
+            ['زرع', 'زراعة', 'الزراعة', 'زراعتها', 'يزرع', 'أزرع', 'للزراعة', 'cultivate', 'cultivation', 'planting', 'sowing', 'grow', 'grown', 'growing', 'grows'],
+            ['ملح', 'ملوحة', 'الملوحة', 'مالحة', 'مالح', 'المالحة', 'saline', 'salinity', 'salt'],
+            ['تأثير', 'تؤثر', 'اثر', 'أثر', 'effect', 'effects', 'affect', 'affects', 'impact'],
+        ];
+    }
+
+    /**
+     * Category-level agricultural subjects (not named entities).
+     *
+     * @return array<string, list<string>>
+     */
+    public static function cropCategorySignals(): array
+    {
+        return [
+            'crops' => ['crops', 'crop', 'محصول', 'المحصول', 'محاصيل', 'المحاصيل'],
+            'vegetables' => ['vegetables', 'vegetable crops', 'خضروات', 'خضر'],
+            'fruit_trees' => ['fruit trees', 'orchard crops', 'أشجار الفاكهة', 'اشجار الفاكهة'],
+            'livestock' => ['livestock', 'animals', 'ماشية', 'حيوانات'],
+        ];
+    }
+
+    /**
+     * @return array{type: string, value: string, label: string}|null
+     */
+    public static function resolveCropCategory(string $normalizedQuestion): ?array
+    {
+        $best = null;
+        $bestLength = 0;
+        foreach (self::cropCategorySignals() as $value => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (! self::matchesSemanticToken($normalizedQuestion, $keyword)) {
+                    continue;
+                }
+                $length = mb_strlen($keyword);
+                if ($length > $bestLength) {
+                    $bestLength = $length;
+                    $best = [
+                        'type' => 'crop_category',
+                        'value' => $value,
+                        'label' => $value,
+                    ];
+                }
+            }
+        }
+
+        return $best;
+    }
+
+    /**
+     * Environmental / agro-climatic conditions. These are constraints, not intents.
+     *
+     * @return array<string, array{constraint_type: string, keywords: list<string>, query_terms: list<string>}>
+     */
+    public static function environmentalConstraintSignals(): array
+    {
+        return [
+            'arid_environment' => [
+                'constraint_type' => 'environment',
+                'keywords' => [
+                    'desert', 'arid', 'arid region', 'dryland', 'dry region', 'dry regions',
+                    'صحراء', 'صحراوية', 'صحراوي',
+                    'المناطق الجافة', 'مناطق جافة', 'الجافة',
+                ],
+                'query_terms' => ['arid', 'desert', 'dryland'],
+            ],
+            'drought' => [
+                'constraint_type' => 'water_availability',
+                'keywords' => ['drought', 'drought stress', 'جفاف', 'الجفاف'],
+                'query_terms' => ['drought', 'water stress'],
+            ],
+            'water_scarcity' => [
+                'constraint_type' => 'water_availability',
+                'keywords' => [
+                    'water scarcity', 'scarce water', 'limited water', 'water is scarce',
+                    'شحة المياه', 'نقص المياه', 'شح المياه',
+                ],
+                'query_terms' => ['water scarcity', 'limited water'],
+            ],
+            'saline_water' => [
+                'constraint_type' => 'water_quality',
+                'keywords' => [
+                    'saline water', 'brackish water', 'salt water irrigation',
+                    'مياه مالحة', 'ماء مالح',
+                ],
+                'query_terms' => ['saline water', 'salinity', 'salt tolerance'],
+            ],
+            'saline_soil' => [
+                'constraint_type' => 'soil',
+                'keywords' => [
+                    'saline soil', 'soil salinity', 'salt-affected soil',
+                    'ملوحة التربة', 'تربة مالحة', 'أراضي ملحية',
+                ],
+                'query_terms' => ['saline soil', 'soil salinity', 'salt-affected soil'],
+            ],
+            'high_temperature' => [
+                'constraint_type' => 'climate',
+                'keywords' => [
+                    'high temperature', 'heat stress', 'hot climate', 'hot region',
+                    'درجة حرارة مرتفعة', 'الحرارة المرتفعة', 'مناخ حار',
+                ],
+                'query_terms' => ['high temperature', 'heat stress'],
+            ],
+            'low_temperature' => [
+                'constraint_type' => 'climate',
+                'keywords' => [
+                    'low temperature', 'cold climate', 'cold region', 'frost',
+                    'درجة حرارة منخفضة', 'مناخ بارد',
+                ],
+                'query_terms' => ['low temperature', 'cold'],
+            ],
+            'sandy_soil' => [
+                'constraint_type' => 'soil',
+                'keywords' => ['sandy soil', 'sandy soils', 'تربة رملية', 'أراضي رملية'],
+                'query_terms' => ['sandy soil'],
+            ],
+            'clay_soil' => [
+                'constraint_type' => 'soil',
+                'keywords' => ['clay soil', 'clay soils', 'تربة طينية'],
+                'query_terms' => ['clay soil'],
+            ],
+            'low_rainfall' => [
+                'constraint_type' => 'climate',
+                'keywords' => ['low rainfall', 'low precipitation', 'قلة الأمطار', 'أمطار قليلة'],
+                'query_terms' => ['low rainfall'],
+            ],
+            'humidity' => [
+                'constraint_type' => 'climate',
+                'keywords' => ['humidity', 'humid climate', 'رطوبة', 'مناخ رطب'],
+                'query_terms' => ['humidity'],
+            ],
+        ];
+    }
+
+    /**
+     * @return list<array{
+     *     type: string,
+     *     constraint_type: string,
+     *     source_phrase: string,
+     *     query_terms: list<string>,
+     *     polarity: string,
+     *     confidence: float
+     * }>
+     */
+    public static function extractEnvironmentalConstraints(string $normalizedQuestion): array
+    {
+        $out = [];
+        foreach (self::environmentalConstraintSignals() as $type => $spec) {
+            foreach ($spec['keywords'] as $keyword) {
+                if (! self::matchesLexical($normalizedQuestion, $keyword)) {
+                    continue;
+                }
+                $out[] = [
+                    'type' => $type,
+                    'constraint_type' => $spec['constraint_type'],
+                    'source_phrase' => $keyword,
+                    'query_terms' => $spec['query_terms'],
+                    'polarity' => 'present',
+                    'confidence' => 0.85,
+                ];
+                break;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $constraints
+     */
+    public static function topicFactorRole(string $haystack, string $factor, array $constraints): string
+    {
+        if (self::factorAskedAsAttribute($haystack, $factor)) {
+            return 'requested';
+        }
+
+        if (self::factorCoveredByConstraints($factor, $constraints)) {
+            return 'constraint';
+        }
+
+        return 'requested';
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $constraints
+     */
+    public static function factorCoveredByConstraints(string $factor, array $constraints): bool
+    {
+        $types = [];
+        foreach ($constraints as $constraint) {
+            if (is_array($constraint) && isset($constraint['type'])) {
+                $types[] = (string) $constraint['type'];
+            }
+        }
+
+        return match ($factor) {
+            'water' => count(array_intersect($types, ['saline_water', 'water_scarcity', 'drought', 'arid_environment'])) > 0,
+            'salinity' => count(array_intersect($types, ['saline_water', 'saline_soil'])) > 0,
+            'temperature' => count(array_intersect($types, ['high_temperature', 'low_temperature'])) > 0,
+            default => false,
+        };
+    }
+
+    public static function factorAskedAsAttribute(string $haystack, string $factor): bool
+    {
+        $asksRequirement = self::matchesSemanticToken($haystack, 'احتياج')
+            || self::matchesSemanticToken($haystack, 'احتياجات')
+            || self::matchesSemanticToken($haystack, 'requirement')
+            || self::matchesSemanticToken($haystack, 'requirements')
+            || self::matchesSemanticToken($haystack, 'متطلبات');
+        $asksEffect = self::matchesSemanticToken($haystack, 'تأثير')
+            || self::matchesSemanticToken($haystack, 'effect')
+            || self::matchesSemanticToken($haystack, 'impact')
+            || self::matchesSemanticToken($haystack, 'affect');
+        $asksQuantity = self::matchesSemanticToken($haystack, 'كمية')
+            || self::matchesSemanticToken($haystack, 'how much')
+            || self::matchesSemanticToken($haystack, 'quantity');
+
+        return match ($factor) {
+            'water' => self::asksExplicitIrrigationOrWaterRequirement($haystack)
+                || (($asksRequirement || $asksQuantity) && (
+                    self::matchesSemanticToken($haystack, 'مياه')
+                    || self::matchesSemanticToken($haystack, 'الماء')
+                    || self::matchesSemanticToken($haystack, 'water')
+                    || self::matchesSemanticToken($haystack, 'ري')
+                    || self::matchesSemanticToken($haystack, 'irrigation')
+                )),
+            'salinity' => $asksEffect || $asksRequirement || self::matchesSemanticToken($haystack, 'salinity tolerance')
+                || self::matchesSemanticToken($haystack, 'تحمل الملوحة'),
+            'temperature' => $asksEffect || $asksRequirement
+                || self::matchesSemanticToken($haystack, 'إنبات')
+                || self::matchesSemanticToken($haystack, 'germination')
+                || self::matchesSemanticToken($haystack, 'optimal temperature')
+                || self::matchesSemanticToken($haystack, 'درجة الحرارة المناسبة'),
+            default => $asksEffect || $asksRequirement,
+        };
+    }
+
+    public static function asksExplicitIrrigationOrWaterRequirement(string $haystack): bool
+    {
+        foreach ([
+            'irrigation scheduling', 'drip irrigation', 'irrigation system',
+            'water scheduling', 'crop water requirement', 'water requirement',
+            'evapotranspiration', 'كمية الري', 'جدولة الري', 'ري بالتنقيط',
+        ] as $signal) {
+            if (self::matchesSemanticToken($haystack, $signal)) {
+                return true;
+            }
+        }
+
+        $hasIrrigationWord = self::containsTerm($haystack, 'ري')
+            || self::matchesSemanticToken($haystack, 'irrigation');
+        $hasQuantityOrSchedule = self::matchesSemanticToken($haystack, 'كمية')
+            || self::matchesSemanticToken($haystack, 'scheduling')
+            || self::matchesSemanticToken($haystack, 'جدولة');
+
+        return $hasIrrigationWord && $hasQuantityOrSchedule;
+    }
+
+    public static function hasSuitabilityOrSelectionFraming(string $haystack): bool
+    {
+        foreach ([
+            'can be grown', 'can be cultivated', 'suitable crops', 'crop suitability',
+            'which crops', 'best crops', 'recommended crops', 'crops for',
+            'recommended', 'are recommended',
+            'يمكن زراعتها', 'يمكن زراعة', 'تصلح ل', 'صالحة ل', 'ملاءمة', 'صلاحية',
+        ] as $signal) {
+            if (self::matchesSemanticToken($haystack, $signal)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Query terms for a recommendation/selection act (generic, not question-specific).
+     *
+     * @return list<string>
+     */
+    public static function userActQueryTerms(string $intent, string $questionType): array
+    {
+        if ($questionType === 'recommendation' && in_array($intent, ['cultivation', 'general_knowledge'], true)) {
+            return ['crop recommendation', 'crop suitability', 'suitable crops'];
+        }
+
+        return self::englishTermsForIntent($intent);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $constraints
+     * @return list<string>
+     */
+    public static function constraintQueryTerms(array $constraints): array
+    {
+        $primary = [];
+        $secondary = [];
+        foreach ($constraints as $constraint) {
+            if (! is_array($constraint)) {
+                continue;
+            }
+            $queryTerms = $constraint['query_terms'] ?? [];
+            if (! is_array($queryTerms)) {
+                continue;
+            }
+            $first = true;
+            foreach ($queryTerms as $term) {
+                $label = trim((string) $term);
+                if ($label === '' || in_array($label, $primary, true) || in_array($label, $secondary, true)) {
+                    continue;
+                }
+                if ($first) {
+                    $primary[] = $label;
+                    $first = false;
+                } else {
+                    $secondary[] = $label;
+                }
+            }
+        }
+
+        return array_values(array_merge($primary, $secondary));
+    }
+
+    /**
+     * @param  list<string>  $members
+     */
+    private static function tokenInFamily(string $needle, string $foldedNeedle, array $members): bool
+    {
+        $needle = mb_strtolower(trim($needle));
+        foreach ($members as $member) {
+            $member = mb_strtolower(trim($member));
+            if ($needle === $member) {
+                return true;
+            }
+            $foldedMember = self::foldArabicMorphology($member);
+            if ($foldedNeedle !== '' && $foldedMember !== '' && $foldedNeedle === $foldedMember) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

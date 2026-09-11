@@ -39,22 +39,55 @@ class QueryUnderstandingService
         $language = $this->detectLanguage($originalQuestion);
         $normalizedQuestion = $this->normalizeQuestion($originalQuestion);
         $topicFactors = AgriculturalEntityCatalog::extractTopicFactors($normalizedQuestion);
+        $environmentalConstraints = AgriculturalEntityCatalog::extractEnvironmentalConstraints($normalizedQuestion);
+        $factorRoles = [];
+        foreach ($topicFactors as $factor) {
+            $factorRoles[$factor] = AgriculturalEntityCatalog::topicFactorRole(
+                $normalizedQuestion,
+                $factor,
+                $environmentalConstraints,
+            );
+        }
+        $requestedFactors = [];
+        foreach ($topicFactors as $factor) {
+            if (($factorRoles[$factor] ?? 'requested') !== 'constraint') {
+                $requestedFactors[] = $factor;
+            }
+        }
         if ($topicFactors !== []) {
             $constraints['scientific_factors'] = $topicFactors;
-            $constraints['scientific_topics'] = AgriculturalEntityCatalog::englishLabelsForFactors($topicFactors);
+            $constraints['scientific_factor_roles'] = $factorRoles;
+            $constraints['scientific_topics'] = AgriculturalEntityCatalog::englishLabelsForFactors($requestedFactors);
+        }
+        if ($environmentalConstraints !== []) {
+            $constraints['environmental_constraints'] = $environmentalConstraints;
         }
 
-        $researchIntent = $this->detectResearchIntent($normalizedQuestion, $input, $topicFactors);
-        $agriculturalDomain = $this->detectDomain($normalizedQuestion, $explicitDomain, $researchIntent);
         $cropRecognition = AgriculturalEntityCatalog::recognizeCrop($normalizedQuestion);
+        $intentQualifier = $this->detectIntentQualifier($normalizedQuestion);
+        $researchIntent = $this->detectResearchIntent(
+            $normalizedQuestion,
+            $input,
+            $requestedFactors,
+            $factorRoles,
+            $cropRecognition,
+            $intentQualifier,
+            $environmentalConstraints,
+        );
+        $agriculturalDomain = $this->detectDomain($normalizedQuestion, $explicitDomain, $researchIntent);
         $subject = $this->detectSubject($normalizedQuestion, $input, $cropRecognition, $researchIntent);
 
         $cropIdResolved = is_array($cropRecognition) ? $cropRecognition['crop_id'] : null;
         $cropLabel = is_array($cropRecognition) ? ($cropRecognition['label'] ?? null) : null;
         $scientificName = $this->resolveScientificName($cropIdResolved, $scientificNameInput, $normalizedQuestion);
 
-        $intentQualifier = $this->detectIntentQualifier($normalizedQuestion);
-        $scientificSense = $this->resolveScientificSense($researchIntent, $topicFactors, $normalizedQuestion);
+        $scientificSense = $this->resolveScientificSense(
+            $researchIntent,
+            $topicFactors,
+            $normalizedQuestion,
+            $factorRoles,
+            $intentQualifier,
+        );
         $constraints['scientific_intent_qualifier'] = $intentQualifier;
         $constraints['scientific_sense'] = $scientificSense;
 
@@ -125,7 +158,7 @@ class QueryUnderstandingService
             $constraints['location'] = $location;
         }
 
-        [$topic, $subtopic] = $this->resolveTopicAndSubtopic($researchIntent, $topicFactors, $subject);
+        [$topic, $subtopic] = $this->resolveTopicAndSubtopic($researchIntent, $requestedFactors, $subject);
         if ($scientificSense === 'plant_family_members') {
             $topic = 'plant family members';
             if ($subtopic === null || $subtopic === 'general_knowledge' || $subtopic === 'cultivation') {
@@ -142,10 +175,16 @@ class QueryUnderstandingService
         $requestedInformation = $this->resolveRequestedInformation(
             $researchIntent,
             $normalizedQuestion,
-            $topicFactors,
+            $requestedFactors,
             $questionType,
             $scientificSense,
         );
+        foreach ($environmentalConstraints as $constraint) {
+            $type = trim((string) ($constraint['type'] ?? ''));
+            if ($type !== '' && ! in_array($type, $requestedInformation, true)) {
+                $requestedInformation[] = $type;
+            }
+        }
         $requiredEvidenceType = AgriculturalEntityCatalog::requiredEvidenceTypeForQuestionType($questionType);
         $constraints['question_type'] = $questionType;
         $constraints['requested_information'] = $requestedInformation;
@@ -175,10 +214,12 @@ class QueryUnderstandingService
         } elseif ($normalizedQuestion === '' || mb_strlen($normalizedQuestion) < 8) {
             $ambiguityState = AgriculturalKnowledgeQuery::AMBIGUITY_NEEDS_CLARIFICATION;
             $clarificationRequirements[] = 'specific_agricultural_question';
-        } elseif ($cropIdResolved === null && $this->intentRequiresEntity($researchIntent) && $subject === null) {
+        } elseif ($cropIdResolved === null && $this->intentRequiresNamedEntity($researchIntent, $subject)) {
             $ambiguityState = AgriculturalKnowledgeQuery::AMBIGUITY_PARTIALLY_AMBIGUOUS;
             $clarificationRequirements[] = 'subject_or_entity';
         }
+
+        $constraints['primary_user_act'] = $researchIntent;
 
         $researchRequired = $ambiguityState !== AgriculturalKnowledgeQuery::AMBIGUITY_NEEDS_CLARIFICATION;
 
@@ -326,10 +367,20 @@ class QueryUnderstandingService
 
     /**
      * @param  array<string, mixed>  $input
-     * @param  list<string>  $topicFactors
+     * @param  list<string>  $topicFactors  requested-role factors only
+     * @param  array<string, string>  $factorRoles
+     * @param  array{crop_id: string, label: string}|null  $cropRecognition
+     * @param  list<array<string, mixed>>  $environmentalConstraints
      */
-    private function detectResearchIntent(string $normalizedQuestion, array $input, array $topicFactors = []): string
-    {
+    private function detectResearchIntent(
+        string $normalizedQuestion,
+        array $input,
+        array $topicFactors = [],
+        array $factorRoles = [],
+        ?array $cropRecognition = null,
+        string $intentQualifier = 'general',
+        array $environmentalConstraints = [],
+    ): string {
         $explicitIntent = trim((string) ($input['research_intent'] ?? $input['intent'] ?? ''));
         if ($explicitIntent !== '' && in_array($explicitIntent, AgriculturalEntityCatalog::researchIntents(), true)) {
             return $explicitIntent;
@@ -341,7 +392,7 @@ class QueryUnderstandingService
         foreach (AgriculturalEntityCatalog::intentKeywordSignals() as $intent => $keywords) {
             $score = 0;
             foreach ($keywords as $keyword) {
-                if (AgriculturalEntityCatalog::containsTerm($normalizedQuestion, $keyword)) {
+                if (AgriculturalEntityCatalog::matchesSemanticToken($normalizedQuestion, $keyword)) {
                     $score += mb_strlen($keyword);
                 }
             }
@@ -352,6 +403,9 @@ class QueryUnderstandingService
         }
 
         foreach ($topicFactors as $factor) {
+            if (($factorRoles[$factor] ?? 'requested') === 'constraint') {
+                continue;
+            }
             $mapped = AgriculturalEntityCatalog::intentForTopicFactor($factor);
             if ($mapped === null) {
                 continue;
@@ -364,6 +418,26 @@ class QueryUnderstandingService
                 $bestScore = $factorScore;
                 $bestIntent = $mapped;
             }
+        }
+
+        $hasNamedCrop = $cropRecognition !== null;
+        $hasCategory = AgriculturalEntityCatalog::resolveCropCategory($normalizedQuestion) !== null;
+        $suitabilityFraming = AgriculturalEntityCatalog::hasSuitabilityOrSelectionFraming($normalizedQuestion)
+            || $intentQualifier === 'optimal_range';
+        $categoryRecommendation = $hasCategory && ! $hasNamedCrop && $suitabilityFraming;
+        $explicitIrrigation = AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)
+            || ($hasNamedCrop && ($factorRoles['water'] ?? null) === 'requested' && in_array('water', $topicFactors, true));
+
+        // Constraint-role water/salinity/temperature must not replace a crop-selection/cultivation act.
+        if (! $explicitIrrigation
+            && $categoryRecommendation
+            && in_array($bestIntent, ['irrigation', 'environmental_requirements'], true)
+        ) {
+            $bestIntent = 'cultivation';
+        }
+
+        if ($categoryRecommendation && in_array($bestIntent, ['general_knowledge', 'productivity'], true)) {
+            $bestIntent = 'cultivation';
         }
 
         return $bestIntent;
@@ -399,7 +473,7 @@ class QueryUnderstandingService
             'irrigation', 'fertilization', 'soil_management', 'plant_nutrition',
             'disease', 'pest', 'beekeeping', 'aquaculture', 'poultry_production',
             'animal_production', 'feed', 'agricultural_economics', 'agricultural_industry',
-            'scientific_literature', 'environmental_requirements',
+            'scientific_literature', 'environmental_requirements', 'cultivation',
         ];
 
         if (in_array($researchIntent, $operationalIntents, true)) {
@@ -488,6 +562,15 @@ class QueryUnderstandingService
             return $best;
         }
 
+        if (AgriculturalEntityCatalog::hasSuitabilityOrSelectionFraming($haystack)
+            || (
+                AgriculturalEntityCatalog::resolveCropCategory($haystack) !== null
+                && $intentQualifier === 'optimal_range'
+            )
+        ) {
+            return 'recommendation';
+        }
+
         if (preg_match('/\bwhat\s+is\b/u', $haystack) === 1
             || preg_match('/\bwhat\s+are\b/u', $haystack) === 1
             || AgriculturalEntityCatalog::containsTerm($haystack, 'ما هو')
@@ -553,6 +636,11 @@ class QueryUnderstandingService
                 'value' => $botanicalFamily,
                 'label' => $botanicalFamily,
             ];
+        }
+
+        $cropCategory = AgriculturalEntityCatalog::resolveCropCategory($normalizedQuestion);
+        if ($cropCategory !== null) {
+            return $cropCategory;
         }
 
         if (AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'soil') || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'تربة')) {
@@ -789,6 +877,35 @@ class QueryUnderstandingService
         ], true);
     }
 
+
+    /**
+     * Category-level crop subjects are valid without a named entity.
+     *
+     * @param  array{type?: string, value?: string, label?: string}|null  $subject
+     */
+    private function intentRequiresNamedEntity(string $researchIntent, ?array $subject): bool
+    {
+        $type = is_array($subject) ? (string) ($subject['type'] ?? '') : '';
+        if ($type === 'crop_category') {
+            return false;
+        }
+
+        return $this->intentRequiresEntity($researchIntent) && $subject === null;
+    }
+
+    /**
+     * @param  list<string>  $topicFactors
+     * @param  array<string, string>  $factorRoles
+     */
+    private function isRequestedTopicFactor(string $factor, array $topicFactors, array $factorRoles): bool
+    {
+        if (! in_array($factor, $topicFactors, true)) {
+            return false;
+        }
+
+        return ($factorRoles[$factor] ?? 'requested') !== 'constraint';
+    }
+
     private function detectIntentQualifier(string $normalizedQuestion): string
     {
         $best = 'general';
@@ -812,9 +929,15 @@ class QueryUnderstandingService
 
     /**
      * @param  list<string>  $topicFactors
+     * @param  array<string, string>  $factorRoles
      */
-    private function resolveScientificSense(string $researchIntent, array $topicFactors, string $normalizedQuestion): string
-    {
+    private function resolveScientificSense(
+        string $researchIntent,
+        array $topicFactors,
+        string $normalizedQuestion,
+        array $factorRoles = [],
+        string $intentQualifier = 'general',
+    ): string {
         // Match land-type inventory on orthography-folded Arabic so انواع/أنواع + اراضي/أراضي agree.
         $senseHaystack = $this->normalizeArabicOrthography($normalizedQuestion);
         if (preg_match(
@@ -845,10 +968,16 @@ class QueryUnderstandingService
             || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'اقتصادية')) {
             return 'agricultural_economics';
         }
-        if (in_array('salinity', $topicFactors, true)) {
+        if ($this->isRequestedTopicFactor('salinity', $topicFactors, $factorRoles)
+            || (
+                in_array('salinity', $topicFactors, true)
+                && $intentQualifier === 'effect'
+            )
+        ) {
             return 'salinity_physiology';
         }
-        if (in_array('water', $topicFactors, true) || $researchIntent === 'irrigation') {
+        if ($this->isRequestedTopicFactor('water', $topicFactors, $factorRoles)
+            || $researchIntent === 'irrigation') {
             return 'crop_water_requirement';
         }
         if (in_array($researchIntent, ['plant_nutrition'], true)

@@ -39,7 +39,11 @@ class ScientificSearchQueryBuilder
         $factors = is_array($query->constraints['scientific_factors'] ?? null)
             ? $query->constraints['scientific_factors']
             : [];
-        $intentTerms = AgriculturalEntityCatalog::englishTermsForIntent($plan->researchIntent);
+        $constraintTerms = $this->resolveConstraintQueryTerms($plan);
+        $questionType = trim((string) ($query->constraints['question_type'] ?? ''));
+        $actTerms = AgriculturalEntityCatalog::userActQueryTerms($plan->researchIntent, $questionType);
+        $intentTerms = $actTerms;
+        $categoryLabel = $this->resolveCategoryLabel($plan);
         $senseTerms = $sense !== ''
             ? AgriculturalEntityCatalog::senseQueryTerms($sense)
             : [];
@@ -134,6 +138,16 @@ class ScientificSearchQueryBuilder
                 }
             }
 
+            // Entity + environmental constraints (conditions, not a replacement act).
+            if ($constraintTerms !== []) {
+                foreach (array_slice($constraintTerms, 0, 2) as $constraintTerm) {
+                    $variants[] = $this->joinTerms([$entity, $constraintTerm, $primaryTopic]);
+                    if ($primaryCommon !== null && strcasecmp($primaryCommon, $entity) !== 0) {
+                        $variants[] = $this->joinTerms([$primaryCommon, $constraintTerm]);
+                    }
+                }
+            }
+
             $variants[] = $this->joinTerms([$entity, $primaryTopic, $senseTerms[0] ?? null]);
 
             // Context-aware diversification: common crop labels + cultivation/production.
@@ -194,6 +208,18 @@ class ScientificSearchQueryBuilder
             }
         } else {
             $latinQuestion = $this->latinScientificFragment($query->normalizedQuestion);
+            if ($constraintTerms !== [] || $questionType === 'recommendation') {
+                $variants[] = $this->joinTerms([
+                    $categoryLabel,
+                    $actTerms[0] ?? null,
+                    ...array_slice($constraintTerms, 0, 3),
+                ]);
+                $variants[] = $this->joinTerms([
+                    $actTerms[1] ?? ($actTerms[0] ?? null),
+                    ...array_slice($constraintTerms, 0, 2),
+                    'agriculture',
+                ]);
+            }
             $variants[] = $this->joinTerms([...$topics, ...array_slice($senseTerms, 0, 2), ...array_slice($intentTerms, 0, 2)]);
             if ($latinQuestion !== null) {
                 $variants[] = $this->joinTerms([$latinQuestion, 'agriculture']);
@@ -796,6 +822,10 @@ class ScientificSearchQueryBuilder
         if (in_array($sense, ['varieties', 'plant_family_members'], true)) {
             return false;
         }
+        // Land / planting-timing WIP — keep independent of family guard above.
+        if (in_array($sense, ['planting_timing', 'land_classification'], true)) {
+            return false;
+        }
         if (in_array($sense, ['plant_growth'], true)) {
             return true;
         }
@@ -873,6 +903,33 @@ class ScientificSearchQueryBuilder
         }
 
         return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function resolveConstraintQueryTerms(KnowledgeQueryPlan $plan): array
+    {
+        $constraints = $plan->normalizedQuery->constraints['environmental_constraints'] ?? [];
+        if (! is_array($constraints) || $constraints === []) {
+            return [];
+        }
+
+        return array_slice(AgriculturalEntityCatalog::constraintQueryTerms($constraints), 0, 4);
+    }
+
+    private function resolveCategoryLabel(KnowledgeQueryPlan $plan): ?string
+    {
+        $subject = $plan->subjectEntity;
+        if (! is_array($subject)) {
+            return null;
+        }
+        if (($subject['type'] ?? '') !== 'crop_category') {
+            return null;
+        }
+        $value = trim((string) ($subject['value'] ?? $subject['label'] ?? ''));
+
+        return $value !== '' ? str_replace('_', ' ', $value) : null;
     }
 
     /**

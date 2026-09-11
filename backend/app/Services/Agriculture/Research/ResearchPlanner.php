@@ -97,6 +97,14 @@ class ResearchPlanner
                 }
             }
         }
+        $environmentalConstraints = $query->constraints['environmental_constraints'] ?? [];
+        if (is_array($environmentalConstraints)) {
+            foreach (AgriculturalEntityCatalog::constraintQueryTerms($environmentalConstraints) as $constraintTerm) {
+                if ($constraintTerm !== '' && ! in_array($constraintTerm, $topics, true)) {
+                    $topics[] = $constraintTerm;
+                }
+            }
+        }
         $subtopics = $query->subtopic !== null ? [$query->subtopic] : [];
 
         return new KnowledgeQueryPlan(
