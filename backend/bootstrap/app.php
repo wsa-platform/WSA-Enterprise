@@ -39,6 +39,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 | Request::HEADER_X_FORWARDED_PROTO
         );
         $middleware->statefulApi();
+        $middleware->validateCsrfTokens(except: [
+            'api/v1/public/research-agent/query',
+        ]);
         $middleware->alias([
             'auth.principal' => \App\Http\Middleware\AuthenticateApiPrincipal::class,
             'resolve.organization' => \App\Http\Middleware\ResolveOrganizationContext::class,

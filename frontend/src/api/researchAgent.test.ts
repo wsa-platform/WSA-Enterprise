@@ -33,7 +33,7 @@ describe('researchAgent API', () => {
     expect(String(url)).toContain('/public/research-agent/query')
     expect(init?.method).toBe('POST')
     expect(JSON.parse(String(init?.body))).toEqual({
-      organization: 'wsa-enterprise',
+      organization: 'wsa-demo',
       query: 'ما ري الذرة؟',
     })
   })

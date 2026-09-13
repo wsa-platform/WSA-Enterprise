@@ -138,8 +138,25 @@ class ScientificSearchQueryBuilder
                 }
             }
 
-            // Entity + environmental constraints (conditions, not a replacement act).
-            if ($constraintTerms !== []) {
+            // Requested resource/process (irrigation, water requirement) before environment-only.
+            $resourceProcessTerms = $this->resolveRequestedResourceProcessTerms(
+                $plan,
+                $topics,
+                $senseTerms,
+                $constraintTerms,
+            );
+            if ($resourceProcessTerms !== []) {
+                foreach (array_slice($resourceProcessTerms, 0, 2) as $resourceTerm) {
+                    $variants[] = $this->joinTerms([$entity, $resourceTerm]);
+                    if ($primaryCommon !== null && strcasecmp($primaryCommon, $entity) !== 0) {
+                        $variants[] = $this->joinTerms([$primaryCommon, $resourceTerm]);
+                    }
+                }
+                if ($constraintTerms !== []) {
+                    $variants[] = $this->joinTerms([$entity, $resourceProcessTerms[0], $constraintTerms[0]]);
+                }
+            } elseif ($constraintTerms !== []) {
+                // Entity + environmental constraints (conditions, not a replacement act).
                 foreach (array_slice($constraintTerms, 0, 2) as $constraintTerm) {
                     $variants[] = $this->joinTerms([$entity, $constraintTerm, $primaryTopic]);
                     if ($primaryCommon !== null && strcasecmp($primaryCommon, $entity) !== 0) {
@@ -966,7 +983,8 @@ class ScientificSearchQueryBuilder
 
         foreach ($plan->topics as $topic) {
             $label = trim((string) $topic);
-            if ($label === '' || $label === $plan->researchIntent) {
+            // Keep topic tokens that equal researchIntent — intent equality is not redundancy.
+            if ($label === '') {
                 continue;
             }
             if (preg_match('/\p{Arabic}/u', $label) === 1) {
@@ -1012,6 +1030,66 @@ class ScientificSearchQueryBuilder
         }
 
         return trim(preg_replace('/\s+/u', ' ', implode(' ', $filtered)) ?? '');
+    }
+
+    /**
+     * Prefer entity + requested resource/process over entity + environment-only
+     * when understanding already identified an irrigation / crop-water-requirement act.
+     */
+    private function prefersResourceProcessOverEnvironment(KnowledgeQueryPlan $plan): bool
+    {
+        $query = $plan->normalizedQuery;
+        $sense = trim((string) ($query->constraints['scientific_sense'] ?? ''));
+        $act = trim((string) ($query->constraints['primary_user_act'] ?? ''));
+
+        return $sense === 'crop_water_requirement'
+            || $plan->researchIntent === 'irrigation'
+            || $act === 'irrigation';
+    }
+
+    /**
+     * @param  list<string>  $topics
+     * @param  list<string>  $senseTerms
+     * @param  list<string>  $constraintTerms
+     * @return list<string>
+     */
+    private function resolveRequestedResourceProcessTerms(
+        KnowledgeQueryPlan $plan,
+        array $topics,
+        array $senseTerms,
+        array $constraintTerms,
+    ): array {
+        if (! $this->prefersResourceProcessOverEnvironment($plan)) {
+            return [];
+        }
+
+        $constraintLower = [];
+        foreach ($constraintTerms as $constraintTerm) {
+            $constraintLower[] = mb_strtolower($constraintTerm);
+        }
+
+        $ordered = [];
+        $candidates = ['irrigation', 'water requirement'];
+        foreach ([...$topics, ...$senseTerms] as $term) {
+            $candidates[] = $term;
+        }
+
+        foreach ($candidates as $term) {
+            $label = trim((string) $term);
+            if ($label === '') {
+                continue;
+            }
+            $lower = mb_strtolower($label);
+            if (in_array($lower, $constraintLower, true)) {
+                continue;
+            }
+            if (in_array($label, $ordered, true)) {
+                continue;
+            }
+            $ordered[] = $label;
+        }
+
+        return array_slice($ordered, 0, 3);
     }
 
     private function isCausalPhysiologyQuestion(KnowledgeQueryPlan $plan): bool
