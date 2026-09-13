@@ -922,6 +922,58 @@ final class AgriculturalEntityCatalog
             default => 'topic_aligned_scientific_claim',
         };
     }
+
+    /**
+     * Thermal seed-germination optimal/suitable/range questions.
+     * Narrow family: temperature + germination, framed as a requested
+     * temperature value/range — not tomato-specific and not causal/how-to.
+     */
+    public static function isThermalGerminationRangeQuestion(
+        string $haystack,
+        string $scientificSense = '',
+        string $intentQualifier = '',
+    ): bool {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+        if (self::asksCausalAffectQuestion($hay) || self::asksHowToProcedureQuestion($hay)) {
+            return false;
+        }
+
+        $factors = self::extractTopicFactors($hay);
+        $hasTemperature = in_array('temperature', $factors, true);
+        $hasGermination = in_array('germination', $factors, true)
+            || $scientificSense === 'seed_germination';
+        if (! $hasTemperature || ! $hasGermination) {
+            return false;
+        }
+
+        if ($intentQualifier === 'optimal_range') {
+            return true;
+        }
+
+        foreach ([
+            'مناسبة', 'مناسب', 'أفضل', 'مثلى', 'مثالي',
+            'optimal', 'optimum', 'suitable', 'ideal',
+        ] as $signal) {
+            if (self::matchesSemanticToken($hay, $signal)) {
+                return true;
+            }
+        }
+
+        if (preg_match('/(?<!\p{L})best(?!\p{L})/u', $hay) === 1) {
+            return true;
+        }
+
+        return preg_match(
+            '/كم\s+درجة|ما\s+(?:هي\s+|هو\s+)?درجة\s+(?:الحرارة|حرارة)|'
+            .'\bwhat\s+(?:is|are)\s+(?:the\s+)?(?:suitable\s+|optimal\s+|best\s+)?temperature\b|'
+            .'\bwhat\s+temperature\b|\bhow\s+(?:many|much)\s+degrees?\b/u',
+            $hay,
+        ) === 1;
+    }
+
     /**
      * English search terms that encode required evidence content.
      *

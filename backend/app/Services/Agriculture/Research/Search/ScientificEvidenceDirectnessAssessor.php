@@ -450,8 +450,7 @@ class ScientificEvidenceDirectnessAssessor
      */
     private function signalPresentPositively(string $haystack, string $signal): bool
     {
-        if (! AgriculturalEntityCatalog::containsTerm($haystack, $signal)
-            && mb_strpos($haystack, $signal) === false) {
+        if (! $this->signalOccursAsToken($haystack, $signal)) {
             return false;
         }
 
@@ -464,6 +463,24 @@ class ScientificEvidenceDirectnessAssessor
         }
 
         return true;
+    }
+
+    /**
+     * Token-aware occurrence so "optimal" does not match "optimization" / "optimizing".
+     */
+    private function signalOccursAsToken(string $haystack, string $signal): bool
+    {
+        $signal = mb_strtolower(trim($signal));
+        if ($signal === '') {
+            return false;
+        }
+
+        if (str_contains($signal, ' ')) {
+            return AgriculturalEntityCatalog::containsTerm($haystack, $signal)
+                || mb_strpos($haystack, $signal) !== false;
+        }
+
+        return preg_match('/(?<!\p{L})'.preg_quote($signal, '/').'(?!\p{L})/u', $haystack) === 1;
     }
 
     private function hasOptimalRangeAnswerability(string $haystack): bool
@@ -569,6 +586,31 @@ class ScientificEvidenceDirectnessAssessor
             : [];
 
         return in_array('germination', $factors, true);
+    }
+
+    /**
+     * Thermal germination optimal-range questions require numeric/°C answerability
+     * even if question_type was misclassified as definition/quantity.
+     */
+    private function requiresThermalGerminationAnswerability(KnowledgeQueryPlan $plan): bool
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
+        $factors = is_array($plan->normalizedQuery->constraints['scientific_factors'] ?? null)
+            ? $plan->normalizedQuery->constraints['scientific_factors']
+            : [];
+        $haystack = mb_strtolower(trim(implode(' ', array_filter([
+            $plan->normalizedQuery->normalizedQuestion,
+            $plan->normalizedQuery->originalQuestion,
+        ]))));
+
+        if (AgriculturalEntityCatalog::isThermalGerminationRangeQuestion($haystack, $sense, $qualifier)) {
+            return true;
+        }
+
+        return $sense === 'seed_germination'
+            && in_array('temperature', $factors, true)
+            && in_array($qualifier, ['optimal_range', 'general', ''], true);
     }
 
     private function isPlantGrowthTemperatureIntent(KnowledgeQueryPlan $plan): bool
@@ -715,6 +757,10 @@ class ScientificEvidenceDirectnessAssessor
      */
     private function requiresTypedEvidenceAnswerability(KnowledgeQueryPlan $plan): bool
     {
+        if ($this->requiresThermalGerminationAnswerability($plan)) {
+            return true;
+        }
+
         $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
         if (in_array($questionType, [
             'classification', 'quantity', 'range', 'timing', 'symptoms', 'species', 'comparison',
@@ -740,6 +786,10 @@ class ScientificEvidenceDirectnessAssessor
      */
     private function hasRequiredEvidenceAnswerability(KnowledgeQueryPlan $plan, string $haystack): bool
     {
+        if ($this->requiresThermalGerminationAnswerability($plan)) {
+            return $this->hasOptimalRangeAnswerability($haystack);
+        }
+
         $required = trim((string) ($plan->normalizedQuery->constraints['required_evidence_type'] ?? ''));
         $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
         if ($required === '' && $questionType !== '') {

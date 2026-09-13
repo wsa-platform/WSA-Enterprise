@@ -380,6 +380,31 @@ class AnswerComposer
     }
 
     /**
+     * Seed-germination + temperature + optimal/suitable range cannot be certified
+     * from SUPPORTING-only piles. Other factual families keep the supporting hatch.
+     */
+    private function requiresThermalGerminationDirectEvidence(KnowledgeQueryPlan $plan): bool
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
+        $factors = is_array($plan->normalizedQuery->constraints['scientific_factors'] ?? null)
+            ? $plan->normalizedQuery->constraints['scientific_factors']
+            : [];
+        $haystack = mb_strtolower(trim(implode(' ', array_filter([
+            $plan->normalizedQuery->normalizedQuestion,
+            $plan->normalizedQuery->originalQuestion,
+        ]))));
+
+        if (AgriculturalEntityCatalog::isThermalGerminationRangeQuestion($haystack, $sense, $qualifier)) {
+            return true;
+        }
+
+        return $sense === 'seed_germination'
+            && $qualifier === 'optimal_range'
+            && in_array('temperature', $factors, true);
+    }
+
+    /**
      * @param  list<ScientificEvidenceItem>  $usable
      * @return array{
      *     sufficient: bool,
@@ -428,7 +453,7 @@ class AnswerComposer
 
         // Factual questions: multiple answer-eligible SUPPORTING → supported_answer (not DIRECT).
         if ($this->requiresFactualDirectEvidence($plan)) {
-            if ($answerEligibleSupporting >= 2) {
+            if ($answerEligibleSupporting >= 2 && ! $this->requiresThermalGerminationDirectEvidence($plan)) {
                 return [
                     'sufficient' => true,
                     'partial' => true,

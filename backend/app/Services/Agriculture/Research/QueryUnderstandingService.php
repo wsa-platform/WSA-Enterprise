@@ -550,6 +550,15 @@ class QueryUnderstandingService
             return 'causes';
         }
 
+        // Thermal germination optimal/suitable/range precedes generic definition/quantity.
+        if (AgriculturalEntityCatalog::isThermalGerminationRangeQuestion(
+            $haystack,
+            $scientificSense,
+            $intentQualifier,
+        )) {
+            return 'range';
+        }
+
         $best = 'general';
         $bestScore = 0;
         foreach (AgriculturalEntityCatalog::questionTypeSignals() as $type => $keywords) {
@@ -666,6 +675,7 @@ class QueryUnderstandingService
         }
 
         if (! AgriculturalEntityCatalog::asksCausalAffectQuestion($normalizedQuestion)
+            && ! AgriculturalEntityCatalog::isThermalGerminationRangeQuestion($normalizedQuestion)
             && (
                 AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'soil')
                 || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'تربة')

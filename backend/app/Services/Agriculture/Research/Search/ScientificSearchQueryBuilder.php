@@ -188,7 +188,9 @@ class ScientificSearchQueryBuilder
             }
 
             $variants[] = $this->joinTerms([$entity, ...array_slice($topics, 0, 2), ...array_slice($intentTerms, 0, 1)]);
-            $variants[] = $this->joinTerms([$entity, $plan->researchIntent, 'agriculture']);
+            if ($sense !== 'seed_germination') {
+                $variants[] = $this->joinTerms([$entity, $plan->researchIntent, 'agriculture']);
+            }
         } elseif ($isMethodClassification) {
             foreach ($this->buildClassificationMethodVariants($plan, $location) as $methodVariant) {
                 $variants[] = $methodVariant;
@@ -822,6 +824,16 @@ class ScientificSearchQueryBuilder
     private function wantsCultivationProductionVariants(KnowledgeQueryPlan $plan): bool
     {
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
+        $haystack = mb_strtolower(trim(implode(' ', array_filter([
+            $plan->normalizedQuery->normalizedQuestion,
+            $plan->normalizedQuery->originalQuestion,
+        ]))));
+        // Thermal germination temperature questions must stay on temperature/germination.
+        if (AgriculturalEntityCatalog::isThermalGerminationRangeQuestion($haystack, $sense, $qualifier)
+            || $sense === 'seed_germination') {
+            return false;
+        }
         // Entity-family / variety inventory: no cultivation-production drift.
         if (in_array($sense, ['varieties', 'plant_family_members'], true)) {
             return false;
