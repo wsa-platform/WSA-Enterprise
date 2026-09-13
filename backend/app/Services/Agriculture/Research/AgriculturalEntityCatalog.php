@@ -224,6 +224,64 @@ final class AgriculturalEntityCatalog
     }
 
     /**
+     * Causal affect constructions (not how-to / procedure).
+     */
+    public static function asksCausalAffectQuestion(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+
+        return preg_match(
+            '/كيف\s+تؤثر|كيف\s+يؤثر|ما\s+تأثير|تأثير\s+.+\s+(?:على|في)|'
+            .'\bhow\s+does\b.+\b(?:affect|influence)|\bhow\s+do\s+(?!i\b).+\b(?:affect|influence)|'
+            .'\bwhat\s+(?:effect|impact)\b|\beffects?\s+of\b|\bimpact\s+of\b|'
+            .'\baffects?\b.+\b(?:on|by)\b/u',
+            $hay,
+        ) === 1;
+    }
+
+    /**
+     * Procedural how-to questions (recommendation), distinct from causal "how does X affect".
+     */
+    public static function asksHowToProcedureQuestion(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+
+        return preg_match(
+            '/كيف\s+(?:أزرع|ازرع|أروي|اروي|أسقي|اسقي|أستخدم|استخدم|أطبق|اطبق|أفعل|اعمل|أعمل)|'
+            .'\bhow\s+to\b|\bhow\s+do\s+i\b|\bhow\s+can\s+i\b|'
+            .'أفضل\s+طريقة|best\s+(?:way|method)/u',
+            $hay,
+        ) === 1;
+    }
+
+    /**
+     * Sense-bearing water-uptake lexicon for salinity/causal physiology.
+     * Bare "water" / "water use" / WUE / irrigation are not included.
+     *
+     * @return list<string>
+     */
+    public static function physiologyWaterUptakeSignals(): array
+    {
+        return [
+            'water uptake',
+            'water absorption',
+            'root water uptake',
+            'plant water relations',
+            'osmotic adjustment',
+            'osmotic potential',
+            'osmotic',
+            'transpiration pull',
+            'stomatal water relations',
+        ];
+    }
+
+    /**
      * Intent-aware negative sense markers (not a global blacklist).
      *
      * @return array<string, list<string>>
@@ -475,7 +533,13 @@ final class AgriculturalEntityCatalog
                 'storage' => ['storage temperature', 'temperature'],
                 default => ['temperature', 'thermal', 'heat stress', 'thermal stress'],
             },
-            'water' => ['water', 'crop water requirement', 'irrigation requirement', 'evapotranspiration', 'water use'],
+            'water' => match ($sense) {
+                'salinity_physiology' => [
+                    'water uptake', 'water absorption', 'root water uptake',
+                    'plant water relations', 'osmotic', 'osmotic adjustment', 'osmotic potential',
+                ],
+                default => ['water', 'crop water requirement', 'irrigation requirement', 'evapotranspiration', 'water use'],
+            },
             'salinity' => ['salinity', 'salt stress', 'salinity tolerance', 'saline'],
             'germination' => ['germination', 'seed germination', 'emergence', 'seedling emergence'],
             'potassium' => ['potassium', 'potassium deficiency', 'K deficiency'],
@@ -506,7 +570,9 @@ final class AgriculturalEntityCatalog
                 'germination rate', 'germination percentage', 'seedling emergence', 'emergence',
             ],
             'crop_water_requirement' => ['irrigation', 'evapotranspiration', 'water use'],
-            'salinity_physiology' => ['growth', 'yield', 'physiology'],
+            'salinity_physiology' => [
+                'physiology', 'water uptake', 'osmotic adjustment', 'plant water relations',
+            ],
             'drying_processing' => ['drying', 'dehydration'],
             'storage' => ['storage', 'postharvest'],
             'plant_nutrition' => ['plant nutrition', 'nutrient deficiency'],

@@ -380,14 +380,18 @@ class ScientificEvidenceDirectnessAssessor
         }
 
         foreach (AgriculturalEntityCatalog::scientificSynonymsForFactor($factor, $sense !== '' ? $sense : null) as $synonym) {
-            if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim($synonym)))) {
+            if ($this->signalPresentPositively($haystack, mb_strtolower(trim($synonym)))) {
                 return true;
             }
         }
 
+        if ($factor === 'water' && $sense === 'salinity_physiology') {
+            return false;
+        }
+
         $label = AgriculturalEntityCatalog::topicFactorEnglishLabels()[$factor] ?? $factor;
 
-        return AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim($label)));
+        return $this->signalPresentPositively($haystack, mb_strtolower(trim($label)));
     }
 
     private function sensePresentInHaystack(string $sense, string $haystack): bool
@@ -453,7 +457,7 @@ class ScientificEvidenceDirectnessAssessor
 
         $quoted = preg_quote($signal, '/');
         if (preg_match(
-            '/\b(?:without|no|not|never|lacks?|absent|missing|neither|nor)\b[\s\w\-,]{0,48}'.$quoted.'/u',
+            '/\b(?:without|no|not|never|lacks?|absent|missing|neither|nor)\b[\s\w\-,]{0,64}'.$quoted.'/u',
             $haystack,
         ) === 1) {
             return false;

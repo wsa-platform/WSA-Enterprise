@@ -334,7 +334,11 @@ class AnswerComposer
         }
 
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
         if ($sense === 'land_classification') {
+            return true;
+        }
+        if ($sense === 'salinity_physiology' && $qualifier === 'effect') {
             return true;
         }
 
@@ -359,7 +363,6 @@ class AnswerComposer
             return true;
         }
 
-        $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
         if (in_array($qualifier, ['optimal_range', 'requirement'], true)) {
             return true;
         }

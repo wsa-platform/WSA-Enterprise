@@ -214,7 +214,9 @@ class QueryUnderstandingService
         } elseif ($normalizedQuestion === '' || mb_strlen($normalizedQuestion) < 8) {
             $ambiguityState = AgriculturalKnowledgeQuery::AMBIGUITY_NEEDS_CLARIFICATION;
             $clarificationRequirements[] = 'specific_agricultural_question';
-        } elseif ($cropIdResolved === null && $this->intentRequiresNamedEntity($researchIntent, $subject)) {
+        } elseif ($cropIdResolved === null
+            && ! AgriculturalEntityCatalog::asksCausalAffectQuestion($normalizedQuestion)
+            && $this->intentRequiresNamedEntity($researchIntent, $subject)) {
             $ambiguityState = AgriculturalKnowledgeQuery::AMBIGUITY_PARTIALLY_AMBIGUOUS;
             $clarificationRequirements[] = 'subject_or_entity';
         }
@@ -532,6 +534,14 @@ class QueryUnderstandingService
             return 'classification';
         }
 
+        if (AgriculturalEntityCatalog::asksCausalAffectQuestion($haystack)) {
+            return 'causes';
+        }
+
+        if (AgriculturalEntityCatalog::asksHowToProcedureQuestion($haystack)) {
+            return 'recommendation';
+        }
+
         // Causal "why" questions about symptoms are causes, not symptom inventories.
         if (preg_match('/\b(why|cause|causes|reason)\b/u', $haystack) === 1
             || AgriculturalEntityCatalog::containsTerm($haystack, 'لماذا')
@@ -545,10 +555,7 @@ class QueryUnderstandingService
         foreach (AgriculturalEntityCatalog::questionTypeSignals() as $type => $keywords) {
             $score = 0;
             foreach ($keywords as $keyword) {
-                if ($keyword !== '' && (
-                    AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower($keyword))
-                    || mb_strpos($haystack, mb_strtolower($keyword)) !== false
-                )) {
+                if ($keyword !== '' && $this->questionTypeKeywordHits($haystack, $keyword)) {
                     $score += mb_strlen($keyword);
                 }
             }
@@ -592,6 +599,21 @@ class QueryUnderstandingService
             $researchIntent === 'disease' => 'symptoms',
             default => 'general',
         };
+    }
+
+    private function questionTypeKeywordHits(string $haystack, string $keyword): bool
+    {
+        $normalized = mb_strtolower(trim($keyword));
+        if ($normalized === '') {
+            return false;
+        }
+
+        // Short particles must be token-bounded so "كم" cannot match inside "كيف".
+        if (mb_strlen($normalized) <= 3) {
+            return preg_match('/(?<!\p{L})'.preg_quote($normalized, '/').'(?!\p{L})/u', $haystack) === 1;
+        }
+
+        return AgriculturalEntityCatalog::containsTerm($haystack, $normalized);
     }
 
 
@@ -643,7 +665,12 @@ class QueryUnderstandingService
             return $cropCategory;
         }
 
-        if (AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'soil') || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'تربة')) {
+        if (! AgriculturalEntityCatalog::asksCausalAffectQuestion($normalizedQuestion)
+            && (
+                AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'soil')
+                || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'تربة')
+            )
+        ) {
             return ['type' => 'soil', 'value' => 'soil', 'label' => 'soil'];
         }
 

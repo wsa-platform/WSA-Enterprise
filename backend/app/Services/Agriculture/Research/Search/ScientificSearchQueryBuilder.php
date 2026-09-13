@@ -201,6 +201,10 @@ class ScientificSearchQueryBuilder
                 'aquaculture',
                 $location,
             ]);
+        } elseif ($this->isCausalPhysiologyQuestion($plan)) {
+            foreach ($this->buildCausalPhysiologyVariants($plan, $topics, $senseTerms) as $physiologyVariant) {
+                $variants[] = $physiologyVariant;
+            }
         } elseif ($isLandClassification || ($isInventoryClassification && $this->isLandSoilInventorySubject($plan))) {
             // National-first inventory when location is a country; regional stays regional-primary.
             foreach ($this->buildLandSoilInventoryVariants($plan, $location) as $inventoryVariant) {
@@ -996,5 +1000,50 @@ class ScientificSearchQueryBuilder
         }
 
         return trim(preg_replace('/\s+/u', ' ', implode(' ', $filtered)) ?? '');
+    }
+
+    private function isCausalPhysiologyQuestion(KnowledgeQueryPlan $plan): bool
+    {
+        $query = $plan->normalizedQuery;
+        $questionType = trim((string) ($query->constraints['question_type'] ?? ''));
+        $sense = trim((string) ($query->constraints['scientific_sense'] ?? ''));
+        $qualifier = trim((string) ($query->constraints['scientific_intent_qualifier'] ?? ''));
+        if ($questionType === 'recommendation' || $questionType === 'classification') {
+            return false;
+        }
+
+        if ($sense === 'salinity_physiology' && ($questionType === 'causes' || $qualifier === 'effect')) {
+            return true;
+        }
+
+        $haystack = trim($query->originalQuestion.' '.$query->normalizedQuestion);
+
+        return AgriculturalEntityCatalog::asksCausalAffectQuestion($haystack)
+            && in_array($sense, ['salinity_physiology', 'plant_nutrition', 'plant_growth'], true);
+    }
+
+    /**
+     * @param  list<string>  $topics
+     * @param  list<string>  $senseTerms
+     * @return list<string>
+     */
+    private function buildCausalPhysiologyVariants(KnowledgeQueryPlan $plan, array $topics, array $senseTerms): array
+    {
+        $uptake = AgriculturalEntityCatalog::physiologyWaterUptakeSignals();
+        $primaryUptake = $uptake[0] ?? 'water uptake';
+        $osmotic = 'osmotic adjustment';
+        $variants = [
+            $this->joinTerms(['salinity', 'salt stress', $primaryUptake, 'plant']),
+            $this->joinTerms(['salinity', $osmotic, 'physiology', 'plant']),
+            $this->joinTerms([
+                ...array_slice($topics, 0, 1),
+                $primaryUptake,
+                ...array_slice($senseTerms, 0, 1),
+                'effect',
+            ]),
+            $this->joinTerms(['salt stress', 'plant water relations', 'physiology']),
+        ];
+
+        return array_values(array_filter($variants, static fn (string $variant): bool => trim($variant) !== ''));
     }
 }
