@@ -1945,6 +1945,23 @@
       "jobsBody": "Tarım sektöründeki iş fırsatlarını keşfedin",
       "jobsCta": "İşleri görüntüle"
     },
+    "research": {
+      "title": "Tarımsal bilimsel araştırma",
+      "support": "Tarımsal bir soru sorun ve platform sunucusu üzerinden güvenilir bilimsel kaynaklara dayanan bir yanıt alın.",
+      "queryLabel": "Bilimsel araştırma sorusu",
+      "queryPlaceholder": "Örnek: kurak bölgelerde tahıl ürünleri için sulama planlaması",
+      "submit": "Bilimsel arama",
+      "loading": "Bilimsel kaynaklar aranıyor...",
+      "answerHeading": "Yanıt",
+      "noAnswer": "Bu soru için şu anda yeterince belgelenmiş bir yanıt yok.",
+      "status": "Durum: {{status}}",
+      "sourcesHeading": "Kaynaklar",
+      "noCitations": "Gösterilecek atıf yok.",
+      "citationFallback": "Kaynak {{index}}",
+      "errorNotFound": "Bilimsel arama hizmeti veya platform kuruluşu bulunamadı. Sunucunun çalıştığını ve kuruluş ayarlarını kontrol edin.",
+      "errorUnavailable": "Bilimsel arama hizmetine bağlanılamadı. Sunucunun çalıştığını kontrol edin, ardından yeniden deneyin.",
+      "errorGeneric": "Bilimsel arama şu anda tamamlanamadı. Lütfen daha sonra yeniden deneyin."
+    },
     "categoriesStrip": {
       "title": "Ana hizmetlerimizi ve kategorilerimizi keşfedin"
     },

@@ -31,8 +31,11 @@ class AnswerComposer
         KnowledgeQueryPlan $plan,
         EvidenceValidationExecutionReport $validationReport,
     ): AnswerSynthesisExecutionReport {
-        $language = trim((string) ($plan->normalizedQuery->constraints['answer_language'] ?? ''))
-            ?: $plan->normalizedQuery->language;
+        $language = trim((string) ($plan->normalizedQuery->constraints['answer_language'] ?? ''));
+        if ($language === '') {
+            $locale = strtolower(substr((string) app()->getLocale(), 0, 2));
+            $language = in_array($locale, ['en', 'ar', 'tr', 'fr'], true) ? $locale : 'en';
+        }
         $query = $plan->normalizedQuery->originalQuestion;
 
         if (in_array($validationReport->status, ['needs_clarification', 'no_search_results'], true)) {
@@ -900,9 +903,7 @@ class AnswerComposer
                 'publication_year' => $item->publicationYear,
                 'conditions' => $item->conditions,
                 'numerical_values' => $this->extractNumericalValues((string) $item->evidenceText),
-                'message' => $language === 'ar'
-                    ? 'توجد أدلة علمية متعارضة لهذا الموضوع؛ القيمة أو الاستنتاج قد يختلف حسب المصدر والظروف.'
-                    : 'Conflicting scientific evidence exists for this topic; values or conclusions may differ by source and conditions.',
+                'message' => AnswerComposerPhrases::get($language, 'conflict_message'),
             ];
         }
 
@@ -1002,9 +1003,7 @@ class AnswerComposer
 
         // Genuine no-usable-substance path only — never prefer meta conflict line when DIRECT exists.
         if ($findings === [] && $hasDirect) {
-            $findings[] = $language === 'ar'
-                ? 'تتوفر أدلة علمية محدودة أو متعارضة؛ راجع التفاصيل والمصادر.'
-                : 'Limited or conflicting scientific evidence is available; review details and sources.';
+            $findings[] = AnswerComposerPhrases::get($language, 'limited_conflicting');
         }
 
         return array_slice($findings, 0, 5);
@@ -1038,9 +1037,9 @@ class AnswerComposer
         $limitations = [];
 
         if ($validationReport->rejectedCount > 0) {
-            $limitations[] = $language === 'ar'
-                ? sprintf('تم استبعاد %d مصدرًا لعدم اجتياز التحقق العلمي.', $validationReport->rejectedCount)
-                : sprintf('%d source(s) were excluded for failing scientific validation.', $validationReport->rejectedCount);
+            $limitations[] = AnswerComposerPhrases::get($language, 'limitation_rejected', [
+                ':count' => (string) $validationReport->rejectedCount,
+            ]);
         }
 
         $partialCount = count(array_filter(
@@ -1048,9 +1047,9 @@ class AnswerComposer
             fn (ScientificEvidenceItem $item): bool => $item->claimRelationship === ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
         ));
         if ($partialCount > 0) {
-            $limitations[] = $language === 'ar'
-                ? sprintf('%d مصدرًا يقدم دعمًا جزئيًا فقط.', $partialCount)
-                : sprintf('%d source(s) provide partial support only.', $partialCount);
+            $limitations[] = AnswerComposerPhrases::get($language, 'limitation_partial', [
+                ':count' => (string) $partialCount,
+            ]);
         }
 
         if (($sufficiency['partial'] ?? false) === true
@@ -1063,15 +1062,11 @@ class AnswerComposer
                 'supported_answer',
                 'sufficient_supporting_evidence',
             ], true)) {
-            $limitations[] = $language === 'ar'
-                ? 'الأدلة داعمة جزئيًا وليست مباشرة بالكامل للسؤال؛ لا تُعامل كإجابة علمية مؤكدة.'
-                : 'Evidence is supporting rather than fully direct; it must not be treated as a confident scientific answer.';
+            $limitations[] = AnswerComposerPhrases::get($language, 'limitation_supporting');
         }
 
         if ($validationReport->conflictingCount > 0) {
-            $limitations[] = $language === 'ar'
-                ? 'توجد تعارضات بين بعض المصادر العلمية المعتمدة.'
-                : 'Some validated scientific sources disagree.';
+            $limitations[] = AnswerComposerPhrases::get($language, 'limitation_disagreement');
         }
 
         return $limitations;
@@ -1092,9 +1087,7 @@ class AnswerComposer
         array $keyFindings = [],
     ): ?string {
         if (! $validationReport->evidenceSufficient || ! ($sufficiency['sufficient'] ?? false)) {
-            return $language === 'ar'
-                ? 'الأدلة العلمية المتاحة غير كافية لإعطاء نتيجة مؤكدة.'
-                : 'Available scientific evidence is insufficient for a definitive conclusion.';
+            return AnswerComposerPhrases::get($language, 'uncertainty_insufficient');
         }
 
         $hasDirect = ((int) ($sufficiency['direct_count'] ?? 0)) >= 1;
@@ -1107,27 +1100,19 @@ class AnswerComposer
         // Partial secondary conflicts with usable non-conflicting DIRECT findings → softer uncertainty.
         // When every usable item is conflicting, keep the hard conflict framing.
         if ($conflicts !== [] && $hasDirect && $usableNonConflict > 0) {
-            return $language === 'ar'
-                ? 'توجد بعض التعارضات الثانوية بين المصادر؛ الاستنتاج الرئيسي مدعوم بأدلة مباشرة.'
-                : 'Some secondary sources disagree; the primary conclusion is supported by direct evidence.';
+            return AnswerComposerPhrases::get($language, 'uncertainty_secondary_conflicts');
         }
 
         if ($conflicts !== []) {
-            return $language === 'ar'
-                ? 'توجد أدلة متعارضة؛ لا ينبغي افتراض قيمة أو استنتاج واحد universal.'
-                : 'Conflicting evidence exists; a single universal value or conclusion should not be assumed.';
+            return AnswerComposerPhrases::get($language, 'uncertainty_conflicting');
         }
 
         if (in_array((string) ($sufficiency['mode'] ?? ''), ['supported_answer', 'sufficient_supporting_evidence'], true)) {
-            return $language === 'ar'
-                ? 'الإجابة مبنية على تجميع أدلة داعمة متعددة؛ لا يوجد مصدر مباشر واحد يغطي السؤال بالكامل.'
-                : 'The answer aggregates multiple supporting sources; no single direct source fully covers the question.';
+            return AnswerComposerPhrases::get($language, 'uncertainty_aggregated');
         }
 
         if (($sufficiency['direct_count'] ?? 0) === 0 && ($sufficiency['supporting_count'] ?? 0) >= 1) {
-            return $language === 'ar'
-                ? 'الأدلة المتاحة داعمة فقط (supporting-only)؛ لا تكفي لإجابة علمية مؤكدة أو قيمة مثلى مباشرة.'
-                : 'Available evidence is supporting-only; it is insufficient for a confident scientific answer or direct optimum.';
+            return AnswerComposerPhrases::get($language, 'uncertainty_supporting_only');
         }
 
         $supported = count(array_filter(
@@ -1136,9 +1121,7 @@ class AnswerComposer
         ));
 
         if ($supported === 1 && count($usable) === 1) {
-            return $language === 'ar'
-                ? 'الاستنتاج يعتمد على مصدر علمي واحد معتمد؛ قد تتطلب التطبيقات العملية مصادر إضافية.'
-                : 'The conclusion relies on a single validated source; practical applications may require additional evidence.';
+            return AnswerComposerPhrases::get($language, 'uncertainty_single_source');
         }
 
         return null;
@@ -1189,18 +1172,14 @@ class AnswerComposer
 
     private function insufficientDirectMessage(string $language): string
     {
-        return match ($language) {
-            'ar' => 'لم يتم العثور على دليل علمي مباشر كافٍ للإجابة بشكل مؤكد.',
-            'fr' => "Aucune preuve scientifique directe suffisante n'a été trouvée pour une réponse certaine.",
-            'tr' => 'Kesin bir yanıt için yeterli doğrudan bilimsel kanıt bulunamadı.',
-            default => 'Insufficient direct scientific evidence was found for a definitive answer.',
-        };
+        return AnswerComposerPhrases::get($language, 'insufficient_direct');
     }
 
     /**
      * @param  list<string>  $keyFindings
      * @param  array<string, mixed>  $sufficiency
      */
+
     private function buildConciseSummary(
         array $keyFindings,
         ?string $uncertainty,
@@ -1215,13 +1194,22 @@ class AnswerComposer
             return $uncertainty ?? $this->insufficientDirectMessage($language);
         }
 
-        return $keyFindings[0];
+        $values = $this->collectedNumericalValues($keyFindings);
+        if ($values !== []) {
+            return AnswerComposerPhrases::get($language, 'range_evidence', [
+                ':label' => AnswerComposerPhrases::get($language, 'label_supported_value'),
+                ':values' => implode(', ', array_slice($values, 0, 4)),
+            ]);
+        }
+
+        return AnswerComposerPhrases::get($language, 'explanatory_evidence');
     }
 
     /**
      * @param  list<string>  $keyFindings
      * @param  array<string, mixed>  $sufficiency
      */
+
     private function buildMainAnswerBody(
         array $keyFindings,
         KnowledgeQueryPlan $plan,
@@ -1241,11 +1229,11 @@ class AnswerComposer
         $heading = $this->mainAnswerHeading($plan, $language);
 
         return match ($mode) {
-            'list' => $this->formatAsNumberedList($keyFindings, $heading),
+            'list' => $this->formatAsNumberedList($keyFindings, $heading, $language),
             'process' => $this->formatAsNumberedSteps($keyFindings, $heading, $language),
             'range' => $this->formatAsLabeledRange($keyFindings, $plan, $language),
             'comparison' => $this->formatAsComparison($keyFindings, $heading, $language),
-            default => $this->formatAsExplanatory($keyFindings, $heading),
+            default => $this->formatAsExplanatory($keyFindings, $heading, $language),
         };
     }
 
@@ -1290,41 +1278,65 @@ class AnswerComposer
     private function mainAnswerHeading(KnowledgeQueryPlan $plan, string $language): string
     {
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
-        $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
-        $topic = is_array($topics) && $topics !== [] ? trim((string) $topics[0]) : '';
-
         $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
         $intent = trim((string) $plan->researchIntent);
+        $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
+        $topic = is_array($topics) && $topics !== [] ? trim((string) $topics[0]) : '';
 
         // Entity-family member inventory heading (stage separately from land/timing).
         if ($sense === 'plant_family_members'
             || $intent === 'plant_family_members'
             || $questionType === 'species') {
-            return $language === 'ar' ? 'أفراد العائلة النباتية' : 'Plant family members';
+            return AnswerComposerPhrases::get($language, 'heading_family_members');
         }
 
         if ($sense === 'land_classification') {
-            return $language === 'ar' ? 'أنواع الأراضي' : 'Land types';
+            return AnswerComposerPhrases::get($language, 'heading_land_types');
         }
 
-        if ($topic !== '') {
+        if ($sense === 'planting_timing' || $questionType === 'timing') {
+            return AnswerComposerPhrases::get($language, 'heading_planting_date');
+        }
+
+        if ($sense === 'varieties' || $intent === 'varieties') {
+            return AnswerComposerPhrases::get($language, 'heading_varieties');
+        }
+
+        // Prefer a localized generic heading over leaking internal sense keys
+        // (e.g. "plant growth", "scientific_generated") into the user answer.
+        $blockedTopicLeak = in_array(mb_strtolower($topic), [
+            'plant growth', 'growth', 'physiology', 'scientific generated',
+            'direct', 'supporting', 'related', 'irrelevant',
+        ], true);
+        if ($topic !== '' && ! $blockedTopicLeak && ! str_contains($topic, '_') && $language === 'en') {
             return $topic;
         }
 
-        if ($sense !== '') {
-            return str_replace('_', ' ', $sense);
+        $localizedSense = match ($sense) {
+            'plant_growth' => AnswerComposerPhrases::get($language, 'heading_plant_growth'),
+            'seed_germination' => AnswerComposerPhrases::get($language, 'heading_seed_germination'),
+            'crop_water_requirement' => AnswerComposerPhrases::get($language, 'heading_water_requirement'),
+            'plant_nutrition' => AnswerComposerPhrases::get($language, 'heading_plant_nutrition'),
+            default => '',
+        };
+        if ($localizedSense !== '') {
+            return $localizedSense;
         }
 
-        return $language === 'ar' ? 'الإجابة' : 'Answer';
+        return AnswerComposerPhrases::get($language, 'heading_answer');
     }
 
     /**
      * @param  list<string>  $keyFindings
      */
-    private function formatAsNumberedList(array $keyFindings, string $heading): string
+
+    private function formatAsNumberedList(array $keyFindings, string $heading, string $language): string
     {
-        $items = $this->extractListItems($keyFindings);
-        $lines = ['### '.$heading];
+        $items = $this->factItemsFromFindings($keyFindings);
+        $lines = ['### '.$heading, AnswerComposerPhrases::get($language, 'list_evidence')];
+        if ($items === []) {
+            return implode("\n", $lines);
+        }
         foreach ($items as $index => $item) {
             $lines[] = ($index + 1).'. **'.$item.'**';
         }
@@ -1335,11 +1347,12 @@ class AnswerComposer
     /**
      * @param  list<string>  $keyFindings
      */
+
     private function formatAsNumberedSteps(array $keyFindings, string $heading, string $language): string
     {
-        $items = $this->extractListItems($keyFindings);
-        $stepLabel = $language === 'ar' ? 'الخطوة' : 'Step';
-        $lines = ['### '.$heading];
+        $items = $this->factItemsFromFindings($keyFindings);
+        $stepLabel = AnswerComposerPhrases::get($language, 'step');
+        $lines = ['### '.$heading, AnswerComposerPhrases::get($language, 'process_evidence')];
         foreach ($items as $index => $item) {
             $lines[] = ($index + 1).'. '.$stepLabel.' '.($index + 1).': '.$item;
         }
@@ -1350,25 +1363,27 @@ class AnswerComposer
     /**
      * @param  list<string>  $keyFindings
      */
+
     private function formatAsLabeledRange(array $keyFindings, KnowledgeQueryPlan $plan, string $language): string
     {
-        $lead = $keyFindings[0];
-        $values = $this->extractNumericalValues($lead);
+        $values = $this->collectedNumericalValues($keyFindings);
         $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
         $label = match (true) {
-            $qualifier === 'optimal_range' => $language === 'ar' ? 'القيمة/النطاق الأمثل' : 'Optimal value/range',
-            $qualifier === 'requirement' => $language === 'ar' ? 'الاحتياج' : 'Requirement',
-            default => $language === 'ar' ? 'القيمة المدعومة' : 'Supported value',
+            $qualifier === 'optimal_range' => AnswerComposerPhrases::get($language, 'label_optimal_range'),
+            $qualifier === 'requirement' => AnswerComposerPhrases::get($language, 'label_requirement'),
+            default => AnswerComposerPhrases::get($language, 'label_supported_value'),
         };
 
         $lines = [];
         if ($values !== []) {
-            $lines[] = $label.': '.implode(', ', array_slice($values, 0, 4));
-        }
-        $lines[] = $lead;
-        if (count($keyFindings) > 1) {
-            $lines[] = '';
-            $lines[] = ($language === 'ar' ? 'توضيح: ' : 'Explanation: ').$keyFindings[1];
+            $valueText = implode(', ', array_slice($values, 0, 4));
+            $lines[] = $label.': '.$valueText;
+            $lines[] = AnswerComposerPhrases::get($language, 'range_evidence', [
+                ':label' => $label,
+                ':values' => $valueText,
+            ]);
+        } else {
+            $lines[] = AnswerComposerPhrases::get($language, 'explanatory_evidence');
         }
 
         return implode("\n", $lines);
@@ -1377,11 +1392,13 @@ class AnswerComposer
     /**
      * @param  list<string>  $keyFindings
      */
+
     private function formatAsComparison(array $keyFindings, string $heading, string $language): string
     {
-        $lines = ['### '.$heading];
-        foreach ($keyFindings as $index => $finding) {
-            $prefix = $language === 'ar' ? 'جانب' : 'Aspect';
+        $items = $this->factItemsFromFindings($keyFindings);
+        $lines = ['### '.$heading, AnswerComposerPhrases::get($language, 'comparison_evidence')];
+        $prefix = AnswerComposerPhrases::get($language, 'aspect');
+        foreach ($items as $index => $finding) {
             $lines[] = ($index + 1).'. '.$prefix.' '.($index + 1).': '.$finding;
         }
 
@@ -1391,15 +1408,26 @@ class AnswerComposer
     /**
      * @param  list<string>  $keyFindings
      */
-    private function formatAsExplanatory(array $keyFindings, string $heading): string
+
+    private function formatAsExplanatory(array $keyFindings, string $heading, string $language): string
     {
-        $lines = [$keyFindings[0]];
-        if (count($keyFindings) > 1) {
+        $values = $this->collectedNumericalValues($keyFindings);
+        $items = $this->factItemsFromFindings($keyFindings);
+        $lines = [];
+        if ($heading !== '' && $heading !== AnswerComposerPhrases::get($language, 'heading_answer')) {
+            $lines[] = '### '.$heading;
             $lines[] = '';
-            $lines[] = $keyFindings[1];
         }
-        if ($heading !== '' && $heading !== 'Answer' && $heading !== 'الإجابة') {
-            array_unshift($lines, '### '.$heading, '');
+        if ($values !== []) {
+            $lines[] = AnswerComposerPhrases::get($language, 'range_evidence', [
+                ':label' => AnswerComposerPhrases::get($language, 'label_supported_value'),
+                ':values' => implode(', ', array_slice($values, 0, 4)),
+            ]);
+        } else {
+            $lines[] = AnswerComposerPhrases::get($language, 'explanatory_evidence');
+        }
+        foreach ($items as $index => $item) {
+            $lines[] = ($index + 1).'. **'.$item.'**';
         }
 
         return implode("\n", $lines);
@@ -1409,6 +1437,64 @@ class AnswerComposer
      * @param  list<string>  $keyFindings
      * @return list<string>
      */
+
+    private function collectedNumericalValues(array $keyFindings): array
+    {
+        $values = [];
+        foreach ($keyFindings as $finding) {
+            foreach ($this->extractNumericalValues($finding) as $value) {
+                if (! in_array($value, $values, true)) {
+                    $values[] = $value;
+                }
+            }
+        }
+
+        return $values;
+    }
+
+    /**
+     * Extract short factual items from evidence findings. Full source-language
+     * sentences stay in citations, not in the explanatory body.
+     *
+     * @param  list<string>  $keyFindings
+     * @return list<string>
+     */
+
+    private function factItemsFromFindings(array $keyFindings): array
+    {
+        $items = [];
+        foreach ($this->extractListItems($keyFindings) as $item) {
+            if ($this->isSourceProseSentence($item)) {
+                continue;
+            }
+            if (! in_array($item, $items, true)) {
+                $items[] = $item;
+            }
+        }
+
+        return array_slice($items, 0, 12);
+    }
+
+    private function isSourceProseSentence(string $text): bool
+    {
+        $clean = trim($text);
+        if ($clean === '') {
+            return true;
+        }
+        $words = preg_split('/\s+/u', $clean) ?: [];
+        if (count($words) >= 12) {
+            return true;
+        }
+
+        return count($words) >= 8
+            && preg_match('/\b(the|this|study|measures|were|was|including|carried|under)\b/i', $clean) === 1;
+    }
+
+    /**
+     * @param  list<string>  $keyFindings
+     * @return list<string>
+     */
+
     private function extractListItems(array $keyFindings): array
     {
         if (count($keyFindings) > 1) {
@@ -1463,18 +1549,8 @@ class AnswerComposer
         }
 
         if ($supportedAnswer) {
-            $heading = match ($language) {
-                'ar' => '### المصادر',
-                'fr' => '### Sources',
-                'tr' => '### Kaynaklar',
-                default => '### Sources',
-            };
-            $disclaimer = match ($language) {
-                'ar' => 'الإجابة مبنية على تجميع الأدلة العلمية المتاحة من المصادر التالية.',
-                'fr' => 'La réponse est basée sur l’agrégation des preuves scientifiques disponibles provenant des sources suivantes.',
-                'tr' => 'Yanıt, aşağıdaki kaynaklardan elde edilen bilimsel kanıtların birleştirilmesine dayanır.',
-                default => 'The answer is based on aggregating available scientific evidence from the following sources.',
-            };
+            $heading = AnswerComposerPhrases::get($language, 'sources');
+            $disclaimer = AnswerComposerPhrases::get($language, 'sources_disclaimer');
             $lines = [$heading, $disclaimer];
             foreach ($citations as $index => $citation) {
                 $lines[] = ($index + 1).'. '.$this->formatCitationBlock($citation, $language);
@@ -1484,18 +1560,8 @@ class AnswerComposer
         }
 
         $heading = count($citations) === 1
-            ? match ($language) {
-                'ar' => '### المصدر الأساسي',
-                'fr' => '### Source principale',
-                'tr' => '### Birincil kaynak',
-                default => '### Primary source',
-            }
-            : match ($language) {
-                'ar' => '### المصادر الأساسية',
-                'fr' => '### Sources principales',
-                'tr' => '### Birincil kaynaklar',
-                default => '### Primary sources',
-            };
+            ? AnswerComposerPhrases::get($language, 'primary_source')
+            : AnswerComposerPhrases::get($language, 'primary_sources');
 
         $lines = [$heading];
         foreach ($citations as $index => $citation) {
@@ -1508,24 +1574,24 @@ class AnswerComposer
     private function formatCitationBlock(ResearchAnswerCitation $citation, string $language): string
     {
         $parts = [];
-        $titleLabel = $language === 'ar' ? 'العنوان' : 'Title';
+        $titleLabel = AnswerComposerPhrases::get($language, 'title');
         $parts[] = $titleLabel.': '.$citation->title;
 
         if ($citation->authors !== []) {
-            $authorsLabel = $language === 'ar' ? 'المؤلفون' : 'Authors';
+            $authorsLabel = AnswerComposerPhrases::get($language, 'authors');
             $parts[] = $authorsLabel.': '.implode(', ', array_slice($citation->authors, 0, 8));
         }
 
         if ($citation->journal !== null && trim($citation->journal) !== '') {
-            $journalLabel = $language === 'ar' ? 'المجلة' : 'Journal';
+            $journalLabel = AnswerComposerPhrases::get($language, 'journal');
             $parts[] = $journalLabel.': '.$citation->journal;
         } elseif ($citation->organization !== null && trim($citation->organization) !== '') {
-            $orgLabel = $language === 'ar' ? 'الجهة' : 'Organization';
+            $orgLabel = AnswerComposerPhrases::get($language, 'organization');
             $parts[] = $orgLabel.': '.$citation->organization;
         }
 
         if ($citation->publicationYear !== null) {
-            $yearLabel = $language === 'ar' ? 'السنة' : 'Year';
+            $yearLabel = AnswerComposerPhrases::get($language, 'year');
             $parts[] = $yearLabel.': '.$citation->publicationYear;
         }
 
@@ -1535,7 +1601,7 @@ class AnswerComposer
 
         // Never invent URLs — only display an original URL already present on the evidence model.
         if ($citation->url !== null && trim($citation->url) !== '') {
-            $urlLabel = $language === 'ar' ? 'الرابط الأصلي' : 'Original URL';
+            $urlLabel = AnswerComposerPhrases::get($language, 'original_url');
             $parts[] = $urlLabel.': '.$citation->url;
         }
 
@@ -1571,10 +1637,8 @@ class AnswerComposer
                 ($item->url !== null && $item->url !== '') ? $item->url : null,
             ]));
 
-            $label = $language === 'ar'
-                ? 'معلومة داعمة/سياقية'
-                : 'Supporting/contextual information';
-            $sourceLabel = $language === 'ar' ? 'المصدر' : 'Source';
+            $label = AnswerComposerPhrases::get($language, 'supporting_info');
+            $sourceLabel = AnswerComposerPhrases::get($language, 'source');
             $entries[] = '- '.$label.': '.$snippet
                 .($sourceBits !== [] ? "\n  ".$sourceLabel.': '.implode(' | ', $sourceBits) : '');
         }
@@ -1583,19 +1647,10 @@ class AnswerComposer
             return '';
         }
 
-        $heading = match ($language) {
-            'ar' => '### معلومات إضافية',
-            'fr' => '### Informations supplémentaires',
-            'tr' => '### Ek bilgiler',
-            default => '### Additional information',
-        };
+        $heading = AnswerComposerPhrases::get($language, 'additional_information');
         $intro = $supportingOnlyContext
-            ? ($language === 'ar'
-                ? 'المعلومات التالية داعمة فقط وليست إجابة مباشرة مؤكدة:'
-                : 'The following is supporting/contextual only and is not a confident direct answer:')
-            : ($language === 'ar'
-                ? 'معلومات مرتبطة مفيدة من أدلة غير مباشرة:'
-                : 'Related useful information from non-primary evidence:');
+            ? AnswerComposerPhrases::get($language, 'additional_supporting_intro')
+            : AnswerComposerPhrases::get($language, 'additional_related_intro');
 
         return implode("\n", array_merge([$heading, $intro], $entries));
     }
@@ -1663,9 +1718,7 @@ class AnswerComposer
         ], static fn (string $part): bool => trim($part) !== ''));
 
         if ($conflicts !== []) {
-            $parts[] = ($language === 'ar'
-                ? 'ملاحظة حول التعارض: '
-                : 'Conflict note: ').($conflicts[0]['message'] ?? '');
+            $parts[] = AnswerComposerPhrases::get($language, 'conflict_note').($conflicts[0]['message'] ?? '');
         }
 
         return implode("\n\n", $parts);
@@ -1692,7 +1745,7 @@ class AnswerComposer
 
         if ($uncertainty !== null && trim($uncertainty) !== '') {
             $sections[] = '';
-            $sections[] = ($language === 'ar' ? 'درجة اليقين: ' : 'Uncertainty: ').$uncertainty;
+            $sections[] = AnswerComposerPhrases::get($language, 'uncertainty_prefix').$uncertainty;
         }
 
         return trim(implode("\n", $sections));
@@ -1800,13 +1853,9 @@ class AnswerComposer
         KnowledgeQueryPlan $plan,
         int $rejectedCount = 0,
     ): AnswerSynthesisExecutionReport {
-        $message = $language === 'ar'
-            ? ($reason === 'no_relevant_validated_evidence' || $reason === 'background_or_weak_evidence_only'
-                ? 'الأدلة العلمية المتاحة غير ذات صلة كافية أو غير كافية لإعطاء نتيجة مؤكدة.'
-                : 'الأدلة العلمية المتاحة غير كافية لإعطاء نتيجة مؤكدة.')
-            : ($reason === 'no_relevant_validated_evidence' || $reason === 'background_or_weak_evidence_only'
-                ? 'Available scientific evidence is not sufficiently relevant for a definitive conclusion.'
-                : 'Available scientific evidence is insufficient for a definitive conclusion.');
+        $message = ($reason === 'no_relevant_validated_evidence' || $reason === 'background_or_weak_evidence_only')
+            ? AnswerComposerPhrases::get($language, 'insufficient_irrelevant')
+            : AnswerComposerPhrases::get($language, 'uncertainty_insufficient');
 
         return new AnswerSynthesisExecutionReport(
             status: $status,
@@ -1820,9 +1869,9 @@ class AnswerComposer
             evidenceReferences: [],
             confidence: 0.0,
             limitations: $rejectedCount > 0
-                ? [($language === 'ar'
-                    ? sprintf('تم رفض %d مصدرًا أثناء التحقق.', $rejectedCount)
-                    : sprintf('%d source(s) were rejected during validation.', $rejectedCount))]
+                ? [AnswerComposerPhrases::get($language, 'rejected_during_validation', [
+                    ':count' => (string) $rejectedCount,
+                ])]
                 : [],
             uncertainty: $message,
             conflicts: [],

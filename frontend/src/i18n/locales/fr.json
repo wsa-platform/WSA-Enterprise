@@ -1945,6 +1945,23 @@
       "jobsBody": "Découvrez les opportunités professionnelles dans le secteur agricole",
       "jobsCta": "Parcourir les emplois"
     },
+    "research": {
+      "title": "Recherche scientifique agricole",
+      "support": "Posez une question agricole et obtenez une réponse fondée sur des sources scientifiques fiables via le serveur de la plateforme.",
+      "queryLabel": "Question de recherche scientifique",
+      "queryPlaceholder": "Exemple : planification de l’irrigation des céréales en zones sèches",
+      "submit": "Recherche scientifique",
+      "loading": "Recherche dans les sources scientifiques...",
+      "answerHeading": "Réponse",
+      "noAnswer": "Aucune réponse suffisamment documentée n’est disponible pour cette question pour le moment.",
+      "status": "Statut : {{status}}",
+      "sourcesHeading": "Sources",
+      "noCitations": "Aucune citation à afficher.",
+      "citationFallback": "Source {{index}}",
+      "errorNotFound": "Le service de recherche scientifique ou l’organisation de la plateforme est introuvable. Vérifiez que le serveur fonctionne et que les paramètres d’organisation sont corrects.",
+      "errorUnavailable": "Impossible de se connecter au service de recherche scientifique. Vérifiez que le serveur fonctionne, puis réessayez.",
+      "errorGeneric": "Impossible de terminer la recherche scientifique pour le moment. Veuillez réessayer plus tard."
+    },
     "categoriesStrip": {
       "title": "Découvrez nos principaux services et catégories"
     },

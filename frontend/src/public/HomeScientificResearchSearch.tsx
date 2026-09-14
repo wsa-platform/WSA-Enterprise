@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '../i18n/config'
 import { ApiError } from '../api/client'
 import {
   queryPublicResearchAgent,
@@ -15,15 +17,15 @@ export function normalizeResearchQuery(value: string): string | null {
 export function resolveResearchSearchError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status === 404) {
-      return 'تعذر العثور على خدمة البحث العلمي أو مؤسسة المنصة. تحقق من تشغيل الخادم وإعدادات المؤسسة.'
+      return i18n.t('website.research.errorNotFound')
     }
     if (error.status === 0 || error.status >= 500) {
-      return 'تعذر الاتصال بخدمة البحث العلمي. تحقق من تشغيل الخادم ثم أعد المحاولة.'
+      return i18n.t('website.research.errorUnavailable')
     }
-    return error.message || 'تعذر إكمال البحث العلمي حالياً. يرجى المحاولة لاحقاً.'
+    return error.message || i18n.t('website.research.errorGeneric')
   }
 
-  return 'تعذر الاتصال بخدمة البحث العلمي. تحقق من تشغيل الخادم ثم أعد المحاولة.'
+  return i18n.t('website.research.errorUnavailable')
 }
 
 export type HomeScientificResearchSearchViewProps = {
@@ -35,8 +37,8 @@ export type HomeScientificResearchSearchViewProps = {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }
 
-function citationLabel(citation: ResearchAgentCitation, index: number): string {
-  return citation.title?.trim() || `مصدر ${index + 1}`
+function citationLabel(citation: ResearchAgentCitation, index: number, fallback: string): string {
+  return citation.title?.trim() || fallback
 }
 
 /** Presentational scientific research search block for the homepage. */
@@ -48,6 +50,7 @@ export function HomeScientificResearchSearchView({
   onQueryChange,
   onSubmit,
 }: HomeScientificResearchSearchViewProps) {
+  const { t } = useTranslation()
   const answer = result?.answer?.trim() || result?.concise_summary?.trim() || null
   const citations = result?.citations ?? []
 
@@ -57,16 +60,16 @@ export function HomeScientificResearchSearchView({
       aria-labelledby="home-research-title"
     >
       <div className="hp-research-heading">
-        <h2 id="home-research-title">البحث العلمي الزراعي</h2>
+        <h2 id="home-research-title">{t('website.research.title')}</h2>
         <span className="hp-category-rule" aria-hidden="true" />
       </div>
       <p className="hp-research-support">
-        اطرح سؤالاً زراعياً واحصل على إجابة مستندة إلى مصادر علمية موثوقة عبر خادم المنصة.
+        {t('website.research.support')}
       </p>
 
       <form className="hp-research-form" onSubmit={onSubmit} noValidate>
         <label className="hp-research-label" htmlFor="home-research-query">
-          سؤال البحث العلمي
+          {t('website.research.queryLabel')}
         </label>
         <div className="hp-research-controls">
           <input
@@ -76,7 +79,7 @@ export function HomeScientificResearchSearchView({
             name="research_query"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="مثال: جدولة الري لمحاصيل الحبوب في المناطق الجافة"
+            placeholder={t('website.research.queryPlaceholder')}
             disabled={loading}
             autoComplete="off"
           />
@@ -85,14 +88,14 @@ export function HomeScientificResearchSearchView({
             className="gs-btn gs-btn-primary hp-research-submit"
             disabled={loading}
           >
-            بحث علمي
+            {t('website.research.submit')}
           </button>
         </div>
       </form>
 
       {loading ? (
         <p className="hp-research-status" aria-live="polite">
-          جاري البحث في المصادر العلمية...
+          {t('website.research.loading')}
         </p>
       ) : null}
 
@@ -106,30 +109,30 @@ export function HomeScientificResearchSearchView({
         <div className="hp-research-result" aria-live="polite">
           {answer ? (
             <div className="hp-research-answer">
-              <h3>الإجابة</h3>
+              <h3>{t('website.research.answerHeading')}</h3>
               {answer.split('\n').map((paragraph, index) => (
                 <p key={`answer-${index}`}>{paragraph}</p>
               ))}
             </div>
           ) : (
             <p className="hp-research-status" role="status">
-              لم تتوفر إجابة موثقة كافية لهذا السؤال حالياً.
+              {t('website.research.noAnswer')}
             </p>
           )}
 
           {result.status ? (
-            <p className="hp-research-meta">الحالة: {result.status}</p>
+            <p className="hp-research-meta">{t('website.research.status', { status: result.status })}</p>
           ) : null}
 
           <div className="hp-research-citations">
-            <h3>المصادر</h3>
+            <h3>{t('website.research.sourcesHeading')}</h3>
             {citations.length === 0 ? (
-              <p className="hp-research-status">لا توجد استشهادات معروضة.</p>
+              <p className="hp-research-status">{t('website.research.noCitations')}</p>
             ) : (
               <ul>
                 {citations.map((citation, index) => (
                   <li key={`${citation.doi ?? citation.url ?? citation.title ?? 'c'}-${index}`}>
-                    <strong>{citationLabel(citation, index)}</strong>
+                    <strong>{citationLabel(citation, index, t('website.research.citationFallback', { index: index + 1 }))}</strong>
                     {citation.organization ? (
                       <span className="hp-research-cite-meta"> — {citation.organization}</span>
                     ) : null}

@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Research;
 
+use App\Http\Middleware\SetLocaleFromHeader;
 use App\Services\Agriculture\FieldCropTaxonomyCatalog;
 
 /**
@@ -195,6 +196,8 @@ class QueryUnderstandingService
         $negativeConstraints = AgriculturalEntityCatalog::negativeConstraintsForEvidenceType($requiredEvidenceType);
         $constraints['negative_constraints'] = $negativeConstraints;
         $constraints['exclusions'] = $negativeConstraints;
+        $constraints['question_language'] = $language;
+        $constraints['answer_language'] = $this->resolvePlatformAnswerLanguage();
         $clarificationRequirements = [];
         $ambiguityState = AgriculturalKnowledgeQuery::AMBIGUITY_CLEAR;
         $hasExplicitEntities = is_array($input['entities'] ?? null) && $input['entities'] !== [];
@@ -306,6 +309,8 @@ class QueryUnderstandingService
             $scientificSense,
             $agriculturalDomain,
         );
+        $constraints['question_language'] = $language;
+        $constraints['answer_language'] = $this->resolvePlatformAnswerLanguage();
 
         return new AgriculturalKnowledgeQuery(
             originalQuestion: $originalQuestion !== '' ? $originalQuestion : $normalizedQuestion,
@@ -364,7 +369,37 @@ class QueryUnderstandingService
             return 'und';
         }
 
-        return preg_match('/\p{Arabic}/u', $text) === 1 ? 'ar' : 'en';
+        if (preg_match('/\p{Arabic}/u', $text) === 1) {
+            return 'ar';
+        }
+
+        // Turkish-specific letters or common TR question tokens.
+        if (preg_match('/[ğüşıöçĞÜŞİÖÇ]/u', $text) === 1
+            || preg_match('/\b(nelerdir|nedir|nasıl|hangi|türleri|mısır|misir)\b/iu', $text) === 1) {
+            return 'tr';
+        }
+
+        // French accents or strong FR question framing.
+        if (preg_match('/[àâäéèêëïîôùûüçœæÀÂÄÉÈÊËÏÎÔÙÛÜÇ]/u', $text) === 1
+            || preg_match('/\b(quels?|quelles?|sont|terres?\s+agricoles|égypte|egypte|pourquoi|comment)\b/iu', $text) === 1) {
+            return 'fr';
+        }
+
+        return 'en';
+    }
+
+    /**
+     * Platform UI locale drives answer prose. Question language stays independent.
+     * Reuses SetLocaleFromHeader (Accept-Language → app locale); unsupported/missing → en.
+     */
+
+    private function resolvePlatformAnswerLanguage(): string
+    {
+        $locale = strtolower(substr((string) app()->getLocale(), 0, 2));
+
+        return in_array($locale, SetLocaleFromHeader::SUPPORTED_LOCALES, true)
+            ? $locale
+            : 'en';
     }
 
     /**

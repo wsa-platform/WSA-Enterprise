@@ -1945,6 +1945,23 @@
       "jobsBody": "Discover career opportunities in agriculture",
       "jobsCta": "Browse jobs"
     },
+    "research": {
+      "title": "Agricultural scientific research",
+      "support": "Ask an agricultural question and get an answer based on trusted scientific sources through the platform server.",
+      "queryLabel": "Scientific research question",
+      "queryPlaceholder": "Example: irrigation scheduling for cereal crops in dry regions",
+      "submit": "Scientific search",
+      "loading": "Searching scientific sources...",
+      "answerHeading": "Answer",
+      "noAnswer": "No sufficiently documented answer is available for this question right now.",
+      "status": "Status: {{status}}",
+      "sourcesHeading": "Sources",
+      "noCitations": "No citations to display.",
+      "citationFallback": "Source {{index}}",
+      "errorNotFound": "The scientific search service or platform organization could not be found. Check that the server is running and organization settings are correct.",
+      "errorUnavailable": "Could not connect to the scientific search service. Check that the server is running, then try again.",
+      "errorGeneric": "Could not complete scientific search right now. Please try again later."
+    },
     "categoriesStrip": {
       "title": "Discover our main services and categories"
     },

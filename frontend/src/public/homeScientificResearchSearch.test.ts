@@ -41,6 +41,25 @@ function renderWithProviders(node: ReactNode) {
   )
 }
 
+function renderView(props: {
+  query: string
+  loading: boolean
+  error: string | null
+  result: Parameters<typeof HomeScientificResearchSearchView>[0]['result']
+}) {
+  return renderToStaticMarkup(
+    createElement(
+      I18nextProvider,
+      { i18n },
+      createElement(HomeScientificResearchSearchView, {
+        ...props,
+        onQueryChange: () => undefined,
+        onSubmit: () => undefined,
+      }),
+    ),
+  )
+}
+
 describe('homepage scientific research search', () => {
   it('renders Arabic research section after hero without touching header market search', async () => {
     await i18n.changeLanguage('ar')
@@ -60,44 +79,38 @@ describe('homepage scientific research search', () => {
     expect(normalizeResearchQuery('  ري الذرة  ')).toBe('ري الذرة')
   })
 
-  it('shows loading state copy and disables controls', () => {
-    const html = renderToStaticMarkup(
-      createElement(HomeScientificResearchSearchView, {
-        query: 'ري الذرة',
-        loading: true,
-        error: null,
-        result: null,
-        onQueryChange: () => undefined,
-        onSubmit: () => undefined,
-      }),
-    )
+  it('shows loading state copy and disables controls', async () => {
+    await i18n.changeLanguage('ar')
+    const html = renderView({
+      query: 'ري الذرة',
+      loading: true,
+      error: null,
+      result: null,
+    })
     expect(html).toContain('جاري البحث في المصادر العلمية...')
     expect(html).toContain('disabled')
     expect(html).toContain('value="ري الذرة"')
   })
 
-  it('shows success answer and citation fields', () => {
-    const html = renderToStaticMarkup(
-      createElement(HomeScientificResearchSearchView, {
-        query: 'ري الذرة',
-        loading: false,
-        error: null,
-        result: {
-          status: 'completed',
-          answer: 'إجابة موثقة من الخادم',
-          citations: [
-            {
-              title: 'Irrigation Study',
-              doi: '10.1000/irrigation',
-              url: 'https://example.test/paper',
-              source_type: 'journal',
-            },
-          ],
-        },
-        onQueryChange: () => undefined,
-        onSubmit: () => undefined,
-      }),
-    )
+  it('shows success answer and citation fields', async () => {
+    await i18n.changeLanguage('ar')
+    const html = renderView({
+      query: 'ري الذرة',
+      loading: false,
+      error: null,
+      result: {
+        status: 'completed',
+        answer: 'إجابة موثقة من الخادم',
+        citations: [
+          {
+            title: 'Irrigation Study',
+            doi: '10.1000/irrigation',
+            url: 'https://example.test/paper',
+            source_type: 'journal',
+          },
+        ],
+      },
+    })
     expect(html).toContain('إجابة موثقة من الخادم')
     expect(html).toContain('Irrigation Study')
     expect(html).toContain('DOI: 10.1000/irrigation')
@@ -105,23 +118,57 @@ describe('homepage scientific research search', () => {
     expect(html).toContain('الحالة: completed')
   })
 
-  it('maps ApiError to Arabic user-facing messages without stack traces', () => {
+  it('maps ApiError to localized user-facing messages without stack traces', async () => {
+    await i18n.changeLanguage('ar')
     const message = resolveResearchSearchError(new ApiError('server boom', 503))
     expect(message).toContain('تعذر الاتصال بخدمة البحث العلمي')
     expect(message).not.toContain('Error:')
     expect(message).not.toContain('stack')
 
-    const html = renderToStaticMarkup(
-      createElement(HomeScientificResearchSearchView, {
-        query: 'ري الذرة',
-        loading: false,
-        error: message,
-        result: null,
-        onQueryChange: () => undefined,
-        onSubmit: () => undefined,
-      }),
-    )
+    const html = renderView({
+      query: 'ري الذرة',
+      loading: false,
+      error: message,
+      result: null,
+    })
     expect(html).toContain('role="alert"')
     expect(html).toContain('تعذر الاتصال بخدمة البحث العلمي')
+  })
+
+  it('renders English research chrome when the platform language is English', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderView({
+      query: 'wheat irrigation',
+      loading: false,
+      error: null,
+      result: null,
+    })
+    expect(html).toContain('Agricultural scientific research')
+    expect(html).toContain('Scientific search')
+    expect(html).not.toContain('البحث العلمي الزراعي')
+  })
+
+  it('renders Turkish and French research chrome from i18n', async () => {
+    await i18n.changeLanguage('tr')
+    const trHtml = renderView({
+      query: 'sulama',
+      loading: false,
+      error: null,
+      result: null,
+    })
+    expect(trHtml).toContain('Tarımsal bilimsel araştırma')
+    expect(trHtml).toContain('Bilimsel arama')
+    expect(trHtml).not.toContain('البحث العلمي الزراعي')
+
+    await i18n.changeLanguage('fr')
+    const frHtml = renderView({
+      query: 'irrigation',
+      loading: false,
+      error: null,
+      result: null,
+    })
+    expect(frHtml).toContain('Recherche scientifique agricole')
+    expect(frHtml).toContain('Recherche scientifique')
+    expect(frHtml).not.toContain('البحث العلمي الزراعي')
   })
 })

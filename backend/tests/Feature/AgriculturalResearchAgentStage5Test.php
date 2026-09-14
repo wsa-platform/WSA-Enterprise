@@ -348,7 +348,8 @@ class AgriculturalResearchAgentStage5Test extends TestCase
         ]);
 
         $payload = $this->synthesizeQuery('كيف أزرع القمح في المناطق الجافة؟');
-        $this->assertSame('ar', $payload['synthesis']['language']);
+        $this->assertSame('ar', $payload['query_understanding']['language'] ?? null);
+        $this->assertSame('en', $payload['synthesis']['language']);
         $this->assertNotEmpty($payload['answer']);
     }
 

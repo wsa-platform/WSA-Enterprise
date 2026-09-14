@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from './client'
+import { getCurrentLanguage } from '../i18n/config'
 import { queryPublicResearchAgent } from './researchAgent'
 import { queryPublicResearchAgent as queryFromBarrel } from './index'
 
@@ -36,6 +37,11 @@ describe('researchAgent API', () => {
       organization: 'wsa-demo',
       query: 'ما ري الذرة؟',
     })
+    expect(init?.headers).toEqual(
+      expect.objectContaining({
+        'Accept-Language': getCurrentLanguage(),
+      }),
+    )
   })
 
   it('surfaces ApiError without calling external scholarly hosts from the browser', async () => {
