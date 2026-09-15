@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Research\Search;
 
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatSearchOptionsResolver;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 
 /**
@@ -12,6 +13,10 @@ use App\Services\Agriculture\Research\KnowledgeQueryPlan;
  */
 class MultiSourceScientificSearchOrchestrator
 {
+    private const ADEQUATE_RESULT_COUNT = 8;
+
+    private const MAX_VARIANTS_PER_PROVIDER = 2;
+
     public function __construct(
         private ScientificSourceAdapterRegistry $registry,
         private ScientificSourceSelector $sourceSelector,
@@ -71,22 +76,27 @@ class MultiSourceScientificSearchOrchestrator
             $attempted[] = $key;
             $adapterStatus[$key] = 'empty';
             $skipRemainingVariants = false;
+            $variantsAttempted = 0;
 
             foreach ($variants as $variant) {
-                if ($skipRemainingVariants) {
+                if ($skipRemainingVariants || $variantsAttempted >= self::MAX_VARIANTS_PER_PROVIDER) {
                     continue;
                 }
 
                 $outcome = $adapter->search(
                     $variant,
                     $limit,
-                    $this->queryBuilder->buildConsensusRequestOptions($plan),
+                    $this->optionsForSource($key, $plan),
                 );
+                $variantsAttempted++;
                 $outcomes[] = $outcome;
 
                 if ($outcome->status === ScientificSourceSearchOutcome::STATUS_SUCCESS) {
                     $adapterStatus[$key] = 'success';
                     $allResults = array_merge($allResults, $outcome->results);
+                    if ($outcome->results !== [] && count($allResults) >= self::ADEQUATE_RESULT_COUNT) {
+                        $skipRemainingVariants = true;
+                    }
 
                     continue;
                 }
@@ -168,6 +178,21 @@ class MultiSourceScientificSearchOrchestrator
         );
     }
 
+    /**
+     * OpenAlex Consensus options (domain=agri, country=ISO) must not reach FAOSTAT.
+     * FAOSTAT interprets domain as a dataset code (QCL) and must receive only FAOSTAT options.
+     *
+     * @return array<string, mixed>
+     */
+    private function optionsForSource(string $sourceKey, KnowledgeQueryPlan $plan): array
+    {
+        if ($sourceKey === 'fao_stat') {
+            return FaoStatSearchOptionsResolver::fromPlan($plan);
+        }
+
+        return $this->queryBuilder->buildConsensusRequestOptions($plan);
+    }
+
     private function isRateLimitedOutcome(ScientificSourceSearchOutcome $outcome): bool
     {
         return $outcome->status === ScientificSourceSearchOutcome::STATUS_UNAVAILABLE
@@ -190,7 +215,8 @@ class MultiSourceScientificSearchOrchestrator
                 'openalex' => (bool) config('agricultural_intelligence.openalex.enabled', true),
                 'crossref' => (bool) config('agricultural_intelligence.crossref.enabled', true),
                 'semantic_scholar' => (bool) config('agricultural_intelligence.semantic_scholar.enabled', true),
-                'fao_stat' => (bool) config('agricultural_intelligence.fao.enabled', false),
+                'fao_stat' => filter_var(config('agricultural_intelligence.faostat.enabled', false), FILTER_VALIDATE_BOOL)
+                    || (bool) config('agricultural_intelligence.fao.enabled', false),
                 default => true,
             };
             if ($flag) {

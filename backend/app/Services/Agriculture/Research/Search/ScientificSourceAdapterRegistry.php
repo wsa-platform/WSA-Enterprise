@@ -3,6 +3,7 @@
 namespace App\Services\Agriculture\Research\Search;
 
 use App\Contracts\ScientificSourceAdapterInterface;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDeveloperPortalAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\ConsensusScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\CrossRefScientificSourceAdapter;
@@ -25,8 +26,11 @@ class ScientificSourceAdapterRegistry
         CrossRefScientificSourceAdapter $crossRef,
         SemanticScholarScientificSourceAdapter $semanticScholar,
         ConsensusScientificSourceAdapter $consensus,
-        FaoStatScientificSourceAdapter $faoStat,
+        FaoStatScientificSourceAdapter $fenixFaoStat,
+        FaoStatDeveloperPortalAdapter $portalFaoStat,
     ) {
+        $portalEnabled = filter_var(config('agricultural_intelligence.faostat.enabled', false), FILTER_VALIDATE_BOOL);
+        $faoStat = $portalEnabled ? $portalFaoStat : $fenixFaoStat;
         $this->adapters = [
             $openAlex->sourceKey() => $openAlex,
             $crossRef->sourceKey() => $crossRef,

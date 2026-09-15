@@ -20,10 +20,27 @@ return [
     ],
 
     'fao' => [
-        'enabled' => filter_var(env('FAO_ENABLED', false), FILTER_VALIDATE_BOOL),
+        // Public FAOSTAT API — no API key. Default on; live reachability is environment-dependent.
+        'enabled' => filter_var(env('FAO_ENABLED', true), FILTER_VALIDATE_BOOL),
         'base_url' => env('FAO_BASE_URL', 'https://fenixservices.fao.org/faostat/api/v1'),
         'timeout' => max(1, min(60, (int) env('FAO_TIMEOUT', 15))),
         'lang' => env('FAO_LANG', 'en'),
+    ],
+
+    'faostat' => [
+        // FAOSTAT Developer Portal (faostatservices). Default off. Credentials via env only.
+        'enabled' => filter_var(env('FAOSTAT_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'base_url' => env('FAOSTAT_BASE_URL', 'https://faostatservices.fao.org/api/v1'),
+        'allowed_host' => env('FAOSTAT_ALLOWED_HOST', 'faostatservices.fao.org'),
+        'timeout' => max(1, min(30, (int) env('FAOSTAT_TIMEOUT', 15))),
+        'lang' => env('FAOSTAT_LANG', 'en'),
+        'allowed_domains' => array_values(array_filter(array_map(
+            static fn (string $code): string => strtoupper(trim($code)),
+            explode(',', (string) env('FAOSTAT_ALLOWED_DOMAINS', 'QCL')),
+        ))),
+        'username' => env('FAOSTAT_USERNAME'),
+        'password' => env('FAOSTAT_PASSWORD'),
+        'code_cache_ttl' => max(60, (int) env('FAOSTAT_CODE_CACHE_TTL', 21600)),
     ],
 
     'semantic_scholar' => [

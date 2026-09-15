@@ -2,6 +2,9 @@
 
 namespace App\Services\Agriculture\Research\Validation;
 
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatClaimSupportAssessor;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatEvidenceType;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatObservationRelevanceGate;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
 use App\Services\Agriculture\Research\Search\ScientificSearchExecutionReport;
@@ -36,6 +39,7 @@ class AgriculturalScientificValidationService
         private EvidenceQualityRanker $qualityRanker,
         private ScientificEvidenceDirectnessAssessor $directnessAssessor,
         private EvidenceVerificationLayer $evidenceVerificationLayer,
+        private FaoStatClaimSupportAssessor $faostatClaimSupport,
     ) {}
 
     public function validate(
@@ -185,6 +189,10 @@ class AgriculturalScientificValidationService
         string $retrievedAt,
         bool $isDuplicate,
     ): ScientificEvidenceItem {
+        if ($this->isFaostatStatistical($result)) {
+            return $this->validateFaostatStatistical($plan, $result, $retrievedAt, $isDuplicate);
+        }
+
         $metadata = $this->metadataValidator->validate($result);
         $identity = $this->identityValidator->validate($result);
         $quality = $this->qualityValidator->validate($result);
@@ -318,6 +326,78 @@ class AgriculturalScientificValidationService
                 'confidence_level' => $quality['confidence_level'] ?? null,
                 'evidence_directness' => $directness['directness'],
                 'verification_label' => $directness['verification_label'] ?? null,
+            ],
+            cropOrEntity: is_string($cropOrEntity) ? $cropOrEntity : null,
+        );
+    }
+
+    private function isFaostatStatistical(ScientificSearchResult $result): bool
+    {
+        if ($result->sourceKey !== 'fao_stat') {
+            return false;
+        }
+
+        $meta = is_array($result->relevanceMetadata) ? $result->relevanceMetadata : [];
+
+        return ($meta['not_literature'] ?? false) === true
+            || ($meta['evidence_family'] ?? '') === 'official_statistics'
+            || ($meta['evidence_type'] ?? '') === FaoStatEvidenceType::DIRECT_STATISTICAL_EVIDENCE;
+    }
+
+    private function validateFaostatStatistical(
+        KnowledgeQueryPlan $plan,
+        ScientificSearchResult $result,
+        string $retrievedAt,
+        bool $isDuplicate,
+    ): ScientificEvidenceItem {
+        $claimMatch = $this->faostatClaimSupport->assess($plan, $result);
+        $relevant = ($claimMatch['factors']['faostat_relevance'] ?? null)
+            === FaoStatObservationRelevanceGate::RELEVANT;
+        $failures = $isDuplicate ? ['duplicate_result'] : [];
+        if (! $relevant) {
+            $failures[] = 'faostat_not_relevant';
+        }
+
+        $validationStatus = $relevant && ! $isDuplicate
+            ? EvidenceValidationStatus::EVIDENCE_USABLE
+            : EvidenceValidationStatus::REJECTED;
+
+        $observation = is_array($result->rawMetadata['faostat'] ?? null) ? $result->rawMetadata['faostat'] : [];
+        $sourceId = (string) ($result->sourceIdentifier ?? $result->canonicalUrl ?? md5($result->title));
+        $cropOrEntity = $plan->normalizedQuery->cropId
+            ?? (is_array($plan->subjectEntity) ? ($plan->subjectEntity['value'] ?? null) : null);
+
+        return new ScientificEvidenceItem(
+            evidenceId: md5($sourceId.'|'.$result->title),
+            sourceId: $sourceId,
+            sourceKey: $result->sourceKey,
+            sourceType: 'official_statistics',
+            publicationTitle: $result->title,
+            authors: $result->authors,
+            institution: 'FAO / FAOSTAT',
+            journal: null,
+            doi: null,
+            url: $result->canonicalUrl,
+            publicationYear: is_numeric($observation['year'] ?? null) ? (int) $observation['year'] : null,
+            retrievedAt: $retrievedAt,
+            agriculturalDomain: $plan->agriculturalDomain,
+            claimTopic: 'official_statistics',
+            evidenceText: $result->abstract,
+            validationStatus: $validationStatus,
+            validationFailures: $failures,
+            claimRelationship: (string) $claimMatch['relationship'],
+            confidence: (float) $claimMatch['confidence'],
+            qualityScore: $relevant ? 80.0 : 0.0,
+            qualityFactors: array_merge($claimMatch['factors'], [
+                'not_literature' => true,
+                'answer_eligible' => $relevant,
+                'evidence_directness' => 'direct_statistical',
+            ]),
+            sourceAttribution: [
+                'organization' => 'FAO / FAOSTAT',
+                'source_type' => 'official_statistics',
+                'found_by_sources' => $result->foundBySources,
+                'evidence_directness' => 'direct_statistical',
             ],
             cropOrEntity: is_string($cropOrEntity) ? $cropOrEntity : null,
         );

@@ -2,6 +2,8 @@
 
 namespace App\Services\Agriculture\Intelligence\Orchestration;
 
+use App\Contracts\Agriculture\AgriculturalProviderInterface;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatConsiderationPolicy;
 use App\Services\Agriculture\Intelligence\Contracts\ProviderType;
 use App\Services\Agriculture\Intelligence\DTO\ProviderQueryInput;
 use App\Services\Agriculture\Intelligence\DTO\ProviderSelectionResult;
@@ -19,7 +21,7 @@ final class CapabilityDrivenSourceSelector
     ) {}
 
     /**
-     * @return list<\App\Contracts\Agriculture\AgriculturalProviderInterface>
+     * @return list<AgriculturalProviderInterface>
      */
     public function select(KnowledgeQueryPlan $plan, ProviderQueryInput $input): array
     {
@@ -45,7 +47,7 @@ final class CapabilityDrivenSourceSelector
             }
             $kept[] = $provider;
         }
-        $selected = $kept;
+        $selected = $this->considerFaostatWhenEnabled($kept);
 
         $selectedIds = [];
         foreach ($selected as $provider) {
@@ -142,6 +144,35 @@ final class CapabilityDrivenSourceSelector
         }
 
         return 'not_selected';
+    }
+
+    /**
+     * FAOSTAT consideration is universal when the portal flag is on.
+     * Evidence acceptance remains relevance-gated downstream.
+     *
+     * @param  list<AgriculturalProviderInterface>  $selected
+     * @return list<AgriculturalProviderInterface>
+     */
+    private function considerFaostatWhenEnabled(array $selected): array
+    {
+        if (! FaoStatConsiderationPolicy::isEnabled()) {
+            return $selected;
+        }
+
+        $fao = $this->registry->get('fao_stat');
+        if ($fao === null || ! $fao->descriptor()->enabled) {
+            return $selected;
+        }
+
+        foreach ($selected as $provider) {
+            if ($provider->descriptor()->id === 'fao_stat') {
+                return $selected;
+            }
+        }
+
+        $selected[] = $fao;
+
+        return $selected;
     }
 
     private function hasCoordinates(ProviderQueryInput $input): bool

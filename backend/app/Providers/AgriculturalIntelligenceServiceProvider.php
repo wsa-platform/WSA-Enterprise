@@ -16,20 +16,24 @@ use App\Services\Agriculture\Intelligence\Adapters\Environmental\AgriSignalMcpAd
 use App\Services\Agriculture\Intelligence\Adapters\Environmental\OpenMeteoEnvironmentalAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\Execution\OctoPusExecutionAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\FieldSense\FieldSenseProvider;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDeveloperPortalAdapter;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDeveloperPortalClient;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDeveloperPortalResultNormalizer;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDeveloperPortalTokenManager;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatResultNormalizer;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\ScientificAdapterBridgeProvider;
 use App\Services\Agriculture\Intelligence\Adapters\Web\ConfigurableWebSearchProvider;
 use App\Services\Agriculture\Intelligence\Adapters\Web\FreeSearchMcpAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\Web\WebSearchAgriculturalProvider;
-use App\Services\Agriculture\Intelligence\Mcp\LaravelStdioMcpToolClient;
-use App\Services\Agriculture\Intelligence\Normalization\FreeSearchMcpResultNormalizer;
 use App\Services\Agriculture\Intelligence\Fusion\EvidenceFusionService;
 use App\Services\Agriculture\Intelligence\Fusion\WebConsensusService;
 use App\Services\Agriculture\Intelligence\Health\ProviderHealthChecker;
+use App\Services\Agriculture\Intelligence\Mcp\LaravelStdioMcpToolClient;
 use App\Services\Agriculture\Intelligence\Normalization\AgriculturalResultNormalizer;
 use App\Services\Agriculture\Intelligence\Normalization\DiseaseResultNormalizer;
 use App\Services\Agriculture\Intelligence\Normalization\EnvironmentalResultNormalizer;
+use App\Services\Agriculture\Intelligence\Normalization\FreeSearchMcpResultNormalizer;
 use App\Services\Agriculture\Intelligence\Normalization\UnitNormalizationService;
 use App\Services\Agriculture\Intelligence\Normalization\WebResultNormalizer;
 use App\Services\Agriculture\Intelligence\Orchestration\AnswerEligibilityResolver;
@@ -55,6 +59,10 @@ class AgriculturalIntelligenceServiceProvider extends ServiceProvider
         $this->app->singleton(EnvironmentalResultNormalizer::class);
         $this->app->singleton(AgriculturalResultNormalizer::class);
         $this->app->singleton(FaoStatResultNormalizer::class);
+        $this->app->singleton(FaoStatDeveloperPortalTokenManager::class);
+        $this->app->singleton(FaoStatDeveloperPortalClient::class);
+        $this->app->singleton(FaoStatDeveloperPortalResultNormalizer::class);
+        $this->app->singleton(FaoStatDeveloperPortalAdapter::class);
         $this->app->singleton(WebConsensusService::class);
         $this->app->singleton(EvidenceFusionService::class);
         $this->app->singleton(AnswerEligibilityResolver::class);
@@ -113,10 +121,14 @@ class AgriculturalIntelligenceServiceProvider extends ServiceProvider
                 priority: 12,
                 enabled: (bool) config('agricultural_intelligence.semantic_scholar.enabled', true),
             ));
+            $portalEnabled = filter_var(config('agricultural_intelligence.faostat.enabled', false), FILTER_VALIDATE_BOOL);
+            $faoAdapter = $portalEnabled
+                ? $app->make(FaoStatDeveloperPortalAdapter::class)
+                : $app->make(FaoStatScientificSourceAdapter::class);
             $registry->register(new ScientificAdapterBridgeProvider(
-                $app->make(FaoStatScientificSourceAdapter::class),
+                $faoAdapter,
                 priority: 15,
-                enabled: (bool) config('agricultural_intelligence.fao.enabled', false),
+                enabled: $portalEnabled || (bool) config('agricultural_intelligence.fao.enabled', true),
             ));
 
             return $registry;

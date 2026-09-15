@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Research\Search;
 
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatConsiderationPolicy;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 
 /**
@@ -29,8 +30,10 @@ class ScientificSourceSelector
 
         $sources = self::DEFAULT_INTERNET_FIRST_SOURCES;
 
-        // Capability / feature-flag driven FAO inclusion — no crop-specific branches.
-        if (filter_var(config('agricultural_intelligence.fao.enabled', false), FILTER_VALIDATE_BOOL)) {
+        // Portal flag: consider FAOSTAT for every Internet-First question (no agricultural detector).
+        // FENIX flag: preserve existing append behavior when the portal is off.
+        if (FaoStatConsiderationPolicy::isEnabled()
+            || filter_var(config('agricultural_intelligence.fao.enabled', false), FILTER_VALIDATE_BOOL)) {
             $sources[] = 'fao_stat';
         }
 
