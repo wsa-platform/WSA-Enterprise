@@ -62,6 +62,7 @@ final class FaoStatDeveloperPortalTokenManager
 
         try {
             $response = Http::timeout($timeout)
+                ->connectTimeout($timeout)
                 ->asForm()
                 ->acceptJson()
                 ->post($base.'/auth/login', [

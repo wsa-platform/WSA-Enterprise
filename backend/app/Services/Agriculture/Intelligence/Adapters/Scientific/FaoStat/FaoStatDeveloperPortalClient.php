@@ -23,6 +23,8 @@ final class FaoStatDeveloperPortalClient
 
     public function __construct(
         private FaoStatDeveloperPortalTokenManager $tokens,
+        private FaoStatCircuitBreaker $circuit,
+        private FaoStatOperationalLogger $logger,
     ) {}
 
     public static function normalizedBaseUrl(): string
@@ -36,7 +38,7 @@ final class FaoStatDeveloperPortalClient
         $host = parse_url($base, PHP_URL_HOST);
         if ($scheme !== 'https' || ! is_string($host) || $host === '') {
             throw new FaoStatPortalException(
-                FaoStatErrorCategory::UNKNOWN_UPSTREAM_ERROR,
+                FaoStatErrorCategory::CONFIGURATION_ERROR,
                 'invalid_base_url',
             );
         }
@@ -44,7 +46,7 @@ final class FaoStatDeveloperPortalClient
         $allowed = (string) config('agricultural_intelligence.faostat.allowed_host', self::DEFAULT_HOST);
         if ($host !== $allowed) {
             throw new FaoStatPortalException(
-                FaoStatErrorCategory::UNKNOWN_UPSTREAM_ERROR,
+                FaoStatErrorCategory::CONFIGURATION_ERROR,
                 'host_not_allowlisted',
             );
         }
@@ -69,23 +71,7 @@ final class FaoStatDeveloperPortalClient
      */
     public static function allowedDomains(): array
     {
-        $raw = config('agricultural_intelligence.faostat.allowed_domains', ['QCL']);
-        if (is_string($raw)) {
-            $raw = explode(',', $raw);
-        }
-        if (! is_array($raw)) {
-            return ['QCL'];
-        }
-
-        $out = [];
-        foreach ($raw as $domain) {
-            $code = strtoupper(trim((string) $domain));
-            if ($code !== '') {
-                $out[] = $code;
-            }
-        }
-
-        return $out === [] ? ['QCL'] : array_values(array_unique($out));
+        return FaoStatActivationPolicy::activeDomains();
     }
 
     /**
@@ -372,8 +358,16 @@ final class FaoStatDeveloperPortalClient
         $url = self::normalizedBaseUrl().$path;
         $this->assertHttpsAllowlisted($url);
 
-        $attempt = function (bool $withAuth) use ($method, $url, $query): Response {
-            $pending = Http::timeout(self::timeoutSeconds())->acceptJson();
+        if ($authenticate && $this->circuit->isOpen()) {
+            throw new FaoStatPortalException(
+                FaoStatErrorCategory::UPSTREAM_SERVER_ERROR,
+                'circuit_open',
+            );
+        }
+
+        $timeout = self::timeoutSeconds();
+        $attempt = function (bool $withAuth) use ($method, $url, $query, $timeout): Response {
+            $pending = Http::timeout($timeout)->connectTimeout($timeout)->acceptJson();
             if ($withAuth) {
                 $pending = $pending->withToken($this->tokens->bearerToken());
             }
@@ -389,16 +383,22 @@ final class FaoStatDeveloperPortalClient
             }
         };
 
+        $retriesUsed = 0;
+        $max = $this->maxTransientRetries();
+
         try {
             $response = $attempt($authenticate);
         } catch (FaoStatPortalException $e) {
-            if ($e->category === FaoStatErrorCategory::NETWORK_ERROR || $e->category === FaoStatErrorCategory::TIMEOUT) {
+            if ($retriesUsed < $max && $this->isTransientCategory($e->category)) {
+                $retriesUsed++;
                 try {
                     $response = $attempt($authenticate);
                 } catch (FaoStatPortalException $retry) {
+                    $this->tripCircuit($authenticate, $retry->category);
                     throw $retry;
                 }
             } else {
+                $this->tripCircuit($authenticate, $e->category);
                 throw $e;
             }
         }
@@ -408,7 +408,7 @@ final class FaoStatDeveloperPortalClient
             $response = $attempt(true);
         }
 
-        if ($response->status() === 429) {
+        if ($response->status() === 429 && $retriesUsed < $max) {
             $retryAfter = $response->header('Retry-After');
             Log::warning('FAOSTAT portal rate limited', [
                 'provider' => 'fao_stat',
@@ -418,29 +418,34 @@ final class FaoStatDeveloperPortalClient
             $wait = is_numeric($retryAfter) ? (int) $retryAfter : 1;
             $wait = max(1, min(5, $wait));
             sleep($wait);
+            $retriesUsed++;
             $response = $attempt($authenticate);
-            if ($response->status() === 429) {
-                throw new FaoStatPortalException(
-                    FaoStatErrorCategory::UPSTREAM_SERVER_ERROR,
-                    'rate_limited',
-                    429,
-                );
-            }
+        }
+        if ($response->status() === 429) {
+            $this->tripCircuit($authenticate, FaoStatErrorCategory::UPSTREAM_SERVER_ERROR);
+            throw new FaoStatPortalException(
+                FaoStatErrorCategory::UPSTREAM_SERVER_ERROR,
+                'rate_limited',
+                429,
+            );
         }
 
-        if ($response->serverError()) {
+        if ($response->serverError() && $retriesUsed < $max) {
+            $retriesUsed++;
             try {
                 $response = $attempt($authenticate);
             } catch (FaoStatPortalException $e) {
+                $this->tripCircuit($authenticate, $e->category);
                 throw $e;
             }
-            if ($response->serverError()) {
-                throw new FaoStatPortalException(
-                    FaoStatErrorCategory::UPSTREAM_SERVER_ERROR,
-                    'http_'.$response->status(),
-                    $response->status(),
-                );
-            }
+        }
+        if ($response->serverError()) {
+            $this->tripCircuit($authenticate, FaoStatErrorCategory::UPSTREAM_SERVER_ERROR);
+            throw new FaoStatPortalException(
+                FaoStatErrorCategory::UPSTREAM_SERVER_ERROR,
+                'http_'.$response->status(),
+                $response->status(),
+            );
         }
 
         if (! $requireSuccess) {
@@ -471,7 +476,32 @@ final class FaoStatDeveloperPortalClient
             );
         }
 
+        if ($authenticate) {
+            $this->circuit->recordSuccess();
+        }
+
         return $response;
+    }
+
+    private function maxTransientRetries(): int
+    {
+        return max(0, min(2, (int) config('agricultural_intelligence.faostat.max_transient_retries', 1)));
+    }
+
+    private function isTransientCategory(string $category): bool
+    {
+        return in_array($category, [
+            FaoStatErrorCategory::NETWORK_ERROR,
+            FaoStatErrorCategory::TIMEOUT,
+            FaoStatErrorCategory::UPSTREAM_SERVER_ERROR,
+        ], true);
+    }
+
+    private function tripCircuit(bool $authenticate, string $category): void
+    {
+        if ($authenticate) {
+            $this->circuit->recordFailure($category);
+        }
     }
 
     private function assertHttpsAllowlisted(string $url): void
@@ -481,7 +511,7 @@ final class FaoStatDeveloperPortalClient
         $allowed = (string) config('agricultural_intelligence.faostat.allowed_host', self::DEFAULT_HOST);
         if ($scheme !== 'https' || $host !== $allowed) {
             throw new FaoStatPortalException(
-                FaoStatErrorCategory::UNKNOWN_UPSTREAM_ERROR,
+                FaoStatErrorCategory::CONFIGURATION_ERROR,
                 'url_not_allowlisted',
             );
         }

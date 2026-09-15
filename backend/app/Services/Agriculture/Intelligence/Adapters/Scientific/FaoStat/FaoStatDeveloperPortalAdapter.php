@@ -3,7 +3,6 @@
 namespace App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat;
 
 use App\Contracts\ScientificSourceAdapterInterface;
-use App\Services\Agriculture\Intelligence\Contracts\ProviderHealthState;
 use App\Services\Agriculture\Intelligence\DTO\ProviderHealthStatus;
 use App\Services\Agriculture\Research\Search\ScientificSearchResult;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
@@ -21,6 +20,8 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
         private FaoStatDeveloperPortalClient $client,
         private FaoStatDeveloperPortalResultNormalizer $normalizer,
         private FaoStatDeveloperPortalTokenManager $tokens,
+        private FaoStatReadinessReporter $readiness,
+        private FaoStatOperationalLogger $logger,
     ) {}
 
     public function sourceKey(): string
@@ -35,56 +36,7 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
 
     public function health(): ProviderHealthStatus
     {
-        if (! $this->isEnabled()) {
-            return new ProviderHealthStatus(self::SOURCE_KEY, ProviderHealthState::NOT_CONFIGURED, 'disabled');
-        }
-
-        try {
-            $ping = $this->client->ping();
-        } catch (FaoStatPortalException $e) {
-            return new ProviderHealthStatus(
-                self::SOURCE_KEY,
-                ProviderHealthState::UNAVAILABLE,
-                'upstream_unreachable',
-                ['category' => $e->category, 'http_status' => $e->httpStatus],
-            );
-        }
-
-        if ($ping->serverError()) {
-            return new ProviderHealthStatus(
-                self::SOURCE_KEY,
-                ProviderHealthState::UNAVAILABLE,
-                'api_unavailable',
-                ['http_status' => $ping->status()],
-            );
-        }
-
-        $username = (string) config('agricultural_intelligence.faostat.username', '');
-        $password = (string) config('agricultural_intelligence.faostat.password', '');
-        if ($username === '' || $password === '') {
-            return new ProviderHealthStatus(
-                self::SOURCE_KEY,
-                ProviderHealthState::NOT_CONFIGURED,
-                'authentication_unavailable',
-            );
-        }
-
-        try {
-            $this->tokens->obtainToken();
-        } catch (FaoStatPortalException $e) {
-            return new ProviderHealthStatus(
-                self::SOURCE_KEY,
-                ProviderHealthState::UNAVAILABLE,
-                'authentication_failed',
-                ['category' => $e->category, 'http_status' => $e->httpStatus],
-            );
-        }
-
-        return new ProviderHealthStatus(
-            self::SOURCE_KEY,
-            ProviderHealthState::HEALTHY,
-            'authentication_successful',
-        );
+        return $this->readiness->health();
     }
 
     /**
@@ -101,6 +53,7 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
             );
         }
 
+        $started = hrtime(true);
         $domain = strtoupper(trim((string) ($options['domain'] ?? $options['domain_code'] ?? 'QCL')));
         try {
             $this->client->assertDomainAllowed($domain);
@@ -160,6 +113,14 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
                 'category' => $e->category,
                 'http_status' => $e->httpStatus,
             ]);
+            $this->logger->event('FAOSTAT portal search failed', [
+                'operation' => 'search',
+                'domain' => $domain,
+                'success' => false,
+                'error_category' => $e->category,
+                'http_status' => $e->httpStatus,
+                'latency_ms' => $this->elapsedMs($started),
+            ], 'warning');
 
             $status = $e->category === FaoStatErrorCategory::AUTHORIZATION_ERROR
                 || $e->category === FaoStatErrorCategory::AUTHENTICATION_ERROR
@@ -221,8 +182,14 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
                 'observation_count' => count($results),
                 'domain' => $domain,
                 'evidence_type' => FaoStatEvidenceType::DIRECT_STATISTICAL_EVIDENCE,
+                'latency_ms' => $this->elapsedMs($started),
             ],
         );
+    }
+
+    private function elapsedMs(int $startedHrtime): int
+    {
+        return (int) max(0, (hrtime(true) - $startedHrtime) / 1_000_000);
     }
 
     private function isEnabled(): bool

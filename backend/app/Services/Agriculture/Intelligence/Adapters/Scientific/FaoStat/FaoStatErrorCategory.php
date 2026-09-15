@@ -31,4 +31,8 @@ final class FaoStatErrorCategory
     public const INCOMPLETE_FILTERS = 'INCOMPLETE_FILTERS';
 
     public const AMBIGUOUS_CODE = 'AMBIGUOUS_CODE';
+
+    public const CONFIGURATION_ERROR = 'CONFIGURATION_ERROR';
+
+    public const VALIDATION_ERROR = 'VALIDATION_ERROR';
 }

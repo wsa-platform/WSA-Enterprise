@@ -16,6 +16,7 @@ use App\Services\Agriculture\Intelligence\Adapters\Environmental\AgriSignalMcpAd
 use App\Services\Agriculture\Intelligence\Adapters\Environmental\OpenMeteoEnvironmentalAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\Execution\OctoPusExecutionAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\FieldSense\FieldSenseProvider;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatCircuitBreaker;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatClaimEvidenceFusion;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatClaimSupportAssessor;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDeveloperPortalAdapter;
@@ -25,6 +26,8 @@ use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDev
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDomainCatalog;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDomainScopedCodeResolver;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDomainVerifier;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatOperationalLogger;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatReadinessReporter;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatResultNormalizer;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\ScientificAdapterBridgeProvider;
@@ -65,8 +68,11 @@ class AgriculturalIntelligenceServiceProvider extends ServiceProvider
         $this->app->singleton(AgriculturalResultNormalizer::class);
         $this->app->singleton(FaoStatResultNormalizer::class);
         $this->app->singleton(FaoStatDeveloperPortalTokenManager::class);
+        $this->app->singleton(FaoStatCircuitBreaker::class);
+        $this->app->singleton(FaoStatOperationalLogger::class);
         $this->app->singleton(FaoStatDeveloperPortalClient::class);
         $this->app->singleton(FaoStatDeveloperPortalResultNormalizer::class);
+        $this->app->singleton(FaoStatReadinessReporter::class);
         $this->app->singleton(FaoStatDeveloperPortalAdapter::class);
         $this->app->singleton(FaoStatDomainCatalog::class);
         $this->app->singleton(FaoStatDomainScopedCodeResolver::class);

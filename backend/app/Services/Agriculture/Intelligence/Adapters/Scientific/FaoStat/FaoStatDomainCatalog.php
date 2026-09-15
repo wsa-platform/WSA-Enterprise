@@ -23,7 +23,7 @@ final class FaoStatDomainCatalog
      */
     public static function activatedDomains(): array
     {
-        return FaoStatDeveloperPortalClient::allowedDomains();
+        return FaoStatActivationPolicy::activeDomains();
     }
 
     /**
@@ -34,22 +34,8 @@ final class FaoStatDomainCatalog
     public static function verifiedDomains(): array
     {
         $raw = config('agricultural_intelligence.faostat.verified_domains', [self::QCL]);
-        if (is_string($raw)) {
-            $raw = explode(',', $raw);
-        }
-        if (! is_array($raw)) {
-            return [self::QCL];
-        }
 
-        $out = [];
-        foreach ($raw as $domain) {
-            $code = strtoupper(trim((string) $domain));
-            if ($code !== '' && $code !== self::OPENALEX_DOMAIN_AGRI) {
-                $out[] = $code;
-            }
-        }
-
-        return $out === [] ? [self::QCL] : array_values(array_unique($out));
+        return FaoStatConfigurationValidator::sanitizeDomainList($raw, true)['accepted'];
     }
 
     /**

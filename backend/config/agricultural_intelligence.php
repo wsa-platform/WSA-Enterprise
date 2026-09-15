@@ -49,6 +49,11 @@ return [
         'username' => env('FAOSTAT_USERNAME'),
         'password' => env('FAOSTAT_PASSWORD'),
         'code_cache_ttl' => max(60, (int) env('FAOSTAT_CODE_CACHE_TTL', 21600)),
+        // Live-validated domains are QCL only. RFN cannot be added here to bypass pending live validation.
+        'live_validated_domains' => ['QCL'],
+        'max_transient_retries' => max(0, min(2, (int) env('FAOSTAT_MAX_TRANSIENT_RETRIES', 1))),
+        'circuit_failure_threshold' => max(2, min(10, (int) env('FAOSTAT_CIRCUIT_FAILURE_THRESHOLD', 5))),
+        'circuit_open_seconds' => max(5, min(120, (int) env('FAOSTAT_CIRCUIT_OPEN_SECONDS', 30))),
     ],
 
     'semantic_scholar' => [
