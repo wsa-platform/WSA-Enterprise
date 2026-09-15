@@ -34,11 +34,15 @@ final class FaoStatQclDimensionResolver
     {
         $code = strtoupper(trim((string) $domain));
         $allowed = FaoStatDeveloperPortalClient::allowedDomains();
-        if ($code !== '' && in_array($code, $allowed, true)) {
+        $fallback = in_array(self::DOMAIN_QCL, $allowed, true) ? self::DOMAIN_QCL : ($allowed[0] ?? self::DOMAIN_QCL);
+        if ($code === '' || $code === 'AGRI') {
+            return $fallback;
+        }
+        if (preg_match('/^[A-Z][A-Z0-9]{1,7}$/', $code) === 1) {
             return $code;
         }
 
-        return in_array(self::DOMAIN_QCL, $allowed, true) ? self::DOMAIN_QCL : ($allowed[0] ?? self::DOMAIN_QCL);
+        return $fallback;
     }
 
     public static function areaCode(?string $location, string $blob): ?string

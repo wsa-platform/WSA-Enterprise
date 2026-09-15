@@ -33,6 +33,14 @@ final class FaoStatSearchOptionsResolver
             }
         }
 
+        $out['domain'] = FaoStatQclDimensionResolver::sanitizeDomain(
+            (string) ($constraints['domain'] ?? $constraints['domain_code'] ?? ''),
+        );
+
+        if ($out['domain'] !== FaoStatQclDimensionResolver::DOMAIN_QCL) {
+            return $out;
+        }
+
         $blob = strtolower(trim(implode(' ', array_filter([
             $query->originalQuestion,
             $query->normalizedQuestion,
@@ -77,10 +85,6 @@ final class FaoStatSearchOptionsResolver
                 $out['year'] = $year;
             }
         }
-
-        $out['domain'] = FaoStatQclDimensionResolver::sanitizeDomain(
-            (string) ($constraints['domain'] ?? $constraints['domain_code'] ?? ''),
-        );
 
         return $out;
     }

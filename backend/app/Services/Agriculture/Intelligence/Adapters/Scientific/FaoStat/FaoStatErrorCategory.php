@@ -26,6 +26,8 @@ final class FaoStatErrorCategory
 
     public const DOMAIN_NOT_ALLOWED = 'DOMAIN_NOT_ALLOWED';
 
+    public const DOMAIN_NOT_VERIFIED = 'DOMAIN_NOT_VERIFIED';
+
     public const INCOMPLETE_FILTERS = 'INCOMPLETE_FILTERS';
 
     public const AMBIGUOUS_CODE = 'AMBIGUOUS_CODE';

@@ -88,9 +88,27 @@ final class FaoStatDeveloperPortalClient
         return $out === [] ? ['QCL'] : array_values(array_unique($out));
     }
 
-    public function assertDomainAllowed(string $domain): string
+    /**
+     * Inspection (metadata/dimensions/codes) may target a DISCOVERED domain.
+     * OpenAlex domain=agri is never a FAOSTAT dataset code.
+     */
+    public function assertInspectableDomain(string $domain): string
     {
         $code = strtoupper(trim($domain));
+        if ($code === FaoStatDomainCatalog::OPENALEX_DOMAIN_AGRI
+            || preg_match('/^[A-Z][A-Z0-9]{1,7}$/', $code) !== 1) {
+            throw new FaoStatPortalException(
+                FaoStatErrorCategory::DOMAIN_NOT_ALLOWED,
+                'domain_not_inspectable',
+            );
+        }
+
+        return $code;
+    }
+
+    public function assertDomainAllowed(string $domain): string
+    {
+        $code = $this->assertInspectableDomain($domain);
         if (! in_array($code, self::allowedDomains(), true)) {
             throw new FaoStatPortalException(
                 FaoStatErrorCategory::DOMAIN_NOT_ALLOWED,
@@ -125,7 +143,7 @@ final class FaoStatDeveloperPortalClient
      */
     public function getMetadata(string $domain): array
     {
-        $domain = $this->assertDomainAllowed($domain);
+        $domain = $this->assertInspectableDomain($domain);
 
         return $this->jsonGet('/'.self::lang().'/metadata/'.$domain);
     }
@@ -135,7 +153,7 @@ final class FaoStatDeveloperPortalClient
      */
     public function getDimensions(string $domain): array
     {
-        $domain = $this->assertDomainAllowed($domain);
+        $domain = $this->assertInspectableDomain($domain);
 
         return $this->jsonGet('/'.self::lang().'/dimensions/'.$domain.'/');
     }
@@ -224,6 +242,29 @@ final class FaoStatDeveloperPortalClient
     public function getData(string $domain, array $filters, bool $csv = false): array
     {
         $domain = $this->assertDomainAllowed($domain);
+
+        return $this->fetchData($domain, $filters, $csv);
+    }
+
+    /**
+     * Controlled verification query. Does not activate the domain for search.
+     *
+     * @param  array<string, string>  $filters
+     * @return array{status: int, content_type: string, payload: array<string, mixed>|null, csv: string|null}
+     */
+    public function getVerificationData(string $domain, array $filters, bool $csv = false): array
+    {
+        $domain = $this->assertInspectableDomain($domain);
+
+        return $this->fetchData($domain, $filters, $csv);
+    }
+
+    /**
+     * @param  array<string, string>  $filters
+     * @return array{status: int, content_type: string, payload: array<string, mixed>|null, csv: string|null}
+     */
+    private function fetchData(string $domain, array $filters, bool $csv = false): array
+    {
         $query = [];
         foreach (['area', 'item', 'element', 'year'] as $key) {
             if (isset($filters[$key]) && trim((string) $filters[$key]) !== '') {
@@ -259,6 +300,14 @@ final class FaoStatDeveloperPortalClient
     /**
      * @return list<array{code: string, label: string}>
      */
+    public function listCodes(string $dimensionId, string $domain): array
+    {
+        return $this->codeList($dimensionId, $domain);
+    }
+
+    /**
+     * @return list<array{code: string, label: string}>
+     */
     private function codeList(string $dimensionId, string $domain): array
     {
         if ($dimensionId === 'areas') {
@@ -268,7 +317,7 @@ final class FaoStatDeveloperPortalClient
             );
         }
 
-        $domain = $this->assertDomainAllowed($domain);
+        $domain = $this->assertInspectableDomain($domain);
         $cacheKey = 'faostat.codes.'.$dimensionId.'.'.$domain.'.'.self::lang();
         $ttl = max(60, (int) config('agricultural_intelligence.faostat.code_cache_ttl', 21600));
 

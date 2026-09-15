@@ -34,10 +34,18 @@ return [
         'allowed_host' => env('FAOSTAT_ALLOWED_HOST', 'faostatservices.fao.org'),
         'timeout' => max(1, min(30, (int) env('FAOSTAT_TIMEOUT', 15))),
         'lang' => env('FAOSTAT_LANG', 'en'),
+        // allowed_domains = activated for /data search. Default QCL only.
         'allowed_domains' => array_values(array_filter(array_map(
             static fn (string $code): string => strtoupper(trim($code)),
             explode(',', (string) env('FAOSTAT_ALLOWED_DOMAINS', 'QCL')),
         ))),
+        // verified_domains = ACTIVATABLE catalog. Not live activation.
+        'verified_domains' => array_values(array_filter(array_map(
+            static fn (string $code): string => strtoupper(trim($code)),
+            explode(',', (string) env('FAOSTAT_VERIFIED_DOMAINS', 'QCL')),
+        ))),
+        // Inspection candidates only. Discovery does not activate them.
+        'candidate_domains' => ['RFN', 'RP', 'RL', 'ESB', 'EMN', 'ET'],
         'username' => env('FAOSTAT_USERNAME'),
         'password' => env('FAOSTAT_PASSWORD'),
         'code_cache_ttl' => max(60, (int) env('FAOSTAT_CODE_CACHE_TTL', 21600)),
