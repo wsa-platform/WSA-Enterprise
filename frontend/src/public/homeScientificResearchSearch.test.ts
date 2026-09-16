@@ -135,6 +135,16 @@ describe('homepage scientific research search', () => {
     expect(html).toContain('تعذر الاتصال بخدمة البحث العلمي')
   })
 
+  it('maps HTTP 504 timeout to search-duration copy, not server-down copy', async () => {
+    await i18n.changeLanguage('ar')
+    const timeoutMessage = resolveResearchSearchError(new ApiError('gateway timeout', 504))
+    expect(timeoutMessage).toContain('انتهت مهلة البحث العلمي')
+    expect(timeoutMessage).not.toContain('تعذر الاتصال بخدمة البحث العلمي')
+
+    const unavailable = resolveResearchSearchError(new ApiError('offline', 0))
+    expect(unavailable).toContain('تعذر الاتصال بخدمة البحث العلمي')
+  })
+
   it('renders English research chrome when the platform language is English', async () => {
     await i18n.changeLanguage('en')
     const html = renderView({

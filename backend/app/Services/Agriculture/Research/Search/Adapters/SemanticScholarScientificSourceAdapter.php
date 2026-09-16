@@ -4,6 +4,7 @@ namespace App\Services\Agriculture\Research\Search\Adapters;
 
 use App\Contracts\ScientificSourceAdapterInterface;
 use App\Services\Agriculture\Research\Search\ScientificResultNormalizer;
+use App\Services\Agriculture\Research\Search\ScientificSearchTimeBudget;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
 use App\Support\ScientificHttp;
 use Illuminate\Http\Client\ConnectionException;
@@ -69,8 +70,14 @@ class SemanticScholarScientificSourceAdapter implements ScientificSourceAdapterI
         $lastStatus = null;
 
         for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
+            $remaining = $this->remainingSeconds($options, $started);
+            if ($remaining !== null && $remaining < 1.0) {
+                break;
+            }
+            $timeout = ScientificHttp::timeoutSeconds($remaining);
+
             try {
-                $pending = Http::timeout(ScientificHttp::timeoutSeconds())->acceptJson();
+                $pending = Http::timeout($timeout)->acceptJson();
                 if ($apiKey !== '') {
                     $pending = $pending->withHeaders(['x-api-key' => $apiKey]);
                 }
@@ -122,8 +129,12 @@ class SemanticScholarScientificSourceAdapter implements ScientificSourceAdapterI
                 if ($attempt >= self::MAX_ATTEMPTS) {
                     break;
                 }
+                $remainingAfter429 = $this->remainingSeconds($options, $started);
+                if (! ScientificHttp::canAffordRetry($remainingAfter429, $response, $attempt, $timeout)) {
+                    break;
+                }
                 $retryCount++;
-                ScientificHttp::sleepForRetryAfterOrBackoff($response, $attempt);
+                ScientificHttp::sleepForRetryAfterOrBackoff($response, $attempt, $remainingAfter429);
                 continue;
             }
 
@@ -184,25 +195,42 @@ class SemanticScholarScientificSourceAdapter implements ScientificSourceAdapterI
             return $this->normalizeSuccessfulResponse($response, $started, $retryCount, $rateLimited);
         }
 
-        Log::warning('Semantic Scholar Stage 3 rate limited after retries', [
-            'provider' => self::SOURCE_KEY,
-            'retry_count' => $retryCount,
-            'http_status' => 429,
-        ]);
+        if ($rateLimited) {
+            Log::warning('Semantic Scholar Stage 3 rate limited after retries', [
+                'provider' => self::SOURCE_KEY,
+                'retry_count' => $retryCount,
+                'http_status' => 429,
+            ]);
+
+            return new ScientificSourceSearchOutcome(
+                sourceKey: $this->sourceKey(),
+                status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
+                error: 'rate_limited',
+                httpStatus: 429,
+                observability: $this->observability(
+                    status: 'unavailable',
+                    resultCount: 0,
+                    retryCount: $retryCount,
+                    rateLimited: true,
+                    latencyMs: $this->latencyMs($started),
+                    failureReason: 'rate_limited',
+                    httpStatus: $lastStatus ?? 429,
+                ),
+            );
+        }
 
         return new ScientificSourceSearchOutcome(
             sourceKey: $this->sourceKey(),
             status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
-            error: 'rate_limited',
-            httpStatus: 429,
+            error: 'time_budget_exhausted',
             observability: $this->observability(
                 status: 'unavailable',
                 resultCount: 0,
                 retryCount: $retryCount,
-                rateLimited: true,
+                rateLimited: false,
                 latencyMs: $this->latencyMs($started),
-                failureReason: 'rate_limited',
-                httpStatus: $lastStatus ?? 429,
+                failureReason: 'time_budget_exhausted',
+                httpStatus: $lastStatus,
             ),
         );
     }
@@ -270,6 +298,19 @@ class SemanticScholarScientificSourceAdapter implements ScientificSourceAdapterI
                 httpStatus: $response->status(),
             ),
         );
+    }
+
+    private function remainingSeconds(array $options, float $started): ?float
+    {
+        $live = ScientificSearchTimeBudget::current();
+        if ($live !== null) {
+            return $live->remainingSeconds();
+        }
+        if (! array_key_exists('search_budget_remaining_seconds', $options)) {
+            return null;
+        }
+
+        return max(0.0, (float) $options['search_budget_remaining_seconds'] - (microtime(true) - $started));
     }
 
     /**

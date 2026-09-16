@@ -3,7 +3,9 @@
 namespace App\Services\Agriculture\Research\Search\Adapters;
 
 use App\Contracts\ScientificSourceAdapterInterface;
+use App\Services\Agriculture\OpenAlexScientificClient;
 use App\Services\Agriculture\Research\Search\ScientificResultNormalizer;
+use App\Services\Agriculture\Research\Search\ScientificSearchTimeBudget;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
 use App\Support\ScientificHttp;
 use Illuminate\Http\Client\Response;
@@ -57,10 +59,33 @@ class OpenAlexScientificSourceAdapter implements ScientificSourceAdapterInterfac
         $rateLimited = false;
         $lastStatus = null;
         $rateHeaders = [];
+        $budgetSnapshot = $this->remainingSeconds($options, $started);
+
+        if ($budgetSnapshot !== null && $budgetSnapshot < 1.0) {
+            return new ScientificSourceSearchOutcome(
+                sourceKey: $this->sourceKey(),
+                status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
+                error: 'time_budget_exhausted',
+                observability: $this->observability(
+                    'unavailable',
+                    0,
+                    0,
+                    false,
+                    0,
+                    'time_budget_exhausted',
+                ),
+            );
+        }
 
         for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
+            $remaining = $this->remainingSeconds($options, $started);
+            if ($remaining !== null && $remaining < 1.0) {
+                break;
+            }
+            $timeout = ScientificHttp::timeoutSeconds($remaining);
+
             try {
-                $response = Http::timeout(ScientificHttp::timeoutSeconds())
+                $response = Http::timeout($timeout)
                     ->acceptJson()
                     ->get('https://api.openalex.org/works', $params);
             } catch (\Throwable $exception) {
@@ -89,17 +114,32 @@ class OpenAlexScientificSourceAdapter implements ScientificSourceAdapterInterfac
 
             if ($lastStatus === 429) {
                 $rateLimited = true;
+                OpenAlexScientificClient::markRequestRateLimited();
                 Log::info('OpenAlex Stage 3 rate limited', array_merge([
                     'provider' => 'openalex',
                     'attempt' => $attempt,
                     'retry_count' => $retryCount,
+                    'retry_after_seconds' => ScientificHttp::retryAfterHeaderSeconds($response),
+                    'remaining_budget_seconds' => $this->remainingSeconds($options, $started),
                 ], $rateHeaders));
 
                 if ($attempt >= self::MAX_ATTEMPTS) {
                     break;
                 }
+
+                $remainingAfter429 = $this->remainingSeconds($options, $started);
+                if (! ScientificHttp::canAffordRetry($remainingAfter429, $response, $attempt, $timeout)) {
+                    Log::info('OpenAlex Stage 3 429 retry skipped — remaining search budget insufficient', [
+                        'provider' => 'openalex',
+                        'attempt' => $attempt,
+                        'retry_after_seconds' => ScientificHttp::retryAfterHeaderSeconds($response),
+                        'remaining_budget_seconds' => $remainingAfter429,
+                    ]);
+                    break;
+                }
+
                 $retryCount++;
-                ScientificHttp::sleepForRetryAfterOrBackoff($response, $attempt);
+                ScientificHttp::sleepForRetryAfterOrBackoff($response, $attempt, $remainingAfter429);
 
                 continue;
             }
@@ -187,22 +227,56 @@ class OpenAlexScientificSourceAdapter implements ScientificSourceAdapterInterfac
             );
         }
 
+        if ($rateLimited) {
+            return new ScientificSourceSearchOutcome(
+                sourceKey: $this->sourceKey(),
+                status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
+                error: 'rate_limited',
+                httpStatus: 429,
+                observability: $this->observability(
+                    'unavailable',
+                    0,
+                    $retryCount,
+                    true,
+                    (int) round((microtime(true) - $started) * 1000),
+                    'rate_limited',
+                    $lastStatus ?? 429,
+                    $rateHeaders,
+                ),
+            );
+        }
+
         return new ScientificSourceSearchOutcome(
             sourceKey: $this->sourceKey(),
             status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
-            error: 'rate_limited',
-            httpStatus: 429,
+            error: 'time_budget_exhausted',
             observability: $this->observability(
                 'unavailable',
                 0,
                 $retryCount,
-                true,
+                false,
                 (int) round((microtime(true) - $started) * 1000),
-                'rate_limited',
-                $lastStatus ?? 429,
+                'time_budget_exhausted',
+                $lastStatus,
                 $rateHeaders,
             ),
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $options
+     */
+    private function remainingSeconds(array $options, float $started): ?float
+    {
+        $live = ScientificSearchTimeBudget::current();
+        if ($live !== null) {
+            return $live->remainingSeconds();
+        }
+        if (! array_key_exists('search_budget_remaining_seconds', $options)) {
+            return null;
+        }
+
+        return max(0.0, (float) $options['search_budget_remaining_seconds'] - (microtime(true) - $started));
     }
 
     /**

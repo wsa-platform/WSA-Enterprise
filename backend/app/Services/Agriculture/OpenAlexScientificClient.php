@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture;
 
+use App\Services\Agriculture\Research\Search\ScientificSearchTimeBudget;
 use App\Support\ScientificHttp;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -12,11 +13,33 @@ use Illuminate\Support\Facades\Log;
  */
 class OpenAlexScientificClient
 {
+    public const REQUEST_RATE_LIMITED_KEY = 'scientific.openalex.rate_limited';
+
+    public static function markRequestRateLimited(): void
+    {
+        app()->instance(self::REQUEST_RATE_LIMITED_KEY, true);
+    }
+
+    public static function isRequestRateLimited(): bool
+    {
+        return app()->bound(self::REQUEST_RATE_LIMITED_KEY)
+            && app(self::REQUEST_RATE_LIMITED_KEY) === true;
+    }
+
     /** @return list<array<string, mixed>> */
     public function searchWorks(string $query, int $perPage = 5): array
     {
+        if (self::isRequestRateLimited()) {
+            return [];
+        }
+
+        $remaining = ScientificSearchTimeBudget::current()?->remainingSeconds();
+        if ($remaining !== null && $remaining < 1.0) {
+            return [];
+        }
+
         try {
-            $response = Http::timeout(ScientificHttp::timeoutSeconds())
+            $response = Http::timeout(ScientificHttp::timeoutSeconds($remaining))
                 ->acceptJson()
                 ->get('https://api.openalex.org/works', [
                     'search' => $query,
@@ -27,6 +50,17 @@ class OpenAlexScientificClient
             Log::warning('OpenAlex search request failed', [
                 'query' => $query,
                 'message' => $exception->getMessage(),
+            ]);
+
+            return [];
+        }
+
+        if ($response->status() === 429) {
+            self::markRequestRateLimited();
+            Log::warning('OpenAlex search failed', [
+                'status' => 429,
+                'query' => $query,
+                'reason' => 'rate_limited',
             ]);
 
             return [];

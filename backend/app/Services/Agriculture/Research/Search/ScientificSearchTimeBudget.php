@@ -15,8 +15,10 @@ final class ScientificSearchTimeBudget
     public static function start(): self
     {
         $seconds = self::configuredSeconds();
+        $budget = new self(hrtime(true) + ($seconds * 1_000_000_000), $seconds);
+        $budget->bind();
 
-        return new self(hrtime(true) + ($seconds * 1_000_000_000), $seconds);
+        return $budget;
     }
 
     public static function configuredSeconds(): int
@@ -24,8 +26,34 @@ final class ScientificSearchTimeBudget
         return max(8, min(90, (int) config('agricultural_intelligence.search_time_budget_seconds', 45)));
     }
 
+    public function bind(): void
+    {
+        app()->instance('scientific.search_time_budget', $this);
+    }
+
+    public static function current(): ?self
+    {
+        if (! app()->bound('scientific.search_time_budget')) {
+            return null;
+        }
+
+        $budget = app('scientific.search_time_budget');
+
+        return $budget instanceof self ? $budget : null;
+    }
+
     public function remaining(): bool
     {
-        return hrtime(true) < $this->deadlineHrtime;
+        return $this->remainingSeconds() > 0.0;
+    }
+
+    public function remainingSeconds(): float
+    {
+        $leftNs = $this->deadlineHrtime - hrtime(true);
+        if ($leftNs <= 0) {
+            return 0.0;
+        }
+
+        return $leftNs / 1_000_000_000;
     }
 }

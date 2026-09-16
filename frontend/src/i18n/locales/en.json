@@ -1960,6 +1960,7 @@
       "citationFallback": "Source {{index}}",
       "errorNotFound": "The scientific search service or platform organization could not be found. Check that the server is running and organization settings are correct.",
       "errorUnavailable": "Could not connect to the scientific search service. Check that the server is running, then try again.",
+      "errorTimeout": "The scientific search timed out before results were ready. Please try again.",
       "errorGeneric": "Could not complete scientific search right now. Please try again later."
     },
     "categoriesStrip": {

@@ -18,6 +18,7 @@ class ScientificProviderContractIsolationTest extends TestCase
     {
         $budget = new ScientificSearchTimeBudget(0, 1);
         $this->assertFalse($budget->remaining());
+        $this->assertSame(0.0, $budget->remainingSeconds());
         $this->assertGreaterThanOrEqual(8, ScientificSearchTimeBudget::configuredSeconds());
         $this->assertLessThanOrEqual(90, ScientificSearchTimeBudget::configuredSeconds());
     }

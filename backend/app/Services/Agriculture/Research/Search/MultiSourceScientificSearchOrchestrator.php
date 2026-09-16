@@ -76,7 +76,7 @@ class MultiSourceScientificSearchOrchestrator
 
         foreach ($adapters as $adapter) {
             $key = $adapter->sourceKey();
-            if (! $budget->remaining()) {
+            if ($budget->remainingSeconds() < 1.0) {
                 $skippedBudget[] = $key;
                 $adapterStatus[$key] = 'skipped';
                 $outcomes[] = new ScientificSourceSearchOutcome(
@@ -86,6 +86,7 @@ class MultiSourceScientificSearchOrchestrator
                     observability: [
                         'reason' => 'search_time_budget',
                         'budget_seconds' => $budget->seconds,
+                        'remaining_seconds' => $budget->remainingSeconds(),
                     ],
                 );
 
@@ -101,7 +102,7 @@ class MultiSourceScientificSearchOrchestrator
                 if ($skipRemainingVariants || $variantsAttempted >= self::MAX_VARIANTS_PER_PROVIDER) {
                     continue;
                 }
-                if (! $budget->remaining()) {
+                if ($budget->remainingSeconds() < 1.0) {
                     $skipRemainingVariants = true;
                     $skippedBudget[] = $key;
 
@@ -111,7 +112,9 @@ class MultiSourceScientificSearchOrchestrator
                 $outcome = $adapter->search(
                     $variant,
                     $limit,
-                    $this->optionsForSource($key, $plan),
+                    array_merge($this->optionsForSource($key, $plan), [
+                        'search_budget_remaining_seconds' => $budget->remainingSeconds(),
+                    ]),
                 );
                 $variantsAttempted++;
                 $outcomes[] = $outcome;

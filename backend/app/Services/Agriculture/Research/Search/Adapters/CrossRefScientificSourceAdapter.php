@@ -4,6 +4,7 @@ namespace App\Services\Agriculture\Research\Search\Adapters;
 
 use App\Contracts\ScientificSourceAdapterInterface;
 use App\Services\Agriculture\Research\Search\ScientificResultNormalizer;
+use App\Services\Agriculture\Research\Search\ScientificSearchTimeBudget;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
 use App\Support\ScientificHttp;
 use Illuminate\Support\Facades\Http;
@@ -47,7 +48,18 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
         }
 
         try {
-            $response = Http::timeout(ScientificHttp::timeoutSeconds())
+            $remaining = isset($options['search_budget_remaining_seconds'])
+                ? (float) $options['search_budget_remaining_seconds']
+                : ScientificSearchTimeBudget::current()?->remainingSeconds();
+            if ($remaining !== null && $remaining < 1.0) {
+                return new ScientificSourceSearchOutcome(
+                    sourceKey: $this->sourceKey(),
+                    status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
+                    error: 'time_budget_exhausted',
+                );
+            }
+
+            $response = Http::timeout(ScientificHttp::timeoutSeconds($remaining))
                 ->acceptJson()
                 ->withHeaders([
                     'User-Agent' => (string) config('wsa.crossref_mailto', 'wsa-platform/1.0 (mailto:wsa-platform@example.com)'),

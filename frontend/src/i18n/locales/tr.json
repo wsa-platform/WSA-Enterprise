@@ -1960,6 +1960,7 @@
       "citationFallback": "Kaynak {{index}}",
       "errorNotFound": "Bilimsel arama hizmeti veya platform kuruluşu bulunamadı. Sunucunun çalıştığını ve kuruluş ayarlarını kontrol edin.",
       "errorUnavailable": "Bilimsel arama hizmetine bağlanılamadı. Sunucunun çalıştığını kontrol edin, ardından yeniden deneyin.",
+      "errorTimeout": "Bilimsel arama, sonuçlar hazır olmadan zaman aşımına uğradı. Lütfen yeniden deneyin.",
       "errorGeneric": "Bilimsel arama şu anda tamamlanamadı. Lütfen daha sonra yeniden deneyin."
     },
     "categoriesStrip": {
