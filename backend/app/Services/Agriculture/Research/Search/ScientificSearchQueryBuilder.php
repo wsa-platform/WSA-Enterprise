@@ -928,8 +928,14 @@ class ScientificSearchQueryBuilder
             return str_replace('-', ' ', trim($query->cropId));
         }
 
-        if (is_array($plan->subjectEntity) && ($plan->subjectEntity['type'] ?? '') === 'crop') {
-            $value = trim((string) ($plan->subjectEntity['value'] ?? ''));
+        $surface = $query->namedEntitySurface();
+        if ($surface !== null && trim($surface) !== ''
+            && ! AgriculturalEntityCatalog::isLocationAliasToken($surface)) {
+            return trim($surface);
+        }
+
+        if (is_array($plan->subjectEntity) && in_array((string) ($plan->subjectEntity['type'] ?? ''), ['crop', 'named_entity', 'animal'], true)) {
+            $value = trim((string) ($plan->subjectEntity['value'] ?? $plan->subjectEntity['label'] ?? ''));
             if ($value !== '') {
                 return str_replace('-', ' ', $value);
             }
@@ -996,6 +1002,28 @@ class ScientificSearchQueryBuilder
         }
 
         return array_slice($terms, 0, 3);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function resolveRequestedPropertyTerms(KnowledgeQueryPlan $plan): array
+    {
+        $terms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
+        if (! is_array($terms)) {
+            return [];
+        }
+
+        $filtered = [];
+        foreach ($terms as $term) {
+            $label = trim((string) $term);
+            if ($label === '' || in_array($label, $filtered, true)) {
+                continue;
+            }
+            $filtered[] = $label;
+        }
+
+        return $filtered;
     }
 
     private function latinScientificFragment(string $normalizedQuestion): ?string

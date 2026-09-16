@@ -1688,6 +1688,116 @@ final class AgriculturalEntityCatalog
         return false;
     }
 
+    public static function isLocationAliasToken(string $token): bool
+    {
+        $folded = mb_strtolower(trim($token));
+        if ($folded === '') {
+            return false;
+        }
+
+        foreach (self::locationAliases() as $alias => $canonical) {
+            if ($folded === mb_strtolower((string) $alias) || $folded === mb_strtolower($canonical)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Extract a named crop/tree phrase when the catalog cannot resolve it.
+     * Generic linguistic frames only — never a crop-specific branch.
+     *
+     * @return array{surface: string, normalized: string}|null
+     */
+    public static function extractNamedAgriculturalEntityCandidate(string $normalizedQuestion): ?array
+    {
+        if (self::recognizeCrop($normalizedQuestion) !== null) {
+            return null;
+        }
+
+        if (self::hasSuitabilityOrSelectionFraming($normalizedQuestion)
+            && self::resolveCropCategory($normalizedQuestion) !== null) {
+            return null;
+        }
+
+        $best = null;
+        $bestLength = 0;
+        $semantic = self::extractSemanticTarget($normalizedQuestion);
+        if (is_array($semantic) && trim((string) ($semantic['entity_surface'] ?? '')) !== '') {
+            $surface = self::trimSemanticPhrase((string) $semantic['entity_surface']);
+            if ($surface !== '' && self::isDistinctiveNamedEntitySurface($surface) && ! self::isLocationAliasToken($surface)) {
+                $best = [
+                    'surface' => $surface,
+                    'normalized' => mb_strtolower($surface),
+                ];
+                $bestLength = mb_strlen($surface);
+            }
+        }
+
+        $patterns = [
+            '/(?:اشجار|أشجار|شجرة)\s+(?:ال)?(\p{L}{2,})/u',
+            '/(?:محصول|نبات)\s+(?:ال)?(\p{L}{2,})/u',
+            '/\b(?:trees?|orchard)\s+(?:of\s+)?([a-z][a-z\-]{2,})/u',
+            '/\bfor\s+([a-z][a-z\- ]{2,20}?)\s+trees?\b/u',
+            '/irrigation(?:\s+water)?\s+requirement(?:s)?\s+for\s+([a-z][a-z\- ]{2,20})/u',
+            '/\bfor\s+([a-z][a-z\- ]{2,20}?)\s+(?:in|under)\b/u',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $normalizedQuestion, $matches) !== 1) {
+                continue;
+            }
+            $surface = trim((string) ($matches[1] ?? ''));
+            $surface = trim($surface, " \t\n\r-");
+            if ($surface === '' || ! self::isDistinctiveNamedEntitySurface($surface) || self::isLocationAliasToken($surface)) {
+                continue;
+            }
+            $length = mb_strlen($surface);
+            if ($length > $bestLength) {
+                $bestLength = $length;
+                $best = [
+                    'surface' => $surface,
+                    'normalized' => mb_strtolower($surface),
+                ];
+            }
+        }
+
+        return $best;
+    }
+
+    public static function isNamedEntityStopToken(string $token): bool
+    {
+        $normalized = mb_strtolower(trim($token));
+        if ($normalized === '' || mb_strlen($normalized) < 2) {
+            return true;
+        }
+
+        $stops = [
+            'النبات', 'نبات', 'النباتات', 'plant', 'plants',
+            'الفاكهة', 'فاكهة', 'fruit', 'fruits',
+            'المحاصيل', 'محاصيل', 'المحصول', 'محصول', 'crops', 'crop',
+            'المناطق', 'مناطق', 'المنطقة', 'region', 'regions',
+            'الجافة', 'جافة', 'arid', 'dry',
+            'الاراضي', 'الأراضي', 'اراضي', 'أراضي', 'land', 'lands', 'farmland',
+            'المياه', 'مياه', 'الماء', 'ماء', 'water',
+            'الري', 'ري', 'irrigation',
+            'كمية', 'appropriate', 'suitable', 'suitability', 'المناسبة', 'مناسبة',
+            'زراعي', 'الزراعة', 'زراعة', 'الزراعية', 'زراعية', 'agriculture', 'agricultural',
+            'farming', 'farm', 'farms', 'practices', 'practice',
+            'smallholders', 'smallholder', 'systems', 'system',
+            'general', 'knowledge', 'common', 'الشائعة', 'شائعة',
+            'التربة', 'تربة', 'soil', 'soils',
+            'الملوحة', 'ملوحة', 'salinity',
+            'امتصاص', 'بواسطة', 'التي', 'الذي', 'يمكن', 'غير', 'معروف',
+            'في', 'اليوم', 'يوم', 'day', 'daily', 'per',
+            'the', 'and', 'for', 'with', 'from',
+            'freshwater', 'marine', 'العذبة', 'عذبة',
+            'fish', 'fishes', 'أسماك', 'اسماك', 'الأسماك', 'الاسماك',
+        ];
+
+        return in_array($normalized, $stops, true);
+    }
+
     /**
      * Query terms for a recommendation/selection act (generic, not question-specific).
      *
@@ -1754,5 +1864,410 @@ final class AgriculturalEntityCatalog
         }
 
         return false;
+    }
+
+    /**
+     * Domain-independent Entity + Property extraction from question frames.
+     * Does not catalog-resolve the entity; unresolved surfaces are preserved.
+     *
+     * @return array{
+     *     entity_surface: ?string,
+     *     entity_normalized: ?string,
+     *     property_surface: ?string,
+     *     property_key: ?string
+     * }|null
+     */
+    public static function extractSemanticTarget(string $normalizedQuestion): ?array
+    {
+        $normalizedQuestion = mb_strtolower(trim($normalizedQuestion));
+        if ($normalizedQuestion === '') {
+            return null;
+        }
+
+        $entity = null;
+        $property = null;
+        $propertyKey = null;
+
+        if (preg_match(
+            '/(?:كمية|كم)\s+(\p{L}{2,})\s+(?:التي|الذي)\s+\p{L}{2,}\s+(?:ال)?(\p{L}{3,}(?:\s+\p{L}{3,}){0,2})/u',
+            $normalizedQuestion,
+            $matches,
+        ) === 1) {
+            $property = self::trimPropertySurface((string) $matches[1]);
+            $entity = self::trimSemanticPhrase((string) $matches[2]);
+            $propertyKey = 'quantity';
+        } elseif (preg_match(
+            '/\bhow\s+much\s+([a-z][a-z\-]{2,24})\s+(?:does|do)\s+(?:a |an |the )?([a-z][a-z\- ]{2,40}?)\s+(?:produce|yield|give|secrete)/u',
+            $normalizedQuestion,
+            $matches,
+        ) === 1) {
+            $property = self::trimPropertySurface((string) $matches[1]);
+            $entity = self::trimSemanticPhrase((string) $matches[2]);
+            $propertyKey = 'quantity';
+        } elseif (preg_match(
+            '/\b(?:what(?:\'s| is)|whats)\s+the\s+([a-z][a-z\-]{2,28})\s+of\s+(?:the\s+)?([a-z][a-z\- ]{2,40})/u',
+            $normalizedQuestion,
+            $matches,
+        ) === 1) {
+            $property = self::trimPropertySurface((string) $matches[1]);
+            $entity = self::trimSemanticPhrase((string) $matches[2]);
+            $propertyKey = self::propertyKeyFromSurface($property);
+            if (in_array($propertyKey, ['definition', 'meaning'], true) || in_array($property, ['definition', 'meaning'], true)) {
+                $entity = null;
+                $property = null;
+                $propertyKey = null;
+            }
+        }
+
+        if ($entity === null && preg_match(
+            '/(?:أنواع|انواع|اصناف|أصناف|سلالات)\s+(?:ال)?(\p{L}{3,}(?:\s+\p{L}{3,}){0,3})/u',
+            $normalizedQuestion,
+            $matches,
+        ) === 1) {
+            $entity = self::trimSemanticPhrase((string) $matches[1]);
+            $propertyKey = 'classification';
+            $property = $property ?: 'types';
+        }
+
+        if ($entity === null && preg_match(
+            '/\b(?:types?|kinds?|varieties|breeds|strains)\s+of\s+(?:the\s+)?([a-z][a-z\- ]{2,40})/u',
+            $normalizedQuestion,
+            $matches,
+        ) === 1) {
+            $entity = self::trimSemanticPhrase((string) $matches[1]);
+            $propertyKey = 'classification';
+            $property = $property ?: 'types';
+        }
+
+        if ($entity === null && preg_match(
+            '/(?:إنتاج|انتاج|غلة)\s+(?:ال)?(\p{L}{3,}(?:\s+\p{L}{3,}){0,2})/u',
+            $normalizedQuestion,
+            $matches,
+        ) === 1) {
+            $entity = self::trimSemanticPhrase((string) $matches[1]);
+            $property = $property ?: 'yield';
+            $propertyKey = $propertyKey ?: 'quantity';
+        }
+
+        if ($entity === null && preg_match(
+            '/\byield of\s+(?:the\s+)?([a-z][a-z\- ]{2,40})/u',
+            $normalizedQuestion,
+            $matches,
+        ) === 1) {
+            $entity = self::trimSemanticPhrase((string) $matches[1]);
+            $property = $property ?: 'yield';
+            $propertyKey = $propertyKey ?: 'quantity';
+        }
+
+        if ($property === null && preg_match('/(?:كمية|كم)\s+(\p{L}{2,})/u', $normalizedQuestion, $matches) === 1) {
+            $property = self::trimPropertySurface((string) $matches[1]);
+            $propertyKey = $propertyKey ?: 'quantity';
+        }
+
+        if (method_exists(self::class, 'inferTemperaturePropertyIfRequested')) {
+            [$property, $propertyKey] = self::inferTemperaturePropertyIfRequested(
+                $normalizedQuestion,
+                $property,
+                $propertyKey,
+            );
+        }
+
+        if ($property === null && preg_match('/(?:تركيز|concentration|ppm)/u', $normalizedQuestion) === 1) {
+            $property = 'concentration';
+            $propertyKey = $propertyKey ?: 'concentration';
+        }
+
+        if (method_exists(self::class, 'inferIrrigationPropertyIfRequested')) {
+            [$property, $propertyKey] = self::inferIrrigationPropertyIfRequested(
+                $normalizedQuestion,
+                $property,
+                $propertyKey,
+            );
+        }
+
+        if ($property !== null && $property !== '') {
+            $mappedKey = self::propertyKeyFromSurface($property);
+            if (in_array($mappedKey, [
+                'irrigation', 'temperature', 'concentration', 'classification', 'quantity',
+            ], true)) {
+                $propertyKey = $mappedKey;
+            }
+        }
+
+        if ($entity !== null && (! self::isDistinctiveNamedEntitySurface($entity) || self::isLocationAliasToken($entity))) {
+            $entity = null;
+        }
+
+        if ($entity === null) {
+            $entity = self::extractResidualEntitySurface($normalizedQuestion, $property, $propertyKey);
+        }
+
+        if ($entity !== null && (! self::isDistinctiveNamedEntitySurface($entity) || self::isLocationAliasToken($entity))) {
+            $entity = null;
+        }
+
+        if ($entity === null && $property === null && $propertyKey === null) {
+            return null;
+        }
+
+        return [
+            'entity_surface' => $entity,
+            'entity_normalized' => $entity !== null ? mb_strtolower($entity) : null,
+            'property_surface' => $property !== '' ? $property : null,
+            'property_key' => $propertyKey,
+        ];
+    }
+
+    /**
+     * @param  array{property_surface?: ?string, property_key?: ?string}|null  $target
+     * @return list<string>
+     */
+    public static function requestedPropertyQueryTerms(?array $target, string $questionType = ''): array
+    {
+        $terms = [];
+        $surface = self::trimSemanticPhrase((string) ($target['property_surface'] ?? ''));
+        $key = trim((string) ($target['property_key'] ?? $questionType));
+        if ($surface !== '') {
+            $terms[] = $surface;
+            $folded = mb_strtolower($surface);
+            if (in_array($folded, ['ري', 'الري', 'irrigation', 'water'], true)) {
+                $terms = array_merge($terms, ['irrigation', 'water requirement', 'water use']);
+            }
+        }
+
+        $mapped = match ($key) {
+            'quantity', 'yield', 'rate', 'production' => array_merge(
+                self::quantitySurfaceQueryTerms($surface),
+                ['quantity', 'rate'],
+            ),
+            'classification', 'types', 'inventory' => ['types', 'classification', 'inventory', 'varieties', 'breeds', 'strains'],
+            'range', 'temperature' => ['range', 'temperature'],
+            'concentration' => ['concentration', 'ppm'],
+            'irrigation' => ['irrigation', 'water', 'water requirement', 'water use'],
+            default => [],
+        };
+
+        foreach ($mapped as $term) {
+            if (! in_array($term, $terms, true)) {
+                $terms[] = $term;
+            }
+        }
+
+        return array_values(array_filter($terms, static fn (string $term): bool => trim($term) !== ''));
+    }
+
+    public static function trimPropertySurface(string $phrase): string
+    {
+        $phrase = trim($phrase);
+        $phrase = preg_replace('/^(?:the|a|an|ال)\s+/iu', '', $phrase) ?? $phrase;
+
+        return trim($phrase);
+    }
+
+    public static function trimSemanticPhrase(string $phrase): string
+    {
+        $tokens = preg_split('/\s+/u', trim($phrase)) ?: [];
+        while ($tokens !== []) {
+            $last = (string) $tokens[count($tokens) - 1];
+            if (self::isNamedEntityStopToken($last)) {
+                array_pop($tokens);
+
+                continue;
+            }
+            break;
+        }
+        while ($tokens !== []) {
+            $first = (string) $tokens[0];
+            if (self::isNamedEntityStopToken($first)) {
+                array_shift($tokens);
+
+                continue;
+            }
+            break;
+        }
+
+        return trim(implode(' ', $tokens));
+    }
+
+    public static function propertyKeyFromSurface(string $surface): string
+    {
+        $folded = mb_strtolower(trim($surface));
+
+        return match (true) {
+            $folded === '' => '',
+            in_array($folded, ['definition', 'meaning', 'تعريف'], true) => 'definition',
+            in_array($folded, ['types', 'type', 'kinds', 'varieties', 'breeds', 'strains', 'أنواع', 'انواع', 'اصناف', 'أصناف', 'سلالات'], true) => 'classification',
+            in_array($folded, ['quantity', 'yield', 'rate', 'production', 'amount', 'dose', 'كمية', 'إنتاج', 'انتاج', 'غلة', 'معدل'], true) => 'quantity',
+            in_array($folded, ['temperature', 'range', 'حرارة', 'درجة'], true) => 'temperature',
+            in_array($folded, ['concentration', 'ppm', 'تركيز'], true) => 'concentration',
+            in_array($folded, ['irrigation', 'ري', 'الري', 'ماء', 'الماء', 'water'], true) => 'irrigation',
+            in_array($folded, ['تقاوي', 'بذور', 'seed', 'seeds', 'seeding', 'sowing', 'seed rate'], true) => 'quantity',
+            default => $folded,
+        };
+    }
+
+    /**
+     * @param  list<string>  $propertyTerms
+     */
+    public static function haystackAddressesRequestedProperty(string $haystack, array $propertyTerms): bool
+    {
+        $haystack = mb_strtolower(trim($haystack));
+        if ($haystack === '') {
+            return false;
+        }
+
+        foreach ($propertyTerms as $term) {
+            $normalized = mb_strtolower(trim((string) $term));
+            if ($normalized === '' || in_array($normalized, ['general_knowledge', 'agriculture', 'farming'], true)) {
+                continue;
+            }
+            if (! self::containsTerm($haystack, $normalized) && ! self::matchesSemanticToken($haystack, $normalized)) {
+                continue;
+            }
+            if (self::propertyMentionIsNegated($haystack, $normalized)) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Leftover distinctive tokens after stripping question frames and property cues.
+     * Preserves unresolved named entities without catalog membership.
+     */
+    public static function extractResidualEntitySurface(
+        string $normalizedQuestion,
+        ?string $propertySurface,
+        ?string $propertyKey,
+    ): ?string {
+        $stripped = $normalizedQuestion;
+        foreach ([
+            'ما هي', 'ما هو', 'ما كمية', 'ما كميه', 'what are', 'what is', 'how much',
+            'how many', 'types of', 'kinds of', 'varieties of', 'breeds of',
+        ] as $frame) {
+            $stripped = preg_replace('/'.preg_quote($frame, '/').'/u', ' ', $stripped) ?? $stripped;
+        }
+        foreach (self::questionTypeSignals() as $keywords) {
+            foreach ($keywords as $keyword) {
+                if (mb_strlen($keyword) < 3) {
+                    continue;
+                }
+                $stripped = preg_replace('/'.preg_quote($keyword, '/').'/iu', ' ', $stripped) ?? $stripped;
+            }
+        }
+        if ($propertySurface !== null && $propertySurface !== '') {
+            $stripped = preg_replace('/'.preg_quote($propertySurface, '/').'/iu', ' ', $stripped) ?? $stripped;
+        }
+        $tokens = preg_split('/\s+/u', trim($stripped)) ?: [];
+        $kept = [];
+        foreach ($tokens as $token) {
+            $token = trim((string) $token, " \t\n\r-?؟");
+            if ($token === '' || self::isNamedEntityStopToken($token) || mb_strlen($token) < 3) {
+                continue;
+            }
+            if (method_exists(self::class, 'isGenericScientificProcessToken')
+                && self::isGenericScientificProcessToken($token)) {
+                continue;
+            }
+            if ($propertyKey !== null && self::propertyKeyFromSurface($token) === $propertyKey) {
+                continue;
+            }
+            if (self::isCatalogCategoryKeyword($token) || self::isLocationAliasToken($token)) {
+                continue;
+            }
+            $kept[] = $token;
+        }
+        if ($kept === []) {
+            return null;
+        }
+
+        $phrase = self::trimSemanticPhrase(implode(' ', array_slice($kept, 0, 4)));
+        if ($phrase === '' || ! self::isDistinctiveNamedEntitySurface($phrase)) {
+            return null;
+        }
+
+        return $phrase;
+    }
+
+    /**
+     * Catalog-unknown leftover names are preserved; generic land/farming/category
+     * vocabulary is not treated as an unresolved named entity.
+     */
+    public static function isDistinctiveNamedEntitySurface(string $surface): bool
+    {
+        $phrase = self::trimSemanticPhrase($surface);
+        if ($phrase === '' || self::isNamedEntityStopToken($phrase)
+            || (method_exists(self::class, 'isGenericScientificProcessToken')
+                && self::isGenericScientificProcessToken($phrase))) {
+            return false;
+        }
+
+        $tokens = preg_split('/\s+/u', mb_strtolower($phrase)) ?: [];
+        foreach ($tokens as $token) {
+            $token = trim((string) $token, " \t\n\r-?؟");
+            if ($token === ''
+                || self::isNamedEntityStopToken($token)
+                || (method_exists(self::class, 'isGenericScientificProcessToken')
+                    && self::isGenericScientificProcessToken($token))
+                || self::isCatalogCategoryKeyword($token)) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function quantitySurfaceQueryTerms(string $surface): array
+    {
+        $folded = mb_strtolower(trim($surface));
+        if ($folded === '') {
+            return ['yield', 'production'];
+        }
+        if (preg_match('/تقاوي|بذور|\bseeds?\b|\bseeding\b|\bsowing\b|seed rate/u', $folded) === 1) {
+            return ['seed rate', 'seeding rate', 'sowing rate'];
+        }
+
+        return [];
+    }
+
+    private static function isCatalogCategoryKeyword(string $token): bool
+    {
+        $folded = mb_strtolower(trim($token));
+        if ($folded === '') {
+            return false;
+        }
+
+        foreach (self::cropCategorySignals() as $keywords) {
+            foreach ($keywords as $keyword) {
+                if (self::matchesSemanticToken($folded, (string) $keyword)
+                    || mb_strtolower(trim((string) $keyword)) === $folded) {
+                    return true;
+                }
+            }
+        }
+
+        foreach (['fish', 'fishes', 'أسماك', 'اسماك', 'الأسماك', 'الاسماك', 'aquaculture', 'poultry', 'دواجن', 'الدواجن'] as $keyword) {
+            if ($folded === mb_strtolower($keyword) || self::matchesSemanticToken($folded, $keyword)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function propertyMentionIsNegated(string $haystack, string $term): bool
+    {
+        $quoted = preg_quote($term, '/');
+
+        return preg_match('/\b(?:without|not|no|never|lacking)\b.{0,48}'.$quoted.'/u', $haystack) === 1
+            || preg_match('/(?:بدون|دون|دون ذكر|بدون ذكر|غير).{0,24}'.$quoted.'/u', $haystack) === 1;
     }
 }

@@ -49,6 +49,53 @@ final class AgriculturalKnowledgeQuery
         return $this->ambiguityState === self::AMBIGUITY_NEEDS_CLARIFICATION;
     }
 
+    public function isEntityDependent(): bool
+    {
+        if (array_key_exists('entity_dependent', $this->constraints)) {
+            return (bool) $this->constraints['entity_dependent'];
+        }
+
+        $subjectType = is_array($this->subject) ? (string) ($this->subject['type'] ?? '') : '';
+
+        return $this->cropId !== null
+            || ($this->scientificName !== null && trim($this->scientificName) !== '')
+            || in_array($subjectType, ['crop', 'named_entity', 'animal', 'plant_family'], true);
+    }
+
+    public function namedEntitySurface(): ?string
+    {
+        $surface = trim((string) ($this->constraints['named_entity_surface'] ?? ''));
+        if ($surface !== '') {
+            return $surface;
+        }
+
+        if ($this->crop !== null && trim($this->crop) !== '') {
+            return trim($this->crop);
+        }
+
+        if (is_array($this->subject) && in_array((string) ($this->subject['type'] ?? ''), ['crop', 'named_entity', 'animal'], true)) {
+            $label = trim((string) ($this->subject['label'] ?? $this->subject['value'] ?? ''));
+
+            return $label !== '' ? $label : null;
+        }
+
+        return null;
+    }
+
+    public function namedEntityState(): string
+    {
+        $state = trim((string) ($this->constraints['named_entity_state'] ?? ''));
+        if ($state !== '') {
+            return $state;
+        }
+
+        if ($this->cropId !== null) {
+            return 'resolved';
+        }
+
+        return $this->namedEntitySurface() !== null ? 'unresolved' : 'none';
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {

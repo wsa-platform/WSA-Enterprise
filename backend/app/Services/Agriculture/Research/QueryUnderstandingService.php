@@ -81,6 +81,9 @@ class QueryUnderstandingService
         $cropIdResolved = is_array($cropRecognition) ? $cropRecognition['crop_id'] : null;
         $cropLabel = is_array($cropRecognition) ? ($cropRecognition['label'] ?? null) : null;
         $scientificName = $this->resolveScientificName($cropIdResolved, $scientificNameInput, $normalizedQuestion);
+        $entityCategory = is_array($cropRecognition)
+            ? (string) ($cropRecognition['category'] ?? FieldCropTaxonomyCatalog::categoryFor((string) $cropIdResolved))
+            : null;
 
         $scientificSense = $this->resolveScientificSense(
             $researchIntent,
@@ -187,6 +190,13 @@ class QueryUnderstandingService
             }
         }
         $requiredEvidenceType = AgriculturalEntityCatalog::requiredEvidenceTypeForQuestionType($questionType);
+        [$constraints, $subject, $propertyTerms, $topic] = $this->applySemanticTargetBaseline(
+            $normalizedQuestion,
+            $constraints,
+            $subject,
+            $questionType,
+            $topic,
+        );
         $constraints['question_type'] = $questionType;
         $constraints['requested_information'] = $requestedInformation;
         $constraints['required_evidence_type'] = $requiredEvidenceType;
@@ -226,7 +236,29 @@ class QueryUnderstandingService
 
         $constraints['primary_user_act'] = $researchIntent;
 
+        $namedEntityState = 'none';
+        $namedEntitySurface = null;
+        $subjectType = is_array($subject) ? (string) ($subject['type'] ?? '') : '';
+        if ($cropIdResolved !== null) {
+            $namedEntityState = 'resolved';
+            $namedEntitySurface = is_string($cropLabel) && $cropLabel !== '' ? $cropLabel : $cropIdResolved;
+            $entityCategory = $entityCategory ?: FieldCropTaxonomyCatalog::categoryFor($cropIdResolved);
+        } elseif (in_array($subjectType, ['crop', 'named_entity', 'animal', 'plant_family'], true)) {
+            $namedEntityState = (($subject['resolution'] ?? '') === 'unresolved') ? 'unresolved' : 'resolved';
+            $namedEntitySurface = trim((string) ($subject['label'] ?? $subject['value'] ?? ''));
+            $namedEntitySurface = $namedEntitySurface !== '' ? $namedEntitySurface : null;
+        }
+        $entityDependent = $namedEntityState !== 'none';
+        $constraints['entity_dependent'] = $entityDependent;
+        $constraints['named_entity_state'] = $namedEntityState;
+        $constraints['named_entity_surface'] = $namedEntitySurface;
+        $constraints['entity_category'] = $entityCategory;
+
         $researchRequired = $ambiguityState !== AgriculturalKnowledgeQuery::AMBIGUITY_NEEDS_CLARIFICATION;
+
+        $crop = is_string($cropLabel) && $cropLabel !== ''
+            ? $cropLabel
+            : $namedEntitySurface;
 
         return new AgriculturalKnowledgeQuery(
             originalQuestion: $originalQuestion,
@@ -234,7 +266,7 @@ class QueryUnderstandingService
             language: $language,
             agriculturalDomain: $agriculturalDomain,
             subject: $subject,
-            crop: $cropLabel,
+            crop: $crop,
             cropId: $cropIdResolved,
             scientificName: $scientificName,
             topic: $topic,
@@ -247,6 +279,73 @@ class QueryUnderstandingService
             clarificationRequirements: $clarificationRequirements,
             researchIntent: $researchIntent,
         );
+    }
+
+    /**
+     * Baseline: entity/property semantic target and requested-property query terms.
+     *
+     * @param  array<string, mixed>  $constraints
+     * @param  array{type?: string, value?: string, label?: string, resolution?: string}|null  $subject
+     * @return array{0: array<string, mixed>, 1: array{type?: string, value?: string, label?: string, resolution?: string}|null, 2: list<string>, 3: string}
+     */
+    private function applySemanticTargetBaseline(
+        string $normalizedQuestion,
+        array $constraints,
+        ?array $subject,
+        string $questionType,
+        string $topic,
+    ): array {
+        $semanticTarget = AgriculturalEntityCatalog::extractSemanticTarget($normalizedQuestion);
+        if (is_array($semanticTarget)) {
+            if ($subject === null && trim((string) ($semanticTarget['entity_surface'] ?? '')) !== ''
+                && AgriculturalEntityCatalog::isDistinctiveNamedEntitySurface((string) $semanticTarget['entity_surface'])
+                && ! AgriculturalEntityCatalog::isLocationAliasToken((string) $semanticTarget['entity_surface'])) {
+                $subject = [
+                    'type' => 'named_entity',
+                    'value' => (string) ($semanticTarget['entity_normalized'] ?? $semanticTarget['entity_surface']),
+                    'label' => (string) $semanticTarget['entity_surface'],
+                    'resolution' => 'unresolved',
+                ];
+            }
+            $propertyKey = trim((string) ($semanticTarget['property_key'] ?? ''));
+            $propertySurface = trim((string) ($semanticTarget['property_surface'] ?? ''));
+            if ($propertyKey !== '') {
+                $constraints['requested_property'] = $propertyKey;
+            } elseif ($questionType !== '' && $questionType !== 'general' && $questionType !== 'definition') {
+                $constraints['requested_property'] = $questionType;
+            }
+            if ($propertySurface !== '') {
+                $constraints['requested_property_surface'] = $propertySurface;
+            }
+            $constraints['semantic_target'] = $semanticTarget;
+        } elseif ($questionType !== '' && $questionType !== 'general' && $questionType !== 'definition') {
+            $constraints['requested_property'] = $questionType;
+        }
+
+        $propertyTerms = AgriculturalEntityCatalog::requestedPropertyQueryTerms(
+            is_array($semanticTarget) ? $semanticTarget : [
+                'property_key' => (string) ($constraints['requested_property'] ?? ''),
+                'property_surface' => (string) ($constraints['requested_property_surface'] ?? ''),
+            ],
+            $questionType,
+        );
+        if ($propertyTerms !== []) {
+            $constraints['requested_property_query_terms'] = $propertyTerms;
+            $topics = is_array($constraints['scientific_topics'] ?? null) ? $constraints['scientific_topics'] : [];
+            $topics = array_values(array_filter(
+                $topics,
+                static fn ($item): bool => ! in_array(mb_strtolower(trim((string) $item)), [
+                    'general_knowledge', 'agriculture', 'farming', 'general agriculture',
+                ], true),
+            ));
+            $constraints['scientific_topics'] = array_values(array_unique(array_merge($propertyTerms, $topics)));
+            $genericTopics = ['general_knowledge', 'agriculture', 'farming', 'general agriculture'];
+            if (in_array(mb_strtolower((string) $topic), $genericTopics, true)) {
+                $topic = $propertyTerms[0];
+            }
+        }
+
+        return [$constraints, $subject, $propertyTerms, $topic];
     }
 
     /**
@@ -701,6 +800,16 @@ class QueryUnderstandingService
                 'type' => 'plant_family',
                 'value' => $botanicalFamily,
                 'label' => $botanicalFamily,
+            ];
+        }
+
+        $unresolvedEntity = AgriculturalEntityCatalog::extractNamedAgriculturalEntityCandidate($normalizedQuestion);
+        if ($unresolvedEntity !== null) {
+            return [
+                'type' => 'crop',
+                'value' => $unresolvedEntity['normalized'],
+                'label' => $unresolvedEntity['surface'],
+                'resolution' => 'unresolved',
             ];
         }
 
