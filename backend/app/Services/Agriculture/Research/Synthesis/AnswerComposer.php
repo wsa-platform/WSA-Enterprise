@@ -5,11 +5,15 @@ namespace App\Services\Agriculture\Research\Synthesis;
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
+use App\Services\Agriculture\Research\Search\ScientificEvidenceModality;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceRelevanceGate;
+use App\Services\Agriculture\Research\Search\ScientificStatisticalClaimAligner;
+use App\Services\Agriculture\Research\Search\ScientificStructuredObservation;
 use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
 use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionReport;
 use App\Services\Agriculture\Research\Validation\EvidenceVerificationLayer;
 use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
+use App\Services\Agriculture\ScientificSourceRegistry;
 use App\Services\Agriculture\ScientificSourceValidator;
 
 /**
@@ -25,6 +29,7 @@ class AnswerComposer
         private ScientificEvidenceRelevanceGate $relevanceGate,
         private ScientificEvidenceDirectnessAssessor $directnessAssessor,
         private EvidenceVerificationLayer $evidenceVerificationLayer,
+        private ScientificStatisticalClaimAligner $statisticalClaimAligner,
     ) {}
 
     public function compose(
@@ -244,6 +249,14 @@ class AnswerComposer
             return false;
         }
 
+        if ($this->isDirectStatisticalEvidence($item)) {
+            if (! $this->directStatisticalObservationSupportsClaim($item, $plan)) {
+                return false;
+            }
+
+            return $this->resolveDirectness($item, $plan) === ScientificEvidenceDirectnessAssessor::DIRECT;
+        }
+
         if (! in_array($item->claimRelationship, [
             ClaimEvidenceRelationship::SUPPORTED,
             ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
@@ -284,6 +297,43 @@ class AnswerComposer
         }
 
         return true;
+    }
+
+    private function isDirectStatisticalEvidence(ScientificEvidenceItem $item): bool
+    {
+        $type = strtoupper(trim((string) ($item->qualityFactors['evidence_type'] ?? '')));
+        $directness = strtolower(trim((string) ($item->qualityFactors['evidence_directness']
+            ?? $item->sourceAttribution['evidence_directness']
+            ?? '')));
+        $sourceType = strtolower(trim((string) ($item->sourceType ?? '')));
+
+        return ($item->qualityFactors['not_literature'] ?? false) === true
+            || $type === ScientificEvidenceModality::DIRECT_STATISTICAL
+            || $directness === 'direct_statistical'
+            || $sourceType === 'official_statistics';
+    }
+
+    private function directStatisticalObservationSupportsClaim(
+        ScientificEvidenceItem $item,
+        KnowledgeQueryPlan $plan,
+    ): bool {
+        $observation = ScientificStructuredObservation::fromEvidenceItem($item);
+        if ($observation === null || ! $observation->isComplete()) {
+            return false;
+        }
+
+        $alignment = $this->statisticalClaimAligner->assess($plan, $observation);
+        if (! $alignment['relevant']) {
+            return false;
+        }
+
+        $value = preg_replace('/[^\d.,]/', '', $observation->value) ?? '';
+        $hay = mb_strtolower(trim(implode(' ', array_filter([
+            $item->publicationTitle,
+            (string) $item->evidenceText,
+        ]))));
+
+        return $value !== '' && str_contains($hay, mb_strtolower($value));
     }
 
     private function requiresStrictGrounding(KnowledgeQueryPlan $plan): bool
@@ -572,7 +622,11 @@ class AnswerComposer
             ?? $item->sourceAttribution['evidence_directness']
             ?? null;
         if (is_string($stored) && $stored !== '') {
-            return $stored;
+            return $this->normalizeDirectnessLabel($stored, $item);
+        }
+
+        if ($this->isDirectStatisticalEvidence($item)) {
+            return ScientificEvidenceDirectnessAssessor::DIRECT;
         }
 
         return $this->directnessAssessor->assess(
@@ -581,6 +635,18 @@ class AnswerComposer
             $item->evidenceText,
             $item->doi,
         )['directness'];
+    }
+
+    private function normalizeDirectnessLabel(string $stored, ScientificEvidenceItem $item): string
+    {
+        $normalized = strtolower(trim($stored));
+        if (in_array($normalized, ['direct_statistical', 'direct_statistical_evidence'], true)
+            || strtoupper($stored) === ScientificEvidenceModality::DIRECT_STATISTICAL
+            || $this->isDirectStatisticalEvidence($item)) {
+            return ScientificEvidenceDirectnessAssessor::DIRECT;
+        }
+
+        return $stored;
     }
 
     /**
@@ -604,9 +670,9 @@ class AnswerComposer
 
     private function citationFromEvidence(ScientificEvidenceItem $item, bool $supportedAnswer = false): ?ResearchAnswerCitation
     {
-        $directness = (string) ($item->qualityFactors['evidence_directness']
+        $directness = $this->normalizeDirectnessLabel((string) ($item->qualityFactors['evidence_directness']
             ?? $item->sourceAttribution['evidence_directness']
-            ?? '');
+            ?? ''), $item);
         // Primary citations[]: DIRECT only, unless supported_answer mode allows eligible SUPPORTING.
         if ($supportedAnswer) {
             if (! $this->evidenceVerificationLayer->isSupportedAnswerCitationEligible($directness)) {
@@ -616,8 +682,13 @@ class AnswerComposer
             return null;
         }
 
+        $sourceType = $item->sourceType ?? 'supporting_verified';
+        if ($this->isDirectStatisticalEvidence($item)
+            && ! ScientificSourceRegistry::isApprovedSourceType((string) $sourceType)) {
+            $sourceType = 'international_organization';
+        }
         $reference = [
-            'source_type' => $item->sourceType ?? 'supporting_verified',
+            'source_type' => $sourceType,
             'organization' => $item->institution ?? ($item->sourceAttribution['organization'] ?? ''),
             'title' => $item->publicationTitle,
         ];
@@ -661,7 +732,10 @@ class AnswerComposer
                 continue;
             }
 
-            $groundedText = $this->selectGroundedSnippet($item->evidenceText, $plan, $item->publicationTitle);
+            $evidenceBody = $this->isDirectStatisticalEvidence($item)
+                ? trim($item->publicationTitle."\n".$item->evidenceText)
+                : $item->evidenceText;
+            $groundedText = $this->selectGroundedSnippet($evidenceBody, $plan, $item->publicationTitle);
             if ($groundedText === '') {
                 continue;
             }
@@ -870,7 +944,7 @@ class AnswerComposer
      */
     private function extractNumericalValues(string $text): array
     {
-        preg_match_all('/\b\d+(?:[.,]\d+)?(?:\s*(?:%|kg|ha|mm|cm|m|l|ml|°c|ph|ppm|mg|g|tons?|days?|weeks?|months?))?\b/iu', $text, $matches);
+        preg_match_all('/\b\d+(?:[.,]\d+)?(?:\s*(?:%|kg\/ha|t\/ha|kg|ha|mm|cm|m|l|ml|°c|ph|ppm|mg|g|tons?|tonnes?|t|days?|weeks?|months?))\b/iu', $text, $matches);
 
         $values = [];
         foreach ($matches[0] ?? [] as $match) {

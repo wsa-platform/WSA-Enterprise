@@ -38,6 +38,13 @@ class ScientificResultDeduplicator
 
     private function dedupeKey(ScientificSearchResult $result): ?string
     {
+        $observation = ScientificStructuredObservation::fromResult($result);
+        if (ScientificEvidenceModality::isDirectStatistical($result)
+            && $observation !== null
+            && $observation->isComplete()) {
+            return 'stat:'.ScientificEvidenceModality::DIRECT_STATISTICAL.':'.$observation->identityKey();
+        }
+
         if ($result->doi !== null && $result->doi !== '') {
             return 'doi:'.$result->doi;
         }

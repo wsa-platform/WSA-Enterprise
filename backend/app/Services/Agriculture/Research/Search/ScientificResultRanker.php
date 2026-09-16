@@ -16,6 +16,7 @@ class ScientificResultRanker
     public function __construct(
         private ScientificEvidenceRelevanceGate $relevanceGate,
         private ScientificEvidenceDirectnessAssessor $directnessAssessor,
+        private ScientificStatisticalClaimAligner $statisticalClaimAligner,
     ) {}
 
     /**
@@ -35,44 +36,71 @@ class ScientificResultRanker
             ];
 
             if ($plan !== null) {
-                $assessment = $this->relevanceGate->assess(
-                    $plan,
-                    $result->title,
-                    $result->abstract,
-                    $result->doi,
-                    $this->extraTextFromResult($result),
-                );
-                $directness = $this->directnessAssessor->assess(
-                    $plan,
-                    $result->title,
-                    $result->abstract,
-                    $result->doi,
-                    $this->extraTextFromResult($result),
-                );
+                $observation = ScientificStructuredObservation::fromResult($result);
+                if (ScientificEvidenceModality::isDirectStatistical($result)
+                    && $observation !== null
+                    && $observation->isComplete()) {
+                    $alignment = $this->statisticalClaimAligner->assess($plan, $observation);
+                    $metadata['evidence_modality'] = ScientificEvidenceModality::DIRECT_STATISTICAL;
+                    $metadata['statistical_claim_aligned'] = $alignment['relevant'];
+                    $metadata['entity_matched'] = ! in_array('entity', $alignment['mismatches'], true);
+                    $metadata['topic_matched'] = ! in_array('property', $alignment['mismatches'], true);
+                    $metadata['sense_matched'] = $alignment['relevant'];
+                    $metadata['context_matched'] = $alignment['relevant'];
+                    $metadata['context_adequate'] = $alignment['relevant'];
+                    $metadata['relevance_gate'] = $alignment['relevant'];
+                    $metadata['directness_reasons'] = $alignment['mismatches'];
+                    $metadata['factor_coverage'] = $alignment['relevant'] ? 1.0 : 0.0;
+                    if ($alignment['relevant']) {
+                        $score += 80.0;
+                        $metadata['evidence_directness'] = ScientificEvidenceDirectnessAssessor::DIRECT;
+                    } else {
+                        $metadata['rejected_by_relevance_gate'] = true;
+                        $metadata['rejection_reasons'] = $alignment['mismatches'];
+                        $metadata['evidence_directness'] = ScientificEvidenceDirectnessAssessor::IRRELEVANT;
+                        $score *= 0.05;
+                    }
+                } else {
+                    $assessment = $this->relevanceGate->assess(
+                        $plan,
+                        $result->title,
+                        $result->abstract,
+                        $result->doi,
+                        $this->extraTextFromResult($result),
+                    );
+                    $directness = $this->directnessAssessor->assess(
+                        $plan,
+                        $result->title,
+                        $result->abstract,
+                        $result->doi,
+                        $this->extraTextFromResult($result),
+                    );
 
-                $score += $assessment['score'];
-                $score += $directness['score'];
-                $score += $this->qualityMetadataBonus($result);
-                $score += $this->topicDirectnessBonus($assessment, $directness);
-                $score += $this->germinationIntentRankingAdjust($plan, $result);
+                    $score += $assessment['score'];
+                    $score += $directness['score'];
+                    $score += $this->qualityMetadataBonus($result);
+                    $score += $this->topicDirectnessBonus($assessment, $directness);
+                    $score += $this->germinationIntentRankingAdjust($plan, $result);
 
-                $metadata['entity_matched'] = $assessment['entity_matched'];
-                $metadata['topic_matched'] = $assessment['topic_matched'];
-                $metadata['sense_matched'] = $assessment['sense_matched'] ?? false;
-                $metadata['context_matched'] = $assessment['context_matched'] ?? false;
-                $metadata['context_adequate'] = $assessment['context_adequate'] ?? false;
-                $metadata['relevance_gate'] = $assessment['relevant'];
-                $metadata['evidence_directness'] = $directness['directness'];
-                $metadata['directness_reasons'] = $directness['reasons'];
-                $metadata['factor_coverage'] = $directness['factor_coverage'];
+                    $metadata['entity_matched'] = $assessment['entity_matched'];
+                    $metadata['topic_matched'] = $assessment['topic_matched'];
+                    $metadata['sense_matched'] = $assessment['sense_matched'] ?? false;
+                    $metadata['context_matched'] = $assessment['context_matched'] ?? false;
+                    $metadata['context_adequate'] = $assessment['context_adequate'] ?? false;
+                    $metadata['relevance_gate'] = $assessment['relevant'];
+                    $metadata['evidence_directness'] = $directness['directness'];
+                    $metadata['directness_reasons'] = $directness['reasons'];
+                    $metadata['factor_coverage'] = $directness['factor_coverage'];
+                    $metadata['evidence_modality'] = ScientificEvidenceModality::fromResult($result);
 
-                if (! $assessment['relevant']
-                    || $directness['directness'] === ScientificEvidenceDirectnessAssessor::IRRELEVANT) {
-                    $metadata['rejected_by_relevance_gate'] = true;
-                    $metadata['rejection_reasons'] = $assessment['rejection_reasons'] !== []
-                        ? $assessment['rejection_reasons']
-                        : $directness['reasons'];
-                    $score *= 0.05;
+                    if (! $assessment['relevant']
+                        || $directness['directness'] === ScientificEvidenceDirectnessAssessor::IRRELEVANT) {
+                        $metadata['rejected_by_relevance_gate'] = true;
+                        $metadata['rejection_reasons'] = $assessment['rejection_reasons'] !== []
+                            ? $assessment['rejection_reasons']
+                            : $directness['reasons'];
+                        $score *= 0.05;
+                    }
                 }
             }
 
