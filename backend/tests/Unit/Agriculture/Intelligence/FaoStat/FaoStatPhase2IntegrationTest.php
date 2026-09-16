@@ -9,7 +9,6 @@ use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatErr
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatEvidenceType;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatObservationRelevanceGate;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatSearchResultFilter;
-use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
 use App\Services\Agriculture\Intelligence\Contracts\ProviderCapability;
 use App\Services\Agriculture\Intelligence\Contracts\SourceRole;
 use App\Services\Agriculture\Intelligence\DTO\CanonicalAgriculturalResult;
@@ -216,7 +215,7 @@ class FaoStatPhase2IntegrationTest extends TestCase
         }
     }
 
-    public function test_feature_flag_off_preserves_fenix_selector_behavior(): void
+    public function test_feature_flag_off_does_not_select_faostat_or_fall_back_to_fenix(): void
     {
         config(['agricultural_intelligence.faostat.enabled' => false, 'agricultural_intelligence.fao.enabled' => false]);
         $this->assertSame(FaoStatConsiderationPolicy::DISABLED, FaoStatConsiderationPolicy::decision());
@@ -224,11 +223,11 @@ class FaoStatPhase2IntegrationTest extends TestCase
         $this->assertNotContains('fao_stat', $sourcesOff);
 
         config(['agricultural_intelligence.fao.enabled' => true]);
-        $sourcesFenix = app(ScientificSourceSelector::class)->selectSources($this->plan('irrigation efficiency research', 'scientific_research', 'irrigation'));
-        $this->assertContains('fao_stat', $sourcesFenix);
+        $sourcesFenixAlias = app(ScientificSourceSelector::class)->selectSources($this->plan('irrigation efficiency research', 'scientific_research', 'irrigation'));
+        $this->assertNotContains('fao_stat', $sourcesFenixAlias);
         $this->app->forgetInstance(ScientificSourceAdapterRegistry::class);
         $this->assertInstanceOf(
-            FaoStatScientificSourceAdapter::class,
+            \App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDeveloperPortalAdapter::class,
             app(ScientificSourceAdapterRegistry::class)->get('fao_stat'),
         );
     }

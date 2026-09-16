@@ -28,8 +28,7 @@ use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDom
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDomainVerifier;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatOperationalLogger;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatReadinessReporter;
-use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatResultNormalizer;
-use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatRuntimePolicy;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\ScientificAdapterBridgeProvider;
 use App\Services\Agriculture\Intelligence\Adapters\Web\ConfigurableWebSearchProvider;
 use App\Services\Agriculture\Intelligence\Adapters\Web\FreeSearchMcpAdapter;
@@ -66,7 +65,6 @@ class AgriculturalIntelligenceServiceProvider extends ServiceProvider
         $this->app->singleton(DiseaseResultNormalizer::class);
         $this->app->singleton(EnvironmentalResultNormalizer::class);
         $this->app->singleton(AgriculturalResultNormalizer::class);
-        $this->app->singleton(FaoStatResultNormalizer::class);
         $this->app->singleton(FaoStatDeveloperPortalTokenManager::class);
         $this->app->singleton(FaoStatCircuitBreaker::class);
         $this->app->singleton(FaoStatOperationalLogger::class);
@@ -97,7 +95,6 @@ class AgriculturalIntelligenceServiceProvider extends ServiceProvider
             return $app->make(ConfigurableWebSearchProvider::class);
         });
         $this->app->singleton(WebSearchAgriculturalProvider::class);
-        $this->app->singleton(FaoStatScientificSourceAdapter::class);
 
         $this->app->singleton(AgriculturalProviderRegistry::class, function ($app) {
             $registry = new AgriculturalProviderRegistry;
@@ -137,14 +134,10 @@ class AgriculturalIntelligenceServiceProvider extends ServiceProvider
                 priority: 12,
                 enabled: (bool) config('agricultural_intelligence.semantic_scholar.enabled', true),
             ));
-            $portalEnabled = filter_var(config('agricultural_intelligence.faostat.enabled', false), FILTER_VALIDATE_BOOL);
-            $faoAdapter = $portalEnabled
-                ? $app->make(FaoStatDeveloperPortalAdapter::class)
-                : $app->make(FaoStatScientificSourceAdapter::class);
             $registry->register(new ScientificAdapterBridgeProvider(
-                $faoAdapter,
+                $app->make(FaoStatDeveloperPortalAdapter::class),
                 priority: 15,
-                enabled: $portalEnabled || (bool) config('agricultural_intelligence.fao.enabled', true),
+                enabled: FaoStatRuntimePolicy::isEnabled(),
             ));
 
             return $registry;

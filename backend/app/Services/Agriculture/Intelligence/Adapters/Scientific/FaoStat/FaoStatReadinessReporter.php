@@ -34,7 +34,7 @@ final class FaoStatReadinessReporter
             'circuit_open' => $this->circuit->isOpen(),
         ];
 
-        if (! filter_var(config('agricultural_intelligence.faostat.enabled', false), FILTER_VALIDATE_BOOL)) {
+        if (! FaoStatRuntimePolicy::isEnabled()) {
             return $this->pack(
                 FaoStatReadinessState::DISABLED,
                 ProviderHealthState::NOT_CONFIGURED,
@@ -45,7 +45,7 @@ final class FaoStatReadinessReporter
 
         if ($this->circuit->isOpen()) {
             return $this->pack(
-                FaoStatReadinessState::UPSTREAM_UNAVAILABLE,
+                FaoStatReadinessState::CIRCUIT_OPEN,
                 ProviderHealthState::UNAVAILABLE,
                 'circuit_open',
                 $details,
@@ -107,6 +107,56 @@ final class FaoStatReadinessReporter
             'authentication_successful',
             $details + ['configured' => true],
         );
+    }
+
+    /**
+     * Lightweight Research Agent gate. Does not ping FAOSTAT on every search.
+     *
+     * @return array{ok: bool, readiness: string, error: ?string, details: array<string, mixed>}
+     */
+    public function searchPreflight(): array
+    {
+        $details = [
+            'circuit_open' => $this->circuit->isOpen(),
+            'activation_state' => FaoStatActivationPolicy::activationState(FaoStatDomainCatalog::QCL),
+            'active_domains' => FaoStatActivationPolicy::activeDomains(),
+        ];
+
+        if (! FaoStatRuntimePolicy::isEnabled()) {
+            return [
+                'ok' => false,
+                'readiness' => FaoStatReadinessState::DISABLED,
+                'error' => FaoStatErrorCategory::DISABLED,
+                'details' => $details,
+            ];
+        }
+
+        if ($this->circuit->isOpen()) {
+            return [
+                'ok' => false,
+                'readiness' => FaoStatReadinessState::CIRCUIT_OPEN,
+                'error' => FaoStatErrorCategory::CIRCUIT_OPEN,
+                'details' => $details,
+            ];
+        }
+
+        $username = (string) config('agricultural_intelligence.faostat.username', '');
+        $password = (string) config('agricultural_intelligence.faostat.password', '');
+        if ($username === '' || $password === '') {
+            return [
+                'ok' => false,
+                'readiness' => FaoStatReadinessState::NOT_AUTHENTICATED,
+                'error' => FaoStatErrorCategory::NOT_AUTHENTICATED,
+                'details' => $details + ['configured' => false],
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'readiness' => FaoStatReadinessState::READY,
+            'error' => null,
+            'details' => $details + ['configured' => true],
+        ];
     }
 
     public function health(): ProviderHealthStatus

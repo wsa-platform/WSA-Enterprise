@@ -15,4 +15,10 @@ final class FaoStatReadinessState
     public const UPSTREAM_UNAVAILABLE = 'UPSTREAM_UNAVAILABLE';
 
     public const READY = 'READY';
+
+    public const NOT_READY = 'NOT_READY';
+
+    public const CIRCUIT_OPEN = 'CIRCUIT_OPEN';
+
+    public const NOT_AUTHENTICATED = 'NOT_AUTHENTICATED';
 }

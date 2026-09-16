@@ -9,7 +9,6 @@ use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatEvi
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatObservationRelevanceGate;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatQclDimensionResolver;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatSearchOptionsResolver;
-use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
 use App\Services\Agriculture\Intelligence\Registry\AgriculturalProviderRegistry;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\QueryUnderstandingService;
@@ -17,6 +16,7 @@ use App\Services\Agriculture\Research\ResearchPlanner;
 use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
 use App\Services\Agriculture\Research\Search\ScientificSearchQueryBuilder;
 use App\Services\Agriculture\Research\Search\ScientificSourceAdapterRegistry;
+use App\Services\Agriculture\Research\Search\ScientificSourceSelector;
 use App\Services\Agriculture\Research\Validation\AgriculturalScientificValidationService;
 use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
 use Illuminate\Support\Facades\Cache;
@@ -157,18 +157,19 @@ class FaoStatPhase3FixTest extends TestCase
         $this->assertTrue($item->qualityFactors['not_literature'] ?? false);
     }
 
-    public function test_fenix_remains_default_when_developer_portal_is_disabled(): void
+    public function test_portal_remains_canonical_when_developer_portal_is_disabled(): void
     {
         config([
             'agricultural_intelligence.faostat.enabled' => false,
-            'agricultural_intelligence.fao.enabled' => false,
+            'agricultural_intelligence.fao.enabled' => true,
         ]);
         $this->app->forgetInstance(ScientificSourceAdapterRegistry::class);
         $this->assertInstanceOf(
-            FaoStatScientificSourceAdapter::class,
+            FaoStatDeveloperPortalAdapter::class,
             app(ScientificSourceAdapterRegistry::class)->get('fao_stat'),
         );
         $this->assertFalse(filter_var(config('agricultural_intelligence.faostat.enabled', false), FILTER_VALIDATE_BOOL));
+        $this->assertNotContains('fao_stat', app(ScientificSourceSelector::class)->selectSources($this->livePlan()));
     }
 
     public function test_portal_adapter_is_used_only_when_enabled(): void

@@ -14,7 +14,7 @@ final class FaoStatConsiderationPolicy
 
     public static function isEnabled(): bool
     {
-        return filter_var(config('agricultural_intelligence.faostat.enabled', false), FILTER_VALIDATE_BOOL);
+        return FaoStatRuntimePolicy::isEnabled();
     }
 
     /**

@@ -22,7 +22,6 @@ use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatPor
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatReadinessReporter;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatReadinessState;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatSupportState;
-use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
 use App\Services\Agriculture\Intelligence\Contracts\ProviderHealthState;
 use App\Services\Agriculture\Research\Search\ScientificSearchQueryBuilder;
 use App\Services\Agriculture\Research\Search\ScientificSourceAdapterRegistry;
@@ -270,7 +269,7 @@ class FaoStatPhase5ProductionReadinessTest extends TestCase
         $this->assertTrue(app(FaoStatCircuitBreaker::class)->isOpen());
         $before = count(Http::recorded());
         $blocked = app(FaoStatDeveloperPortalAdapter::class)->search('wheat', 5, $filters);
-        $this->assertSame(FaoStatErrorCategory::UPSTREAM_SERVER_ERROR, $blocked->error);
+        $this->assertSame(FaoStatErrorCategory::CIRCUIT_OPEN, $blocked->error);
         $this->assertSame($before, count(Http::recorded()));
     }
 
@@ -365,12 +364,12 @@ class FaoStatPhase5ProductionReadinessTest extends TestCase
         $this->assertSame('PENDING_BLOCKED', $ready->details['rfn_live_validation'] ?? null);
     }
 
-    public function test_fenix_remains_default_when_portal_disabled(): void
+    public function test_portal_remains_canonical_when_portal_disabled(): void
     {
         config(['agricultural_intelligence.faostat.enabled' => false]);
         $this->app->forgetInstance(ScientificSourceAdapterRegistry::class);
         $this->assertInstanceOf(
-            FaoStatScientificSourceAdapter::class,
+            FaoStatDeveloperPortalAdapter::class,
             app(ScientificSourceAdapterRegistry::class)->get('fao_stat'),
         );
     }
@@ -443,7 +442,7 @@ class FaoStatPhase5ProductionReadinessTest extends TestCase
         $this->assertFalse($snapshot['rfn_active']);
         $this->assertSame('PENDING_BLOCKED', $snapshot['rfn_live_validation']);
         $this->assertTrue($snapshot['qcl_default_active']);
-        $this->assertTrue($snapshot['fenix_retained']);
+        $this->assertFalse($snapshot['fenix_retained']);
         $this->assertFalse($snapshot['faostat_enabled_default']);
         $encoded = json_encode($snapshot) ?: '';
         $this->assertStringNotContainsString('portal-pass', $encoded);

@@ -35,4 +35,10 @@ final class FaoStatErrorCategory
     public const CONFIGURATION_ERROR = 'CONFIGURATION_ERROR';
 
     public const VALIDATION_ERROR = 'VALIDATION_ERROR';
+
+    public const CIRCUIT_OPEN = 'CIRCUIT_OPEN';
+
+    public const NOT_READY = 'NOT_READY';
+
+    public const NOT_AUTHENTICATED = 'NOT_AUTHENTICATED';
 }

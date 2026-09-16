@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Research\Search;
 
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatRuntimePolicy;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatSearchOptionsResolver;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 
@@ -52,7 +53,7 @@ class MultiSourceScientificSearchOrchestrator
             );
         }
 
-        $adapters = $this->registry->resolveMany($selectedSources);
+        $adapters = $this->registry->resolveMany($this->prioritizeSources($selectedSources));
         if ($adapters === []) {
             return $this->emptyReport(
                 plan: $plan,
@@ -63,6 +64,7 @@ class MultiSourceScientificSearchOrchestrator
             );
         }
 
+        $budget = ScientificSearchTimeBudget::start();
         $outcomes = [];
         $allResults = [];
         $attempted = [];
@@ -70,9 +72,26 @@ class MultiSourceScientificSearchOrchestrator
         $failed = [];
         $empty = [];
         $adapterStatus = [];
+        $skippedBudget = [];
 
         foreach ($adapters as $adapter) {
             $key = $adapter->sourceKey();
+            if (! $budget->remaining()) {
+                $skippedBudget[] = $key;
+                $adapterStatus[$key] = 'skipped';
+                $outcomes[] = new ScientificSourceSearchOutcome(
+                    sourceKey: $key,
+                    status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
+                    error: 'time_budget_exhausted',
+                    observability: [
+                        'reason' => 'search_time_budget',
+                        'budget_seconds' => $budget->seconds,
+                    ],
+                );
+
+                continue;
+            }
+
             $attempted[] = $key;
             $adapterStatus[$key] = 'empty';
             $skipRemainingVariants = false;
@@ -80,6 +99,12 @@ class MultiSourceScientificSearchOrchestrator
 
             foreach ($variants as $variant) {
                 if ($skipRemainingVariants || $variantsAttempted >= self::MAX_VARIANTS_PER_PROVIDER) {
+                    continue;
+                }
+                if (! $budget->remaining()) {
+                    $skipRemainingVariants = true;
+                    $skippedBudget[] = $key;
+
                     continue;
                 }
 
@@ -172,6 +197,8 @@ class MultiSourceScientificSearchOrchestrator
             deduplicatedResults: $ranked,
             planSummary: array_merge($plan->toArray(), [
                 'search_queries' => $variants,
+                'search_time_budget_seconds' => $budget->seconds,
+                'adapters_skipped_time_budget' => array_values(array_unique($skippedBudget)),
             ]),
             internetFirst: $plan->isInternetFirst(),
             searchQueries: $variants,
@@ -215,8 +242,7 @@ class MultiSourceScientificSearchOrchestrator
                 'openalex' => (bool) config('agricultural_intelligence.openalex.enabled', true),
                 'crossref' => (bool) config('agricultural_intelligence.crossref.enabled', true),
                 'semantic_scholar' => (bool) config('agricultural_intelligence.semantic_scholar.enabled', true),
-                'fao_stat' => filter_var(config('agricultural_intelligence.faostat.enabled', false), FILTER_VALIDATE_BOOL)
-                    || (bool) config('agricultural_intelligence.fao.enabled', false),
+                'fao_stat' => FaoStatRuntimePolicy::isEnabled(),
                 default => true,
             };
             if ($flag) {
@@ -224,7 +250,28 @@ class MultiSourceScientificSearchOrchestrator
             }
         }
 
-        return array_values(array_unique($enabled));
+        return array_values(array_unique($this->prioritizeSources($enabled)));
+    }
+
+    /**
+     * Statistical FAOSTAT runs first so a slow scholarly provider cannot consume the whole budget.
+     *
+     * @param  list<string>  $sourceKeys
+     * @return list<string>
+     */
+    private function prioritizeSources(array $sourceKeys): array
+    {
+        $preferred = [];
+        $rest = [];
+        foreach ($sourceKeys as $key) {
+            if ($key === FaoStatRuntimePolicy::canonicalSourceKey()) {
+                $preferred[] = $key;
+            } else {
+                $rest[] = $key;
+            }
+        }
+
+        return [...$preferred, ...$rest];
     }
 
     /**

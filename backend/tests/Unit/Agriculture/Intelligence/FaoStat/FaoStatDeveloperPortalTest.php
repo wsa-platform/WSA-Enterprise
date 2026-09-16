@@ -9,7 +9,6 @@ use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDev
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatErrorCategory;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatEvidenceType;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatPortalException;
-use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
 use App\Services\Agriculture\Intelligence\Contracts\ProviderHealthState;
 use App\Services\Agriculture\Research\Search\ScientificSourceAdapterRegistry;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
@@ -407,12 +406,12 @@ class FaoStatDeveloperPortalTest extends TestCase
         $this->assertSame('authentication_successful', $ok->message);
     }
 
-    public function test_registry_keeps_fenix_when_portal_disabled(): void
+    public function test_registry_keeps_portal_when_disabled(): void
     {
         config(['agricultural_intelligence.faostat.enabled' => false]);
         $this->app->forgetInstance(ScientificSourceAdapterRegistry::class);
         $registry = app(ScientificSourceAdapterRegistry::class);
-        $this->assertInstanceOf(FaoStatScientificSourceAdapter::class, $registry->get('fao_stat'));
+        $this->assertInstanceOf(FaoStatDeveloperPortalAdapter::class, $registry->get('fao_stat'));
     }
 
     public function test_registry_uses_portal_when_enabled(): void

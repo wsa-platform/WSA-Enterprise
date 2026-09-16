@@ -19,7 +19,7 @@ final class FaoStatOperationalStatus
             'rfn_active' => FaoStatActivationPolicy::isActive('RFN'),
             'rfn_activation' => FaoStatActivationPolicy::activationState('RFN'),
             'rfn_live_validation' => FaoStatLiveValidationRegistry::rfnLiveValidationStatus(),
-            'fenix_retained' => true,
+            'fenix_retained' => false,
             'active_domains' => FaoStatActivationPolicy::activeDomains(),
             'live_validated_domains' => FaoStatLiveValidationRegistry::liveValidatedDomains(),
         ];

@@ -86,6 +86,37 @@ final class FaoStatSearchOptionsResolver
             }
         }
 
+        $cropLabel = is_string($query->cropId) && $query->cropId !== ''
+            ? $query->cropId
+            : (is_string($query->crop) ? $query->crop : '');
+        if ($cropLabel !== '') {
+            $out['item_label'] = $cropLabel;
+        }
+        $areaLabel = is_string($query->location) && $query->location !== ''
+            ? $query->location
+            : (string) ($constraints['location'] ?? '');
+        if ($areaLabel !== '') {
+            $out['area_label'] = $areaLabel;
+        }
+        $elementLabel = trim((string) ($constraints['requested_property_surface'] ?? $constraints['element_label'] ?? ''));
+        if ($elementLabel !== '') {
+            $out['element_label'] = $elementLabel;
+        }
+        if (isset($out['year'])) {
+            $out['year_label'] = $out['year'];
+        }
+
+        if (isset($out['item'])) {
+            $out['item_code'] = $out['item'];
+        }
+        if (isset($out['area'])) {
+            $out['area_code'] = $out['area'];
+        }
+        if (isset($out['element'])) {
+            $out['element_code'] = $out['element'];
+            $out['query_element_code'] = $out['element'];
+        }
+
         return $out;
     }
 

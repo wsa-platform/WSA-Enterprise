@@ -30,11 +30,9 @@ class ScientificSourceSelector
 
         $sources = self::DEFAULT_INTERNET_FIRST_SOURCES;
 
-        // Portal flag: consider FAOSTAT for every Internet-First question (no agricultural detector).
-        // FENIX flag: preserve existing append behavior when the portal is off.
-        if (FaoStatConsiderationPolicy::isEnabled()
-            || filter_var(config('agricultural_intelligence.fao.enabled', false), FILTER_VALIDATE_BOOL)) {
-            $sources[] = 'fao_stat';
+        // Canonical FAOSTAT flag only. Retired Fenix FAO_ENABLED must not select fao_stat.
+        if (FaoStatConsiderationPolicy::isEnabled()) {
+            array_unshift($sources, 'fao_stat');
         }
 
         if (! filter_var(config('agricultural_intelligence.openalex.enabled', true), FILTER_VALIDATE_BOOL)) {

@@ -22,6 +22,7 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
         private FaoStatDeveloperPortalTokenManager $tokens,
         private FaoStatReadinessReporter $readiness,
         private FaoStatOperationalLogger $logger,
+        private FaoStatDomainScopedCodeResolver $codes,
     ) {}
 
     public function sourceKey(): string
@@ -49,7 +50,28 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
                 sourceKey: $this->sourceKey(),
                 status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
                 error: FaoStatErrorCategory::DISABLED,
-                observability: ['reason' => 'FAOSTAT_ENABLED=false'],
+                observability: [
+                    'reason' => 'FAOSTAT_ENABLED=false',
+                    'readiness' => FaoStatReadinessState::DISABLED,
+                    'selected' => false,
+                ],
+            );
+        }
+
+        $preflight = $this->readiness->searchPreflight();
+        if ($preflight['ok'] !== true) {
+            return new ScientificSourceSearchOutcome(
+                sourceKey: $this->sourceKey(),
+                status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
+                error: $preflight['error'],
+                observability: [
+                    'reason' => $preflight['readiness'],
+                    'readiness' => $preflight['readiness'],
+                    'activation_state' => $preflight['details']['activation_state'] ?? null,
+                    'circuit_open' => $preflight['details']['circuit_open'] ?? false,
+                    'selected' => true,
+                    'considered' => true,
+                ],
             );
         }
 
@@ -57,6 +79,7 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
         $domain = strtoupper(trim((string) ($options['domain'] ?? $options['domain_code'] ?? 'QCL')));
         try {
             $this->client->assertDomainAllowed($domain);
+            FaoStatActivationPolicy::assertCanActivate($domain);
         } catch (FaoStatPortalException $e) {
             return new ScientificSourceSearchOutcome(
                 sourceKey: $this->sourceKey(),
@@ -88,6 +111,9 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
                 observability: [
                     'considered' => true,
                     'forced' => false,
+                    'domain' => $domain,
+                    'activation_state' => FaoStatActivationPolicy::activationState($domain),
+                    'readiness' => $preflight['readiness'],
                     'missing' => array_keys(array_filter([
                         'area' => $area === null,
                         'item' => $item === null,
@@ -116,10 +142,16 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
             $this->logger->event('FAOSTAT portal search failed', [
                 'operation' => 'search',
                 'domain' => $domain,
+                'item' => $item,
+                'area' => $area,
+                'element' => $element,
+                'year' => $year,
                 'success' => false,
                 'error_category' => $e->category,
                 'http_status' => $e->httpStatus,
                 'latency_ms' => $this->elapsedMs($started),
+                'readiness' => $preflight['readiness'],
+                'activation_state' => FaoStatActivationPolicy::activationState($domain),
             ], 'warning');
 
             $status = $e->category === FaoStatErrorCategory::AUTHORIZATION_ERROR
@@ -180,9 +212,19 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
             httpStatus: $result['status'],
             observability: [
                 'observation_count' => count($results),
+                'evidence_count' => count($results),
                 'domain' => $domain,
+                'item' => $item,
+                'area' => $area,
+                'element' => $element,
+                'year' => $year,
+                'query_element_code' => $element,
                 'evidence_type' => FaoStatEvidenceType::DIRECT_STATISTICAL_EVIDENCE,
                 'latency_ms' => $this->elapsedMs($started),
+                'readiness' => $preflight['readiness'],
+                'activation_state' => FaoStatActivationPolicy::activationState($domain),
+                'considered' => true,
+                'selected' => true,
             ],
         );
     }
@@ -194,7 +236,7 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
 
     private function isEnabled(): bool
     {
-        return filter_var(config('agricultural_intelligence.faostat.enabled', false), FILTER_VALIDATE_BOOL);
+        return FaoStatRuntimePolicy::isEnabled();
     }
 
     /**
@@ -203,12 +245,63 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
      */
     private function resolveFilters(string $domain, array $options): array
     {
+        $area = $this->explicitCode($options, ['area_code', 'area', 'fao_area_code']);
+        $item = $this->explicitCode($options, ['item_code', 'item', 'fao_item_code']);
+        $element = $this->explicitCode($options, ['element_code', 'element', 'query_element_code', 'fao_element_code']);
+        $year = $this->explicitCode($options, ['year', 'year_code', 'fao_year']);
+
+        if ($area === null) {
+            $area = $this->resolveLabel($domain, 'countries', $options['area_label'] ?? $options['location'] ?? '');
+            if ($area === '__ambiguous') {
+                return ['area' => null, 'item' => $item, 'element' => $element, 'year' => $year, 'error' => FaoStatErrorCategory::AMBIGUOUS_CODE];
+            }
+        }
+        if ($item === null) {
+            $item = $this->resolveLabel($domain, 'items', $options['item_label'] ?? $options['crop'] ?? '');
+            if ($item === '__ambiguous') {
+                return ['area' => $area, 'item' => null, 'element' => $element, 'year' => $year, 'error' => FaoStatErrorCategory::AMBIGUOUS_CODE];
+            }
+        }
+        if ($element === null) {
+            $element = $this->resolveLabel($domain, 'elements', $options['element_label'] ?? '');
+            if ($element === '__ambiguous') {
+                return ['area' => $area, 'item' => $item, 'element' => null, 'year' => $year, 'error' => FaoStatErrorCategory::AMBIGUOUS_CODE];
+            }
+        }
+        if ($year === null) {
+            $yearCandidate = trim((string) ($options['year_label'] ?? ''));
+            if ($yearCandidate !== '' && preg_match('/^(?:19|20)\d{2}$/', $yearCandidate) === 1) {
+                $year = $yearCandidate;
+            }
+        }
+
         return [
-            'area' => $this->explicitCode($options, ['area_code', 'area', 'fao_area_code']),
-            'item' => $this->explicitCode($options, ['item_code', 'item', 'fao_item_code']),
-            'element' => $this->explicitCode($options, ['element_code', 'element', 'query_element_code', 'fao_element_code']),
-            'year' => $this->explicitCode($options, ['year', 'year_code', 'fao_year']),
+            'area' => $area,
+            'item' => $item,
+            'element' => $element,
+            'year' => $year,
         ];
+    }
+
+    private function resolveLabel(string $domain, string $dimension, mixed $label): ?string
+    {
+        $text = trim((string) $label);
+        if ($text === '') {
+            return null;
+        }
+        try {
+            $got = $this->codes->resolve($domain, $dimension, $text);
+        } catch (FaoStatPortalException) {
+            return null;
+        }
+        if (($got['status'] ?? '') === 'ambiguous') {
+            return '__ambiguous';
+        }
+        if (($got['status'] ?? '') === 'resolved' && is_string($got['code'] ?? null) && $got['code'] !== '') {
+            return $got['code'];
+        }
+
+        return null;
     }
 
     /**

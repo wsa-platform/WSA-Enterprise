@@ -23,6 +23,16 @@ final class FaoStatOperationalLogger
         'circuit_open',
         'readiness',
         'activation_state',
+        'item',
+        'area',
+        'element',
+        'year',
+        'domain',
+        'query_element_code',
+        'response_element_code',
+        'evidence_count',
+        'considered',
+        'selected',
     ];
 
     /**

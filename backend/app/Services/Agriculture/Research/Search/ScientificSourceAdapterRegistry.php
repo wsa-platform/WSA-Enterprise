@@ -4,7 +4,6 @@ namespace App\Services\Agriculture\Research\Search;
 
 use App\Contracts\ScientificSourceAdapterInterface;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDeveloperPortalAdapter;
-use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\ConsensusScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\CrossRefScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\OpenAlexScientificSourceAdapter;
@@ -13,8 +12,9 @@ use App\Services\Agriculture\Research\Search\Adapters\SemanticScholarScientificS
 /**
  * Registry of Stage 3 scientific source adapters.
  *
- * Internet-First path selects OpenAlex + Crossref + Semantic Scholar (+ FAO when enabled).
+ * Internet-First path selects OpenAlex + Crossref + Semantic Scholar (+ FAOSTAT Portal when enabled).
  * Consensus remains registered for optional/legacy use but is not required.
+ * fao_stat is exclusively FaoStatDeveloperPortalAdapter.
  */
 class ScientificSourceAdapterRegistry
 {
@@ -26,17 +26,14 @@ class ScientificSourceAdapterRegistry
         CrossRefScientificSourceAdapter $crossRef,
         SemanticScholarScientificSourceAdapter $semanticScholar,
         ConsensusScientificSourceAdapter $consensus,
-        FaoStatScientificSourceAdapter $fenixFaoStat,
         FaoStatDeveloperPortalAdapter $portalFaoStat,
     ) {
-        $portalEnabled = filter_var(config('agricultural_intelligence.faostat.enabled', false), FILTER_VALIDATE_BOOL);
-        $faoStat = $portalEnabled ? $portalFaoStat : $fenixFaoStat;
         $this->adapters = [
             $openAlex->sourceKey() => $openAlex,
             $crossRef->sourceKey() => $crossRef,
             $semanticScholar->sourceKey() => $semanticScholar,
             $consensus->sourceKey() => $consensus,
-            $faoStat->sourceKey() => $faoStat,
+            $portalFaoStat->sourceKey() => $portalFaoStat,
         ];
     }
 

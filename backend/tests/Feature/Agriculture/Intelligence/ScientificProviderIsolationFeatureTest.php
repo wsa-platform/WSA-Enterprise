@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Agriculture\Intelligence;
 
-use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStatScientificSourceAdapter;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatDeveloperPortalAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\SemanticScholarScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\ScientificSourceAdapterRegistry;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
@@ -18,14 +18,14 @@ class ScientificProviderIsolationFeatureTest extends TestCase
     {
         $registry = app(ScientificSourceAdapterRegistry::class);
         $this->assertContains('fao_stat', $registry->registeredSourceKeys());
-        $this->assertInstanceOf(FaoStatScientificSourceAdapter::class, $registry->get('fao_stat'));
+        $this->assertInstanceOf(FaoStatDeveloperPortalAdapter::class, $registry->get('fao_stat'));
 
-        config(['agricultural_intelligence.fao.enabled' => false]);
+        config(['agricultural_intelligence.faostat.enabled' => false, 'agricultural_intelligence.fao.enabled' => true]);
         $plan = $this->internetFirstPlan();
         $sources = app(ScientificSourceSelector::class)->selectSources($plan);
         $this->assertNotContains('fao_stat', $sources);
 
-        config(['agricultural_intelligence.fao.enabled' => true]);
+        config(['agricultural_intelligence.faostat.enabled' => true, 'agricultural_intelligence.fao.enabled' => false]);
         $sourcesOn = app(ScientificSourceSelector::class)->selectSources($plan);
         $this->assertContains('fao_stat', $sourcesOn);
     }

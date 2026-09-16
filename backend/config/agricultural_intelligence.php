@@ -9,6 +9,8 @@ return [
     */
     'orchestrator_enabled' => filter_var(env('UNIVERSAL_ANSWER_ORCHESTRATOR_ENABLED', true), FILTER_VALIDATE_BOOL),
     'enrich_legacy_synthesis' => filter_var(env('UNIVERSAL_ANSWER_ENRICH_LEGACY', true), FILTER_VALIDATE_BOOL),
+    // Stage 3 wall-clock budget. Must stay below the gateway FastCGI read timeout.
+    'search_time_budget_seconds' => max(8, min(90, (int) env('SCIENTIFIC_SEARCH_TIME_BUDGET_SECONDS', 45))),
 
     'web_search' => [
         'enabled' => filter_var(env('WEB_SEARCH_ENABLED', false), FILTER_VALIDATE_BOOL),
@@ -19,16 +21,9 @@ return [
         'display_name' => env('WEB_SEARCH_DISPLAY_NAME', 'Web Search'),
     ],
 
-    'fao' => [
-        // Public FAOSTAT API — no API key. Default on; live reachability is environment-dependent.
-        'enabled' => filter_var(env('FAO_ENABLED', true), FILTER_VALIDATE_BOOL),
-        'base_url' => env('FAO_BASE_URL', 'https://fenixservices.fao.org/faostat/api/v1'),
-        'timeout' => max(1, min(60, (int) env('FAO_TIMEOUT', 15))),
-        'lang' => env('FAO_LANG', 'en'),
-    ],
-
     'faostat' => [
-        // FAOSTAT Developer Portal (faostatservices). Default off. Credentials via env only.
+        // Canonical FAOSTAT statistical provider (Developer Portal). Credentials via env only.
+        // Disabled / not ready is UNAVAILABLE. There is no Fenix replacement path.
         'enabled' => filter_var(env('FAOSTAT_ENABLED', false), FILTER_VALIDATE_BOOL),
         'base_url' => env('FAOSTAT_BASE_URL', 'https://faostatservices.fao.org/api/v1'),
         'allowed_host' => env('FAOSTAT_ALLOWED_HOST', 'faostatservices.fao.org'),
