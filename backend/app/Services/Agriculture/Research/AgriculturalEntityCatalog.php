@@ -243,6 +243,71 @@ final class AgriculturalEntityCatalog
     }
 
     /**
+     * Affector / target spans for causal questions. Role is structural, not lexical.
+     *
+     * @return array{affector: string, target: string}|null
+     */
+    public static function causalArgumentSpans(string $haystack): ?array
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return null;
+        }
+
+        $patterns = [
+            '/كيف\s+تؤثر\s+(.+?)\s+على\s+(.+)/u',
+            '/كيف\s+يؤثر\s+(.+?)\s+على\s+(.+)/u',
+            '/ما\s+تأثير\s+(.+?)\s+(?:على|في)\s+(.+)/u',
+            '/تأثير\s+(.+?)\s+(?:على|في)\s+(.+)/u',
+            '/\bhow\s+does\s+(.+?)\s+(?:affect|influence)\s+(.+)/u',
+            '/\bhow\s+do\s+(?!i\b)(.+?)\s+(?:affect|influence)\s+(.+)/u',
+            '/\bwhat\s+(?:is\s+)?the\s+(?:effect|impact)\s+of\s+(.+?)\s+on\s+(.+)/u',
+            '/\b(?:effects?|impact)\s+of\s+(.+?)\s+on\s+(.+)/u',
+            '/\bwhat\s+does\s+(.+?)\s+do\s+to\s+(.+)/u',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $hay, $matches) === 1) {
+                $affector = trim((string) ($matches[1] ?? ''));
+                $target = trim((string) ($matches[2] ?? ''));
+                if ($affector !== '' && $target !== '') {
+                    return [
+                        'affector' => $affector,
+                        'target' => $target,
+                    ];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * True when the factor occupies the causal affector or affected-process role.
+     */
+    public static function factorOccupiesCausalRole(string $haystack, string $factor): bool
+    {
+        $spans = self::causalArgumentSpans($haystack);
+        if ($spans === null) {
+            return false;
+        }
+
+        $labels = self::topicFactorSignals()[$factor] ?? [];
+        $labels[] = $factor;
+        $combined = $spans['affector'].' '.$spans['target'];
+        foreach ($labels as $label) {
+            $needle = trim((string) $label);
+            if ($needle === '') {
+                continue;
+            }
+            if (self::matchesSemanticToken($combined, $needle) || self::matchesLexical($combined, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Procedural how-to questions (recommendation), distinct from causal "how does X affect".
      */
     public static function asksHowToProcedureQuestion(string $haystack): bool
@@ -1586,6 +1651,10 @@ final class AgriculturalEntityCatalog
     public static function topicFactorRole(string $haystack, string $factor, array $constraints): string
     {
         if (self::factorAskedAsAttribute($haystack, $factor)) {
+            return 'requested';
+        }
+
+        if (self::factorOccupiesCausalRole($haystack, $factor)) {
             return 'requested';
         }
 
