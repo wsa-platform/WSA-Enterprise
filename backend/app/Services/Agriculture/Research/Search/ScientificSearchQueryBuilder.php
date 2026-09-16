@@ -267,6 +267,20 @@ class ScientificSearchQueryBuilder
             $variants[] = $this->joinTerms(['fish farming', $location]);
         }
 
+        if ($entity !== null) {
+            $propertyTerms = $this->resolveRequestedPropertyTerms($plan);
+            $mandatory = $this->appendMandatorySemanticPrimaryVariants(
+                [],
+                $entity,
+                $primaryCommon,
+                $propertyTerms,
+                $senseTerms,
+                $topics,
+                $mentionsRhizome,
+            );
+            $variants = [...$mandatory, ...$variants];
+        }
+
         $unique = [];
         foreach ($variants as $variant) {
             $trimmed = trim($variant);
@@ -286,7 +300,7 @@ class ScientificSearchQueryBuilder
             }
         }
 
-        return $unique !== [] ? $unique : ['agriculture'];
+        return $unique !== [] ? $unique : $this->fallbackMandatorySemanticVariants($plan);
     }
 
     /**
@@ -1038,6 +1052,155 @@ class ScientificSearchQueryBuilder
         }
 
         return $normalizedQuestion;
+    }
+
+    /**
+     * R1: unique-empty fallback through the mandatory semantic joiner.
+     *
+     * @return list<string>
+     */
+    private function fallbackMandatorySemanticVariants(KnowledgeQueryPlan $plan): array
+    {
+        $entity = $this->resolveEntityTerm($plan);
+        $propertyTerms = $this->resolveRequestedPropertyTerms($plan);
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $fallbackSenseTerms = $sense !== ''
+            ? AgriculturalEntityCatalog::senseQueryTerms($sense)
+            : [];
+        if ($entity !== null || $propertyTerms !== [] || $this->mandatorySenseTerms($fallbackSenseTerms) !== []) {
+            $fallback = $this->joinMandatorySemanticComponents($entity, $propertyTerms, $fallbackSenseTerms);
+
+            return $fallback !== '' ? [$fallback] : ['agriculture'];
+        }
+
+        return ['agriculture'];
+    }
+
+    /**
+     * R1: emit the mandatory semantic primary before optional expansions.
+     *
+     * @param  list<string>  $variants
+     * @param  list<string>  $propertyTerms
+     * @param  list<string>  $senseTerms
+     * @param  list<string>  $topics
+     * @return list<string>
+     */
+    private function appendMandatorySemanticPrimaryVariants(
+        array $variants,
+        ?string $entity,
+        ?string $primaryCommon,
+        array $propertyTerms,
+        array $senseTerms,
+        array $topics,
+        bool $mentionsRhizome,
+    ): array {
+        $mandatoryContext = [];
+        if ($mentionsRhizome) {
+            $mandatoryContext[] = 'rhizome';
+        }
+        foreach ($topics as $topic) {
+            $folded = mb_strtolower(trim((string) $topic));
+            if ($folded === '' || in_array($folded, [
+                'agriculture', 'farming', 'general_knowledge', 'general agriculture',
+                'general_agriculture',
+            ], true)) {
+                continue;
+            }
+            $mandatoryContext[] = $topic;
+        }
+
+        $mandatoryPrimary = $this->joinMandatorySemanticComponents($entity, $propertyTerms, $senseTerms, $mandatoryContext);
+        if ($mandatoryPrimary !== '') {
+            $variants[] = $mandatoryPrimary;
+        }
+        if ($primaryCommon !== null && strcasecmp($primaryCommon, $entity) !== 0) {
+            $mandatoryCommon = $this->joinMandatorySemanticComponents($primaryCommon, $propertyTerms, $senseTerms, $mandatoryContext);
+            if ($mandatoryCommon !== '' && $mandatoryCommon !== $mandatoryPrimary) {
+                $variants[] = $mandatoryCommon;
+            }
+        }
+
+        return $variants;
+    }
+
+    /**
+     * Mandatory retrieval components: entity + property + required factor/context + sense.
+     * Optional expansions may follow, but MAX_VARIANTS must not drop this primary.
+     *
+     * @param  list<string>  $propertyTerms
+     * @param  list<string>  $senseTerms
+     * @param  list<string>  $contextTerms
+     */
+    private function joinMandatorySemanticComponents(
+        ?string $entity,
+        array $propertyTerms,
+        array $senseTerms,
+        array $contextTerms = [],
+    ): string {
+        $propertySlice = array_slice($propertyTerms, 0, 2);
+        $already = array_values(array_filter(
+            [$entity, ...$propertySlice],
+            static fn ($part): bool => is_string($part) && trim($part) !== '',
+        ));
+        foreach (array_slice($contextTerms, 0, 2) as $contextTerm) {
+            if ($this->senseTermAddsDimension((string) $contextTerm, $already)) {
+                $already[] = $contextTerm;
+            }
+        }
+        $mandatorySense = null;
+        foreach ($this->mandatorySenseTerms($senseTerms) as $senseTerm) {
+            if ($this->senseTermAddsDimension($senseTerm, $already)) {
+                $mandatorySense = $senseTerm;
+                break;
+            }
+        }
+
+        return $this->joinTerms([...$already, $mandatorySense]);
+    }
+
+    /**
+     * @param  list<string>  $senseTerms
+     * @return list<string>
+     */
+    private function mandatorySenseTerms(array $senseTerms): array
+    {
+        $skip = [
+            'agriculture', 'farming', 'general_knowledge', 'general agriculture',
+            'general_agriculture',
+        ];
+        $kept = [];
+        foreach ($senseTerms as $term) {
+            $normalized = mb_strtolower(trim($term));
+            if ($normalized === '' || in_array($normalized, $skip, true)) {
+                continue;
+            }
+            $kept[] = $term;
+        }
+
+        return $kept;
+    }
+
+    /**
+     * @param  list<string>  $already
+     */
+    private function senseTermAddsDimension(string $senseTerm, array $already): bool
+    {
+        $alreadyHay = mb_strtolower(trim(implode(' ', $already)));
+        $tokens = preg_split('/\s+/u', mb_strtolower(trim($senseTerm))) ?: [];
+        $generic = ['the', 'a', 'an', 'of', 'and', 'or', 'for'];
+        $hasContent = false;
+        foreach ($tokens as $token) {
+            $token = trim((string) $token);
+            if ($token === '' || in_array($token, $generic, true)) {
+                continue;
+            }
+            $hasContent = true;
+            if ($alreadyHay === '' || ! str_contains($alreadyHay, $token)) {
+                return true;
+            }
+        }
+
+        return $hasContent && $alreadyHay === '';
     }
 
     /**
