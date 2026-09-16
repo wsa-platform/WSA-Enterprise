@@ -1771,6 +1771,63 @@ final class AgriculturalEntityCatalog
         return $hasIrrigationWord && $hasQuantityOrSchedule;
     }
 
+    /**
+     * Temperature property inference (existing Q1/thermal WIP). Not part of the
+     * semantic-target frame extractor; called from extractSemanticTarget.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    private static function inferTemperaturePropertyIfRequested(
+        string $normalizedQuestion,
+        ?string $property,
+        ?string $propertyKey,
+    ): array {
+        if ($property !== null || preg_match('/(?:درجة حرارة|حرارة|temperature)/u', $normalizedQuestion) !== 1) {
+            return [$property, $propertyKey];
+        }
+
+        $temperatureRole = self::topicFactorRole(
+            $normalizedQuestion,
+            'temperature',
+            self::extractEnvironmentalConstraints($normalizedQuestion),
+        );
+        if ($temperatureRole !== 'constraint') {
+            return ['temperature', $propertyKey ?: 'temperature'];
+        }
+
+        return [$property, $propertyKey];
+    }
+
+    /**
+     * Irrigation / water-requirement property inference (existing Q3 WIP).
+     * Not part of the semantic-target frame extractor.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    private static function inferIrrigationPropertyIfRequested(
+        string $normalizedQuestion,
+        ?string $property,
+        ?string $propertyKey,
+    ): array {
+        if ($property !== null) {
+            return [$property, $propertyKey];
+        }
+
+        if (self::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)) {
+            return ['irrigation', $propertyKey ?: 'irrigation'];
+        }
+
+        if (
+            preg_match('/(?:احتياج|احتياجات).{0,40}(?:ماء|الماء|مياه|water)/u', $normalizedQuestion) === 1
+            || preg_match('/(?:ماء|الماء|مياه|water).{0,40}(?:احتياج|احتياجات|requirement)/u', $normalizedQuestion) === 1
+            || preg_match('/\bwater\s+requirements?\b/u', $normalizedQuestion) === 1
+        ) {
+            return ['water', 'irrigation'];
+        }
+
+        return [$property, $propertyKey];
+    }
+
     public static function hasSuitabilityOrSelectionFraming(string $haystack): bool
     {
         foreach ([
