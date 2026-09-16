@@ -1720,6 +1720,36 @@ final class AgriculturalEntityCatalog
         };
     }
 
+    /**
+     * R3: process / physiology / question leftovers are not named agricultural entities.
+     * HEAD-anchored after factorAskedAsAttribute. Residual/distinctive call this
+     * only through method_exists so baseline residual remains valid without R3.
+     */
+    public static function isGenericScientificProcessToken(string $token): bool
+    {
+        $normalized = mb_strtolower(trim($token));
+        if ($normalized === '') {
+            return false;
+        }
+
+        $process = [
+            'uptake', 'absorption', 'absorb', 'absorbs', 'absorbing',
+            'transpiration', 'photosynthesis', 'respiration',
+            'osmotic', 'osmosis', 'physiology', 'physiological',
+            'effect', 'effects', 'impact', 'impacts', 'influence', 'influences',
+            'affect', 'affects', 'process', 'processes', 'mechanism', 'mechanisms',
+            'growth', 'development', 'response', 'responses', 'tolerance', 'adjustment',
+            'relations', 'relationship', 'how', 'does', 'did', 'do', 'doing',
+            'what', 'which', 'why', 'are', 'is', 'was', 'were', 'been', 'being',
+            'have', 'has', 'had', 'can', 'could', 'should', 'would', 'may', 'might', 'will',
+            'humidity', 'climate', 'light', 'nutrient', 'nutrients',
+            'emergence', 'by', 'via', 'through',
+            'نمو', 'تأثير', 'عملية', 'آلية', 'اليه',
+        ];
+
+        return in_array($normalized, $process, true);
+    }
+
     public static function asksExplicitIrrigationOrWaterRequirement(string $haystack): bool
     {
         foreach ([
