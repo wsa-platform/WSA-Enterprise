@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Services\Agriculture\Research\Search\Adapters\CrossRefScientificSourceAdapter;
+use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -79,6 +81,7 @@ class CrossRefScientificSourceAdapterRetrievalTest extends TestCase
             ),
             'Country-agnostic national inventory phrasing must survive normalization',
         );
+        $this->assertNonNegativeLatencyMs($outcome);
     }
 
     public function test_crossref_respects_upper_fetch_cap_when_limit_is_large(): void
@@ -108,5 +111,71 @@ class CrossRefScientificSourceAdapterRetrievalTest extends TestCase
         $this->assertSame('empty', $outcome->status);
         $this->assertSame('empty_query', $outcome->error);
         Http::assertNothingSent();
+    }
+
+    public function test_crossref_empty_response_exposes_latency(): void
+    {
+        Http::fake([
+            'api.crossref.org/*' => Http::response(['message' => ['items' => []]], 200),
+        ]);
+
+        $outcome = app(CrossRefScientificSourceAdapter::class)->search('soil types Exampleland', 10);
+
+        $this->assertSame('empty', $outcome->status);
+        $this->assertNull($outcome->error);
+        $this->assertSame([], $outcome->results);
+        $this->assertNonNegativeLatencyMs($outcome);
+    }
+
+    public function test_crossref_http_429_exposes_latency(): void
+    {
+        Http::fake([
+            'api.crossref.org/*' => Http::response(['message' => 'Too Many Requests'], 429),
+        ]);
+
+        $outcome = app(CrossRefScientificSourceAdapter::class)->search('soil types Exampleland', 10);
+
+        $this->assertSame('unavailable', $outcome->status);
+        $this->assertSame('rate_limited', $outcome->error);
+        $this->assertSame(429, $outcome->httpStatus);
+        $this->assertSame([], $outcome->results);
+        $this->assertNonNegativeLatencyMs($outcome);
+    }
+
+    public function test_crossref_http_error_exposes_latency(): void
+    {
+        Http::fake([
+            'api.crossref.org/*' => Http::response(['message' => 'error'], 500),
+        ]);
+
+        $outcome = app(CrossRefScientificSourceAdapter::class)->search('soil types Exampleland', 10);
+
+        $this->assertSame('failed', $outcome->status);
+        $this->assertSame('http_error', $outcome->error);
+        $this->assertSame(500, $outcome->httpStatus);
+        $this->assertSame([], $outcome->results);
+        $this->assertNonNegativeLatencyMs($outcome);
+    }
+
+    public function test_crossref_request_exception_exposes_latency(): void
+    {
+        Http::fake(function () {
+            throw new ConnectionException('Connection timed out');
+        });
+
+        $outcome = app(CrossRefScientificSourceAdapter::class)->search('soil types Exampleland', 10);
+
+        $this->assertSame('failed', $outcome->status);
+        $this->assertSame('request_exception', $outcome->error);
+        $this->assertSame([], $outcome->results);
+        $this->assertNonNegativeLatencyMs($outcome);
+    }
+
+    private function assertNonNegativeLatencyMs(ScientificSourceSearchOutcome $outcome): void
+    {
+        $this->assertIsArray($outcome->observability);
+        $this->assertArrayHasKey('latency_ms', $outcome->observability);
+        $this->assertIsNumeric($outcome->observability['latency_ms']);
+        $this->assertGreaterThanOrEqual(0, $outcome->observability['latency_ms']);
     }
 }

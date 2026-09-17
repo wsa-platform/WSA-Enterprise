@@ -47,6 +47,8 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
             );
         }
 
+        $startedNs = null;
+
         try {
             $remaining = isset($options['search_budget_remaining_seconds'])
                 ? (float) $options['search_budget_remaining_seconds']
@@ -59,6 +61,7 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
                 );
             }
 
+            $startedNs = hrtime(true);
             $response = Http::timeout(ScientificHttp::timeoutSeconds($remaining))
                 ->acceptJson()
                 ->withHeaders([
@@ -78,6 +81,7 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
                 sourceKey: $this->sourceKey(),
                 status: ScientificSourceSearchOutcome::STATUS_FAILED,
                 error: 'request_exception',
+                observability: $this->observability($startedNs),
             );
         }
 
@@ -87,6 +91,7 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
                 status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
                 error: 'rate_limited',
                 httpStatus: 429,
+                observability: $this->observability($startedNs),
             );
         }
 
@@ -96,6 +101,7 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
                 status: ScientificSourceSearchOutcome::STATUS_FAILED,
                 error: 'http_error',
                 httpStatus: $response->status(),
+                observability: $this->observability($startedNs),
             );
         }
 
@@ -104,6 +110,7 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
             return new ScientificSourceSearchOutcome(
                 sourceKey: $this->sourceKey(),
                 status: ScientificSourceSearchOutcome::STATUS_EMPTY,
+                observability: $this->observability($startedNs),
             );
         }
 
@@ -123,6 +130,7 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
                 sourceKey: $this->sourceKey(),
                 status: ScientificSourceSearchOutcome::STATUS_EMPTY,
                 error: 'malformed_or_unusable_results',
+                observability: $this->observability($startedNs),
             );
         }
 
@@ -130,7 +138,25 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
             sourceKey: $this->sourceKey(),
             status: ScientificSourceSearchOutcome::STATUS_SUCCESS,
             results: $results,
+            observability: $this->observability($startedNs),
         );
+    }
+
+    /**
+     * Wall-clock Stage 3 Crossref adapter latency. Null start means the HTTP call never began.
+     *
+     * @return array<string, mixed>
+     */
+    private function observability(?int $startedNs): array
+    {
+        $meta = [
+            'provider' => $this->sourceKey(),
+        ];
+        if ($startedNs !== null) {
+            $meta['latency_ms'] = max(0, (int) ((hrtime(true) - $startedNs) / 1_000_000));
+        }
+
+        return $meta;
     }
 
     /**
