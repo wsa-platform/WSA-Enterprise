@@ -181,7 +181,7 @@ class ScientificSearchQueryBuilder
                 $variants[] = $this->joinTerms([$entity, 'production']);
 
                 $genus = $this->genusFromScientificName($entity);
-                if ($genus !== null) {
+                if ($genus !== null && $this->shouldEmitGenusOnlyCultivationVariant($plan)) {
                     $variants[] = $this->joinTerms([$genus, 'cultivation']);
                 }
             }
@@ -909,6 +909,36 @@ class ScientificSearchQueryBuilder
         }
 
         return $genus;
+    }
+
+    /**
+     * Crop-profile context keeps existing genus-only cultivation variants.
+     * Home specific-species questions suppress them unless existing family-inventory
+     * intent signals are already present.
+     */
+    private function shouldEmitGenusOnlyCultivationVariant(KnowledgeQueryPlan $plan): bool
+    {
+        $cropId = trim((string) ($plan->contextInput['selected_crop_id'] ?? ''));
+        $cropName = trim((string) ($plan->contextInput['selected_crop_name'] ?? ''));
+        if ($cropId !== '' && $cropName !== '') {
+            return true;
+        }
+
+        $subjectType = is_array($plan->subjectEntity) ? (string) ($plan->subjectEntity['type'] ?? '') : '';
+        if ($subjectType === 'plant_family') {
+            return true;
+        }
+
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if ($sense === 'plant_family_members' || $plan->researchIntent === 'plant_family_members') {
+            return true;
+        }
+
+        $haystack = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+
+        return AgriculturalEntityCatalog::asksPlantFamilyMemberInventory($haystack);
     }
 
     /**

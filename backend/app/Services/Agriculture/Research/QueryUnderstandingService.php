@@ -258,6 +258,15 @@ class QueryUnderstandingService
         $constraints['named_entity_state'] = $namedEntityState;
         $constraints['named_entity_surface'] = $namedEntitySurface;
         $constraints['entity_category'] = $entityCategory;
+        $this->retainHomeRequestedVersusResolvedEntity(
+            $constraints,
+            $originalQuestion,
+            $normalizedQuestion,
+            $subject,
+            $cropIdResolved,
+            $namedEntitySurface,
+            is_string($cropLabel) ? $cropLabel : null,
+        );
 
         $researchRequired = $ambiguityState !== AgriculturalKnowledgeQuery::AMBIGUITY_NEEDS_CLARIFICATION;
 
@@ -1244,5 +1253,121 @@ class QueryUnderstandingService
             $scientificSense === 'agricultural_extension' => 'agricultural_extension',
             default => $agriculturalDomain !== '' ? $agriculturalDomain : 'crop_science',
         };
+    }
+
+    /**
+     * Home-only: keep the requested surface token beside the canonical resolved id.
+     * Does not change cropId, subject, or named_entity_surface meaning.
+     *
+     * @param  array<string, mixed>  $constraints
+     * @param  array{type?: string, value?: string, label?: string, resolution?: string}|null  $subject
+     */
+    private function retainHomeRequestedVersusResolvedEntity(
+        array &$constraints,
+        string $originalQuestion,
+        string $normalizedQuestion,
+        ?array $subject,
+        ?string $cropIdResolved,
+        ?string $namedEntitySurface,
+        ?string $cropLabel,
+    ): void {
+        $subjectType = is_array($subject) ? (string) ($subject['type'] ?? '') : '';
+        $resolvedId = $cropIdResolved !== null && trim($cropIdResolved) !== '' ? $cropIdResolved : null;
+        if ($resolvedId === null && in_array($subjectType, ['crop', 'named_entity', 'animal', 'plant_family'], true)) {
+            $value = trim((string) ($subject['value'] ?? ''));
+            $resolvedId = $value !== '' ? $value : null;
+        }
+
+        $requested = $this->requestedEntitySurfaceFromQuestion(
+            $originalQuestion,
+            $normalizedQuestion,
+            $subject,
+            $cropLabel,
+            $namedEntitySurface,
+        );
+
+        if ($requested !== null && $requested !== '') {
+            $constraints['requested_entity_surface'] = $requested;
+        }
+        if ($resolvedId !== null) {
+            $constraints['resolved_entity_id'] = $resolvedId;
+        }
+    }
+
+    /**
+     * @param  array{type?: string, value?: string, label?: string}|null  $subject
+     */
+    private function requestedEntitySurfaceFromQuestion(
+        string $originalQuestion,
+        string $normalizedQuestion,
+        ?array $subject,
+        ?string $cropLabel,
+        ?string $namedEntitySurface,
+    ): ?string {
+        $subjectType = is_array($subject) ? (string) ($subject['type'] ?? '') : '';
+        if ($subjectType === 'animal') {
+            $canonical = trim((string) ($subject['value'] ?? ''));
+            $fromAlias = $this->requestedLivestockSurface($originalQuestion, $normalizedQuestion, $canonical);
+            if ($fromAlias !== null) {
+                return $fromAlias;
+            }
+        }
+
+        $cropLabel = is_string($cropLabel) ? trim($cropLabel) : '';
+        if ($cropLabel !== '') {
+            return $cropLabel;
+        }
+
+        $surface = is_string($namedEntitySurface) ? trim($namedEntitySurface) : '';
+        if ($surface !== '') {
+            return $surface;
+        }
+
+        if (is_array($subject)) {
+            $label = trim((string) ($subject['label'] ?? $subject['value'] ?? ''));
+
+            return $label !== '' ? $label : null;
+        }
+
+        return null;
+    }
+
+    private function requestedLivestockSurface(
+        string $originalQuestion,
+        string $normalizedQuestion,
+        string $canonical,
+    ): ?string {
+        if ($canonical === '') {
+            return null;
+        }
+
+        $signals = AgriculturalEntityCatalog::livestockEntitySignals()[$canonical] ?? [];
+        if (! is_array($signals) || $signals === []) {
+            return null;
+        }
+
+        $best = null;
+        $bestLength = 0;
+        $originalLower = mb_strtolower($originalQuestion);
+        foreach ($signals as $alias) {
+            $alias = trim((string) $alias);
+            if ($alias === '') {
+                continue;
+            }
+            $aliasLower = mb_strtolower($alias);
+            $matched = AgriculturalEntityCatalog::containsTerm($originalLower, $aliasLower)
+                || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, $aliasLower)
+                || mb_strpos($originalQuestion, $alias) !== false;
+            if (! $matched) {
+                continue;
+            }
+            $length = mb_strlen($alias);
+            if ($length > $bestLength) {
+                $bestLength = $length;
+                $best = $alias;
+            }
+        }
+
+        return $best;
     }
 }
