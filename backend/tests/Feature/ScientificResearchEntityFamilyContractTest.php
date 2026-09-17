@@ -215,4 +215,89 @@ class ScientificResearchEntityFamilyContractTest extends TestCase
         $this->assertTrue($direct['topic_matched']);
         $this->assertNotSame(ScientificEvidenceDirectnessAssessor::IRRELEVANT, $direct['directness']);
     }
+
+    public function test_livestock_breed_questions_are_animal_not_crop(): void
+    {
+        $qus = app(QueryUnderstandingService::class);
+
+        $animalBreedCases = [
+            'ما هي سلالات الأبقار؟' => 'cattle',
+            'ما هي سلالات أبقار اللحم؟' => 'cattle',
+            'ما هي سلالات الأبقار المنتجة للحوم؟' => 'cattle',
+            'ما هي سلالات الأبقار الحلوب؟' => 'cattle',
+            'ما هي سلالات الأغنام؟' => 'sheep',
+            'ما هي أنواع الأبقار؟' => 'cattle',
+            'What are beef cattle breeds?' => 'cattle',
+            'What are dairy cattle breeds?' => 'cattle',
+        ];
+        foreach ($animalBreedCases as $query => $canonical) {
+            $u = $qus->understand(['query' => $query]);
+            $this->assertSame('animal', $u->subject['type'] ?? null, $query);
+            $this->assertSame($canonical, $u->subject['value'] ?? null, $query);
+            $this->assertNotSame('crop', $u->subject['type'] ?? null, $query);
+            $this->assertNotSame('varieties', $u->researchIntent, $query);
+            $this->assertSame('animal_production', $u->researchIntent, $query);
+            $this->assertSame('animal_production', $u->agriculturalDomain, $query);
+            $this->assertSame('classification', $u->constraints['question_type'] ?? null, $query);
+            $this->assertNull($u->cropId, $query);
+        }
+
+        $poultry = $qus->understand(['query' => 'ما هي سلالات الدجاج؟']);
+        $this->assertSame('animal', $poultry->subject['type'] ?? null);
+        $this->assertSame('poultry', $poultry->subject['value'] ?? null);
+        $this->assertSame('poultry_production', $poultry->researchIntent);
+        $this->assertNotSame('crop', $poultry->subject['type'] ?? null);
+        $this->assertNotSame('varieties', $poultry->researchIntent);
+    }
+
+    public function test_crop_variety_questions_are_not_reclassified_as_livestock(): void
+    {
+        $qus = app(QueryUnderstandingService::class);
+
+        foreach ([
+            'ما هي أصناف القمح؟' => 'wheat',
+            'ما هي أصناف الأرز؟' => 'rice',
+            'ما هي أصناف الطماطم؟' => 'tomato',
+            'ما هي سلالات القمح؟' => 'wheat',
+        ] as $query => $cropId) {
+            $u = $qus->understand(['query' => $query]);
+            $this->assertSame('crop', $u->subject['type'] ?? null, $query);
+            $this->assertSame($cropId, $u->cropId, $query);
+            $this->assertSame('varieties', $u->researchIntent, $query);
+            $this->assertNotSame('animal', $u->subject['type'] ?? null, $query);
+            $this->assertNotSame('animal_production', $u->researchIntent, $query);
+        }
+
+        foreach ([
+            'ما هي أنواع النباتات؟',
+            'ما هي أصناف المحاصيل؟',
+            'ما هي سلالات النباتات؟',
+        ] as $query) {
+            $u = $qus->understand(['query' => $query]);
+            $this->assertNotSame('animal', $u->subject['type'] ?? null, $query);
+            $this->assertNotSame('animal_production', $u->researchIntent, $query);
+        }
+    }
+
+    public function test_livestock_subject_is_retained_for_productivity_and_fattening(): void
+    {
+        $qus = app(QueryUnderstandingService::class);
+
+        $category = $qus->understand(['query' => 'ما هي أنواع الماشية؟']);
+        $this->assertContains($category->subject['type'] ?? null, ['animal', 'crop_category']);
+        $this->assertNotSame('crop', $category->subject['type'] ?? null);
+        $this->assertContains($category->subject['value'] ?? null, ['livestock']);
+        $this->assertNotSame('varieties', $category->researchIntent);
+
+        $productivity = $qus->understand(['query' => 'ما هي إنتاجية الأبقار المنتجة للحوم؟']);
+        $this->assertSame('animal', $productivity->subject['type'] ?? null);
+        $this->assertSame('cattle', $productivity->subject['value'] ?? null);
+        $this->assertNotNull($productivity->subject);
+
+        $fattening = $qus->understand(['query' => 'ما هي طرق تسمين الأبقار؟']);
+        $this->assertSame('animal', $fattening->subject['type'] ?? null);
+        $this->assertSame('cattle', $fattening->subject['value'] ?? null);
+        $this->assertSame('feed', $fattening->researchIntent);
+        $this->assertNotSame('general_knowledge', $fattening->researchIntent);
+    }
 }

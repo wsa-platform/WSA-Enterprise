@@ -1528,6 +1528,61 @@ final class AgriculturalEntityCatalog
     }
 
     /**
+     * Named livestock / animal entities. Small closed vocabulary — not a generic ontology.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function livestockEntitySignals(): array
+    {
+        return [
+            'cattle' => [
+                'beef cattle', 'dairy cattle',
+                'cattle', 'cows', 'cow',
+                'أبقار', 'ابقار', 'بقر',
+            ],
+            'buffalo' => ['buffalo', 'جاموس'],
+            'sheep' => ['sheep', 'أغنام', 'اغنام', 'ضأن'],
+            'goats' => ['goats', 'goat', 'ماعز'],
+            'poultry' => ['poultry', 'chickens', 'chicken', 'دواجن', 'دجاج'],
+            'camels' => ['camels', 'camel', 'إبل', 'جمال'],
+            'livestock' => ['livestock', 'ماشية'],
+        ];
+    }
+
+    /**
+     * @return array{type: string, value: string, label: string, resolution: string}|null
+     */
+    public static function recognizeLivestockEntity(string $normalizedQuestion): ?array
+    {
+        $best = null;
+        $bestLength = 0;
+        foreach (self::livestockEntitySignals() as $canonical => $keywords) {
+            foreach ($keywords as $keyword) {
+                $keyword = trim((string) $keyword);
+                if ($keyword === '') {
+                    continue;
+                }
+                if (! self::containsTerm($normalizedQuestion, $keyword)
+                    && ! self::matchesLexical($normalizedQuestion, $keyword)) {
+                    continue;
+                }
+                $length = mb_strlen($keyword);
+                if ($length > $bestLength) {
+                    $bestLength = $length;
+                    $best = [
+                        'type' => 'animal',
+                        'value' => $canonical,
+                        'label' => $canonical,
+                        'resolution' => 'resolved',
+                    ];
+                }
+            }
+        }
+
+        return $best;
+    }
+
+    /**
      * Environmental / agro-climatic conditions. These are constraints, not intents.
      *
      * @return array<string, array{constraint_type: string, keywords: list<string>, query_terms: list<string>}>
@@ -1872,6 +1927,10 @@ final class AgriculturalEntityCatalog
             return null;
         }
 
+        if (self::recognizeLivestockEntity($normalizedQuestion) !== null) {
+            return null;
+        }
+
         if (self::hasSuitabilityOrSelectionFraming($normalizedQuestion)
             && self::resolveCropCategory($normalizedQuestion) !== null) {
             return null;
@@ -2160,6 +2219,11 @@ final class AgriculturalEntityCatalog
 
         if ($entity !== null && (! self::isDistinctiveNamedEntitySurface($entity) || self::isLocationAliasToken($entity))) {
             $entity = null;
+        }
+
+        $livestock = self::recognizeLivestockEntity($normalizedQuestion);
+        if ($livestock !== null) {
+            $entity = (string) ($livestock['label'] ?? $livestock['value']);
         }
 
         if ($entity === null && $property === null && $propertyKey === null) {

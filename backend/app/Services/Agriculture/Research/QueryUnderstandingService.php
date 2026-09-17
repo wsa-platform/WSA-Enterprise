@@ -77,6 +77,11 @@ class QueryUnderstandingService
         );
         $agriculturalDomain = $this->detectDomain($normalizedQuestion, $explicitDomain, $researchIntent);
         $subject = $this->detectSubject($normalizedQuestion, $input, $cropRecognition, $researchIntent);
+        [$researchIntent, $agriculturalDomain] = $this->alignLivestockIntentAndDomain(
+            $researchIntent,
+            $agriculturalDomain,
+            $subject,
+        );
 
         $cropIdResolved = is_array($cropRecognition) ? $cropRecognition['crop_id'] : null;
         $cropLabel = is_array($cropRecognition) ? ($cropRecognition['label'] ?? null) : null;
@@ -803,6 +808,11 @@ class QueryUnderstandingService
             ];
         }
 
+        $livestockEntity = AgriculturalEntityCatalog::recognizeLivestockEntity($normalizedQuestion);
+        if ($livestockEntity !== null) {
+            return $livestockEntity;
+        }
+
         $unresolvedEntity = AgriculturalEntityCatalog::extractNamedAgriculturalEntityCandidate($normalizedQuestion);
         if ($unresolvedEntity !== null) {
             return [
@@ -849,6 +859,46 @@ class QueryUnderstandingService
         }
 
         return null;
+    }
+
+    /**
+     * Livestock subjects must not inherit crop-variety intent or plant domains.
+     *
+     * @param  array{type?: string, value?: string, label?: string}|null  $subject
+     * @return array{0: string, 1: string}
+     */
+    private function alignLivestockIntentAndDomain(
+        string $researchIntent,
+        string $agriculturalDomain,
+        ?array $subject,
+    ): array {
+        if (! is_array($subject) || ($subject['type'] ?? '') !== 'animal') {
+            return [$researchIntent, $agriculturalDomain];
+        }
+
+        $value = (string) ($subject['value'] ?? '');
+        if (! in_array($value, ['cattle', 'sheep', 'goats', 'poultry', 'camels', 'buffalo', 'livestock'], true)) {
+            return [$researchIntent, $agriculturalDomain];
+        }
+
+        $livestockIntent = $value === 'poultry' ? 'poultry_production' : 'animal_production';
+        $livestockDomain = $value === 'poultry'
+            ? AgriculturalDomainCatalog::POULTRY
+            : AgriculturalDomainCatalog::ANIMAL_PRODUCTION;
+
+        if (in_array($researchIntent, ['general_knowledge', 'varieties'], true)) {
+            $researchIntent = $livestockIntent;
+        }
+
+        if (in_array($agriculturalDomain, [
+            AgriculturalDomainCatalog::GENERAL_AGRICULTURE,
+            AgriculturalDomainCatalog::FIELD_CROPS,
+            AgriculturalDomainCatalog::PLANT_PRODUCTION,
+        ], true)) {
+            $agriculturalDomain = $livestockDomain;
+        }
+
+        return [$researchIntent, $agriculturalDomain];
     }
 
     private function resolveScientificName(?string $cropId, string $provided, string $normalizedQuestion): ?string
