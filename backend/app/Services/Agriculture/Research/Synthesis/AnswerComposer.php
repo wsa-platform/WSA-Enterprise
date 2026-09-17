@@ -508,7 +508,7 @@ class AnswerComposer
         if ($this->requiresFactualDirectEvidence($plan)) {
             if ($answerEligibleSupporting >= 2 && ! $this->requiresThermalGerminationDirectEvidence($plan)) {
                 return [
-                    'sufficient' => true,
+                    'sufficient' => false,
                     'partial' => true,
                     'reason' => 'sufficient_supporting_evidence',
                     'mode' => 'supported_answer',
@@ -532,7 +532,7 @@ class AnswerComposer
         // Non-factual (e.g. hydroponics benefits): allow limited supporting-only framing, never full confidence.
         if ($supportingCount >= 1 || $usable !== []) {
             return [
-                'sufficient' => true,
+                'sufficient' => false,
                 'partial' => true,
                 'reason' => 'supporting_only',
                 'mode' => 'supporting_only',
@@ -1241,6 +1241,7 @@ class AnswerComposer
                 'multiple_supporting_evidence',
                 'general_query_usable_evidence',
                 'insufficient_direct_evidence',
+                'supported_answer',
             ], true);
     }
 
@@ -1770,6 +1771,37 @@ class AnswerComposer
                 || str_contains($snippetNorm, $findingNorm)
                 || str_contains($findingNorm, $snippetNorm)
             )) {
+                return false;
+            }
+        }
+
+        if (! $this->evidenceIdentityCompatible($item, $plan, $directness)) {
+            return false;
+        }
+
+        if ($directness === ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH) {
+            return false;
+        }
+
+        $requestedYear = trim((string) ($plan->normalizedQuery->constraints['year'] ?? ''));
+        if ($requestedYear !== ''
+            && preg_match('/^(?:19|20)\d{2}$/', $requestedYear) === 1
+            && $item->publicationYear !== null
+            && (int) $item->publicationYear !== (int) $requestedYear) {
+            return false;
+        }
+
+        $propertyKey = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));
+        $propertyTerms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
+        if ($propertyKey !== ''
+            && ! in_array($propertyKey, ['general', 'definition'], true)
+            && is_array($propertyTerms)
+            && $propertyTerms !== []) {
+            $hay = mb_strtolower(trim(implode(' ', array_filter([
+                $item->publicationTitle,
+                (string) $item->evidenceText,
+            ], static fn ($part): bool => is_string($part) && trim($part) !== ''))));
+            if (! AgriculturalEntityCatalog::haystackAddressesRequestedProperty($hay, $propertyTerms)) {
                 return false;
             }
         }
