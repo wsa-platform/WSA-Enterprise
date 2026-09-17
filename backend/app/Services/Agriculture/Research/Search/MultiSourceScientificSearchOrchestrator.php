@@ -125,6 +125,10 @@ class MultiSourceScientificSearchOrchestrator
                     if ($outcome->results !== [] && count($allResults) >= self::ADEQUATE_RESULT_COUNT) {
                         $skipRemainingVariants = true;
                     }
+                    if ($key === FaoStatRuntimePolicy::canonicalSourceKey()
+                        && $this->hasCompleteStructuredObservation($outcome)) {
+                        $skipRemainingVariants = true;
+                    }
 
                     continue;
                 }
@@ -227,6 +231,22 @@ class MultiSourceScientificSearchOrchestrator
     {
         return $outcome->status === ScientificSourceSearchOutcome::STATUS_UNAVAILABLE
             && ($outcome->httpStatus === 429 || $outcome->error === 'rate_limited');
+    }
+
+    private function hasCompleteStructuredObservation(ScientificSourceSearchOutcome $outcome): bool
+    {
+        if ($outcome->status !== ScientificSourceSearchOutcome::STATUS_SUCCESS) {
+            return false;
+        }
+
+        foreach ($outcome->results as $result) {
+            $observation = ScientificStructuredObservation::fromResult($result);
+            if ($observation !== null && $observation->isComplete()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
