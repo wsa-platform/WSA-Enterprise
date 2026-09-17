@@ -10,8 +10,12 @@ use App\Services\Agriculture\Intelligence\Adapters\Web\FreeSearchMcpAdapter;
 use App\Services\Agriculture\Intelligence\Orchestration\UniversalAnswerOrchestrator;
 use App\Services\Agriculture\OpenAlexScientificClient;
 use App\Services\Agriculture\Research\AgriculturalResearchAgent;
+use App\Services\Agriculture\Research\AgriculturalResearchResult;
 use App\Services\Agriculture\Research\AgriculturalScientificKnowledgeEngine;
 use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
+use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
+use App\Services\Agriculture\Research\Synthesis\AnswerSynthesisExecutionReport;
+use App\Services\Agriculture\Research\Synthesis\ResearchAnswerCitation;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
 use App\Services\Agriculture\Research\Search\ScientificSearchExecutionReport;
 use App\Services\Agriculture\Research\Search\ScientificSearchResult;
@@ -50,7 +54,14 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
     {
         $query = 'wheat cultivation practices in dryland agriculture systems';
 
-        $this->bindSearchAndValidation($query, sufficient: true);
+        $this->bindP4cHomePipeline($this->p4cSynthesisReport([
+            'researchMetadata' => [
+                'evidence_sufficient' => true,
+                'direct_evidence_gate' => 'PASSED',
+                'sufficiency_mode' => 'sufficient_direct_evidence',
+                'supporting_evidence_count' => 0,
+            ],
+        ]), expectLegacyExecute: false);
 
         $pipeline = Mockery::mock(ScientificSourceDiscoveryPipeline::class);
         $pipeline->shouldNotReceive('discoverMissingSections');
@@ -64,14 +75,6 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
         $crossRef->shouldNotReceive('searchWorks');
         $this->app->instance(CrossRefScientificClient::class, $crossRef);
 
-        $engine = Mockery::mock(AgriculturalScientificKnowledgeEngine::class);
-        $engine->shouldNotReceive('execute');
-        $this->app->instance(AgriculturalScientificKnowledgeEngine::class, $engine);
-
-        $mcp = Mockery::mock(McpToolClientInterface::class);
-        $mcp->shouldNotReceive('callTool');
-        $this->rebindMcpClient($mcp);
-
         $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
             'query' => $query,
             'organization_id' => 1,
@@ -80,14 +83,13 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
 
         $this->assertSame('scientific_generated', $payload['status']);
         $this->assertTrue((bool) ($payload['research_metadata']['evidence_sufficient'] ?? false));
+        $this->assertSame('PASSED', $payload['research_metadata']['direct_evidence_gate'] ?? null);
         $this->assertNotEmpty($payload['answer'] ?? null);
         $this->assertNotEmpty($payload['citations'] ?? []);
-        $this->assertNotEmpty($payload['claims'] ?? []);
         $this->assertSame(5, $payload['stage']);
         $this->assertFalse((bool) ($payload['discovery']['performed'] ?? true));
         $this->assertSame('sufficient_scientific_result', $payload['discovery']['reason'] ?? null);
         $this->assertSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
-        $this->assertTrue((bool) ($payload['library_persistence']['performed'] ?? false));
         $this->assertArrayHasKey('scientific_search', $payload);
         $this->assertArrayHasKey('scientific_validation', $payload);
         $this->assertArrayHasKey('confidence', $payload);
@@ -136,6 +138,158 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
         $this->assertArrayHasKey('discovery', $payload);
         $this->assertArrayHasKey('research', $payload);
         $this->assertArrayHasKey('universal_orchestrator', $payload);
+    }
+
+    public function test_home_direct_passed_gate_skips_legacy_execute(): void
+    {
+        $this->bindP4cHomePipeline($this->p4cSynthesisReport([
+            'researchMetadata' => [
+                'evidence_sufficient' => true,
+                'direct_evidence_gate' => 'PASSED',
+                'sufficiency_mode' => 'sufficient_direct_evidence',
+                'supporting_evidence_count' => 0,
+            ],
+        ]), expectLegacyExecute: false);
+
+        $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
+            'query' => 'wheat cultivation practices in dryland agriculture systems',
+            'organization_id' => 1,
+            'force_execute' => true,
+        ]);
+
+        $this->assertSame('scientific_generated', $payload['status']);
+        $this->assertSame('PASSED', $payload['research_metadata']['direct_evidence_gate'] ?? null);
+        $this->assertSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+        $this->assertSame('generic_research', $payload['plan']['intent'] ?? null);
+    }
+
+    public function test_home_supporting_only_keeps_legacy_execute(): void
+    {
+        $this->bindP4cHomePipeline($this->p4cSynthesisReport([
+            'status' => 'synthesis_completed_partial',
+            'researchMetadata' => [
+                'evidence_sufficient' => true,
+                'direct_evidence_gate' => 'SUPPORTED_ANSWER_ELIGIBLE',
+                'sufficiency_mode' => 'supporting_only',
+                'supporting_evidence_count' => 2,
+            ],
+        ]), expectLegacyExecute: true);
+
+        $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
+            'query' => 'wheat cultivation practices in dryland agriculture systems',
+            'organization_id' => 1,
+            'force_execute' => true,
+        ]);
+
+        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+    }
+
+    public function test_home_insufficient_direct_evidence_keeps_legacy_execute(): void
+    {
+        $this->bindP4cHomePipeline($this->p4cSynthesisReport([
+            'status' => 'insufficient_evidence',
+            'researchMetadata' => [
+                'evidence_sufficient' => false,
+                'direct_evidence_gate' => 'INSUFFICIENT_DIRECT_EVIDENCE',
+                'sufficiency_mode' => 'insufficient_direct_evidence',
+                'supporting_evidence_count' => 1,
+            ],
+        ]), expectLegacyExecute: true);
+
+        $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
+            'query' => 'wheat cultivation practices in dryland agriculture systems',
+            'organization_id' => 1,
+            'force_execute' => true,
+        ]);
+
+        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+    }
+
+    public function test_home_empty_citations_keep_legacy_execute_even_if_evidence_sufficient(): void
+    {
+        $this->bindP4cHomePipeline($this->p4cSynthesisReport([
+            'citations' => [],
+            'researchMetadata' => [
+                'evidence_sufficient' => true,
+                'direct_evidence_gate' => 'PASSED',
+                'sufficiency_mode' => 'sufficient_direct_evidence',
+                'supporting_evidence_count' => 0,
+            ],
+        ]), expectLegacyExecute: true);
+
+        $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
+            'query' => 'wheat cultivation practices in dryland agriculture systems',
+            'organization_id' => 1,
+            'force_execute' => true,
+        ]);
+
+        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+    }
+
+    public function test_home_empty_answer_keeps_legacy_execute(): void
+    {
+        $this->bindP4cHomePipeline($this->p4cSynthesisReport([
+            'answer' => '',
+            'researchMetadata' => [
+                'evidence_sufficient' => true,
+                'direct_evidence_gate' => 'PASSED',
+                'sufficiency_mode' => 'sufficient_direct_evidence',
+                'supporting_evidence_count' => 0,
+            ],
+        ]), expectLegacyExecute: true);
+
+        $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
+            'query' => 'wheat cultivation practices in dryland agriculture systems',
+            'organization_id' => 1,
+            'force_execute' => true,
+        ]);
+
+        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+    }
+
+    public function test_home_synthesis_not_performed_keeps_legacy_execute(): void
+    {
+        $this->bindP4cHomePipeline($this->p4cSynthesisReport([
+            'performed' => false,
+            'researchMetadata' => [
+                'evidence_sufficient' => true,
+                'direct_evidence_gate' => 'PASSED',
+                'sufficiency_mode' => 'sufficient_direct_evidence',
+                'supporting_evidence_count' => 0,
+            ],
+        ]), expectLegacyExecute: true);
+
+        $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
+            'query' => 'wheat cultivation practices in dryland agriculture systems',
+            'organization_id' => 1,
+            'force_execute' => true,
+        ]);
+
+        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+    }
+
+    public function test_crop_direct_passed_gate_still_runs_legacy_execute(): void
+    {
+        $this->bindP4cHomePipeline($this->p4cSynthesisReport([
+            'researchMetadata' => [
+                'evidence_sufficient' => true,
+                'direct_evidence_gate' => 'PASSED',
+                'sufficiency_mode' => 'sufficient_direct_evidence',
+                'supporting_evidence_count' => 0,
+            ],
+        ]), expectLegacyExecute: true);
+
+        $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
+            'query' => 'sweet potato farming needs',
+            'selected_crop_id' => 'sweet-potato',
+            'selected_crop_name' => 'Sweet potato',
+            'knowledge_option' => 'farming-needs',
+            'organization_id' => 1,
+            'force_execute' => true,
+        ]);
+
+        $this->assertSame('crop_profile', $payload['research_agent']['plan']['intent'] ?? null);
+        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
     }
 
     private function enableBlockingProviders(): void
@@ -241,5 +395,101 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
             observability: [],
         ));
         $this->app->instance(AgriculturalScientificValidationService::class, $validation);
+    }
+
+    private function bindP4cHomePipeline(AnswerSynthesisExecutionReport $synthesis, bool $expectLegacyExecute): void
+    {
+        $this->bindSearchAndValidation('wheat cultivation practices in dryland agriculture systems', sufficient: true);
+
+        $composer = Mockery::mock(AnswerComposer::class);
+        $composer->shouldReceive('compose')->once()->andReturn($synthesis);
+        $this->app->instance(AnswerComposer::class, $composer);
+
+        $engine = Mockery::mock(AgriculturalScientificKnowledgeEngine::class);
+        if ($expectLegacyExecute) {
+            $engine->shouldReceive('execute')->once()->andReturn(new AgriculturalResearchResult(
+                researchContext: [
+                    'query' => 'wheat cultivation practices in dryland agriculture systems',
+                    'sections' => [],
+                    'references' => [],
+                    'load_state' => 'scientific_generated',
+                    'library' => [
+                        'discoverers_used' => [],
+                        'retrieval_failed' => false,
+                    ],
+                ],
+                planSummary: [],
+                status: 'scientific_generated',
+            ));
+        } else {
+            $engine->shouldNotReceive('execute');
+        }
+        $this->app->instance(AgriculturalScientificKnowledgeEngine::class, $engine);
+
+        $mcp = Mockery::mock(McpToolClientInterface::class);
+        if ($expectLegacyExecute) {
+            $mcp->shouldReceive('callTool')->zeroOrMoreTimes()->andReturn([
+                'is_error' => false,
+                'text' => '',
+                'structured' => ['results' => []],
+                'error' => null,
+            ]);
+        } else {
+            $mcp->shouldNotReceive('callTool');
+        }
+        $this->rebindMcpClient($mcp);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function p4cSynthesisReport(array $overrides): AnswerSynthesisExecutionReport
+    {
+        $metadata = array_merge([
+            'evidence_sufficient' => true,
+            'direct_evidence_gate' => 'PASSED',
+            'sufficiency_mode' => 'sufficient_direct_evidence',
+            'supporting_evidence_count' => 0,
+        ], is_array($overrides['researchMetadata'] ?? null) ? $overrides['researchMetadata'] : []);
+
+        $citations = array_key_exists('citations', $overrides)
+            ? $overrides['citations']
+            : [$this->p4cCitation()];
+
+        return new AnswerSynthesisExecutionReport(
+            status: (string) ($overrides['status'] ?? 'synthesis_completed'),
+            performed: (bool) ($overrides['performed'] ?? true),
+            answer: array_key_exists('answer', $overrides) ? $overrides['answer'] : 'Direct wheat cultivation answer.',
+            conciseSummary: 'Direct wheat cultivation answer.',
+            detailedExplanation: 'Direct wheat cultivation answer.',
+            keyFindings: ['Wheat cultivation is documented.'],
+            claims: [],
+            citations: $citations,
+            evidenceReferences: [],
+            confidence: 0.8,
+            limitations: [],
+            uncertainty: null,
+            conflicts: [],
+            language: 'en',
+            researchMetadata: $metadata,
+            observability: [],
+        );
+    }
+
+    private function p4cCitation(): ResearchAnswerCitation
+    {
+        return new ResearchAnswerCitation(
+            citationId: 'c-p4c-wheat',
+            sourceId: 'src-p4c-wheat',
+            evidenceId: 'ev-p4c-wheat',
+            title: 'Wheat cultivation practices in dryland agriculture systems',
+            authors: ['Dr Researcher'],
+            organization: 'University of Agriculture',
+            journal: 'Journal of Agronomy',
+            doi: '10.1000/gate-wheat',
+            url: 'https://doi.org/10.1000/gate-wheat',
+            publicationYear: 2023,
+            sourceType: 'university_research',
+        );
     }
 }

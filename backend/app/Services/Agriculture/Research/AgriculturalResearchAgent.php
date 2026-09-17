@@ -355,7 +355,7 @@ class AgriculturalResearchAgent
 
     /**
      * Crop-profile HTTP contract is engine-built. Generic research skips blocking
-     * legacy discovery/MCP when Stage 5 already produced a sufficient scientific answer.
+     * legacy discovery/MCP only when Stage 5 DIRECT evidence already passed.
      */
     private function shouldRunLegacyPostProcessing(
         AgriculturalResearchPlan $plan,
@@ -369,9 +369,9 @@ class AgriculturalResearchAgent
     }
 
     /**
-     * Canonical Stage 5 sufficiency: composer research_metadata.evidence_sufficient,
-     * plus a non-empty synthesized answer and citations. Does not invent a parallel
-     * quality system and does not inspect query text.
+     * Home DIRECT short-circuit: performed synthesis, non-empty answer and citations,
+     * and research_metadata.direct_evidence_gate === PASSED. Does not treat
+     * evidence_sufficient or supported_answer as DIRECT.
      */
     private function hasSufficientScientificSynthesis(AnswerSynthesisExecutionReport $synthesis): bool
     {
@@ -387,7 +387,7 @@ class AgriculturalResearchAgent
             return false;
         }
 
-        return ($synthesis->researchMetadata['evidence_sufficient'] ?? false) === true;
+        return ($synthesis->researchMetadata['direct_evidence_gate'] ?? null) === 'PASSED';
     }
 
     /**
@@ -403,7 +403,7 @@ class AgriculturalResearchAgent
             return false;
         }
 
-        return ($payload['research_metadata']['evidence_sufficient'] ?? false) === true;
+        return ($payload['research_metadata']['direct_evidence_gate'] ?? null) === 'PASSED';
     }
 
     /**
