@@ -49,13 +49,50 @@ final class ScientificStatisticalClaimAligner
             || str_contains($blob, 'مساحة')) {
             return 'area_harvested';
         }
-        if (str_contains($blob, 'production')
+        if (preg_match('/\bimports?\b/u', $blob) === 1 || str_contains($blob, 'واردات')) {
+            return 'imports';
+        }
+        if (preg_match('/\bexports?\b/u', $blob) === 1 || str_contains($blob, 'صادرات')) {
+            return 'exports';
+        }
+        if (preg_match('/\bstocks?\b/u', $blob) === 1 || str_contains($blob, 'مخزون')) {
+            return 'stock';
+        }
+        if (preg_match('/\bprices?\b/u', $blob) === 1 || str_contains($blob, 'سعر')) {
+            return 'price';
+        }
+        if (preg_match('/\bvalues?\b/u', $blob) === 1 || str_contains($blob, 'قيمة')) {
+            return 'value';
+        }
+
+        $hasWaterSignal = preg_match('/\b(?:water|irrigation)\b/u', $blob) === 1
+            || str_contains($blob, 'مياه')
+            || str_contains($blob, 'ماء')
+            || str_contains($blob, 'ري');
+        if (! $hasWaterSignal && (
+            str_contains($blob, 'production')
             || str_contains($blob, 'quantity produced')
-            || str_contains($blob, 'إنتاج')) {
+            || preg_match('/\bproduced\b/u', $blob) === 1
+            || str_contains($blob, 'quantity')
+            || str_contains($blob, 'إنتاج')
+            || str_contains($blob, 'المنتج')
+            || str_contains($blob, 'كمية')
+        )) {
             return 'production_quantity';
         }
 
-        return preg_replace('/[^a-z0-9]+/i', '_', $blob) ?: $blob;
+        $slug = preg_replace('/[^a-z0-9]+/i', '_', $blob) ?: $blob;
+        $slug = trim((string) $slug, '_');
+        if ($slug === '' || self::isYearOnlySlug($slug)) {
+            return '';
+        }
+
+        return $slug;
+    }
+
+    private static function isYearOnlySlug(string $slug): bool
+    {
+        return preg_match('/^(?:(?:19|20)\d{2}_?)+$/', $slug) === 1;
     }
 
     private function entityMatches(KnowledgeQueryPlan $plan, ScientificStructuredObservation $observation): bool
