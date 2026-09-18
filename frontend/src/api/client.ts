@@ -68,13 +68,19 @@ export async function request<T>(
   organizationId?: number,
 ): Promise<T> {
   const body = options.body
-  const response = await fetch(`${apiUrl}${path}`, {
-    ...options,
-    headers: {
-      ...buildHeaders(token, organizationId, body),
-      ...options.headers,
-    },
-  })
+  let response: Response
+  try {
+    response = await fetch(`${apiUrl}${path}`, {
+      ...options,
+      headers: {
+        ...buildHeaders(token, organizationId, body),
+        ...options.headers,
+      },
+    })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Network request failed.'
+    throw new ApiError(message, 0)
+  }
 
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as {
@@ -83,6 +89,7 @@ export async function request<T>(
       quota?: { limit: number; used: number }
     } | null
     const requestId = response.headers.get('X-Request-Id') ?? undefined
+    const gatewayFailure = !payload && (response.status === 500 || response.status === 502 || response.status === 503)
 
     if (response.status === 401 && token && path !== '/auth/logout') {
       unauthorizedHandler?.()
@@ -103,7 +110,7 @@ export async function request<T>(
 
     throw new ApiError(
       payload?.message ?? 'Unable to complete the request.',
-      response.status,
+      gatewayFailure ? 502 : response.status,
       undefined,
       requestId,
       payload?.quota,

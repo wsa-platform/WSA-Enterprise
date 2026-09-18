@@ -143,6 +143,13 @@ describe('homepage scientific research search', () => {
 
     const unavailable = resolveResearchSearchError(new ApiError('offline', 0))
     expect(unavailable).toContain('تعذر الاتصال بخدمة البحث العلمي')
+
+    const proxyDown = resolveResearchSearchError(new ApiError('bad gateway', 502))
+    expect(proxyDown).toContain('تعذر الاتصال بخدمة البحث العلمي')
+
+    const searchFailed = resolveResearchSearchError(new ApiError('internal error', 500))
+    expect(searchFailed).toContain('تعذر إكمال البحث العلمي حالياً')
+    expect(searchFailed).not.toContain('تعذر الاتصال بخدمة البحث العلمي')
   })
 
   it('renders English research chrome when the platform language is English', async () => {

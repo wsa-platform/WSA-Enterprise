@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/ensure-local-api.mjs && vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",
-    "preview": "vite preview"
+    "preview": "node scripts/ensure-local-api.mjs && vite preview"
   },
   "dependencies": {
     "i18next": "^26.3.6",

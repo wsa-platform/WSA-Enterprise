@@ -22,8 +22,11 @@ export function resolveResearchSearchError(error: unknown): string {
     if (error.status === 504 || error.status === 408) {
       return i18n.t('website.research.errorTimeout')
     }
-    if (error.status === 0 || error.status >= 500) {
+    if (error.status === 0 || error.status === 502 || error.status === 503) {
       return i18n.t('website.research.errorUnavailable')
+    }
+    if (error.status >= 500) {
+      return i18n.t('website.research.errorGeneric')
     }
     return error.message || i18n.t('website.research.errorGeneric')
   }
