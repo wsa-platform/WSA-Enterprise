@@ -300,6 +300,8 @@ class ScientificSearchQueryBuilder
             }
         }
 
+        $unique = $this->ensureHomeMultiEntitySemanticCoverage($plan, $unique, $location);
+
         return $unique !== [] ? $unique : $this->fallbackMandatorySemanticVariants($plan);
     }
 
@@ -329,6 +331,208 @@ class ScientificSearchQueryBuilder
         }
 
         return $options;
+    }
+
+    /**
+     * Home-only: every search-relevant comparison/multi entity must appear in ≥1 variant.
+     * Crop-profile plans are unchanged (ADR-019).
+     * Bounded: still ≤ MAX_VARIANTS; secondary-entity coverage replaces lowest-priority slots.
+     *
+     * @param  list<string>  $variants
+     * @return list<string>
+     */
+    private function ensureHomeMultiEntitySemanticCoverage(
+        KnowledgeQueryPlan $plan,
+        array $variants,
+        ?string $location,
+    ): array {
+        if ($plan->toAgriculturalResearchPlan()->isCropProfileIntent()) {
+            return $variants;
+        }
+
+        $additionalCropIds = $this->resolveHomeAdditionalSearchEntityCropIds($plan);
+        if ($additionalCropIds === []) {
+            return $variants;
+        }
+
+        $propertyTerms = $this->resolveRequestedPropertyTerms($plan);
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $senseTerms = $sense !== ''
+            ? AgriculturalEntityCatalog::senseQueryTerms($sense)
+            : [];
+        $topics = $this->resolveTopicTerms($plan);
+
+        $coverageVariants = [];
+        foreach ($additionalCropIds as $cropId) {
+            if ($this->variantsMentionHomeEntity($variants, $cropId)
+                || $this->variantsMentionHomeEntity($coverageVariants, $cropId)) {
+                continue;
+            }
+
+            $entityTerm = $this->resolveHomeEntitySearchTerm($cropId);
+            if ($entityTerm === null) {
+                continue;
+            }
+
+            $coverage = $this->joinMandatorySemanticComponents(
+                $entityTerm,
+                $propertyTerms,
+                $senseTerms,
+                array_slice($topics, 0, 2),
+            );
+            if ($coverage === '') {
+                $coverage = $this->joinTerms([$entityTerm, $propertyTerms[0] ?? ($senseTerms[0] ?? null)]);
+            }
+            if ($location !== null && ! $this->variantMentionsLocation($coverage, $location)) {
+                $coverage = $this->joinTerms([$coverage, $location]);
+            }
+            $coverage = trim($coverage);
+            if ($coverage === '' || in_array($coverage, $coverageVariants, true)) {
+                continue;
+            }
+            $coverageVariants[] = $coverage;
+        }
+
+        if ($coverageVariants === []) {
+            return $variants;
+        }
+
+        $keepSlots = max(1, self::MAX_VARIANTS - count($coverageVariants));
+        $kept = [];
+        foreach ($variants as $variant) {
+            if (count($kept) >= $keepSlots) {
+                break;
+            }
+            if (in_array($variant, $kept, true) || in_array($variant, $coverageVariants, true)) {
+                continue;
+            }
+            $kept[] = $variant;
+        }
+
+        $merged = [...$kept, ...$coverageVariants];
+        $unique = [];
+        foreach ($merged as $variant) {
+            $trimmed = trim($variant);
+            if ($trimmed === '' || in_array($trimmed, $unique, true)) {
+                continue;
+            }
+            $unique[] = $trimmed;
+            if (count($unique) >= self::MAX_VARIANTS) {
+                break;
+            }
+        }
+
+        return $unique;
+    }
+
+    /**
+     * Additional crop entities from QUS comparison_entities (excludes primary cropId).
+     * Catalog-driven — no crop-specific hard-coding.
+     *
+     * @return list<string>
+     */
+    private function resolveHomeAdditionalSearchEntityCropIds(KnowledgeQueryPlan $plan): array
+    {
+        $primary = trim((string) ($plan->normalizedQuery->cropId ?? ''));
+        $entities = $plan->normalizedQuery->constraints['comparison_entities'] ?? [];
+        if (! is_array($entities) || $entities === []) {
+            return [];
+        }
+
+        $ids = [];
+        foreach ($entities as $entity) {
+            if (! is_array($entity)) {
+                continue;
+            }
+            $cropId = trim((string) ($entity['crop_id'] ?? ''));
+            if ($cropId === '') {
+                continue;
+            }
+            if ($primary !== '' && strcasecmp($cropId, $primary) === 0) {
+                continue;
+            }
+            if (! in_array($cropId, $ids, true)) {
+                $ids[] = $cropId;
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Prefer taxonomy scientific name, else English catalog search term, else crop_id label.
+     */
+    private function resolveHomeEntitySearchTerm(string $cropId): ?string
+    {
+        $scientific = trim(FieldCropTaxonomyCatalog::scientificNameFor($cropId));
+        if ($scientific !== '') {
+            return $scientific;
+        }
+
+        foreach (FieldCropTaxonomyCatalog::searchTermsFor($cropId) as $term) {
+            $label = trim((string) $term);
+            if ($label === '' || preg_match('/\p{Arabic}/u', $label) === 1) {
+                continue;
+            }
+
+            return $label;
+        }
+
+        $fallback = str_replace('-', ' ', trim($cropId));
+
+        return $fallback !== '' ? $fallback : null;
+    }
+
+    /**
+     * @param  list<string>  $variants
+     */
+    private function variantsMentionHomeEntity(array $variants, string $cropId): bool
+    {
+        if ($variants === []) {
+            return false;
+        }
+
+        $joined = mb_strtolower(implode(' | ', $variants));
+        foreach ($this->homeEntityMentionTokens($cropId) as $token) {
+            if ($token !== '' && mb_strpos($joined, $token) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function homeEntityMentionTokens(string $cropId): array
+    {
+        $tokens = [];
+        $scientific = mb_strtolower(trim(FieldCropTaxonomyCatalog::scientificNameFor($cropId)));
+        if ($scientific !== '') {
+            $tokens[] = $scientific;
+            $genus = trim(explode(' ', $scientific)[0] ?? '');
+            if ($genus !== '') {
+                $tokens[] = $genus;
+            }
+        }
+
+        $idLabel = mb_strtolower(str_replace('-', ' ', trim($cropId)));
+        if ($idLabel !== '') {
+            $tokens[] = $idLabel;
+        }
+
+        foreach (FieldCropTaxonomyCatalog::searchTermsFor($cropId) as $term) {
+            $label = mb_strtolower(trim((string) $term));
+            if ($label === '' || preg_match('/\p{Arabic}/u', $label) === 1) {
+                continue;
+            }
+            if (! in_array($label, $tokens, true)) {
+                $tokens[] = $label;
+            }
+        }
+
+        return $tokens;
     }
 
     private function shouldUseAgriDomain(KnowledgeQueryPlan $plan): bool
