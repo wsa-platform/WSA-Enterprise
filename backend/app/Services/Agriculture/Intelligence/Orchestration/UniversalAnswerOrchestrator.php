@@ -11,6 +11,7 @@ use App\Services\Agriculture\Intelligence\DTO\ProviderQueryInput;
 use App\Services\Agriculture\Intelligence\DTO\UniversalAnswerResult;
 use App\Services\Agriculture\Intelligence\DTO\WebSearchOutcome;
 use App\Services\Agriculture\Intelligence\Fusion\EvidenceFusionService;
+use App\Services\Agriculture\Research\Home\HomeEvidenceLifecycleDisposition;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\QueryUnderstandingService;
 use App\Services\Agriculture\Research\ResearchPlanner;
@@ -40,6 +41,7 @@ final class UniversalAnswerOrchestrator
         private AgriculturalScientificSearchService $scientificSearchService,
         private AgriculturalScientificValidationService $scientificValidationService,
         private AnswerComposer $answerComposer,
+        private HomeEvidenceLifecycleDisposition $homeEvidenceLifecycleDisposition = new HomeEvidenceLifecycleDisposition,
     ) {}
 
     /**
@@ -120,6 +122,12 @@ final class UniversalAnswerOrchestrator
             : $this->scientificSearchService->search($plan, (int) ($input['limit'] ?? 10), []);
         $validationReport = $this->scientificValidationService->validate($plan, $searchReport);
         $synthesisReport = $this->answerComposer->compose($plan, $validationReport);
+        // Home-only lifecycle authority (S1). Crop profile plans are a no-op identity return.
+        $synthesisReport = $this->homeEvidenceLifecycleDisposition->applyToSynthesis(
+            $plan,
+            $validationReport,
+            $synthesisReport,
+        );
 
         $scientificEligible = (bool) ($synthesisReport->researchMetadata['evidence_sufficient'] ?? false);
         $scientificPartial = ! $scientificEligible
