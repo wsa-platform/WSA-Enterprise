@@ -493,6 +493,19 @@ final class AgriculturalEntityCatalog
     }
 
     /**
+     * Home Free Question location surfaces. Not merged into locationAliases().
+     *
+     * @return array<string, string>
+     */
+    public static function homeLocationAliases(): array
+    {
+        return [
+            'égypte' => 'Egypt',
+            'egypte' => 'Egypt',
+        ];
+    }
+
+    /**
      * User asks how soil/land classification is done (methods/models/frameworks),
      * not for a types/classes inventory.
      */
@@ -1296,6 +1309,103 @@ final class AgriculturalEntityCatalog
     // --- END CURRENT TASK: Semantic Scholar / QueryBuilder family+potato ---
 
     /**
+     * Home Free Question TR/FR crop surfaces. Not merged into cropRecognitionEntries().
+     *
+     * @return array<string, list<string>>
+     */
+    private static function homeMultilingualCropSurfaceLabels(): array
+    {
+        return [
+            'wheat' => ['buğday', 'bugday', 'blé', 'du blé', 'le blé'],
+            'corn' => ['maïs', 'le maïs', 'mısır', 'misir', 'maize'],
+            'sweet-potato' => [
+                'tatlı patates', 'tatli patates', 'patate douce', 'la patate douce',
+            ],
+        ];
+    }
+
+    /**
+     * Home-only multilingual topic factors. Crop path keeps extractTopicFactors() unchanged.
+     *
+     * @return list<string>
+     */
+    public static function extractHomeMultilingualTopicFactors(string $normalizedQuestion): array
+    {
+        $signals = [
+            'temperature' => ['sıcaklık', 'sicaklik', 'sıcaklığı', 'température'],
+            'salinity' => ['tuzluluk', 'tuzlu', 'salinité'],
+            'water' => ['sulama', 'sulama suyu', 'eau d irrigation', "eau d'irrigation", 'gereksinimleri'],
+            'germination' => ['çimlenme', 'cimlenme', 'الإنبات', 'انبات'],
+            'soil' => ['toprak', 'تربة', 'التربة', 'sol', 'soil'],
+        ];
+        $matched = [];
+        foreach ($signals as $factor => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (self::matchesSemanticToken($normalizedQuestion, $keyword)
+                    || self::containsTerm($normalizedQuestion, $keyword)) {
+                    $matched[] = $factor;
+                    break;
+                }
+            }
+        }
+
+        return array_values(array_unique($matched));
+    }
+
+    /**
+     * Home Free Question intent keywords. Crop path does not call this.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function homeIntentKeywordSignals(): array
+    {
+        return [
+            'environmental_requirements' => [
+                'sıcaklık', 'sicaklik', 'sıcaklığı', 'température',
+            ],
+            'irrigation' => [
+                'sulama', 'besoin en eau', "eau d'irrigation", 'eau d irrigation',
+                'irriguer', 'sulama gereksinimleri', 'besoins en irrigation',
+            ],
+            'productivity' => [
+                'verim', 'üretim', 'rendement', 'grain yield', 'tane verimi', 'إنتاجية', 'انتاجية',
+            ],
+            'cultivation' => [
+                'toprak', 'تربة', 'التربة', 'sol convient', 'suitable for', 'uygundur', 'مناسبة',
+            ],
+        ];
+    }
+
+    /**
+     * Home: crop-present soil suitability (not bare land-type inventory).
+     */
+    public static function asksHomeCropSoilSuitability(string $normalizedQuestion): bool
+    {
+        $hay = mb_strtolower(trim($normalizedQuestion));
+        if ($hay === '') {
+            return false;
+        }
+        $hasSoil = self::containsTerm($hay, 'soil')
+            || self::containsTerm($hay, 'تربة')
+            || self::containsTerm($hay, 'التربة')
+            || self::containsTerm($hay, 'toprak')
+            || self::containsTerm($hay, 'sol');
+        if (! $hasSoil) {
+            return false;
+        }
+
+        return self::containsTerm($hay, 'suitable')
+            || self::containsTerm($hay, 'suitability')
+            || self::containsTerm($hay, 'مناسبة')
+            || self::containsTerm($hay, 'مناسب')
+            || self::containsTerm($hay, 'uygundur')
+            || self::containsTerm($hay, 'uygun')
+            || self::containsTerm($hay, 'convient')
+            || preg_match('/\b(?:for|için|pour)\b/u', $hay) === 1
+            || preg_match('/مناسبة\s+ل/u', $hay) === 1;
+    }
+
+    /**
      * @return list<string>
      */
     public static function recognitionLabelsForCrop(string $cropId): array
@@ -1372,6 +1482,137 @@ final class AgriculturalEntityCatalog
         }
 
         return $best;
+    }
+
+    /**
+     * Home Free Question crop recognition: global catalog labels plus Home TR/FR
+     * surfaces. Not used by Crop Page. Locative Turkish Mısır is not maize.
+     *
+     * @return list<array{crop_id: string, label: string, category: string}>
+     */
+    public static function recognizeHomeMultilingualCrops(string $normalizedQuestion): array
+    {
+        $haystack = mb_strtolower(trim($normalizedQuestion));
+        if ($haystack === '') {
+            return [];
+        }
+
+        $homeLabels = self::homeMultilingualCropSurfaceLabels();
+        $found = [];
+        foreach (self::cropRecognitionEntries() as $entry) {
+            $cropId = (string) $entry['crop_id'];
+            $labels = $entry['labels'];
+            foreach ($homeLabels[$cropId] ?? [] as $homeLabel) {
+                $labels[] = mb_strtolower(trim((string) $homeLabel));
+            }
+            $labels = array_values(array_unique(array_filter($labels, static fn (string $label): bool => $label !== '')));
+            $bestLabel = '';
+            $bestOffset = null;
+            $bestLength = 0;
+            foreach ($labels as $label) {
+                $label = mb_strtolower(trim((string) $label));
+                if ($label === '') {
+                    continue;
+                }
+                if (self::isTurkishMaizeSurfaceLabel($label)
+                    && self::isTurkishMisirCountryLocative($haystack)) {
+                    continue;
+                }
+                if (! self::containsTerm($haystack, $label)) {
+                    continue;
+                }
+                $offset = mb_stripos($haystack, $label);
+                if ($offset === false) {
+                    $offset = 0;
+                }
+                $length = mb_strlen($label);
+                if ($bestOffset === null
+                    || $offset < $bestOffset
+                    || ($offset === $bestOffset && $length > $bestLength)) {
+                    $bestOffset = $offset;
+                    $bestLength = $length;
+                    $bestLabel = $label;
+                }
+            }
+            if ($bestOffset === null || $bestLabel === '') {
+                continue;
+            }
+            $found[] = [
+                'crop_id' => $cropId,
+                'label' => $bestLabel,
+                'category' => 'field_crop',
+                'offset' => $bestOffset,
+            ];
+        }
+
+        usort($found, static function (array $a, array $b): int {
+            $byOffset = $a['offset'] <=> $b['offset'];
+            if ($byOffset !== 0) {
+                return $byOffset;
+            }
+
+            return mb_strlen((string) $b['label']) <=> mb_strlen((string) $a['label']);
+        });
+
+        $filtered = [];
+        foreach ($found as $row) {
+            $label = mb_strtolower((string) $row['label']);
+            $nested = false;
+            foreach ($found as $other) {
+                if ($other['crop_id'] === $row['crop_id']) {
+                    continue;
+                }
+                $otherLabel = mb_strtolower((string) $other['label']);
+                if ($label !== $otherLabel && mb_strlen($otherLabel) > mb_strlen($label)
+                    && mb_strpos($otherLabel, $label) !== false) {
+                    $nested = true;
+                    break;
+                }
+            }
+            if ($nested) {
+                continue;
+            }
+            $filtered[] = $row;
+        }
+
+        $ids = array_column($filtered, 'crop_id');
+        if (in_array('corn', $ids, true)) {
+            $filtered = array_values(array_filter(
+                $filtered,
+                static fn (array $row): bool => (string) $row['crop_id'] !== 'fodder-corn',
+            ));
+        }
+        if (in_array('sorghum', $ids, true)) {
+            $filtered = array_values(array_filter(
+                $filtered,
+                static fn (array $row): bool => (string) $row['crop_id'] !== 'fodder-sorghum',
+            ));
+        }
+
+        return array_map(static function (array $row): array {
+            return [
+                'crop_id' => $row['crop_id'],
+                'label' => $row['label'],
+                'category' => $row['category'],
+            ];
+        }, $filtered);
+    }
+
+    public static function isTurkishMisirCountryLocative(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+
+        return preg_match('/(?<!\p{L})m[ıi]s[ıi]r[\'’´\s]*da(?:ki)?(?!\p{L})/u', $hay) === 1;
+    }
+
+    public static function isTurkishMaizeSurfaceLabel(string $label): bool
+    {
+        $folded = mb_strtolower(trim($label));
+
+        return in_array($folded, ['mısır', 'misir'], true);
     }
 
     public static function containsTerm(string $haystack, string $needle): bool
@@ -1941,7 +2182,8 @@ final class AgriculturalEntityCatalog
         $semantic = self::extractSemanticTarget($normalizedQuestion);
         if (is_array($semantic) && trim((string) ($semantic['entity_surface'] ?? '')) !== '') {
             $surface = self::trimSemanticPhrase((string) $semantic['entity_surface']);
-            if ($surface !== '' && self::isDistinctiveNamedEntitySurface($surface) && ! self::isLocationAliasToken($surface)) {
+            if ($surface !== '' && self::isDistinctiveNamedEntitySurface($surface) && ! self::isLocationAliasToken($surface)
+                && ! self::isUnsafeResidualEntitySurface($surface)) {
                 $best = [
                     'surface' => $surface,
                     'normalized' => mb_strtolower($surface),
@@ -1964,7 +2206,9 @@ final class AgriculturalEntityCatalog
             }
             $surface = trim((string) ($matches[1] ?? ''));
             $surface = trim($surface, " \t\n\r-");
-            if ($surface === '' || ! self::isDistinctiveNamedEntitySurface($surface) || self::isLocationAliasToken($surface)) {
+            if ($surface === '' || ! self::isDistinctiveNamedEntitySurface($surface)
+                || self::isLocationAliasToken($surface)
+                || self::isUnsafeResidualEntitySurface($surface)) {
                 continue;
             }
             $length = mb_strlen($surface);
@@ -2317,10 +2561,11 @@ final class AgriculturalEntityCatalog
             $folded === '' => '',
             in_array($folded, ['definition', 'meaning', 'تعريف'], true) => 'definition',
             in_array($folded, ['types', 'type', 'kinds', 'varieties', 'breeds', 'strains', 'أنواع', 'انواع', 'اصناف', 'أصناف', 'سلالات'], true) => 'classification',
-            in_array($folded, ['quantity', 'yield', 'rate', 'production', 'amount', 'dose', 'كمية', 'إنتاج', 'انتاج', 'غلة', 'معدل'], true) => 'quantity',
-            in_array($folded, ['temperature', 'range', 'حرارة', 'درجة'], true) => 'temperature',
+            in_array($folded, ['quantity', 'yield', 'rate', 'production', 'amount', 'dose', 'كمية', 'إنتاج', 'انتاج', 'غلة', 'معدل', 'verim', 'üretim', 'rendement', 'إنتاجية', 'انتاجية'], true) => 'quantity',
+            in_array($folded, ['temperature', 'range', 'حرارة', 'درجة', 'sıcaklık', 'sicaklik', 'sıcaklığı', 'température'], true) => 'temperature',
             in_array($folded, ['concentration', 'ppm', 'تركيز'], true) => 'concentration',
-            in_array($folded, ['irrigation', 'ري', 'الري', 'ماء', 'الماء', 'water'], true) => 'irrigation',
+            in_array($folded, ['irrigation', 'ري', 'الري', 'ماء', 'الماء', 'water', 'sulama', 'requirements'], true) => 'irrigation',
+            in_array($folded, ['soil', 'soils', 'تربة', 'التربة', 'toprak', 'sol'], true) => 'soil',
             in_array($folded, ['تقاوي', 'بذور', 'seed', 'seeds', 'seeding', 'sowing', 'seed rate'], true) => 'quantity',
             default => $folded,
         };
@@ -2405,11 +2650,66 @@ final class AgriculturalEntityCatalog
         }
 
         $phrase = self::trimSemanticPhrase(implode(' ', array_slice($kept, 0, 4)));
-        if ($phrase === '' || ! self::isDistinctiveNamedEntitySurface($phrase)) {
+        if ($phrase === '' || ! self::isDistinctiveNamedEntitySurface($phrase)
+            || self::isUnsafeResidualEntitySurface($phrase)) {
             return null;
         }
 
         return $phrase;
+    }
+
+    /**
+     * Question leftover / property-only phrases must not become a crop entity.
+     */
+    public static function isUnsafeResidualEntitySurface(string $surface): bool
+    {
+        $phrase = mb_strtolower(trim($surface));
+        if ($phrase === '') {
+            return true;
+        }
+
+        $tokens = preg_split('/\s+/u', $phrase) ?: [];
+        if (count($tokens) > 3) {
+            return true;
+        }
+
+        $blocked = [
+            'nedir', 'nelerdir', 'quelle', 'quelles', 'quels', 'comment', 'hangisi',
+            'lequel', 'laquelle', 'how', 'what', 'which', 'est', 'sont',
+            'température', 'temperature', 'sıcaklığı', 'sıcaklık', 'sicaklik',
+            'germination', 'çimlenme', 'cimlenme', 'الإنبات', 'انبات', 'إنبات', 'sulama', 'ihtiyacı', 'ihtiyaç',
+            'quantité', 'besoin', 'besoins', 'types', 'türleri', 'tipleri',
+            'rendement', 'verim', 'üretim', 'production',
+            'summer', 'été', 'ete', 'yaz', 'الصيف', 'saison', 'season',
+            'soil', 'soils', 'تربة', 'التربة', 'toprak', 'sol',
+            'terms', 'yield', 'uygundur', 'hangi',
+        ];
+        if (str_contains($phrase, 'إنبات') || str_contains($phrase, 'انبات') || str_contains($phrase, 'germination')) {
+            return true;
+        }
+        foreach ($tokens as $token) {
+            $token = trim((string) $token, " \t\n\r-?؟");
+            if (in_array($token, $blocked, true)) {
+                return true;
+            }
+        }
+
+        if (self::recognizeCrop($phrase) !== null) {
+            return false;
+        }
+
+        foreach ($tokens as $token) {
+            $token = trim((string) $token, " \t\n\r-?؟");
+            if ($token === '' || self::isNamedEntityStopToken($token)) {
+                continue;
+            }
+            $mapped = self::propertyKeyFromSurface($token);
+            if (! in_array($mapped, ['temperature', 'irrigation', 'quantity', 'classification', 'concentration', 'soil'], true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

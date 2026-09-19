@@ -37,9 +37,14 @@ class QueryUnderstandingService
             );
         }
 
+        // Home Free Question only — Crop Page returned above.
+        $location = $this->extractHomeLocation($input, $originalQuestion);
         $language = $this->detectLanguage($originalQuestion);
         $normalizedQuestion = $this->normalizeQuestion($originalQuestion);
-        $topicFactors = AgriculturalEntityCatalog::extractTopicFactors($normalizedQuestion);
+        $topicFactors = array_values(array_unique(array_merge(
+            AgriculturalEntityCatalog::extractTopicFactors($normalizedQuestion),
+            AgriculturalEntityCatalog::extractHomeMultilingualTopicFactors($normalizedQuestion),
+        )));
         $environmentalConstraints = AgriculturalEntityCatalog::extractEnvironmentalConstraints($normalizedQuestion);
         $factorRoles = [];
         foreach ($topicFactors as $factor) {
@@ -64,7 +69,19 @@ class QueryUnderstandingService
             $constraints['environmental_constraints'] = $environmentalConstraints;
         }
 
-        $cropRecognition = AgriculturalEntityCatalog::recognizeCrop($normalizedQuestion);
+        $recognizedCrops = AgriculturalEntityCatalog::recognizeHomeMultilingualCrops($normalizedQuestion);
+        $cropRecognition = $recognizedCrops[0] ?? AgriculturalEntityCatalog::recognizeCrop($normalizedQuestion);
+        if (count($recognizedCrops) >= 2) {
+            $constraints['is_comparison'] = true;
+            $constraints['comparison_entities'] = array_values(array_map(
+                static fn (array $crop): array => [
+                    'crop_id' => $crop['crop_id'],
+                    'label' => $crop['label'],
+                    'category' => $crop['category'] ?? null,
+                ],
+                $recognizedCrops,
+            ));
+        }
         $intentQualifier = $this->detectIntentQualifier($normalizedQuestion);
         $researchIntent = $this->detectResearchIntent(
             $normalizedQuestion,
@@ -87,7 +104,7 @@ class QueryUnderstandingService
         $cropLabel = is_array($cropRecognition) ? ($cropRecognition['label'] ?? null) : null;
         $scientificName = $this->resolveScientificName($cropIdResolved, $scientificNameInput, $normalizedQuestion);
         $entityCategory = is_array($cropRecognition)
-            ? (string) ($cropRecognition['category'] ?? FieldCropTaxonomyCatalog::categoryFor((string) $cropIdResolved))
+            ? (string) ($cropRecognition['category'] ?? 'field_crop')
             : null;
 
         $scientificSense = $this->resolveScientificSense(
@@ -97,6 +114,20 @@ class QueryUnderstandingService
             $factorRoles,
             $intentQualifier,
         );
+        // Home: crop soil-suitability must not collapse to bare land inventory.
+        if ($cropIdResolved !== null
+            && AgriculturalEntityCatalog::asksHomeCropSoilSuitability($normalizedQuestion)) {
+            $scientificSense = 'plant_growth';
+            $researchIntent = 'cultivation';
+            $topicFactors = array_values(array_unique(array_merge($topicFactors, ['soil'])));
+            $constraints['scientific_factors'] = $topicFactors;
+            $constraints['scientific_topics'] = AgriculturalEntityCatalog::englishLabelsForFactors(
+                array_values(array_filter(
+                    $topicFactors,
+                    static fn ($f): bool => ($factorRoles[$f] ?? 'requested') !== 'constraint',
+                )),
+            );
+        }
         $constraints['scientific_intent_qualifier'] = $intentQualifier;
         $constraints['scientific_sense'] = $scientificSense;
 
@@ -181,6 +212,10 @@ class QueryUnderstandingService
             $intentQualifier,
             $researchIntent,
         );
+        if (! empty($constraints['is_comparison'])
+            && ! in_array($questionType, ['causes', 'range'], true)) {
+            $questionType = 'comparison';
+        }
         $requestedInformation = $this->resolveRequestedInformation(
             $researchIntent,
             $normalizedQuestion,
@@ -202,6 +237,23 @@ class QueryUnderstandingService
             $questionType,
             $topic,
         );
+        $this->applyHomeSemanticPropertyContract(
+            $constraints,
+            $normalizedQuestion,
+            $questionType,
+            $scientificSense,
+            $researchIntent,
+            $cropIdResolved,
+            $topicFactors,
+        );
+        if ($location !== null && $this->isHomeUnsafeLocationCandidate($location)) {
+            $location = null;
+            unset($constraints['location']);
+        }
+        $explicitYear = $this->extractHomeExplicitCalendarYear($normalizedQuestion, $originalQuestion);
+        if ($explicitYear !== null) {
+            $constraints['year'] = $explicitYear;
+        }
         $constraints['question_type'] = $questionType;
         $constraints['requested_information'] = $requestedInformation;
         $constraints['required_evidence_type'] = $requiredEvidenceType;
@@ -247,7 +299,7 @@ class QueryUnderstandingService
         if ($cropIdResolved !== null) {
             $namedEntityState = 'resolved';
             $namedEntitySurface = is_string($cropLabel) && $cropLabel !== '' ? $cropLabel : $cropIdResolved;
-            $entityCategory = $entityCategory ?: FieldCropTaxonomyCatalog::categoryFor($cropIdResolved);
+            $entityCategory = $entityCategory ?: 'field_crop';
         } elseif (in_array($subjectType, ['crop', 'named_entity', 'animal', 'plant_family'], true)) {
             $namedEntityState = (($subject['resolution'] ?? '') === 'unresolved') ? 'unresolved' : 'resolved';
             $namedEntitySurface = trim((string) ($subject['label'] ?? $subject['value'] ?? ''));
@@ -313,7 +365,8 @@ class QueryUnderstandingService
         if (is_array($semanticTarget)) {
             if ($subject === null && trim((string) ($semanticTarget['entity_surface'] ?? '')) !== ''
                 && AgriculturalEntityCatalog::isDistinctiveNamedEntitySurface((string) $semanticTarget['entity_surface'])
-                && ! AgriculturalEntityCatalog::isLocationAliasToken((string) $semanticTarget['entity_surface'])) {
+                && ! AgriculturalEntityCatalog::isLocationAliasToken((string) $semanticTarget['entity_surface'])
+                && ! AgriculturalEntityCatalog::isUnsafeResidualEntitySurface((string) $semanticTarget['entity_surface'])) {
                 $subject = [
                     'type' => 'named_entity',
                     'value' => (string) ($semanticTarget['entity_normalized'] ?? $semanticTarget['entity_surface']),
@@ -325,14 +378,14 @@ class QueryUnderstandingService
             $propertySurface = trim((string) ($semanticTarget['property_surface'] ?? ''));
             if ($propertyKey !== '') {
                 $constraints['requested_property'] = $propertyKey;
-            } elseif ($questionType !== '' && $questionType !== 'general' && $questionType !== 'definition') {
+            } elseif ($questionType !== '' && ! in_array($questionType, ['general', 'definition', 'comparison'], true)) {
                 $constraints['requested_property'] = $questionType;
             }
             if ($propertySurface !== '') {
                 $constraints['requested_property_surface'] = $propertySurface;
             }
             $constraints['semantic_target'] = $semanticTarget;
-        } elseif ($questionType !== '' && $questionType !== 'general' && $questionType !== 'definition') {
+        } elseif ($questionType !== '' && ! in_array($questionType, ['general', 'definition', 'comparison'], true)) {
             $constraints['requested_property'] = $questionType;
         }
 
@@ -543,6 +596,20 @@ class QueryUnderstandingService
             $score = 0;
             foreach ($keywords as $keyword) {
                 if (AgriculturalEntityCatalog::matchesSemanticToken($normalizedQuestion, $keyword)) {
+                    $score += mb_strlen($keyword);
+                }
+            }
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $bestIntent = $intent;
+            }
+        }
+
+        foreach (AgriculturalEntityCatalog::homeIntentKeywordSignals() as $intent => $keywords) {
+            $score = 0;
+            foreach ($keywords as $keyword) {
+                if (AgriculturalEntityCatalog::matchesSemanticToken($normalizedQuestion, $keyword)
+                    || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, $keyword)) {
                     $score += mb_strlen($keyword);
                 }
             }
@@ -1369,5 +1436,152 @@ class QueryUnderstandingService
         }
 
         return $best;
+    }
+
+    /**
+     * Home-only location extraction: geographic aliases + contextual Mısır locative.
+     * Rejects temporal / residual phrases (summer, soil clauses, "terms of yield").
+     *
+     * @param  array<string, mixed>  $input
+     */
+    private function extractHomeLocation(array $input, string $question): ?string
+    {
+        $explicit = trim((string) ($input['location'] ?? ''));
+        if ($explicit !== '') {
+            return $explicit;
+        }
+
+        $haystack = mb_strtolower(trim($question));
+        if (AgriculturalEntityCatalog::isTurkishMisirCountryLocative($haystack)) {
+            return 'Egypt';
+        }
+
+        $aliases = array_merge(
+            AgriculturalEntityCatalog::locationAliases(),
+            AgriculturalEntityCatalog::homeLocationAliases(),
+        );
+        uksort($aliases, static fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
+        foreach ($aliases as $alias => $canonical) {
+            if ($alias !== '' && AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower((string) $alias))) {
+                return $canonical;
+            }
+            if (preg_match('/\p{Arabic}/u', (string) $alias) === 1
+                && mb_strpos($haystack, mb_strtolower((string) $alias)) !== false) {
+                return $canonical;
+            }
+        }
+
+        if (preg_match('/\b(in|at|near)\s+([a-z\s]{3,40})/i', $question, $matches) === 1) {
+            $candidate = trim($matches[2]);
+            if ($this->isHomeUnsafeLocationCandidate($candidate)) {
+                return null;
+            }
+            foreach ($aliases as $alias => $canonical) {
+                if (strcasecmp($candidate, (string) $alias) === 0 || strcasecmp($candidate, $canonical) === 0) {
+                    return $canonical;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function isHomeUnsafeLocationCandidate(string $candidate): bool
+    {
+        $folded = mb_strtolower(trim($candidate));
+        if ($folded === '') {
+            return true;
+        }
+        $blocked = [
+            'summer', 'été', 'ete', 'yaz', 'الصيف', 'saison', 'season', 'winter', 'spring', 'autumn', 'fall',
+            'soil', 'soils', 'تربة', 'toprak', 'sol', 'germination', 'yield', 'terms of yield',
+            'hangi toprak uygundur', 'terms',
+        ];
+        foreach ($blocked as $token) {
+            if ($folded === $token || str_contains($folded, $token)) {
+                return true;
+            }
+        }
+
+        return AgriculturalEntityCatalog::isUnsafeResidualEntitySurface($folded);
+    }
+
+    /**
+     * Home-only: reinforce semantic property contract after baseline assembly.
+     *
+     * @param  array<string, mixed>  $constraints
+     * @param  list<string>  $topicFactors
+     */
+    private function applyHomeSemanticPropertyContract(
+        array &$constraints,
+        string $normalizedQuestion,
+        string $questionType,
+        string $scientificSense,
+        string $researchIntent,
+        ?string $cropIdResolved,
+        array $topicFactors,
+    ): void {
+        if ($scientificSense === 'seed_germination' || in_array('germination', $topicFactors, true)) {
+            if (in_array('temperature', $topicFactors, true)
+                || $questionType === 'range'
+                || str_contains($normalizedQuestion, 'temperature')
+                || str_contains($normalizedQuestion, 'حرارة')
+                || str_contains($normalizedQuestion, 'sıcaklık')
+                || str_contains($normalizedQuestion, 'température')) {
+                $constraints['requested_property'] = 'temperature';
+            }
+        }
+
+        if ($scientificSense === 'crop_water_requirement' || $researchIntent === 'irrigation') {
+            $constraints['requested_property'] = 'irrigation';
+        }
+        if (preg_match('/(?:irrigat|sulama|sulan|irriguer)/u', $normalizedQuestion) === 1
+            || str_contains($normalizedQuestion, 'ري')
+            || str_contains($normalizedQuestion, 'الري')) {
+            $constraints['requested_property'] = 'irrigation';
+        }
+
+        if ($cropIdResolved !== null
+            && AgriculturalEntityCatalog::asksHomeCropSoilSuitability($normalizedQuestion)) {
+            $constraints['requested_property'] = 'soil';
+            if (($constraints['location'] ?? null) !== null
+                && $this->isHomeUnsafeLocationCandidate((string) $constraints['location'])) {
+                unset($constraints['location']);
+            }
+        }
+
+        $yieldLike = in_array('productivity', [$researchIntent], true)
+            || preg_match('/\b(yield|production|verim|rendement|إنتاج|انتاج|إنتاجية)\b/u', $normalizedQuestion) === 1;
+        if ($yieldLike && in_array($questionType, ['quantity', 'comparison', 'general', 'definition', ''], true)) {
+            if (($constraints['requested_property'] ?? null) === null
+                || in_array((string) ($constraints['requested_property'] ?? ''), ['general', 'definition', 'comparison', 'recommendation', 'classification'], true)) {
+                $constraints['requested_property'] = 'quantity';
+            }
+        }
+
+        if (! empty($constraints['is_comparison'])) {
+            if (($constraints['requested_property'] ?? null) === null
+                || in_array((string) ($constraints['requested_property'] ?? ''), ['comparison', 'general', 'definition'], true)) {
+                if ($yieldLike) {
+                    $constraints['requested_property'] = 'quantity';
+                }
+            }
+        }
+
+        // Never keep residual/temporal strings on Home location.
+        if (isset($constraints['location'])
+            && $this->isHomeUnsafeLocationCandidate((string) $constraints['location'])) {
+            unset($constraints['location']);
+        }
+    }
+
+    private function extractHomeExplicitCalendarYear(string $normalizedQuestion, string $originalQuestion): ?string
+    {
+        $haystack = trim($normalizedQuestion.' '.$originalQuestion);
+        if (preg_match('/\b((?:19|20)\d{2})\b/u', $haystack, $matches) === 1) {
+            return $matches[1];
+        }
+
+        return null;
     }
 }
