@@ -37,8 +37,34 @@ final class ScientificSourceSearchOutcome
             'result_count' => count($this->results),
             'error' => $this->error,
             'http_status' => $this->httpStatus,
+            // Top-level duration_ms for Stage-3 latency forensics (RC-L Phase-1).
+            // Adapters already record latency_ms inside observability; probes historically
+            // read duration_ms at the outcome root and saw null.
+            'duration_ms' => $this->resolveDurationMs(),
             'observability' => $this->observability,
             'results' => array_map(static fn (ScientificSearchResult $r): array => $r->toArray(), $this->results),
         ];
+    }
+
+    /**
+     * Prefer explicit observability.latency_ms; never invent a zero when absent.
+     */
+    private function resolveDurationMs(): ?int
+    {
+        if (! is_array($this->observability)) {
+            return null;
+        }
+        if (! array_key_exists('latency_ms', $this->observability)) {
+            return null;
+        }
+        $raw = $this->observability['latency_ms'];
+        if (is_int($raw)) {
+            return max(0, $raw);
+        }
+        if (is_float($raw) || (is_string($raw) && is_numeric($raw))) {
+            return max(0, (int) round((float) $raw));
+        }
+
+        return null;
     }
 }

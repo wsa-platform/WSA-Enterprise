@@ -38,6 +38,7 @@ class MultiSourceScientificSearchOrchestrator
 
     public function execute(KnowledgeQueryPlan $plan, int $limit = 10, ?array $sourceKeys = null): ScientificSearchExecutionReport
     {
+        $stage3StartedNs = hrtime(true);
         $variants = $this->queryBuilder->buildVariantsFromPlan($plan);
         $searchQuery = $variants[0] ?? $this->queryBuilder->buildFromPlan($plan);
 
@@ -50,6 +51,7 @@ class MultiSourceScientificSearchOrchestrator
                 status: $plan->needsClarification() ? 'needs_clarification' : 'no_sources_selected',
                 searchQuery: $searchQuery,
                 searchQueries: $variants,
+                stage3ElapsedMs: $this->elapsedMsSince($stage3StartedNs),
             );
         }
 
@@ -60,6 +62,7 @@ class MultiSourceScientificSearchOrchestrator
                 searchQuery: '',
                 selectedSources: $selectedSources,
                 searchQueries: $variants,
+                stage3ElapsedMs: $this->elapsedMsSince($stage3StartedNs),
             );
         }
 
@@ -71,6 +74,7 @@ class MultiSourceScientificSearchOrchestrator
                 searchQuery: $searchQuery,
                 selectedSources: $selectedSources,
                 searchQueries: $variants,
+                stage3ElapsedMs: $this->elapsedMsSince($stage3StartedNs),
             );
         }
 
@@ -128,6 +132,8 @@ class MultiSourceScientificSearchOrchestrator
             default => 'no_results',
         };
 
+        $stage3ElapsedMs = $this->elapsedMsSince($stage3StartedNs);
+
         return new ScientificSearchExecutionReport(
             status: $status,
             searchQuery: $searchQuery,
@@ -143,6 +149,8 @@ class MultiSourceScientificSearchOrchestrator
                 'search_queries' => $variants,
                 'search_time_budget_seconds' => $budget->seconds,
                 'adapters_skipped_time_budget' => array_values(array_unique($skippedBudget)),
+                'stage3_elapsed_ms' => $stage3ElapsedMs,
+                'provider_duration_ms' => $this->providerDurationMsBySource($outcomes),
             ]),
             internetFirst: $plan->isInternetFirst(),
             searchQueries: $variants,
@@ -244,7 +252,14 @@ class MultiSourceScientificSearchOrchestrator
         string $searchQuery,
         array $selectedSources = [],
         array $searchQueries = [],
+        ?int $stage3ElapsedMs = null,
     ): ScientificSearchExecutionReport {
+        $planSummary = $plan->toArray();
+        if ($stage3ElapsedMs !== null) {
+            $planSummary['stage3_elapsed_ms'] = $stage3ElapsedMs;
+            $planSummary['provider_duration_ms'] = [];
+        }
+
         return new ScientificSearchExecutionReport(
             status: $status,
             searchQuery: $searchQuery,
@@ -256,10 +271,36 @@ class MultiSourceScientificSearchOrchestrator
             sourceOutcomes: [],
             results: [],
             deduplicatedResults: [],
-            planSummary: $plan->toArray(),
+            planSummary: $planSummary,
             internetFirst: $plan->isInternetFirst(),
             searchQueries: $searchQueries,
         );
+    }
+
+    private function elapsedMsSince(int $startedNs): int
+    {
+        return max(0, (int) ((hrtime(true) - $startedNs) / 1_000_000));
+    }
+
+    /**
+     * Sum known outcome duration_ms per source key. Missing latency stays absent (never coerced to 0).
+     *
+     * @param  list<ScientificSourceSearchOutcome>  $outcomes
+     * @return array<string, int>
+     */
+    private function providerDurationMsBySource(array $outcomes): array
+    {
+        $sums = [];
+        foreach ($outcomes as $outcome) {
+            $ms = $outcome->toArray()['duration_ms'] ?? null;
+            if (! is_int($ms)) {
+                continue;
+            }
+            $key = $outcome->sourceKey;
+            $sums[$key] = ($sums[$key] ?? 0) + $ms;
+        }
+
+        return $sums;
     }
 
     /**

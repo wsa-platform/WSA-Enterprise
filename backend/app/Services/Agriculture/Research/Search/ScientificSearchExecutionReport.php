@@ -60,6 +60,12 @@ final class ScientificSearchExecutionReport
                 $this->deduplicatedResults,
             ),
             'plan' => $this->planSummary,
+            // RC-L Phase-1: stage/provider timing surfaced for forensics (nulls omitted, never invented).
+            'timings' => array_filter([
+                'stage3_elapsed_ms' => $this->planSummary['stage3_elapsed_ms'] ?? null,
+                'provider_duration_ms' => $this->planSummary['provider_duration_ms'] ?? null,
+                'search_time_budget_seconds' => $this->planSummary['search_time_budget_seconds'] ?? null,
+            ], static fn (mixed $v): bool => $v !== null),
             'validation' => [
                 'performed' => false,
                 'stage' => 4,
