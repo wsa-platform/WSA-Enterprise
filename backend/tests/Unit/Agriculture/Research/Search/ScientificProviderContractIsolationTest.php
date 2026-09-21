@@ -91,8 +91,16 @@ class ScientificProviderContractIsolationTest extends TestCase
 
         $this->assertContains('openalex', $report->successfulSources);
         $this->assertNotContains('openalex', $report->failedSources);
-        $this->assertSame('fao_stat', $report->attemptedSources[0] ?? $report->selectedSources[0] ?? null);
+        // Phase 3-B: non-statistical plans execute scholarly before FAOSTAT consideration.
+        $this->assertContains('fao_stat', array_merge(
+            $report->attemptedSources,
+            $report->failedSources,
+            $report->emptySources,
+            $report->selectedSources,
+        ));
+        $this->assertSame('openalex', $report->attemptedSources[0] ?? null);
         $this->assertArrayHasKey('search_time_budget_seconds', $report->planSummary);
+        $this->assertArrayHasKey('search_observability', $report->planSummary);
     }
 
     /**

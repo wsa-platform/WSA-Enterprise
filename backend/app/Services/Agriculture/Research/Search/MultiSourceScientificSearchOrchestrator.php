@@ -4,6 +4,7 @@ namespace App\Services\Agriculture\Research\Search;
 
 use App\Contracts\ScientificSourceAdapterInterface;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatProviderQueryIdentity;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatQclDimensionResolver;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatRuntimePolicy;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatSearchOptionsResolver;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
@@ -40,12 +41,14 @@ class MultiSourceScientificSearchOrchestrator
     public function execute(KnowledgeQueryPlan $plan, int $limit = 10, ?array $sourceKeys = null): ScientificSearchExecutionReport
     {
         $stage3StartedNs = hrtime(true);
-        $variants = $this->queryBuilder->buildVariantsFromPlan($plan);
+        $variantBudget = ScientificSearchVariantBudget::apply($this->queryBuilder->buildVariantsFromPlan($plan));
+        $variants = $variantBudget['variants'];
         $searchQuery = $variants[0] ?? $this->queryBuilder->buildFromPlan($plan);
+        $selectionTrace = $this->sourceSelector->selectionTrace($plan);
 
         $selectedSources = $sourceKeys !== null
-            ? $this->filterEnabledSources($sourceKeys)
-            : $this->sourceSelector->selectSources($plan);
+            ? $this->filterEnabledSources($sourceKeys, $plan)
+            : $selectionTrace['selected'];
         if ($selectedSources === []) {
             return $this->emptyReport(
                 plan: $plan,
@@ -53,6 +56,18 @@ class MultiSourceScientificSearchOrchestrator
                 searchQuery: $searchQuery,
                 searchQueries: $variants,
                 stage3ElapsedMs: $this->elapsedMsSince($stage3StartedNs),
+                searchObservability: $this->buildSearchObservability(
+                    selectionTrace: $selectionTrace,
+                    variantBudget: $variantBudget,
+                    selectedSources: [],
+                    adapterStatus: [],
+                    outcomes: [],
+                    collections: [],
+                    rawCount: 0,
+                    dedupCount: 0,
+                    finalCount: 0,
+                    concurrencyMode: 'none',
+                ),
             );
         }
 
@@ -64,10 +79,22 @@ class MultiSourceScientificSearchOrchestrator
                 selectedSources: $selectedSources,
                 searchQueries: $variants,
                 stage3ElapsedMs: $this->elapsedMsSince($stage3StartedNs),
+                searchObservability: $this->buildSearchObservability(
+                    selectionTrace: $selectionTrace,
+                    variantBudget: $variantBudget,
+                    selectedSources: $selectedSources,
+                    adapterStatus: [],
+                    outcomes: [],
+                    collections: [],
+                    rawCount: 0,
+                    dedupCount: 0,
+                    finalCount: 0,
+                    concurrencyMode: 'none',
+                ),
             );
         }
 
-        $adapters = $this->registry->resolveMany($this->prioritizeSources($selectedSources));
+        $adapters = $this->registry->resolveMany($this->prioritizeSources($selectedSources, $plan));
         if ($adapters === []) {
             return $this->emptyReport(
                 plan: $plan,
@@ -76,10 +103,23 @@ class MultiSourceScientificSearchOrchestrator
                 selectedSources: $selectedSources,
                 searchQueries: $variants,
                 stage3ElapsedMs: $this->elapsedMsSince($stage3StartedNs),
+                searchObservability: $this->buildSearchObservability(
+                    selectionTrace: $selectionTrace,
+                    variantBudget: $variantBudget,
+                    selectedSources: $selectedSources,
+                    adapterStatus: [],
+                    outcomes: [],
+                    collections: [],
+                    rawCount: 0,
+                    dedupCount: 0,
+                    finalCount: 0,
+                    concurrencyMode: 'none',
+                ),
             );
         }
 
         $budget = ScientificSearchTimeBudget::start();
+        $concurrencyMode = $this->resolveConcurrencyMode($plan, $adapters);
         $collections = $this->collectProviderExecutions($adapters, $variants, $limit, $plan, $budget);
 
         $outcomes = [];
@@ -134,6 +174,18 @@ class MultiSourceScientificSearchOrchestrator
         };
 
         $stage3ElapsedMs = $this->elapsedMsSince($stage3StartedNs);
+        $searchObservability = $this->buildSearchObservability(
+            selectionTrace: $selectionTrace,
+            variantBudget: $variantBudget,
+            selectedSources: $selectedSources,
+            adapterStatus: $adapterStatus,
+            outcomes: $outcomes,
+            collections: $collections,
+            rawCount: count($allResults),
+            dedupCount: count($deduplicated),
+            finalCount: count($ranked),
+            concurrencyMode: $concurrencyMode,
+        );
 
         return new ScientificSearchExecutionReport(
             status: $status,
@@ -153,6 +205,7 @@ class MultiSourceScientificSearchOrchestrator
                 'adapters_skipped_time_budget' => array_values(array_unique($skippedBudget)),
                 'stage3_elapsed_ms' => $stage3ElapsedMs,
                 'provider_duration_ms' => $this->providerDurationMsBySource($outcomes),
+                'search_observability' => $searchObservability,
                 'result_pipeline' => [
                     'raw_retrieved_count' => count($allResults),
                     'raw_result_count' => count($allResults),
@@ -220,7 +273,7 @@ class MultiSourceScientificSearchOrchestrator
      * @param  list<string>  $sourceKeys
      * @return list<string>
      */
-    private function filterEnabledSources(array $sourceKeys): array
+    private function filterEnabledSources(array $sourceKeys, KnowledgeQueryPlan $plan): array
     {
         $enabled = [];
         foreach ($sourceKeys as $key) {
@@ -240,16 +293,17 @@ class MultiSourceScientificSearchOrchestrator
             }
         }
 
-        return array_values(array_unique($this->prioritizeSources($enabled)));
+        return array_values(array_unique($this->prioritizeSources($enabled, $plan)));
     }
 
     /**
      * Statistical FAOSTAT runs first so a slow scholarly provider cannot consume the whole budget.
+     * Non-statistical Home/Crop flows keep scholarly providers ahead of FAOSTAT consideration.
      *
      * @param  list<string>  $sourceKeys
      * @return list<string>
      */
-    private function prioritizeSources(array $sourceKeys): array
+    private function prioritizeSources(array $sourceKeys, KnowledgeQueryPlan $plan): array
     {
         $preferred = [];
         $rest = [];
@@ -261,12 +315,17 @@ class MultiSourceScientificSearchOrchestrator
             }
         }
 
-        return [...$preferred, ...$rest];
+        if (FaoStatQclDimensionResolver::hasQuantitativeStatisticalNeed($plan)) {
+            return [...$preferred, ...$rest];
+        }
+
+        return [...$rest, ...$preferred];
     }
 
     /**
      * @param  list<string>  $selectedSources
      * @param  list<string>  $searchQueries
+     * @param  array<string, mixed>|null  $searchObservability
      */
     private function emptyReport(
         KnowledgeQueryPlan $plan,
@@ -275,11 +334,15 @@ class MultiSourceScientificSearchOrchestrator
         array $selectedSources = [],
         array $searchQueries = [],
         ?int $stage3ElapsedMs = null,
+        ?array $searchObservability = null,
     ): ScientificSearchExecutionReport {
         $planSummary = $plan->toArray();
         if ($stage3ElapsedMs !== null) {
             $planSummary['stage3_elapsed_ms'] = $stage3ElapsedMs;
             $planSummary['provider_duration_ms'] = [];
+        }
+        if ($searchObservability !== null) {
+            $planSummary['search_observability'] = $searchObservability;
         }
 
         return new ScientificSearchExecutionReport(
@@ -328,7 +391,7 @@ class MultiSourceScientificSearchOrchestrator
     /**
      * @param  list<ScientificSourceAdapterInterface>  $adapters
      * @param  list<string>  $variants
-     * @return array<string, array{attempted: bool, adapterStatus: string, outcomes: list<ScientificSourceSearchOutcome>, results: list<ScientificSearchResult>, skippedBudget: bool}>
+     * @return array<string, array{attempted: bool, adapterStatus: string, outcomes: list<ScientificSourceSearchOutcome>, results: list<ScientificSearchResult>, skippedBudget: bool, variantsAttempted: int, equivalentVariantsSuppressed: int}>
      */
     private function collectProviderExecutions(
         array $adapters,
@@ -356,10 +419,15 @@ class MultiSourceScientificSearchOrchestrator
             }
         }
 
-        $collections = $this->collectAdaptersSequentially($faoAdapters, $variants, $limit, $plan, $budget, 0);
+        $prioritizeFaostat = FaoStatQclDimensionResolver::hasQuantitativeStatisticalNeed($plan);
+        $collections = [];
         $priorResultCount = 0;
-        foreach ($faoAdapters as $adapter) {
-            $priorResultCount += count($collections[$adapter->sourceKey()]['results']);
+
+        if ($prioritizeFaostat) {
+            $collections = $this->collectAdaptersSequentially($faoAdapters, $variants, $limit, $plan, $budget, 0);
+            foreach ($faoAdapters as $adapter) {
+                $priorResultCount += count($collections[$adapter->sourceKey()]['results']);
+            }
         }
 
         $scholarlyCollections = $this->collectIndependentScholarlyAdapters(
@@ -374,6 +442,22 @@ class MultiSourceScientificSearchOrchestrator
             $key = $adapter->sourceKey();
             $collections[$key] = $scholarlyCollections[$key];
             $priorResultCount += count($collections[$key]['results']);
+        }
+
+        if (! $prioritizeFaostat && $faoAdapters !== []) {
+            $faoCollections = $this->collectAdaptersSequentially(
+                $faoAdapters,
+                $variants,
+                $limit,
+                $plan,
+                $budget,
+                $priorResultCount,
+            );
+            foreach ($faoAdapters as $adapter) {
+                $key = $adapter->sourceKey();
+                $collections[$key] = $faoCollections[$key];
+                $priorResultCount += count($collections[$key]['results']);
+            }
         }
 
         $otherCollections = $this->collectAdaptersSequentially(
@@ -537,6 +621,8 @@ class MultiSourceScientificSearchOrchestrator
                         ],
                         'results' => [],
                         'skippedBudget' => false,
+                        'variantsAttempted' => 0,
+                        'equivalentVariantsSuppressed' => 0,
                     ];
                 }
 
@@ -623,7 +709,7 @@ class MultiSourceScientificSearchOrchestrator
     }
 
     /**
-     * @return array{attempted: bool, adapterStatus: string, outcomes: list<ScientificSourceSearchOutcome>, results: list<ScientificSearchResult>, skippedBudget: bool}
+     * @return array{attempted: bool, adapterStatus: string, outcomes: list<ScientificSourceSearchOutcome>, results: list<ScientificSearchResult>, skippedBudget: bool, variantsAttempted: int, equivalentVariantsSuppressed: int}
      */
     private static function unavailableWaveCollection(string $sourceKey): array
     {
@@ -639,6 +725,8 @@ class MultiSourceScientificSearchOrchestrator
             ],
             'results' => [],
             'skippedBudget' => false,
+            'variantsAttempted' => 0,
+            'equivalentVariantsSuppressed' => 0,
         ];
     }
 
@@ -674,6 +762,8 @@ class MultiSourceScientificSearchOrchestrator
                 ],
                 'results' => [],
                 'skippedBudget' => true,
+                'variantsAttempted' => 0,
+                'equivalentVariantsSuppressed' => 0,
             ];
         }
 
@@ -683,8 +773,10 @@ class MultiSourceScientificSearchOrchestrator
         $skippedBudget = false;
         $skipRemainingVariants = false;
         $variantsAttempted = 0;
+        $equivalentVariantsSuppressed = 0;
         $key = $adapter->sourceKey();
         $isFaostat = $key === FaoStatRuntimePolicy::canonicalSourceKey();
+        $seenScholarlyIdentities = [];
 
         // FAOSTAT: execute each canonical dimension tuple once (multi-measure decomposition).
         // NL search variants must not re-hit the portal for equivalent identities.
@@ -710,6 +802,8 @@ class MultiSourceScientificSearchOrchestrator
                 unset($opts['_faostat_canonical_queries']);
                 $identity = FaoStatProviderQueryIdentity::fromOptions($opts);
                 if ($identity !== null && isset($seenIdentities[$identity])) {
+                    $equivalentVariantsSuppressed++;
+
                     continue;
                 }
                 if ($identity !== null) {
@@ -763,6 +857,8 @@ class MultiSourceScientificSearchOrchestrator
                 'outcomes' => $outcomes,
                 'results' => $results,
                 'skippedBudget' => $skippedBudget,
+                'variantsAttempted' => $variantsAttempted,
+                'equivalentVariantsSuppressed' => $equivalentVariantsSuppressed,
             ];
         }
 
@@ -776,6 +872,14 @@ class MultiSourceScientificSearchOrchestrator
 
                 continue;
             }
+
+            $variantIdentity = ScientificSearchVariantBudget::identityKey($variant);
+            if (isset($seenScholarlyIdentities[$variantIdentity])) {
+                $equivalentVariantsSuppressed++;
+
+                continue;
+            }
+            $seenScholarlyIdentities[$variantIdentity] = true;
 
             $outcome = $adapter->search(
                 $variant,
@@ -824,6 +928,120 @@ class MultiSourceScientificSearchOrchestrator
             'outcomes' => $outcomes,
             'results' => $results,
             'skippedBudget' => $skippedBudget,
+            'variantsAttempted' => $variantsAttempted,
+            'equivalentVariantsSuppressed' => $equivalentVariantsSuppressed,
+        ];
+    }
+
+    /**
+     * @param  list<ScientificSourceAdapterInterface>  $adapters
+     */
+    private function resolveConcurrencyMode(KnowledgeQueryPlan $plan, array $adapters): string
+    {
+        if (! $this->shouldOverlapIndependentScholarlyProviders($plan)
+            || $this->independentScholarlyAdapterCount($adapters) < 2) {
+            return 'sequential';
+        }
+
+        return FaoStatQclDimensionResolver::hasQuantitativeStatisticalNeed($plan)
+            ? 'home_overlap_faostat_first'
+            : 'home_overlap_scholarly_first';
+    }
+
+    /**
+     * @param  array<string, mixed>  $selectionTrace
+     * @param  array<string, mixed>  $variantBudget
+     * @param  list<string>  $selectedSources
+     * @param  array<string, string>  $adapterStatus
+     * @param  list<ScientificSourceSearchOutcome>  $outcomes
+     * @param  array<string, array<string, mixed>>  $collections
+     * @return array<string, mixed>
+     */
+    private function buildSearchObservability(
+        array $selectionTrace,
+        array $variantBudget,
+        array $selectedSources,
+        array $adapterStatus,
+        array $outcomes,
+        array $collections,
+        int $rawCount,
+        int $dedupCount,
+        int $finalCount,
+        string $concurrencyMode,
+    ): array {
+        $providerVariantCounts = [];
+        $executionCount = 0;
+        $duplicateSuppressedExecutions = (int) ($variantBudget['equivalent_suppressed'] ?? 0)
+            + (int) ($variantBudget['truncated'] ?? 0);
+        $timeouts = 0;
+        $retryCounts = 0;
+
+        foreach ($collections as $key => $collection) {
+            $attempted = (int) ($collection['variantsAttempted'] ?? 0);
+            $suppressed = (int) ($collection['equivalentVariantsSuppressed'] ?? 0);
+            $providerVariantCounts[$key] = [
+                'attempted' => $attempted,
+                'equivalent_suppressed' => $suppressed,
+                'max_per_provider' => self::MAX_VARIANTS_PER_PROVIDER,
+            ];
+            $executionCount += $attempted;
+            $duplicateSuppressedExecutions += $suppressed;
+        }
+
+        foreach ($outcomes as $outcome) {
+            $error = (string) ($outcome->error ?? '');
+            if ($error === 'timeout' || str_contains($error, 'timeout')) {
+                $timeouts++;
+            }
+            $obs = is_array($outcome->observability) ? $outcome->observability : [];
+            if (isset($obs['retry_count']) && is_numeric($obs['retry_count'])) {
+                $retryCounts += (int) $obs['retry_count'];
+            } elseif (isset($obs['retries']) && is_numeric($obs['retries'])) {
+                $retryCounts += (int) $obs['retries'];
+            }
+        }
+
+        $successful = [];
+        $failed = [];
+        $empty = [];
+        $skipped = [];
+        foreach ($adapterStatus as $key => $status) {
+            match ($status) {
+                'success' => $successful[] = $key,
+                'failed' => $failed[] = $key,
+                'skipped' => $skipped[] = $key,
+                default => $empty[] = $key,
+            };
+        }
+
+        return [
+            'selected_providers' => array_values($selectedSources),
+            'skipped_providers' => array_values(array_unique(array_merge(
+                $selectionTrace['skipped_inactive'] ?? [],
+                $skipped,
+            ))),
+            'optional_not_selected' => $selectionTrace['optional_not_selected'] ?? ScientificSourceSelector::OPTIONAL_SOURCES,
+            'faostat_consideration' => $selectionTrace['faostat_consideration'] ?? null,
+            'selection_policy' => $selectionTrace['policy'] ?? null,
+            'variant_count' => (int) ($variantBudget['output_count'] ?? count($variantBudget['variants'] ?? [])),
+            'variant_input_count' => (int) ($variantBudget['input_count'] ?? 0),
+            'variant_equivalent_suppressed' => (int) ($variantBudget['equivalent_suppressed'] ?? 0),
+            'variant_truncated' => (int) ($variantBudget['truncated'] ?? 0),
+            'max_variants' => ScientificSearchVariantBudget::MAX_VARIANTS,
+            'max_variants_per_provider' => self::MAX_VARIANTS_PER_PROVIDER,
+            'provider_variant_counts' => $providerVariantCounts,
+            'execution_count' => $executionCount,
+            'duplicate_suppressed_executions' => $duplicateSuppressedExecutions,
+            'successful_provider_calls' => $successful,
+            'empty_provider_responses' => $empty,
+            'provider_failures' => $failed,
+            'timeouts' => $timeouts,
+            'retry_counts' => $retryCounts,
+            'normalized_result_count' => $rawCount,
+            'deduplicated_result_count' => $dedupCount,
+            'final_handoff_result_count' => $finalCount,
+            'concurrency_mode' => $concurrencyMode,
+            'provider_status' => $adapterStatus,
         ];
     }
 }

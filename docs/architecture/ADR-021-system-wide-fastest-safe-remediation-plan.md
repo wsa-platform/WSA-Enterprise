@@ -96,6 +96,20 @@ Repair:
 
 Do not solve coverage problems by blindly increasing query volume.
 
+#### Phase 3-B Search & Provider policy (implemented)
+
+| Concern | Policy |
+|---|---|
+| Variant budget | Global ≤ 5 (`ScientificSearchVariantBudget`); per-provider ≤ 2; equivalent NL variants suppressed |
+| Provider selection | Internet-First defaults + universal FAOSTAT consideration when portal enabled; Consensus optional/never auto-selected |
+| Execution order | Statistical need → FAOSTAT first; otherwise scholarly first; Crop profile remains sequential |
+| Concurrency | Home `generic_research` may overlap independent scholarly providers; Crop stays sequential |
+| Timeout / retry | `ScientificHttp` bounded timeout (default 15s, capped to remaining budget); ≤ 3 rate-limit attempts with backoff |
+| Failure isolation | Per-provider success/empty/failed/skipped/timeout; healthy providers retained |
+| Dedup | DOI/URL/id/title+year for scholarly; structured statistical `identityKey` for FAOSTAT |
+| Observability | Internal `plan.search_observability` (not a public API envelope change) |
+| FAOSTAT | Phase 3-A contract unchanged (Portal-only, QCL map, query identity, pipeline outcomes) |
+
 ### Phase 4 — Evidence + Validation + Ranking
 
 Unify the Evidence lifecycle:
