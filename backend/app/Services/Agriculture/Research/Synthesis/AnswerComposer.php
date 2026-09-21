@@ -239,8 +239,46 @@ class AnswerComposer
                 'independent_search' => false,
                 'validation_bypassed' => false,
                 'evidence_directness_filter' => true,
-            ],
+            ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, $usable),
         );
+    }
+
+    /**
+     * Phase-5 Unit A — embed Question→Claims→Evidence→AnswerStatement matrix.
+     * Does not own Phase-4 axes or R5 persistence.
+     *
+     * @param  list<ScientificEvidenceItem>  $usable
+     * @return array<string, mixed>
+     */
+    private function phase5QuestionClaimMatrix(
+        KnowledgeQueryPlan $plan,
+        ?EvidenceValidationExecutionReport $validationReport,
+        array $usable = [],
+    ): array {
+        $report = $validationReport ?? new EvidenceValidationExecutionReport(
+            status: 'no_valid_evidence',
+            validatedEvidence: [],
+            rejectedEvidence: [],
+            sourcesReceived: 0,
+            validatedCount: 0,
+            rejectedCount: 0,
+            duplicateCount: 0,
+            conflictingCount: 0,
+            evidenceSufficient: false,
+            validatorsUsed: [],
+            qualityDistribution: [],
+            searchSummary: [],
+            observability: [],
+        );
+        $matrix = (new QuestionClaimSynthesisContract)->build($plan, $report, $usable);
+
+        return [
+            'phase5_unit_a' => true,
+            'question_claims' => $matrix['question_claims'],
+            'claim_evidence_bindings' => $matrix['claim_evidence_bindings'],
+            'answer_statement_traces' => $matrix['answer_statement_traces'],
+            'question_claim_matrix_version' => $matrix['matrix_version'],
+        ];
     }
 
     private function isSynthesizable(ScientificEvidenceItem $item, KnowledgeQueryPlan $plan): bool
@@ -763,6 +801,7 @@ class AnswerComposer
                 numericalValues: $this->extractNumericalValues($groundedText),
                 limitations: $limitations,
                 conditions: is_array($item->conditions) ? json_encode($item->conditions) : null,
+                questionClaimId: 'qc-1',
             );
         }
 
@@ -1924,7 +1963,7 @@ class AnswerComposer
                 'independent_search' => false,
                 'validation_bypassed' => false,
                 'failure_reason' => (string) ($sufficiency['reason'] ?? 'supporting_only'),
-            ],
+            ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, $usable),
         );
     }
 
@@ -1997,7 +2036,7 @@ class AnswerComposer
                 'independent_search' => false,
                 'validation_bypassed' => false,
                 'failure_reason' => $reason,
-            ],
+            ] + $this->phase5QuestionClaimMatrix($plan, null, []),
         );
     }
 }

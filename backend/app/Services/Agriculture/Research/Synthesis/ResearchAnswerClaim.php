@@ -24,6 +24,7 @@ final class ResearchAnswerClaim
         public readonly array $numericalValues = [],
         public readonly array $limitations = [],
         public readonly ?string $conditions = null,
+        public readonly ?string $questionClaimId = null,
     ) {}
 
     /** @return array<string, mixed> */
@@ -40,6 +41,7 @@ final class ResearchAnswerClaim
             'numerical_values' => $this->numericalValues,
             'limitations' => $this->limitations,
             'conditions' => $this->conditions,
+            'question_claim_id' => $this->questionClaimId,
         ];
     }
 }
