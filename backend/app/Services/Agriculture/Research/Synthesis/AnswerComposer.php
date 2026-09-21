@@ -91,7 +91,7 @@ class AnswerComposer
         }
 
         $citations = $this->buildCitations($usable, $sufficiency);
-        $claims = $this->buildClaims($usable, $plan);
+        $claims = $this->buildClaims($usable, $plan, $validationReport);
         if ($claims === []) {
             return $this->insufficientReport(
                 status: 'insufficient_evidence',
@@ -108,6 +108,14 @@ class AnswerComposer
         // Findings may include supporting for metadata/additional; main answer body gates DIRECT-only.
         $keyFindings = $this->buildKeyFindings($claims, $usable, $plan, $language);
         $limitations = $this->buildLimitations($validationReport, $usable, $language, $sufficiency);
+        foreach ($claims as $claim) {
+            foreach ($claim->limitations as $limitation) {
+                $limitation = trim((string) $limitation);
+                if ($limitation !== '' && ! in_array($limitation, $limitations, true)) {
+                    $limitations[] = $limitation;
+                }
+            }
+        }
         $uncertainty = $this->resolveUncertainty(
             $validationReport,
             $usable,
@@ -777,49 +785,136 @@ class AnswerComposer
     }
 
     /**
+     * Phase-5 Unit B2 — build ResearchAnswerClaims from QuestionClaim → Evidence traces.
+     * Consumes Unit-A matrix / Phase-4 relationships; does not recalculate claim_relation.
+     *
      * @param  list<ScientificEvidenceItem>  $items
      * @return list<ResearchAnswerClaim>
      */
-    private function buildClaims(array $items, KnowledgeQueryPlan $plan): array
-    {
-        $claims = [];
+    private function buildClaims(
+        array $items,
+        KnowledgeQueryPlan $plan,
+        ?EvidenceValidationExecutionReport $validationReport = null,
+    ): array {
+        $report = $validationReport ?? new EvidenceValidationExecutionReport(
+            status: 'no_valid_evidence',
+            validatedEvidence: [],
+            rejectedEvidence: [],
+            sourcesReceived: 0,
+            validatedCount: 0,
+            rejectedCount: 0,
+            duplicateCount: 0,
+            conflictingCount: 0,
+            evidenceSufficient: false,
+            validatorsUsed: [],
+            qualityDistribution: [],
+            searchSummary: [],
+            observability: [],
+        );
+
+        $matrix = (new QuestionClaimSynthesisContract)->build($plan, $report, $items);
+        $itemsById = [];
         foreach ($items as $item) {
-            if ($item->evidenceText === null || trim($item->evidenceText) === '') {
+            $itemsById[$item->evidenceId] = $item;
+        }
+
+        $claims = [];
+        foreach ($matrix['answer_statement_traces'] as $trace) {
+            $questionClaimId = (string) ($trace['question_claim_id'] ?? '');
+            if ($questionClaimId === '') {
                 continue;
             }
 
-            $evidenceBody = $this->isDirectStatisticalEvidence($item)
-                ? trim($item->publicationTitle."\n".$item->evidenceText)
-                : $item->evidenceText;
-            $groundedText = $this->selectGroundedSnippet($evidenceBody, $plan, $item->publicationTitle);
-            if ($groundedText === '') {
-                continue;
-            }
+            $relationship = (string) ($trace['aggregate_claim_relationship']
+                ?? ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE);
+            $answerEligible = (bool) ($trace['answer_eligible'] ?? false);
+            $evidenceIds = array_values(array_filter(
+                array_map('strval', is_array($trace['evidence_ids'] ?? null) ? $trace['evidence_ids'] : []),
+            ));
+            $sourceIds = array_values(array_filter(
+                array_map('strval', is_array($trace['source_ids'] ?? null) ? $trace['source_ids'] : []),
+            ));
+            $limitations = array_values(array_filter(
+                array_map('strval', is_array($trace['limitations'] ?? null) ? $trace['limitations'] : []),
+            ));
 
-            $limitations = [];
-            if ($item->claimRelationship === ClaimEvidenceRelationship::PARTIALLY_SUPPORTED) {
-                $limitations[] = 'partial_evidence_support';
-            }
-            if ($item->hasConflict) {
-                $limitations[] = 'conflicting_evidence';
-            }
-            $directness = $this->resolveDirectness($item, $plan);
-            if ($directness === ScientificEvidenceDirectnessAssessor::SUPPORTING) {
-                $limitations[] = 'supporting_not_direct_evidence';
+            $claimText = '';
+            $numericalValues = [];
+            $confidence = 0.0;
+            $validationStatus = 'insufficient_evidence';
+            $conditions = null;
+
+            if ($answerEligible
+                && $relationship !== ClaimEvidenceRelationship::CONFLICTING
+                && $relationship !== ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE
+            ) {
+                foreach ($evidenceIds as $evidenceId) {
+                    $item = $itemsById[$evidenceId] ?? null;
+                    if ($item === null || $item->evidenceText === null || trim($item->evidenceText) === '') {
+                        continue;
+                    }
+                    if ($item->claimRelationship === ClaimEvidenceRelationship::CONFLICTING || $item->hasConflict) {
+                        continue;
+                    }
+
+                    $evidenceBody = $this->isDirectStatisticalEvidence($item)
+                        ? trim($item->publicationTitle."\n".$item->evidenceText)
+                        : $item->evidenceText;
+                    $groundedText = $this->selectGroundedSnippet($evidenceBody, $plan, $item->publicationTitle);
+                    if ($groundedText === '') {
+                        continue;
+                    }
+
+                    $claimText = $groundedText;
+                    $numericalValues = $this->extractNumericalValues($groundedText);
+                    $confidence = $item->confidence;
+                    $validationStatus = $item->validationStatus;
+                    $conditions = is_array($item->conditions) ? json_encode($item->conditions) : null;
+
+                    if ($item->claimRelationship === ClaimEvidenceRelationship::PARTIALLY_SUPPORTED
+                        && ! in_array('partial_evidence_support', $limitations, true)) {
+                        $limitations[] = 'partial_evidence_support';
+                    }
+                    $directness = $this->resolveDirectness($item, $plan);
+                    if ($directness === ScientificEvidenceDirectnessAssessor::SUPPORTING
+                        && ! in_array('supporting_not_direct_evidence', $limitations, true)) {
+                        $limitations[] = 'supporting_not_direct_evidence';
+                    }
+                    break;
+                }
+
+                // Eligible but no grounded snippet — treat as non-factual for prose; keep claim identity.
+                if ($claimText === '') {
+                    $answerEligible = false;
+                    $limitations[] = 'insufficient_validated_evidence_for_question_claim';
+                    $relationship = ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE;
+                }
+            } elseif ($relationship === ClaimEvidenceRelationship::CONFLICTING) {
+                // Preserve conflict identity without selecting a convenient conflicting value as fact.
+                $claimText = '';
+                $validationStatus = 'conflicting';
+                if (! in_array('conflicting_evidence_for_question_claim', $limitations, true)) {
+                    $limitations[] = 'conflicting_evidence_for_question_claim';
+                }
+            } else {
+                $claimText = '';
+                if (! in_array('insufficient_validated_evidence_for_question_claim', $limitations, true)) {
+                    $limitations[] = 'insufficient_validated_evidence_for_question_claim';
+                }
             }
 
             $claims[] = new ResearchAnswerClaim(
-                claimId: 'claim-'.$item->evidenceId,
-                claimText: $groundedText,
-                evidenceIds: [$item->evidenceId],
-                sourceIds: [$item->sourceId],
-                validationStatus: $item->validationStatus,
-                claimRelationship: $item->claimRelationship,
-                confidence: $item->confidence,
-                numericalValues: $this->extractNumericalValues($groundedText),
-                limitations: $limitations,
-                conditions: is_array($item->conditions) ? json_encode($item->conditions) : null,
-                questionClaimId: 'qc-1',
+                claimId: 'claim-'.$questionClaimId,
+                claimText: $claimText,
+                evidenceIds: $evidenceIds,
+                sourceIds: $sourceIds,
+                validationStatus: $validationStatus,
+                claimRelationship: $relationship,
+                confidence: $confidence,
+                numericalValues: $numericalValues,
+                limitations: array_values(array_unique($limitations)),
+                conditions: $conditions,
+                questionClaimId: $questionClaimId,
             );
         }
 
@@ -1095,9 +1190,16 @@ class AnswerComposer
         $hasDirect = in_array(ScientificEvidenceDirectnessAssessor::DIRECT, $directnessByEvidenceId, true);
 
         $findings = [];
-        // Pass 1: non-conflicting claims. When DIRECT exists, main answer uses DIRECT only.
+        // Pass 1: non-conflicting, claim-eligible factual statements only.
         foreach ($ordered as $claim) {
-            if ($claim->claimRelationship === ClaimEvidenceRelationship::CONFLICTING) {
+            if ($claim->questionClaimId === null || trim($claim->questionClaimId) === '') {
+                continue;
+            }
+            if ($claim->claimRelationship === ClaimEvidenceRelationship::CONFLICTING
+                || $claim->claimRelationship === ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE) {
+                continue;
+            }
+            if (trim($claim->claimText) === '') {
                 continue;
             }
             if ($hasDirect && ! $this->claimIsDirect($claim, $directnessByEvidenceId)) {
@@ -1112,6 +1214,12 @@ class AnswerComposer
         // Pass 2: usable DIRECT claims even if marked conflicting (secondary noise).
         if ($findings === []) {
             foreach ($ordered as $claim) {
+                if ($claim->questionClaimId === null || trim($claim->questionClaimId) === '') {
+                    continue;
+                }
+                if (trim($claim->claimText) === '') {
+                    continue;
+                }
                 if (! $this->claimIsDirect($claim, $directnessByEvidenceId)) {
                     continue;
                 }
@@ -1125,6 +1233,16 @@ class AnswerComposer
         // Pass 3: no DIRECT — keep supporting findings for metadata/additional (main answer still gated).
         if ($findings === [] && ! $hasDirect) {
             foreach ($ordered as $claim) {
+                if ($claim->questionClaimId === null || trim($claim->questionClaimId) === '') {
+                    continue;
+                }
+                if ($claim->claimRelationship === ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE
+                    || $claim->claimRelationship === ClaimEvidenceRelationship::CONFLICTING) {
+                    continue;
+                }
+                if (trim($claim->claimText) === '') {
+                    continue;
+                }
                 $sentence = $this->firstSentence($claim->claimText);
                 if ($sentence !== '' && ! in_array($sentence, $findings, true)) {
                     $findings[] = $sentence;

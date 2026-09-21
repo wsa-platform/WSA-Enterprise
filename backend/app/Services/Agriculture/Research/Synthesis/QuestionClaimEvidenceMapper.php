@@ -24,9 +24,14 @@ final class QuestionClaimEvidenceMapper
             return [];
         }
 
+        $claimCount = count($questionClaims);
         $bindings = [];
         foreach ($questionClaims as $claim) {
             foreach ($evidenceItems as $item) {
+                if (! $this->evidenceAddressesClaim($claim, $item, $claimCount)) {
+                    continue;
+                }
+
                 $bindings[] = new QuestionClaimEvidenceBinding(
                     questionClaimId: $claim->claimId,
                     evidenceId: $item->evidenceId,
@@ -56,6 +61,62 @@ final class QuestionClaimEvidenceMapper
         }
 
         return $bindings;
+    }
+
+    /**
+     * Single-claim: bind all evidence (Unit A). Multi-claim: lexical property address only.
+     * Catalog-free — does not call AgriculturalEntityCatalog / FieldCropTaxonomyCatalog.
+     */
+    private function evidenceAddressesClaim(
+        QuestionClaim $claim,
+        ScientificEvidenceItem $item,
+        int $claimCount,
+    ): bool {
+        if ($claimCount <= 1) {
+            return true;
+        }
+
+        $property = mb_strtolower(trim((string) ($claim->property ?? '')));
+        if ($property === '') {
+            return true;
+        }
+
+        $hay = mb_strtolower(trim(implode(' ', array_filter([
+            (string) ($item->publicationTitle ?? ''),
+            (string) ($item->evidenceText ?? ''),
+        ]))));
+
+        foreach ($this->propertyAddressTerms($property) as $term) {
+            if ($term !== '' && mb_strpos($hay, $term) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function propertyAddressTerms(string $property): array
+    {
+        $aliases = [
+            'quantity' => ['quantity', 'production', 'produced', 'output', 'tonnage', 'tons', 'tonnes'],
+            'yield' => ['yield', 'productivity', 'productive'],
+            'area' => ['area', 'harvested', 'hectare', 'hectares', 'ha '],
+            'rate' => ['rate', 'dosage', 'seed rate', 'seeding'],
+            'irrigation' => ['irrigation', 'water requirement', 'watering'],
+            'temperature' => ['temperature', 'celsius', '°c', 'deg c'],
+            'production' => ['production', 'quantity', 'produced', 'output'],
+        ];
+
+        $terms = $aliases[$property] ?? [];
+        $terms[] = $property;
+
+        return array_values(array_unique(array_map(
+            static fn (string $term): string => mb_strtolower(trim($term)),
+            $terms,
+        )));
     }
 
     /**
