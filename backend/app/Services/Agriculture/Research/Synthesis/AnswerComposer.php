@@ -36,11 +36,8 @@ class AnswerComposer
         KnowledgeQueryPlan $plan,
         EvidenceValidationExecutionReport $validationReport,
     ): AnswerSynthesisExecutionReport {
-        $language = trim((string) ($plan->normalizedQuery->constraints['answer_language'] ?? ''));
-        if ($language === '') {
-            $locale = strtolower(substr((string) app()->getLocale(), 0, 2));
-            $language = in_array($locale, ['en', 'ar', 'tr', 'fr'], true) ? $locale : 'en';
-        }
+        // R2: answer language follows the question contract only — never UI/app locale.
+        $language = $this->resolveComposeAnswerLanguage($plan);
         $query = $plan->normalizedQuery->originalQuestion;
 
         if (in_array($validationReport->status, ['needs_clarification', 'no_search_results'], true)) {
@@ -279,6 +276,27 @@ class AnswerComposer
             'answer_statement_traces' => $matrix['answer_statement_traces'],
             'question_claim_matrix_version' => $matrix['matrix_version'],
         ];
+    }
+
+    /**
+     * R2: Composer consumes plan answer_language (question language).
+     * Never uses app()/UI/platform locale. Missing answer_language falls back to
+     * normalizedQuery.language only; unknown/empty aligns with QUS und→en.
+     */
+    private function resolveComposeAnswerLanguage(KnowledgeQueryPlan $plan): string
+    {
+        $fromContract = strtolower(substr(trim((string) ($plan->normalizedQuery->constraints['answer_language'] ?? '')), 0, 2));
+        if (in_array($fromContract, ['en', 'ar', 'tr', 'fr'], true)) {
+            return $fromContract;
+        }
+
+        $fromQuestion = strtolower(substr(trim((string) ($plan->normalizedQuery->language ?? '')), 0, 2));
+        if (in_array($fromQuestion, ['en', 'ar', 'tr', 'fr'], true)) {
+            return $fromQuestion;
+        }
+
+        // Contract gap: upstream should populate answer_language. Do not use UI locale.
+        return 'en';
     }
 
     private function isSynthesizable(ScientificEvidenceItem $item, KnowledgeQueryPlan $plan): bool
