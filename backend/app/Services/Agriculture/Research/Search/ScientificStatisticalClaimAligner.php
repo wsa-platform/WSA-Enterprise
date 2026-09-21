@@ -2,11 +2,14 @@
 
 namespace App\Services\Agriculture\Research\Search;
 
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatQclDimensionResolver;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatQclElementSemantics;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 
 /**
  * Claim alignment for structured statistical observations.
  * Matches entity, location, year, and measure family — never provider identity.
+ * Prefers structured FAOSTAT codes / requested property surfaces over keyword precedence.
  */
 final class ScientificStatisticalClaimAligner
 {
@@ -37,17 +40,18 @@ final class ScientificStatisticalClaimAligner
 
     public static function measureFamily(string $surface): string
     {
+        $families = FaoStatQclElementSemantics::detectMeasuresInSurface($surface);
+        if (count($families) === 1) {
+            return $families[0];
+        }
+        if (count($families) > 1) {
+            // Ambiguous multi-measure surface — do not silently prefer yield or production.
+            return '';
+        }
+
         $blob = mb_strtolower(trim($surface));
         if ($blob === '') {
             return '';
-        }
-        if (str_contains($blob, 'yield') || str_contains($blob, 'إنتاجية') || str_contains($blob, 'محصول')) {
-            return 'yield';
-        }
-        if (str_contains($blob, 'area harvested')
-            || str_contains($blob, 'harvested area')
-            || str_contains($blob, 'مساحة')) {
-            return 'area_harvested';
         }
         if (preg_match('/\bimports?\b/u', $blob) === 1 || str_contains($blob, 'واردات')) {
             return 'imports';
@@ -63,22 +67,6 @@ final class ScientificStatisticalClaimAligner
         }
         if (preg_match('/\bvalues?\b/u', $blob) === 1 || str_contains($blob, 'قيمة')) {
             return 'value';
-        }
-
-        $hasWaterSignal = preg_match('/\b(?:water|irrigation)\b/u', $blob) === 1
-            || str_contains($blob, 'مياه')
-            || str_contains($blob, 'ماء')
-            || str_contains($blob, 'ري');
-        if (! $hasWaterSignal && (
-            str_contains($blob, 'production')
-            || str_contains($blob, 'quantity produced')
-            || preg_match('/\bproduced\b/u', $blob) === 1
-            || str_contains($blob, 'quantity')
-            || str_contains($blob, 'إنتاج')
-            || str_contains($blob, 'المنتج')
-            || str_contains($blob, 'كمية')
-        )) {
-            return 'production_quantity';
         }
 
         $slug = preg_replace('/[^a-z0-9]+/i', '_', $blob) ?: $blob;
@@ -98,13 +86,38 @@ final class ScientificStatisticalClaimAligner
     private function entityMatches(KnowledgeQueryPlan $plan, ScientificStructuredObservation $observation): bool
     {
         $query = $plan->normalizedQuery;
+        $constraints = is_array($query->constraints) ? $query->constraints : [];
+
+        // Prefer structured FAOSTAT item identity when present (never taxonomy-ID equality alone).
+        $wantedCodes = array_values(array_filter([
+            trim((string) ($constraints['item'] ?? '')),
+            trim((string) ($constraints['item_code'] ?? '')),
+            trim((string) ($constraints['fao_item_code'] ?? '')),
+        ], static fn (string $code): bool => $code !== '' && preg_match('/^\d{1,8}$/', $code) === 1));
+        if ($wantedCodes !== [] && $observation->entityCode !== '') {
+            foreach ($wantedCodes as $code) {
+                if ($code === $observation->entityCode) {
+                    return true;
+                }
+            }
+        }
+
         $wanted = array_values(array_filter([
             is_string($query->cropId) ? $query->cropId : '',
             is_string($query->crop) ? $query->crop : '',
             is_string($query->scientificName) ? $query->scientificName : '',
-            is_array($query->subject) ? (string) ($query->subject['value'] ?? '') : '',
-            is_array($query->subject) ? (string) ($query->subject['label'] ?? '') : '',
         ]));
+
+        // Subject contributes only when it is an entity/crop subject — not a topic slug.
+        if (is_array($query->subject)) {
+            $subjectType = strtolower(trim((string) ($query->subject['type'] ?? '')));
+            if (in_array($subjectType, ['crop', 'entity', 'organism', 'species', 'item'], true)) {
+                $wanted[] = (string) ($query->subject['value'] ?? '');
+                $wanted[] = (string) ($query->subject['label'] ?? '');
+            }
+        }
+        $wanted = array_values(array_filter($wanted));
+
         $observed = array_values(array_filter([$observation->entity, $observation->entityCode]));
         if ($wanted === []) {
             return $this->anyTokenInBlob($observed, $this->questionBlob($plan));
@@ -145,29 +158,65 @@ final class ScientificStatisticalClaimAligner
     {
         $query = $plan->normalizedQuery;
         $constraints = is_array($query->constraints) ? $query->constraints : [];
-        $wantedCode = trim((string) ($constraints['element'] ?? $constraints['element_code'] ?? $constraints['query_element_code'] ?? ''));
-        if ($wantedCode !== '' && $observation->propertyCode !== '' && $wantedCode === $observation->propertyCode) {
+        $wantedCode = trim((string) (
+            $constraints['element']
+            ?? $constraints['element_code']
+            ?? $constraints['query_element_code']
+            ?? ''
+        ));
+        // Element-code short-circuit only for quantitative statistical needs — never for
+        // mechanism/physiology questions that merely inherited forced FAOSTAT filters.
+        if ($wantedCode !== ''
+            && $observation->propertyCode !== ''
+            && FaoStatQclDimensionResolver::hasQuantitativeStatisticalNeed($plan)
+            && FaoStatQclElementSemantics::codesCompatible($wantedCode, $observation->propertyCode)
+        ) {
             return true;
         }
 
         $observedFamily = self::measureFamily($observation->property);
-        $questionFamily = self::measureFamily(trim($query->originalQuestion.' '.$query->normalizedQuestion));
+        if ($observedFamily === '' && $observation->propertyCode !== '') {
+            $observedFamily = (string) (FaoStatQclElementSemantics::measureForAnyCode($observation->propertyCode) ?? '');
+        }
+
         $surfaceFamily = self::measureFamily(trim(implode(' ', array_filter([
             (string) ($constraints['requested_property_surface'] ?? ''),
             (string) ($constraints['requested_property_key'] ?? ''),
             (string) ($constraints['requested_property'] ?? ''),
+            (string) ($constraints['element_label'] ?? ''),
         ]))));
 
-        if ($questionFamily !== '' && $observedFamily === $questionFamily) {
-            return true;
-        }
         if ($surfaceFamily !== '' && $observedFamily === $surfaceFamily) {
             return true;
         }
-        if ($questionFamily !== '' && $questionFamily !== $observedFamily) {
+        if ($surfaceFamily !== '' && $surfaceFamily !== $observedFamily) {
             return false;
         }
-        if ($surfaceFamily !== '' && $surfaceFamily !== $observedFamily) {
+
+        $requestedMeasures = FaoStatQclElementSemantics::detectRequestedMeasures($plan);
+        if (count($requestedMeasures) === 1 && $observedFamily === $requestedMeasures[0]) {
+            return true;
+        }
+        if (count($requestedMeasures) > 1) {
+            // Decomposed multi-measure: accept an observation whose measure is one of the requested set.
+            if ($observedFamily !== '' && in_array($observedFamily, $requestedMeasures, true)) {
+                return true;
+            }
+            if ($observation->propertyCode !== '') {
+                $codeMeasure = FaoStatQclElementSemantics::measureForAnyCode($observation->propertyCode);
+                if ($codeMeasure !== null && in_array($codeMeasure, $requestedMeasures, true)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        $questionFamily = self::measureFamily(trim($query->originalQuestion.' '.$query->normalizedQuestion));
+        if ($questionFamily !== '' && $observedFamily === $questionFamily) {
+            return true;
+        }
+        if ($questionFamily !== '' && $questionFamily !== $observedFamily) {
             return false;
         }
 

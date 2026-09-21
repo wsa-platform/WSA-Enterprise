@@ -204,6 +204,22 @@ WSA MUST:
 
 This behavior is verified for tested QCL measures but is not yet established as a universal FAOSTAT rule across all domains.
 
+## 9.1 Phase 3-A Measure Resolution & Pipeline Outcomes
+
+Phase 3-A general remediation requires:
+
+- Resolve QCL **query** element codes from structured statistical intent (`production_quantity` → `2510`, `yield` → `2413`, `area_harvested` → `2312`).
+- Never default every quantitative need to Production Quantity (`2510`).
+- When multiple measures are explicitly requested and area/item/year are complete, **decompose** into one canonical portal query per measure (`DECOMPOSED_MEASURES`). Preserve all measures; never silently pick one.
+- When multiple measures are requested but dimensions are incomplete, leave the element unresolved (`AMBIGUOUS_MEASURES`) rather than guessing.
+- When an explicit element code contradicts an explicit structured measure surface, return `MEASURE_CONFLICT` (no silent certainty).
+- Treat query/response dual codes as compatible only via the verified pairs above — never by `+3000` arithmetic and never by collapsing codes.
+- Map WSA crop taxonomy identity → FAOSTAT item codes through an explicit label/slug map; never treat a numeric taxonomy ID as a FAOSTAT item code.
+- QCL label→code resolution during search uses the versioned verified local map only (`resources/faostat/qcl_verified_dimension_map.php`). Unknown labels stay unresolved (`INCOMPLETE_FILTERS`) and must not probe the live portal codes API. Expand the map only via offline-reviewed imports.
+- Canonicalize equivalent FAOSTAT provider queries by `domain|area|item|element|year` so NL variants do not re-execute the same portal request.
+- Record internal pipeline stages under `planSummary.faostat_pipeline_outcome` and `planSummary.result_pipeline.stages` without changing the public result envelope. The historical field `deduplicatedResults` remains the post-rank filtered survivor list.
+- Provider registration Model B: `AgriculturalProviderRegistry` (capabilities) and `ScientificSourceAdapterRegistry` (runtime adapters) share one canonical identity `fao_stat` and one activation flag.
+
 ## 10. Language Contract
 
 This ADR MUST NOT change the established WSA language contract:

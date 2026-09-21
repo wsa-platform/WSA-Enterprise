@@ -8,6 +8,7 @@ use App\Services\Agriculture\Research\Search\ScientificSearchResult;
 /**
  * Claim/need relevance for FAOSTAT observations.
  * Does not ask whether the question is agricultural.
+ * Query and response element codes may differ when they share a verified measure pair.
  */
 final class FaoStatObservationRelevanceGate
 {
@@ -63,14 +64,9 @@ final class FaoStatObservationRelevanceGate
      */
     private function dimensionMismatches(array $need, array $observation): array
     {
-        $map = [
-            'area' => ['area_code', 'area'],
-            'item' => ['item_code', 'item'],
-            'element' => ['query_element_code', 'element_code', 'response_element_code'],
-            'year' => ['year', 'year_code'],
-        ];
         $mismatches = [];
-        foreach ($map as $filter => $obsKeys) {
+
+        foreach (['area' => ['area_code', 'area'], 'item' => ['item_code', 'item'], 'year' => ['year', 'year_code']] as $filter => $obsKeys) {
             if (! isset($need[$filter])) {
                 continue;
             }
@@ -84,6 +80,23 @@ final class FaoStatObservationRelevanceGate
             }
             if (! $matched) {
                 $mismatches[] = $filter;
+            }
+        }
+
+        if (isset($need['element'])) {
+            $wantedElement = (string) $need['element'];
+            $matched = false;
+            foreach (['query_element_code', 'element_code', 'response_element_code'] as $key) {
+                if (! isset($observation[$key])) {
+                    continue;
+                }
+                if (FaoStatQclElementSemantics::codesCompatible($wantedElement, (string) $observation[$key])) {
+                    $matched = true;
+                    break;
+                }
+            }
+            if (! $matched) {
+                $mismatches[] = 'element';
             }
         }
 

@@ -57,7 +57,7 @@ class FaoStatDuplicateVariantExecutionTest extends TestCase
         $this->assertSame(2, $openAlexCalls);
     }
 
-    public function test_empty_faostat_does_not_skip_second_variant(): void
+    public function test_empty_faostat_skips_equivalent_second_variant(): void
     {
         $faoCalls = 0;
         $fao = $this->adapter(FaoStatRuntimePolicy::canonicalSourceKey(), function () use (&$faoCalls) {
@@ -72,10 +72,10 @@ class FaoStatDuplicateVariantExecutionTest extends TestCase
 
         $this->orchestrator($fao, $this->idleOpenAlex())->execute($this->plan(), 5, ['fao_stat', 'openalex']);
 
-        $this->assertSame(2, $faoCalls);
+        $this->assertSame(1, $faoCalls, 'equivalent FAOSTAT options must not re-execute on EMPTY_RESULT');
     }
 
-    public function test_failed_faostat_does_not_skip_second_variant(): void
+    public function test_failed_faostat_skips_equivalent_second_variant(): void
     {
         $faoCalls = 0;
         $fao = $this->adapter(FaoStatRuntimePolicy::canonicalSourceKey(), function () use (&$faoCalls) {
@@ -91,10 +91,10 @@ class FaoStatDuplicateVariantExecutionTest extends TestCase
 
         $this->orchestrator($fao, $this->idleOpenAlex())->execute($this->plan(), 5, ['fao_stat', 'openalex']);
 
-        $this->assertSame(2, $faoCalls);
+        $this->assertSame(1, $faoCalls, 'equivalent FAOSTAT options must not re-execute after failure');
     }
 
-    public function test_faostat_429_keeps_existing_failed_variant_policy(): void
+    public function test_faostat_429_skips_equivalent_second_variant(): void
     {
         $faoCalls = 0;
         $openAlexCalls = 0;
@@ -116,11 +116,11 @@ class FaoStatDuplicateVariantExecutionTest extends TestCase
 
         $this->orchestrator($fao, $openAlex)->execute($this->plan(), 5, ['fao_stat', 'openalex']);
 
-        $this->assertSame(2, $faoCalls, 'FAOSTAT 429 is FAILED, not complete success; remaining variant stays eligible');
+        $this->assertSame(1, $faoCalls, 'FAOSTAT options are variant-invariant; 429 must not re-query the portal');
         $this->assertSame(2, $openAlexCalls);
     }
 
-    public function test_success_without_complete_observation_does_not_skip_second_variant(): void
+    public function test_success_without_complete_observation_still_skips_equivalent_variant(): void
     {
         $faoCalls = 0;
         $fao = $this->adapter(FaoStatRuntimePolicy::canonicalSourceKey(), function () use (&$faoCalls) {
@@ -131,7 +131,7 @@ class FaoStatDuplicateVariantExecutionTest extends TestCase
 
         $this->orchestrator($fao, $this->idleOpenAlex())->execute($this->plan(), 5, ['fao_stat', 'openalex']);
 
-        $this->assertSame(2, $faoCalls);
+        $this->assertSame(1, $faoCalls);
     }
 
     public function test_complete_faostat_does_not_stop_other_providers(): void
@@ -170,7 +170,7 @@ class FaoStatDuplicateVariantExecutionTest extends TestCase
         $this->assertSame(2, $faoCalls, 'each execute() must independently run FAOSTAT variant 1');
     }
 
-    public function test_non_empty_incomplete_result_does_not_trigger_guard(): void
+    public function test_incomplete_observation_does_not_reexecute_equivalent_query(): void
     {
         $faoCalls = 0;
         $sequence = [
@@ -185,7 +185,7 @@ class FaoStatDuplicateVariantExecutionTest extends TestCase
 
         $this->orchestrator($fao, $this->idleOpenAlex())->execute($this->plan(), 5, ['fao_stat']);
 
-        $this->assertSame(2, $faoCalls);
+        $this->assertSame(1, $faoCalls, 'incomplete observation must not trigger a second equivalent FAOSTAT call');
     }
 
     public function test_provider_eligibility_remains_unchanged(): void

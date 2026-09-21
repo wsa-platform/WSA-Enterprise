@@ -58,24 +58,6 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
             );
         }
 
-        $preflight = $this->readiness->searchPreflight();
-        if ($preflight['ok'] !== true) {
-            return new ScientificSourceSearchOutcome(
-                sourceKey: $this->sourceKey(),
-                status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
-                error: $preflight['error'],
-                observability: [
-                    'reason' => $preflight['readiness'],
-                    'readiness' => $preflight['readiness'],
-                    'activation_state' => $preflight['details']['activation_state'] ?? null,
-                    'circuit_open' => $preflight['details']['circuit_open'] ?? false,
-                    'selected' => true,
-                    'considered' => true,
-                ],
-            );
-        }
-
-        $started = hrtime(true);
         $domain = strtoupper(trim((string) ($options['domain'] ?? $options['domain_code'] ?? 'QCL')));
         try {
             $this->client->assertDomainAllowed($domain);
@@ -89,6 +71,8 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
             );
         }
 
+        // Resolve dimensions before any HTTP (auth/preflight/data). Incomplete filters must
+        // never trigger portal traffic.
         $filters = $this->resolveFilters($domain, $options);
         if (($filters['error'] ?? null) === FaoStatErrorCategory::AMBIGUOUS_CODE) {
             return new ScientificSourceSearchOutcome(
@@ -113,7 +97,7 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
                     'forced' => false,
                     'domain' => $domain,
                     'activation_state' => FaoStatActivationPolicy::activationState($domain),
-                    'readiness' => $preflight['readiness'],
+                    'readiness' => FaoStatReadinessState::READY,
                     'missing' => array_keys(array_filter([
                         'area' => $area === null,
                         'item' => $item === null,
@@ -123,6 +107,25 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
                 ],
             );
         }
+
+        $preflight = $this->readiness->searchPreflight();
+        if ($preflight['ok'] !== true) {
+            return new ScientificSourceSearchOutcome(
+                sourceKey: $this->sourceKey(),
+                status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
+                error: $preflight['error'],
+                observability: [
+                    'reason' => $preflight['readiness'],
+                    'readiness' => $preflight['readiness'],
+                    'activation_state' => $preflight['details']['activation_state'] ?? null,
+                    'circuit_open' => $preflight['details']['circuit_open'] ?? false,
+                    'selected' => true,
+                    'considered' => true,
+                ],
+            );
+        }
+
+        $started = hrtime(true);
 
         $queryUrl = $this->reconstructQueryUrl($domain, $area, $item, $element, $year);
 

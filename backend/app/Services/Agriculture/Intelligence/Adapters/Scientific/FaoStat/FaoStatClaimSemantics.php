@@ -51,17 +51,36 @@ final class FaoStatClaimSemantics
             'area' => self::firstNonEmpty([
                 is_string($query->location) ? $query->location : null,
                 is_string($constraints['location'] ?? null) ? (string) $constraints['location'] : null,
-                self::containsLabel($blob, ['italy', 'italia']) ? 'Italy' : null,
             ]),
             'item' => self::firstNonEmpty([
                 is_string($query->crop) ? $query->crop : null,
                 is_string($query->cropId) ? $query->cropId : null,
-                self::containsLabel($blob, ['wheat', 'triticum aestivum']) ? 'Wheat' : null,
             ]),
-            'element' => self::containsLabel($blob, ['production quantity', 'production', 'produced'])
-                ? 'production'
-                : null,
+            'element' => self::elementLabel($blob, $constraints),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $constraints
+     */
+    private static function elementLabel(string $blob, array $constraints): ?string
+    {
+        $surface = trim(implode(' ', array_filter([
+            (string) ($constraints['requested_property_surface'] ?? ''),
+            (string) ($constraints['element_label'] ?? ''),
+            $blob,
+        ])));
+        $measures = FaoStatQclElementSemantics::detectMeasuresInSurface($surface);
+        if (count($measures) !== 1) {
+            return null;
+        }
+
+        return match ($measures[0]) {
+            FaoStatQclElementSemantics::MEASURE_YIELD => 'yield',
+            FaoStatQclElementSemantics::MEASURE_AREA_HARVESTED => 'area_harvested',
+            FaoStatQclElementSemantics::MEASURE_PRODUCTION_QUANTITY => 'production',
+            default => null,
+        };
     }
 
     public static function kind(string $blob): string

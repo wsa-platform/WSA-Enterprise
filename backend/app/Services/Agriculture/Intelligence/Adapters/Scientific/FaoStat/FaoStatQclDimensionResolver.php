@@ -2,33 +2,20 @@
 
 namespace App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat;
 
+use App\Services\Agriculture\FieldCropTaxonomyCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 
 /**
  * Verified QCL dimension codes only. Does not invent unverified FAOSTAT codes.
- * Query element 2510 and response element 5510 remain separate; never +3000.
+ * Query element codes and response element codes remain separate (ADR-004).
+ * WSA crop taxonomy IDs are never treated as FAOSTAT item codes.
  */
 final class FaoStatQclDimensionResolver
 {
     public const DOMAIN_QCL = 'QCL';
 
-    public const QUERY_ELEMENT_PRODUCTION_QUANTITY = '2510';
-
-    /** @var array<string, string> */
-    private const AREA_CODES = [
-        'italy' => '106',
-        'italia' => '106',
-        'italien' => '106',
-        'إيطاليا' => '106',
-    ];
-
-    /** @var array<string, string> */
-    private const ITEM_CODES = [
-        'wheat' => '15',
-        'triticum aestivum' => '15',
-        'قمح' => '15',
-        'القمح' => '15',
-    ];
+    /** @deprecated Use FaoStatQclElementSemantics::QUERY_PRODUCTION_QUANTITY */
+    public const QUERY_ELEMENT_PRODUCTION_QUANTITY = FaoStatQclElementSemantics::QUERY_PRODUCTION_QUANTITY;
 
     public static function sanitizeDomain(?string $domain): string
     {
@@ -47,13 +34,14 @@ final class FaoStatQclDimensionResolver
 
     public static function areaCode(?string $location, string $blob): ?string
     {
+        $areas = FaoStatQclVerifiedDimensionMap::areas();
         foreach (self::labelCandidates($location) as $label) {
-            if (isset(self::AREA_CODES[$label])) {
-                return self::AREA_CODES[$label];
+            if (isset($areas[$label])) {
+                return $areas[$label];
             }
         }
 
-        foreach (self::AREA_CODES as $label => $code) {
+        foreach ($areas as $label => $code) {
             if (self::containsTerm($blob, $label)) {
                 return $code;
             }
@@ -64,19 +52,56 @@ final class FaoStatQclDimensionResolver
 
     public static function itemCode(?string $crop, string $blob): ?string
     {
+        $items = FaoStatQclVerifiedDimensionMap::items();
         foreach (self::labelCandidates($crop) as $label) {
-            if (isset(self::ITEM_CODES[$label])) {
-                return self::ITEM_CODES[$label];
+            $mapped = self::itemCodeForLabel($label);
+            if ($mapped !== null) {
+                return $mapped;
             }
         }
 
-        foreach (self::ITEM_CODES as $label => $code) {
+        foreach ($items as $label => $code) {
             if (self::containsTerm($blob, $label)) {
                 return $code;
             }
         }
 
         return null;
+    }
+
+    /**
+     * Explicit crop-identity → FAOSTAT item mapping.
+     * Never treats a bare numeric string as a FAOSTAT item code.
+     */
+    public static function itemCodeFromCropIdentity(?string $cropId, ?string $cropLabel, ?string $scientificName, string $blob): ?string
+    {
+        $candidates = [];
+        foreach ([$cropLabel, $cropId, $scientificName] as $value) {
+            $normalized = mb_strtolower(trim((string) $value));
+            if ($normalized === '' || preg_match('/^\d{1,8}$/', $normalized) === 1) {
+                // Numeric-only values are not FAO item codes unless supplied via fao_item_code.
+                continue;
+            }
+            $candidates[] = $normalized;
+        }
+
+        if (is_string($cropId) && $cropId !== '' && preg_match('/^\d{1,8}$/', $cropId) !== 1) {
+            foreach (FieldCropTaxonomyCatalog::searchTermsFor($cropId) as $term) {
+                $normalized = mb_strtolower(trim($term));
+                if ($normalized !== '') {
+                    $candidates[] = $normalized;
+                }
+            }
+        }
+
+        foreach (array_values(array_unique($candidates)) as $label) {
+            $mapped = self::itemCodeForLabel($label);
+            if ($mapped !== null) {
+                return $mapped;
+            }
+        }
+
+        return self::itemCode(null, $blob);
     }
 
     public static function yearCode(array $constraints, string $blob): ?string
@@ -95,11 +120,26 @@ final class FaoStatQclDimensionResolver
         return null;
     }
 
+    /**
+     * Resolve the QCL query element for a statistical need.
+     * Returns null when no measure is requested or multiple measures are ambiguous.
+     *
+     * @return array{element: ?string, measures: list<string>, status: 'resolved'|'unresolved'|'ambiguous'|'not_statistical'}
+     */
+    public static function resolveQueryElement(KnowledgeQueryPlan $plan): array
+    {
+        if (! self::hasQuantitativeStatisticalNeed($plan)) {
+            return ['element' => null, 'measures' => [], 'status' => 'not_statistical'];
+        }
+
+        return FaoStatQclElementSemantics::resolveQueryElement($plan);
+    }
+
     public static function queryElementCode(KnowledgeQueryPlan $plan): ?string
     {
-        return self::hasQuantitativeStatisticalNeed($plan)
-            ? self::QUERY_ELEMENT_PRODUCTION_QUANTITY
-            : null;
+        $resolved = self::resolveQueryElement($plan);
+
+        return $resolved['status'] === 'resolved' ? $resolved['element'] : null;
     }
 
     public static function hasQuantitativeStatisticalNeed(KnowledgeQueryPlan $plan): bool
@@ -122,15 +162,12 @@ final class FaoStatQclDimensionResolver
             return true;
         }
 
+        if (FaoStatQclElementSemantics::detectMeasuresInSurface($blob) !== []) {
+            return true;
+        }
+
         foreach ([
-            'production quantity',
-            'quantity produced',
-            'amount produced',
             'production statistics',
-            'harvested area',
-            'area harvested',
-            'crop yield',
-            'yield statistics',
             'national production',
             'official statistics',
             'faostat',
@@ -158,6 +195,16 @@ final class FaoStatQclDimensionResolver
             || preg_match('/\b((?:19|20)\d{2})\b/u', $blob) === 1
             || str_contains($blob, 'statistics')
             || str_contains($blob, 'quantity');
+    }
+
+    private static function itemCodeForLabel(string $label): ?string
+    {
+        $label = mb_strtolower(trim($label));
+        if ($label === '') {
+            return null;
+        }
+
+        return FaoStatQclVerifiedDimensionMap::items()[$label] ?? null;
     }
 
     /**

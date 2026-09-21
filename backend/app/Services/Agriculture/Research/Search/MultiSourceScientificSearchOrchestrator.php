@@ -3,6 +3,7 @@
 namespace App\Services\Agriculture\Research\Search;
 
 use App\Contracts\ScientificSourceAdapterInterface;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatProviderQueryIdentity;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatRuntimePolicy;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatSearchOptionsResolver;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
@@ -144,6 +145,7 @@ class MultiSourceScientificSearchOrchestrator
             emptySources: $empty,
             sourceOutcomes: $outcomes,
             results: $allResults,
+            // Named historically; value is post-rank / relevance-filtered survivors.
             deduplicatedResults: $ranked,
             planSummary: array_merge($plan->toArray(), [
                 'search_queries' => $variants,
@@ -151,6 +153,21 @@ class MultiSourceScientificSearchOrchestrator
                 'adapters_skipped_time_budget' => array_values(array_unique($skippedBudget)),
                 'stage3_elapsed_ms' => $stage3ElapsedMs,
                 'provider_duration_ms' => $this->providerDurationMsBySource($outcomes),
+                'result_pipeline' => [
+                    'raw_retrieved_count' => count($allResults),
+                    'raw_result_count' => count($allResults),
+                    'after_dedup_count' => count($deduplicated),
+                    'after_rank_filter_count' => count($ranked),
+                    'final_survivor_count' => count($ranked),
+                    'deduplicated_results_field' => 'historical_name_for_post_rank_filtered_survivors',
+                    'deduplicated_results_means' => 'post_rank_filtered_survivors',
+                    'stages' => [
+                        'rawRetrievedResults' => count($allResults),
+                        'deduplicatedResults' => count($deduplicated),
+                        'rankedAndRelevanceFilteredResults' => count($ranked),
+                        'finalResults' => count($ranked),
+                    ],
+                ],
             ]),
             internetFirst: $plan->isInternetFirst(),
             searchQueries: $variants,
@@ -166,7 +183,12 @@ class MultiSourceScientificSearchOrchestrator
     private function optionsForSource(string $sourceKey, KnowledgeQueryPlan $plan): array
     {
         if ($sourceKey === 'fao_stat') {
-            return FaoStatSearchOptionsResolver::fromPlan($plan);
+            $queries = FaoStatSearchOptionsResolver::canonicalQueriesFromPlan($plan);
+            $primary = $queries[0] ?? FaoStatSearchOptionsResolver::fromPlan($plan);
+            // Internal orchestration hint only — never sent as a FAOSTAT query parameter.
+            $primary['_faostat_canonical_queries'] = $queries !== [] ? $queries : [$primary];
+
+            return $primary;
         }
 
         return $this->queryBuilder->buildConsensusRequestOptions($plan);
@@ -661,6 +683,88 @@ class MultiSourceScientificSearchOrchestrator
         $skippedBudget = false;
         $skipRemainingVariants = false;
         $variantsAttempted = 0;
+        $key = $adapter->sourceKey();
+        $isFaostat = $key === FaoStatRuntimePolicy::canonicalSourceKey();
+
+        // FAOSTAT: execute each canonical dimension tuple once (multi-measure decomposition).
+        // NL search variants must not re-hit the portal for equivalent identities.
+        if ($isFaostat) {
+            $canonicalQueries = [];
+            if (isset($baseOptions['_faostat_canonical_queries']) && is_array($baseOptions['_faostat_canonical_queries'])) {
+                $canonicalQueries = $baseOptions['_faostat_canonical_queries'];
+            }
+            if ($canonicalQueries === []) {
+                $canonicalQueries = [$baseOptions];
+            }
+
+            $queryText = $variants[0] ?? '';
+            $seenIdentities = [];
+            foreach ($canonicalQueries as $opts) {
+                if (! is_array($opts)) {
+                    continue;
+                }
+                if ($budget->remainingSeconds() < 1.0) {
+                    $skippedBudget = true;
+                    break;
+                }
+                unset($opts['_faostat_canonical_queries']);
+                $identity = FaoStatProviderQueryIdentity::fromOptions($opts);
+                if ($identity !== null && isset($seenIdentities[$identity])) {
+                    continue;
+                }
+                if ($identity !== null) {
+                    $seenIdentities[$identity] = true;
+                }
+
+                $outcome = $adapter->search(
+                    $queryText,
+                    $limit,
+                    array_merge($opts, [
+                        'search_budget_remaining_seconds' => $budget->remainingSeconds(),
+                    ]),
+                );
+                $variantsAttempted++;
+                $obs = is_array($outcome->observability) ? $outcome->observability : [];
+                if ($identity !== null) {
+                    $obs['query_identity'] = $identity;
+                }
+                $outcome = new ScientificSourceSearchOutcome(
+                    sourceKey: $outcome->sourceKey,
+                    status: $outcome->status,
+                    results: $outcome->results,
+                    error: $outcome->error,
+                    httpStatus: $outcome->httpStatus,
+                    observability: $obs,
+                );
+                $outcomes[] = $outcome;
+
+                if ($outcome->status === ScientificSourceSearchOutcome::STATUS_SUCCESS) {
+                    $adapterStatus = 'success';
+                    $results = array_merge($results, $outcome->results);
+                } elseif ($outcome->status === ScientificSourceSearchOutcome::STATUS_EMPTY) {
+                    if ($adapterStatus !== 'success' && $adapterStatus !== 'failed') {
+                        $adapterStatus = 'empty';
+                    }
+                } elseif ($outcome->status === ScientificSourceSearchOutcome::STATUS_UNAVAILABLE
+                    && $outcome->error === 'missing_api_key') {
+                    if ($adapterStatus !== 'success' && $adapterStatus !== 'failed') {
+                        $adapterStatus = 'skipped';
+                    }
+                } else {
+                    if ($adapterStatus !== 'success') {
+                        $adapterStatus = 'failed';
+                    }
+                }
+            }
+
+            return [
+                'attempted' => true,
+                'adapterStatus' => $adapterStatus,
+                'outcomes' => $outcomes,
+                'results' => $results,
+                'skippedBudget' => $skippedBudget,
+            ];
+        }
 
         foreach ($variants as $variant) {
             if ($skipRemainingVariants || $variantsAttempted >= self::MAX_VARIANTS_PER_PROVIDER) {
@@ -689,42 +793,28 @@ class MultiSourceScientificSearchOrchestrator
                 if ($outcome->results !== [] && ($priorResultCount + count($results)) >= self::ADEQUATE_RESULT_COUNT) {
                     $skipRemainingVariants = true;
                 }
-                if ($key === FaoStatRuntimePolicy::canonicalSourceKey()
-                    && self::hasCompleteStructuredObservation($outcome)) {
-                    $skipRemainingVariants = true;
-                }
-
-                continue;
-            }
-
-            // Missing Consensus key: unavailable but not a provider failure — OA+CR continue.
-            if ($outcome->status === ScientificSourceSearchOutcome::STATUS_UNAVAILABLE
+            } elseif ($outcome->status === ScientificSourceSearchOutcome::STATUS_UNAVAILABLE
                 && $outcome->error === 'missing_api_key') {
+                // Missing Consensus key: unavailable but not a provider failure — OA+CR continue.
                 if ($adapterStatus !== 'success' && $adapterStatus !== 'failed') {
                     $adapterStatus = 'skipped';
                 }
                 $skipRemainingVariants = true;
-
-                continue;
-            }
-
-            if ($outcome->status === ScientificSourceSearchOutcome::STATUS_EMPTY) {
+            } elseif ($outcome->status === ScientificSourceSearchOutcome::STATUS_EMPTY) {
                 if ($adapterStatus !== 'success' && $adapterStatus !== 'failed') {
                     $adapterStatus = 'empty';
                 }
+            } else {
+                // failed / unavailable / rate-limited / timeout — provider-partial only
+                if ($adapterStatus !== 'success') {
+                    $adapterStatus = 'failed';
+                }
 
-                continue;
-            }
-
-            // failed / unavailable / rate-limited / timeout — provider-partial only
-            if ($adapterStatus !== 'success') {
-                $adapterStatus = 'failed';
-            }
-
-            // After first OpenAlex (or any provider) 429, skip remaining variants for
-            // that provider in this request; other providers still run all variants.
-            if (self::isRateLimitedOutcome($outcome)) {
-                $skipRemainingVariants = true;
+                // After first OpenAlex (or any provider) 429, skip remaining variants for
+                // that provider in this request; other providers still run all variants.
+                if (self::isRateLimitedOutcome($outcome)) {
+                    $skipRemainingVariants = true;
+                }
             }
         }
 
