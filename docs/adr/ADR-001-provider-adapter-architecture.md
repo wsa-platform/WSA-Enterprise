@@ -963,7 +963,7 @@ Concrete implementation landed on branch `phase-18-m18-ai-marketing-communicatio
    - Integration contracts: `AgriculturalProviderInterface`, `WebSearchProviderInterface`, `PlantDiseaseAnalysisProviderInterface`
    - **Canonical Agricultural Result** DTO (provider-agnostic)
 2. **Reuse** existing Semantic Scholar / OpenAlex / Crossref adapters via `ScientificAdapterBridgeProvider` — do not duplicate SS.
-3. **FAO/FAOSTAT** is a real `ScientificSourceAdapterInterface` implementation (`FaoStatScientificSourceAdapter`) using `https://fenixservices.fao.org/faostat/api/v1`. Codes are never fabricated; invalid lookups are skipped.
+3. **FAO/FAOSTAT (HISTORICAL note):** Older docs referenced `FaoStatScientificSourceAdapter` on FENIX (`https://fenixservices.fao.org/faostat/api/v1`). That path is **superseded**. Current runtime uses the FAOSTAT **Developer Portal** client (`FaoStatDeveloperPortalClient` → `https://faostatservices.fao.org/api/v1`). See ADR-004. Do not reintroduce FENIX as the active contract.
 4. **Web search is a separate family** from scholarly sources. The intended general web-search provider is **Free Search MCP** (`FREE_SEARCH_MCP_ENABLED`, stdio `uvx free-search-mcp`). Generic HTTP web search (`WEB_SEARCH_ENABLED` + key + endpoint) remains available as a fallback adapter. Either path disabled/unconfigured → `NOT_CONFIGURED` (no fake results). Free Search MCP is general web evidence, not scientific verification.
 5. Disease / MCP / FieldSense / OctoPus adapters are implemented as REST abstractions; missing infra → `NOT_CONFIGURED` / `BLOCKED` (OctoPus license not assumed commercial-OK).
 6. Open-Meteo is the **primary weather** provider; MCP adapters do not duplicate weather logic.
@@ -982,7 +982,7 @@ Concrete implementation landed on branch `phase-18-m18-ai-marketing-communicatio
 |-----------|----------|
 | Registry | `Intelligence/Registry/AgriculturalProviderRegistry.php` |
 | Orchestrator | ADR-002 / `UniversalAnswerOrchestrator` |
-| FAO | `Intelligence/Adapters/Scientific/FaoStatScientificSourceAdapter.php` |
+| FAO | `Intelligence/Adapters/Scientific/FaoStat/FaoStatDeveloperPortalAdapter.php` (CURRENT); legacy FENIX adapter retired |
 | Web | `Intelligence/Adapters/Web/*` |
 | Disease | `Intelligence/Adapters/Disease/*` |
 | Environmental / MCP | `Intelligence/Adapters/Environmental/*` |

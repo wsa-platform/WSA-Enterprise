@@ -19,17 +19,23 @@ class ScientificEvidenceDirectnessAssessor
 
     public const SUPPORTING = 'supporting';
 
-    /** Verification-layer alias of SUPPORTING (DIRECT/SUPPORTED/RELATED labels). */
+    /**
+     * Legacy alias retained for verification-layer compatibility.
+     * R6: Prefer SUPPORTING on the *directness* axis.
+     * Do NOT confuse with ClaimEvidenceRelation::supported (separate claim_relation axis).
+     *
+     * @deprecated Use SUPPORTING for directness; use claim_relation field for claim support.
+     */
     public const SUPPORTED = 'supported';
 
     public const BACKGROUND = 'background';
 
-    /** Verification-layer alias of BACKGROUND. */
+    /** Verification-layer alias of BACKGROUND on the directness axis (related ≠ claim_relation). */
     public const RELATED = 'related';
 
     public const IRRELEVANT = 'irrelevant';
 
-    /** Study-country mismatch vs asked location (publisher geo must not trigger this alone). */
+    /** Geographic mismatch — evidence fails asked geography (directness axis). */
     public const GEOGRAPHIC_MISMATCH = 'geographic_mismatch';
 
     public function __construct(

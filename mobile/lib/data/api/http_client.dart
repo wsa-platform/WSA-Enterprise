@@ -12,6 +12,7 @@ class HttpClient {
     this.timeout = const Duration(seconds: 30),
     this.getToken,
     this.getOrganizationId,
+    this.getAcceptLanguage,
     this.onUnauthorized,
   }) : _http = httpClient ?? http.Client();
 
@@ -20,6 +21,8 @@ class HttpClient {
   final Duration timeout;
   final String? Function()? getToken;
   final int? Function()? getOrganizationId;
+  /// UI locale for Accept-Language (e.g. ar|en|tr|fr). Not the scientific answer language.
+  final String? Function()? getAcceptLanguage;
   void Function()? onUnauthorized;
 
   static List<dynamic> unwrapRows(dynamic decoded) {
@@ -172,9 +175,12 @@ class HttpClient {
   Map<String, String> _headers({bool includeJson = false}) {
     final token = getToken?.call();
     final organizationId = getOrganizationId?.call();
+    // P2-C04 / R2 transport: send UI locale; answer language is derived from question text server-side.
+    final acceptLanguage = getAcceptLanguage?.call() ?? 'ar';
 
     return {
       'Accept': 'application/json',
+      'Accept-Language': acceptLanguage,
       if (includeJson) 'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
       if (organizationId != null) 'X-Organization-Id': '$organizationId',

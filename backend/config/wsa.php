@@ -1,6 +1,8 @@
 <?php
 
 return [
+    // MODEL B: server-authoritative public/demo tenant for unauthenticated research/crop writes.
+    // Clients may still send organization fields for compatibility; they are never used for tenant selection.
     'public_organization_slug' => env('WSA_PUBLIC_ORG_SLUG', 'wsa-demo'),
     'openalex_mailto' => env('OPENALEX_MAILTO', 'wsa-platform@example.com'),
     // Optional OpenAlex API key (query param). Empty → polite pool via mailto only.

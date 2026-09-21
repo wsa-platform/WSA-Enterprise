@@ -16,13 +16,19 @@ export function normalizeResearchQuery(value: string): string | null {
 
 export function resolveResearchSearchError(error: unknown): string {
   if (error instanceof ApiError) {
+    if (
+      error.status === 503 ||
+      /public_organization_unavailable/i.test(error.message)
+    ) {
+      return i18n.t('website.research.errorUnavailable')
+    }
     if (error.status === 404) {
       return i18n.t('website.research.errorNotFound')
     }
     if (error.status === 504 || error.status === 408) {
       return i18n.t('website.research.errorTimeout')
     }
-    if (error.status === 0 || error.status === 502 || error.status === 503) {
+    if (error.status === 0 || error.status === 502) {
       return i18n.t('website.research.errorUnavailable')
     }
     if (error.status >= 500) {
@@ -128,6 +134,26 @@ export function HomeScientificResearchSearchView({
 
           {result.status ? (
             <p className="hp-research-meta">{t('website.research.status', { status: result.status })}</p>
+          ) : null}
+
+          {typeof result.confidence === 'number' ? (
+            <p className="hp-research-meta">
+              {t('website.research.confidence', {
+                confidence: Math.round(result.confidence * 100) / 100,
+                defaultValue: `Confidence: ${Math.round(result.confidence * 100) / 100}`,
+              })}
+            </p>
+          ) : null}
+
+          {Array.isArray(result.limitations) && result.limitations.length > 0 ? (
+            <div className="hp-research-limitations">
+              <h3>{t('website.research.limitationsHeading', { defaultValue: 'Limitations' })}</h3>
+              <ul>
+                {result.limitations.map((limitation, index) => (
+                  <li key={`limitation-${index}`}>{limitation}</li>
+                ))}
+              </ul>
+            </div>
           ) : null}
 
           <div className="hp-research-citations">

@@ -87,6 +87,8 @@ final class KnowledgeQueryPlan
             'library_roles' => self::LIBRARY_ROLES,
             'ambiguity_state' => $this->ambiguityState,
             'clarification_requirements' => $this->clarificationRequirements,
+            // P2-C07 / Phase 2: preserve crop-profile and planning context through serialization.
+            'context_input' => $this->contextInput,
             'ready_for_stage_3' => $this->readyForStage3,
         ];
     }

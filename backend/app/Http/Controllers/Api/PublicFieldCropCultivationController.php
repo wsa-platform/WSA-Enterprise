@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Organization;
 use App\Services\Agriculture\Research\AgriculturalResearchAgent;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Services\Tenancy\PublicTenantResolutionException;
+use App\Services\Tenancy\PublicTenantResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -13,13 +13,15 @@ class PublicFieldCropCultivationController extends Controller
 {
     public function __construct(
         private AgriculturalResearchAgent $researchAgent,
+        private PublicTenantResolver $publicTenantResolver,
     ) {}
 
     public function farmingNeedsProfile(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'organization' => ['required_without:organization_id', 'string', 'max:255'],
-            'organization_id' => ['required_without:organization', 'integer'],
+            // Accepted for client compatibility only — never authoritative for tenant selection (MODEL B).
+            'organization' => ['nullable', 'string', 'max:255'],
+            'organization_id' => ['nullable', 'integer'],
             'selected_crop_id' => ['required', 'string', 'max:64'],
             'selected_crop_name' => ['required', 'string', 'max:255'],
             'selected_category_id' => ['nullable', 'string', 'max:64'],
@@ -29,15 +31,26 @@ class PublicFieldCropCultivationController extends Controller
         ]);
 
         try {
-            $organization = $this->resolvePublicOrganization($validated);
-        } catch (ModelNotFoundException) {
+            $publicTenant = $this->publicTenantResolver->bindPublicTenant();
+        } catch (PublicTenantResolutionException) {
             return response()->json([
-                'load_state' => 'organization_not_found',
-                'message' => 'تعذر العثور على مؤسسة المنصة العامة. تحقق من إعدادات قاعدة البيانات أو معرّف المؤسسة.',
-            ], 404);
+                // Legacy Crop field.
+                'load_state' => 'public_organization_unavailable',
+                'message' => 'Public organization is unavailable.',
+                // Shared Phase-2 error contract (P2-C03 transitional dual-emit).
+                'status' => 'public_organization_unavailable',
+                'error' => [
+                    'code' => 'public_organization_unavailable',
+                    'http_status' => 503,
+                    'message' => 'Public organization is unavailable.',
+                    'details' => null,
+                ],
+            ], 503);
         }
 
-        $profile = $this->researchAgent->conductCropProfileResearch($organization->id, [
+        $this->publicTenantResolver->recordIgnoredClientOrganizationInput($validated, $publicTenant);
+
+        $profile = $this->researchAgent->conductCropProfileResearch($publicTenant->organizationId, [
             'selected_crop_id' => $validated['selected_crop_id'],
             'selected_crop_name' => $validated['selected_crop_name'],
             'selected_category_id' => $validated['selected_category_id'] ?? '',
@@ -47,24 +60,5 @@ class PublicFieldCropCultivationController extends Controller
         ]);
 
         return response()->json($profile);
-    }
-
-    /**
-     * @param  array<string, mixed>  $validated
-     */
-    private function resolvePublicOrganization(array $validated): Organization
-    {
-        if (isset($validated['organization_id'])) {
-            return Organization::query()->findOrFail($validated['organization_id']);
-        }
-
-        $slug = (string) ($validated['organization'] ?? config('wsa.public_organization_slug', 'wsa-demo'));
-
-        $organization = Organization::query()->where('slug', $slug)->first();
-        if ($organization !== null) {
-            return $organization;
-        }
-
-        return Organization::query()->orderBy('id')->firstOrFail();
     }
 }

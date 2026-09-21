@@ -14,7 +14,8 @@ use App\Services\Agriculture\Research\Search\ScientificSearchResult;
  * claim > intent > topic > entity > geo > environment > quality > semantic > citations.
  * Semantic similarity and citation counts alone cannot force DIRECT.
  *
- * Verification labels: DIRECT / SUPPORTED / RELATED / IRRELEVANT / GEOGRAPHIC_MISMATCH
+ * Verification labels (uppercase transport): DIRECT / SUPPORTING / RELATED / IRRELEVANT / GEOGRAPHIC_MISMATCH.
+ * Legacy LABEL_SUPPORTED maps to SUPPORTING on the directness axis (R6 — not claim_relation).
  */
 class EvidenceVerificationLayer
 {

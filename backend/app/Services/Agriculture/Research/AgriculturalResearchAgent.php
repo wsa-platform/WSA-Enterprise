@@ -3,6 +3,7 @@
 namespace App\Services\Agriculture\Research;
 
 use App\Services\Agriculture\Intelligence\Orchestration\UniversalAnswerOrchestrator;
+use App\Services\Agriculture\Research\Home\HomeEvidenceLifecycleDisposition;
 use App\Services\Agriculture\Research\Persistence\KnowledgePersistenceExecutionReport;
 use App\Services\Agriculture\Research\Persistence\ScientificKnowledgePersistenceService;
 use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
@@ -27,6 +28,7 @@ class AgriculturalResearchAgent
         private AnswerComposer $answerComposer,
         private ScientificKnowledgePersistenceService $knowledgePersistenceService,
         private AgriculturalScientificKnowledgeEngine $knowledgeEngine,
+        private HomeEvidenceLifecycleDisposition $homeEvidenceLifecycleDisposition = new HomeEvidenceLifecycleDisposition,
         private ?UniversalAnswerOrchestrator $universalAnswerOrchestrator = null,
     ) {}
 
@@ -155,6 +157,11 @@ class AgriculturalResearchAgent
         );
         $validationReport = $this->scientificValidationService->validate($knowledgePlan, $searchReport);
         $synthesisReport = $this->answerComposer->compose($knowledgePlan, $validationReport);
+        $synthesisReport = $this->applyHomeEvidenceLifecycleDisposition(
+            $knowledgePlan,
+            $validationReport,
+            $synthesisReport,
+        );
         $persistenceReport = $this->knowledgePersistenceService->persist(
             $organizationId,
             $knowledgePlan,
@@ -217,6 +224,11 @@ class AgriculturalResearchAgent
         $scientificSearch = $this->scientificSearchService->search($knowledgePlan);
         $scientificValidation = $this->scientificValidationService->validate($knowledgePlan, $scientificSearch);
         $synthesisReport = $this->answerComposer->compose($knowledgePlan, $scientificValidation);
+        $synthesisReport = $this->applyHomeEvidenceLifecycleDisposition(
+            $knowledgePlan,
+            $scientificValidation,
+            $synthesisReport,
+        );
         $persistenceReport = $this->knowledgePersistenceService->persist(
             $organizationId,
             $knowledgePlan,
@@ -468,5 +480,20 @@ class AgriculturalResearchAgent
     private function isUniversalOrchestratorEnabled(): bool
     {
         return filter_var(config('agricultural_intelligence.orchestrator_enabled', true), FILTER_VALIDATE_BOOL);
+    }
+
+    /**
+     * Home-only: attach evidence lifecycle disposition. Crop profile plans are unchanged.
+     */
+    private function applyHomeEvidenceLifecycleDisposition(
+        KnowledgeQueryPlan $knowledgePlan,
+        EvidenceValidationExecutionReport $validationReport,
+        AnswerSynthesisExecutionReport $synthesisReport,
+    ): AnswerSynthesisExecutionReport {
+        return $this->homeEvidenceLifecycleDisposition->applyToSynthesis(
+            $knowledgePlan,
+            $validationReport,
+            $synthesisReport,
+        );
     }
 }

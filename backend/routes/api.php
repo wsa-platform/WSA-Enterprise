@@ -49,6 +49,7 @@ use App\Http\Controllers\Api\PublicCropLibraryFileController;
 use App\Http\Controllers\Api\PublicFieldCropCultivationController;
 use App\Http\Controllers\Api\PublicFieldCropTaxonomyController;
 use App\Http\Controllers\Api\PublicPlatformController;
+use App\Http\Controllers\Api\PublicResearchFeedbackController;
 use App\Http\Controllers\Api\ReportsController;
 use App\Http\Controllers\Api\SoilController;
 use App\Http\Controllers\Api\TaskController;
@@ -81,6 +82,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/research-agent/search', [AgriculturalResearchAgentController::class, 'search']);
         Route::post('/research-agent/validate', [AgriculturalResearchAgentController::class, 'validate']);
         Route::post('/research-agent/synthesize', [AgriculturalResearchAgentController::class, 'synthesize']);
+        Route::post('/research-agent/feedback', [PublicResearchFeedbackController::class, 'store']);
         Route::post('/plant-diagnosis/analyze', [PlantAiDiagnosisController::class, 'analyze']);
         Route::post('/plant-diagnosis/knowledge', [PlantAiDiagnosisController::class, 'knowledge']);
     });

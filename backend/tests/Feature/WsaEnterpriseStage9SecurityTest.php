@@ -262,20 +262,38 @@ class WsaEnterpriseStage9SecurityTest extends TestCase
         ]);
         $tooLong->assertUnprocessable();
 
+        // MODEL B: organization fields are optional / non-authoritative; omit still uses public tenant.
+        Http::fake([
+            'api.openalex.org/works*' => Http::response(['results' => []], 200),
+            'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
+            'api.semanticscholar.org/*' => Http::response(['data' => []], 200),
+            'faostatservices.fao.org/*' => Http::response(['message' => 'unavailable'], 503),
+            'fenixservices.fao.org/*' => Http::response(['message' => 'unavailable'], 503),
+        ]);
         $missingOrg = $this->postJson('/api/v1/public/research-agent/query', [
             'query' => 'wheat drip irrigation scheduling arid agriculture',
         ]);
-        $missingOrg->assertUnprocessable();
+        $this->assertNotSame(422, $missingOrg->status());
+        $this->assertNotSame(404, $missingOrg->status());
+        $this->assertNoSensitiveLeak($missingOrg);
     }
 
     public function test_12_unknown_organization_does_not_leak_schema(): void
     {
+        // MODEL B: client org slug is ignored — not an existence oracle; public tenant is used.
+        Http::fake([
+            'api.openalex.org/works*' => Http::response(['results' => []], 200),
+            'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
+            'api.semanticscholar.org/*' => Http::response(['data' => []], 200),
+            'faostatservices.fao.org/*' => Http::response(['message' => 'unavailable'], 503),
+            'fenixservices.fao.org/*' => Http::response(['message' => 'unavailable'], 503),
+        ]);
         $response = $this->postJson('/api/v1/public/research-agent/query', [
             'organization' => 'does-not-exist-stage9',
             'query' => 'wheat drip irrigation scheduling arid agriculture',
         ]);
-        $response->assertNotFound();
-        $response->assertJsonPath('message', 'Organization not found.');
+        $response->assertOk();
+        $this->assertNotSame('organization_not_found', $response->json('status'));
         $this->assertStringNotContainsString('SQLSTATE', (string) $response->getContent());
         $this->assertNoSensitiveLeak($response);
     }

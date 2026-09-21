@@ -8,7 +8,13 @@ use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionRepo
 use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
 
 /**
- * Home/Free-Question evidence lifecycle disposition (Phase 10C).
+ * Home/Free-Question evidence lifecycle disposition (Phase 10C / R6 disposition axis).
+ *
+ * Ownership (P2-C11 / R5–R6):
+ * - This class owns Home *lifecycle disposition labels* for observability/API.
+ * - EvidenceVerificationLayer + EvidenceValidationExecutionReport.evidenceSufficient
+ *   own scientific verification / library save eligibility (not Composer alone).
+ * - Composer may emit synthesis status; it is not sole save authority.
  *
  * Crop profile plans are out of scope: every public method returns a no-op
  * when {@see KnowledgeQueryPlan} maps to crop_profile intent.

@@ -264,7 +264,8 @@ class QueryUnderstandingService
         $constraints['negative_constraints'] = $negativeConstraints;
         $constraints['exclusions'] = $negativeConstraints;
         $constraints['question_language'] = $language;
-        $constraints['answer_language'] = $this->resolvePlatformAnswerLanguage();
+        // R2: answer language follows question language (UI locale is independent).
+        $constraints['answer_language'] = $this->resolveAnswerLanguageFromQuestion($language);
         $clarificationRequirements = [];
         $ambiguityState = AgriculturalKnowledgeQuery::AMBIGUITY_CLEAR;
         $hasExplicitEntities = is_array($input['entities'] ?? null) && $input['entities'] !== [];
@@ -476,7 +477,8 @@ class QueryUnderstandingService
             $agriculturalDomain,
         );
         $constraints['question_language'] = $language;
-        $constraints['answer_language'] = $this->resolvePlatformAnswerLanguage();
+        // R2: answer language follows question language (UI locale is independent).
+        $constraints['answer_language'] = $this->resolveAnswerLanguageFromQuestion($language);
 
         return new AgriculturalKnowledgeQuery(
             originalQuestion: $originalQuestion !== '' ? $originalQuestion : $normalizedQuestion,
@@ -555,17 +557,22 @@ class QueryUnderstandingService
     }
 
     /**
-     * Platform UI locale drives answer prose. Question language stays independent.
-     * Reuses SetLocaleFromHeader (Accept-Language → app locale); unsupported/missing → en.
+     * R2: Answer prose follows the question language (not platform UI locale).
+     * Supported: ar|en|tr|fr; und/unknown → en.
      */
-
-    private function resolvePlatformAnswerLanguage(): string
+    private function resolveAnswerLanguageFromQuestion(string $questionLanguage): string
     {
-        $locale = strtolower(substr((string) app()->getLocale(), 0, 2));
+        $language = strtolower(substr(trim($questionLanguage), 0, 2));
 
-        return in_array($locale, SetLocaleFromHeader::SUPPORTED_LOCALES, true)
-            ? $locale
-            : 'en';
+        if ($language === 'un') {
+            $language = 'und';
+        }
+
+        if (in_array($language, SetLocaleFromHeader::SUPPORTED_LOCALES, true)) {
+            return $language;
+        }
+
+        return 'en';
     }
 
     /**

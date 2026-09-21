@@ -15,6 +15,7 @@ class M22HttpClient {
     required this.baseUrl,
     this.getToken,
     this.getOrganizationId,
+    this.getAcceptLanguage,
     this.onUnauthorized,
     http.Client? inner,
   }) : _inner = inner ?? http.Client();
@@ -24,6 +25,7 @@ class M22HttpClient {
       baseUrl: source.baseUrl,
       getToken: source.getToken,
       getOrganizationId: source.getOrganizationId,
+      getAcceptLanguage: source.getAcceptLanguage,
       onUnauthorized: () => source.onUnauthorized?.call(),
       inner: inner,
     );
@@ -32,6 +34,8 @@ class M22HttpClient {
   final String baseUrl;
   final String? Function()? getToken;
   final int? Function()? getOrganizationId;
+  /// UI locale for Accept-Language (ar|en|tr|fr). Not scientific answer language.
+  final String? Function()? getAcceptLanguage;
   void Function()? onUnauthorized;
   final http.Client _inner;
 
@@ -160,10 +164,11 @@ class M22HttpClient {
   Map<String, String> _headers({bool includeJson = false}) {
     final token = getToken?.call();
     final organizationId = getOrganizationId?.call();
+    final acceptLanguage = (getAcceptLanguage?.call() ?? 'ar').trim();
 
     return {
       'Accept': 'application/json',
-      'Accept-Language': 'ar',
+      'Accept-Language': acceptLanguage.isEmpty ? 'ar' : acceptLanguage,
       if (includeJson) 'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
       if (organizationId != null) 'X-Organization-Id': '$organizationId',
