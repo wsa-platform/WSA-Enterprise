@@ -153,20 +153,14 @@ class AgriculturalScientificValidationService
             evidenceSufficient: $evidenceSufficient,
             validatorsUsed: self::VALIDATORS_USED,
             qualityDistribution: $qualityDistribution,
-            searchSummary: [
-                'search_status' => $searchReport->status,
-                'internet_first' => $searchReport->internetFirst,
-                'search_query' => $searchReport->searchQuery,
-                'search_queries' => $searchReport->searchQueries !== []
-                    ? $searchReport->searchQueries
-                    : [$searchReport->searchQuery],
-                'selected_sources' => $searchReport->selectedSources,
-                'attempted_sources' => $searchReport->attemptedSources,
-                'successful_sources' => $searchReport->successfulSources,
-                'direct_evidence_count' => $directCount,
-                'supporting_evidence_count' => $supportingCount,
-                'answer_eligible_supporting_count' => $answerEligibleSupportingCount,
-            ],
+            searchSummary: $this->buildSearchSummary(
+                $searchReport,
+                [
+                    'direct_evidence_count' => $directCount,
+                    'supporting_evidence_count' => $supportingCount,
+                    'answer_eligible_supporting_count' => $answerEligibleSupportingCount,
+                ],
+            ),
             observability: [
                 'failure_reasons' => $this->collectFailureReasons($items),
                 'source_types_used' => array_values(array_unique(array_filter(array_map(
@@ -179,6 +173,8 @@ class AgriculturalScientificValidationService
                     'supporting' => $supportingCount,
                     'answer_eligible_supporting' => $answerEligibleSupportingCount,
                 ],
+                // Phase-4: preserve Phase-3 FAOSTAT pipeline taxonomy (do not collapse to empty).
+                'faostat_pipeline_outcome' => $searchReport->planSummary['faostat_pipeline_outcome'] ?? null,
             ],
         );
     }
@@ -462,17 +458,54 @@ class AgriculturalScientificValidationService
             evidenceSufficient: false,
             validatorsUsed: self::VALIDATORS_USED,
             qualityDistribution: [],
-            searchSummary: [
-                'search_status' => $searchReport->status,
-                'internet_first' => $searchReport->internetFirst,
-                'search_query' => $searchReport->searchQuery,
-            ],
+            searchSummary: $this->buildSearchSummary($searchReport, [
+                'direct_evidence_count' => 0,
+                'supporting_evidence_count' => 0,
+                'answer_eligible_supporting_count' => 0,
+            ]),
             observability: [
                 'failure_reasons' => [$status],
                 'source_types_used' => [],
                 'validation_status_counts' => [],
+                'faostat_pipeline_outcome' => $searchReport->planSummary['faostat_pipeline_outcome'] ?? null,
+                'evidence_directness_counts' => [
+                    'direct' => 0,
+                    'supporting' => 0,
+                    'answer_eligible_supporting' => 0,
+                ],
             ],
         );
+    }
+
+    /**
+     * Propagate Phase-3 search observability into validation without collapsing outcomes.
+     *
+     * @param  array<string, mixed>  $extra
+     * @return array<string, mixed>
+     */
+    private function buildSearchSummary(ScientificSearchExecutionReport $searchReport, array $extra = []): array
+    {
+        $summary = [
+            'search_status' => $searchReport->status,
+            'internet_first' => $searchReport->internetFirst,
+            'search_query' => $searchReport->searchQuery,
+            'search_queries' => $searchReport->searchQueries !== []
+                ? $searchReport->searchQueries
+                : [$searchReport->searchQuery],
+            'selected_sources' => $searchReport->selectedSources,
+            'attempted_sources' => $searchReport->attemptedSources,
+            'successful_sources' => $searchReport->successfulSources,
+            'failed_sources' => $searchReport->failedSources,
+            // Phase-4 handoff: keep FAOSTAT retrieval vs downstream rejection distinguishable.
+            'faostat_pipeline_outcome' => $searchReport->planSummary['faostat_pipeline_outcome'] ?? null,
+            'result_pipeline' => $searchReport->planSummary['result_pipeline'] ?? null,
+        ];
+
+        foreach ($extra as $key => $value) {
+            $summary[$key] = $value;
+        }
+
+        return $summary;
     }
 
     /**

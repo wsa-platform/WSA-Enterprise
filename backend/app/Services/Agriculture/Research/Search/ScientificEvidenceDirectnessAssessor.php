@@ -4,9 +4,14 @@ namespace App\Services\Agriculture\Research\Search;
 
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
+use App\Services\Agriculture\Research\Validation\CatalogSafeLandSignals;
 
 /**
- * Classifies how directly a scholarly result answers the structured scientific intent.
+ * Classifies how directly a scholarly result answers the structured scientific intent (Phase 4 / R6).
+ *
+ * Ownership:
+ * - Emits the directness axis only (not claim_relation, disposition, sufficiency, or ranking).
+ * - May call RelevanceGate for candidate context; Gate relevance ≠ directness.
  *
  * DIRECT — studies the requested entity+topic+sense relationship.
  * SUPPORTING — on-entity/topic but incomplete for the full claim.
@@ -110,11 +115,49 @@ class ScientificEvidenceDirectnessAssessor
         $requiredSenseFactorMissing = $this->requiredSenseFactorMissing($factors, $haystack);
         $oilDemotion = $this->essentialOilPrimaryDemotion($plan, $haystack);
         $landClassification = $this->isLandClassificationQuestion($plan);
+        $speciesRelation = (string) ($relevance['species_relation'] ?? '');
+        $requiresEntity = (bool) ($relevance['requires_entity'] ?? false);
 
-        // Entity-less land/agriculture domain: greenhouse/ornamental/protected without land
-        // classification signals must not auto-SUPPORTING.
+        if ($requiresEntity && in_array($speciesRelation, ['different_species', 'entity_less'], true)) {
+            return [
+                'directness' => self::SUPPORTING,
+                'score' => 10.0 + (8.0 * $factorCoverage),
+                'reasons' => ['entity_identity_incompatible_for_direct'],
+                'factor_coverage' => round($factorCoverage, 3),
+                'sense_coverage' => $senseCoverage,
+                'entity_matched' => $entityMatched,
+                'topic_matched' => $topicMatched,
+            ];
+        }
+
+        if ($requiresEntity && $speciesRelation === 'genus_only') {
+            return [
+                'directness' => self::SUPPORTING,
+                'score' => 12.0 + (8.0 * $factorCoverage),
+                'reasons' => ['genus_only_not_identity_direct'],
+                'factor_coverage' => round($factorCoverage, 3),
+                'sense_coverage' => $senseCoverage,
+                'entity_matched' => $entityMatched,
+                'topic_matched' => $topicMatched,
+            ];
+        }
+
+        // Entity-less land/agriculture domain: greenhouse/irrigation/etc. without real
+        // classification answerability must not become DIRECT (or auto-SUPPORTING).
+        // Method/ML/GIS/framework papers without a types inventory → RELATED/BACKGROUND.
         if ($landClassification) {
-            if ($this->hasLandOfftopicWithoutLandSignals($haystack)) {
+            if (CatalogSafeLandSignals::isMethodologyOnlyWithoutInventory($haystack)) {
+                return [
+                    'directness' => self::RELATED,
+                    'score' => 8.0,
+                    'reasons' => ['land_classification_method_only_without_inventory'],
+                    'factor_coverage' => round($factorCoverage, 3),
+                    'sense_coverage' => $senseCoverage,
+                    'entity_matched' => $entityMatched,
+                    'topic_matched' => $this->hasLandClassificationSignals($haystack),
+                ];
+            }
+            if ($this->hasLandOfftopicWithoutClassificationAnswerability($haystack)) {
                 return [
                     'directness' => self::IRRELEVANT,
                     'score' => 0.0,
@@ -125,7 +168,8 @@ class ScientificEvidenceDirectnessAssessor
                     'topic_matched' => false,
                 ];
             }
-            if (! $this->hasLandClassificationSignals($haystack)) {
+            if (! $this->hasLandClassificationSignals($haystack)
+                && ! $this->hasClassificationAnswerability($haystack)) {
                 return [
                     'directness' => self::IRRELEVANT,
                     'score' => 0.0,
@@ -194,13 +238,27 @@ class ScientificEvidenceDirectnessAssessor
             }
 
             // THIS-TASK: required-evidence answerability for typed factual questions
-            // (includes species_list_or_taxonomy for plant_family).
+            // (includes species_list_or_taxonomy for plant_family). Land geo/method WIP is below.
+            // Do not demote generic effect/growth DIRECT hits that already passed qualifier answerability.
             if ($this->requiresTypedEvidenceAnswerability($plan)
                 && ! $this->hasRequiredEvidenceAnswerability($plan, $haystack)) {
                 return [
                     'directness' => self::SUPPORTING,
                     'score' => 14.0 + (8.0 * $factorCoverage),
                     'reasons' => ['missing_required_evidence_answerability'],
+                    'factor_coverage' => round($factorCoverage, 3),
+                    'sense_coverage' => $senseCoverage,
+                    'entity_matched' => true,
+                    'topic_matched' => true,
+                ];
+            }
+
+            // Land classification inventory: asked geography must appear for DIRECT.
+            if ($landClassification && ! $this->landClassificationGeoSatisfied($plan, $haystack)) {
+                return [
+                    'directness' => self::RELATED,
+                    'score' => 12.0 + (6.0 * $factorCoverage),
+                    'reasons' => ['land_classification_missing_asked_geography'],
                     'factor_coverage' => round($factorCoverage, 3),
                     'sense_coverage' => $senseCoverage,
                     'entity_matched' => true,
@@ -218,6 +276,10 @@ class ScientificEvidenceDirectnessAssessor
                 $directScore += 6.0;
                 $reasons[] = 'growth_evidence_preferred';
             }
+            if ($landClassification && $this->hasClassificationAnswerability($haystack)) {
+                $directScore += 6.0;
+                $reasons[] = 'land_classification_answerable';
+            }
 
             return [
                 'directness' => self::DIRECT,
@@ -226,6 +288,37 @@ class ScientificEvidenceDirectnessAssessor
                 'factor_coverage' => round($factorCoverage, 3),
                 'sense_coverage' => $senseCoverage,
                 'entity_matched' => true,
+                'topic_matched' => true,
+            ];
+        }
+
+        // Land classification with true classification/types content → DIRECT even without crop entity.
+        if ($landClassification
+            && $this->hasClassificationAnswerability($haystack)
+            && $this->hasRequiredEvidenceAnswerability($plan, $haystack)
+            && $this->landClassificationGeoSatisfied($plan, $haystack)) {
+            return [
+                'directness' => self::DIRECT,
+                'score' => 42.0 + (10.0 * $factorCoverage),
+                'reasons' => ['land_classification_answerable'],
+                'factor_coverage' => round($factorCoverage, 3),
+                'sense_coverage' => true,
+                'entity_matched' => $entityMatched,
+                'topic_matched' => true,
+            ];
+        }
+
+        // Inventory answerable but missing asked geography → RELATED (not DIRECT).
+        if ($landClassification
+            && $this->hasClassificationAnswerability($haystack)
+            && ! $this->landClassificationGeoSatisfied($plan, $haystack)) {
+            return [
+                'directness' => self::RELATED,
+                'score' => 16.0 + (8.0 * $factorCoverage),
+                'reasons' => ['land_classification_missing_asked_geography'],
+                'factor_coverage' => round($factorCoverage, 3),
+                'sense_coverage' => true,
+                'entity_matched' => $entityMatched,
                 'topic_matched' => true,
             ];
         }
@@ -706,14 +799,17 @@ class ScientificEvidenceDirectnessAssessor
 
     private function isLandClassificationQuestion(KnowledgeQueryPlan $plan): bool
     {
+        $hay = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+        if (CatalogSafeLandSignals::isLandOrSoilClassificationMethodQuestion($hay)) {
+            return false;
+        }
+
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
         if ($sense === 'land_classification') {
             return true;
         }
-
-        $hay = mb_strtolower(trim(
-            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
-        ));
 
         return preg_match(
             '/land\s*types?|soil\s*classification|land\s*classification|أنواع\s*(?:ال)?أراضي|انواع\s*(?:ال)?اراضي|تصنيف\s*(?:ال)?أراضي|تصنيف\s*(?:ال)?اراضي/u',
@@ -737,24 +833,66 @@ class ScientificEvidenceDirectnessAssessor
         return false;
     }
 
-    private function hasLandOfftopicWithoutLandSignals(string $haystack): bool
+    /**
+     * Classification/inventory answerability = evidence contains the requested types list.
+     * Lexical "classification" / method / ML / GIS alone never qualifies as DIRECT.
+     */
+    private function hasClassificationAnswerability(string $haystack): bool
     {
-        if ($this->hasLandClassificationSignals($haystack)) {
+        if (CatalogSafeLandSignals::isMethodologyOnlyWithoutInventory($haystack)) {
             return false;
         }
 
-        foreach ([
-            'greenhouse', 'greenhouses', 'polyhouse', 'polyhouses',
-            'protected cultivation', 'protected agriculture', 'hydroponics', 'hydroponic',
-            'soilless', 'ornamental', 'gerbera', 'rose', 'roses', 'cucumber',
-        ] as $marker) {
-            if (AgriculturalEntityCatalog::containsTerm($haystack, $marker)
-                || mb_strpos($haystack, $marker) !== false) {
+        return CatalogSafeLandSignals::hasInventoryContent($haystack);
+    }
+
+    private function hasLandOfftopicMarkers(string $haystack): bool
+    {
+        foreach (CatalogSafeLandSignals::offtopicMarkers() as $marker) {
+            $normalized = mb_strtolower(trim($marker));
+            if ($normalized !== '' && (
+                AgriculturalEntityCatalog::containsTerm($haystack, $normalized)
+                || mb_strpos($haystack, $normalized) !== false
+            )) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private function hasLandTypeInventoryContent(string $haystack): bool
+    {
+        return CatalogSafeLandSignals::hasInventoryContent($haystack);
+    }
+
+    private function hasLandOfftopicWithoutClassificationAnswerability(string $haystack): bool
+    {
+        if ($this->hasClassificationAnswerability($haystack)) {
+            return false;
+        }
+
+        // Method-only is handled separately as RELATED — not IRRELEVANT offtopic.
+        if (CatalogSafeLandSignals::isMethodologyOnlyWithoutInventory($haystack)) {
+            return false;
+        }
+
+        return $this->hasLandOfftopicMarkers($haystack);
+    }
+
+    /**
+     * When the user asked for a geography, land-classification DIRECT requires that geo in evidence.
+     */
+    private function landClassificationGeoSatisfied(KnowledgeQueryPlan $plan, string $haystack): bool
+    {
+        $location = trim((string) ($plan->normalizedQuery->location
+            ?? $plan->normalizedQuery->constraints['location']
+            ?? ''));
+        if ($location === '') {
+            return true;
+        }
+
+        return CatalogSafeLandSignals::haystackMentionsLocation($haystack, $location);
     }
 
     /**
@@ -806,12 +944,9 @@ class ScientificEvidenceDirectnessAssessor
         }
 
         return match ($required) {
-            'classification_or_types_inventory' => preg_match(
-                '/\b(?:types?|categories|classes|varieties|cultivars|classification|inventory)\b/u',
-                $haystack,
-            ) === 1,
+            'classification_or_types_inventory' => $this->hasClassificationAnswerability($haystack),
             'numeric_rate_or_quantity' => preg_match(
-                '/\b\d+(?:[.,]\d+)?\s*(?:kg\/ha|kg|g\/|t\/ha|%|ppm|mg)\b/u',
+                '/\b\d+(?:[.,]\d+)?\s*(?:kg\/ha|kg|g\/|t\/ha|%|ppm|mg|mm|m3|m\^3|l\/ha|mm\/day)\b/u',
                 $haystack,
             ) === 1,
             'numeric_range_or_optimal_value' => $this->hasOptimalRangeAnswerability($haystack),
@@ -846,7 +981,6 @@ class ScientificEvidenceDirectnessAssessor
             default => true,
         };
     }
-
 
     private function hasEssentialOilPrimary(string $haystack): bool
     {

@@ -9,10 +9,12 @@ use App\Services\Agriculture\Research\Search\ScientificEvidenceRelevanceGate;
 use App\Services\Agriculture\Research\Search\ScientificSearchResult;
 
 /**
- * Generic claim-to-evidence matching without inventing support.
+ * Generic claim-to-evidence matching without inventing support (Phase 4 / R6 claim_relation).
  *
- * Incorporates evidence directness so background/irrelevant hits cannot
- * become SUPPORTED claims for the user's question.
+ * Ownership:
+ * - Emits claim_relation via `relationship` (→ claim_relationship downstream).
+ * - May consume Gate/Directness/EVL outputs; does NOT own disposition, sufficiency, or ranking.
+ * - Incorporates evidence directness so background/irrelevant hits cannot become SUPPORTED.
  */
 class ClaimEvidenceMatcher
 {
@@ -215,6 +217,29 @@ class ClaimEvidenceMatcher
                     'topic_matched' => $assessment['topic_matched'],
                     'evidence_directness' => $directness['directness'],
                     'doi_alone_insufficient' => true,
+                ],
+            ];
+        }
+
+        $propertyTerms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
+        $propertySurface = trim((string) ($plan->normalizedQuery->constraints['requested_property_surface'] ?? ''));
+        $propertyKey = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));
+        $requiresSpecificProperty = $propertySurface !== ''
+            || in_array($propertyKey, [
+                'temperature', 'concentration', 'classification', 'irrigation',
+                'quantity', 'yield', 'rate', 'production',
+            ], true);
+        if ($requiresSpecificProperty && is_array($propertyTerms) && $propertyTerms !== []
+            && ! AgriculturalEntityCatalog::haystackAddressesRequestedProperty($haystack, $propertyTerms)) {
+            return [
+                'relationship' => ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE,
+                'confidence' => 0.08,
+                'factors' => [
+                    'reason' => 'missing_requested_property',
+                    'requested_property' => $propertyKey !== '' ? $propertyKey : $propertySurface,
+                    'entity_matched' => $assessment['entity_matched'],
+                    'topic_matched' => false,
+                    'evidence_directness' => $directness['directness'],
                 ],
             ];
         }
@@ -513,16 +538,13 @@ class ClaimEvidenceMatcher
      */
     private function rejectsSpeciesIdentityMismatch(KnowledgeQueryPlan $plan, array $assessment): bool
     {
-        if (! ($assessment['requires_entity'] ?? false) || ! ($assessment['requires_topic'] ?? false)) {
+        if (! ($assessment['requires_entity'] ?? false)) {
             return false;
         }
 
-        $scientific = trim((string) ($plan->normalizedQuery->scientificName ?? ''));
-        if (preg_match('/^[A-Za-z]{3,}\s+[A-Za-z]{2,}$/', $scientific) !== 1) {
-            return false;
-        }
+        $relation = (string) ($assessment['species_relation'] ?? '');
 
-        return in_array((string) ($assessment['species_relation'] ?? ''), ['genus_only', 'different_species'], true);
+        return in_array($relation, ['genus_only', 'different_species', 'entity_less'], true);
     }
 
     private function queryText(KnowledgeQueryPlan $plan): string
@@ -634,14 +656,17 @@ class ClaimEvidenceMatcher
 
     private function isLandClassificationQuestion(KnowledgeQueryPlan $plan): bool
     {
+        $hay = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+        if (CatalogSafeLandSignals::isLandOrSoilClassificationMethodQuestion($hay)) {
+            return false;
+        }
+
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
         if ($sense === 'land_classification') {
             return true;
         }
-
-        $hay = mb_strtolower(trim(
-            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
-        ));
 
         return preg_match(
             '/land\s*types?|soil\s*classification|land\s*classification|أنواع\s*(?:ال)?أراضي|انواع\s*(?:ال)?اراضي/u',
@@ -651,28 +676,22 @@ class ClaimEvidenceMatcher
 
     private function isLandOfftopicEvidence(string $haystack): bool
     {
-        $hasLandClaim = false;
-        foreach ([
-            'land type', 'land types', 'soil classification', 'land classification',
-            'soil type', 'soil types', 'soil taxonomy', 'soil survey', 'pedology',
-        ] as $signal) {
-            if (AgriculturalEntityCatalog::containsTerm($haystack, $signal)
-                || mb_strpos($haystack, $signal) !== false) {
-                $hasLandClaim = true;
-                break;
-            }
-        }
-        if ($hasLandClaim) {
+        if (CatalogSafeLandSignals::hasInventoryContent($haystack)
+            && ! CatalogSafeLandSignals::isMethodologyOnlyWithoutInventory($haystack)) {
             return false;
         }
 
-        foreach ([
-            'greenhouse', 'greenhouses', 'polyhouse', 'polyhouses',
-            'protected cultivation', 'hydroponics', 'hydroponic', 'soilless',
-            'ornamental', 'gerbera', 'rose', 'roses', 'cucumber',
-        ] as $marker) {
-            if (AgriculturalEntityCatalog::containsTerm($haystack, $marker)
-                || mb_strpos($haystack, $marker) !== false) {
+        // Method/ML/GIS without inventory is RELATED (handled by directness), not hard offtopic.
+        if (CatalogSafeLandSignals::isMethodologyOnlyWithoutInventory($haystack)) {
+            return false;
+        }
+
+        foreach (CatalogSafeLandSignals::offtopicMarkers() as $marker) {
+            $normalized = mb_strtolower(trim($marker));
+            if ($normalized !== '' && (
+                AgriculturalEntityCatalog::containsTerm($haystack, $normalized)
+                || mb_strpos($haystack, $normalized) !== false
+            )) {
                 return true;
             }
         }

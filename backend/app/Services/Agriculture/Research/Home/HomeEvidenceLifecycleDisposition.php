@@ -10,11 +10,15 @@ use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
 /**
  * Home/Free-Question evidence lifecycle disposition (Phase 10C / R6 disposition axis).
  *
- * Ownership (P2-C11 / R5–R6):
- * - This class owns Home *lifecycle disposition labels* for observability/API.
+ * Ownership (P2-C11 / R5–R6 / Phase-4 RC-E):
+ * - THIS CLASS is the sole authoritative writer of Home lifecycle disposition labels.
+ * - AnswerComposer may only *delegate* to classify()/unusedEvidenceReferences(); it must
+ *   not reimplement disposition match rules.
+ * - UniversalAnswerOrchestrator + AgriculturalResearchAgent call applyToSynthesis() as the
+ *   post-compose authoritative merge into researchMetadata/observability.
  * - EvidenceVerificationLayer + EvidenceValidationExecutionReport.evidenceSufficient
  *   own scientific verification / library save eligibility (not Composer alone).
- * - Composer may emit synthesis status; it is not sole save authority.
+ * - R6 axes remain independent: directness ≠ claim_relationship ≠ disposition.
  *
  * Crop profile plans are out of scope: every public method returns a no-op
  * when {@see KnowledgeQueryPlan} maps to crop_profile intent.
@@ -85,6 +89,8 @@ final class HomeEvidenceLifecycleDisposition
             'rejected_evidence_count' => $rejectedCount,
             'composer_eligible_count' => $composerEligibleCount,
             'search_status' => $searchStatus !== '' ? $searchStatus : null,
+            // Phase-4: surface Phase-3 FAOSTAT taxonomy when present (null when absent).
+            'faostat_pipeline_outcome' => $validationReport?->searchSummary['faostat_pipeline_outcome'] ?? null,
         ];
     }
 

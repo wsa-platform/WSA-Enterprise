@@ -6,13 +6,32 @@ use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 
 /**
- * Deterministic relevance ranking — not scientific validity (Stage 4).
+ * Deterministic relevance ranking — not scientific validity (Stage 4 / Phase 4).
  *
  * Query-aware scores: entity / topic / intent / sense / directness / quality metadata.
  * Diversity prefers provider/journal/institution — never country.
+ *
+ * Ownership (Phase-4 Unit B):
+ * - relevanceScore = ordering preference only (not confidence, not verification, not sufficiency).
+ * - rejected_by_relevance_gate = preliminary ranking exclusion / soft demotion marker for ordering;
+ *   Stage-4 validation remains authoritative for scientific usability and R5 save eligibility.
+ * - Geographic / required-evidence adjustments are ranking preferences after topical gating;
+ *   they never rescue topically rejected results and never decide Library-save.
  */
 class ScientificResultRanker
 {
+    /** Country-level inventory: prefer national content scope (+15% of post-topical score). */
+    private const NATIONAL_SCOPE_BONUS_RATIO = 0.15;
+
+    /** Country-level inventory: demote regional content scope (−10% of post-topical score). */
+    private const REGIONAL_SCOPE_PENALTY_RATIO = 0.10;
+
+    public const DOCUMENT_GEO_SCOPE_NATIONAL = 'national';
+
+    public const DOCUMENT_GEO_SCOPE_REGIONAL = 'regional';
+
+    public const DOCUMENT_GEO_SCOPE_UNKNOWN = 'unknown';
+
     public function __construct(
         private ScientificEvidenceRelevanceGate $relevanceGate,
         private ScientificEvidenceDirectnessAssessor $directnessAssessor,
@@ -33,6 +52,8 @@ class ScientificResultRanker
             $metadata = [
                 'ranking_basis' => 'query_relevance_directness_quality',
                 'not_scientific_validation' => true,
+                // Phase-4: explicit score role — ordering only.
+                'score_role' => 'ranking_order',
             ];
 
             if ($plan !== null) {
@@ -81,6 +102,7 @@ class ScientificResultRanker
                     $score += $this->qualityMetadataBonus($result);
                     $score += $this->topicDirectnessBonus($assessment, $directness);
                     $score += $this->germinationIntentRankingAdjust($plan, $result);
+                    $score += $this->requiredEvidenceRankingAdjust($plan, $result, $directness);
 
                     $metadata['entity_matched'] = $assessment['entity_matched'];
                     $metadata['topic_matched'] = $assessment['topic_matched'];
@@ -93,14 +115,22 @@ class ScientificResultRanker
                     $metadata['factor_coverage'] = $directness['factor_coverage'];
                     $metadata['evidence_modality'] = ScientificEvidenceModality::fromResult($result);
 
-                    if (! $assessment['relevant']
-                        || $directness['directness'] === ScientificEvidenceDirectnessAssessor::IRRELEVANT) {
+                    $topicallyRejected = ! $assessment['relevant']
+                        || $directness['directness'] === ScientificEvidenceDirectnessAssessor::IRRELEVANT;
+                    if ($topicallyRejected) {
                         $metadata['rejected_by_relevance_gate'] = true;
                         $metadata['rejection_reasons'] = $assessment['rejection_reasons'] !== []
                             ? $assessment['rejection_reasons']
                             : $directness['reasons'];
                         $score *= 0.05;
                     }
+
+                    // Geographic scope only after topical gate; never rescues irrelevant docs.
+                    $geo = $this->geographicScopeRankingAdjust($plan, $result, ! $topicallyRejected, $score);
+                    $score += $geo['delta'];
+                    $metadata['document_geo_scope'] = $geo['document_scope'];
+                    $metadata['query_geo_level'] = $geo['query_level'];
+                    $metadata['geo_scope_delta'] = $geo['delta'];
                 }
             }
 
@@ -137,8 +167,10 @@ class ScientificResultRanker
     }
 
     /**
-     * Drop results rejected by the relevance gate when a plan is available.
+     * Drop results marked for ranking exclusion when a plan is available.
      * Also drop OpenAlex "Peer Review #N" wrappers when primary literature remains.
+     *
+     * Preliminary ranking-pipeline filter only — not Stage-4 verification and not R5 save authority.
      *
      * @param  list<ScientificSearchResult>  $results
      * @return list<ScientificSearchResult>
@@ -356,6 +388,544 @@ class ScientificResultRanker
         }
 
         return $adjust;
+    }
+
+    /**
+     * Boost results that contain the required evidence content for the question type.
+     *
+     * @param  array<string, mixed>  $directness
+     */
+    private function requiredEvidenceRankingAdjust(
+        KnowledgeQueryPlan $plan,
+        ScientificSearchResult $result,
+        array $directness,
+    ): float {
+        $required = trim((string) ($plan->normalizedQuery->constraints['required_evidence_type'] ?? ''));
+        if ($required === '' || $required === 'topic_aligned_scientific_claim') {
+            return 0.0;
+        }
+
+        $haystack = mb_strtolower(trim(implode(' ', array_filter([
+            $result->title,
+            $result->abstract,
+            $this->extraTextFromResult($result),
+        ], static fn ($part): bool => is_string($part) && trim($part) !== ''))));
+
+        $adjust = 0.0;
+        foreach (AgriculturalEntityCatalog::requiredEvidenceQueryTerms($required) as $term) {
+            $normalized = mb_strtolower(trim($term));
+            if ($normalized !== '' && (
+                AgriculturalEntityCatalog::containsTerm($haystack, $normalized)
+                || mb_strpos($haystack, $normalized) !== false
+            )) {
+                $adjust += 4.0;
+                break;
+            }
+        }
+
+        if ($required === 'classification_or_types_inventory') {
+            // Ranking preference only: lexical inventory signals. Catalog land helpers are optional
+            // (Phase-6 Catalog WIP must not be required to stage Phase-4 ranking).
+            $hasInventory = $this->haystackHasInventoryClassificationSignals($haystack);
+            if ($hasInventory) {
+                $adjust += 10.0;
+            } else {
+                // Lexical "classification" without inventory must not rank as if DIRECT.
+                $adjust -= 6.0;
+            }
+            foreach ($this->landClassificationAnswerabilitySignals() as $signal) {
+                $normalized = mb_strtolower(trim($signal));
+                if ($normalized !== '' && (
+                    AgriculturalEntityCatalog::containsTerm($haystack, $normalized)
+                    || mb_strpos($haystack, $normalized) !== false
+                )) {
+                    $adjust += $hasInventory ? 8.0 : 2.0;
+                    break;
+                }
+            }
+            foreach ($this->landClassificationOfftopicMarkers() as $marker) {
+                $normalized = mb_strtolower(trim($marker));
+                if ($normalized !== '' && (
+                    AgriculturalEntityCatalog::containsTerm($haystack, $normalized)
+                    || mb_strpos($haystack, $normalized) !== false
+                )) {
+                    $adjust -= $hasInventory ? 4.0 : 14.0;
+                    break;
+                }
+            }
+            if ($this->isClassificationMethodologyOnlyWithoutInventory($haystack)) {
+                $adjust -= 16.0;
+            }
+        }
+
+        if (($directness['directness'] ?? '') === ScientificEvidenceDirectnessAssessor::DIRECT) {
+            $adjust += 6.0;
+        }
+
+        return $adjust;
+    }
+
+    /**
+     * Inventory/classification only: prefer matching geographic content scope.
+     * Country-level queries: national > regional. Regional queries: regional > national.
+     * Applied after topical relevance; affiliation/publisher geo alone never counts.
+     *
+     * @return array{
+     *     delta: float,
+     *     document_scope: string,
+     *     query_level: ?string
+     * }
+     */
+    private function geographicScopeRankingAdjust(
+        KnowledgeQueryPlan $plan,
+        ScientificSearchResult $result,
+        bool $topicallyRelevant,
+        float $currentScore,
+    ): array {
+        $neutral = [
+            'delta' => 0.0,
+            'document_scope' => self::DOCUMENT_GEO_SCOPE_UNKNOWN,
+            'query_level' => null,
+        ];
+
+        if (! $topicallyRelevant || ! $this->isInventoryClassificationQuery($plan)) {
+            return $neutral;
+        }
+
+        $location = $this->planLocation($plan);
+        $queryLevel = $this->queryGeographicLevel($plan, $location);
+        if ($queryLevel === null || $location === '') {
+            return $neutral;
+        }
+
+        $contentHaystack = $this->contentScopeHaystack($result);
+        $documentScope = $this->detectDocumentGeographicScope($contentHaystack, $queryLevel, $location);
+
+        $delta = 0.0;
+        if ($queryLevel === 'country') {
+            if ($documentScope === self::DOCUMENT_GEO_SCOPE_NATIONAL) {
+                $delta = $currentScore * self::NATIONAL_SCOPE_BONUS_RATIO;
+            } elseif ($documentScope === self::DOCUMENT_GEO_SCOPE_REGIONAL) {
+                $delta = -($currentScore * self::REGIONAL_SCOPE_PENALTY_RATIO);
+            }
+        } elseif ($queryLevel === 'regional') {
+            if ($documentScope === self::DOCUMENT_GEO_SCOPE_REGIONAL) {
+                $delta = $currentScore * self::NATIONAL_SCOPE_BONUS_RATIO;
+            } elseif ($documentScope === self::DOCUMENT_GEO_SCOPE_NATIONAL) {
+                $delta = -($currentScore * self::REGIONAL_SCOPE_PENALTY_RATIO);
+            }
+        }
+
+        return [
+            'delta' => $delta,
+            'document_scope' => $documentScope,
+            'query_level' => $queryLevel,
+        ];
+    }
+
+    private function isInventoryClassificationQuery(KnowledgeQueryPlan $plan): bool
+    {
+        $constraints = $plan->normalizedQuery->constraints;
+        $required = trim((string) ($constraints['required_evidence_type'] ?? ''));
+        $questionType = trim((string) ($constraints['question_type'] ?? ''));
+        $sense = trim((string) ($constraints['scientific_sense'] ?? ''));
+        $intent = trim((string) ($plan->researchIntent ?? ''));
+        $subtopic = trim((string) ($plan->normalizedQuery->subtopic ?? ''));
+
+        return $required === 'classification_or_types_inventory'
+            || $questionType === 'classification'
+            || $sense === 'land_classification'
+            || $intent === 'land_classification'
+            || $subtopic === 'classification_inventory';
+    }
+
+    private function planLocation(KnowledgeQueryPlan $plan): string
+    {
+        $fromQuery = trim((string) ($plan->normalizedQuery->location ?? ''));
+        if ($fromQuery !== '') {
+            return $fromQuery;
+        }
+
+        return trim((string) ($plan->normalizedQuery->constraints['location'] ?? ''));
+    }
+
+    /**
+     * @return 'country'|'regional'|null
+     */
+    private function queryGeographicLevel(KnowledgeQueryPlan $plan, string $location): ?string
+    {
+        if ($location === '') {
+            return null;
+        }
+
+        if ($this->isCountryLevelLocation($location)) {
+            return 'country';
+        }
+
+        // Non-empty location that is not a known country ⇒ subnational / regional query.
+        return 'regional';
+    }
+
+    private function isCountryLevelLocation(string $location): bool
+    {
+        $normalized = mb_strtolower(trim($location));
+        if ($normalized === '') {
+            return false;
+        }
+
+        if (AgriculturalEntityCatalog::locationToIsoCountryCode($location) !== null) {
+            return true;
+        }
+
+        foreach (AgriculturalEntityCatalog::locationAliases() as $alias => $canonical) {
+            if ($normalized === mb_strtolower($alias) || $normalized === mb_strtolower($canonical)) {
+                return true;
+            }
+        }
+
+        // Generic country labels beyond catalog ISO map (no country-specific ranking branches).
+        return in_array($normalized, $this->genericCountryLabels(), true);
+    }
+
+    /**
+     * Well-known sovereign country labels for geo-level detection only.
+     *
+     * @return list<string>
+     */
+    private function genericCountryLabels(): array
+    {
+        return [
+            'france', 'brazil', 'canada', 'india', 'germany', 'italy', 'spain', 'portugal',
+            'china', 'japan', 'australia', 'mexico', 'argentina', 'chile', 'peru',
+            'kenya', 'ethiopia', 'nigeria', 'ghana', 'pakistan', 'bangladesh',
+            'indonesia', 'thailand', 'vietnam', 'philippines', 'united states', 'usa',
+            'united kingdom', 'uk', 'poland', 'romania', 'greece', 'netherlands',
+            'belgium', 'sweden', 'norway', 'denmark', 'finland', 'ireland',
+            'egypt', 'saudi arabia', 'turkey', 'türkiye', 'turkiye', 'morocco',
+            'libya', 'sudan', 'tunisia', 'algeria', 'jordan', 'united arab emirates',
+            'uae', 'iraq', 'syria', 'lebanon', 'yemen', 'oman', 'kuwait', 'qatar',
+            'bahrain', 'iran', 'afghanistan', 'south africa', 'tanzania', 'uganda',
+            'russia', 'ukraine', 'kazakhstan', 'uzbekistan', 'new zealand',
+            'colombia', 'venezuela', 'ecuador', 'bolivia', 'paraguay', 'uruguay',
+            'cuba', 'haiti', 'dominican republic', 'guatemala', 'honduras',
+            'nicaragua', 'costa rica', 'panama', 'senegal', 'mali', 'niger',
+            'chad', 'cameroon', 'angola', 'mozambique', 'madagascar', 'malawi',
+            'zambia', 'zimbabwe', 'botswana', 'namibia', 'rwanda', 'burundi',
+            'somalia', 'djibouti', 'eritrea', 'mauritania', 'gambia', 'benin',
+            'togo', 'sierra leone', 'liberia', 'ivory coast', "côte d'ivoire",
+            'burkina faso', 'central african republic', 'congo', 'dr congo',
+            'south korea', 'north korea', 'mongolia', 'nepal', 'sri lanka',
+            'myanmar', 'cambodia', 'laos', 'malaysia', 'singapore', 'brunei',
+            'papua new guinea', 'fiji', 'solomon islands', 'vanuatu', 'samoa',
+            'israel', 'palestine', 'cyprus', 'malta', 'iceland', 'luxembourg',
+            'switzerland', 'austria', 'czech republic', 'czechia', 'slovakia',
+            'hungary', 'slovenia', 'croatia', 'serbia', 'bosnia and herzegovina',
+            'montenegro', 'albania', 'north macedonia', 'bulgaria', 'moldova',
+            'belarus', 'georgia', 'armenia', 'azerbaijan', 'turkmenistan',
+            'tajikistan', 'kyrgyzstan', 'mongolia',
+        ];
+    }
+
+    /**
+     * Title + abstract + concept keywords only — never authorship affiliation.
+     */
+    private function contentScopeHaystack(ScientificSearchResult $result): string
+    {
+        return mb_strtolower(trim(implode(' ', array_filter([
+            $result->title,
+            $result->abstract,
+            $this->extraTextFromResult($result),
+        ], static fn ($part): bool => is_string($part) && trim($part) !== ''))));
+    }
+
+    /**
+     * Content geographic scope for inventory ranking.
+     * Country mention alone is insufficient for NATIONAL; affiliation never consulted.
+     *
+     * @param  'country'|'regional'  $queryLevel
+     */
+    private function detectDocumentGeographicScope(string $haystack, string $queryLevel, string $location): string
+    {
+        if ($haystack === '') {
+            return self::DOCUMENT_GEO_SCOPE_UNKNOWN;
+        }
+
+        $locationLower = mb_strtolower(trim($location));
+
+        if ($queryLevel === 'regional') {
+            if ($this->haystackMentionsLocationToken($haystack, $locationLower)) {
+                return self::DOCUMENT_GEO_SCOPE_REGIONAL;
+            }
+            if ($this->hasNationalScopeMarkers($haystack)) {
+                return self::DOCUMENT_GEO_SCOPE_NATIONAL;
+            }
+
+            return self::DOCUMENT_GEO_SCOPE_UNKNOWN;
+        }
+
+        // Country-level inventory query.
+        if ($this->hasRegionalScopeMarkers($haystack) || $this->hasSubnationalBeforeCountry($haystack, $locationLower)) {
+            return self::DOCUMENT_GEO_SCOPE_REGIONAL;
+        }
+
+        if ($this->hasNationalScopeMarkers($haystack) || $this->hasCountryFramedNationalInventory($haystack, $locationLower)) {
+            return self::DOCUMENT_GEO_SCOPE_NATIONAL;
+        }
+
+        return self::DOCUMENT_GEO_SCOPE_UNKNOWN;
+    }
+
+    private function hasRegionalScopeMarkers(string $haystack): bool
+    {
+        $markers = [
+            'governorate', 'province', 'district', 'county', 'prefecture', 'municipality',
+            'wilaya', 'oblast', 'canton', 'département', 'department of', 'região',
+            'eyalet', 'regional study', 'local scale', 'watershed', 'catchment',
+            'peninsula', 'oasis', 'delta of', 'river basin',
+            'محافظة', 'ولايه', 'ولاية', 'إقليم', 'اقليم', 'منطقة', 'المنطقة',
+            'gouvernorat', 'province de', 'région de', 'département de',
+            'ilçe', 'vilayet', 'bölge',
+        ];
+
+        foreach ($markers as $marker) {
+            if ($marker !== '' && (
+                AgriculturalEntityCatalog::containsTerm($haystack, $marker)
+                || mb_strpos($haystack, $marker) !== false
+            )) {
+                return true;
+            }
+        }
+
+        // Cardinal / relative + place framing marks subnational study areas (generic).
+        if (preg_match(
+            '/\b(?:south|north|east|west|southern|northern|eastern|western|upper|lower|central)\s+[a-z\p{L}]{3,40}\b/u',
+            $haystack,
+        ) === 1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function hasNationalScopeMarkers(string $haystack): bool
+    {
+        $markers = [
+            'national', 'nationwide', 'nation-wide', 'country-wide', 'countrywide',
+            'national scale', 'national-level', 'national level', 'national inventory',
+            'national soil', 'national land', 'soil map of', 'land map of',
+            'across the country', 'throughout the country', 'whole country',
+            'republic-wide', 'federal inventory',
+            'وطني', 'القومي', 'قومي', 'على مستوى الجمهورية', 'خريطة التربة',
+            'à l\'échelle nationale', 'echelle nationale', 'carte des sols',
+            'ulusal', 'ülke çapında', 'ulke capinda', 'ulusal ölçek',
+        ];
+
+        foreach ($markers as $marker) {
+            if ($marker !== '' && (
+                AgriculturalEntityCatalog::containsTerm($haystack, $marker)
+                || mb_strpos($haystack, $marker) !== false
+            )) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Country framed as the study area for inventory/classification — not a single bare mention.
+     */
+    private function hasCountryFramedNationalInventory(string $haystack, string $countryLocation): bool
+    {
+        $country = $this->canonicalCountryNeedle($countryLocation);
+        if ($country === '') {
+            return false;
+        }
+
+        $countryQuoted = preg_quote($country, '/');
+        $inventory = '(?:soil|land|agricultural\s+land| الأراضي|الاراضي|تربة|الأراضي)';
+        $class = '(?:types?|classes?|classification|map|inventory|taxonomy|kinds?|أنواع|انواع|تصنيف|خريطة)';
+
+        // e.g. "soil types of Morocco", "land classification in Brazil", "Soil Map of France"
+        if (preg_match(
+            '/'.$inventory.'.{0,48}'.$class.'.{0,32}\b'.$countryQuoted.'\b/u',
+            $haystack,
+        ) === 1) {
+            return true;
+        }
+        if (preg_match(
+            '/\b'.$countryQuoted.'\b.{0,32}'.$inventory.'.{0,48}'.$class.'/u',
+            $haystack,
+        ) === 1) {
+            return true;
+        }
+        if (preg_match(
+            '/(?:soil|land)\s+map\s+of\s+'.$countryQuoted.'\b/u',
+            $haystack,
+        ) === 1) {
+            return true;
+        }
+
+        // Adjectival demonym + inventory without regional markers (e.g. egyptian / french soils).
+        $demonym = $this->countryDemonym($country);
+        if ($demonym !== '' && preg_match(
+            '/\b'.$demonym.'\b.{0,40}(?:soil|land).{0,40}(?:types?|classes?|classification)/u',
+            $haystack,
+        ) === 1) {
+            return true;
+        }
+        if ($demonym !== '' && preg_match(
+            '/(?:soil|land).{0,40}(?:types?|classes?|classification).{0,40}\b'.$demonym.'\b/u',
+            $haystack,
+        ) === 1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * "Provence, France" / "Punjab, India" — subnational place before country.
+     */
+    private function hasSubnationalBeforeCountry(string $haystack, string $countryLocation): bool
+    {
+        $country = $this->canonicalCountryNeedle($countryLocation);
+        if ($country === '') {
+            return false;
+        }
+
+        $countryQuoted = preg_quote($country, '/');
+
+        return preg_match(
+            '/\b([a-z\p{L}][a-z\p{L}\s\-]{2,40}),\s*'.$countryQuoted.'\b/u',
+            $haystack,
+            $matches,
+        ) === 1
+            && isset($matches[1])
+            && ! $this->isCountryLevelLocation(trim($matches[1]));
+    }
+
+    private function haystackMentionsLocationToken(string $haystack, string $location): bool
+    {
+        $location = mb_strtolower(trim($location));
+        if ($location === '' || $haystack === '') {
+            return false;
+        }
+
+        if (method_exists(AgriculturalEntityCatalog::class, 'haystackMentionsLocation')
+            && AgriculturalEntityCatalog::haystackMentionsLocation($haystack, $location)) {
+            return true;
+        }
+
+        return AgriculturalEntityCatalog::containsTerm($haystack, $location)
+            || mb_strpos($haystack, $location) !== false;
+    }
+
+    /**
+     * Phase-4-safe inventory signals for ranking preference (not scientific verification).
+     *
+     * Prefer Catalog helpers when present; otherwise use local lexical fallbacks so ranking
+     * does not require Phase-6 Catalog WIP to be staged.
+     */
+    private function haystackHasInventoryClassificationSignals(string $haystack): bool
+    {
+        if (method_exists(AgriculturalEntityCatalog::class, 'hasLandTypeInventoryContent')) {
+            return AgriculturalEntityCatalog::hasLandTypeInventoryContent($haystack);
+        }
+
+        foreach ([
+            'soil type', 'soil types', 'land type', 'land types', 'land class', 'land classes',
+            'soil classification', 'land classification', 'soil map', 'land capability',
+            'inventory of', 'nationwide inventory', 'soil taxonomy',
+        ] as $signal) {
+            if (AgriculturalEntityCatalog::containsTerm($haystack, $signal)
+                || mb_strpos($haystack, $signal) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @return list<string> */
+    private function landClassificationAnswerabilitySignals(): array
+    {
+        if (method_exists(AgriculturalEntityCatalog::class, 'landClassificationAnswerabilitySignals')) {
+            return AgriculturalEntityCatalog::landClassificationAnswerabilitySignals();
+        }
+
+        return [
+            'soil type', 'soil types', 'land type', 'land types', 'land class',
+            'soil classification', 'land classification', 'land capability',
+        ];
+    }
+
+    /** @return list<string> */
+    private function landClassificationOfftopicMarkers(): array
+    {
+        if (method_exists(AgriculturalEntityCatalog::class, 'landClassificationOfftopicMarkers')) {
+            return AgriculturalEntityCatalog::landClassificationOfftopicMarkers();
+        }
+
+        return [
+            'greenhouse', 'hydroponic', 'hydroponics', 'gerbera', 'ornamental',
+            'machine learning', 'remote sensing', 'neural network',
+        ];
+    }
+
+    private function isClassificationMethodologyOnlyWithoutInventory(string $haystack): bool
+    {
+        if (method_exists(AgriculturalEntityCatalog::class, 'isClassificationMethodologyOnlyWithoutInventory')) {
+            return AgriculturalEntityCatalog::isClassificationMethodologyOnlyWithoutInventory($haystack);
+        }
+
+        $methodMarkers = ['machine learning', 'deep learning', 'neural network', 'random forest', 'cnn', 'gis'];
+        $hasMethod = false;
+        foreach ($methodMarkers as $marker) {
+            if (AgriculturalEntityCatalog::containsTerm($haystack, $marker)
+                || mb_strpos($haystack, $marker) !== false) {
+                $hasMethod = true;
+                break;
+            }
+        }
+
+        return $hasMethod && ! $this->haystackHasInventoryClassificationSignals($haystack);
+    }
+
+    private function canonicalCountryNeedle(string $location): string
+    {
+        $normalized = mb_strtolower(trim($location));
+        if ($normalized === '') {
+            return '';
+        }
+
+        foreach (AgriculturalEntityCatalog::locationAliases() as $alias => $canonical) {
+            if ($normalized === mb_strtolower($alias) || $normalized === mb_strtolower($canonical)) {
+                return mb_strtolower($canonical);
+            }
+        }
+
+        return $normalized;
+    }
+
+    private function countryDemonym(string $countryNeedle): string
+    {
+        return match ($countryNeedle) {
+            'egypt' => 'egyptian',
+            'saudi arabia' => 'saudi',
+            'turkey', 'türkiye', 'turkiye' => 'turkish',
+            'morocco' => 'moroccan',
+            'france' => 'french',
+            'brazil' => 'brazilian',
+            'india' => 'indian',
+            'canada' => 'canadian',
+            'libya' => 'libyan',
+            'sudan' => 'sudanese',
+            'tunisia' => 'tunisian',
+            'algeria' => 'algerian',
+            'jordan' => 'jordanian',
+            default => '',
+        };
     }
 
     /**

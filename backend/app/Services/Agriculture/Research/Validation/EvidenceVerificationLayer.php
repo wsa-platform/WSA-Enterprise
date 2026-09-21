@@ -6,14 +6,17 @@ use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
 use App\Services\Agriculture\Research\Search\ScientificSearchResult;
+use App\Services\Agriculture\Research\Validation\CatalogSafeLandSignals;
 
 /**
- * Evidence Verification Layer — orchestration over existing Directness / Matcher / Quality.
+ * Evidence Verification Layer — refine/verify directness after assessors (Phase 4 / R6).
  *
- * Does NOT replace Stage 4 validators. Refines directness labels and enforces priority:
- * claim > intent > topic > entity > geo > environment > quality > semantic > citations.
- * Semantic similarity and citation counts alone cannot force DIRECT.
+ * Ownership:
+ * - Refines directness + verification_label with geo/environment/land gates.
+ * - Does NOT own disposition, sufficiency, ranking, or claim_relation.
+ * - Does NOT replace Stage 4 validators; consumers remain ValidationService / Composer.
  *
+ * Priority: claim > intent > topic > entity > geo > environment > quality > semantic > citations.
  * Verification labels (uppercase transport): DIRECT / SUPPORTING / RELATED / IRRELEVANT / GEOGRAPHIC_MISMATCH.
  * Legacy LABEL_SUPPORTED maps to SUPPORTING on the directness axis (R6 — not claim_relation).
  */
@@ -30,11 +33,19 @@ class EvidenceVerificationLayer
     public const LABEL_GEOGRAPHIC_MISMATCH = 'GEOGRAPHIC_MISMATCH';
 
     /** @var list<string> */
+    // --- WIP: land classification offtopic markers ---
     private const LAND_TYPE_OFFTOPIC_MARKERS = [
         'gerbera', 'rose', 'roses', 'cucumber', 'cucumbers',
         'polyhouse', 'greenhouse', 'greenhouses', 'hydroponics', 'hydroponic',
         'protected cultivation', 'soilless',
+        'groundwater', 'microbial diversity', 'microbial',
+        'wheat production', 'wheat yield', 'irrigation system', 'irrigation efficiency',
+        'gis', 'remote sensing', 'land evaluation',
+        'machine learning', 'deep learning', 'neural network', 'random forest',
+        'classification algorithm', 'classification model', 'cnn',
+        'crop cultivation', 'cultivation practices', 'crop production',
     ];
+    // --- END WIP: land classification offtopic markers ---
 
     /** @var list<string> */
     private const PROTECTED_ENV_MARKERS = [
@@ -242,13 +253,21 @@ class EvidenceVerificationLayer
             ];
         }
 
-        // Topic: land-types must not become DIRECT via ornamental/greenhouse papers unless asked.
+        // --- WIP: land classification refine/gates ---
+        // Topic: land-types must not become DIRECT via ornamental/greenhouse papers unless
+        // the content actually answers classification/types.
+        // Method/ML/GIS-only without inventory stays RELATED (not IRRELEVANT) for additional info.
         if ($this->isLandTypesQuestion($plan)
             && $this->hasUnaskedLandTypeOfftopicMarkers($plan, $haystack)
-            && ($base['directness'] ?? '') === ScientificEvidenceDirectnessAssessor::DIRECT) {
+            && ! $this->hasLandClassificationAnswerability($haystack)
+            && ! CatalogSafeLandSignals::isMethodologyOnlyWithoutInventory($haystack)
+            && in_array(($base['directness'] ?? ''), [
+                ScientificEvidenceDirectnessAssessor::DIRECT,
+                ScientificEvidenceDirectnessAssessor::SUPPORTING,
+            ], true)) {
             return [
-                'directness' => ScientificEvidenceDirectnessAssessor::RELATED,
-                'score' => min(6.0, (float) ($base['score'] ?? 0.0)),
+                'directness' => ScientificEvidenceDirectnessAssessor::IRRELEVANT,
+                'score' => 0.0,
                 'reasons' => array_values(array_unique(array_merge(
                     $base['reasons'] ?? [],
                     ['land_types_offtopic_crop_or_environment'],
@@ -259,6 +278,28 @@ class EvidenceVerificationLayer
                 'topic_matched' => false,
             ];
         }
+
+        // Method-only classification papers: never preserve DIRECT for types-inventory questions.
+        if ($this->isLandTypesQuestion($plan)
+            && CatalogSafeLandSignals::isMethodologyOnlyWithoutInventory($haystack)
+            && in_array(($base['directness'] ?? ''), [
+                ScientificEvidenceDirectnessAssessor::DIRECT,
+                ScientificEvidenceDirectnessAssessor::SUPPORTING,
+            ], true)) {
+            return [
+                'directness' => ScientificEvidenceDirectnessAssessor::RELATED,
+                'score' => min(12.0, (float) ($base['score'] ?? 0.0)),
+                'reasons' => array_values(array_unique(array_merge(
+                    $base['reasons'] ?? [],
+                    ['land_classification_method_only_without_inventory'],
+                ))),
+                'factor_coverage' => (float) ($base['factor_coverage'] ?? 0.0),
+                'sense_coverage' => (bool) ($base['sense_coverage'] ?? false),
+                'entity_matched' => (bool) ($base['entity_matched'] ?? false),
+                'topic_matched' => (bool) ($base['topic_matched'] ?? false),
+            ];
+        }
+        // --- END WIP: land classification refine/gates (inside refine) ---
 
         // Environment: open-field vs greenhouse/polyhouse/hydroponics mismatch demotes DIRECT → RELATED
         // (not SUPPORTING; GEOGRAPHIC_MISMATCH path above is unchanged).
@@ -414,8 +455,17 @@ class EvidenceVerificationLayer
         return $raw;
     }
 
+    // --- WIP: land classification question/answerability helpers ---
+
     private function isLandTypesQuestion(KnowledgeQueryPlan $plan): bool
     {
+        $hay = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+        if (CatalogSafeLandSignals::isLandOrSoilClassificationMethodQuestion($hay)) {
+            return false;
+        }
+
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
         if ($sense === 'land_classification') {
             return true;
@@ -429,10 +479,6 @@ class EvidenceVerificationLayer
                 return true;
             }
         }
-
-        $hay = mb_strtolower(trim(
-            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
-        ));
 
         return preg_match(
             '/land\s*types?|soil\s*classification|land\s*classification|أنواع\s*(?:ال)?أراضي|تصنيف\s*(?:ال)?أراضي|أنواع\s*التربة/u',
@@ -462,6 +508,17 @@ class EvidenceVerificationLayer
 
         return false;
     }
+
+    private function hasLandClassificationAnswerability(string $haystack): bool
+    {
+        if (CatalogSafeLandSignals::isMethodologyOnlyWithoutInventory($haystack)) {
+            return false;
+        }
+
+        return CatalogSafeLandSignals::hasInventoryContent($haystack);
+    }
+
+    // --- END WIP: land classification question/answerability helpers ---
 
     private function hasEnvironmentMismatch(KnowledgeQueryPlan $plan, string $haystack): bool
     {

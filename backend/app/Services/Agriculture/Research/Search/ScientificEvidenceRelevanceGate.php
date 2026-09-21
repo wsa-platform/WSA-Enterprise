@@ -7,7 +7,12 @@ use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 
 /**
- * Relevance gate: crop/entity + topic/sense + agricultural context before synthesis.
+ * Relevance gate: candidate topical relevance before scientific evaluation (Phase 4).
+ *
+ * Ownership:
+ * - Answers: "Is this result relevant enough to remain a candidate?"
+ * - Does NOT decide: scientific truth, claim_relation, sufficiency, disposition, Library-save.
+ * - Ranker may consume Gate for preliminary ranking exclusion; validation remains authoritative.
  *
  * DOI alone is never sufficient for crop- or topic-constrained questions.
  * Bare entity + weak topic keyword is insufficient when crop+topic are required.
@@ -228,16 +233,28 @@ class ScientificEvidenceRelevanceGate
 
     private function requiresEntity(KnowledgeQueryPlan $plan): bool
     {
+        if ($plan->normalizedQuery->isEntityDependent()) {
+            return true;
+        }
+
         $subjectType = is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null;
 
         return $plan->normalizedQuery->cropId !== null
             || $plan->normalizedQuery->scientificName !== null
-            || $subjectType === 'crop'
-            || $subjectType === 'plant_family';
+            || in_array((string) $subjectType, ['crop', 'named_entity', 'animal', 'plant_family'], true);
     }
 
     private function requiresTopic(KnowledgeQueryPlan $plan): bool
     {
+        $propertyTerms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
+        if (is_array($propertyTerms) && $propertyTerms !== []) {
+            return true;
+        }
+        $requestedProperty = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));
+        if ($requestedProperty !== '' && ! in_array($requestedProperty, ['general', 'definition'], true)) {
+            return true;
+        }
+
         $factors = $plan->normalizedQuery->constraints['scientific_factors'] ?? [];
         if (is_array($factors) && $factors !== []) {
             return true;
@@ -276,9 +293,14 @@ class ScientificEvidenceRelevanceGate
             $needles = array_merge($needles, FieldCropTaxonomyCatalog::searchTermsFor($query->cropId));
         }
 
-        if (is_array($plan->subjectEntity) && ($plan->subjectEntity['type'] ?? '') === 'crop') {
+        if (is_array($plan->subjectEntity) && in_array((string) ($plan->subjectEntity['type'] ?? ''), ['crop', 'named_entity', 'animal'], true)) {
             $needles[] = (string) ($plan->subjectEntity['value'] ?? '');
             $needles[] = (string) ($plan->subjectEntity['label'] ?? '');
+        }
+
+        $surface = $plan->normalizedQuery->namedEntitySurface();
+        if ($surface !== null) {
+            $needles[] = $surface;
         }
 
         if (is_array($plan->subjectEntity) && ($plan->subjectEntity['type'] ?? '') === 'plant_family') {
@@ -375,15 +397,18 @@ class ScientificEvidenceRelevanceGate
         string $genus,
         string $epithet,
     ): bool {
+        $labels = [];
         $cropId = $plan->normalizedQuery->cropId;
-        if ($cropId === null || $cropId === '') {
-            return false;
+        if ($cropId !== null && $cropId !== '') {
+            $labels = array_merge(
+                AgriculturalEntityCatalog::recognitionLabelsForCrop($cropId),
+                FieldCropTaxonomyCatalog::searchTermsFor($cropId),
+            );
         }
-
-        $labels = array_merge(
-            AgriculturalEntityCatalog::recognitionLabelsForCrop($cropId),
-            FieldCropTaxonomyCatalog::searchTermsFor($cropId),
-        );
+        $surface = $plan->normalizedQuery->namedEntitySurface();
+        if ($surface !== null) {
+            $labels[] = $surface;
+        }
         foreach ($labels as $label) {
             $normalized = mb_strtolower(trim((string) $label));
             if ($normalized === '' || $normalized === $genus || $normalized === $genus.' '.$epithet) {
@@ -481,9 +506,15 @@ class ScientificEvidenceRelevanceGate
             return 'none';
         }
 
+        $best = 'none';
+        $propertyTerms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
+        if (is_array($propertyTerms) && $propertyTerms !== []
+            && AgriculturalEntityCatalog::haystackAddressesRequestedProperty($haystack, $propertyTerms)) {
+            $best = 'weak';
+        }
+
         $factors = $plan->normalizedQuery->constraints['scientific_factors'] ?? [];
         if (! is_array($factors) || $factors === []) {
-            $best = 'none';
             $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
             if ($sense !== '') {
                 foreach (AgriculturalEntityCatalog::senseQueryTerms($sense) as $term) {
@@ -525,10 +556,9 @@ class ScientificEvidenceRelevanceGate
                 }
             }
 
-            return 'none';
+            return $best;
         }
 
-        $best = 'none';
         foreach ($factors as $factor) {
             $strongSignals = AgriculturalEntityCatalog::strongTopicFactorSignals()[$factor] ?? [];
             foreach ($strongSignals as $signal) {
