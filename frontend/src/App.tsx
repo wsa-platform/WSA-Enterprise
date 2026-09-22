@@ -78,6 +78,19 @@ function AuthenticatedRedirect() {
   return <RoleHomeRedirect />
 }
 
+/** Library Page: authentication only — then complete Library browse. */
+function LibraryPageGate() {
+  const { token } = useAuth()
+  const location = useLocation()
+
+  if (!token) {
+    const next = `${location.pathname}${location.search}`
+    return <Navigate to={loginPathForProtectedRoute(next)} replace />
+  }
+
+  return <LibraryPage />
+}
+
 function UnknownRouteFallback() {
   const { token } = useAuth()
   if (token) return <RoleHomeRedirect />
@@ -218,7 +231,7 @@ function AppRoutes() {
       <Route path="/sections/:sectionId" element={<SectionPage />} />
       <Route path="/crops/:cropCategoryId" element={<CropCategoryPage />} />
       <Route path="/plant-production/:categoryId" element={<PlantProductionPage />} />
-      <Route path="/library" element={<LibraryPage />} />
+      <Route path="/library" element={<LibraryPageGate />} />
       <Route path="/services/:serviceId" element={<ServicesPortalPage />} />
       <Route path="/about" element={<InfoPage page="about" />} />
       <Route path="/privacy" element={<InfoPage page="privacy" />} />

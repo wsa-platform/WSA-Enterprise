@@ -1,12 +1,13 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { I18nextProvider } from 'react-i18next'
-import { MemoryRouter } from 'react-router-dom'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
-import { AuthProvider } from '../context/AuthContext'
+import { AuthProvider, useAuth } from '../context/AuthContext'
 import i18n from '../i18n/config'
 import { PUBLIC_TOP_NAV_ITEMS, publicPaths } from './paths'
 import { LibraryPage } from '../pages/public/LibraryPage'
+import { loginPathForProtectedRoute } from './routeGuards'
 import {
   LIBRARY_PLANT_PRODUCTION_CATEGORIES,
   LIBRARY_PLANT_PRODUCTION_SECTION_TITLE,
@@ -17,7 +18,37 @@ import {
 } from '../public/library/libraryCropSections'
 import { getLibraryCropsForCategory } from '../public/library/libraryCrops'
 
-function renderLibraryPage() {
+function stubStorage(entries: Array<[string, string]> = []) {
+  const store = new Map<string, string>(entries)
+  vi.stubGlobal('localStorage', {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, String(value))
+    },
+    removeItem: (key: string) => {
+      store.delete(key)
+    },
+    clear: () => store.clear(),
+  })
+}
+
+function LibraryPageGateProbe() {
+  const { token } = useAuth()
+  if (!token) {
+    return createElement('div', {
+      'data-testid': 'library-auth-redirect',
+      'data-to': loginPathForProtectedRoute(publicPaths.library),
+    })
+  }
+  return createElement(LibraryPage)
+}
+
+function renderAuthenticatedLibraryPage() {
+  stubStorage([
+    ['wsa_token', 'test-token'],
+    ['wsa_user', JSON.stringify({ id: 1, name: 'Library User', email: 'library@wsa.test' })],
+  ])
+
   return renderToStaticMarkup(
     createElement(
       AuthProvider,
@@ -35,19 +66,35 @@ function renderLibraryPage() {
   )
 }
 
+function renderUnauthenticatedLibraryGate() {
+  stubStorage()
+
+  return renderToStaticMarkup(
+    createElement(
+      AuthProvider,
+      null,
+      createElement(
+        I18nextProvider,
+        { i18n },
+        createElement(
+          MemoryRouter,
+          { initialEntries: [publicPaths.library] },
+          createElement(
+            Routes,
+            null,
+            createElement(Route, {
+              path: publicPaths.library,
+              element: createElement(LibraryPageGateProbe),
+            }),
+          ),
+        ),
+      ),
+    ),
+  )
+}
+
 describe('library page', () => {
   beforeAll(async () => {
-    const store = new Map<string, string>()
-    vi.stubGlobal('localStorage', {
-      getItem: (key: string) => store.get(key) ?? null,
-      setItem: (key: string, value: string) => {
-        store.set(key, String(value))
-      },
-      removeItem: (key: string) => {
-        store.delete(key)
-      },
-      clear: () => store.clear(),
-    })
     await i18n.changeLanguage('ar')
   })
 
@@ -68,8 +115,15 @@ describe('library page', () => {
     expect(i18n.t('website.nav.library')).toBe('المكتبة')
   })
 
-  it('renders public header, library body, and footer without workspace chrome', () => {
-    const html = renderLibraryPage()
+  it('redirects unauthenticated visitors into the existing login flow', () => {
+    const html = renderUnauthenticatedLibraryGate()
+    expect(html).toContain('data-testid="library-auth-redirect"')
+    expect(html).toContain('data-to="/login?next=%2Flibrary"')
+    expect(html).not.toContain('class="library-page"')
+  })
+
+  it('renders public header, library body, and footer without workspace chrome when authenticated', () => {
+    const html = renderAuthenticatedLibraryPage()
 
     expect(html).toContain('class="gs-header')
     expect(html).toContain('class="gs-footer')
@@ -83,7 +137,7 @@ describe('library page', () => {
   })
 
   it('shows الإنتاج النباتي as the only sidebar section and all 12 categories', () => {
-    const html = renderLibraryPage()
+    const html = renderAuthenticatedLibraryPage()
     const sidebarMatches = html.match(/library-page__sidebar-item/g) ?? []
 
     expect(sidebarMatches).toHaveLength(1)
@@ -113,7 +167,7 @@ describe('library page', () => {
   })
 
   it('phase 2: library page has no dashboard workspace or library password UI', () => {
-    const html = renderLibraryPage()
+    const html = renderAuthenticatedLibraryPage()
     expect(html).not.toMatch(/library-dashboard|library-workspace|library-account/i)
     expect(html).not.toContain('Library Dashboard')
     expect(html).not.toContain('Library Workspace')

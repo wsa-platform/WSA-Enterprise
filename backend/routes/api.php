@@ -288,6 +288,8 @@ Route::prefix('v1')->group(function (): void {
         });
         Route::prefix('library')->group(function (): void {
             Route::get('/search', [LibraryController::class, 'search']);
+            Route::get('/files', [LibraryController::class, 'files']);
+            Route::get('/files/{fileId}/content', [LibraryController::class, 'fileContent'])->whereNumber('fileId');
             Route::get('/crop-knowledge/tree', [CropKnowledgeLibraryBrowseController::class, 'tree']);
             Route::get('/crop-knowledge/items/{itemId}', [CropKnowledgeLibraryBrowseController::class, 'show'])->whereNumber('itemId');
             Route::get('/{module}', [LibraryController::class, 'index']);

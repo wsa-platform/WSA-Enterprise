@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
-  fetchCropLibraryFiles,
+  fetchAuthenticatedLibraryFiles,
   type CropLibraryFileRecord,
 } from '../../api/libraryCropFiles'
+import { useAuth } from '../../context/AuthContext'
 import { LibraryFilePreviewPanel } from './LibraryFilePreviewPanel'
 import { getLibraryCropsForCategory } from './libraryCrops'
 import {
@@ -55,6 +56,7 @@ function getCategoryById(categoryId: string): CategorySelection | undefined {
 }
 
 export function LibraryPlantProductionBody() {
+  const { token } = useAuth()
   const [view, setView] = useState<LibraryView>({ level: 'categories' })
   const [files, setFiles] = useState<CropLibraryFileRecord[]>([])
   const [filesLoading, setFilesLoading] = useState(false)
@@ -65,15 +67,25 @@ export function LibraryPlantProductionBody() {
       return
     }
 
+    if (!token) {
+      setFiles([])
+      setFilesError('authentication_required')
+      setFilesLoading(false)
+      return
+    }
+
     let cancelled = false
     setFilesLoading(true)
     setFilesError('')
 
-    void fetchCropLibraryFiles({
-      plantProductionCategoryId: view.category.id,
-      fieldCropId: view.crop.id,
-      libraryFileSection: view.section.id,
-    })
+    void fetchAuthenticatedLibraryFiles(
+      {
+        plantProductionCategoryId: view.category.id,
+        fieldCropId: view.crop.id,
+        libraryFileSection: view.section.id,
+      },
+      token,
+    )
       .then((records) => {
         if (!cancelled) {
           setFiles(records)
@@ -94,7 +106,7 @@ export function LibraryPlantProductionBody() {
     return () => {
       cancelled = true
     }
-  }, [view])
+  }, [view, token])
 
   const openCategory = (categoryId: string) => {
     const category = getCategoryById(categoryId)
