@@ -320,7 +320,9 @@ class AgriculturalResearchAgent
                 ],
             ];
 
-            return $legacy;
+            // Phase 7 P7-U1 / STRUCT-03: Stage 5 is the canonical scientific Crop answer
+            // at root; legacy sections/load_state/library remain compatibility siblings.
+            return CropCanonicalStage5Response::dualEmit($legacy, $synthesisReport);
         }
 
         $response = $result->toAgentResponse();

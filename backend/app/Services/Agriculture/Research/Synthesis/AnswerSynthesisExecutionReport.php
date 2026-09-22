@@ -68,6 +68,8 @@ final class AnswerSynthesisExecutionReport
             'limitations' => $this->limitations,
             'uncertainty' => $this->uncertainty,
             'conflicts' => $this->conflicts,
+            // Canonical client contract: answer language at root (same value as synthesis.language).
+            'language' => $this->language,
             'research_metadata' => $this->researchMetadata,
             'observability' => $this->observability,
         ];
