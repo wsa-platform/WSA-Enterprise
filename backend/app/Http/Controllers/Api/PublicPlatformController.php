@@ -53,9 +53,14 @@ class PublicPlatformController extends Controller
     {
         $organization = $this->resolvePublicOrganization($request);
 
+        // Library product contract: verified scientific research is authenticated-only.
         $query = LibraryItem::query()
             ->where('organization_id', $organization->id)
             ->where('publication_status', 'published')
+            ->where(function ($builder): void {
+                $builder->whereNull('item_type')
+                    ->orWhere('item_type', '!=', \App\Services\Agriculture\Research\Persistence\ScientificKnowledgePersistenceService::ITEM_TYPE_VERIFIED_RESEARCH);
+            })
             ->select(['id', 'slug', 'title', 'title_ar', 'summary', 'summary_ar', 'item_type', 'locale', 'published_at'])
             ->latest('published_at');
 

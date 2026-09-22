@@ -35,9 +35,18 @@ class PublicCropLibraryFileController extends Controller
         $cropId = $validated['field_crop_id'];
         $sectionId = $validated['library_file_section'];
 
+        // Library product contract: scientific research originals are not anonymous public files.
         $items = LibraryItem::query()
             ->where('organization_id', $organization->id)
             ->where('publication_status', 'published')
+            ->where(function ($builder): void {
+                $builder->whereNull('item_type')
+                    ->orWhere('item_type', '!=', \App\Services\Agriculture\Research\Persistence\ScientificKnowledgePersistenceService::ITEM_TYPE_VERIFIED_RESEARCH);
+            })
+            ->where(function ($builder): void {
+                $builder->whereNull('metadata->library_file_section')
+                    ->orWhere('metadata->library_file_section', '!=', 'scientific-research');
+            })
             ->whereNotNull('file_path')
             ->where('file_path', '!=', '')
             ->where(function ($query) use ($categoryId, $cropId, $sectionId): void {
@@ -68,6 +77,14 @@ class PublicCropLibraryFileController extends Controller
         $item = LibraryItem::query()
             ->where('organization_id', $organization->id)
             ->where('publication_status', 'published')
+            ->where(function ($builder): void {
+                $builder->whereNull('item_type')
+                    ->orWhere('item_type', '!=', \App\Services\Agriculture\Research\Persistence\ScientificKnowledgePersistenceService::ITEM_TYPE_VERIFIED_RESEARCH);
+            })
+            ->where(function ($builder): void {
+                $builder->whereNull('metadata->library_file_section')
+                    ->orWhere('metadata->library_file_section', '!=', 'scientific-research');
+            })
             ->whereNotNull('file_path')
             ->where('file_path', '!=', '')
             ->whereKey($fileId)

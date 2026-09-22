@@ -28,6 +28,8 @@ class ScientificKnowledgePersistenceService
 
     public const ACTION_PERSISTENCE_ACCEPTED = 'security.public_tenant_persistence_accepted';
 
+    public const ITEM_TYPE_VERIFIED_RESEARCH = 'verified_research_knowledge';
+
     public function __construct(
         private KnowledgeSemanticIndexSync $semanticIndex,
         private ScientificSourceValidator $sourceValidator,
@@ -104,40 +106,25 @@ class ScientificKnowledgePersistenceService
             $existingResearch = is_array($existingMeta['research_agent'] ?? null) ? $existingMeta['research_agent'] : [];
             $existingFingerprint = (string) ($existingResearch['evidence_fingerprint'] ?? '');
 
-            if ($existingFingerprint === $fingerprint) {
-                $report = new KnowledgePersistenceExecutionReport(
-                    status: 'persistence_unchanged',
-                    performed: true,
-                    libraryItemId: (int) $existing->id,
-                    slug: $slug,
-                    action: 'unchanged',
-                    provenance: is_array($existingResearch['provenance'] ?? null) ? $existingResearch['provenance'] : null,
-                    observability: [
-                        'duplicate_protection' => 'same_evidence_fingerprint',
-                        'internet_first_preserved' => true,
-                    ],
-                );
-                $this->auditPublicPersistenceAccepted($organizationId, $existing, $report->action);
+            // Library product contract: same research identity (org + slug) must not create
+            // another LibraryItem or overwrite/re-download when already stored.
+            $report = new KnowledgePersistenceExecutionReport(
+                status: 'persistence_unchanged',
+                performed: true,
+                libraryItemId: (int) $existing->id,
+                slug: $slug,
+                action: 'unchanged',
+                provenance: is_array($existingResearch['provenance'] ?? null) ? $existingResearch['provenance'] : null,
+                observability: [
+                    'duplicate_protection' => $existingFingerprint === $fingerprint
+                        ? 'same_evidence_fingerprint'
+                        : 'same_research_identity',
+                    'internet_first_preserved' => true,
+                ],
+            );
+            $this->auditPublicPersistenceAccepted($organizationId, $existing, $report->action);
 
-                return $report;
-            }
-
-            $existingFreshness = (int) ($existingResearch['newest_publication_year'] ?? 0);
-            $incomingFreshness = $this->newestPublicationYear($validationReport->validatedEvidence);
-            if ($existingFreshness > $incomingFreshness && $existingFingerprint !== '') {
-                return new KnowledgePersistenceExecutionReport(
-                    status: 'persistence_skipped',
-                    performed: false,
-                    libraryItemId: (int) $existing->id,
-                    slug: $slug,
-                    action: 'skipped_newer_existing',
-                    provenance: is_array($existingResearch['provenance'] ?? null) ? $existingResearch['provenance'] : null,
-                    observability: [
-                        'duplicate_protection' => 'existing_evidence_is_newer',
-                        'internet_first_preserved' => true,
-                    ],
-                );
-            }
+            return $report;
         }
 
         try {
@@ -148,7 +135,7 @@ class ScientificKnowledgePersistenceService
                 $validationReport,
                 $slug,
                 $fingerprint,
-                $existing,
+                null,
             );
 
             $report = new KnowledgePersistenceExecutionReport(
@@ -156,7 +143,7 @@ class ScientificKnowledgePersistenceService
                 performed: true,
                 libraryItemId: (int) $item->id,
                 slug: $slug,
-                action: $existing === null ? 'created' : 'updated',
+                action: 'created',
                 provenance: $this->provenance($plan, $synthesisReport, $validationReport),
                 observability: [
                     'claims_persisted' => count($synthesisReport->claims),
@@ -178,7 +165,7 @@ class ScientificKnowledgePersistenceService
             return new KnowledgePersistenceExecutionReport(
                 status: 'persistence_failed',
                 performed: false,
-                libraryItemId: $existing !== null ? (int) $existing->id : null,
+                libraryItemId: null,
                 slug: $slug,
                 action: 'failed',
                 provenance: null,
@@ -204,7 +191,7 @@ class ScientificKnowledgePersistenceService
         $item = $existing ?? new LibraryItem;
         $references = $this->scientificReferences($synthesisReport->citations);
         $primarySource = $references[0] ?? null;
-        $cropFolder = $this->ensureCropScientificResearchFolder($organizationId, $plan);
+        $topicFolder = $this->ensureTopicScientificResearchFolder($organizationId, $plan);
 
         $metadata = is_array($item->metadata) ? $item->metadata : [];
         $metadata['research_agent'] = [
@@ -249,19 +236,26 @@ class ScientificKnowledgePersistenceService
             $metadata['scientific_references'] = $references;
         }
 
-        if ($cropFolder !== null) {
-            $metadata['field_crop_id'] = $cropFolder['crop_id'];
-            $metadata['field_crop_name'] = $cropFolder['crop_name'];
-            $metadata['field_crop_category_id'] = $cropFolder['category_id'];
-            $metadata['field_crop_category_name'] = $cropFolder['category_name'];
+        if ($topicFolder !== null) {
+            $metadata['topic_id'] = $topicFolder['topic_id'];
+            $metadata['topic_name'] = $topicFolder['topic_name'];
+            $metadata['topic_kind'] = $topicFolder['topic_kind'];
             $metadata['library_file_section'] = 'scientific-research';
             $metadata['knowledge_option'] = 'scientific-research';
             $metadata['service_option'] = 'scientific-research';
             $metadata['library_folder'] = [
-                'crop_category_id' => $cropFolder['crop_category_row_id'],
-                'scientific_research_category_id' => $cropFolder['scientific_category_row_id'],
-                'path' => 'Crop → Scientific Research',
+                'topic_category_id' => $topicFolder['topic_category_row_id'],
+                'scientific_research_category_id' => $topicFolder['scientific_category_row_id'],
+                'path' => $topicFolder['path'],
             ];
+
+            if ($topicFolder['topic_kind'] === 'crop') {
+                $metadata['field_crop_id'] = $topicFolder['topic_id'];
+                $metadata['field_crop_name'] = $topicFolder['topic_name'];
+                $metadata['field_crop_category_id'] = $topicFolder['category_id'];
+                $metadata['field_crop_category_name'] = $topicFolder['category_name'];
+                $metadata['library_folder']['crop_category_id'] = $topicFolder['topic_category_row_id'];
+            }
         }
 
         $title = $this->titleFor($plan, $language);
@@ -269,9 +263,11 @@ class ScientificKnowledgePersistenceService
 
         $item->organization_id = $organizationId;
         $item->slug = $slug;
-        $item->item_type = 'verified_research_knowledge';
-        if ($cropFolder !== null) {
-            $item->category_id = $cropFolder['scientific_category_row_id'];
+        $item->item_type = self::ITEM_TYPE_VERIFIED_RESEARCH;
+        // Shared scientific research is not an owned service record.
+        $item->owner_user_id = null;
+        if ($topicFolder !== null) {
+            $item->category_id = $topicFolder['scientific_category_row_id'];
         }
         // R2/R3 + P2-C08: persist supported answer languages without collapsing tr/fr → en.
         $persistedLocale = in_array($language, ['ar', 'en', 'tr', 'fr'], true) ? $language : 'en';
@@ -298,7 +294,13 @@ class ScientificKnowledgePersistenceService
         }
 
         $item->source = $this->sourceAttribution($references);
+        $item->owner_user_id = null;
         $item->save();
+
+        // Shared scientific research must remain non-owned even if model hooks fire.
+        if ($item->owner_user_id !== null) {
+            $item->forceFill(['owner_user_id' => null])->saveQuietly();
+        }
 
         // R3: preserve original source file bytes when a verified URL is downloadable.
         $this->preserveOriginalSourceFile($item, $primarySource);
@@ -509,19 +511,80 @@ class ScientificKnowledgePersistenceService
     }
 
     /**
-     * R19: organize verified research under Crop → Scientific Research folders.
-     * Uses LibraryCategory hierarchy; does not invent FAOSTAT codes as crop IDs.
+     * Organize verified research under Topic → Scientific Research folders.
+     * Crops keep crop-* category codes; other entities use topic-* codes.
      *
      * @return array{
-     *     crop_id: string,
-     *     crop_name: string,
+     *     topic_id: string,
+     *     topic_name: string,
+     *     topic_kind: string,
      *     category_id: string,
      *     category_name: string,
-     *     crop_category_row_id: int,
-     *     scientific_category_row_id: int
+     *     topic_category_row_id: int,
+     *     scientific_category_row_id: int,
+     *     path: string
      * }|null
      */
-    private function ensureCropScientificResearchFolder(int $organizationId, KnowledgeQueryPlan $plan): ?array
+    private function ensureTopicScientificResearchFolder(int $organizationId, KnowledgeQueryPlan $plan): ?array
+    {
+        $topic = $this->resolveResearchTopic($plan);
+        if ($topic === null) {
+            return null;
+        }
+
+        $prefix = $topic['kind'] === 'crop' ? 'crop-' : 'topic-';
+        $topicCode = $prefix.Str::slug(mb_substr($topic['id'], 0, 48));
+        if ($topicCode === $prefix || strlen($topicCode) < strlen($prefix) + 2) {
+            $topicCode = $prefix.substr(md5($topic['id']), 0, 12);
+        }
+
+        $topicCategory = LibraryCategory::query()->firstOrCreate(
+            [
+                'organization_id' => $organizationId,
+                'code' => mb_substr($topicCode, 0, 32),
+            ],
+            [
+                'parent_id' => null,
+                'name' => $topic['name'],
+                'name_ar' => $topic['name'],
+            ],
+        );
+
+        $scientific = LibraryCategory::query()->firstOrCreate(
+            [
+                'organization_id' => $organizationId,
+                'code' => mb_substr($topicCode.'-sci', 0, 32),
+            ],
+            [
+                'parent_id' => (int) $topicCategory->id,
+                'name' => 'Scientific Research',
+                'name_ar' => 'الأبحاث العلمية',
+            ],
+        );
+
+        if ($scientific->parent_id === null || (int) $scientific->parent_id !== (int) $topicCategory->id) {
+            $scientific->parent_id = (int) $topicCategory->id;
+            $scientific->save();
+        }
+
+        $pathLabel = $topic['kind'] === 'crop' ? 'Crop → Scientific Research' : 'Topic → Scientific Research';
+
+        return [
+            'topic_id' => $topic['id'],
+            'topic_name' => $topic['name'],
+            'topic_kind' => $topic['kind'],
+            'category_id' => $topic['category_id'],
+            'category_name' => $topic['category_name'],
+            'topic_category_row_id' => (int) $topicCategory->id,
+            'scientific_category_row_id' => (int) $scientific->id,
+            'path' => $pathLabel,
+        ];
+    }
+
+    /**
+     * @return array{id: string, name: string, kind: string, category_id: string, category_name: string}|null
+     */
+    private function resolveResearchTopic(KnowledgeQueryPlan $plan): ?array
     {
         $cropId = trim((string) ($plan->contextInput['selected_crop_id'] ?? $plan->normalizedQuery->cropId ?? ''));
         $cropName = trim((string) ($plan->contextInput['selected_crop_name'] ?? $plan->normalizedQuery->crop ?? ''));
@@ -529,58 +592,43 @@ class ScientificKnowledgePersistenceService
             $cropId = trim((string) ($plan->subjectEntity['value'] ?? ''));
             $cropName = trim((string) ($plan->subjectEntity['label'] ?? $cropName));
         }
-        if ($cropId === '') {
-            return null;
-        }
-        if ($cropName === '') {
-            $cropName = $cropId;
-        }
-
-        $categoryId = trim((string) ($plan->contextInput['selected_category_id'] ?? ''));
-        $categoryName = trim((string) ($plan->contextInput['selected_category_name'] ?? ''));
-
-        $cropCode = 'crop-'.Str::slug(mb_substr($cropId, 0, 48));
-        if ($cropCode === 'crop-' || strlen($cropCode) < 6) {
-            $cropCode = 'crop-'.substr(md5($cropId), 0, 12);
+        if ($cropId !== '') {
+            return [
+                'id' => $cropId,
+                'name' => $cropName !== '' ? $cropName : $cropId,
+                'kind' => 'crop',
+                'category_id' => trim((string) ($plan->contextInput['selected_category_id'] ?? '')),
+                'category_name' => trim((string) ($plan->contextInput['selected_category_name'] ?? '')),
+            ];
         }
 
-        $cropCategory = LibraryCategory::query()->firstOrCreate(
-            [
-                'organization_id' => $organizationId,
-                'code' => mb_substr($cropCode, 0, 32),
-            ],
-            [
-                'parent_id' => null,
-                'name' => $cropName,
-                'name_ar' => $cropName,
-            ],
-        );
-
-        $scientific = LibraryCategory::query()->firstOrCreate(
-            [
-                'organization_id' => $organizationId,
-                'code' => mb_substr($cropCode.'-sci', 0, 32),
-            ],
-            [
-                'parent_id' => (int) $cropCategory->id,
-                'name' => 'Scientific Research',
-                'name_ar' => 'الأبحاث العلمية',
-            ],
-        );
-
-        if ($scientific->parent_id === null || (int) $scientific->parent_id !== (int) $cropCategory->id) {
-            $scientific->parent_id = (int) $cropCategory->id;
-            $scientific->save();
+        if (is_array($plan->subjectEntity)) {
+            $entityId = trim((string) ($plan->subjectEntity['value'] ?? ''));
+            $entityName = trim((string) ($plan->subjectEntity['label'] ?? $entityId));
+            $entityType = trim((string) ($plan->subjectEntity['type'] ?? 'entity'));
+            if ($entityId !== '') {
+                return [
+                    'id' => $entityId,
+                    'name' => $entityName !== '' ? $entityName : $entityId,
+                    'kind' => $entityType !== '' ? $entityType : 'entity',
+                    'category_id' => '',
+                    'category_name' => '',
+                ];
+            }
         }
 
-        return [
-            'crop_id' => $cropId,
-            'crop_name' => $cropName,
-            'category_id' => $categoryId,
-            'category_name' => $categoryName,
-            'crop_category_row_id' => (int) $cropCategory->id,
-            'scientific_category_row_id' => (int) $scientific->id,
-        ];
+        $domain = trim((string) $plan->agriculturalDomain);
+        if ($domain !== '' && ! in_array(strtolower($domain), ['general', 'unknown', 'n/a'], true)) {
+            return [
+                'id' => $domain,
+                'name' => $domain,
+                'kind' => 'domain',
+                'category_id' => '',
+                'category_name' => '',
+            ];
+        }
+
+        return null;
     }
 
     private function auditPublicPersistenceAccepted(

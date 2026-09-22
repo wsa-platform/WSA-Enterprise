@@ -7,7 +7,9 @@ use App\Http\Controllers\Concerns\ManagesUserOwnedModules;
 use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{CropType, LibraryCategory, LibraryItem, LibraryTag};
+use App\Services\Agriculture\Research\Persistence\ScientificKnowledgePersistenceService;
 use App\Services\Media\MediaReferenceService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -60,11 +62,7 @@ class LibraryController extends Controller
         }
 
         $this->authorizePermission($request, $this->moduleViewPermission($request, $module));
-        $query = $this->ownership()->scopeAccessibleServices(
-            $class::query()->where('organization_id', $this->organization($request)),
-            $request->user(),
-            $this->organization($request),
-        )->latest();
+        $query = $this->scientificResearchAwareItemsQuery($request)->latest();
 
         if ($status = $request->query('publication_status')) {
             $query->where('publication_status', $status);
@@ -96,12 +94,9 @@ class LibraryController extends Controller
         $term = $validated['q'];
         $likeOperator = LibraryItem::query()->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
 
-        $query = $this->ownership()->scopeAccessibleServices(
-            LibraryItem::where('organization_id', $organizationId)
-                ->where('publication_status', 'published'),
-            $request->user(),
-            $organizationId,
-        )->where(function ($builder) use ($term, $likeOperator) {
+        $query = $this->scientificResearchAwareItemsQuery($request)
+            ->where('publication_status', 'published')
+            ->where(function ($builder) use ($term, $likeOperator) {
                 $builder->where('title', $likeOperator, "%{$term}%")
                     ->orWhere('title_ar', $likeOperator, "%{$term}%")
                     ->orWhere('summary', $likeOperator, "%{$term}%")
@@ -114,7 +109,8 @@ class LibraryController extends Controller
                     ->orWhere('metadata->field_crop_id', $likeOperator, "%{$term}%")
                     ->orWhere('metadata->knowledge_option', $likeOperator, "%{$term}%")
                     ->orWhere('metadata->service_option', $likeOperator, "%{$term}%")
-                    ->orWhere('metadata->field_crop_category_name', $likeOperator, "%{$term}%");
+                    ->orWhere('metadata->field_crop_category_name', $likeOperator, "%{$term}%")
+                    ->orWhere('metadata->topic_name', $likeOperator, "%{$term}%");
             })
             ->with(['tags', 'category:id,name,name_ar', 'cropType:id,code,name']);
 
@@ -146,6 +142,37 @@ class LibraryController extends Controller
             ...$paginator->toArray(),
             'query' => $term,
         ]);
+    }
+
+    /**
+     * Verified scientific research is a shared authenticated Library surface:
+     * visible to any member with library.view without ownership/supervisor gates.
+     * Other Library item types remain organization-owned services.
+     *
+     * @return Builder<LibraryItem>
+     */
+    private function scientificResearchAwareItemsQuery(Request $request): Builder
+    {
+        $organizationId = $this->organization($request);
+        $user = $request->user();
+        $canSupervise = $user !== null && $this->ownership()->canSupervise($user, $organizationId);
+        $ownerColumn = config('service_ownership.owner_column', 'owner_user_id');
+
+        return LibraryItem::query()->where(function (Builder $builder) use ($organizationId, $user, $canSupervise, $ownerColumn): void {
+            $builder->where('item_type', ScientificKnowledgePersistenceService::ITEM_TYPE_VERIFIED_RESEARCH);
+
+            $builder->orWhere(function (Builder $orgItems) use ($organizationId, $user, $canSupervise, $ownerColumn): void {
+                $orgItems->where('organization_id', $organizationId)
+                    ->where(function (Builder $types): void {
+                        $types->whereNull('item_type')
+                            ->orWhere('item_type', '!=', ScientificKnowledgePersistenceService::ITEM_TYPE_VERIFIED_RESEARCH);
+                    });
+
+                if (! $canSupervise && $user !== null) {
+                    $orgItems->where($ownerColumn, $user->id);
+                }
+            });
+        });
     }
 
     public function store(Request $request, string $module): JsonResponse
