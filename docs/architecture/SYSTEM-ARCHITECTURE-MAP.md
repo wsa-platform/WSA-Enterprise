@@ -16,14 +16,14 @@ HomePage (React)
     RISK: thin rendering of API fields
 
   → queryPublicResearchAgent (POST /api/v1/public/research-agent/query)
-    CONTRACT: { organization|organization_id, query }
+    CONTRACT: { organization? (compat), query }
     DATA: no crop selectors
-    RISK: public, unauthenticated
+    RISK: public, unauthenticated; expensive (U8.3)
 
   → AgriculturalResearchAgentController::query
-    CONTRACT: validate org + query; throttle:60,1
-    DATA: Organization model
-    RISK: client-chosen organization_id (SEC)
+    CONTRACT: MODEL B PublicTenantResolver bind; org fields compatibility-only; public-global + public-expensive-compute limiters
+    DATA: bound public Organization id
+    RISK: cost/abuse (U8.3); write tenant server-bound (R1)
 
   → AgriculturalResearchAgent::conductResearch
     CONTRACT: full Stage 2–5 + persist
@@ -247,18 +247,28 @@ DISCOVERED (adapters)
 
 ## SECURITY BOUNDARIES
 
+> **CURRENT AUTHORITATIVE (Phase 8A-1 / R1 MODEL B):** Public **writes** bind the server-configured public tenant via `PublicTenantResolver` — client `organization` / `organization_id` are compatibility-only and not authoritative. See `PHASE-8A-1-SECURITY-CONTRACT-ALIGNMENT.md` and `WSA-ENTERPRISE-ARCHITECTURAL-DECISIONS-R1-R7.md`.
+
 ```
 [Public Internet]
   → nginx / API
-    → throttle:60,1
-    → /public/research-agent/*     ❌ no auth.principal
-    → /public/field-crops/*        ❌ no auth.principal
-    → resolveOrganization(client)  ⚠️ tenant selection
-    → persist LibraryItem          ⚠️ write
+    → public-global (aggregate ceiling; default 60/min; inherited from historical throttle:60,1)
+         ├─ public-expensive-compute (specialized sub-bucket; default 60/min — NOT additive to global)
+         └─ public-browse (specialized sub-bucket; default 60/min — NOT additive to global)
+    → /public/research-agent/query|synthesize|plan|search|validate  ❌ no auth.principal
+    → /public/field-crops/farming-needs-profile                     ❌ no auth.principal
+    → PublicTenantResolver (MODEL B) → TenantContext public-bound   ✅ server tenant for writes
+    → persist LibraryItem (public-bound mismatch rejected)          ✅ write tenant guarded
+    → /public/library|training|crop-files browse                    ⚠️ client org (P8-F1 FROZEN)
   → /api/v1/... authenticated groups ✅ auth.principal (other features)
+  → /api/v1/health/* outside public limiter group
 ```
 
-**RISK KEY:** Public research is a **cost + tenant write** boundary, not a read-only demo boundary.
+**HISTORICAL (pre-MODEL B):** Older maps showed `resolveOrganization(client)` selecting the write tenant. That write-path behavior is **superseded**; preserve discovery docs as historical evidence only.
+
+**HISTORICAL (early 8A-1 draft wording):** Specialized expensive/browse buckets alone could be misread as additive 60+60. **CURRENT:** `public-global` is the aggregate public-route ceiling; specialized buckets are sub-buckets and cannot bypass global.
+
+**RISK KEY:** Public research remains a **cost** boundary (U8.3; global ≤60/min). Public **write tenant selection** is server-bound (MODEL B). Published **browse** org selection remains a frozen product decision (P8-F1).
 
 ---
 

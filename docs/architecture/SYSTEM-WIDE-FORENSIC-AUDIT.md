@@ -13,7 +13,7 @@
 1. **Mission authority ADR-021** was absent on local HEAD `7486178` (PROVEN historically). On 2026-09-21 the ADR text was **recovered into the working tree** from Git object `1eaced9` without performing G0 FF — HEAD commit tip unchanged. In-repo ADR-019/ADR-020 remain historical/8-phase Home records; ADR-021 is the master 10-phase plan.
 2. **Mission expected HEAD `1eaced9…` ≠ actual code HEAD `7486178…`** (PROVEN). ADR-021 docs commit exists; G0 FF not executed.
 3. **Home and Crop share `AgriculturalResearchAgent::conductResearch`** after an early QUS fork (PROVEN).
-4. **Public research endpoints are unauthenticated** with client-selectable `organization_id` that can drive Library persistence (PROVEN) — **SECURITY REVIEW REQUIRED** (G1 MODEL B implemented as WIP; not committed).
+4. **Public research endpoints are unauthenticated** with client-selectable `organization_id` that can drive Library persistence (PROVEN **historically** at audit HEAD) — **SECURITY REVIEW REQUIRED** at time of audit. **CURRENT (Phase 8A-1 / HEAD `53a8734`+):** MODEL B write binding is implemented; client org is compatibility-only for public writes. Residual: P8-F1 browse / P8-F2 plant (frozen). See `PHASE-8A-1-SECURITY-CONTRACT-ALIGNMENT.md`.
 5. **Evidence classification is re-evaluated in multiple layers** (Ranker → Matcher/EVL → Validation → Composer) with **duplicated Home disposition** between Composer and `HomeEvidenceLifecycleDisposition` (PROVEN) — architectural debt.
 6. **Comparison entity-B omission** was PROVEN historically (RC-2); **RC-C committed** `ensureHomeMultiEntitySemanticCoverage` on HEAD (`e96c34a`) — live post-fix matrix **REQUIRES VERIFICATION**.
 7. **Answer language follows platform locale**, not question language (PROVEN mechanism). Flutter omits `Accept-Language` (PROVEN) → English answers likely under default locale.
@@ -490,7 +490,7 @@ Do not invent titles. Do not renumber NEW-/RC- findings into `#1`–`#31` withou
 | NEW-ID | Description | Root cause | Evidence | First divergence | Impact | Confidence | Phase hint |
 |--------|-------------|------------|----------|------------------|--------|------------|------------|
 | NEW-01 | ADR-021 missing; ADR conflict | Docs not landed | `docs/architecture` listing | Docs | Phase planning blocked | HIGH | Phase 1/2 governance |
-| NEW-02 | Public org_id → Library write | Unauthenticated resolveOrganization | Controller | API entry | Tenant/data integrity | HIGH | Security phase |
+| NEW-02 | Public org_id → Library write | Unauthenticated resolveOrganization (historical) | Controller | API entry | Tenant/data integrity | HIGH | Security — **WRITE MITIGATED (MODEL B)**; browse/plant residual = P8-F1/P8-F2 frozen |
 | NEW-03 | Disposition ownership duplication | Composer + HomeDisposition | Both classes | Post-compose | Inconsistent metadata | HIGH | Evidence/Composer |
 | NEW-04 | Locale persistence collapses TR/FR | `locale = ar?ar:en` | Persistence service | Persist | Wrong library language | HIGH | Language/persistence |
 | NEW-05 | Flutter no Accept-Language | Http client headers | `http_client.dart` | Mobile API | EN answers + AR chrome | HIGH | Mobile/language |

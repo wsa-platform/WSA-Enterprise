@@ -76,12 +76,12 @@
 | `backend/tests/Feature/ScientificResearchAnswerRelevanceTest.php` | A — Protected scientific test WIP |
 | `backend/tests/Feature/ScientificUpstreamRetrievalFixTest.php` | A — Protected scientific test WIP |
 | `backend/tests/Feature/SweetPotatoEntityResolutionTest.php` | A — Protected scientific test WIP |
-| `backend/app/Http/Controllers/Api/AgriculturalResearchAgentController.php` | A — Protected (G1 MODEL B public-tenant binding — uncommitted) |
-| `backend/app/Http/Controllers/Api/PublicFieldCropCultivationController.php` | A — Protected (G1 Crop public-tenant binding — uncommitted) |
-| `backend/app/Services/Agriculture/Research/Persistence/ScientificKnowledgePersistenceService.php` | A — Protected (G1 persistence defense-in-depth — uncommitted) |
-| `backend/app/Services/Tenancy/TenantContext.php` | A — Protected (G1 public-bound flag — uncommitted) |
-| `backend/config/wsa.php` | A — Protected (G1 MODEL B comment — uncommitted) |
-| `backend/tests/Feature/WsaEnterpriseStage9SecurityTest.php` | A — Protected (G1-related Stage9 contract updates — uncommitted) |
+| `backend/app/Http/Controllers/Api/AgriculturalResearchAgentController.php` | MODEL B public-tenant write binding — **on HEAD** (Phase 8A-1 docs align) |
+| `backend/app/Http/Controllers/Api/PublicFieldCropCultivationController.php` | MODEL B Crop public-tenant write binding — **on HEAD** |
+| `backend/app/Services/Agriculture/Research/Persistence/ScientificKnowledgePersistenceService.php` | MODEL B persistence defense-in-depth — **on HEAD** |
+| `backend/app/Services/Tenancy/TenantContext.php` | Public-bound flag — **on HEAD** |
+| `backend/config/wsa.php` | MODEL B + Phase 8A-1 public rate-limit config |
+| `backend/tests/Feature/PublicTenantBindingSecurityTest.php` | MODEL B security matrix — **on HEAD** |
 
 ### Untracked — classification summary (439 paths)
 
@@ -118,8 +118,8 @@
 
 | Component | Entry | Notes |
 |-----------|-------|-------|
-| Home research | `HomeScientificResearchSearch` → `POST /api/v1/public/research-agent/query` | Unauthenticated + `throttle:60,1` |
-| Crop profile | `FieldCropFarmingNeedsPanel` → `GET /api/v1/public/field-crops/farming-needs-profile` | Unauthenticated + throttle |
+| Home research | `HomeScientificResearchSearch` → `POST /api/v1/public/research-agent/query` | Unauthenticated + `public-global` + `public-expensive-compute` (MODEL B write bind) |
+| Crop profile | `FieldCropFarmingNeedsPanel` → `GET /api/v1/public/field-crops/farming-needs-profile` | Unauthenticated + `public-global` + `public-expensive-compute` (MODEL B write bind) |
 | Agent | `AgriculturalResearchAgent::conductResearch` | Shared by Home + Crop |
 | Universal orchestrator | In-process enrichment only | No dedicated public route |
 | Stage 3 | `MultiSourceScientificSearchOrchestrator` | OA/CR/S2 (+ optional FAOSTAT) |
@@ -149,7 +149,7 @@
 | R32 / R33 | Documented in `AUTHORITATIVE-PROBLEM-REGISTRY.md` |
 | Post–RC-C live comparison matrix | **REQUIRES VERIFICATION** (not re-run this audit; persist mutates) |
 | Per-provider / Stage-3-only ms on HEAD `7486178` | **NOT RUNTIME VERIFIED** (instrumentation now present; live measure not run) |
-| Public `organization_id` → Library write | **PROVEN design risk** (security) |
+| Public `organization_id` → Library write | **HISTORICAL risk**; **WRITE MITIGATED (MODEL B)**. Browse/plant = P8-F1/P8-F2 frozen |
 | Flutter research locale (`Accept-Language` absent) | **PROVEN mismatch risk** |
 | Clean-HEAD semantics vs dirty WIP | **REQUIRES VERIFICATION** |
 | Crop runtime answer quality | **NOT RUNTIME VERIFIED** this audit |
@@ -182,9 +182,9 @@
 
 | Control | Finding |
 |---------|---------|
-| Public research + crop routes | No `auth.principal`; `throttle:60,1` |
-| Org resolution | Client-supplied `organization_id` / slug → `findOrFail` |
-| Persistence | Query path can write LibraryItem for resolved org |
+| Public research + crop routes | No `auth.principal`; **HISTORICAL** shared `throttle:60,1`. **CURRENT (Phase 8A-1):** `public-global` (aggregate 60/min) + specialized `public-expensive-compute` / `public-browse` sub-buckets (not additive). |
+| Org resolution | **HISTORICAL:** client-supplied `organization_id` / slug → `findOrFail`. **CURRENT writes:** MODEL B `PublicTenantResolver` (client org compatibility-only). Browse/plant = P8-F1/P8-F2 frozen. |
+| Persistence | Query path can write LibraryItem for **bound public** org when eligible; public-bound mismatch rejected |
 | CSRF | `research-agent/query` excepted; other stage POSTs may differ |
 | Citation URL fetch | No Synthesis HTTP fetch of citation URLs found |
 

@@ -65,26 +65,33 @@ Route::prefix('v1/health')->group(function (): void {
 });
 
 Route::prefix('v1')->group(function (): void {
-    Route::prefix('public')->middleware('throttle:60,1')->group(function (): void {
-        Route::get('/services', [PublicPlatformController::class, 'serviceCatalog']);
-        Route::get('/library/items', [PublicPlatformController::class, 'publishedLibraryItems']);
-        Route::get('/library/crop-files', [PublicCropLibraryFileController::class, 'index']);
-        Route::get('/library/crop-files/{fileId}/content', [PublicCropLibraryFileController::class, 'content'])->whereNumber('fileId');
-        Route::get('/training/courses', [PublicPlatformController::class, 'publishedTrainingCourses']);
-        Route::get('/market/listings', [MarketplacePublicController::class, 'listings']);
-        Route::get('/market/listings/{listing}', [MarketplacePublicController::class, 'show'])->whereNumber('listing');
-        Route::get('/market/categories', [MarketplacePublicController::class, 'categories']);
-        Route::get('/market/units', [MarketplacePublicController::class, 'units']);
-        Route::get('/field-crops/taxonomy', [PublicFieldCropTaxonomyController::class, 'index']);
-        Route::get('/field-crops/farming-needs-profile', [PublicFieldCropCultivationController::class, 'farmingNeedsProfile']);
-        Route::post('/research-agent/query', [AgriculturalResearchAgentController::class, 'query']);
-        Route::post('/research-agent/plan', [AgriculturalResearchAgentController::class, 'plan']);
-        Route::post('/research-agent/search', [AgriculturalResearchAgentController::class, 'search']);
-        Route::post('/research-agent/validate', [AgriculturalResearchAgentController::class, 'validate']);
-        Route::post('/research-agent/synthesize', [AgriculturalResearchAgentController::class, 'synthesize']);
-        Route::post('/research-agent/feedback', [PublicResearchFeedbackController::class, 'store']);
-        Route::post('/plant-diagnosis/analyze', [PlantAiDiagnosisController::class, 'analyze']);
-        Route::post('/plant-diagnosis/knowledge', [PlantAiDiagnosisController::class, 'knowledge']);
+    // Phase 8A-1 / U8.3 — global public cap (60/min inherited) wraps specialized sub-buckets.
+    Route::prefix('public')->middleware('throttle:public-global')->group(function (): void {
+        Route::middleware('throttle:public-browse')->group(function (): void {
+            Route::get('/services', [PublicPlatformController::class, 'serviceCatalog']);
+            Route::get('/library/items', [PublicPlatformController::class, 'publishedLibraryItems']);
+            Route::get('/library/crop-files', [PublicCropLibraryFileController::class, 'index']);
+            Route::get('/library/crop-files/{fileId}/content', [PublicCropLibraryFileController::class, 'content'])->whereNumber('fileId');
+            Route::get('/training/courses', [PublicPlatformController::class, 'publishedTrainingCourses']);
+            Route::get('/market/listings', [MarketplacePublicController::class, 'listings']);
+            Route::get('/market/listings/{listing}', [MarketplacePublicController::class, 'show'])->whereNumber('listing');
+            Route::get('/market/categories', [MarketplacePublicController::class, 'categories']);
+            Route::get('/market/units', [MarketplacePublicController::class, 'units']);
+            Route::get('/field-crops/taxonomy', [PublicFieldCropTaxonomyController::class, 'index']);
+            Route::post('/research-agent/feedback', [PublicResearchFeedbackController::class, 'store']);
+            Route::post('/plant-diagnosis/analyze', [PlantAiDiagnosisController::class, 'analyze']);
+            Route::post('/plant-diagnosis/knowledge', [PlantAiDiagnosisController::class, 'knowledge']);
+        });
+
+        // Specialized expensive public research/crop compute sub-bucket (under global cap).
+        Route::middleware('throttle:public-expensive-compute')->group(function (): void {
+            Route::get('/field-crops/farming-needs-profile', [PublicFieldCropCultivationController::class, 'farmingNeedsProfile']);
+            Route::post('/research-agent/query', [AgriculturalResearchAgentController::class, 'query']);
+            Route::post('/research-agent/plan', [AgriculturalResearchAgentController::class, 'plan']);
+            Route::post('/research-agent/search', [AgriculturalResearchAgentController::class, 'search']);
+            Route::post('/research-agent/validate', [AgriculturalResearchAgentController::class, 'validate']);
+            Route::post('/research-agent/synthesize', [AgriculturalResearchAgentController::class, 'synthesize']);
+        });
     });
 
     Route::middleware('throttle:20,1')->group(function (): void {

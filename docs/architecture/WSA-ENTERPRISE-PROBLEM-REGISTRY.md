@@ -283,7 +283,7 @@
 | Source location | ADR-021 §4 / Phase 8 row |
 | Phase mapping | 8 |
 | Evidence | ID appears in ADR-021 mapping; no authoritative local definition source |
-| Notes | |
+| Notes | Phase 8A-1 does **not** invent a definition. Working security residuals tracked as NEW-02 (write mitigated / browse residual) + P8-F1/P8-F2 frozen. See `PHASE-8A-1-SECURITY-CONTRACT-ALIGNMENT.md`. |
 
 ### #19
 
@@ -296,7 +296,7 @@
 | Source location | ADR-021 §4 / Phase 8 row |
 | Phase mapping | 8 |
 | Evidence | ID appears in ADR-021 mapping; no authoritative local definition source |
-| Notes | |
+| Notes | Phase 8A-1 does **not** invent a definition. See `PHASE-8A-1-SECURITY-CONTRACT-ALIGNMENT.md`. |
 
 ### #20
 
