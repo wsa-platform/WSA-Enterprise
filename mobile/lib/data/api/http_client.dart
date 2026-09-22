@@ -21,7 +21,8 @@ class HttpClient {
   final Duration timeout;
   final String? Function()? getToken;
   final int? Function()? getOrganizationId;
-  /// UI locale for Accept-Language (e.g. ar|en|tr|fr). Not the scientific answer language.
+  /// Client language preference for HTTP Accept-Language (ar|en|tr|fr).
+  /// Scientific answer language remains server-authoritative (question → response.language).
   final String? Function()? getAcceptLanguage;
   void Function()? onUnauthorized;
 
@@ -175,7 +176,8 @@ class HttpClient {
   Map<String, String> _headers({bool includeJson = false}) {
     final token = getToken?.call();
     final organizationId = getOrganizationId?.call();
-    // P2-C04 / R2 transport: send UI locale; answer language is derived from question text server-side.
+    // P7-U3: send Accept-Language from client language preference (default ar).
+    // Scientific answer language is server-derived from the question, not this header.
     final acceptLanguage = getAcceptLanguage?.call() ?? 'ar';
 
     return {

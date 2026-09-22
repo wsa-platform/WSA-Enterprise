@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:wsa_enterprise/config/app_config.dart';
+import 'package:wsa_enterprise/core/language/client_language_state.dart';
 import 'package:wsa_enterprise/data/api/api_client.dart';
 import 'package:wsa_enterprise/data/api/http_client.dart';
 import 'package:wsa_enterprise/data/media/diagnosis_image.dart';
@@ -93,6 +94,7 @@ http.Response jsonOk(Object body, {int status = 200}) =>
 ApiClient testApiClient({
   required http.Client httpClient,
   DiagnosisImagePicker? picker,
+  ClientLanguageState? languageState,
 }) {
   return ApiClient(
     baseUrl: 'http://example.test/api/v1',
@@ -106,6 +108,7 @@ ApiClient testApiClient({
       diagnosisTimeout: Duration(seconds: 5),
     ),
     diagnosisImagePicker: picker,
+    languageState: languageState,
   );
 }
 

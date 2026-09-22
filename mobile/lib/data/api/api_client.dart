@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:wsa_enterprise/config/app_config.dart';
+import 'package:wsa_enterprise/core/language/client_language_state.dart';
 import 'package:wsa_enterprise/data/api/ai_api.dart';
 import 'package:wsa_enterprise/data/api/api_exception.dart';
 import 'package:wsa_enterprise/data/api/auth_api.dart';
@@ -27,8 +28,10 @@ class ApiClient {
     http.Client? httpClient,
     AppConfig config = AppConfig.current,
     DiagnosisImagePicker? diagnosisImagePicker,
+    ClientLanguageState? languageState,
   })  : baseUrl = baseUrl ?? config.apiBaseUrl,
         config = config,
+        languageState = languageState ?? ClientLanguageState(),
         diagnosisImagePicker =
             diagnosisImagePicker ?? const UnavailableDiagnosisImagePicker(),
         _tokenStorage = tokenStorage ?? SharedPreferencesTokenStorage() {
@@ -38,6 +41,7 @@ class ApiClient {
       timeout: config.requestTimeout,
       getToken: () => _token,
       getOrganizationId: () => _organizationId,
+      getAcceptLanguage: () => this.languageState.acceptLanguage,
       onUnauthorized: _handleUnauthorized,
     );
     auth = AuthApi(_http);
@@ -50,6 +54,7 @@ class ApiClient {
 
   final String baseUrl;
   final AppConfig config;
+  final ClientLanguageState languageState;
   final DiagnosisImagePicker diagnosisImagePicker;
   final TokenStorage _tokenStorage;
 

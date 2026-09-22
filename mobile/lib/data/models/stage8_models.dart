@@ -104,6 +104,12 @@ class ResearchCitation {
     this.url,
     this.sourceType,
     this.authors = const [],
+    this.citationId,
+    this.sourceId,
+    this.evidenceId,
+    this.organization,
+    this.journal,
+    this.publicationYear,
   });
 
   final String title;
@@ -111,6 +117,12 @@ class ResearchCitation {
   final String? url;
   final String? sourceType;
   final List<String> authors;
+  final String? citationId;
+  final String? sourceId;
+  final String? evidenceId;
+  final String? organization;
+  final String? journal;
+  final int? publicationYear;
 
   factory ResearchCitation.fromJson(Map<String, dynamic> json) =>
       ResearchCitation(
@@ -121,6 +133,53 @@ class ResearchCitation {
         authors: (json['authors'] as List<dynamic>? ?? const [])
             .map((item) => '$item')
             .toList(),
+        citationId: json['citation_id']?.toString(),
+        sourceId: json['source_id']?.toString(),
+        evidenceId: json['evidence_id']?.toString(),
+        organization: json['organization']?.toString(),
+        journal: json['journal']?.toString(),
+        publicationYear: json['publication_year'] is num
+            ? (json['publication_year'] as num).toInt()
+            : int.tryParse('${json['publication_year'] ?? ''}'),
+      );
+}
+
+class ResearchAnswerClaim {
+  const ResearchAnswerClaim({
+    this.claimId,
+    this.claimText,
+    this.evidenceIds = const [],
+    this.sourceIds = const [],
+    this.validationStatus,
+    this.claimRelationship,
+    this.confidence,
+    this.questionClaimId,
+  });
+
+  final String? claimId;
+  final String? claimText;
+  final List<String> evidenceIds;
+  final List<String> sourceIds;
+  final String? validationStatus;
+  final String? claimRelationship;
+  final double? confidence;
+  final String? questionClaimId;
+
+  factory ResearchAnswerClaim.fromJson(Map<String, dynamic> json) =>
+      ResearchAnswerClaim(
+        claimId: json['claim_id']?.toString(),
+        claimText: json['claim_text']?.toString(),
+        evidenceIds: (json['evidence_ids'] as List<dynamic>? ?? const [])
+            .map((item) => '$item')
+            .toList(),
+        sourceIds: (json['source_ids'] as List<dynamic>? ?? const [])
+            .map((item) => '$item')
+            .toList(),
+        validationStatus: json['validation_status']?.toString(),
+        claimRelationship: json['claim_relationship']?.toString(),
+        confidence:
+            json['confidence'] is num ? (json['confidence'] as num).toDouble() : null,
+        questionClaimId: json['question_claim_id']?.toString(),
       );
 }
 
@@ -128,24 +187,51 @@ class ResearchAgentResult {
   const ResearchAgentResult({
     required this.question,
     this.answer,
+    this.conciseSummary,
+    this.detailedExplanation,
+    this.keyFindings = const [],
     this.confidence,
     this.limitations = const [],
+    this.uncertainty,
+    this.conflicts = const [],
+    this.claims = const [],
     this.citations = const [],
     this.evidence = const [],
+    this.evidenceReferences = const [],
     this.status,
+    this.stage,
+    this.language,
     this.insufficientEvidence = false,
     this.raw = const {},
   });
 
   final String question;
   final String? answer;
+  final String? conciseSummary;
+  final String? detailedExplanation;
+  final List<String> keyFindings;
   final double? confidence;
   final List<String> limitations;
+  final String? uncertainty;
+  final List<String> conflicts;
+  final List<ResearchAnswerClaim> claims;
   final List<ResearchCitation> citations;
   final List<String> evidence;
+  final List<Map<String, dynamic>> evidenceReferences;
   final String? status;
+  final int? stage;
+  final String? language;
   final bool insufficientEvidence;
   final Map<String, dynamic> raw;
+
+  /// Primary scientific answer text: answer, else concise_summary.
+  String? get canonicalAnswerText {
+    final primary = answer?.trim();
+    if (primary != null && primary.isNotEmpty) return primary;
+    final summary = conciseSummary?.trim();
+    if (summary != null && summary.isNotEmpty) return summary;
+    return null;
+  }
 
   factory ResearchAgentResult.fromJson(Map<String, dynamic> json,
       {required String fallbackQuestion}) {
@@ -168,12 +254,26 @@ class ResearchAgentResult {
       }
     }
 
+    final claims = <ResearchAnswerClaim>[];
+    final rawClaims = json['claims'];
+    if (rawClaims is List) {
+      for (final item in rawClaims) {
+        if (item is Map) {
+          claims.add(
+              ResearchAnswerClaim.fromJson(Map<String, dynamic>.from(item)));
+        }
+      }
+    }
+
     final evidence = <String>[];
+    final evidenceReferences = <Map<String, dynamic>>[];
     final refs = json['evidence_references'];
     if (refs is List) {
       for (final item in refs) {
         if (item is Map) {
-          final title = item['title'] ?? item['claim'] ?? item['evidence_id'];
+          final map = Map<String, dynamic>.from(item);
+          evidenceReferences.add(map);
+          final title = map['title'] ?? map['claim'] ?? map['evidence_id'];
           if (title != null) evidence.add('$title');
         } else if (item != null) {
           evidence.add('$item');
@@ -184,14 +284,47 @@ class ResearchAgentResult {
     final limitations = (json['limitations'] as List<dynamic>? ?? const [])
         .map((item) => '$item')
         .toList();
-    final answer =
-        json['answer']?.toString() ?? json['concise_summary']?.toString();
+    final keyFindings = (json['key_findings'] as List<dynamic>? ?? const [])
+        .map((item) => '$item')
+        .toList();
+    final conflicts = <String>[];
+    final rawConflicts = json['conflicts'];
+    if (rawConflicts is List) {
+      for (final item in rawConflicts) {
+        if (item is String) {
+          conflicts.add(item);
+        } else if (item is Map) {
+          final detail = item['detail'] ??
+              item['relationship'] ??
+              item['type'] ??
+              item.toString();
+          conflicts.add('$detail');
+        } else if (item != null) {
+          conflicts.add('$item');
+        }
+      }
+    }
+
+    final answerRaw = json['answer']?.toString();
+    final concise = json['concise_summary']?.toString();
+    final answer = (answerRaw != null && answerRaw.trim().isNotEmpty)
+        ? answerRaw
+        : ((concise != null && concise.trim().isNotEmpty) ? concise : null);
     final status = json['status']?.toString();
     final confidenceRaw = json['confidence'] ??
         (json['synthesis'] is Map ? json['synthesis']['confidence'] : null);
     final confidence = confidenceRaw is num ? confidenceRaw.toDouble() : null;
+    final language = json['language']?.toString() ??
+        (json['synthesis'] is Map
+            ? (json['synthesis'] as Map)['language']?.toString()
+            : null);
+    final stageRaw = json['stage'];
+    final stage = stageRaw is num
+        ? stageRaw.toInt()
+        : int.tryParse('${stageRaw ?? ''}');
     final insufficient = status == 'insufficient_evidence' ||
         status == 'insufficient_verified_sources' ||
+        status == 'conflicted' ||
         (json['synthesis'] is Map &&
             json['synthesis']['performed'] == false &&
             answer == null) ||
@@ -199,12 +332,24 @@ class ResearchAgentResult {
 
     return ResearchAgentResult(
       question: question,
-      answer: (answer == null || answer.isEmpty) ? null : answer,
+      answer: (answerRaw != null && answerRaw.trim().isNotEmpty)
+          ? answerRaw
+          : null,
+      conciseSummary:
+          (concise != null && concise.trim().isNotEmpty) ? concise : null,
+      detailedExplanation: json['detailed_explanation']?.toString(),
+      keyFindings: keyFindings,
       confidence: confidence,
       limitations: limitations,
+      uncertainty: json['uncertainty']?.toString(),
+      conflicts: conflicts,
+      claims: claims,
       citations: citations,
       evidence: evidence,
+      evidenceReferences: evidenceReferences,
       status: status,
+      stage: stage,
+      language: language,
       insufficientEvidence: insufficient,
       raw: json,
     );

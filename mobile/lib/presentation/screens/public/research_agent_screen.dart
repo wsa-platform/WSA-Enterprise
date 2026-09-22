@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:wsa_enterprise/api/api_client.dart';
+import 'package:wsa_enterprise/core/citations/citation_launcher.dart';
 import 'package:wsa_enterprise/data/models/stage8_models.dart';
 import 'package:wsa_enterprise/l10n/ar_strings.dart';
+import 'package:wsa_enterprise/l10n/research_ui_strings.dart';
 import 'package:wsa_enterprise/presentation/widgets/public_async_body.dart';
 
 class ResearchAgentScreen extends StatefulWidget {
-  const ResearchAgentScreen({super.key, required this.client});
+  const ResearchAgentScreen({
+    super.key,
+    required this.client,
+    this.citationLauncher,
+  });
 
   final ApiClient client;
+  final CitationLauncher? citationLauncher;
 
   @override
   State<ResearchAgentScreen> createState() => _ResearchAgentScreenState();
@@ -15,8 +22,11 @@ class ResearchAgentScreen extends StatefulWidget {
 
 class _ResearchAgentScreenState extends State<ResearchAgentScreen> {
   final questionController = TextEditingController();
+  late final CitationLauncher _launcher =
+      widget.citationLauncher ?? CitationLauncher();
   ResearchAgentResult? result;
   String? error;
+  String? citationMessage;
   bool loading = false;
 
   @override
@@ -25,12 +35,15 @@ class _ResearchAgentScreenState extends State<ResearchAgentScreen> {
     super.dispose();
   }
 
+  String get _uiLang => widget.client.languageState.uiLocale;
+
   Future<void> submit() async {
     final question = questionController.text.trim();
     if (question.isEmpty) return;
     setState(() {
       loading = true;
       error = null;
+      citationMessage = null;
     });
     try {
       result = await widget.client.publicApi.researchQuery(question);
@@ -45,9 +58,20 @@ class _ResearchAgentScreenState extends State<ResearchAgentScreen> {
     }
   }
 
+  Future<void> _openCitation(ResearchCitation citation) async {
+    final launch = await _launcher.openDirectUrl(citation.url);
+    if (!mounted) return;
+    setState(() {
+      citationMessage = launch.ok
+          ? null
+          : ResearchUiStrings.citationUnavailable(_uiLang);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final current = result;
+    final answerText = current?.canonicalAnswerText;
     return Column(
       children: [
         Padding(
@@ -88,21 +112,82 @@ class _ResearchAgentScreenState extends State<ResearchAgentScreen> {
                           style: Theme.of(context).textTheme.titleMedium),
                       Text(current.question),
                       const SizedBox(height: 12),
+                      if (current.status != null) ...[
+                        Text(
+                          '${ResearchUiStrings.status(_uiLang)}: ${current.status}',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      if (current.language != null &&
+                          current.language!.isNotEmpty) ...[
+                        Text(
+                          '${ResearchUiStrings.answerLanguage(_uiLang)}: ${current.language}',
+                          key: const Key('research-answer-language'),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       if (current.insufficientEvidence) ...[
-                        const Text(ArStrings.insufficientEvidence),
+                        Text(
+                          ArStrings.insufficientEvidence,
+                          key: const Key('research-insufficient'),
+                        ),
                         const SizedBox(height: 12),
                       ],
-                      Text('الإجابة',
+                      Text(ResearchUiStrings.answer(_uiLang),
                           style: Theme.of(context).textTheme.titleMedium),
-                      Text(current.answer ?? ArStrings.insufficientEvidence),
+                      Text(
+                        answerText ?? ArStrings.insufficientEvidence,
+                        key: const Key('research-canonical-answer'),
+                      ),
                       const SizedBox(height: 12),
-                      Text(ArStrings.confidence,
+                      Text(ResearchUiStrings.confidence(_uiLang),
                           style: Theme.of(context).textTheme.titleMedium),
-                      Text(current.confidence == null
-                          ? '—'
-                          : current.confidence!.toStringAsFixed(2)),
+                      Text(
+                        current.confidence == null
+                            ? '—'
+                            : current.confidence!.toStringAsFixed(2),
+                        key: const Key('research-confidence'),
+                      ),
                       const SizedBox(height: 12),
-                      Text(ArStrings.sources,
+                      if (current.limitations.isNotEmpty) ...[
+                        Text(ResearchUiStrings.limitations(_uiLang),
+                            style: Theme.of(context).textTheme.titleMedium),
+                        for (final item in current.limitations)
+                          Text('• $item'),
+                        const SizedBox(height: 12),
+                      ],
+                      if (current.uncertainty != null &&
+                          current.uncertainty!.isNotEmpty) ...[
+                        Text(ResearchUiStrings.uncertainty(_uiLang),
+                            style: Theme.of(context).textTheme.titleMedium),
+                        Text(current.uncertainty!,
+                            key: const Key('research-uncertainty')),
+                        const SizedBox(height: 12),
+                      ],
+                      if (current.conflicts.isNotEmpty) ...[
+                        Text(ResearchUiStrings.conflicts(_uiLang),
+                            style: Theme.of(context).textTheme.titleMedium),
+                        for (final item in current.conflicts)
+                          Text('• $item', key: const Key('research-conflict')),
+                        const SizedBox(height: 12),
+                      ],
+                      if (current.claims.isNotEmpty) ...[
+                        Text(ResearchUiStrings.claims(_uiLang),
+                            style: Theme.of(context).textTheme.titleMedium),
+                        for (final claim in current.claims)
+                          Text(
+                            [
+                              claim.claimText ?? claim.claimId ?? 'claim',
+                              if (claim.questionClaimId != null)
+                                'question_claim_id=${claim.questionClaimId}',
+                              if (claim.evidenceIds.isNotEmpty)
+                                'evidence_ids=${claim.evidenceIds.join(',')}',
+                            ].join(' · '),
+                          ),
+                        const SizedBox(height: 12),
+                      ],
+                      Text(ResearchUiStrings.sources(_uiLang),
                           style: Theme.of(context).textTheme.titleMedium),
                       if (current.citations.isEmpty)
                         const Text(ArStrings.noCitations),
@@ -116,19 +201,30 @@ class _ResearchAgentScreenState extends State<ResearchAgentScreen> {
                             if (citation.url != null &&
                                 citation.url!.isNotEmpty)
                               citation.url!,
+                            if (citation.evidenceId != null)
+                              'evidence: ${citation.evidenceId}',
                             if (citation.sourceType != null)
                               citation.sourceType!,
                           ].join('\n')),
+                          trailing: citation.url == null ||
+                                  citation.url!.trim().isEmpty
+                              ? null
+                              : TextButton(
+                                  onPressed: () => _openCitation(citation),
+                                  child: Text(
+                                      ResearchUiStrings.openSource(_uiLang)),
+                                ),
                         ),
+                      if (citationMessage != null) ...[
+                        const SizedBox(height: 8),
+                        Text(citationMessage!,
+                            style: const TextStyle(color: Colors.red)),
+                      ],
                       const SizedBox(height: 12),
                       Text(ArStrings.evidence,
                           style: Theme.of(context).textTheme.titleMedium),
                       if (current.evidence.isEmpty) const Text(ArStrings.empty),
                       for (final item in current.evidence) Text('• $item'),
-                      const SizedBox(height: 12),
-                      Text(ArStrings.limitations,
-                          style: Theme.of(context).textTheme.titleMedium),
-                      for (final item in current.limitations) Text('• $item'),
                     ],
                   ),
           ),
