@@ -46,6 +46,8 @@ function renderView(props: {
   loading: boolean
   error: string | null
   result: Parameters<typeof HomeScientificResearchSearchView>[0]['result']
+  feedbackState?: Parameters<typeof HomeScientificResearchSearchView>[0]['feedbackState']
+  onPositiveFeedback?: () => void
 }) {
   return renderToStaticMarkup(
     createElement(
@@ -163,6 +165,99 @@ describe('homepage scientific research search', () => {
     expect(html).toContain('Agricultural scientific research')
     expect(html).toContain('Scientific search')
     expect(html).not.toContain('البحث العلمي الزراعي')
+  })
+
+  it('renders conflicts and uncertainty from Stage 5 fields without replacing the answer', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderView({
+      query: 'wheat irrigation',
+      loading: false,
+      error: null,
+      result: {
+        status: 'completed',
+        answer: 'Scientific answer in English.',
+        confidence: 0.72,
+        limitations: ['limited_geo_coverage'],
+        uncertainty: 'competing_sources',
+        conflicts: [{ detail: 'irrigation amounts differ' }],
+        citations: [{ title: 'Source A', url: 'https://example.org/paper' }],
+      },
+    })
+    expect(html).toContain('Scientific answer in English.')
+    expect(html).toContain('data-testid="home-research-confidence"')
+    expect(html).toContain('limited_geo_coverage')
+    expect(html).toContain('data-testid="home-research-uncertainty"')
+    expect(html).toContain('competing_sources')
+    expect(html).toContain('data-testid="home-research-conflicts"')
+    expect(html).toContain('irrigation amounts differ')
+    expect(html).toContain('Source A')
+    expect(html).toContain('https://example.org/paper')
+  })
+
+  it('omits conflict and uncertainty blocks when fields are absent', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderView({
+      query: 'wheat irrigation',
+      loading: false,
+      error: null,
+      result: {
+        status: 'completed',
+        answer: 'Answer only',
+        citations: [],
+      },
+    })
+    expect(html).toContain('Answer only')
+    expect(html).not.toContain('data-testid="home-research-conflicts"')
+    expect(html).not.toContain('data-testid="home-research-uncertainty"')
+  })
+
+  it('renders positive feedback control and success/error states', async () => {
+    await i18n.changeLanguage('en')
+    const idle = renderView({
+      query: 'q',
+      loading: false,
+      error: null,
+      result: { status: 'completed', answer: 'A', citations: [] },
+      feedbackState: 'idle',
+      onPositiveFeedback: () => undefined,
+    })
+    expect(idle).toContain('data-testid="home-research-feedback-positive"')
+    expect(idle).toContain('This answer was useful')
+
+    const success = renderView({
+      query: 'q',
+      loading: false,
+      error: null,
+      result: { status: 'completed', answer: 'A', citations: [] },
+      feedbackState: 'success',
+      onPositiveFeedback: () => undefined,
+    })
+    expect(success).toContain('data-testid="home-research-feedback-success"')
+    expect(success).toContain('Thank you. Your feedback was recorded.')
+    expect(success).toContain('disabled')
+
+    const failure = renderView({
+      query: 'q',
+      loading: false,
+      error: null,
+      result: { status: 'completed', answer: 'A', citations: [] },
+      feedbackState: 'error',
+      onPositiveFeedback: () => undefined,
+    })
+    expect(failure).toContain('data-testid="home-research-feedback-error"')
+    expect(failure).toContain('Could not submit feedback')
+    expect(failure).toContain('Answer')
+  })
+
+  it('does not render feedback control when no handler is provided', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderView({
+      query: 'q',
+      loading: false,
+      error: null,
+      result: { status: 'completed', answer: 'A', citations: [] },
+    })
+    expect(html).not.toContain('data-testid="home-research-feedback"')
   })
 
   it('renders Turkish and French research chrome from i18n', async () => {

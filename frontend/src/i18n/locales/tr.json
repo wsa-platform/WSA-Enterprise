@@ -1970,7 +1970,11 @@
       "errorNotFound": "Bilimsel arama hizmeti veya platform kuruluşu bulunamadı. Sunucunun çalıştığını ve kuruluş ayarlarını kontrol edin.",
       "errorUnavailable": "Bilimsel arama hizmetine bağlanılamadı. Sunucunun çalıştığını kontrol edin, ardından yeniden deneyin.",
       "errorTimeout": "Bilimsel arama, sonuçlar hazır olmadan zaman aşımına uğradı. Lütfen yeniden deneyin.",
-      "errorGeneric": "Bilimsel arama şu anda tamamlanamadı. Lütfen daha sonra yeniden deneyin."
+      "errorGeneric": "Bilimsel arama şu anda tamamlanamadı. Lütfen daha sonra yeniden deneyin.",
+      "feedbackPositive": "Bu yanıt faydalıydı",
+      "feedbackSubmitting": "Geri bildirim gönderiliyor...",
+      "feedbackSuccess": "Teşekkürler. Geri bildiriminiz kaydedildi.",
+      "feedbackError": "Geri bildirim gönderilemedi. Lütfen tekrar deneyin."
     },
     "categoriesStrip": {
       "title": "Ana hizmetlerimizi ve kategorilerimizi keşfedin"

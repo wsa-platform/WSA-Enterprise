@@ -14,6 +14,17 @@ export type ResearchAgentCitation = {
   evidence_id?: string
 }
 
+/** Stage 5 conflict item as already emitted by backend synthesis (string or detail map). */
+export type ResearchAgentConflict =
+  | string
+  | {
+      type?: string
+      detail?: string
+      claim_id?: string
+      relationship?: string
+      [key: string]: unknown
+    }
+
 export type ResearchAgentQueryResponse = {
   status?: string
   answer?: string | null
@@ -21,12 +32,54 @@ export type ResearchAgentQueryResponse = {
   citations?: ResearchAgentCitation[]
   confidence?: number
   limitations?: string[]
+  uncertainty?: string | null
+  conflicts?: ResearchAgentConflict[]
+  language?: string | null
   message?: string
   error?: {
     code?: string
     http_status?: number
     message?: string
     details?: unknown
+  }
+}
+
+/** Present backend conflict payloads without scientific reinterpretation. */
+export function formatResearchConflictText(conflict: ResearchAgentConflict): string {
+  if (typeof conflict === 'string') return conflict
+  const detail = conflict.detail ?? conflict.relationship ?? conflict.type
+  if (typeof detail === 'string' && detail.trim() !== '') return detail
+  try {
+    return JSON.stringify(conflict)
+  } catch {
+    return 'conflict'
+  }
+}
+
+export type HomePositiveFeedbackPayload = {
+  polarity: 'positive'
+  question?: string
+  question_language?: string
+  answer_language?: string
+  ui_locale?: string
+  research_source: 'home'
+  what_worked?: string
+}
+
+/** Build the existing R7 positive-only Home feedback payload (no new fields). */
+export function buildHomePositiveFeedbackPayload(input: {
+  question: string
+  uiLocale: string
+  answerLanguage?: string | null
+}): HomePositiveFeedbackPayload {
+  return {
+    polarity: 'positive',
+    research_source: 'home',
+    question: input.question.trim(),
+    ui_locale: input.uiLocale,
+    ...(input.answerLanguage && input.answerLanguage.trim() !== ''
+      ? { answer_language: input.answerLanguage.trim() }
+      : {}),
   }
 }
 

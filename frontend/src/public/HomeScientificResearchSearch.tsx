@@ -1,9 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import i18n from '../i18n/config'
+import i18n, { getCurrentLanguage } from '../i18n/config'
 import { ApiError } from '../api/client'
 import {
+  buildHomePositiveFeedbackPayload,
+  formatResearchConflictText,
   queryPublicResearchAgent,
+  submitResearchFeedback,
   type ResearchAgentCitation,
   type ResearchAgentQueryResponse,
 } from '../api/researchAgent'
@@ -40,6 +43,8 @@ export function resolveResearchSearchError(error: unknown): string {
   return i18n.t('website.research.errorUnavailable')
 }
 
+export type HomeFeedbackUiState = 'idle' | 'submitting' | 'success' | 'error'
+
 export type HomeScientificResearchSearchViewProps = {
   query: string
   loading: boolean
@@ -47,9 +52,11 @@ export type HomeScientificResearchSearchViewProps = {
   result: ResearchAgentQueryResponse | null
   onQueryChange: (value: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  feedbackState?: HomeFeedbackUiState
+  onPositiveFeedback?: () => void
 }
 
-function citationLabel(citation: ResearchAgentCitation, index: number, fallback: string): string {
+function citationLabel(citation: ResearchAgentCitation, _index: number, fallback: string): string {
   return citation.title?.trim() || fallback
 }
 
@@ -61,10 +68,18 @@ export function HomeScientificResearchSearchView({
   result,
   onQueryChange,
   onSubmit,
+  feedbackState = 'idle',
+  onPositiveFeedback,
 }: HomeScientificResearchSearchViewProps) {
   const { t } = useTranslation()
   const answer = result?.answer?.trim() || result?.concise_summary?.trim() || null
   const citations = result?.citations ?? []
+  const conflicts = result?.conflicts ?? []
+  const uncertainty = result?.uncertainty?.trim() || null
+  const showFeedback = Boolean(result) && typeof onPositiveFeedback === 'function'
+  const feedbackBusy = feedbackState === 'submitting'
+  const feedbackDone = feedbackState === 'success'
+  const feedbackDisabled = feedbackBusy || feedbackDone || loading
 
   return (
     <section
@@ -137,7 +152,7 @@ export function HomeScientificResearchSearchView({
           ) : null}
 
           {typeof result.confidence === 'number' ? (
-            <p className="hp-research-meta">
+            <p className="hp-research-meta" data-testid="home-research-confidence">
               {t('website.research.confidence', {
                 confidence: Math.round(result.confidence * 100) / 100,
                 defaultValue: `Confidence: ${Math.round(result.confidence * 100) / 100}`,
@@ -146,11 +161,29 @@ export function HomeScientificResearchSearchView({
           ) : null}
 
           {Array.isArray(result.limitations) && result.limitations.length > 0 ? (
-            <div className="hp-research-limitations">
+            <div className="hp-research-limitations" data-testid="home-research-limitations">
               <h3>{t('website.research.limitationsHeading', { defaultValue: 'Limitations' })}</h3>
               <ul>
                 {result.limitations.map((limitation, index) => (
                   <li key={`limitation-${index}`}>{limitation}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {uncertainty ? (
+            <div className="hp-research-uncertainty" data-testid="home-research-uncertainty">
+              <h3>{t('website.research.uncertaintyHeading', { defaultValue: 'Uncertainty' })}</h3>
+              <p>{uncertainty}</p>
+            </div>
+          ) : null}
+
+          {conflicts.length > 0 ? (
+            <div className="hp-research-conflicts" data-testid="home-research-conflicts">
+              <h3>{t('website.research.conflictsHeading', { defaultValue: 'Conflicts' })}</h3>
+              <ul>
+                {conflicts.map((conflict, index) => (
+                  <li key={`conflict-${index}`}>{formatResearchConflictText(conflict)}</li>
                 ))}
               </ul>
             </div>
@@ -187,6 +220,40 @@ export function HomeScientificResearchSearchView({
               </ul>
             )}
           </div>
+
+          {showFeedback ? (
+            <div className="hp-research-feedback" data-testid="home-research-feedback">
+              <button
+                type="button"
+                className="gs-btn hp-research-feedback-positive"
+                data-testid="home-research-feedback-positive"
+                disabled={feedbackDisabled}
+                onClick={() => onPositiveFeedback?.()}
+              >
+                {feedbackBusy
+                  ? t('website.research.feedbackSubmitting')
+                  : t('website.research.feedbackPositive')}
+              </button>
+              {feedbackState === 'success' ? (
+                <p
+                  className="hp-research-status"
+                  data-testid="home-research-feedback-success"
+                  role="status"
+                >
+                  {t('website.research.feedbackSuccess')}
+                </p>
+              ) : null}
+              {feedbackState === 'error' ? (
+                <p
+                  className="hp-research-status hp-research-status--error"
+                  data-testid="home-research-feedback-error"
+                  role="alert"
+                >
+                  {t('website.research.feedbackError')}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </section>
@@ -199,6 +266,8 @@ export function HomeScientificResearchSearch() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ResearchAgentQueryResponse | null>(null)
+  const [submittedQuestion, setSubmittedQuestion] = useState<string | null>(null)
+  const [feedbackState, setFeedbackState] = useState<HomeFeedbackUiState>('idle')
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -207,15 +276,40 @@ export function HomeScientificResearchSearch() {
 
     setLoading(true)
     setError(null)
+    setFeedbackState('idle')
 
     try {
       const response = await queryPublicResearchAgent(normalized)
       setResult(response)
+      setSubmittedQuestion(normalized)
     } catch (submitError: unknown) {
       setError(resolveResearchSearchError(submitError))
       setResult(null)
+      setSubmittedQuestion(null)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handlePositiveFeedback() {
+    if (!result || !submittedQuestion) return
+    if (feedbackState === 'submitting' || feedbackState === 'success') return
+
+    setFeedbackState('submitting')
+    try {
+      const payload = buildHomePositiveFeedbackPayload({
+        question: submittedQuestion,
+        uiLocale: getCurrentLanguage(),
+        answerLanguage: result.language,
+      })
+      const response = await submitResearchFeedback(payload)
+      if (response.persisted) {
+        setFeedbackState('success')
+      } else {
+        setFeedbackState('error')
+      }
+    } catch {
+      setFeedbackState('error')
     }
   }
 
@@ -225,9 +319,13 @@ export function HomeScientificResearchSearch() {
       loading={loading}
       error={error}
       result={result}
+      feedbackState={feedbackState}
       onQueryChange={setQuery}
       onSubmit={(event) => {
         void handleSubmit(event)
+      }}
+      onPositiveFeedback={() => {
+        void handlePositiveFeedback()
       }}
     />
   )

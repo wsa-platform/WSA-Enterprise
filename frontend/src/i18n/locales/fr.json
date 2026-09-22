@@ -1970,7 +1970,11 @@
       "errorNotFound": "Le service de recherche scientifique ou l’organisation de la plateforme est introuvable. Vérifiez que le serveur fonctionne et que les paramètres d’organisation sont corrects.",
       "errorUnavailable": "Impossible de se connecter au service de recherche scientifique. Vérifiez que le serveur fonctionne, puis réessayez.",
       "errorTimeout": "La recherche scientifique a dépassé le délai imparti avant d'obtenir des résultats. Veuillez réessayer.",
-      "errorGeneric": "Impossible de terminer la recherche scientifique pour le moment. Veuillez réessayer plus tard."
+      "errorGeneric": "Impossible de terminer la recherche scientifique pour le moment. Veuillez réessayer plus tard.",
+      "feedbackPositive": "Cette réponse était utile",
+      "feedbackSubmitting": "Envoi des commentaires...",
+      "feedbackSuccess": "Merci. Vos commentaires ont été enregistrés.",
+      "feedbackError": "Impossible d'envoyer les commentaires. Veuillez réessayer."
     },
     "categoriesStrip": {
       "title": "Découvrez nos principaux services et catégories"
