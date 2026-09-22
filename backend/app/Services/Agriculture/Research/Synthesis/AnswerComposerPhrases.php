@@ -204,6 +204,36 @@ final class AnswerComposerPhrases
                 'tr' => 'Bazı doğrulanmış bilimsel kaynaklar birbiriyle çelişir.',
                 'fr' => 'Certaines sources scientifiques validées sont en désaccord.',
             ],
+            'limitation_accuracy_entity' => [
+                'en' => 'Available evidence does not match the requested crop or entity closely enough for a factual answer.',
+                'ar' => 'الأدلة المتاحة لا تطابق المحصول أو الكيان المطلوب بدرجة كافية لإجابة وقائعية.',
+                'tr' => 'Mevcut kanıtlar, olgusal bir yanıt için istenen ürün veya varlıkla yeterince eşleşmiyor.',
+                'fr' => 'Les preuves disponibles ne correspondent pas assez à la culture ou à l’entité demandée pour une réponse factuelle.',
+            ],
+            'limitation_accuracy_property' => [
+                'en' => 'Available evidence does not directly support the requested property or measurement.',
+                'ar' => 'الأدلة المتاحة لا تدعم مباشرة الخاصية أو القياس المطلوب.',
+                'tr' => 'Mevcut kanıtlar istenen özelliği veya ölçümü doğrudan desteklemiyor.',
+                'fr' => 'Les preuves disponibles ne prennent pas directement en charge la propriété ou la mesure demandée.',
+            ],
+            'limitation_accuracy_geography' => [
+                'en' => 'Available evidence does not support the requested geography.',
+                'ar' => 'الأدلة المتاحة لا تدعم الجغرافيا المطلوبة.',
+                'tr' => 'Mevcut kanıtlar istenen coğrafyayı desteklemiyor.',
+                'fr' => 'Les preuves disponibles ne prennent pas en charge la géographie demandée.',
+            ],
+            'limitation_accuracy_period' => [
+                'en' => 'Available evidence does not support the requested time period.',
+                'ar' => 'الأدلة المتاحة لا تدعم الفترة الزمنية المطلوبة.',
+                'tr' => 'Mevcut kanıtlar istenen zaman aralığını desteklemiyor.',
+                'fr' => 'Les preuves disponibles ne prennent pas en charge la période demandée.',
+            ],
+            'limitation_accuracy_numeric' => [
+                'en' => 'A numeric value could not be safely tied to the requested measurement from the available evidence.',
+                'ar' => 'تعذر ربط قيمة رقمية بالقياس المطلوب بأمان من الأدلة المتاحة.',
+                'tr' => 'Mevcut kanıtlardan istenen ölçüme güvenle bağlanabilecek bir sayısal değer çıkarılamadı.',
+                'fr' => 'Une valeur numérique n’a pas pu être reliée de façon sûre à la mesure demandée à partir des preuves disponibles.',
+            ],
             'uncertainty_insufficient' => [
                 'en' => 'Available scientific evidence is insufficient for a definitive conclusion.',
                 'ar' => 'الأدلة العلمية المتاحة غير كافية لإعطاء نتيجة مؤكدة.',

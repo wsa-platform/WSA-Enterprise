@@ -30,6 +30,7 @@ class AnswerComposer
         private ScientificEvidenceDirectnessAssessor $directnessAssessor,
         private EvidenceVerificationLayer $evidenceVerificationLayer,
         private ScientificStatisticalClaimAligner $statisticalClaimAligner,
+        private AnswerExpressionAccuracyGate $expressionAccuracyGate = new AnswerExpressionAccuracyGate,
     ) {}
 
     public function compose(
@@ -108,11 +109,16 @@ class AnswerComposer
         // Findings may include supporting for metadata/additional; main answer body gates DIRECT-only.
         $keyFindings = $this->buildKeyFindings($claims, $usable, $plan, $language);
         $limitations = $this->buildLimitations($validationReport, $usable, $language, $sufficiency);
-        foreach ($claims as $claim) {
+                foreach ($claims as $claim) {
             foreach ($claim->limitations as $limitation) {
                 $limitation = trim((string) $limitation);
-                if ($limitation !== '' && ! in_array($limitation, $limitations, true)) {
-                    $limitations[] = $limitation;
+                if ($limitation === '') {
+                    continue;
+                }
+                $phrased = $this->phraseAccuracyLimitation($language, $limitation);
+                $entry = $phrased ?? $limitation;
+                if (! in_array($entry, $limitations, true)) {
+                    $limitations[] = $entry;
                 }
             }
         }
@@ -817,6 +823,16 @@ class AnswerComposer
         foreach ($items as $item) {
             $itemsById[$item->evidenceId] = $item;
         }
+        $questionClaimsById = [];
+        foreach ($matrix['question_claims'] as $questionClaimRow) {
+            if (! is_array($questionClaimRow)) {
+                continue;
+            }
+            $qcId = (string) ($questionClaimRow['claim_id'] ?? '');
+            if ($qcId !== '') {
+                $questionClaimsById[$qcId] = $questionClaimRow;
+            }
+        }
 
         $claims = [];
         foreach ($matrix['answer_statement_traces'] as $trace) {
@@ -837,6 +853,12 @@ class AnswerComposer
             $limitations = array_values(array_filter(
                 array_map('strval', is_array($trace['limitations'] ?? null) ? $trace['limitations'] : []),
             ));
+            $questionClaim = $questionClaimsById[$questionClaimId] ?? [
+                'claim_id' => $questionClaimId,
+                'property' => null,
+                'location' => $plan->normalizedQuery->location,
+                'time' => null,
+            ];
 
             $claimText = '';
             $numericalValues = [];
@@ -865,8 +887,37 @@ class AnswerComposer
                         continue;
                     }
 
-                    $claimText = $groundedText;
-                    $numericalValues = $this->extractNumericalValues($groundedText);
+                    // B3: expression accuracy gate (Catalog-free) before factual prose.
+                    $accuracy = $this->expressionAccuracyGate->evaluate(
+                        $item,
+                        $plan,
+                        $questionClaim,
+                        $groundedText,
+                        $relationship,
+                        fn (ScientificEvidenceItem $evidence, KnowledgeQueryPlan $queryPlan, string $directness): bool => $this->evidenceIdentityCompatible($evidence, $queryPlan, $directness),
+                        fn (ScientificEvidenceItem $evidence, KnowledgeQueryPlan $queryPlan): string => $this->resolveDirectness($evidence, $queryPlan),
+                        fn (string $text, KnowledgeQueryPlan $queryPlan): array => $this->extractSupportedPropertyValues($text, $queryPlan),
+                        fn (KnowledgeQueryPlan $queryPlan): bool => $this->requiresSupportedMeasurement($queryPlan),
+                    );
+
+                    if (! ($accuracy['allowed'] ?? false)) {
+                        foreach (($accuracy['reasons'] ?? []) as $reason) {
+                            $reason = trim((string) $reason);
+                            if ($reason !== '' && ! in_array($reason, $limitations, true)) {
+                                $limitations[] = $reason;
+                            }
+                        }
+                        $claimText = '';
+                        $numericalValues = [];
+                        $confidence = 0.0;
+                        continue;
+                    }
+
+                    $claimText = (string) ($accuracy['claim_text'] ?? $groundedText);
+                    $numericalValues = array_values(array_filter(
+                        (array) ($accuracy['numerical_values'] ?? []),
+                        static fn ($value): bool => is_string($value) && trim($value) !== '',
+                    ));
                     $confidence = $item->confidence;
                     $validationStatus = $item->validationStatus;
                     $conditions = is_array($item->conditions) ? json_encode($item->conditions) : null;
@@ -883,14 +934,15 @@ class AnswerComposer
                     break;
                 }
 
-                // Eligible but no grounded snippet — treat as non-factual for prose; keep claim identity.
                 if ($claimText === '') {
                     $answerEligible = false;
-                    $limitations[] = 'insufficient_validated_evidence_for_question_claim';
+                    if (! in_array('insufficient_validated_evidence_for_question_claim', $limitations, true)
+                        && ! $this->hasAccuracyLimitation($limitations)) {
+                        $limitations[] = 'insufficient_validated_evidence_for_question_claim';
+                    }
                     $relationship = ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE;
                 }
             } elseif ($relationship === ClaimEvidenceRelationship::CONFLICTING) {
-                // Preserve conflict identity without selecting a convenient conflicting value as fact.
                 $claimText = '';
                 $validationStatus = 'conflicting';
                 if (! in_array('conflicting_evidence_for_question_claim', $limitations, true)) {
@@ -1092,27 +1144,226 @@ class AnswerComposer
     }
 
     /**
+     * Catalog-free property-term address (Phase 5 B3).
+     *
+     * @param  list<mixed>  $propertyTerms
+     */
+    private function haystackAddressesPropertyTerms(string $haystack, array $propertyTerms): bool
+    {
+        return $this->expressionAccuracyGate->haystackAddressesPropertyTerms($haystack, $propertyTerms);
+    }
+
+    private function measurementWindowAddressesProperty(string $text, string $number, string $propertyKey): bool
+    {
+        return $this->expressionAccuracyGate->measurementWindowAddressesProperty($text, $number, $propertyKey);
+    }
+
+    /**
+     * @param  list<string>  $limitations
+     */
+    private function hasAccuracyLimitation(array $limitations): bool
+    {
+        foreach ($limitations as $limitation) {
+            if (str_starts_with((string) $limitation, 'accuracy_')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function phraseAccuracyLimitation(string $language, string $code): ?string
+    {
+        $key = match ($code) {
+            'accuracy_entity_incompatible' => 'limitation_accuracy_entity',
+            'accuracy_property_unsupported' => 'limitation_accuracy_property',
+            'accuracy_geography_unsupported' => 'limitation_accuracy_geography',
+            'accuracy_period_unsupported' => 'limitation_accuracy_period',
+            'accuracy_numeric_unsupported', 'accuracy_numeric_ambiguous' => 'limitation_accuracy_numeric',
+            default => null,
+        };
+
+        return $key === null ? null : AnswerComposerPhrases::get($language, $key);
+    }
+
+    /**
      * @return list<string>
      */
     private function extractNumericalValues(string $text): array
     {
-        preg_match_all('/\b\d+(?:[.,]\d+)?(?:\s*(?:%|kg\/ha|t\/ha|kg|ha|mm|cm|m|l|ml|°c|ph|ppm|mg|g|tons?|tonnes?|t|days?|weeks?|months?))\b/iu', $text, $matches);
+        return $this->extractMeasurementAssertions($text, null);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function extractSupportedPropertyValues(string $text, KnowledgeQueryPlan $plan): array
+    {
+        return $this->extractMeasurementAssertions($text, $plan);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function extractMeasurementAssertions(string $text, ?KnowledgeQueryPlan $plan): array
+    {
+        $text = trim($text);
+        if ($text === '' || $this->rejectsNumericAnswers($plan)) {
+            return [];
+        }
+
+        $pattern = '/(?<![\/.\w])(\d+(?:[.,]\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?)\s*(?:million|billion)?\s*(%|kg\/ha|kg\s*ha-1|t\/ha|mg\/l|mg\/kg|kg\/day|kg\s*d-1|l\/day|mm\/day|m3\/ha|°c|deg c|celsius|kelvin|ppm|ph|tons?|tonnes?|hectares?|t|kg|g|mg|l|ml|mm|cm|m|ha|days?|weeks?|months?|c)\b/iu';
+        preg_match_all($pattern, $text, $matches, PREG_SET_ORDER);
+        $matches = is_array($matches) ? $matches : [];
 
         $values = [];
-        foreach ($matches[0] ?? [] as $match) {
-            $clean = trim((string) $match);
-            if ($clean !== '' && ! in_array($clean, $values, true)) {
-                $values[] = $clean;
+        foreach ($matches as $match) {
+            $raw = trim((string) ($match[0] ?? ''));
+            $number = trim((string) ($match[1] ?? ''));
+            $unit = mb_strtolower(trim((string) ($match[2] ?? '')));
+            if ($raw === '' || $number === '' || $unit === '') {
+                continue;
+            }
+            if ($this->isBibliographicNumericContext($text, $number, $unit)) {
+                continue;
+            }
+            if ($plan !== null && ! $this->measurementMatchesRequestedProperty($plan, $text, $number, $unit, $this->textLooksLikeStructuredStatisticalMeasurement($text))) {
+                continue;
+            }
+            if (! in_array($raw, $values, true)) {
+                $values[] = $raw;
             }
         }
 
         return $values;
     }
 
+    private function rejectsNumericAnswers(?KnowledgeQueryPlan $plan): bool
+    {
+        if ($plan === null) {
+            return false;
+        }
+
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+
+        return in_array($questionType, ['classification', 'species', 'definition', 'causes', 'symptoms', 'comparison'], true);
+    }
+
+    private function isBibliographicNumericContext(string $text, string $number, string $unit): bool
+    {
+        $hay = mb_strtolower($text);
+        $digits = preg_replace('/[^\d]/', '', $number) ?? '';
+
+        if (preg_match('/\b(?:10\.\d{4,}|doi:|https?:\/\/doi)/i', $hay) === 1
+            && preg_match('/^10(?:[.,]\d+)?$/', trim($number)) === 1) {
+            return true;
+        }
+
+        if (preg_match('/\b(?:vol(?:ume)?\.?|issue|pp?\.|pages?|issn|isbn|pmid|pmc)\b/i', $hay) === 1
+            && in_array($unit, ['mm', 'cm', 'm', 'g', 'l'], true)
+            && mb_strlen($digits) <= 4) {
+            return true;
+        }
+
+        if (preg_match('/\b((?:19|20)\d{2})\b/', $number) === 1
+            || (mb_strlen($digits) === 4 && (int) $digits >= 1900 && (int) $digits <= 2100 && $unit === '')) {
+            if (preg_match('/\b(?:published|publication|copyright|cited|citations?|year|©)\b/i', $hay) === 1) {
+                return true;
+            }
+        }
+
+        if (preg_match('/\b(?:cited|citations?|citation count|times cited)\b/i', $hay) === 1
+            && preg_match('/(?:cited|citations?|times cited)\D{0,12}'.preg_quote($digits, '/').'/i', $hay) === 1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function measurementMatchesRequestedProperty(
+        KnowledgeQueryPlan $plan,
+        string $text,
+        string $number,
+        string $unit,
+        bool $structuredStatistical = false,
+    ): bool {
+        $propertyKey = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        $target = $propertyKey !== '' ? $propertyKey : $questionType;
+        $unitClass = $this->measurementUnitClass($unit);
+        $allowed = $this->requestedPropertyUnitClasses($target);
+        if ($allowed !== null && ! in_array($unitClass, $allowed, true)) {
+            return false;
+        }
+
+        if ($structuredStatistical) {
+            return $number !== '';
+        }
+
+        $propertyTerms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
+        $surface = trim((string) ($plan->normalizedQuery->constraints['requested_property_surface'] ?? ''));
+        if ($surface !== '' && is_array($propertyTerms) && $propertyTerms !== []) {
+            $hay = mb_strtolower($text);
+            if (! $this->haystackAddressesPropertyTerms($hay, $propertyTerms)) {
+                return false;
+            }
+        }
+
+        if ($propertyKey !== '' && ! $this->measurementWindowAddressesProperty($text, $number, $propertyKey)) {
+            return false;
+        }
+
+        return $number !== '';
+    }
+
+    private function textLooksLikeStructuredStatisticalMeasurement(string $text): bool
+    {
+        return preg_match('/value:\s*\d/iu', $text) === 1;
+    }
+
+    private function measurementUnitClass(string $unit): string
+    {
+        $unit = mb_strtolower(trim($unit));
+
+        return match (true) {
+            in_array($unit, ['°c', 'deg c', 'celsius', 'kelvin', 'c'], true) => 'temperature',
+            in_array($unit, ['ppm', 'mg/l', 'mg/kg', '%', 'ph'], true) => 'concentration',
+            in_array($unit, ['kg/ha', 'kg ha-1', 't/ha', 'kg/day', 'kg d-1', 'l/day', 'mm/day', 'm3/ha', 'mm'], true) => 'rate',
+            in_array($unit, ['ha', 'hectare', 'hectares'], true) => 'area',
+            in_array($unit, ['kg', 'g', 'mg', 'l', 'ml', 'tons', 'ton', 'tonnes', 'tonne', 't'], true) => 'quantity',
+            in_array($unit, ['days', 'day', 'weeks', 'week', 'months', 'month'], true) => 'time',
+            default => 'quantity',
+        };
+    }
+
     /**
-     * @param  list<ScientificEvidenceItem>  $items
-     * @return list<array<string, mixed>>
+     * @return list<string>|null
      */
+    private function requestedPropertyUnitClasses(string $target): ?array
+    {
+        return match ($target) {
+            'temperature', 'range' => ['temperature'],
+            'concentration' => ['concentration'],
+            'quantity', 'yield', 'rate', 'production', 'irrigation', 'requirements' => ['quantity', 'rate'],
+            'area' => ['area'],
+            'classification', 'species', 'definition', 'causes', 'symptoms', 'comparison' => [],
+            default => null,
+        };
+    }
+
+    private function requiresSupportedMeasurement(KnowledgeQueryPlan $plan): bool
+    {
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        $propertyKey = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));
+
+        if (in_array($questionType, ['quantity', 'range', 'requirements'], true)) {
+            return true;
+        }
+
+        return in_array($propertyKey, ['quantity', 'yield', 'rate', 'production', 'irrigation', 'concentration'], true)
+            && ! in_array($questionType, ['causes', 'symptoms', 'comparison', 'classification', 'definition'], true);
+    }
+
     private function buildConflicts(array $items, string $language): array
     {
         $conflicts = [];
@@ -1376,7 +1627,7 @@ class AnswerComposer
         return null;
     }
 
-    /**
+        /**
      * @param  list<ResearchAnswerClaim>  $claims
      * @param  array<string, mixed>  $sufficiency
      */
@@ -1397,16 +1648,37 @@ class AnswerComposer
             $confidence = min($confidence, 0.42);
         }
 
+        $expressible = array_values(array_filter(
+            $claims,
+            static fn (ResearchAnswerClaim $claim): bool => trim($claim->claimText) !== ''
+                && $claim->claimRelationship !== ClaimEvidenceRelationship::CONFLICTING
+                && $claim->claimRelationship !== ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE,
+        ));
+        if ($expressible === []) {
+            $hasAccuracyBlock = false;
+            foreach ($claims as $claim) {
+                if ($this->hasAccuracyLimitation($claim->limitations)) {
+                    $hasAccuracyBlock = true;
+                    break;
+                }
+            }
+            if ($hasAccuracyBlock) {
+                return 0.0;
+            }
+        } else {
+            $expressibleTotal = array_sum(array_map(
+                static fn (ResearchAnswerClaim $claim): float => $claim->confidence,
+                $expressible,
+            ));
+            $confidence = min($confidence, min(0.95, $expressibleTotal / count($expressible)));
+            if (((int) ($sufficiency['direct_count'] ?? 0)) === 0) {
+                $confidence = min($confidence, 0.42);
+            }
+        }
+
         return round($confidence, 3);
     }
 
-    /**
-     * @param  list<string>  $keyFindings
-     * @param  array<string, mixed>  $sufficiency
-     */
-    /**
-     * @param  array<string, mixed>  $sufficiency
-     */
     private function isSupportingOnlySufficiency(array $sufficiency): bool
     {
         return ((int) ($sufficiency['direct_count'] ?? 0)) === 0
@@ -1976,7 +2248,7 @@ class AnswerComposer
                 $item->publicationTitle,
                 (string) $item->evidenceText,
             ], static fn ($part): bool => is_string($part) && trim($part) !== ''))));
-            if (! AgriculturalEntityCatalog::haystackAddressesRequestedProperty($hay, $propertyTerms)) {
+            if (! $this->haystackAddressesPropertyTerms($hay, $propertyTerms)) {
                 return false;
             }
         }
