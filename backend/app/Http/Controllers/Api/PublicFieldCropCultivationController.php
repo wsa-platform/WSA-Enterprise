@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\Agriculture\CropProfileIdentityValidator;
 use App\Services\Agriculture\Research\AgriculturalResearchAgent;
 use App\Services\Tenancy\PublicTenantResolutionException;
 use App\Services\Tenancy\PublicTenantResolver;
@@ -29,6 +30,12 @@ class PublicFieldCropCultivationController extends Controller
             'knowledge_option' => ['nullable', 'string', 'max:64'],
             'scientific_name' => ['nullable', 'string', 'max:255'],
         ]);
+
+        // Phase 6 U6.3: authoritative taxonomy identity (ID owns identity; name must match).
+        $identity = CropProfileIdentityValidator::normalizePair($validated);
+        $validated['selected_crop_id'] = $identity['selected_crop_id'];
+        $validated['selected_crop_name'] = $identity['selected_crop_name'];
+        $validated['scientific_name'] = $identity['scientific_name'];
 
         try {
             $publicTenant = $this->publicTenantResolver->bindPublicTenant();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\Agriculture\CropProfileIdentityValidator;
 use App\Services\Agriculture\Research\AgriculturalResearchAgent;
 use App\Services\Tenancy\PublicTenantResolutionException;
 use App\Services\Tenancy\PublicTenantResolver;
@@ -43,6 +44,7 @@ class AgriculturalResearchAgentController extends Controller
             'knowledge_option' => ['nullable', 'string', 'max:64'],
             'scientific_name' => ['nullable', 'string', 'max:255'],
         ]);
+        $validated = $this->applyCropSelectorContract($validated);
 
         try {
             $publicTenant = $this->publicTenantResolver->bindPublicTenant();
@@ -66,6 +68,31 @@ class AgriculturalResearchAgentController extends Controller
         $result = $this->researchAgent->conductResearch($publicTenant->organizationId, $validated);
 
         return response()->json($result);
+    }
+
+    /**
+     * Phase 6 U6.3: incomplete Crop selectors must not silently become Home research;
+     * complete pairs must pass authoritative taxonomy identity.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function applyCropSelectorContract(array $validated): array
+    {
+        CropProfileIdentityValidator::assertNotIncompleteCropSelector($validated);
+
+        $cropId = trim((string) ($validated['selected_crop_id'] ?? ''));
+        $cropName = trim((string) ($validated['selected_crop_name'] ?? ''));
+        if ($cropId === '' && $cropName === '') {
+            return $validated;
+        }
+
+        $identity = CropProfileIdentityValidator::normalizePair($validated);
+        $validated['selected_crop_id'] = $identity['selected_crop_id'];
+        $validated['selected_crop_name'] = $identity['selected_crop_name'];
+        $validated['scientific_name'] = $identity['scientific_name'];
+
+        return $validated;
     }
 
     public function plan(Request $request): JsonResponse
@@ -96,6 +123,7 @@ class AgriculturalResearchAgentController extends Controller
             'research_intent' => ['nullable', 'string', 'max:64'],
         ]);
 
+        $validated = $this->applyCropSelectorContract($validated);
         $result = $this->researchAgent->planResearch($validated);
 
         return response()->json($result);
@@ -130,6 +158,7 @@ class AgriculturalResearchAgentController extends Controller
             'limit' => ['nullable', 'integer', 'min:1', 'max:10'],
         ]);
 
+        $validated = $this->applyCropSelectorContract($validated);
         $result = $this->researchAgent->searchResearch($validated);
 
         return response()->json($result);
@@ -165,6 +194,7 @@ class AgriculturalResearchAgentController extends Controller
             'force_execute' => ['nullable', 'boolean'],
         ]);
 
+        $validated = $this->applyCropSelectorContract($validated);
         $result = $this->researchAgent->validateResearch($validated);
 
         return response()->json($result);
@@ -202,6 +232,7 @@ class AgriculturalResearchAgentController extends Controller
             'limit' => ['nullable', 'integer', 'min:1', 'max:10'],
             'force_execute' => ['nullable', 'boolean'],
         ]);
+        $validated = $this->applyCropSelectorContract($validated);
 
         try {
             $publicTenant = $this->publicTenantResolver->bindPublicTenant();

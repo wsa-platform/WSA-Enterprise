@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Research;
 
+use App\Services\Agriculture\CropProfileIdentityValidator;
 use App\Services\Agriculture\Intelligence\Orchestration\UniversalAnswerOrchestrator;
 use App\Services\Agriculture\Research\Home\HomeEvidenceLifecycleDisposition;
 use App\Services\Agriculture\Research\Persistence\KnowledgePersistenceExecutionReport;
@@ -12,6 +13,7 @@ use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
 use App\Services\Agriculture\Research\Synthesis\AnswerSynthesisExecutionReport;
 use App\Services\Agriculture\Research\Validation\AgriculturalScientificValidationService;
 use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionReport;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Top-level agricultural research orchestration layer.
@@ -206,6 +208,53 @@ class AgriculturalResearchAgent
      */
     public function conductResearch(int $organizationId, array $input): array
     {
+        // Phase 6 U6.3: incomplete Crop selectors must not silently fall through to Home/generic.
+        if (CropProfileIdentityValidator::isIncompleteCropSelector($input)) {
+            return [
+                'status' => 'needs_clarification',
+                'stage' => 2,
+                'query_understanding' => null,
+                'knowledge_query_plan' => null,
+                'execution' => [
+                    'performed' => false,
+                    'reason' => 'incomplete_crop_selector',
+                ],
+                'clarification_requirements' => ['selected_crop_id', 'selected_crop_name'],
+                'error' => [
+                    'code' => 'incomplete_crop_selector',
+                    'http_status' => 422,
+                    'message' => 'Crop profile requires both selected_crop_id and selected_crop_name.',
+                    'details' => null,
+                ],
+            ];
+        }
+
+        $cropId = trim((string) ($input['selected_crop_id'] ?? ''));
+        $cropName = trim((string) ($input['selected_crop_name'] ?? ''));
+        if ($cropId !== '' && $cropName !== '') {
+            try {
+                $identity = CropProfileIdentityValidator::normalizePair($input);
+                $input['selected_crop_id'] = $identity['selected_crop_id'];
+                $input['selected_crop_name'] = $identity['selected_crop_name'];
+                $input['scientific_name'] = $identity['scientific_name'];
+            } catch (ValidationException $exception) {
+                return [
+                    'status' => 'invalid_crop_identity',
+                    'stage' => 2,
+                    'execution' => [
+                        'performed' => false,
+                        'reason' => 'invalid_crop_identity',
+                    ],
+                    'error' => [
+                        'code' => 'invalid_crop_identity',
+                        'http_status' => 422,
+                        'message' => 'Crop identity failed authoritative taxonomy validation.',
+                        'details' => $exception->errors(),
+                    ],
+                ];
+            }
+        }
+
         $knowledgePlan = $this->planner->planKnowledgeQuery($input);
 
         if ($knowledgePlan->needsClarification() && ! filter_var($input['force_execute'] ?? false, FILTER_VALIDATE_BOOL)) {
