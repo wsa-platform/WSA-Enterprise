@@ -11,7 +11,9 @@ use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionRepo
 use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
 use App\Services\Agriculture\ScientificSourceValidator;
 use App\Services\Ai\Retrieval\KnowledgeSemanticIndexSync;
+use App\Services\Audit\AuditService;
 use App\Services\Tenancy\TenantContext;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -22,10 +24,15 @@ use Illuminate\Support\Str;
  */
 class ScientificKnowledgePersistenceService
 {
+    public const ACTION_PERSISTENCE_REJECTED = 'security.public_tenant_persistence_rejected';
+
+    public const ACTION_PERSISTENCE_ACCEPTED = 'security.public_tenant_persistence_accepted';
+
     public function __construct(
         private KnowledgeSemanticIndexSync $semanticIndex,
         private ScientificSourceValidator $sourceValidator,
         private TenantContext $tenantContext,
+        private AuditService $audit,
     ) {}
 
     public function persist(
@@ -46,6 +53,18 @@ class ScientificKnowledgePersistenceService
                     'attempted_organization_id' => $organizationId,
                     'bound_public_organization_id' => $boundPublicOrganizationId,
                 ]);
+
+                $this->audit->record(
+                    action: self::ACTION_PERSISTENCE_REJECTED,
+                    organizationId: $boundPublicOrganizationId,
+                    userId: null,
+                    newValues: [
+                        'category' => 'public_tenant_mismatch',
+                        'mismatch' => true,
+                        'persistence_surface' => 'library',
+                    ],
+                    request: $this->currentRequest(),
+                );
 
                 return $this->skippedReport('public_tenant_mismatch', 'public_tenant_persistence_rejected');
             }
@@ -86,7 +105,7 @@ class ScientificKnowledgePersistenceService
             $existingFingerprint = (string) ($existingResearch['evidence_fingerprint'] ?? '');
 
             if ($existingFingerprint === $fingerprint) {
-                return new KnowledgePersistenceExecutionReport(
+                $report = new KnowledgePersistenceExecutionReport(
                     status: 'persistence_unchanged',
                     performed: true,
                     libraryItemId: (int) $existing->id,
@@ -98,6 +117,9 @@ class ScientificKnowledgePersistenceService
                         'internet_first_preserved' => true,
                     ],
                 );
+                $this->auditPublicPersistenceAccepted($organizationId, $existing, $report->action);
+
+                return $report;
             }
 
             $existingFreshness = (int) ($existingResearch['newest_publication_year'] ?? 0);
@@ -129,7 +151,7 @@ class ScientificKnowledgePersistenceService
                 $existing,
             );
 
-            return new KnowledgePersistenceExecutionReport(
+            $report = new KnowledgePersistenceExecutionReport(
                 status: 'persistence_completed',
                 performed: true,
                 libraryItemId: (int) $item->id,
@@ -143,6 +165,9 @@ class ScientificKnowledgePersistenceService
                     'internet_first_preserved' => true,
                 ],
             );
+            $this->auditPublicPersistenceAccepted($organizationId, $item, $report->action);
+
+            return $report;
         } catch (\Throwable $exception) {
             Log::warning('Research agent knowledge persistence failed', [
                 'organization_id' => $organizationId,
@@ -556,6 +581,40 @@ class ScientificKnowledgePersistenceService
             'crop_category_row_id' => (int) $cropCategory->id,
             'scientific_category_row_id' => (int) $scientific->id,
         ];
+    }
+
+    private function auditPublicPersistenceAccepted(
+        int $organizationId,
+        LibraryItem $item,
+        string $persistAction,
+    ): void {
+        if (! $this->tenantContext->isPublicBound()) {
+            return;
+        }
+
+        $this->audit->record(
+            action: self::ACTION_PERSISTENCE_ACCEPTED,
+            organizationId: $organizationId,
+            userId: null,
+            auditable: $item,
+            newValues: [
+                'category' => 'public_persistence_accepted',
+                'persistence_surface' => 'library',
+                'persist_action' => $persistAction,
+            ],
+            request: $this->currentRequest(),
+        );
+    }
+
+    private function currentRequest(): ?Request
+    {
+        if (! app()->bound('request')) {
+            return null;
+        }
+
+        $request = request();
+
+        return $request instanceof Request ? $request : null;
     }
 
     private function skippedReport(string $status, string $reason): KnowledgePersistenceExecutionReport

@@ -3,6 +3,8 @@
 namespace App\Services\Tenancy;
 
 use App\Models\Organization;
+use App\Services\Audit\AuditService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -12,12 +14,19 @@ use Illuminate\Support\Facades\Log;
  */
 final class PublicTenantResolver
 {
+    public const ACTION_CLIENT_OVERRIDE_IGNORED = 'security.public_tenant_client_override_ignored';
+
+    public const ACTION_PUBLIC_TENANT_UNAVAILABLE = 'security.public_tenant_unavailable';
+
     public function __construct(
         private TenantContext $tenant,
+        private AuditService $audit,
     ) {}
 
     /**
      * Resolve and bind the public tenant into request-scoped TenantContext.
+     *
+     * Per Phase 8A-2 H2: successful bind does not emit a durable audit event.
      */
     public function bindPublicTenant(): PublicTenantContext
     {
@@ -38,6 +47,7 @@ final class PublicTenantResolver
             Log::warning('security.public_tenant_config_invalid', [
                 'reason' => 'empty_public_organization_slug',
             ]);
+            $this->auditPublicTenantUnavailable('empty_public_organization_slug');
 
             throw new PublicTenantResolutionException('Public organization is unavailable.');
         }
@@ -48,6 +58,7 @@ final class PublicTenantResolver
             Log::warning('security.public_tenant_not_found', [
                 'configured_slug' => $slug,
             ]);
+            $this->auditPublicTenantUnavailable('not_found');
 
             throw new PublicTenantResolutionException('Public organization is unavailable.');
         }
@@ -57,6 +68,7 @@ final class PublicTenantResolver
                 'configured_slug' => $slug,
                 'organization_id' => $organization->id,
             ]);
+            $this->auditPublicTenantUnavailable('inactive', (int) $organization->id);
 
             throw new PublicTenantResolutionException('Public organization is unavailable.');
         }
@@ -88,11 +100,51 @@ final class PublicTenantResolver
             return;
         }
 
+        $clientOrganizationIdPresent = $clientId !== null;
+        $clientOrganizationSlugPresent = $clientSlug !== null && $clientSlug !== '';
+
         Log::info('security.public_tenant_client_override_ignored', [
             'bound_organization_id' => $bound->organizationId,
             'bound_slug' => $bound->slug,
-            'client_organization_id_present' => $clientId !== null,
-            'client_organization_slug_present' => $clientSlug !== null && $clientSlug !== '',
+            'client_organization_id_present' => $clientOrganizationIdPresent,
+            'client_organization_slug_present' => $clientOrganizationSlugPresent,
         ]);
+
+        $this->audit->record(
+            action: self::ACTION_CLIENT_OVERRIDE_IGNORED,
+            organizationId: $bound->organizationId,
+            userId: null,
+            newValues: [
+                'category' => 'client_organization_override_ignored',
+                'client_organization_id_present' => $clientOrganizationIdPresent,
+                'client_organization_slug_present' => $clientOrganizationSlugPresent,
+            ],
+            request: $this->currentRequest(),
+        );
+    }
+
+    private function auditPublicTenantUnavailable(string $reason, ?int $organizationId = null): void
+    {
+        $this->audit->record(
+            action: self::ACTION_PUBLIC_TENANT_UNAVAILABLE,
+            organizationId: $organizationId,
+            userId: null,
+            newValues: [
+                'category' => 'public_organization_unavailable',
+                'reason' => $reason,
+            ],
+            request: $this->currentRequest(),
+        );
+    }
+
+    private function currentRequest(): ?Request
+    {
+        if (! app()->bound('request')) {
+            return null;
+        }
+
+        $request = request();
+
+        return $request instanceof Request ? $request : null;
     }
 }

@@ -3,7 +3,9 @@
 namespace App\Services\Agriculture\Research\Feedback;
 
 use App\Models\ResearchFeedbackRecord;
+use App\Services\Audit\AuditService;
 use App\Services\Tenancy\PublicTenantResolver;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -17,8 +19,12 @@ final class PositiveResearchFeedbackService
 
     public const POLARITY_NEGATIVE = 'negative';
 
+    /** Must match ScientificKnowledgePersistenceService::ACTION_PERSISTENCE_ACCEPTED (≤50 chars). */
+    public const ACTION_PERSISTENCE_ACCEPTED = 'security.public_tenant_persistence_accepted';
+
     public function __construct(
         private PublicTenantResolver $publicTenantResolver,
+        private AuditService $audit,
     ) {}
 
     /**
@@ -76,6 +82,19 @@ final class PositiveResearchFeedbackService
             ],
         ]);
 
+        $this->audit->record(
+            action: self::ACTION_PERSISTENCE_ACCEPTED,
+            organizationId: $publicTenant->organizationId,
+            userId: null,
+            auditable: $record,
+            newValues: [
+                'category' => 'public_persistence_accepted',
+                'persistence_surface' => 'feedback',
+                'persist_action' => 'created',
+            ],
+            request: $this->currentRequest(),
+        );
+
         return [
             'status' => 'recorded',
             'persisted' => true,
@@ -98,5 +117,16 @@ final class PositiveResearchFeedbackService
         }
 
         return in_array($locale, ['ar', 'en', 'tr', 'fr'], true) ? $locale : null;
+    }
+
+    private function currentRequest(): ?Request
+    {
+        if (! app()->bound('request')) {
+            return null;
+        }
+
+        $request = request();
+
+        return $request instanceof Request ? $request : null;
     }
 }
