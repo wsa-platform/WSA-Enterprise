@@ -205,6 +205,8 @@
     "phoneSend": "Kod gönder",
     "phoneVerify": "Doğrula ve giriş yap",
     "googleFailed": "Google ile giriş tamamlanamadı.",
+    "facebookFailed": "Facebook ile giriş tamamlanamadı.",
+    "oauthCancelled": "Giriş iptal edildi.",
     "completingSignIn": "Giriş tamamlanıyor…",
     "entry": {
       "title": "İş arayan veya işveren olarak devam edin",
@@ -843,6 +845,8 @@
     "validation": "Doğrulama başarısız. Lütfen girdilerinizi kontrol edin.",
     "network": "Sunucuya ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
     "rateLimited": "Çok fazla istek. Lütfen daha sonra tekrar deneyin.",
+    "csrf": "Oturum koruması sona erdi. Lütfen tekrar deneyin.",
+    "server": "Sunucu bu isteği tamamlayamadı.",
     "notAuthenticated": "Kimlik doğrulanmadı.",
     "checkingAccess": "Erişim kontrol ediliyor…"
   },

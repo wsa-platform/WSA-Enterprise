@@ -1,9 +1,16 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { register, forgotPassword, getGoogleRedirect, updateAccountProfile, activateEmployerService } from './auth'
+import { resetSpaCsrfState, seedSpaXsrfToken } from './client'
+
+function seedSpaCsrfCookie() {
+  resetSpaCsrfState()
+  seedSpaXsrfToken('test-xsrf')
+}
 
 describe('register', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    seedSpaCsrfCookie()
   })
 
   it('posts registration payload to the auth register endpoint', async () => {
@@ -32,6 +39,8 @@ describe('register', () => {
     const [url, init] = fetchMock.mock.calls[0]
     expect(String(url)).toContain('/auth/register')
     expect(init?.method).toBe('POST')
+    expect((init?.headers as Record<string, string>)['X-XSRF-TOKEN']).toBe('test-xsrf')
+    expect(init?.credentials).toBe('same-origin')
     expect(JSON.parse(String(init?.body))).toMatchObject({
       email: 'owner@wsa.test',
       device_name: 'wsa-web-dashboard',
@@ -125,6 +134,7 @@ describe('register', () => {
 describe('activateEmployerService', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    seedSpaCsrfCookie()
   })
 
   it('posts to the existing employer-service activation endpoint', async () => {
@@ -152,6 +162,7 @@ describe('activateEmployerService', () => {
 describe('password reset and google redirect', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    seedSpaCsrfCookie()
   })
 
   it('posts forgot-password to the auth endpoint', async () => {
@@ -228,6 +239,7 @@ describe('public services catalog', () => {
 describe('updateAccountProfile', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    seedSpaCsrfCookie()
   })
 
   it('patches only the authenticated user name', async () => {

@@ -32,6 +32,8 @@ class OAuthService
             'scope' => 'openid email profile',
             'state' => $state,
             'access_type' => 'online',
+            // Official Google account chooser — do not silently pick a stored account.
+            'prompt' => 'select_account',
         ]);
 
         return [
@@ -56,21 +58,19 @@ class OAuthService
 
         abort_unless($tokenResponse->successful(), 422, 'Google token exchange failed.');
 
-        $accessToken = $tokenResponse->json('access_token');
-        $profile = Http::withToken($accessToken)->get('https://www.googleapis.com/oauth2/v2/userinfo');
-        abort_unless($profile->successful(), 422, 'Failed to fetch Google profile.');
+        $idToken = (string) $tokenResponse->json('id_token');
+        abort_unless($idToken !== '', 422, 'Google identity token was missing.');
 
-        $googleId = (string) $profile->json('id');
-        $email = (string) $profile->json('email');
-        $name = (string) ($profile->json('name') ?: $email);
+        $claims = $this->verifyGoogleIdToken($idToken);
 
         return $this->resolveOAuthUser(
             provider: UserIdentity::PROVIDER_GOOGLE,
-            providerId: $googleId,
-            email: $email,
-            name: $name,
+            providerId: $claims['sub'],
+            email: $claims['email'],
+            name: $claims['name'],
             deviceName: $deviceName,
-            metadata: $profile->json() ?? [],
+            emailVerified: true,
+            metadata: $claims,
         );
     }
 
@@ -112,7 +112,11 @@ class OAuthService
 
         abort_unless($tokenResponse->successful(), 422, 'Facebook token exchange failed.');
 
-        $accessToken = $tokenResponse->json('access_token');
+        $accessToken = (string) $tokenResponse->json('access_token');
+        abort_unless($accessToken !== '', 422, 'Facebook access token was missing.');
+
+        $appUserId = $this->verifyFacebookAccessToken($accessToken);
+
         $profile = Http::get('https://graph.facebook.com/me', [
             'fields' => 'id,name,email',
             'access_token' => $accessToken,
@@ -120,8 +124,12 @@ class OAuthService
         abort_unless($profile->successful(), 422, 'Failed to fetch Facebook profile.');
 
         $facebookId = (string) $profile->json('id');
-        $email = (string) ($profile->json('email') ?: $facebookId.'@facebook.local');
-        $name = (string) ($profile->json('name') ?: 'Facebook User');
+        abort_unless($facebookId !== '' && $facebookId === $appUserId, 422, 'Facebook identity did not match the verified token.');
+
+        $email = strtolower(trim((string) $profile->json('email')));
+        abort_unless($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL), 422, 'Facebook did not provide a verified email.');
+
+        $name = (string) ($profile->json('name') ?: $email);
 
         return $this->resolveOAuthUser(
             provider: UserIdentity::PROVIDER_FACEBOOK,
@@ -129,21 +137,32 @@ class OAuthService
             email: $email,
             name: $name,
             deviceName: $deviceName,
+            emailVerified: true,
             metadata: $profile->json() ?? [],
         );
     }
 
-    /** @param  array<string, mixed>  $metadata
+    /**
+     * @param  array<string, mixed>  $metadata
      * @return array{user: User, token: string, created: bool}
      */
-    private function resolveOAuthUser(string $provider, string $providerId, string $email, string $name, string $deviceName, array $metadata): array
-    {
+    private function resolveOAuthUser(
+        string $provider,
+        string $providerId,
+        string $email,
+        string $name,
+        string $deviceName,
+        bool $emailVerified,
+        array $metadata,
+    ): array {
         $identity = UserIdentity::where('provider', $provider)->where('provider_id', $providerId)->first();
         $created = false;
 
         if ($identity !== null) {
             $user = $identity->user;
         } else {
+            abort_unless($emailVerified && $email !== '', 422, 'Provider email is not verified.');
+
             $user = User::where('email', $email)->first();
             if ($user === null) {
                 abort_unless(config('app.allow_registration'), 403, 'Registration is disabled.');
@@ -164,6 +183,55 @@ class OAuthService
             'token' => $user->createToken($deviceName)->plainTextToken,
             'created' => $created,
         ];
+    }
+
+    /** @return array{sub: string, email: string, name: string, iss: string, aud: string} */
+    private function verifyGoogleIdToken(string $idToken): array
+    {
+        $response = Http::acceptJson()->get('https://oauth2.googleapis.com/tokeninfo', [
+            'id_token' => $idToken,
+        ]);
+        abort_unless($response->successful(), 422, 'Google identity token could not be verified.');
+
+        $iss = (string) $response->json('iss');
+        $aud = (string) $response->json('aud');
+        $sub = (string) $response->json('sub');
+        $email = strtolower(trim((string) $response->json('email')));
+        $verified = filter_var($response->json('email_verified'), FILTER_VALIDATE_BOOLEAN);
+        $exp = (int) $response->json('exp');
+
+        abort_unless(in_array($iss, ['accounts.google.com', 'https://accounts.google.com'], true), 422, 'Google token issuer is invalid.');
+        abort_unless($aud === (string) config('services.google.client_id'), 422, 'Google token audience is invalid.');
+        abort_unless($sub !== '', 422, 'Google subject is missing.');
+        abort_unless($verified && $email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL), 422, 'Google email is not verified.');
+        abort_unless($exp > time(), 422, 'Google identity token has expired.');
+
+        return [
+            'sub' => $sub,
+            'email' => $email,
+            'name' => (string) ($response->json('name') ?: $email),
+            'iss' => $iss,
+            'aud' => $aud,
+        ];
+    }
+
+    private function verifyFacebookAccessToken(string $accessToken): string
+    {
+        $appToken = $this->facebookClientId().'|'.$this->facebookClientSecret();
+        $response = Http::acceptJson()->get('https://graph.facebook.com/debug_token', [
+            'input_token' => $accessToken,
+            'access_token' => $appToken,
+        ]);
+        abort_unless($response->successful(), 422, 'Facebook token could not be verified.');
+
+        $data = $response->json('data') ?? [];
+        abort_unless(($data['is_valid'] ?? false) === true, 422, 'Facebook token is invalid.');
+        abort_unless((string) ($data['app_id'] ?? '') === (string) $this->facebookClientId(), 422, 'Facebook token audience is invalid.');
+
+        $userId = (string) ($data['user_id'] ?? '');
+        abort_unless($userId !== '', 422, 'Facebook subject is missing.');
+
+        return $userId;
     }
 
     private function googleConfigured(): bool

@@ -33,6 +33,7 @@ class AuthExtensionTest extends TestCase
             ->assertJsonStructure(['url', 'state']);
 
         $this->assertStringContainsString('accounts.google.com', (string) $response->json('url'));
+        $this->assertStringContainsString('prompt=select_account', (string) $response->json('url'));
     }
 
     public function test_phone_otp_send_returns_503_when_sms_is_disconnected(): void

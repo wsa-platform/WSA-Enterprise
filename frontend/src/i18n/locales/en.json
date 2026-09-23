@@ -205,6 +205,8 @@
     "phoneSend": "Send code",
     "phoneVerify": "Verify and sign in",
     "googleFailed": "Google sign-in could not be completed.",
+    "facebookFailed": "Facebook sign-in could not be completed.",
+    "oauthCancelled": "Sign-in was cancelled.",
     "completingSignIn": "Completing sign-in…",
     "entry": {
       "title": "Continue as a job seeker or employer",
@@ -843,6 +845,8 @@
     "validation": "Validation failed. Please check your input.",
     "network": "Unable to reach the server. Check your connection and try again.",
     "rateLimited": "Too many requests. Please try again later.",
+    "csrf": "Your session protection expired. Please try again.",
+    "server": "The server could not complete this request.",
     "notAuthenticated": "Not authenticated.",
     "checkingAccess": "Checking access…"
   },

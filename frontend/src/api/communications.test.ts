@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { composeCommunication, sendCommunication } from './communications'
+import { resetSpaCsrfState, seedSpaXsrfToken } from './client'
 
 describe('communications API', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    resetSpaCsrfState()
+    seedSpaXsrfToken('test-xsrf')
   })
 
   it('creates then sends a message', async () => {

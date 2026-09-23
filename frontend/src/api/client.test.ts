@@ -1,9 +1,16 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import {
   ApiError,
   buildHeaders,
+  ensureSpaCsrfCookie,
+  isStateChangingMethod,
   modulePaginationMeta,
+  readXsrfToken,
+  request,
   requestWithRetry,
+  resetSpaCsrfState,
+  SANCTUM_CSRF_COOKIE_PATH,
+  seedSpaXsrfToken,
   unwrapEnvelope,
   unwrapModuleRows,
 } from './client'
@@ -25,6 +32,12 @@ describe('ApiError', () => {
   it('identifies unauthorized and not-found responses', () => {
     expect(new ApiError('Unauthorized', 401).isUnauthorized).toBe(true)
     expect(new ApiError('Missing', 404).isNotFound).toBe(true)
+  })
+
+  it('identifies CSRF mismatches and server errors', () => {
+    expect(new ApiError('CSRF token mismatch.', 419).isCsrfMismatch).toBe(true)
+    expect(new ApiError('Boom', 500).isServerError).toBe(true)
+    expect(new ApiError('No', 422).isServerError).toBe(false)
   })
 })
 
@@ -65,6 +78,108 @@ describe('response helpers', () => {
       lastPage: 2,
       total: 3,
     })
+  })
+})
+
+describe('SPA CSRF contract', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+    resetSpaCsrfState()
+  })
+
+  afterEach(() => {
+    resetSpaCsrfState()
+  })
+
+  it('reads and URL-decodes the XSRF-TOKEN cookie', () => {
+    const previous = (globalThis as { document?: unknown }).document
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: { cookie: 'XSRF-TOKEN=' + encodeURIComponent('token/value+') },
+    })
+    expect(readXsrfToken()).toBe('token/value+')
+    expect(isStateChangingMethod('POST')).toBe(true)
+    expect(isStateChangingMethod('GET')).toBe(false)
+    Object.defineProperty(globalThis, 'document', { configurable: true, value: previous })
+  })
+
+  it('initializes Sanctum CSRF before the first state-changing request', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = String(input)
+      if (url.includes(SANCTUM_CSRF_COOKIE_PATH)) {
+        seedSpaXsrfToken('fresh-xsrf')
+        return new Response(null, { status: 204 })
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    })
+
+    await request('/auth/login', { method: 'POST', body: JSON.stringify({ email: 'a@b.c' }) })
+
+    expect(fetchMock.mock.calls.map((call) => String(call[0]))).toEqual([
+      SANCTUM_CSRF_COOKIE_PATH,
+      expect.stringContaining('/auth/login'),
+    ])
+    expect((fetchMock.mock.calls[1][1]?.headers as Record<string, string>)['X-XSRF-TOKEN']).toBe('fresh-xsrf')
+    expect(fetchMock.mock.calls[1][1]?.credentials).toBe('same-origin')
+  })
+
+  it('skips CSRF initialization when a valid XSRF cookie already exists', async () => {
+    seedSpaXsrfToken('existing-xsrf')
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    )
+
+    await ensureSpaCsrfCookie()
+    await request('/auth/login', { method: 'POST', body: '{}' })
+
+    expect(fetchMock).toHaveBeenCalledOnce()
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/auth/login')
+  })
+
+  it('refreshes CSRF once after 419 and does not loop', async () => {
+    let loginAttempts = 0
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = String(input)
+      if (url.includes(SANCTUM_CSRF_COOKIE_PATH)) {
+        seedSpaXsrfToken('retry-xsrf')
+        return new Response(null, { status: 204 })
+      }
+      loginAttempts += 1
+      if (loginAttempts === 1) {
+        return new Response(JSON.stringify({ message: 'CSRF token mismatch.' }), {
+          status: 419,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response(JSON.stringify({ token: 'ok' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    })
+
+    const result = await request<{ token: string }>('/auth/login', { method: 'POST', body: '{}' })
+
+    expect(result.token).toBe('ok')
+    const csrfCalls = fetchMock.mock.calls.filter((call) => String(call[0]).includes(SANCTUM_CSRF_COOKIE_PATH))
+    const loginCalls = fetchMock.mock.calls.filter((call) => String(call[0]).includes('/auth/login'))
+    expect(csrfCalls).toHaveLength(2)
+    expect(loginCalls).toHaveLength(2)
+  })
+
+  it('does not send CSRF headers on GET requests', async () => {
+    seedSpaXsrfToken('existing-xsrf')
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ status: 'ok' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    )
+
+    await request('/health')
+
+    expect(fetchMock).toHaveBeenCalledOnce()
+    expect((fetchMock.mock.calls[0][1]?.headers as Record<string, string>)['X-XSRF-TOKEN']).toBeUndefined()
+    expect(String(fetchMock.mock.calls[0][0])).not.toContain(SANCTUM_CSRF_COOKIE_PATH)
   })
 })
 

@@ -54,6 +54,7 @@ export function translateApiError(error: unknown): string {
 
   if (error.name === 'ApiError') {
     const apiError = error as ApiError
+    if (apiError.isCsrfMismatch) return i18n.t('errors.csrf')
     if (apiError.isUnauthorized) return i18n.t('errors.unauthorized')
     if (apiError.isForbidden) {
       if ((apiError.message || '').toLowerCase().includes('registration is disabled')) {
@@ -64,6 +65,7 @@ export function translateApiError(error: unknown): string {
     if (apiError.isNotFound) return i18n.t('errors.notFound')
     if (apiError.isConflict) return i18n.t('errors.conflict')
     if (apiError.isRateLimited) return i18n.t('errors.rateLimited')
+    if (apiError.isServerError) return apiError.message || i18n.t('errors.server')
     if (apiError.errors) {
       const mapped = translateFieldErrors(apiError.errors)
       if (mapped.length > 0) return mapped.join(' ')

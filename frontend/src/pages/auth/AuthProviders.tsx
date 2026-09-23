@@ -45,10 +45,22 @@ export function AuthProviders({
 
   return (
     <div className="public-auth-providers">
-      <button type="button" className="public-auth-provider" disabled={loading} onClick={() => void startOAuth('google')}>
+      <button
+        type="button"
+        className="public-auth-provider"
+        data-auth-provider="google"
+        disabled={loading}
+        onClick={() => void startOAuth('google')}
+      >
         {t('website.auth.google')}
       </button>
-      <button type="button" className="public-auth-provider" disabled={loading} onClick={() => void startOAuth('facebook')}>
+      <button
+        type="button"
+        className="public-auth-provider"
+        data-auth-provider="facebook"
+        disabled={loading}
+        onClick={() => void startOAuth('facebook')}
+      >
         {t('website.auth.facebook')}
       </button>
     </div>

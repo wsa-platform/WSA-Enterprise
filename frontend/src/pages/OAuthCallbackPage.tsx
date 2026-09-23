@@ -23,12 +23,20 @@ export function OAuthCallbackPage() {
   const [params] = useSearchParams()
   const { setSession, setOrganizationId } = useAuth()
   const [error, setError] = useState('')
+  const oauthError = params.get('error')
+  const cancelled = oauthError === 'access_denied' || oauthError === 'user_denied'
+  const displayError = cancelled ? t('auth.oauthCancelled') : error
 
   useEffect(() => {
+    if (cancelled) {
+      return
+    }
+
     const code = params.get('code')
     const state = params.get('state')
     if (!code || !state) {
-      setError(t('auth.googleFailed'))
+      const provider = sessionStorage.getItem(AUTH_PROVIDER_STORAGE_KEY) === 'facebook' ? 'facebook' : 'google'
+      setError(provider === 'facebook' ? t('auth.facebookFailed') : t('auth.googleFailed'))
       return
     }
 
@@ -55,10 +63,11 @@ export function OAuthCallbackPage() {
         })
         navigate(destination, { replace: true })
       } catch (requestError) {
-        setError(translateApiError(requestError) || t('auth.googleFailed'))
+        const provider = sessionStorage.getItem(AUTH_PROVIDER_STORAGE_KEY) === 'facebook' ? 'facebook' : 'google'
+        setError(translateApiError(requestError) || (provider === 'facebook' ? t('auth.facebookFailed') : t('auth.googleFailed')))
       }
     })()
-  }, [params, navigate, setOrganizationId, setSession, t])
+  }, [cancelled, params, navigate, setOrganizationId, setSession, t])
 
   return (
     <div className="public-site">
@@ -74,9 +83,9 @@ export function OAuthCallbackPage() {
       <main className="public-auth-shell">
         <section className="public-auth-card">
           <h1>{t('auth.completingSignIn')}</h1>
-          {error ? (
+          {displayError ? (
             <>
-              <p className="error" role="alert">{error}</p>
+              <p className="error" role="alert">{displayError}</p>
               <Link to="/jobs/enter">{t('auth.backToLogin')}</Link>
             </>
           ) : (

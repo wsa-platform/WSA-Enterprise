@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n, { getCurrentLanguage } from '../i18n/config'
 import { ApiError } from '../api/client'
+import { translateApiError } from '../i18n/apiErrors'
 import {
   buildHomePositiveFeedbackPayload,
   formatResearchConflictText,
@@ -53,6 +54,7 @@ export type HomeScientificResearchSearchViewProps = {
   onQueryChange: (value: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   feedbackState?: HomeFeedbackUiState
+  feedbackErrorMessage?: string | null
   onPositiveFeedback?: () => void
 }
 
@@ -69,6 +71,7 @@ export function HomeScientificResearchSearchView({
   onQueryChange,
   onSubmit,
   feedbackState = 'idle',
+  feedbackErrorMessage = null,
   onPositiveFeedback,
 }: HomeScientificResearchSearchViewProps) {
   const { t } = useTranslation()
@@ -249,7 +252,7 @@ export function HomeScientificResearchSearchView({
                   data-testid="home-research-feedback-error"
                   role="alert"
                 >
-                  {t('website.research.feedbackError')}
+                  {feedbackErrorMessage || t('website.research.feedbackError')}
                 </p>
               ) : null}
             </div>
@@ -268,6 +271,7 @@ export function HomeScientificResearchSearch() {
   const [result, setResult] = useState<ResearchAgentQueryResponse | null>(null)
   const [submittedQuestion, setSubmittedQuestion] = useState<string | null>(null)
   const [feedbackState, setFeedbackState] = useState<HomeFeedbackUiState>('idle')
+  const [feedbackErrorMessage, setFeedbackErrorMessage] = useState<string | null>(null)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -277,6 +281,7 @@ export function HomeScientificResearchSearch() {
     setLoading(true)
     setError(null)
     setFeedbackState('idle')
+    setFeedbackErrorMessage(null)
 
     try {
       const response = await queryPublicResearchAgent(normalized)
@@ -296,6 +301,7 @@ export function HomeScientificResearchSearch() {
     if (feedbackState === 'submitting' || feedbackState === 'success') return
 
     setFeedbackState('submitting')
+    setFeedbackErrorMessage(null)
     try {
       const payload = buildHomePositiveFeedbackPayload({
         question: submittedQuestion,
@@ -307,9 +313,11 @@ export function HomeScientificResearchSearch() {
         setFeedbackState('success')
       } else {
         setFeedbackState('error')
+        setFeedbackErrorMessage(response.reason || i18n.t('website.research.feedbackError'))
       }
-    } catch {
+    } catch (submitError: unknown) {
       setFeedbackState('error')
+      setFeedbackErrorMessage(translateApiError(submitError) || i18n.t('website.research.feedbackError'))
     }
   }
 
@@ -320,6 +328,7 @@ export function HomeScientificResearchSearch() {
       error={error}
       result={result}
       feedbackState={feedbackState}
+      feedbackErrorMessage={feedbackErrorMessage}
       onQueryChange={setQuery}
       onSubmit={(event) => {
         void handleSubmit(event)

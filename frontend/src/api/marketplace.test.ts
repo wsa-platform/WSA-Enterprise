@@ -15,10 +15,13 @@ import {
   updateListing,
 } from './marketplace'
 import { fetchPublicListings as fetchPublicListingsFromBarrel } from './index'
+import { resetSpaCsrfState, seedSpaXsrfToken } from './client'
 
 describe('marketplace API', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    resetSpaCsrfState()
+    seedSpaXsrfToken('test-xsrf')
   })
 
   it('is re-exported from the API barrel', () => {

@@ -205,6 +205,8 @@
     "phoneSend": "Envoyer le code",
     "phoneVerify": "Vérifier et se connecter",
     "googleFailed": "La connexion Google n'a pas pu aboutir.",
+    "facebookFailed": "La connexion Facebook n'a pas pu aboutir.",
+    "oauthCancelled": "La connexion a été annulée.",
     "completingSignIn": "Finalisation de la connexion…",
     "entry": {
       "title": "Continuer comme chercheur d'emploi ou employeur",
@@ -843,6 +845,8 @@
     "validation": "Échec de la validation. Veuillez vérifier vos saisies.",
     "network": "Impossible de joindre le serveur. Vérifiez votre connexion puis réessayez.",
     "rateLimited": "Trop de requêtes. Veuillez réessayer plus tard.",
+    "csrf": "La protection de session a expiré. Veuillez réessayer.",
+    "server": "Le serveur n’a pas pu terminer cette requête.",
     "notAuthenticated": "Non authentifié.",
     "checkingAccess": "Vérification de l'accès…"
   },

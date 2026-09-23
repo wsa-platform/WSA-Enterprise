@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError } from './client'
+import { ApiError, resetSpaCsrfState, seedSpaXsrfToken } from './client'
 import { getCurrentLanguage } from '../i18n/config'
 import {
   buildHomePositiveFeedbackPayload,
@@ -13,6 +13,8 @@ describe('researchAgent API', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     vi.unstubAllEnvs()
+    resetSpaCsrfState()
+    seedSpaXsrfToken('test-xsrf')
   })
 
   it('is re-exported from the API barrel', () => {

@@ -38,4 +38,11 @@ describe('translateApiError', () => {
     const network = new TypeError('Failed to fetch')
     expect(translateApiError(network)).toBe(i18n.t('errors.network'))
   })
+
+  it('distinguishes CSRF, unauthorized, rate-limit, and server failures', () => {
+    expect(translateApiError(new ApiError('CSRF token mismatch.', 419))).toBe(i18n.t('errors.csrf'))
+    expect(translateApiError(new ApiError('Unauthenticated.', 401))).toBe(i18n.t('errors.unauthorized'))
+    expect(translateApiError(new ApiError('Too many', 429))).toBe(i18n.t('errors.rateLimited'))
+    expect(translateApiError(new ApiError('Provider down', 503))).toBe('Provider down')
+  })
 })
