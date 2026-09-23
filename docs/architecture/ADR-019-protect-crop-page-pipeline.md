@@ -1,9 +1,13 @@
 # ADR-019 — Protect the Crop Page Pipeline
 
-- **Status:** Accepted
+- **Status:** HISTORICAL / PARTIALLY SUPERSEDED
 - **Date:** 2026-09-17
 - **Scope:** WSA-Enterprise public agricultural research architecture
 - **Decision type:** Architectural boundary / protected path
+
+> Original Crop protection rationale below remains historical and is not rewritten.
+> ADR-021 made Crop in-scope for system-wide remediation. Phases 6–7 subsequently performed Crop work under that later decision.
+> Do not delete this ADR. Do not treat the “MUST NOT be modified” sentence as the live Crop-scope rule.
 
 ## Decision
 

@@ -99,7 +99,9 @@ Authoritative gate for auto-save: validation `evidenceSufficient` + eligible syn
 
 Composer status informs disposition; it is not sole eligibility authority.
 
-When eligible: auto-save Library item under **Crop → Scientific Research** folder when crop context exists; download original source file unchanged.
+When eligible: auto-save Library item under **`[Research Topic] → Scientific Research`**. Crop topics use the `Crop → Scientific Research` label; other topics use `Topic → Scientific Research`. Download the original source file unchanged.
+
+Library Page **READ** after persist is a separate Phase 8B contract (authentication-only complete Library browse). See `docs/architecture/PHASE-8-CLOSEOUT.md`. This section does not make Library writes or public APIs unrestricted.
 
 Source links shown to users remain **original source URLs**, not Library URLs.
 

@@ -1,5 +1,19 @@
 # CURRENT SYSTEM STATE — Phase 1 Baseline
 
+> **HISTORICAL DOCUMENT — PHASE 1 FORENSIC BASELINE**
+>
+> This file is a Phase 1 forensic snapshot (audit dates 2026-09-20 / 2026-09-21).
+> It is **not** the authoritative post-Phase-8 current-state reference.
+> SHA, dirty-count, and untracked-count values in the tables below are **historical snapshot values** from that audit. Do not treat them as live repository metrics.
+> Post-Phase-8 security / Library closeout: `docs/architecture/PHASE-8-CLOSEOUT.md`.
+> ADR-021 remains the remediation phase model (`PHASE 9 — LEGACY + WIP + ENGINEERING CLEANUP`).
+>
+> **Post-Phase-8 status notes (do not rewrite the Phase 1 evidence below):**
+> - MODEL B public-tenant files (`PublicTenantResolver` and related) are **on HEAD** after Phase 8A-1 — they are not merely uncommitted G1 WIP.
+> - Flutter `Accept-Language` absence is **HISTORICAL / RESOLVED** (P2-C04; UI locale only — R2 still forbids using it as answer language).
+> - Locale `ar|en` collapse (TR/FR → `en`) is **HISTORICAL / RESOLVED** (P2-C08; persist `ar|en|tr|fr`).
+> - The commit subject `708debb` “Phase 9 multilingual semantic contract” is a **historical scientific commit name**, not official Phase 9 Wave 0/1.
+
 - **Original Phase 1 audit date:** 2026-09-20 (UTC+3)
 - **WIP inventory refresh date:** 2026-09-21 (point-in-time snapshot — documentation only)
 - **Audit mode:** READ-ONLY forensic (Phase 1) + documentation gap closure
@@ -9,6 +23,8 @@
 ---
 
 ## 1. Git baseline (PROVEN — refreshed 2026-09-21)
+
+> Historical snapshot of 2026-09-21. Not the post-Phase-8 HEAD. See `PHASE-8-CLOSEOUT.md`.
 
 | Field | Value |
 |-------|--------|
@@ -88,7 +104,7 @@
 | Class | Examples | Notes |
 |-------|----------|-------|
 | **A — Protected pre-existing scientific WIP** | Untracked Feature tests: `ScientificResultRankerGeoScopeTest`, `SemanticTargetAndSupportedValueContractTest`, `ScientificResearchSearchFlowTest`, `HomeMultilingualSemanticContractTest`, `GenericAgriculturalEntityArchitectureTest`, `ProviderActivationAndLevel4FeatureTest` | Do not delete or normalize |
-| **A — Protected G1 security WIP (uncommitted)** | `PublicTenantContext.php`, `PublicTenantResolver.php`, `PublicTenantResolutionException.php`, `PublicTenantBindingSecurityTest.php`, `G1-PUBLIC-TENANT-BINDING-MODEL-B.md` | Application+test+doc for MODEL B; not Phase 1 docs |
+| **A — Protected G1 security WIP (uncommitted)** | `PublicTenantContext.php`, `PublicTenantResolver.php`, `PublicTenantResolutionException.php`, `PublicTenantBindingSecurityTest.php`, `G1-PUBLIC-TENANT-BINDING-MODEL-B.md` | **HISTORICAL Phase 1 classification.** **CURRENT:** tenancy/resolver/test files are on HEAD after Phase 8A-1; G1 markdown may remain untracked as a historical implementation note. MODEL B is implemented, not “merely uncommitted G1 WIP.” |
 | **B — Documentation-only Phase 1 / remediation governance** | `CURRENT-SYSTEM-STATE.md`, `SYSTEM-WIDE-FORENSIC-AUDIT.md`, `SYSTEM-ARCHITECTURE-MAP.md`, `ADR-021-…md` (recovered), `WSA-ENTERPRISE-PROBLEM-REGISTRY.md`, `AUTHORITATIVE-PROBLEM-REGISTRY.md`, `BASELINE-RECONCILIATION.md`, `MASTER-REMEDIATION-EXECUTION-PLAN.md`, `REMEDIATION-DEPENDENCY-MAP.md`, `SECURITY-BOUNDARY-DISCOVERY.md` | Docs only |
 | **C — Historical / generated / temp artifacts** | `backend/e2e-tmp/**`, `admin-mobile/e2e-tmp/**`, `frontend/e2e-tmp/**`, root `*-test-*.txt`, `frontend-*-*.txt`, `docker-ps-out.txt`, `agent-tools-docker-settings.html`, `mobile/**/*.iml`, `.kotlin/errors/*` | Do not treat as product source |
 | **D — Unknown / human review** | `backend/composer.lock` | Lockfile untracked — do not auto-commit |
@@ -150,7 +166,7 @@
 | Post–RC-C live comparison matrix | **REQUIRES VERIFICATION** (not re-run this audit; persist mutates) |
 | Per-provider / Stage-3-only ms on HEAD `7486178` | **NOT RUNTIME VERIFIED** (instrumentation now present; live measure not run) |
 | Public `organization_id` → Library write | **HISTORICAL risk**; **WRITE MITIGATED (MODEL B)**. Browse/plant = P8-F1/P8-F2 frozen |
-| Flutter research locale (`Accept-Language` absent) | **PROVEN mismatch risk** |
+| Flutter research locale (`Accept-Language` absent) | **HISTORICAL / RESOLVED (P2-C04).** Phase 1 finding only. Flutter now sends UI `Accept-Language`. R2: that header must not override answer language. |
 | Clean-HEAD semantics vs dirty WIP | **REQUIRES VERIFICATION** |
 | Crop runtime answer quality | **NOT RUNTIME VERIFIED** this audit |
 

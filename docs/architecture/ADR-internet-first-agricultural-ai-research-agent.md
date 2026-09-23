@@ -57,3 +57,5 @@ User Query
 - WordPress changes
 - New packages (Laravel AI SDK, Scout, Meilisearch, etc.)
 - Broad UI work
+
+See also: `docs/architecture/PHASE-8-CLOSEOUT.md` for the later Library Page vs public Library vs persist distinction. This ADR’s Internet-First decision is unchanged.

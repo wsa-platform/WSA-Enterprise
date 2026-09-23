@@ -2,6 +2,8 @@
 
 WSA-Enterprise uses organization-scoped multi-tenancy. All tenant-owned records carry an `organization_id` foreign key and API reads/writes are filtered through the authenticated user's organization membership.
 
+**Library Page READ carve-out (Phase 8B):** Library Page **READ** access is authentication-only. Any authenticated platform user may browse the complete Library Page. Organization, `owner_user_id`, supervisor status, and item type do **not** restrict Library Page reads. This carve-out applies **only** to the Library Page. It does **not** change authenticated Library **writes** (still organization- and permission-controlled), other authenticated APIs, public Library APIs, public crop-file APIs, raw storage, or Marketplace. See `docs/architecture/PHASE-8-CLOSEOUT.md`. Do not read this carve-out as making the rest of the platform organization-free.
+
 ## Core platform (Phase 1–2)
 
 ```

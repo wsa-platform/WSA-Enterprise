@@ -1,10 +1,14 @@
 # Phase 8A-1 — Security Contract Alignment + Public Expensive-Compute Protection
 
-**Status:** CURRENT AUTHORITATIVE for Phase 8A-1 (U8.1 + U8.3)
+**Status:** CLOSED — historical Phase 8A-1 document (still authoritative for 8A-1 detail)
 **Baseline HEAD:** `53a87348b93d63e61c41ff1031c42203676e1378`
 **Date:** 2026-09-22
 **Scope:** U8.1 documentation alignment + U8.3 public expensive-compute protection
-**Out of scope:** U8.4, P8-F1, P8-F2, Phase 8A-2, Phases 9–10
+**Out of scope at 8A-1 time:** U8.4, P8-F1, P8-F2, Phase 8A-2, Phases 9–10
+
+> Phase 8A-2 and Phase 8B subsequently completed Phase 8. P8-F1 / P8-F2 remain **frozen** (not fixed).
+> Phase 8 closeout / Library Page contract: `docs/architecture/PHASE-8-CLOSEOUT.md`.
+> This file is **not** rewritten; 8A-1 scope below remains the 8A-1 record.
 
 ---
 
@@ -128,7 +132,7 @@ Public vs authenticated: authenticated groups retain `throttle:120,1` / `ai-org`
 
 ## 6. Explicit non-goals
 
-- U8.4 structured `AuditService` public events → Phase 8A-2
+- U8.4 structured `AuditService` public events → Phase 8A-2 **(8A-1 out of scope; later completed — see `PHASE-8-CLOSEOUT.md`)**
 - P8-F1 / P8-F2 behavior changes
 - Inventing `#18` / `#19` text
 - Protected scientific WIP edits

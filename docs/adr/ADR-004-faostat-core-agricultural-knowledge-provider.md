@@ -1,10 +1,13 @@
 # ADR-004 — FAOSTAT as a Core Agricultural Knowledge & Data Provider
 
-- **Status:** Accepted
+- **Status:** Accepted / Implemented
 - **Date:** 2026-09-14
 - **Scope:** WSA-Enterprise agricultural answer/research architecture
 - **Decision Type:** Provider role, retrieval orchestration, evidence architecture
 - **Related:** ADR-001 Provider Adapter Architecture; ADR-002 Universal Answer Orchestrator
+
+> **CURRENT RUNTIME:** FAOSTAT **Developer Portal** (`FaoStatDeveloperPortalClient` → `https://faostatservices.fao.org/api/v1`) is the active FAOSTAT target. Portal was proven in Phase 3 (`0ea1c7e`).
+> **FENIX** is historical/retired. No active FENIX adapter exists on the current branch. FENIX negative-proof tests and historical documentation remain intentionally preserved. Do not reintroduce FENIX as the live contract.
 
 ## 1. Decision
 
@@ -306,7 +309,9 @@ FaoStatDeveloperPortalAdapter
 Existing WSA Evidence Pipeline
 ```
 
-The old FENIX adapter remains isolated and disabled until the Developer Portal implementation is proven. It must not be presented as compatible with the Developer Portal.
+**HISTORICAL migration constraint:** keep the old FENIX adapter isolated and disabled until the Developer Portal implementation is proven, and do not present FENIX as compatible with the Portal.
+
+**CURRENT:** Portal is proven. FENIX is historical/retired. No active FENIX adapter exists on the current branch. Negative-proof tests that reject `fenixservices.fao.org` remain intentionally preserved.
 
 ## 14. Security
 
@@ -442,8 +447,8 @@ Migration MUST be staged and reversible:
 10. Replace always-on FAOSTAT selection with the new provider-consideration model.
 11. Add contract and E2E tests.
 12. Enable the new provider behind a feature flag only after tests pass.
-13. Keep FENIX isolated until the portal implementation is proven.
-14. Remove obsolete FENIX behavior only in a later explicitly approved migration stage.
+13. Keep FENIX isolated until the portal implementation is proven. **(HISTORICAL step — Portal is now proven; FENIX is retired. No active FENIX adapter on this branch.)**
+14. Remove obsolete FENIX behavior only in a later explicitly approved migration stage. **(Do not delete FENIX negative-proof tests or historical documentation in Phase 9 Wave 1.)**
 
 ## 19. Rollback
 

@@ -3,8 +3,8 @@
 **Document type:** Phase 7 decision recovery / documentation (P7-U4)
 **Requirement ID:** R33 — Answer Presentation & Navigation
 **Branch baseline HEAD:** `e7643c6ab8a7e18b4150416d138b344739d62958`
-**Status of this document:** ANALYSIS / DOCUMENTATION — pending Human GO for commit
-**Does not authorize:** implementation, commit, push, or P7-U5
+**Status of this document:** COMMITTED documentation (`70491a4` — `docs(phase7): document R33 open decisions`). Remaining R33 items are **product UI open decisions**, not a pending commit of this file.
+**Does not authorize:** further implementation, commit, push, or reopening P7-U5 as if unfinished documentation.
 
 ---
 

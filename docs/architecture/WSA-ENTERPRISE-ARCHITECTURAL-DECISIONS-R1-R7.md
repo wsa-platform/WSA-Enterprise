@@ -93,3 +93,5 @@ Never collapse these dimensions:
 ## Related Phase-2 contracts
 
 See `docs/architecture/CANONICAL-CONTRACT-SPECIFICATION-v1.md`.
+
+Phase 8 security / Library Page closeout (no change to R1–R7 semantics): `docs/architecture/PHASE-8-CLOSEOUT.md`.

@@ -1,5 +1,11 @@
 # SYSTEM-WIDE FORENSIC AUDIT — Phase 1
 
+> **HISTORICAL DOCUMENT — PHASE 1 FORENSIC AUDIT**
+>
+> Findings below describe HEAD `7486178` on 2026-09-20 unless a later **CURRENT** note says otherwise.
+> This file is **not** the post-Phase-8 current-state index. See `docs/architecture/PHASE-8-CLOSEOUT.md`.
+> Do not delete or rewrite the Phase 1 evidence body.
+
 - **Date:** 2026-09-20
 - **HEAD audited:** `74861783574b0fd407d964900af2ecc827fe542f`
 - **Branch:** `phase-18-m18-ai-marketing-communications`
@@ -10,13 +16,13 @@
 
 ## 1. Executive findings
 
-1. **Mission authority ADR-021** was absent on local HEAD `7486178` (PROVEN historically). On 2026-09-21 the ADR text was **recovered into the working tree** from Git object `1eaced9` without performing G0 FF — HEAD commit tip unchanged. In-repo ADR-019/ADR-020 remain historical/8-phase Home records; ADR-021 is the master 10-phase plan.
-2. **Mission expected HEAD `1eaced9…` ≠ actual code HEAD `7486178…`** (PROVEN). ADR-021 docs commit exists; G0 FF not executed.
+1. **Mission authority ADR-021** was absent on local HEAD `7486178` (PROVEN historically). On 2026-09-21 the ADR text was **recovered into the working tree** from Git object `1eaced9` without performing G0 FF — HEAD commit tip unchanged. In-repo ADR-019/ADR-020 remain historical/8-phase Home records; ADR-021 is the master 10-phase plan. **CURRENT:** ADR-021 is on this branch (`23c57b8`+). ADR-019/ADR-020 are HISTORICAL / PARTIALLY SUPERSEDED.
+2. **Mission expected HEAD `1eaced9…` ≠ actual code HEAD `7486178…`** (PROVEN **historically**). ADR-021 docs commit exists; G0 FF not executed **at audit time**. **CURRENT:** that governance lag is historical; do not re-open G0 as a live gate.
 3. **Home and Crop share `AgriculturalResearchAgent::conductResearch`** after an early QUS fork (PROVEN).
-4. **Public research endpoints are unauthenticated** with client-selectable `organization_id` that can drive Library persistence (PROVEN **historically** at audit HEAD) — **SECURITY REVIEW REQUIRED** at time of audit. **CURRENT (Phase 8A-1 / HEAD `53a8734`+):** MODEL B write binding is implemented; client org is compatibility-only for public writes. Residual: P8-F1 browse / P8-F2 plant (frozen). See `PHASE-8A-1-SECURITY-CONTRACT-ALIGNMENT.md`.
+4. **Public research endpoints are unauthenticated** with client-selectable `organization_id` that can drive Library persistence (PROVEN **historically** at audit HEAD) — **SECURITY REVIEW REQUIRED** at time of audit. **CURRENT (Phase 8 closed):** MODEL B write binding is implemented; client org is compatibility-only for public writes. Residual: P8-F1 browse / P8-F2 plant (frozen — not fixed). See `PHASE-8-CLOSEOUT.md` and `PHASE-8A-1-SECURITY-CONTRACT-ALIGNMENT.md`.
 5. **Evidence classification is re-evaluated in multiple layers** (Ranker → Matcher/EVL → Validation → Composer) with **duplicated Home disposition** between Composer and `HomeEvidenceLifecycleDisposition` (PROVEN) — architectural debt.
 6. **Comparison entity-B omission** was PROVEN historically (RC-2); **RC-C committed** `ensureHomeMultiEntitySemanticCoverage` on HEAD (`e96c34a`) — live post-fix matrix **REQUIRES VERIFICATION**.
-7. **Answer language follows platform locale**, not question language (PROVEN mechanism). Flutter omits `Accept-Language` (PROVEN) → English answers likely under default locale.
+7. **Answer language follows platform locale**, not question language (PROVEN **historically**). Flutter omits `Accept-Language` (PROVEN **historically**) → English answers likely under default locale. **CURRENT (R2 / P2-C09 / P2-C04):** `answer_language = question_language`; Flutter sends UI `Accept-Language` only (must not override answer language).
 8. **Problem inventory `#1–#31` statement text not found** (PROVEN absence of definitions). Phase mapping recovered from ADR-021; scaffolding in `WSA-ENTERPRISE-PROBLEM-REGISTRY.md` marks definitions **NOT LOCALLY RECOVERABLE**. R32/R33 recovered in `AUTHORITATIVE-PROBLEM-REGISTRY.md`.
 9. **Dirty WIP heavily overlaps** the scientific stack under audit (PROVEN; inventory refreshed 2026-09-21: 25 tracked mods / 439 untracked) — risk of contaminating any future live verification.
 10. **No application code was modified** in this Phase 1 audit beyond creating the three forensic markdown artifacts listed in Section 33 of the completion response.
@@ -44,10 +50,10 @@
 | Finding | Status | Confidence | First divergence | Impact |
 |---------|--------|------------|------------------|--------|
 | FE sends only `{organization, query}` | PROVEN | HIGH | API client | No crop selectors on Home |
-| Throttle 60/min, no auth | PROVEN | HIGH | `routes/api.php` | Abuse / cost / tenant risk |
+| Throttle 60/min, no auth | PROVEN **historically**; **CURRENT:** U8.3 `public-global` + specialized sub-buckets (not additive) | HIGH | `routes/api.php` | Abuse / cost / tenant risk |
 | Home scholarly concurrency for `generic_research` | PROVEN | HIGH | Orchestrator | Latency/architecture differ from Crop |
 | Disposition Home-only | PROVEN | HIGH | `HomeEvidenceLifecycleDisposition::appliesTo` | Crop unchanged by design |
-| FE ignores confidence/limitations/evidence_references | PROVEN | HIGH | `HomeScientificResearchSearch.tsx` | User sees thinner contract than API |
+| FE ignores confidence/limitations/evidence_references | PROVEN **historically**; **CURRENT (P2-C10):** Home FE renders confidence/limitations | HIGH | `HomeScientificResearchSearch.tsx` | User sees thinner contract than API |
 
 ---
 
@@ -72,7 +78,7 @@
 | Finding | Status | Confidence | Evidence |
 |---------|--------|------------|----------|
 | Crop profile short-circuit before free-text NLP | PROVEN | HIGH | `QueryUnderstandingService` |
-| `answer_language` ← platform locale | PROVEN | HIGH | `resolvePlatformAnswerLanguage` |
+| `answer_language` ← platform locale | PROVEN **historically**; **CURRENT (R2):** question language | HIGH | `resolvePlatformAnswerLanguage` |
 | Question language detection separate | PROVEN | HIGH | `detectLanguage` / AKQ.language |
 | Dirty WT land/causal/year WIP | PROVEN | HIGH | Large QUS diff vs HEAD | Live semantics may depend on WIP |
 | Historical matrix QUS PASS on dirty tree | PROVEN (prior audit) | MEDIUM | External accuracy forensic @ older HEAD |

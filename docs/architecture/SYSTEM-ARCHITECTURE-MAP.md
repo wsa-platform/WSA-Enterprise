@@ -1,6 +1,12 @@
 # SYSTEM ARCHITECTURE MAP — Phase 1
 
-- **HEAD:** `74861783574b0fd407d964900af2ecc827fe542f`
+> **HISTORICAL DOCUMENT — PHASE 1 AS-IMPLEMENTED MAP**
+>
+> Topology below is the Phase 1 forensic map at HEAD `7486178`. It is **not** the post-Phase-8 current-state index.
+> Post-Phase-8 security / Library Page contract: `docs/architecture/PHASE-8-CLOSEOUT.md`.
+> ADR-021 is the remediation phase model and is present on this branch (no longer “absent from HEAD”).
+
+- **HEAD:** `74861783574b0fd407d964900af2ecc827fe542f` *(Phase 1 snapshot — historical)*
 - **Mode:** As-implemented map from code (not aspirational)
 - **Legend:** SOURCE → TARGET | CONTRACT | DATA | RISK
 
@@ -33,7 +39,7 @@ HomePage (React)
   → QueryUnderstandingService::understand (Home free-text path)
     CONTRACT: AKQ (language, entities, intent, constraints, answer_language)
     DATA: semantic target / comparison flags / location / year
-    RISK: dirty WIP; answer_language = platform locale
+    RISK: dirty WIP; **HISTORICAL:** answer_language = platform locale — **CURRENT (R2 / P2-C09):** answer_language = question_language
 
   → ResearchPlanner::buildGenericKnowledgePlan
     CONTRACT: KnowledgeQueryPlan (internet-first, topics, evidenceRequirements)
@@ -190,8 +196,9 @@ DISCOVERED (adapters)
 
 ## PERSISTENCE
 
-`ScientificKnowledgePersistenceService` → `LibraryItem` (`organization_id`, locale ar|en, bilingual fields).
-**RISK:** Public caller + org selection; TR/FR collapse.
+`ScientificKnowledgePersistenceService` → `LibraryItem` (`organization_id`, locale, bilingual fields).
+**HISTORICAL RISK:** Public caller + client org selection; TR/FR collapse.
+**CURRENT:** MODEL B write bind (R1); persist locale `ar|en|tr|fr` (P2-C08). Library Page READ is authentication-only — see `PHASE-8-CLOSEOUT.md`. This persist path is **not** the Library Page.
 
 ---
 
@@ -220,7 +227,7 @@ DISCOVERED (adapters)
 
 | SOURCE | TARGET | CONTRACT | RISK |
 |--------|--------|----------|------|
-| ResearchAgentScreen | researchQuery API | Richer field display | No URL launch; no Accept-Language |
+| ResearchAgentScreen | researchQuery API | Richer field display | **HISTORICAL:** no Accept-Language. **CURRENT (P2-C04):** UI Accept-Language sent; R2 still separates UI locale from answer language. |
 | Plant production screens | Taxonomy | Not research answers | Confusion with Crop web path |
 | admin-mobile | Admin APIs | Separate | Not in root CI |
 
@@ -247,7 +254,9 @@ DISCOVERED (adapters)
 
 ## SECURITY BOUNDARIES
 
-> **CURRENT AUTHORITATIVE (Phase 8A-1 / R1 MODEL B):** Public **writes** bind the server-configured public tenant via `PublicTenantResolver` — client `organization` / `organization_id` are compatibility-only and not authoritative. See `PHASE-8A-1-SECURITY-CONTRACT-ALIGNMENT.md` and `WSA-ENTERPRISE-ARCHITECTURAL-DECISIONS-R1-R7.md`.
+> **CURRENT AUTHORITATIVE (Phase 8 closeout / R1 MODEL B):** Public **writes** bind the server-configured public tenant via `PublicTenantResolver` — client `organization` / `organization_id` are compatibility-only and not authoritative. See `PHASE-8-CLOSEOUT.md`, `PHASE-8A-1-SECURITY-CONTRACT-ALIGNMENT.md`, and `WSA-ENTERPRISE-ARCHITECTURAL-DECISIONS-R1-R7.md`.
+>
+> **Library Page READ (Phase 8B):** authentication only; complete Library browse for any authenticated user. Organization / owner / supervisor / item type do **not** restrict Library Page reads. This does **not** apply to Library writes, public Library APIs, public crop-file APIs, raw storage, or Marketplace.
 
 ```
 [Public Internet]
@@ -260,7 +269,8 @@ DISCOVERED (adapters)
     → PublicTenantResolver (MODEL B) → TenantContext public-bound   ✅ server tenant for writes
     → persist LibraryItem (public-bound mismatch rejected)          ✅ write tenant guarded
     → /public/library|training|crop-files browse                    ⚠️ client org (P8-F1 FROZEN)
-  → /api/v1/... authenticated groups ✅ auth.principal (other features)
+  → /api/v1/library/* Library Page reads ✅ auth only (complete Library; not org-filtered)
+  → /api/v1/... authenticated groups ✅ auth.principal (other features; writes remain org/permission scoped)
   → /api/v1/health/* outside public limiter group
 ```
 
@@ -290,10 +300,13 @@ DISCOVERED (adapters)
 
 ## DOCUMENTATION AUTHORITY MAP (AS OF 2026-09-21)
 
+> Phase 1 authority snapshot. **CURRENT pointer:** `PHASE-8-CLOSEOUT.md` for Phase 8; ADR-021 for the 10-phase model (now on this branch).
+
 | Doc | Role | Conflict |
 |-----|------|----------|
-| ADR-019 | Historical Crop pipeline protection | vs ADR-021 Crop-in-scope |
-| ADR-020 | Historical 8-phase Home surgical repair | vs ADR-021 10-phase master |
-| ADR-021 | Mission / master Fastest Safe Remediation plan | Recovered to worktree from `1eaced9`; not on HEAD tip |
-| Phase 1 trio | Forensic baseline | Untracked working-tree docs |
+| ADR-019 | Historical Crop pipeline protection | vs ADR-021 Crop-in-scope — **STATUS:** HISTORICAL / PARTIALLY SUPERSEDED |
+| ADR-020 | Historical 8-phase Home surgical repair | vs ADR-021 10-phase master — **STATUS:** HISTORICAL / PARTIALLY SUPERSEDED BY ADR-021 |
+| ADR-021 | Mission / master Fastest Safe Remediation plan | **CURRENT** phase model (present on branch). Dirty working-tree §8 is pre-existing docs WIP — do not treat as a runbook. |
+| Phase 1 trio | Forensic baseline | Historical snapshots (this file + CURRENT-SYSTEM-STATE + SYSTEM-WIDE-FORENSIC-AUDIT) |
+| `PHASE-8-CLOSEOUT.md` | Post-Phase-8 closeout / Library Page contract pointer | Canonical Phase 8 index |
 | `WSA-ENTERPRISE-PROBLEM-REGISTRY.md` | `#1`–`#31` phase map scaffolding | Definitions NOT LOCALLY RECOVERABLE |

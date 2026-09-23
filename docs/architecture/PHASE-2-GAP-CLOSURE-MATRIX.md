@@ -37,6 +37,6 @@ Classification values: `RESOLVED` | `INTENTIONALLY_RETAINED_WITH_DOCUMENTED_RATI
 
 ## Second forensic pass notes
 
-- No Phase-3 work started.
+- **HISTORICAL (at Phase 2 closure):** No Phase-3 work started. **CURRENT:** Phase 3-A (`0ea1c7e`) and Phase 3-B (`ff91d0d`) subsequently completed. This matrix is not a live Phase 3 status document.
 - Pre-existing scientific WIP preserved; Phase-2 changes are surgical on tenant/language/persistence/evidence/docs/clients/tests.
 - FENIX not reintroduced; Developer Portal remains runtime.

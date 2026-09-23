@@ -1,10 +1,15 @@
 # ADR-020 — Phased Surgical Repair Execution Plan
 
-- **Status:** Accepted
+- **Status:** HISTORICAL / PARTIALLY SUPERSEDED BY ADR-021
 - **Date:** 2026-09-17
 - **Scope:** WSA-Enterprise Home Page scientific research pipeline repair program
 - **Decision type:** Execution architecture / change isolation / release discipline
 - **Related ADR:** ADR-019 — Protect the Crop Page Pipeline
+
+> This remains a historical Home-only 8-phase surgical repair plan. Protected-WIP and lockfile safety principles below remain useful where still applicable.
+> ADR-021 is the current 10-phase system-wide remediation model (`PHASE 9 — LEGACY + WIP + ENGINEERING CLEANUP`).
+> ADR-020 “Phase 8” meant Home validation/sign-off — not remediation 8A/8B Security + Library.
+> Do not rewrite the historical execution plan. Do not delete this ADR.
 
 ## 1. Decision
 
