@@ -29,6 +29,7 @@ export type ResearchAgentQueryResponse = {
   status?: string
   answer?: string | null
   concise_summary?: string | null
+  additional_information?: string | null
   citations?: ResearchAgentCitation[]
   confidence?: number
   limitations?: string[]

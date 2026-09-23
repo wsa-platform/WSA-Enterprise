@@ -191,7 +191,8 @@ describe('homepage scientific research search', () => {
     expect(html).toContain('data-testid="home-research-conflicts"')
     expect(html).toContain('irrigation amounts differ')
     expect(html).toContain('Source A')
-    expect(html).toContain('https://example.org/paper')
+    expect(html).toContain('href="https://example.org/paper"')
+    expect(html).toContain('>Source A</a>')
   })
 
   it('omits conflict and uncertainty blocks when fields are absent', async () => {
@@ -209,6 +210,44 @@ describe('homepage scientific research search', () => {
     expect(html).toContain('Answer only')
     expect(html).not.toContain('data-testid="home-research-conflicts"')
     expect(html).not.toContain('data-testid="home-research-uncertainty"')
+    expect(html).not.toContain('Sources')
+    expect(html).not.toContain('No citations to display.')
+  })
+
+  it('hides empty Sources and duplicate uncertainty heading', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderView({
+      query: 'wheat irrigation',
+      loading: false,
+      error: null,
+      result: {
+        status: 'insufficient_evidence',
+        answer: 'Insufficient scientific evidence was found for a factual answer.',
+        uncertainty: 'Insufficient scientific evidence was found for a factual answer.',
+        citations: [],
+      },
+    })
+    expect(html).not.toContain('Sources')
+    expect(html).not.toContain('data-testid="home-research-uncertainty"')
+    expect(html).toContain('Insufficient scientific evidence was found for a factual answer.')
+  })
+
+  it('renders additional information separately from the main answer', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderView({
+      query: 'wheat irrigation',
+      loading: false,
+      error: null,
+      result: {
+        status: 'completed',
+        answer: 'Main scientific answer.',
+        additional_information: 'Supporting context only.',
+        citations: [{ title: 'Source A', url: 'https://example.org/paper' }],
+      },
+    })
+    expect(html).toContain('Main scientific answer.')
+    expect(html).toContain('data-testid="home-research-additional"')
+    expect(html).toContain('Supporting context only.')
   })
 
   it('renders positive feedback control and success/error states', async () => {

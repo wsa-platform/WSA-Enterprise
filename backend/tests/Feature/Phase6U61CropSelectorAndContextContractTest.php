@@ -172,6 +172,18 @@ class Phase6U61CropSelectorAndContextContractTest extends TestCase
             || str_contains($blob, 'aestivum'),
             'Crop entity terminology must appear in scholarly variants'
         );
+        $this->assertTrue(
+            str_contains($blob, 'agronomic requirements')
+            || str_contains($blob, 'cultivation practices')
+            || str_contains($blob, 'crop management'),
+            'Farming-needs retrieval must lead with agronomic requirement terms, not physiology-only'
+        );
+        $this->assertTrue(
+            str_contains(mb_strtolower((string) $variants[0]), 'agronomic')
+            || str_contains(mb_strtolower((string) $variants[0]), 'cultivation practices')
+            || str_contains(mb_strtolower((string) $variants[0]), 'crop management'),
+            'Primary farming-needs variant must be agronomic, not plant-growth physiology'
+        );
     }
 
     public function test_f_wsa_crop_id_is_not_used_as_numeric_faostat_item_code(): void

@@ -90,10 +90,11 @@ class AnswerComposerEvidenceStateContractTest extends TestCase
             'Insufficient direct scientific evidence was found for a definitive answer.',
             $report->conciseSummary,
         );
-        $this->assertStringContainsString('### Additional information', $report->answer);
+        $this->assertStringNotContainsString('### Additional information', (string) $report->answer);
+        $this->assertStringContainsString('### Additional information', (string) $report->additionalInformation);
         $this->assertStringContainsString(
             'The following is supporting/contextual only and is not a confident direct answer:',
-            $report->answer,
+            (string) $report->additionalInformation,
         );
     }
 
@@ -142,7 +143,8 @@ class AnswerComposerEvidenceStateContractTest extends TestCase
         $this->assertSame('supported_answer', $report->researchMetadata['sufficiency_mode']);
         $this->assertSame('sufficient_supporting_evidence', $report->researchMetadata['failure_reason'] ?? null);
         $this->assertGreaterThanOrEqual(1, (int) $report->researchMetadata['supporting_evidence_count']);
-        $this->assertStringContainsString('### Additional information', $report->answer);
+        $this->assertStringNotContainsString('### Additional information', (string) $report->answer);
+        $this->assertStringContainsString('### Additional information', (string) $report->additionalInformation);
         $this->assertStringNotContainsString('no_relevant_validated_evidence', (string) ($report->researchMetadata['failure_reason'] ?? ''));
     }
 
@@ -161,9 +163,10 @@ class AnswerComposerEvidenceStateContractTest extends TestCase
         );
 
         $this->assertSame('sufficient_direct_evidence', $report->researchMetadata['sufficiency_mode']);
-        $this->assertStringContainsString('### Additional information', $report->answer);
-        $this->assertStringContainsString('Wheat classification supporting review', $report->answer);
-        $this->assertStringContainsString('Supporting/contextual information', $report->answer);
+        $this->assertStringNotContainsString('### Additional information', (string) $report->answer);
+        $this->assertStringContainsString('### Additional information', (string) $report->additionalInformation);
+        $this->assertStringContainsString('Wheat classification supporting review', (string) $report->additionalInformation);
+        $this->assertStringContainsString('Supporting/contextual information', (string) $report->additionalInformation);
     }
 
     public function test_07_wrong_entity_supporting_evidence_is_not_useful_additional_information(): void
@@ -280,9 +283,10 @@ class AnswerComposerEvidenceStateContractTest extends TestCase
         );
 
         $this->assertSame('supported_answer', $report->researchMetadata['sufficiency_mode']);
-        $this->assertStringContainsString('### Additional information', $report->answer);
-        $this->assertStringContainsString('Wheat irrigation supporting review keep-a', $report->answer);
-        $this->assertStringContainsString('Wheat irrigation supporting review keep-b', $report->answer);
+        $this->assertStringNotContainsString('### Additional information', (string) $report->answer);
+        $this->assertStringContainsString('### Additional information', (string) $report->additionalInformation);
+        $this->assertStringContainsString('Wheat irrigation supporting review keep-a', (string) $report->additionalInformation);
+        $this->assertStringContainsString('Wheat irrigation supporting review keep-b', (string) $report->additionalInformation);
     }
 
     public function test_12_duplicate_supporting_evidence_is_still_suppressed(): void
@@ -376,6 +380,35 @@ class AnswerComposerEvidenceStateContractTest extends TestCase
         $this->assertSame([], $report->citations);
         $this->assertSame([], $report->keyFindings);
         $this->assertStringNotContainsString('### Additional information', $report->answer);
+    }
+
+    public function test_15_agronomic_requirements_without_numbers_are_not_measurement_wiped(): void
+    {
+        $report = $this->composer()->compose(
+            $this->plan([
+                'question' => 'wheat farming-needs',
+                'topic' => 'cultivation',
+                'question_type' => 'requirements',
+                'research_intent' => 'cultivation',
+            ]),
+            $this->validationReport([
+                $this->usableEvidence(
+                    'wheat-cult',
+                    'Wheat cultivation requires well-drained loam soils and timely sowing for stand establishment.',
+                    ClaimEvidenceRelationship::SUPPORTED,
+                    ScientificEvidenceDirectnessAssessor::DIRECT,
+                    ['publicationTitle' => 'Wheat cultivation agronomic review'],
+                ),
+            ]),
+        );
+
+        $this->assertNotSame(
+            'no_supported_property_measurement',
+            $report->observability['failure_reason'] ?? $report->researchMetadata['failure_reason'] ?? null,
+        );
+        $this->assertNotSame('insufficient_evidence', $report->status);
+        $this->assertNotEmpty($report->answer);
+        $this->assertStringNotContainsString('### Additional information', (string) $report->answer);
     }
 
     private function composer(): AnswerComposer

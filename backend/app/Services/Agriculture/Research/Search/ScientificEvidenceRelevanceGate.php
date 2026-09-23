@@ -5,6 +5,7 @@ namespace App\Services\Agriculture\Research\Search;
 use App\Services\Agriculture\FieldCropTaxonomyCatalog;
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
+use App\Services\Agriculture\Research\ScientificQuestionSemantics;
 
 /**
  * Relevance gate: candidate topical relevance before scientific evaluation (Phase 4).
@@ -513,34 +514,43 @@ class ScientificEvidenceRelevanceGate
             $best = 'weak';
         }
 
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $senseTerms = [];
+        if ($sense !== '') {
+            $senseTerms = array_values(array_unique(array_merge(
+                AgriculturalEntityCatalog::senseQueryTerms($sense),
+                ScientificQuestionSemantics::senseQueryTerms($sense),
+            )));
+        }
+
+        $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
+        if (is_array($topics)) {
+            foreach ($topics as $topic) {
+                $normalized = mb_strtolower(trim((string) $topic));
+                if ($normalized === '' || in_array($normalized, ['agriculture', 'farming'], true)) {
+                    continue;
+                }
+                // Skip Latin family names here — those are entity needles, not topics.
+                if ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? '') : '') === 'plant_family'
+                    && strcasecmp($normalized, (string) ($plan->subjectEntity['value'] ?? '')) === 0) {
+                    continue;
+                }
+                if (AgriculturalEntityCatalog::containsTerm($haystack, $normalized)) {
+                    $best = 'strong';
+                    break;
+                }
+            }
+        }
+
         $factors = $plan->normalizedQuery->constraints['scientific_factors'] ?? [];
         if (! is_array($factors) || $factors === []) {
-            $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
             if ($sense !== '') {
-                foreach (AgriculturalEntityCatalog::senseQueryTerms($sense) as $term) {
+                foreach ($senseTerms as $term) {
                     if (in_array(mb_strtolower(trim($term)), ['agriculture', 'farming'], true)) {
                         continue;
                     }
                     if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim($term)))) {
                         return 'strong';
-                    }
-                }
-            }
-            $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
-            if (is_array($topics)) {
-                foreach ($topics as $topic) {
-                    $normalized = mb_strtolower(trim((string) $topic));
-                    if ($normalized === '' || in_array($normalized, ['agriculture', 'farming'], true)) {
-                        continue;
-                    }
-                    // Skip Latin family names here — those are entity needles, not topics.
-                    if ((is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? '') : '') === 'plant_family'
-                        && strcasecmp($normalized, (string) ($plan->subjectEntity['value'] ?? '')) === 0) {
-                        continue;
-                    }
-                    if (AgriculturalEntityCatalog::containsTerm($haystack, $normalized)) {
-                        $best = 'strong';
-                        break;
                     }
                 }
             }

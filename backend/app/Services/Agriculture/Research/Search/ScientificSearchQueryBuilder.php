@@ -5,12 +5,20 @@ namespace App\Services\Agriculture\Research\Search;
 use App\Services\Agriculture\FieldCropTaxonomyCatalog;
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
+use App\Services\Agriculture\Research\ScientificQuestionSemantics;
 
 /**
  * Builds deterministic scholarly search queries from Stage 2 planning output.
  *
  * Prefers scientific entity + English topic/factor terms over raw multilingual user text.
  * Emits multiple intent/sense-driven variants for multi-query retrieval.
+ *
+ * Year / time-range intentional scholarly omission:
+ * Resolved `constraints.year` is NOT injected into scholarly text variants. Year remains on the
+ * KnowledgeQueryPlan for FAOSTAT structured options (`FaoStatSearchOptionsResolver`). Scholarly
+ * adapters (OpenAlex / Crossref / Semantic Scholar) do not receive a year filter via
+ * {@see buildConsensusRequestOptions()}. This is an intentional provider-contract split, not a
+ * silent QUS loss.
  */
 class ScientificSearchQueryBuilder
 {
@@ -73,6 +81,8 @@ class ScientificSearchQueryBuilder
         $isInventoryClassification = ! $isMethodClassification && $this->isInventoryClassificationQuestion($plan);
         $isVarietyInventory = $this->isCropVarietyInventoryQuestion($plan);
         $plantFamily = $this->resolveBotanicalFamily($plan);
+        $useLandInventory = ! $isMethodClassification
+            && ($isLandClassification || ($isInventoryClassification && $this->isLandSoilInventorySubject($plan)));
 
         $variants = [];
 
@@ -84,7 +94,53 @@ class ScientificSearchQueryBuilder
             $wantsCultivationProduction = false;
         }
 
-        if ($entity !== null) {
+        if ($isMethodClassification) {
+            foreach ($this->buildClassificationMethodVariants($plan, $location) as $methodVariant) {
+                $variants[] = $methodVariant;
+            }
+        } elseif ($useLandInventory) {
+            foreach ($this->buildLandSoilInventoryVariants($plan, $location) as $inventoryVariant) {
+                $variants[] = $inventoryVariant;
+            }
+        } elseif ($entity !== null) {
+            $propertyTerms = $this->resolveRequestedPropertyTerms($plan);
+
+            // Filter false irrigation sense from rhizome questions before the mandatory primary.
+            if ($mentionsRhizome) {
+                $topics = array_values(array_filter(
+                    $topics,
+                    static fn (string $topic): bool => ! in_array(mb_strtolower($topic), ['irrigation', 'water'], true),
+                ));
+                $factors = array_values(array_filter(
+                    $factors,
+                    static fn ($factor): bool => ! in_array(mb_strtolower((string) $factor), ['irrigation', 'water'], true),
+                ));
+                $senseTerms = array_values(array_filter(
+                    $senseTerms,
+                    static fn (string $term): bool => ! in_array(mb_strtolower($term), [
+                        'irrigation', 'evapotranspiration', 'water use', 'water',
+                    ], true),
+                ));
+                if ($senseTerms === []) {
+                    $senseTerms = ['growth', 'physiology', 'cultivation'];
+                }
+                $primaryTopic = $topics[0] ?? ($senseTerms[0] ?? null);
+            }
+
+            if ($wantsCultivationProduction) {
+                if ($primaryCommon !== null) {
+                    $variants[] = $this->joinTerms([$primaryCommon, 'cultivation']);
+                    $variants[] = $this->joinTerms([$primaryCommon, 'production']);
+                }
+                $variants[] = $this->joinTerms([$entity, 'cultivation']);
+                $variants[] = $this->joinTerms([$entity, 'production']);
+
+                $genus = $this->genusFromScientificName($entity);
+                if ($genus !== null && $this->shouldEmitGenusOnlyCultivationVariant($plan)) {
+                    $variants[] = $this->joinTerms([$genus, 'cultivation']);
+                }
+            }
+
             // Crop variety/cultivar inventory: prefer varieties/cultivars; do not drift to disease/oil/storage.
             if ($isVarietyInventory) {
                 $wantsCultivationProduction = false;
@@ -100,32 +156,12 @@ class ScientificSearchQueryBuilder
                 }
             }
 
-            // Rhizome questions: lead with rhizome variants so ranking is not hijacked by
-            // accidental irrigation topic matches from Arabic "ري" inside "ريزوم".
+            // Rhizome questions: keep rhizome variants after the mandatory semantic primary.
             if ($mentionsRhizome) {
                 $variants[] = $this->joinTerms([$entity, 'rhizome']);
                 if ($primaryCommon !== null) {
                     $variants[] = $this->joinTerms([$primaryCommon, 'rhizome']);
                 }
-                $topics = array_values(array_filter(
-                    $topics,
-                    static fn (string $topic): bool => ! in_array(mb_strtolower($topic), ['irrigation', 'water'], true),
-                ));
-                $factors = array_values(array_filter(
-                    $factors,
-                    static fn ($factor): bool => ! in_array(mb_strtolower((string) $factor), ['irrigation', 'water'], true),
-                ));
-                // Arabic "ريزوم" can false-match irrigation intent/sense; prefer growth terms.
-                $senseTerms = array_values(array_filter(
-                    $senseTerms,
-                    static fn (string $term): bool => ! in_array(mb_strtolower($term), [
-                        'irrigation', 'evapotranspiration', 'water use', 'water',
-                    ], true),
-                ));
-                if ($senseTerms === []) {
-                    $senseTerms = ['growth', 'physiology', 'cultivation'];
-                }
-                $primaryTopic = $topics[0] ?? ($senseTerms[0] ?? null);
             }
 
             // Entity + land/soil suitability (from plan topics or question markers).
@@ -172,20 +208,6 @@ class ScientificSearchQueryBuilder
                 $variants[] = $this->joinTerms([$primaryCommon, $primaryTopic, $senseTerms[0] ?? null]);
             }
 
-            if ($wantsCultivationProduction) {
-                if ($primaryCommon !== null) {
-                    $variants[] = $this->joinTerms([$primaryCommon, 'cultivation']);
-                    $variants[] = $this->joinTerms([$primaryCommon, 'production']);
-                }
-                $variants[] = $this->joinTerms([$entity, 'cultivation']);
-                $variants[] = $this->joinTerms([$entity, 'production']);
-
-                $genus = $this->genusFromScientificName($entity);
-                if ($genus !== null && $this->shouldEmitGenusOnlyCultivationVariant($plan)) {
-                    $variants[] = $this->joinTerms([$genus, 'cultivation']);
-                }
-            }
-
             foreach ($this->synonymTopicPairs($factors, $sense) as $pair) {
                 $variants[] = $this->joinTerms([$entity, $pair[0], $pair[1] ?? ($senseTerms[0] ?? null)]);
             }
@@ -205,12 +227,12 @@ class ScientificSearchQueryBuilder
             }
 
             $variants[] = $this->joinTerms([$entity, ...array_slice($topics, 0, 2), ...array_slice($intentTerms, 0, 1)]);
-            if ($sense !== 'seed_germination') {
+            $propertyTerms = $propertyTerms ?? $this->resolveRequestedPropertyTerms($plan);
+            if ($sense !== 'seed_germination'
+                && $propertyTerms === []
+                && ! in_array(mb_strtolower(trim((string) $plan->researchIntent)), ['general_knowledge'], true)
+            ) {
                 $variants[] = $this->joinTerms([$entity, $plan->researchIntent, 'agriculture']);
-            }
-        } elseif ($isMethodClassification) {
-            foreach ($this->buildClassificationMethodVariants($plan, $location) as $methodVariant) {
-                $variants[] = $methodVariant;
             }
         } elseif ($this->isGeoAquacultureQuestion($plan)) {
             $variants[] = $this->joinTerms(['aquaculture', 'fish', $location]);
@@ -223,11 +245,6 @@ class ScientificSearchQueryBuilder
         } elseif ($this->isCausalPhysiologyQuestion($plan)) {
             foreach ($this->buildCausalPhysiologyVariants($plan, $topics, $senseTerms) as $physiologyVariant) {
                 $variants[] = $physiologyVariant;
-            }
-        } elseif ($isLandClassification || ($isInventoryClassification && $this->isLandSoilInventorySubject($plan))) {
-            // National-first inventory when location is a country; regional stays regional-primary.
-            foreach ($this->buildLandSoilInventoryVariants($plan, $location) as $inventoryVariant) {
-                $variants[] = $inventoryVariant;
             }
         } else {
             $latinQuestion = $this->latinScientificFragment($query->normalizedQuestion);
@@ -243,11 +260,20 @@ class ScientificSearchQueryBuilder
                     'agriculture',
                 ]);
             }
+            $propertyTerms = $this->resolveRequestedPropertyTerms($plan);
+            $entitySurface = $this->resolveEntityTerm($plan);
+            if ($entitySurface !== null && $propertyTerms !== []) {
+                $variants[] = $this->joinTerms([$entitySurface, ...array_slice($propertyTerms, 0, 3)]);
+            } elseif ($propertyTerms !== []) {
+                $variants[] = $this->joinTerms([...array_slice($propertyTerms, 0, 3)]);
+            }
             $variants[] = $this->joinTerms([...$topics, ...array_slice($senseTerms, 0, 2), ...array_slice($intentTerms, 0, 2)]);
             if ($latinQuestion !== null) {
                 $variants[] = $this->joinTerms([$latinQuestion, 'agriculture']);
             }
-            $variants[] = $this->joinTerms([$plan->researchIntent, $plan->agriculturalDomain, 'agriculture']);
+            if ($entitySurface === null && $propertyTerms === []) {
+                $variants[] = $this->joinTerms([$plan->researchIntent, $plan->agriculturalDomain, 'agriculture']);
+            }
         }
 
         // Hydroponics / production-system variants (no country filter).
@@ -281,6 +307,11 @@ class ScientificSearchQueryBuilder
             $variants = [...$mandatory, ...$variants];
         }
 
+        if ($this->isRequirementSpecificationPlan($plan) && $entity !== null) {
+            $requirementVariants = $this->buildRequirementSpecificationVariants($entity, $primaryCommon, $plan);
+            $variants = [...$requirementVariants, ...$variants];
+        }
+
         $unique = [];
         foreach ($variants as $variant) {
             $trimmed = trim($variant);
@@ -292,6 +323,11 @@ class ScientificSearchQueryBuilder
                 $trimmed = $this->joinTerms([$trimmed, $location]);
             }
             if ($trimmed === '' || in_array($trimmed, $unique, true)) {
+                continue;
+            }
+            $hasSemanticTarget = $this->resolveEntityTerm($plan) !== null
+                || $this->resolveRequestedPropertyTerms($plan) !== [];
+            if ($hasSemanticTarget && $this->isGenericAgricultureQuery($trimmed)) {
                 continue;
             }
             $unique[] = $trimmed;
@@ -309,6 +345,7 @@ class ScientificSearchQueryBuilder
      * Consensus HTTP query options from the structured plan.
      * domain=agri for agricultural questions; country only when location asked (study country).
      * Never maps publisher to geo.
+     * Year is intentionally omitted here — see class docblock (FAOSTAT carries structured year).
      *
      * @return array{domain?: string, country?: string, include_semantic_score: bool}
      */
@@ -533,6 +570,20 @@ class ScientificSearchQueryBuilder
         }
 
         return $tokens;
+    }
+
+    private function isGenericAgricultureQuery(string $query): bool
+    {
+        $tokens = preg_split('/[^a-z\p{Arabic}]+/iu', mb_strtolower($query)) ?: [];
+        $meaningful = array_values(array_filter(
+            $tokens,
+            static fn (string $token): bool => $token !== '' && ! in_array($token, [
+                'general', 'knowledge', 'agriculture', 'farming', 'general_knowledge',
+                'general_agriculture',
+            ], true),
+        ));
+
+        return $meaningful === [];
     }
 
     private function shouldUseAgriDomain(KnowledgeQueryPlan $plan): bool
@@ -1026,28 +1077,32 @@ class ScientificSearchQueryBuilder
     {
         $query = $plan->normalizedQuery;
         $cropId = trim((string) ($query->cropId ?? ''));
-        if ($cropId === '') {
-            return [];
-        }
-
         $scientific = trim((string) ($query->scientificName ?? ''));
         $labels = [];
-        $idLabel = str_replace('-', ' ', $cropId);
-        if ($idLabel !== '') {
-            $labels[] = $idLabel;
+
+        if ($cropId !== '') {
+            $idLabel = str_replace('-', ' ', $cropId);
+            if ($idLabel !== '') {
+                $labels[] = $idLabel;
+            }
+
+            foreach (FieldCropTaxonomyCatalog::searchTermsFor($cropId) as $term) {
+                $label = trim((string) $term);
+                if ($label === '' || ($scientific !== '' && strcasecmp($label, $scientific) === 0)) {
+                    continue;
+                }
+                if (preg_match('/\p{Arabic}/u', $label) === 1) {
+                    continue;
+                }
+                if (! in_array($label, $labels, true)) {
+                    $labels[] = $label;
+                }
+            }
         }
 
-        foreach (FieldCropTaxonomyCatalog::searchTermsFor($cropId) as $term) {
-            $label = trim((string) $term);
-            if ($label === '' || ($scientific !== '' && strcasecmp($label, $scientific) === 0)) {
-                continue;
-            }
-            if (preg_match('/\p{Arabic}/u', $label) === 1) {
-                continue;
-            }
-            if (! in_array($label, $labels, true)) {
-                $labels[] = $label;
-            }
+        $surface = $query->namedEntitySurface();
+        if ($surface !== null && trim($surface) !== '' && ! in_array(trim($surface), $labels, true)) {
+            $labels[] = trim($surface);
         }
 
         // Prefer longer common names (e.g. "sweet potato" over short aliases like "batata").
@@ -1086,6 +1141,70 @@ class ScientificSearchQueryBuilder
             'environmental_requirements',
             'productivity',
         ], true);
+    }
+
+    private function isRequirementSpecificationPlan(KnowledgeQueryPlan $plan): bool
+    {
+        $query = $plan->normalizedQuery;
+        $questionType = trim((string) ($query->constraints['question_type'] ?? ''));
+        $evidenceType = trim((string) ($query->constraints['required_evidence_type'] ?? ''));
+        $qualifier = trim((string) ($query->constraints['scientific_intent_qualifier'] ?? ''));
+        $factors = is_array($query->constraints['scientific_factors'] ?? null)
+            ? $query->constraints['scientific_factors']
+            : [];
+        $sense = trim((string) ($query->constraints['scientific_sense'] ?? ''));
+        $property = trim((string) ($query->constraints['requested_property'] ?? ''));
+
+        return ScientificQuestionSemantics::hasSpecializedSearchTails(
+            $questionType,
+            $evidenceType,
+            $factors,
+            $sense,
+            $qualifier,
+            $query->normalizedQuestion,
+            $property,
+        );
+    }
+
+    /**
+     * Entity is DATA; tails come from question-type semantics.
+     *
+     * @return list<string>
+     */
+    private function buildRequirementSpecificationVariants(
+        string $entity,
+        ?string $primaryCommon,
+        KnowledgeQueryPlan $plan,
+    ): array {
+        $query = $plan->normalizedQuery;
+        $tails = ScientificQuestionSemantics::searchVariantTails(
+            trim((string) ($query->constraints['question_type'] ?? '')),
+            trim((string) ($query->constraints['required_evidence_type'] ?? '')),
+            is_array($query->constraints['scientific_factors'] ?? null)
+                ? $query->constraints['scientific_factors']
+                : [],
+            trim((string) ($query->constraints['scientific_sense'] ?? '')),
+            trim((string) ($query->constraints['scientific_intent_qualifier'] ?? '')),
+            $query->normalizedQuestion,
+            trim((string) ($query->constraints['requested_property'] ?? '')),
+        );
+        $variants = [];
+        foreach ($tails as $tail) {
+            $joined = $this->joinTerms([$entity, $tail]);
+            if ($joined !== '' && ! in_array($joined, $variants, true)) {
+                $variants[] = $joined;
+            }
+        }
+        if ($primaryCommon !== null && strcasecmp($primaryCommon, $entity) !== 0) {
+            foreach ($tails as $tail) {
+                $joined = $this->joinTerms([$primaryCommon, $tail]);
+                if ($joined !== '' && ! in_array($joined, $variants, true)) {
+                    $variants[] = $joined;
+                }
+            }
+        }
+
+        return $variants;
     }
 
     private function mentionsRhizome(KnowledgeQueryPlan $plan): bool
@@ -1225,13 +1344,25 @@ class ScientificSearchQueryBuilder
     private function resolveTopicTerms(KnowledgeQueryPlan $plan): array
     {
         $terms = [];
+        foreach ($this->resolveRequestedPropertyTerms($plan) as $term) {
+            $label = trim($term);
+            if ($label !== '' && ! in_array($label, $terms, true)) {
+                $terms[] = $label;
+            }
+        }
+        $hasProperty = $terms !== [];
+        $genericNoise = ['general_knowledge', 'agriculture', 'farming', 'general agriculture'];
         $factorTopics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
         if (is_array($factorTopics)) {
             foreach ($factorTopics as $topic) {
                 $label = trim((string) $topic);
-                if ($label !== '' && ! in_array($label, $terms, true)) {
-                    $terms[] = $label;
+                if ($label === '' || in_array($label, $terms, true)) {
+                    continue;
                 }
+                if ($hasProperty && in_array(mb_strtolower($label), $genericNoise, true)) {
+                    continue;
+                }
+                $terms[] = $label;
             }
         }
 
@@ -1242,6 +1373,9 @@ class ScientificSearchQueryBuilder
                 continue;
             }
             if (preg_match('/\p{Arabic}/u', $label) === 1) {
+                continue;
+            }
+            if ($hasProperty && in_array(mb_strtolower($label), $genericNoise, true)) {
                 continue;
             }
             if (! in_array($label, $terms, true)) {

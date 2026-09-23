@@ -179,8 +179,25 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
     await i18n.changeLanguage('en')
     const html = renderCanonical(canonicalFixture())
     expect(html).toContain('href="https://example.org/wheat-direct"')
+    expect(html).toContain('>Wheat Study</a>')
     expect(html).not.toContain('google.com')
     expect(html).not.toContain('google.')
+  })
+
+  it('hides empty Sources and duplicate uncertainty heading', async () => {
+    await i18n.changeLanguage('en')
+    const limitedAnswer = 'Insufficient evidence for a factual crop answer.'
+    const html = renderCanonical(
+      canonicalFixture({
+        status: 'insufficient_evidence',
+        answer: limitedAnswer,
+        uncertainty: limitedAnswer,
+        citations: [],
+      }),
+    )
+    expect(html).not.toContain('id="field-crop-canonical-sources"')
+    expect(html).not.toContain('No citations to display.')
+    expect(html).not.toContain('data-testid="crop-uncertainty"')
   })
 
   it('J/K answer language metadata preserved; UI locale does not rewrite answer body', async () => {

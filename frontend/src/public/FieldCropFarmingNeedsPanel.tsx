@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import i18n from '../i18n/config'
 import { ApiError } from '../api/client'
 import {
   fetchFieldCropKnowledgeProfile,
@@ -18,21 +19,18 @@ type FieldCropFarmingNeedsPanelProps = {
   knowledgeOption?: FieldCropOptionId
 }
 
-function resolveFetchErrorMessage(
-  error: unknown,
-  t: (key: string, options?: Record<string, unknown>) => string,
-): string {
+function resolveFetchErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status === 404) {
-      return t('website.research.errorNotFound')
+      return i18n.t('website.research.errorNotFound')
     }
     if (error.status === 0 || error.status >= 500) {
-      return t('website.research.errorUnavailable')
+      return i18n.t('website.research.errorUnavailable')
     }
-    return error.message || t('website.research.errorGeneric')
+    return error.message || i18n.t('website.research.errorGeneric')
   }
 
-  return t('website.research.errorUnavailable')
+  return i18n.t('website.research.errorUnavailable')
 }
 
 /** Displays Crop knowledge profile — Stage 5 canonical answer primary (P7-U2). */
@@ -69,7 +67,7 @@ export function FieldCropFarmingNeedsPanel({
       })
       .catch((fetchError: unknown) => {
         if (!cancelled) {
-          setError(resolveFetchErrorMessage(fetchError, t))
+          setError(resolveFetchErrorMessage(fetchError))
         }
       })
       .finally(() => {
@@ -81,7 +79,7 @@ export function FieldCropFarmingNeedsPanel({
     return () => {
       cancelled = true
     }
-  }, [categoryId, categoryName, cropId, cropName, knowledgeOption, t])
+  }, [categoryId, categoryName, cropId, cropName, knowledgeOption])
 
   if (loading) {
     return (

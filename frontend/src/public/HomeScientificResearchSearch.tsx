@@ -62,6 +62,14 @@ function citationLabel(citation: ResearchAgentCitation, _index: number, fallback
   return citation.title?.trim() || fallback
 }
 
+function citationHref(citation: ResearchAgentCitation): string | null {
+  const url = citation.url?.trim()
+  if (url && /^https?:\/\//i.test(url)) {
+    return url
+  }
+  return null
+}
+
 /** Presentational scientific research search block for the homepage. */
 export function HomeScientificResearchSearchView({
   query,
@@ -76,9 +84,11 @@ export function HomeScientificResearchSearchView({
 }: HomeScientificResearchSearchViewProps) {
   const { t } = useTranslation()
   const answer = result?.answer?.trim() || result?.concise_summary?.trim() || null
+  const additionalInformation = result?.additional_information?.trim() || null
   const citations = result?.citations ?? []
   const conflicts = result?.conflicts ?? []
   const uncertainty = result?.uncertainty?.trim() || null
+  const showUncertainty = Boolean(uncertainty) && uncertainty !== answer
   const showFeedback = Boolean(result) && typeof onPositiveFeedback === 'function'
   const feedbackBusy = feedbackState === 'submitting'
   const feedbackDone = feedbackState === 'success'
@@ -163,6 +173,15 @@ export function HomeScientificResearchSearchView({
             </p>
           ) : null}
 
+          {additionalInformation ? (
+            <div className="hp-research-additional" data-testid="home-research-additional">
+              <h3>{t('website.research.additionalInformationHeading', { defaultValue: 'Additional information' })}</h3>
+              {additionalInformation.split('\n').map((paragraph, index) => (
+                <p key={`additional-${index}`}>{paragraph}</p>
+              ))}
+            </div>
+          ) : null}
+
           {Array.isArray(result.limitations) && result.limitations.length > 0 ? (
             <div className="hp-research-limitations" data-testid="home-research-limitations">
               <h3>{t('website.research.limitationsHeading', { defaultValue: 'Limitations' })}</h3>
@@ -174,7 +193,7 @@ export function HomeScientificResearchSearchView({
             </div>
           ) : null}
 
-          {uncertainty ? (
+          {showUncertainty ? (
             <div className="hp-research-uncertainty" data-testid="home-research-uncertainty">
               <h3>{t('website.research.uncertaintyHeading', { defaultValue: 'Uncertainty' })}</h3>
               <p>{uncertainty}</p>
@@ -192,37 +211,41 @@ export function HomeScientificResearchSearchView({
             </div>
           ) : null}
 
-          <div className="hp-research-citations">
-            <h3>{t('website.research.sourcesHeading')}</h3>
-            {citations.length === 0 ? (
-              <p className="hp-research-status">{t('website.research.noCitations')}</p>
-            ) : (
+          {citations.length > 0 ? (
+            <div className="hp-research-citations">
+              <h3>{t('website.research.sourcesHeading')}</h3>
               <ul>
-                {citations.map((citation, index) => (
-                  <li key={`${citation.doi ?? citation.url ?? citation.title ?? 'c'}-${index}`}>
-                    <strong>{citationLabel(citation, index, t('website.research.citationFallback', { index: index + 1 }))}</strong>
-                    {citation.organization ? (
-                      <span className="hp-research-cite-meta"> — {citation.organization}</span>
-                    ) : null}
-                    {citation.doi ? (
-                      <span className="hp-research-cite-meta"> · DOI: {citation.doi}</span>
-                    ) : null}
-                    {citation.url ? (
-                      <>
-                        {' '}
-                        <a href={citation.url} target="_blank" rel="noreferrer noopener">
-                          {citation.url}
+                {citations.map((citation, index) => {
+                  const label = citationLabel(
+                    citation,
+                    index,
+                    t('website.research.citationFallback', { index: index + 1 }),
+                  )
+                  const href = citationHref(citation)
+                  return (
+                    <li key={`${citation.doi ?? citation.url ?? citation.title ?? 'c'}-${index}`}>
+                      {href ? (
+                        <a href={href} target="_blank" rel="noreferrer noopener">
+                          {label}
                         </a>
-                      </>
-                    ) : null}
-                    {citation.source_type ? (
-                      <span className="hp-research-cite-meta"> · {citation.source_type}</span>
-                    ) : null}
-                  </li>
-                ))}
+                      ) : (
+                        <strong>{label}</strong>
+                      )}
+                      {citation.organization ? (
+                        <span className="hp-research-cite-meta"> — {citation.organization}</span>
+                      ) : null}
+                      {citation.doi ? (
+                        <span className="hp-research-cite-meta"> · DOI: {citation.doi}</span>
+                      ) : null}
+                      {citation.source_type ? (
+                        <span className="hp-research-cite-meta"> · {citation.source_type}</span>
+                      ) : null}
+                    </li>
+                  )
+                })}
               </ul>
-            )}
-          </div>
+            </div>
+          ) : null}
 
           {showFeedback ? (
             <div className="hp-research-feedback" data-testid="home-research-feedback">

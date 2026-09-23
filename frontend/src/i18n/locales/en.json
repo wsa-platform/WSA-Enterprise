@@ -1966,6 +1966,7 @@
       "claimsHeading": "Claims",
       "keyFindingsHeading": "Key findings",
       "detailedExplanationHeading": "Detailed explanation",
+      "additionalInformationHeading": "Additional information",
       "answerLanguage": "Answer language: {{language}}",
       "insufficientNotice": "This response is limited by insufficient or conflicting scientific evidence.",
       "sourcesHeading": "Sources",

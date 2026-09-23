@@ -52,10 +52,14 @@ class AgriculturalScientificKnowledgeEngine
         $context = $this->genericContextFromPlan($plan);
         $sectionKeys = $plan->researchSections;
 
+        // Home generic path runs only after Stage 3 scholarly retrieval.
+        // Re-running OpenAlex/Crossref section discoverers duplicated provider HTTP
+        // (~40s on the controlled Home agronomy query) without feeding Stage 5 citations.
         $discovery = $this->discoveryPipeline->discoverMissingSections(
             $organizationId,
             $context,
             $sectionKeys,
+            skipExternalDiscoverers: true,
         );
 
         $sections = [];

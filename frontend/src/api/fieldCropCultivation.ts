@@ -86,6 +86,7 @@ export type FieldCropCultivationProfile = {
   answer?: string | null
   concise_summary?: string | null
   detailed_explanation?: string | null
+  additional_information?: string | null
   key_findings?: string[]
   claims?: FieldCropAnswerClaim[]
   citations?: ResearchAgentCitation[]

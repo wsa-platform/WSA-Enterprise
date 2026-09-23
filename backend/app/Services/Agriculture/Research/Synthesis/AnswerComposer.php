@@ -3,6 +3,7 @@
 namespace App\Services\Agriculture\Research\Synthesis;
 
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
+use App\Services\Agriculture\Research\Home\HomeEvidenceLifecycleDisposition;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceModality;
@@ -21,6 +22,10 @@ use App\Services\Agriculture\ScientificSourceValidator;
  *
  * Does not browse the Internet, invent evidence, or bypass Stage 4 validation.
  * Background-only leftovers and off-topic abstract sentences are not answers.
+ *
+ * R6 disposition: Composer may embed Home lifecycle metadata by delegating to
+ * {@see HomeEvidenceLifecycleDisposition}; it must not redefine disposition rules.
+ * Authoritative post-compose writer remains applyToSynthesis on Home/Agent/Universal.
  */
 class AnswerComposer
 {
@@ -30,6 +35,7 @@ class AnswerComposer
         private ScientificEvidenceDirectnessAssessor $directnessAssessor,
         private EvidenceVerificationLayer $evidenceVerificationLayer,
         private ScientificStatisticalClaimAligner $statisticalClaimAligner,
+        private HomeEvidenceLifecycleDisposition $homeEvidenceLifecycleDisposition = new HomeEvidenceLifecycleDisposition,
         private AnswerExpressionAccuracyGate $expressionAccuracyGate = new AnswerExpressionAccuracyGate,
     ) {}
 
@@ -48,6 +54,7 @@ class AnswerComposer
                 language: $language,
                 query: $query,
                 plan: $plan,
+                validationReport: $validationReport,
             );
         }
 
@@ -57,6 +64,37 @@ class AnswerComposer
         ));
 
         if ($usable === []) {
+            $supportingLabeled = array_values(array_filter(
+                $validationReport->validatedEvidence,
+                function (ScientificEvidenceItem $item): bool {
+                    $directness = (string) ($item->qualityFactors['evidence_directness']
+                        ?? $item->sourceAttribution['evidence_directness']
+                        ?? '');
+
+                    return in_array($directness, [
+                        ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                        ScientificEvidenceDirectnessAssessor::SUPPORTED,
+                    ], true);
+                },
+            ));
+            if ($supportingLabeled !== [] && $this->requiresFactualDirectEvidence($plan)) {
+                return $this->supportingOnlyInsufficientReport(
+                    $plan,
+                    $supportingLabeled,
+                    $validationReport,
+                    [
+                        'sufficient' => false,
+                        'partial' => false,
+                        'reason' => 'insufficient_direct_evidence',
+                        'mode' => 'insufficient_direct_evidence',
+                        'direct_count' => 0,
+                        'supporting_count' => count($supportingLabeled),
+                    ],
+                    $language,
+                    $query,
+                );
+            }
+
             return $this->insufficientReport(
                 status: 'no_validated_evidence',
                 reason: 'no_relevant_validated_evidence',
@@ -64,6 +102,7 @@ class AnswerComposer
                 query: $query,
                 plan: $plan,
                 rejectedCount: $validationReport->rejectedCount,
+                validationReport: $validationReport,
             );
         }
 
@@ -88,6 +127,7 @@ class AnswerComposer
                 query: $query,
                 plan: $plan,
                 rejectedCount: $validationReport->rejectedCount,
+                validationReport: $validationReport,
             );
         }
 
@@ -101,15 +141,40 @@ class AnswerComposer
                 query: $query,
                 plan: $plan,
                 rejectedCount: $validationReport->rejectedCount,
+                validationReport: $validationReport,
             );
         }
 
-        $conflicts = $this->buildConflicts($usable, $language);
+        $conflicts = $this->buildConflicts($usable, $language, $plan);
         $supportingOnly = $this->isSupportingOnlySufficiency($sufficiency);
         // Findings may include supporting for metadata/additional; main answer body gates DIRECT-only.
         $keyFindings = $this->buildKeyFindings($claims, $usable, $plan, $language);
-        $limitations = $this->buildLimitations($validationReport, $usable, $language, $sufficiency);
+        if ($this->requiresSupportedMeasurement($plan)) {
+            $keyFindings = $this->rejectFindingsWithUnsupportedNumbers($keyFindings, $plan);
+            if ($this->collectedNumericalValues($keyFindings, $plan) === []) {
+                $accuracyBlocked = false;
                 foreach ($claims as $claim) {
+                    if ($this->hasAccuracyLimitation($claim->limitations)) {
+                        $accuracyBlocked = true;
+                        break;
+                    }
+                }
+                // B3: keep claim-traceable accuracy limitations instead of wiping the report.
+                if (! $accuracyBlocked) {
+                    return $this->insufficientReport(
+                        status: 'insufficient_evidence',
+                        reason: 'no_supported_property_measurement',
+                        language: $language,
+                        query: $query,
+                        plan: $plan,
+                        rejectedCount: $validationReport->rejectedCount,
+                        validationReport: $validationReport,
+                    );
+                }
+            }
+        }
+        $limitations = $this->buildLimitations($validationReport, $usable, $language, $sufficiency);
+        foreach ($claims as $claim) {
             foreach ($claim->limitations as $limitation) {
                 $limitation = trim((string) $limitation);
                 if ($limitation === '') {
@@ -146,7 +211,7 @@ class AnswerComposer
         );
 
         $mainAnswerBody = $this->buildMainAnswerBody($keyFindings, $plan, $language, $sufficiency);
-        $conciseSummary = $this->buildConciseSummary($keyFindings, $uncertainty, $language, $sufficiency);
+        $conciseSummary = $this->buildConciseSummary($keyFindings, $uncertainty, $language, $sufficiency, $plan);
         $additionalSection = $this->buildAdditionalInformationSection(
             $usable,
             // Supporting-only: main answer is the insufficient-direct message, so do not suppress additional against supporting findings.
@@ -173,6 +238,7 @@ class AnswerComposer
             $uncertainty,
             $language,
         );
+        $additionalInformation = trim($additionalSection) !== '' ? $additionalSection : null;
 
         $nonConflictClaims = count(array_filter(
             $claims,
@@ -241,7 +307,12 @@ class AnswerComposer
                     ],
                     $citations,
                 ),
-            ],
+            ] + $this->homeEvidenceLifecycleMetadata(
+                $plan,
+                $validationReport,
+                composerEligibleCount: count($usable),
+                disposition: 'composer_used',
+            ),
             observability: [
                 'usable_evidence_count' => count($usable),
                 'claims_generated' => count($claims),
@@ -250,7 +321,14 @@ class AnswerComposer
                 'independent_search' => false,
                 'validation_bypassed' => false,
                 'evidence_directness_filter' => true,
-            ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, $usable),
+            ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, $usable)
+              + $this->homeEvidenceLifecycleMetadata(
+                $plan,
+                $validationReport,
+                composerEligibleCount: count($usable),
+                disposition: 'composer_used',
+            ),
+            additionalInformation: $additionalInformation,
         );
     }
 
@@ -313,6 +391,37 @@ class AnswerComposer
         return 'en';
     }
 
+    /**
+     * Home-only lifecycle metadata — delegates to the single disposition owner (R6 / RC-E).
+     *
+     * @return array<string, mixed>
+     */
+    private function homeEvidenceLifecycleMetadata(
+        KnowledgeQueryPlan $plan,
+        ?EvidenceValidationExecutionReport $validationReport,
+        int $composerEligibleCount,
+        ?string $disposition = null,
+    ): array {
+        return $this->homeEvidenceLifecycleDisposition->classify(
+            $plan,
+            $validationReport,
+            $composerEligibleCount,
+            $disposition,
+        );
+    }
+
+    /**
+     * Preserve source identity for Home when evidence was retrieved but not used in the main answer.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function homeUnusedEvidenceReferences(
+        KnowledgeQueryPlan $plan,
+        EvidenceValidationExecutionReport $validationReport,
+    ): array {
+        return $this->homeEvidenceLifecycleDisposition->unusedEvidenceReferences($plan, $validationReport);
+    }
+
     private function isSynthesizable(ScientificEvidenceItem $item, KnowledgeQueryPlan $plan): bool
     {
         if (! $item->isUsable()) {
@@ -366,6 +475,23 @@ class AnswerComposer
             return false;
         }
 
+        $propertyTerms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
+        $propertyKey = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));
+        $directnessIsPrimary = in_array($directness, [
+            ScientificEvidenceDirectnessAssessor::DIRECT,
+            ScientificEvidenceDirectnessAssessor::SUPPORTED,
+        ], true);
+        if ($directnessIsPrimary && is_array($propertyTerms) && $propertyTerms !== []
+            && ! in_array($propertyKey, ['general', 'definition', ''], true)) {
+            $hay = mb_strtolower(trim(implode(' ', array_filter([
+                $item->publicationTitle,
+                $item->evidenceText,
+            ], static fn ($part): bool => is_string($part) && trim($part) !== ''))));
+            if (! $this->haystackAddressesPropertyTerms($hay, $propertyTerms)) {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -409,10 +535,10 @@ class AnswerComposer
     private function requiresStrictGrounding(KnowledgeQueryPlan $plan): bool
     {
         $subjectType = is_array($plan->subjectEntity) ? ($plan->subjectEntity['type'] ?? null) : null;
-        $hasEntity = $plan->normalizedQuery->cropId !== null
+        $hasEntity = $plan->normalizedQuery->isEntityDependent()
+            || $plan->normalizedQuery->cropId !== null
             || $plan->normalizedQuery->scientificName !== null
-            || $subjectType === 'crop'
-            || $subjectType === 'plant_family';
+            || in_array((string) $subjectType, ['crop', 'named_entity', 'animal', 'plant_family'], true);
         $factors = $plan->normalizedQuery->constraints['scientific_factors'] ?? [];
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
 
@@ -546,19 +672,29 @@ class AnswerComposer
         $directCount = 0;
         $supportingCount = 0;
         $answerEligibleSupporting = 0;
+        $identitySafeDirect = 0;
+        $entityDependent = $plan->normalizedQuery->isEntityDependent();
         foreach ($usable as $item) {
             $directness = $this->resolveDirectness($item, $plan);
+            $identityCompatible = $this->evidenceIdentityCompatible($item, $plan, $directness);
             if ($directness === ScientificEvidenceDirectnessAssessor::DIRECT) {
                 $directCount++;
+                if ($identityCompatible) {
+                    $identitySafeDirect++;
+                }
             } elseif (in_array($directness, [
                 ScientificEvidenceDirectnessAssessor::SUPPORTING,
                 ScientificEvidenceDirectnessAssessor::SUPPORTED,
             ], true)) {
                 $supportingCount++;
-                if ($this->isAnswerEligibleSupportingItem($item, $plan)) {
+                if ($identityCompatible && $this->isAnswerEligibleSupportingItem($item, $plan)) {
                     $answerEligibleSupporting++;
                 }
             }
+        }
+
+        if ($entityDependent) {
+            $directCount = $identitySafeDirect;
         }
 
         // Never treat many SUPPORTING as DIRECT.
@@ -575,6 +711,7 @@ class AnswerComposer
         }
 
         // Factual questions: multiple answer-eligible SUPPORTING → supported_answer (not DIRECT).
+        // Thermal germination optimal-range still requires real DIRECT evidence.
         if ($this->requiresFactualDirectEvidence($plan)) {
             if ($answerEligibleSupporting >= 2 && ! $this->requiresThermalGerminationDirectEvidence($plan)) {
                 return [
@@ -621,6 +758,37 @@ class AnswerComposer
             'supporting_count' => $supportingCount,
             'answer_eligible_count' => $answerEligibleSupporting,
         ];
+    }
+
+    private function evidenceIdentityCompatible(
+        ScientificEvidenceItem $item,
+        KnowledgeQueryPlan $plan,
+        string $directness,
+    ): bool {
+        if ($this->isDirectStatisticalEvidence($item)) {
+            return $this->directStatisticalObservationSupportsClaim($item, $plan);
+        }
+
+        if (! $plan->normalizedQuery->isEntityDependent()) {
+            return true;
+        }
+
+        $relation = (string) ($item->qualityFactors['species_relation'] ?? '');
+        if ($relation === '') {
+            $assessed = $this->relevanceGate->assess(
+                $plan,
+                $item->publicationTitle,
+                $item->evidenceText,
+                $item->doi,
+            );
+            $relation = (string) ($assessed['species_relation'] ?? '');
+        }
+
+        if (in_array($relation, ['different_species', 'entity_less', 'genus_only'], true)) {
+            return false;
+        }
+
+        return $directness !== ScientificEvidenceDirectnessAssessor::IRRELEVANT;
     }
 
     private function isAnswerEligibleSupportingItem(ScientificEvidenceItem $item, KnowledgeQueryPlan $plan): bool
@@ -910,6 +1078,7 @@ class AnswerComposer
                         $claimText = '';
                         $numericalValues = [];
                         $confidence = 0.0;
+                        // Keep claim identity; do not emit rejected factual values.
                         continue;
                     }
 
@@ -934,6 +1103,7 @@ class AnswerComposer
                     break;
                 }
 
+                // Eligible but no grounded/accurate snippet — keep claim identity without factual prose.
                 if ($claimText === '') {
                     $answerEligible = false;
                     if (! in_array('insufficient_validated_evidence_for_question_claim', $limitations, true)
@@ -943,6 +1113,7 @@ class AnswerComposer
                     $relationship = ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE;
                 }
             } elseif ($relationship === ClaimEvidenceRelationship::CONFLICTING) {
+                // Preserve conflict identity without selecting a convenient conflicting value as fact.
                 $claimText = '';
                 $validationStatus = 'conflicting';
                 if (! in_array('conflicting_evidence_for_question_claim', $limitations, true)) {
@@ -1119,6 +1290,16 @@ class AnswerComposer
     private function groundingNeedles(KnowledgeQueryPlan $plan): array
     {
         $needles = [];
+        $propertyTerms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
+        if (is_array($propertyTerms)) {
+            foreach ($propertyTerms as $term) {
+                $needles[] = mb_strtolower(trim((string) $term));
+            }
+        }
+        $propertySurface = trim((string) ($plan->normalizedQuery->constraints['requested_property_surface'] ?? ''));
+        if ($propertySurface !== '') {
+            $needles[] = mb_strtolower($propertySurface);
+        }
         $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
         if (is_array($topics)) {
             foreach ($topics as $topic) {
@@ -1172,6 +1353,9 @@ class AnswerComposer
         return false;
     }
 
+    /**
+     * Map B3 accuracy limitation codes to localized phrases.
+     */
     private function phraseAccuracyLimitation(string $language, string $code): ?string
     {
         $key = match ($code) {
@@ -1203,6 +1387,9 @@ class AnswerComposer
     }
 
     /**
+     * Numeric values may become answers only when they are asserted measurements
+     * of the requested property — never bibliographic metadata or bare integers.
+     *
      * @return list<string>
      */
     private function extractMeasurementAssertions(string $text, ?KnowledgeQueryPlan $plan): array
@@ -1309,6 +1496,7 @@ class AnswerComposer
             }
         }
 
+        // Claim/property lexical window around the measurement (Catalog-free).
         if ($propertyKey !== '' && ! $this->measurementWindowAddressesProperty($text, $number, $propertyKey)) {
             return false;
         }
@@ -1351,20 +1539,11 @@ class AnswerComposer
         };
     }
 
-    private function requiresSupportedMeasurement(KnowledgeQueryPlan $plan): bool
-    {
-        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
-        $propertyKey = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));
-
-        if (in_array($questionType, ['quantity', 'range', 'requirements'], true)) {
-            return true;
-        }
-
-        return in_array($propertyKey, ['quantity', 'yield', 'rate', 'production', 'irrigation', 'concentration'], true)
-            && ! in_array($questionType, ['causes', 'symptoms', 'comparison', 'classification', 'definition'], true);
-    }
-
-    private function buildConflicts(array $items, string $language): array
+    /**
+     * @param  list<ScientificEvidenceItem>  $items
+     * @return list<array<string, mixed>>
+     */
+    private function buildConflicts(array $items, string $language, KnowledgeQueryPlan $plan): array
     {
         $conflicts = [];
         foreach ($items as $item) {
@@ -1379,7 +1558,7 @@ class AnswerComposer
                 'evidence_text' => $item->evidenceText,
                 'publication_year' => $item->publicationYear,
                 'conditions' => $item->conditions,
-                'numerical_values' => $this->extractNumericalValues((string) $item->evidenceText),
+                'numerical_values' => $this->extractSupportedPropertyValues((string) $item->evidenceText, $plan),
                 'message' => AnswerComposerPhrases::get($language, 'conflict_message'),
             ];
         }
@@ -1627,7 +1806,7 @@ class AnswerComposer
         return null;
     }
 
-        /**
+    /**
      * @param  list<ResearchAnswerClaim>  $claims
      * @param  array<string, mixed>  $sufficiency
      */
@@ -1648,6 +1827,8 @@ class AnswerComposer
             $confidence = min($confidence, 0.42);
         }
 
+        // Accuracy-filtered claims contribute 0 confidence already; when every claim
+        // was blocked by an accuracy limitation, confidence remains zero.
         $expressible = array_values(array_filter(
             $claims,
             static fn (ResearchAnswerClaim $claim): bool => trim($claim->claimText) !== ''
@@ -1666,6 +1847,7 @@ class AnswerComposer
                 return 0.0;
             }
         } else {
+            // Confidence tracks remaining expressible claims only (no invented constants).
             $expressibleTotal = array_sum(array_map(
                 static fn (ResearchAnswerClaim $claim): float => $claim->confidence,
                 $expressible,
@@ -1679,6 +1861,9 @@ class AnswerComposer
         return round($confidence, 3);
     }
 
+    /**
+     * @param  array<string, mixed>  $sufficiency
+     */
     private function isSupportingOnlySufficiency(array $sufficiency): bool
     {
         return ((int) ($sufficiency['direct_count'] ?? 0)) === 0
@@ -1701,12 +1886,12 @@ class AnswerComposer
      * @param  list<string>  $keyFindings
      * @param  array<string, mixed>  $sufficiency
      */
-
     private function buildConciseSummary(
         array $keyFindings,
         ?string $uncertainty,
         string $language,
         array $sufficiency = [],
+        ?KnowledgeQueryPlan $plan = null,
     ): string {
         if ($this->isSupportingOnlySufficiency($sufficiency)) {
             return $this->insufficientDirectMessage($language);
@@ -1716,7 +1901,7 @@ class AnswerComposer
             return $uncertainty ?? $this->insufficientDirectMessage($language);
         }
 
-        $values = $this->collectedNumericalValues($keyFindings);
+        $values = $this->collectedNumericalValues($keyFindings, $plan);
         if ($values !== []) {
             return AnswerComposerPhrases::get($language, 'range_evidence', [
                 ':label' => AnswerComposerPhrases::get($language, 'label_supported_value'),
@@ -1731,7 +1916,6 @@ class AnswerComposer
      * @param  list<string>  $keyFindings
      * @param  array<string, mixed>  $sufficiency
      */
-
     private function buildMainAnswerBody(
         array $keyFindings,
         KnowledgeQueryPlan $plan,
@@ -1755,7 +1939,7 @@ class AnswerComposer
             'process' => $this->formatAsNumberedSteps($keyFindings, $heading, $language),
             'range' => $this->formatAsLabeledRange($keyFindings, $plan, $language),
             'comparison' => $this->formatAsComparison($keyFindings, $heading, $language),
-            default => $this->formatAsExplanatory($keyFindings, $heading, $language),
+            default => $this->formatAsExplanatory($keyFindings, $heading, $language, $plan),
         };
     }
 
@@ -1851,7 +2035,6 @@ class AnswerComposer
     /**
      * @param  list<string>  $keyFindings
      */
-
     private function formatAsNumberedList(array $keyFindings, string $heading, string $language): string
     {
         $items = $this->factItemsFromFindings($keyFindings);
@@ -1869,7 +2052,6 @@ class AnswerComposer
     /**
      * @param  list<string>  $keyFindings
      */
-
     private function formatAsNumberedSteps(array $keyFindings, string $heading, string $language): string
     {
         $items = $this->factItemsFromFindings($keyFindings);
@@ -1885,10 +2067,9 @@ class AnswerComposer
     /**
      * @param  list<string>  $keyFindings
      */
-
     private function formatAsLabeledRange(array $keyFindings, KnowledgeQueryPlan $plan, string $language): string
     {
-        $values = $this->collectedNumericalValues($keyFindings);
+        $values = $this->collectedNumericalValues($keyFindings, $plan);
         $qualifier = trim((string) ($plan->normalizedQuery->constraints['scientific_intent_qualifier'] ?? ''));
         $label = match (true) {
             $qualifier === 'optimal_range' => AnswerComposerPhrases::get($language, 'label_optimal_range'),
@@ -1914,7 +2095,6 @@ class AnswerComposer
     /**
      * @param  list<string>  $keyFindings
      */
-
     private function formatAsComparison(array $keyFindings, string $heading, string $language): string
     {
         $items = $this->factItemsFromFindings($keyFindings);
@@ -1930,10 +2110,9 @@ class AnswerComposer
     /**
      * @param  list<string>  $keyFindings
      */
-
-    private function formatAsExplanatory(array $keyFindings, string $heading, string $language): string
+    private function formatAsExplanatory(array $keyFindings, string $heading, string $language, ?KnowledgeQueryPlan $plan = null): string
     {
-        $values = $this->collectedNumericalValues($keyFindings);
+        $values = $this->collectedNumericalValues($keyFindings, $plan);
         $items = $this->factItemsFromFindings($keyFindings);
         $lines = [];
         if ($heading !== '' && $heading !== AnswerComposerPhrases::get($language, 'heading_answer')) {
@@ -1956,15 +2135,83 @@ class AnswerComposer
     }
 
     /**
+     * Quantity/rate answers require a validated measurement of the requested property.
+     */
+    private function requiresSupportedMeasurement(KnowledgeQueryPlan $plan): bool
+    {
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        $propertyKey = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));
+
+        // Quantity/range answers need a validated measurement. Agronomic
+        // "requirements" (requirement_specification / crop farming-needs) are
+        // not quantity questions — treating them as measurement-required wiped
+        // otherwise-sufficient crop profiles (no_supported_property_measurement).
+        if (in_array($questionType, ['quantity', 'range'], true)) {
+            return true;
+        }
+
+        return in_array($propertyKey, ['quantity', 'yield', 'rate', 'production', 'irrigation', 'concentration'], true)
+            && ! in_array($questionType, ['causes', 'symptoms', 'comparison', 'classification', 'definition', 'requirements'], true);
+    }
+
+    /**
+     * @param  list<string>  $findings
+     * @return list<string>
+     */
+    private function rejectFindingsWithUnsupportedNumbers(array $findings, KnowledgeQueryPlan $plan): array
+    {
+        $kept = [];
+        foreach ($findings as $finding) {
+            if ($this->findingContainsUnsupportedNumeric((string) $finding, $plan)) {
+                continue;
+            }
+            $kept[] = $finding;
+        }
+
+        return $kept;
+    }
+
+    private function findingContainsUnsupportedNumeric(string $text, KnowledgeQueryPlan $plan): bool
+    {
+        preg_match_all('/\b\d+(?:[.,]\d+)?\b/u', $text, $matches);
+        $candidates = array_values(array_unique($matches[0] ?? []));
+        if ($candidates === []) {
+            return false;
+        }
+
+        $supported = $this->extractMeasurementAssertions($text, $plan);
+        foreach ($candidates as $raw) {
+            $digits = preg_replace('/[^\d]/', '', (string) $raw) ?? '';
+            if ($digits === '' || $this->isBibliographicNumericContext($text, (string) $raw, '')) {
+                continue;
+            }
+            if (preg_match('/^(?:19|20)\d{2}$/', $digits) === 1) {
+                continue;
+            }
+            $covered = false;
+            foreach ($supported as $value) {
+                if (str_contains($value, (string) $raw)) {
+                    $covered = true;
+                    break;
+                }
+            }
+            if (! $covered) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @param  list<string>  $keyFindings
      * @return list<string>
      */
-
-    private function collectedNumericalValues(array $keyFindings): array
+    private function collectedNumericalValues(array $keyFindings, ?KnowledgeQueryPlan $plan = null): array
     {
         $values = [];
         foreach ($keyFindings as $finding) {
-            foreach ($this->extractNumericalValues($finding) as $value) {
+            foreach ($this->extractMeasurementAssertions($finding, $plan) as $value) {
                 if (! in_array($value, $values, true)) {
                     $values[] = $value;
                 }
@@ -1981,7 +2228,6 @@ class AnswerComposer
      * @param  list<string>  $keyFindings
      * @return list<string>
      */
-
     private function factItemsFromFindings(array $keyFindings): array
     {
         $items = [];
@@ -2016,7 +2262,6 @@ class AnswerComposer
      * @param  list<string>  $keyFindings
      * @return list<string>
      */
-
     private function extractListItems(array $keyFindings): array
     {
         if (count($keyFindings) > 1) {
@@ -2284,24 +2529,12 @@ class AnswerComposer
         ?string $uncertainty,
         string $language,
     ): string {
-        $sections = [$mainAnswerBody];
+        // Semantic contract: `answer` is the main body only.
+        // Sources stay in citations[]; additional text in additional_information;
+        // uncertainty stays on the uncertainty field. Do not concatenate.
+        unset($primarySourcesSection, $additionalSection, $uncertainty, $language);
 
-        if ($primarySourcesSection !== '') {
-            $sections[] = '';
-            $sections[] = $primarySourcesSection;
-        }
-
-        if ($additionalSection !== '') {
-            $sections[] = '';
-            $sections[] = $additionalSection;
-        }
-
-        if ($uncertainty !== null && trim($uncertainty) !== '') {
-            $sections[] = '';
-            $sections[] = AnswerComposerPhrases::get($language, 'uncertainty_prefix').$uncertainty;
-        }
-
-        return trim(implode("\n", $sections));
+        return trim($mainAnswerBody);
     }
 
     /**
@@ -2362,7 +2595,12 @@ class AnswerComposer
                 'direct_evidence_gate' => 'INSUFFICIENT_DIRECT_EVIDENCE',
                 'failure_status' => 'INSUFFICIENT_DIRECT_EVIDENCE',
                 'answer_presentation_mode' => $this->resolvePresentationMode($plan),
-            ],
+            ] + $this->homeEvidenceLifecycleMetadata(
+                $plan,
+                $validationReport,
+                composerEligibleCount: count($usable),
+                disposition: 'insufficient_direct_supporting_retained',
+            ),
             observability: [
                 'usable_evidence_count' => count($usable),
                 'claims_generated' => 0,
@@ -2371,7 +2609,14 @@ class AnswerComposer
                 'independent_search' => false,
                 'validation_bypassed' => false,
                 'failure_reason' => (string) ($sufficiency['reason'] ?? 'supporting_only'),
-            ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, $usable),
+            ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, $usable)
+              + $this->homeEvidenceLifecycleMetadata(
+                $plan,
+                $validationReport,
+                composerEligibleCount: count($usable),
+                disposition: 'insufficient_direct_supporting_retained',
+            ),
+            additionalInformation: trim($additionalSection) !== '' ? $additionalSection : null,
         );
     }
 
@@ -2405,10 +2650,27 @@ class AnswerComposer
         string $query,
         KnowledgeQueryPlan $plan,
         int $rejectedCount = 0,
+        ?EvidenceValidationExecutionReport $validationReport = null,
     ): AnswerSynthesisExecutionReport {
         $message = ($reason === 'no_relevant_validated_evidence' || $reason === 'background_or_weak_evidence_only')
             ? AnswerComposerPhrases::get($language, 'insufficient_irrelevant')
             : AnswerComposerPhrases::get($language, 'uncertainty_insufficient');
+
+        $lifecycle = $this->homeEvidenceLifecycleMetadata(
+            $plan,
+            $validationReport,
+            composerEligibleCount: 0,
+            disposition: $status === 'no_search_results' || $status === 'needs_clarification'
+                ? ($status === 'needs_clarification' ? 'needs_clarification' : null)
+                : null,
+        );
+        if ($status === 'no_search_results' && $lifecycle !== []) {
+            $lifecycle['evidence_lifecycle_disposition'] = 'no_results_retrieved';
+        }
+
+        $evidenceReferences = $validationReport !== null
+            ? $this->homeUnusedEvidenceReferences($plan, $validationReport)
+            : [];
 
         return new AnswerSynthesisExecutionReport(
             status: $status,
@@ -2419,7 +2681,7 @@ class AnswerComposer
             keyFindings: [],
             claims: [],
             citations: [],
-            evidenceReferences: [],
+            evidenceReferences: $evidenceReferences,
             confidence: 0.0,
             limitations: $rejectedCount > 0
                 ? [AnswerComposerPhrases::get($language, 'rejected_during_validation', [
@@ -2435,7 +2697,8 @@ class AnswerComposer
                 'agricultural_domain' => $plan->agriculturalDomain,
                 'failure_reason' => $reason,
                 'internet_first' => $plan->isInternetFirst(),
-            ],
+                'evidence_sufficient' => false,
+            ] + $lifecycle,
             observability: [
                 'usable_evidence_count' => 0,
                 'claims_generated' => 0,
@@ -2444,7 +2707,8 @@ class AnswerComposer
                 'independent_search' => false,
                 'validation_bypassed' => false,
                 'failure_reason' => $reason,
-            ] + $this->phase5QuestionClaimMatrix($plan, null, []),
+            ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, [])
+              + $lifecycle,
         );
     }
 }

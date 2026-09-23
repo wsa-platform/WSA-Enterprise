@@ -12,8 +12,16 @@ export type FieldCropCanonicalAnswerViewProps = {
   profile: FieldCropCultivationProfile
 }
 
-function citationLabel(citation: ResearchAgentCitation, index: number, fallback: string): string {
+function citationLabel(citation: ResearchAgentCitation, _index: number, fallback: string): string {
   return citation.title?.trim() || fallback
+}
+
+function citationHref(citation: ResearchAgentCitation): string | null {
+  const url = citation.url?.trim()
+  if (url && /^https?:\/\//i.test(url)) {
+    return url
+  }
+  return null
 }
 
 /**
@@ -29,6 +37,9 @@ export function FieldCropCanonicalAnswerView({ profile }: FieldCropCanonicalAnsw
   const conflicts = profile.conflicts ?? []
   const claims = profile.claims ?? []
   const keyFindings = profile.key_findings ?? []
+  const additionalInformation = profile.additional_information?.trim() || null
+  const uncertainty = profile.uncertainty?.trim() || null
+  const showUncertainty = Boolean(uncertainty) && uncertainty !== answer
   const limited = mode === 'limited' || (mode === 'canonical' && isLimitedLabel(profile.status))
 
   return (
@@ -96,6 +107,17 @@ export function FieldCropCanonicalAnswerView({ profile }: FieldCropCanonicalAnsw
         </section>
       ) : null}
 
+      {additionalInformation ? (
+        <section className="gs-field-crop-profile-section" data-testid="crop-additional">
+          <h3>{t('website.research.additionalInformationHeading', { defaultValue: 'Additional information' })}</h3>
+          <div className="gs-field-crop-profile-content">
+            {additionalInformation.split('\n').map((paragraph, index) => (
+              <p key={`crop-additional-${index}`}>{paragraph}</p>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {keyFindings.length > 0 ? (
         <section className="gs-field-crop-profile-section">
           <h3>{t('website.research.keyFindingsHeading', { defaultValue: 'Key findings' })}</h3>
@@ -118,10 +140,10 @@ export function FieldCropCanonicalAnswerView({ profile }: FieldCropCanonicalAnsw
         </section>
       ) : null}
 
-      {profile.uncertainty ? (
+      {showUncertainty ? (
         <section className="gs-field-crop-profile-section" data-testid="crop-uncertainty">
           <h3>{t('website.research.uncertaintyHeading', { defaultValue: 'Uncertainty' })}</h3>
-          <p>{profile.uncertainty}</p>
+          <p>{uncertainty}</p>
         </section>
       ) : null}
 
@@ -147,39 +169,37 @@ export function FieldCropCanonicalAnswerView({ profile }: FieldCropCanonicalAnsw
         </section>
       ) : null}
 
-      <section className="gs-field-crop-profile-section" aria-labelledby="field-crop-canonical-sources">
-        <h3 id="field-crop-canonical-sources">{t('website.research.sourcesHeading')}</h3>
-        {citations.length === 0 ? (
-          <p>{t('website.research.noCitations')}</p>
-        ) : (
+      {citations.length > 0 ? (
+        <section className="gs-field-crop-profile-section" aria-labelledby="field-crop-canonical-sources">
+          <h3 id="field-crop-canonical-sources">{t('website.research.sourcesHeading')}</h3>
           <ul className="gs-field-crop-profile-references" data-testid="crop-citations">
-            {citations.map((citation, index) => (
-              <li key={`${citation.citation_id ?? citation.doi ?? citation.url ?? citation.title ?? 'c'}-${index}`}>
-                <strong>
-                  {citationLabel(
-                    citation,
-                    index,
-                    t('website.research.citationFallback', { index: index + 1 }),
-                  )}
-                </strong>
-                {citation.organization ? ` — ${citation.organization}` : null}
-                {citation.doi ? ` · DOI: ${citation.doi}` : null}
-                {citation.evidence_id ? (
-                  <span data-evidence-id={citation.evidence_id}>{` · evidence: ${citation.evidence_id}`}</span>
-                ) : null}
-                {citation.url ? (
-                  <>
-                    {' '}
-                    <a href={citation.url} target="_blank" rel="noreferrer noopener">
-                      {citation.url}
+            {citations.map((citation, index) => {
+              const label = citationLabel(
+                citation,
+                index,
+                t('website.research.citationFallback', { index: index + 1 }),
+              )
+              const href = citationHref(citation)
+              return (
+                <li key={`${citation.citation_id ?? citation.doi ?? citation.url ?? citation.title ?? 'c'}-${index}`}>
+                  {href ? (
+                    <a href={href} target="_blank" rel="noreferrer noopener">
+                      {label}
                     </a>
-                  </>
-                ) : null}
-              </li>
-            ))}
+                  ) : (
+                    <strong>{label}</strong>
+                  )}
+                  {citation.organization ? ` — ${citation.organization}` : null}
+                  {citation.doi ? ` · DOI: ${citation.doi}` : null}
+                  {citation.evidence_id ? (
+                    <span data-evidence-id={citation.evidence_id}>{` · evidence: ${citation.evidence_id}`}</span>
+                  ) : null}
+                </li>
+              )
+            })}
           </ul>
-        )}
-      </section>
+        </section>
+      ) : null}
     </div>
   )
 }

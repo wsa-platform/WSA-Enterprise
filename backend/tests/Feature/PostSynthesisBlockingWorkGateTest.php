@@ -104,13 +104,18 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
         $this->bindSearchAndValidation($query, sufficient: false);
 
         $pipeline = Mockery::mock(ScientificSourceDiscoveryPipeline::class);
-        $pipeline->shouldReceive('discoverMissingSections')->once()->andReturn([
-            'sections' => [],
-            'discoverers_used' => [],
-            'external_discoverers_used' => [],
-            'library_discoverers_used' => [],
-            'retrieval_failed' => false,
-        ]);
+        $pipeline->shouldReceive('discoverMissingSections')
+            ->once()
+            ->withArgs(function (int $organizationId, $context, array $sectionKeys, bool $skipExternalDiscoverers = false): bool {
+                return $skipExternalDiscoverers === true;
+            })
+            ->andReturn([
+                'sections' => [],
+                'discoverers_used' => [],
+                'external_discoverers_used' => [],
+                'library_discoverers_used' => [],
+                'retrieval_failed' => false,
+            ]);
         $this->app->instance(ScientificSourceDiscoveryPipeline::class, $pipeline);
 
         $mcp = Mockery::mock(McpToolClientInterface::class);

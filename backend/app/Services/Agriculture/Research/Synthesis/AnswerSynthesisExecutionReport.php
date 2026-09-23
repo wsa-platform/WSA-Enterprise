@@ -34,6 +34,7 @@ final class AnswerSynthesisExecutionReport
         public readonly string $language,
         public readonly array $researchMetadata,
         public readonly array $observability,
+        public readonly ?string $additionalInformation = null,
     ) {}
 
     /** @return array<string, mixed> */
@@ -54,6 +55,7 @@ final class AnswerSynthesisExecutionReport
             'answer' => $this->answer,
             'concise_summary' => $this->conciseSummary,
             'detailed_explanation' => $this->detailedExplanation,
+            'additional_information' => $this->additionalInformation,
             'key_findings' => $this->keyFindings,
             'claims' => array_map(
                 static fn (ResearchAnswerClaim $claim): array => $claim->toArray(),
