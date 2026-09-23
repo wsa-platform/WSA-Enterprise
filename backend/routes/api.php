@@ -40,6 +40,14 @@ use App\Http\Controllers\Api\MonitoringLogsController;
 use App\Http\Controllers\Api\OperationsController;
 use App\Http\Controllers\Api\OrganizationController;
 use App\Http\Controllers\Api\PlantAiDiagnosisController;
+use App\Http\Controllers\Api\Admin\AdminAuditController;
+use App\Http\Controllers\Api\Admin\AdminJobsController;
+use App\Http\Controllers\Api\Admin\AdminLibraryController;
+use App\Http\Controllers\Api\Admin\AdminMarketplaceController;
+use App\Http\Controllers\Api\Admin\AdminMeController;
+use App\Http\Controllers\Api\Admin\AdminPlatformSettingsController;
+use App\Http\Controllers\Api\Admin\AdminSummaryController;
+use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\PlatformAdminController;
 use App\Http\Controllers\Api\PlatformController;
 use App\Http\Controllers\Api\ProductImageController;
@@ -108,6 +116,62 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/auth/phone/verify-otp', [AuthExtensionController::class, 'verifyPhoneOtp'])->middleware('throttle:10,1');
     });
 
+    Route::middleware(['auth.principal', 'throttle:120,1'])->group(function (): void {
+        Route::get('/admin/me', [AdminMeController::class, 'show']);
+    });
+
+    Route::middleware(['auth.principal', 'platform.administrator', 'throttle:120,1'])->group(function (): void {
+        Route::get('/admin/summary', [AdminSummaryController::class, 'show']);
+        Route::get('/admin/settings', [AdminPlatformSettingsController::class, 'show']);
+        Route::put('/admin/settings', [AdminPlatformSettingsController::class, 'update']);
+        Route::get('/admin/audit-logs', [AdminAuditController::class, 'index']);
+
+        Route::get('/admin/users', [AdminUserController::class, 'index']);
+        Route::post('/admin/users', [AdminUserController::class, 'store']);
+        Route::patch('/admin/users/{user}', [AdminUserController::class, 'update'])->whereNumber('user');
+        Route::post('/admin/users/{user}/roles', [AdminUserController::class, 'assignRole'])->whereNumber('user');
+        Route::get('/admin/roles', [AdminUserController::class, 'roles']);
+        Route::post('/admin/roles', [AdminUserController::class, 'storeRole']);
+        Route::patch('/admin/roles/{platformRole}', [AdminUserController::class, 'updateRole'])->whereNumber('platformRole');
+        Route::get('/admin/permissions', [AdminUserController::class, 'permissions']);
+
+        Route::get('/admin/organizations', [PlatformAdminController::class, 'organizations']);
+        Route::post('/admin/organizations', [PlatformAdminController::class, 'storeOrganization']);
+        Route::get('/admin/organizations/{organization}', [PlatformAdminController::class, 'showOrganization'])->whereNumber('organization');
+        Route::patch('/admin/organizations/{organization}', [PlatformAdminController::class, 'updateOrganization'])->whereNumber('organization');
+        Route::get('/admin/organizations/{organization}/members', [PlatformAdminController::class, 'organizationMembers'])->whereNumber('organization');
+        Route::post('/admin/organizations/{organization}/members', [PlatformAdminController::class, 'addOrganizationMember'])->whereNumber('organization');
+        Route::patch('/admin/organizations/{organization}/members/{user}', [PlatformAdminController::class, 'updateOrganizationMember'])->whereNumber(['organization', 'user']);
+        Route::delete('/admin/organizations/{organization}/members/{user}', [PlatformAdminController::class, 'removeOrganizationMember'])->whereNumber(['organization', 'user']);
+
+        Route::get('/admin/jobs/seekers', [AdminJobsController::class, 'seekers']);
+        Route::get('/admin/jobs/seekers/{jobSeeker}', [AdminJobsController::class, 'show'])->whereNumber('jobSeeker');
+        Route::patch('/admin/jobs/seekers/{jobSeeker}/status', [AdminJobsController::class, 'updateSeekerStatus'])->whereNumber('jobSeeker');
+        Route::get('/admin/jobs/seekers/{jobSeeker}/notes', [AdminJobsController::class, 'notes'])->whereNumber('jobSeeker');
+        Route::post('/admin/jobs/seekers/{jobSeeker}/notes', [AdminJobsController::class, 'storeNote'])->whereNumber('jobSeeker');
+        Route::get('/admin/jobs/seekers/{jobSeeker}/history', [AdminJobsController::class, 'history'])->whereNumber('jobSeeker');
+
+        Route::get('/admin/marketplace/listings', [AdminMarketplaceController::class, 'listings']);
+        Route::post('/admin/marketplace/listings/{listing}/approve', [AdminMarketplaceController::class, 'approve'])->whereNumber('listing');
+        Route::post('/admin/marketplace/listings/{listing}/reject', [AdminMarketplaceController::class, 'reject'])->whereNumber('listing');
+        Route::post('/admin/marketplace/listings/{listing}/suspend', [AdminMarketplaceController::class, 'suspend'])->whereNumber('listing');
+
+        Route::get('/admin/library/items', [AdminLibraryController::class, 'index']);
+        Route::post('/admin/library/items', [AdminLibraryController::class, 'store']);
+        Route::patch('/admin/library/items/{libraryItem}', [AdminLibraryController::class, 'update'])->whereNumber('libraryItem');
+        Route::delete('/admin/library/items/{libraryItem}', [AdminLibraryController::class, 'destroy'])->whereNumber('libraryItem');
+
+        // Close the former org-* hole: same controller, Platform Admin identity only, no org middleware.
+        Route::get('/platform/admin/organizations', [PlatformAdminController::class, 'organizations']);
+        Route::post('/platform/admin/organizations', [PlatformAdminController::class, 'storeOrganization']);
+        Route::get('/platform/admin/organizations/{organization}', [PlatformAdminController::class, 'showOrganization'])->whereNumber('organization');
+        Route::patch('/platform/admin/organizations/{organization}', [PlatformAdminController::class, 'updateOrganization'])->whereNumber('organization');
+        Route::get('/platform/admin/organizations/{organization}/members', [PlatformAdminController::class, 'organizationMembers'])->whereNumber('organization');
+        Route::post('/platform/admin/organizations/{organization}/members', [PlatformAdminController::class, 'addOrganizationMember'])->whereNumber('organization');
+        Route::patch('/platform/admin/organizations/{organization}/members/{user}', [PlatformAdminController::class, 'updateOrganizationMember'])->whereNumber(['organization', 'user']);
+        Route::delete('/platform/admin/organizations/{organization}/members/{user}', [PlatformAdminController::class, 'removeOrganizationMember'])->whereNumber(['organization', 'user']);
+    });
+
     Route::middleware(['auth.principal', 'resolve.organization', 'api_client.routes', 'throttle:120,1'])->group(function (): void {
         Route::get('/user', fn () => request()->user()?->only(['id', 'name', 'email']));
         Route::patch('/user', [AuthController::class, 'updateProfile']);
@@ -130,14 +194,6 @@ Route::prefix('v1')->group(function (): void {
         Route::delete('/invitations/{invitation}', [InvitationController::class, 'destroy'])->whereNumber('invitation');
         Route::get('/dashboard', DashboardController::class);
         Route::get('/platform/organizations', [PlatformController::class, 'organizations']);
-        Route::get('/platform/admin/organizations', [PlatformAdminController::class, 'organizations']);
-        Route::post('/platform/admin/organizations', [PlatformAdminController::class, 'storeOrganization']);
-        Route::get('/platform/admin/organizations/{organization}', [PlatformAdminController::class, 'showOrganization'])->whereNumber('organization');
-        Route::patch('/platform/admin/organizations/{organization}', [PlatformAdminController::class, 'updateOrganization'])->whereNumber('organization');
-        Route::get('/platform/admin/organizations/{organization}/members', [PlatformAdminController::class, 'organizationMembers'])->whereNumber('organization');
-        Route::post('/platform/admin/organizations/{organization}/members', [PlatformAdminController::class, 'addOrganizationMember'])->whereNumber('organization');
-        Route::patch('/platform/admin/organizations/{organization}/members/{user}', [PlatformAdminController::class, 'updateOrganizationMember'])->whereNumber(['organization', 'user']);
-        Route::delete('/platform/admin/organizations/{organization}/members/{user}', [PlatformAdminController::class, 'removeOrganizationMember'])->whereNumber(['organization', 'user']);
         Route::post('/media/uploads', [MediaController::class, 'upload']);
         Route::get('/media/uploads/{mediaUpload}', [MediaController::class, 'show'])->whereNumber('mediaUpload');
         Route::delete('/media/uploads/{mediaUpload}', [MediaController::class, 'destroy'])->whereNumber('mediaUpload');

@@ -20,31 +20,33 @@ class PlatformApi {
     if (isActive != null) params['is_active'] = isActive.toString();
     final qs = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
     final suffix = qs.isEmpty ? '' : '&$qs';
-    return http.getPaginated('/platform/admin/organizations?page=$page&per_page=$perPage$suffix');
+    return http.getPaginated('/admin/organizations?page=$page&per_page=$perPage$suffix');
   }
 
   Future<Map<String, dynamic>> createAdminOrganization(Map<String, dynamic> body) =>
-      http.postJson('/platform/admin/organizations', body);
+      http.postJson('/admin/organizations', body);
 
   Future<Map<String, dynamic>> updateAdminOrganization(int id, Map<String, dynamic> body) =>
-      http.patchJson('/platform/admin/organizations/$id', body);
+      http.patchJson('/admin/organizations/$id', body);
 
   Future<Map<String, dynamic>> adminOrganization(int id) =>
-      http.getJson('/platform/admin/organizations/$id');
+      http.getJson('/admin/organizations/$id');
 
   Future<List<dynamic>> adminOrganizationMembers(int orgId, {int page = 1, int perPage = 25}) =>
-      http.getList('/platform/admin/organizations/$orgId/members?page=$page&per_page=$perPage');
+      http.getList('/admin/organizations/$orgId/members?page=$page&per_page=$perPage');
 
   Future<Map<String, dynamic>> addAdminOrganizationMember(int orgId, Map<String, dynamic> body) =>
-      http.postJson('/platform/admin/organizations/$orgId/members', body);
+      http.postJson('/admin/organizations/$orgId/members', body);
 
   Future<Map<String, dynamic>> updateAdminOrganizationMember(int orgId, int userId, Map<String, dynamic> body) =>
-      http.patchJson('/platform/admin/organizations/$orgId/members/$userId', body);
+      http.patchJson('/admin/organizations/$orgId/members/$userId', body);
 
   Future<void> removeAdminOrganizationMember(int orgId, int userId) =>
-      http.delete('/platform/admin/organizations/$orgId/members/$userId');
+      http.delete('/admin/organizations/$orgId/members/$userId');
 
-  Future<Map<String, dynamic>> me() => http.getJson('/platform/me');
+  Future<Map<String, dynamic>> adminMe() => http.getJson('/admin/me');
+
+  Future<Map<String, dynamic>> me() => http.getJson('/admin/me');
 
   Future<Map<String, dynamic>> accessSummary() => http.getJson('/platform/access-summary');
 

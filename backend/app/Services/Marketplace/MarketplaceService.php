@@ -84,6 +84,62 @@ class MarketplaceService
         return $query->latest()->paginate(min(max($perPage, 1), 100));
     }
 
+    /** @param  array<string, mixed>  $filters */
+    public function searchPlatformAdmin(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = MarketplaceListing::query()
+            ->with(['category:id,slug,name,name_ar', 'seller:id,name,email', 'images']);
+
+        if (! empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        if (! empty($filters['search'])) {
+            $query->where('title', 'like', '%'.$filters['search'].'%');
+        }
+
+        return $query->latest()->paginate(min(max($perPage, 1), 100));
+    }
+
+    public function moderatePlatform(
+        MarketplaceListing $listing,
+        string $action,
+        User $actor,
+        ?string $reason,
+        ?Request $request = null,
+    ): MarketplaceListing {
+        $newStatus = match ($action) {
+            'approve' => MarketplaceListing::STATUS_PUBLISHED,
+            'reject' => MarketplaceListing::STATUS_REJECTED,
+            'suspend' => MarketplaceListing::STATUS_SUSPENDED,
+            default => abort(422, 'Invalid moderation action.'),
+        };
+
+        $oldStatus = $listing->status;
+        $listing->update([
+            'status' => $newStatus,
+            'published_at' => $newStatus === MarketplaceListing::STATUS_PUBLISHED ? now() : $listing->published_at,
+        ]);
+
+        $this->recordStatusChange($listing, $newStatus, $actor->id, $reason);
+        $this->audit->record(
+            'admin.mkt.moderate',
+            null,
+            $actor->id,
+            $listing,
+            ['status' => $oldStatus],
+            [
+                'status' => $newStatus,
+                'reason' => $reason,
+                'target_organization_id' => $listing->organization_id,
+                'listing_id' => $listing->id,
+                'action' => $action,
+            ],
+            $request,
+        );
+
+        return $listing->fresh(['category', 'images', 'unit']);
+    }
+
     /** @param  array<string, mixed>  $data */
     public function createForSeller(User $seller, array $data, ?int $organizationId = null): MarketplaceListing
     {

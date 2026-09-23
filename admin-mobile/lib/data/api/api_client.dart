@@ -48,26 +48,24 @@ class ApiClient {
   Map<String, dynamic>? _user;
   List<Map<String, dynamic>> _organizations = [];
   List<String> _permissions = [];
+  bool _isPlatformAdministrator = false;
 
   String? get token => _token;
   int? get organizationId => _organizationId;
   Map<String, dynamic>? get user => _user;
   List<Map<String, dynamic>> get organizations => List.unmodifiable(_organizations);
   List<String> get permissions => List.unmodifiable(_permissions);
+  bool get isPlatformAdministrator => _isPlatformAdministrator;
 
-  bool get _hasWildcard => _permissions.contains('*');
+  bool get hasWildcardAccess => false;
 
-  bool get hasWildcardAccess => _hasWildcard;
-
-  bool get hasAdminAccess =>
-      _hasWildcard ||
-      _permissions.any((permission) => AppConfig.adminPermissions.contains(permission));
+  bool get hasAdminAccess => _isPlatformAdministrator;
 
   bool hasPermission(String permission) =>
-      _hasWildcard || _permissions.contains(permission);
+      _isPlatformAdministrator && _permissions.contains(permission);
 
   bool hasAnyPermission(Iterable<String> permissions) =>
-      _hasWildcard || permissions.any(_permissions.contains);
+      _isPlatformAdministrator && permissions.any(_permissions.contains);
 
   void Function()? onUnauthorized;
 
@@ -144,13 +142,15 @@ class ApiClient {
   }
 
   Future<void> refreshPermissions() async {
-    if (_token == null || _organizationId == null) {
+    if (_token == null) {
       _permissions = [];
+      _isPlatformAdministrator = false;
       return;
     }
 
-    final payload = await platform.me();
-    final raw = payload['permissions'];
+    final payload = await platform.adminMe();
+    _isPlatformAdministrator = payload['is_platform_administrator'] == true;
+    final raw = payload['platform_permissions'];
     if (raw is List) {
       _permissions = raw.map((item) => '$item').toList();
     } else {
@@ -183,6 +183,7 @@ class ApiClient {
     _user = null;
     _organizations = [];
     _permissions = [];
+    _isPlatformAdministrator = false;
     await _tokenStorage.clearAll();
   }
 
@@ -191,8 +192,9 @@ class ApiClient {
   }
 
   /// Test helper for setting permissions without network calls.
-  void setPermissionsForTest(List<String> permissions) {
+  void setPermissionsForTest(List<String> permissions, {bool isPlatformAdministrator = false}) {
     _permissions = List<String>.from(permissions);
+    _isPlatformAdministrator = isPlatformAdministrator;
   }
 
   /// Test helper for setting user profile without network calls.

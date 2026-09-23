@@ -12,7 +12,7 @@ void main() {
 
     setUp(() {
       client = ApiClient.inMemory();
-      client.setPermissionsForTest(['jobs.view', 'jobs.status']);
+      client.setPermissionsForTest(['platform.jobs.view', 'platform.jobs.manage'], isPlatformAdministrator: true);
       JobSeekersScreen.debugLoader = null;
       JobSeekersScreen.debugListFetch = null;
       JobSeekersScreen.debugProfileLoader = null;
@@ -68,7 +68,7 @@ void main() {
     });
 
     testWidgets('hides status action without jobs.status and omits private fields', (tester) async {
-      client.setPermissionsForTest(['jobs.view']);
+      client.setPermissionsForTest(['platform.jobs.view'], isPlatformAdministrator: true);
       JobSeekersScreen.debugLoader = (_) async => JobSeekersSummary(
             total: '1',
             active: '1',
@@ -115,7 +115,7 @@ void main() {
     });
 
     testWidgets('detail sheet omits private fields without jobs.private_data', (tester) async {
-      client.setPermissionsForTest(['jobs.view']);
+      client.setPermissionsForTest(['platform.jobs.view'], isPlatformAdministrator: true);
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.rtl,
@@ -152,7 +152,7 @@ void main() {
     });
 
     testWidgets('detail sheet shows private contact when jobs.private_data is granted', (tester) async {
-      client.setPermissionsForTest(['jobs.view', 'jobs.private_data', 'jobs.notes']);
+      client.setPermissionsForTest(['platform.jobs.view', 'platform.jobs.manage'], isPlatformAdministrator: true);
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.rtl,
@@ -196,7 +196,7 @@ void main() {
 
     setUp(() {
       client = ApiClient.inMemory();
-      client.setPermissionsForTest(['market.review', 'market.approve']);
+      client.setPermissionsForTest(['platform.marketplace.view', 'platform.marketplace.manage'], isPlatformAdministrator: true);
       MarketplaceAdminScreen.debugLoader = null;
     });
 

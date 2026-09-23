@@ -15,7 +15,7 @@ void main() {
 
     setUp(() {
       client = ApiClient.inMemory();
-      client.setPermissionsForTest(['platform.view', 'access.manage']);
+      client.setPermissionsForTest(['platform.access'], isPlatformAdministrator: true);
       client.setUserForTest({'name': 'سارة', 'email': 'sara@example.com'});
       auth = AuthController(client);
     });

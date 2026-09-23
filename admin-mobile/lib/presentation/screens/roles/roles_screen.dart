@@ -246,7 +246,7 @@ class _RolesScreenState extends State<RolesScreen> {
 
   Widget build(BuildContext context) {
 
-    final canManage = widget.client.hasPermission('access.manage');
+    final canManage = widget.client.hasPermission('platform.roles.manage');
 
     final hasWildcard = widget.client.hasPermission('*');
 

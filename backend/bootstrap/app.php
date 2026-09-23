@@ -46,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.principal' => \App\Http\Middleware\AuthenticateApiPrincipal::class,
             'resolve.organization' => \App\Http\Middleware\ResolveOrganizationContext::class,
             'api_client.routes' => \App\Http\Middleware\RestrictApiClientRoutes::class,
+            'platform.administrator' => \App\Http\Middleware\RequirePlatformAdministrator::class,
         ]);
         $middleware->appendToGroup('api', [
             \App\Http\Middleware\AssignRequestId::class,

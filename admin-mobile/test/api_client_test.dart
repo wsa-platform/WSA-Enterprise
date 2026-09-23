@@ -67,43 +67,41 @@ void main() {
   });
 
   group('ApiClient admin access', () {
-    test('detects admin permissions', () {
+    test('detects server platform administrator identity', () {
       final client = ApiClient.inMemory();
-      client.setPermissionsForTest(['access.manage']);
+      client.setPermissionsForTest(['platform.access'], isPlatformAdministrator: true);
       expect(client.hasAdminAccess, isTrue);
     });
 
-    test('detects supervise permission', () {
+    test('rejects organization permissions as platform admin proof', () {
       final client = ApiClient.inMemory();
-      client.setPermissionsForTest(['services.supervise']);
-      expect(client.hasAdminAccess, isTrue);
+      client.setPermissionsForTest(['access.manage', 'services.supervise', '*']);
+      expect(client.hasAdminAccess, isFalse);
     });
 
-    test('rejects non-admin permissions', () {
+    test('rejects non-admin identity', () {
       final client = ApiClient.inMemory();
       client.setPermissionsForTest(['platform.view']);
       expect(client.hasAdminAccess, isFalse);
     });
 
-    test('checks single and multiple permissions', () {
+    test('checks single and multiple platform permissions', () {
       final client = ApiClient.inMemory();
-      client.setPermissionsForTest(['platform.view', 'farm.view']);
+      client.setPermissionsForTest(['platform.access', 'platform.jobs.view'], isPlatformAdministrator: true);
 
-      expect(client.hasPermission('platform.view'), isTrue);
+      expect(client.hasPermission('platform.access'), isTrue);
       expect(client.hasPermission('access.manage'), isFalse);
-      expect(client.hasAnyPermission(['access.manage', 'farm.view']), isTrue);
+      expect(client.hasAnyPermission(['access.manage', 'platform.jobs.view']), isTrue);
       expect(client.hasAnyPermission(['access.manage', 'ai.use']), isFalse);
     });
 
-    test('wildcard permission grants full admin access', () {
+    test('wildcard organization permission does not grant platform access', () {
       final client = ApiClient.inMemory();
       client.setPermissionsForTest(['*']);
 
-      expect(client.hasAdminAccess, isTrue);
-      expect(client.hasPermission('access.manage'), isTrue);
-      expect(client.hasPermission('platform.view'), isTrue);
-      expect(client.hasAnyPermission(['access.manage', 'farm.view']), isTrue);
-      expect(client.hasAnyPermission(['ai.use']), isTrue);
+      expect(client.hasAdminAccess, isFalse);
+      expect(client.hasPermission('access.manage'), isFalse);
+      expect(client.hasPermission('platform.view'), isFalse);
     });
   });
 

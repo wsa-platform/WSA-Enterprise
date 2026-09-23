@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Organization;
 use App\Models\Project;
 use App\Models\Task;
+use App\Services\Authorization\PlatformRbacService;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -88,5 +89,7 @@ class DatabaseSeeder extends Seeder
         $this->call(AccessSeeder::class);
         $this->call(JobSeekerSeeder::class);
         $this->call(MarketplaceSeeder::class);
+
+        app(PlatformRbacService::class)->grantPlatformAdministrator($admin);
     }
 }

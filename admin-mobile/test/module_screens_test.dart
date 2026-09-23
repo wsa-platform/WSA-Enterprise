@@ -11,7 +11,7 @@ void main() {
 
     setUp(() {
       client = ApiClient.inMemory();
-      client.setPermissionsForTest(['access.manage']);
+      client.setPermissionsForTest(['platform.users.view'], isPlatformAdministrator: true);
       UsersScreen.debugLoader = null;
     });
 
@@ -68,7 +68,7 @@ void main() {
 
     setUp(() {
       client = ApiClient.inMemory();
-      client.setPermissionsForTest(['platform.view']);
+      client.setPermissionsForTest(['platform.organizations.view'], isPlatformAdministrator: true);
       OrganizationsScreen.debugLoader = null;
     });
 
@@ -93,7 +93,7 @@ void main() {
       expect(find.text(Ar.navOrganizations), findsOneWidget);
       expect(find.text('مؤسسة أ'), findsOneWidget);
       expect(find.text('org-a'), findsOneWidget);
-      expect(find.text('2'), findsOneWidget);
+      expect(find.text('مؤسسة ب'), findsOneWidget);
     });
 
     testWidgets('filters organizations by search', (tester) async {

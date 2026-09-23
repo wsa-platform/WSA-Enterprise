@@ -2,18 +2,24 @@
 
 namespace App\Http\Controllers\Concerns;
 
-use App\Services\Authorization\PermissionService;
+use App\Services\Authorization\PlatformAdministratorAuthorizer;
 use Illuminate\Http\Request;
 
 trait AuthorizesPlatformAdmin
 {
-    protected function authorizePlatformAdmin(Request $request): void
+    protected function authorizePlatformAdmin(Request $request, ?string $permission = null): void
     {
-        $permissions = app(PermissionService::class)->permissionsFor(
-            $request->user(),
-            $this->organization($request),
-        );
+        $user = $request->user();
+        abort_unless($user !== null, 401, 'Unauthenticated.');
 
-        abort_unless(in_array('*', $permissions, true), 403, 'Platform administrator access required.');
+        $authorizer = app(PlatformAdministratorAuthorizer::class);
+
+        if (! $authorizer->isPlatformAdministrator($user)) {
+            $authorizer->deny($request, $user, $permission ?? 'platform.access');
+        }
+
+        if ($permission !== null && ! $authorizer->hasPermission($user, $permission)) {
+            $authorizer->deny($request, $user, $permission);
+        }
     }
 }

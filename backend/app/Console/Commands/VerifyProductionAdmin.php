@@ -27,7 +27,14 @@ class VerifyProductionAdmin extends Command
             return self::FAILURE;
         }
 
-        $this->components->info("Production admin account exists for {$email}.");
+        $user = \App\Models\User::query()->where('email', $email)->first();
+        if ($user === null || ! $user->isPlatformAdministrator()) {
+            $this->components->error("User {$email} exists but is not a Platform Administrator. Re-run deploy:bootstrap-admin.");
+
+            return self::FAILURE;
+        }
+
+        $this->components->info("Production Platform Administrator exists for {$email}.");
 
         return self::SUCCESS;
     }

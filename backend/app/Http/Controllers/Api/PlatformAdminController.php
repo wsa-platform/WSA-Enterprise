@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Concerns\AuthorizesOrganizationAccess;
 use App\Http\Controllers\Concerns\AuthorizesPlatformAdmin;
-use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\User;
@@ -19,9 +17,7 @@ use Illuminate\Validation\Rule;
 
 class PlatformAdminController extends Controller
 {
-    use AuthorizesOrganizationAccess;
     use AuthorizesPlatformAdmin;
-    use PaginatesOrganizationRecords;
 
     public function __construct(
         private AuditService $auditService,
@@ -30,7 +26,7 @@ class PlatformAdminController extends Controller
 
     public function organizations(Request $request): JsonResponse
     {
-        $this->authorizePlatformAdmin($request);
+        $this->authorizePlatformAdmin($request, 'platform.organizations.view');
 
         $query = Organization::query()->withCount('members');
 
@@ -57,7 +53,7 @@ class PlatformAdminController extends Controller
 
     public function storeOrganization(Request $request): JsonResponse
     {
-        $this->authorizePlatformAdmin($request);
+        $this->authorizePlatformAdmin($request, 'platform.organizations.manage');
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -75,11 +71,14 @@ class PlatformAdminController extends Controller
         $this->enterpriseRoles->seedForOrganization($organization->id);
 
         $this->auditService->record(
-            action: 'organization.created',
-            organizationId: $this->organization($request),
+            action: 'admin.org.created',
+            organizationId: null,
             userId: $request->user()->id,
             auditable: $organization,
-            newValues: $organization->only(['id', 'name', 'slug', 'is_active']),
+            newValues: [
+                ...$organization->only(['id', 'name', 'slug', 'is_active']),
+                'target_organization_id' => $organization->id,
+            ],
             request: $request,
         );
 
@@ -88,14 +87,14 @@ class PlatformAdminController extends Controller
 
     public function showOrganization(Request $request, Organization $organization): JsonResponse
     {
-        $this->authorizePlatformAdmin($request);
+        $this->authorizePlatformAdmin($request, 'platform.organizations.view');
 
         return response()->json($this->transformOrganization($organization->loadCount('members')));
     }
 
     public function updateOrganization(Request $request, Organization $organization): JsonResponse
     {
-        $this->authorizePlatformAdmin($request);
+        $this->authorizePlatformAdmin($request, 'platform.organizations.manage');
 
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
@@ -116,12 +115,15 @@ class PlatformAdminController extends Controller
         $organization->update($data);
 
         $this->auditService->record(
-            action: 'organization.updated',
-            organizationId: $this->organization($request),
+            action: 'admin.org.updated',
+            organizationId: null,
             userId: $request->user()->id,
             auditable: $organization,
             oldValues: $oldValues,
-            newValues: $organization->only(['name', 'slug', 'is_active']),
+            newValues: [
+                ...$organization->only(['name', 'slug', 'is_active']),
+                'target_organization_id' => $organization->id,
+            ],
             request: $request,
         );
 
@@ -130,7 +132,7 @@ class PlatformAdminController extends Controller
 
     public function organizationMembers(Request $request, Organization $organization): JsonResponse
     {
-        $this->authorizePlatformAdmin($request);
+        $this->authorizePlatformAdmin($request, 'platform.organizations.view');
 
         $members = $organization->members()
             ->orderBy('users.name')
@@ -161,7 +163,7 @@ class PlatformAdminController extends Controller
 
     public function addOrganizationMember(Request $request, Organization $organization): JsonResponse
     {
-        $this->authorizePlatformAdmin($request);
+        $this->authorizePlatformAdmin($request, 'platform.organizations.members');
 
         $data = $request->validate([
             'name' => ['required_without:user_id', 'string', 'max:255'],
@@ -196,6 +198,19 @@ class PlatformAdminController extends Controller
 
         app(PermissionCacheInvalidator::class)->forgetUser($user, $organization->id);
 
+        $this->auditService->record(
+            action: 'admin.org.member.add',
+            organizationId: null,
+            userId: $request->user()->id,
+            auditable: $user,
+            newValues: [
+                'target_organization_id' => $organization->id,
+                'member_user_id' => $user->id,
+                'membership_role' => $data['membership_role'] ?? 'member',
+            ],
+            request: $request,
+        );
+
         return response()->json([
             'id' => $user->id,
             'name' => $user->name,
@@ -207,7 +222,7 @@ class PlatformAdminController extends Controller
 
     public function updateOrganizationMember(Request $request, Organization $organization, User $user): JsonResponse
     {
-        $this->authorizePlatformAdmin($request);
+        $this->authorizePlatformAdmin($request, 'platform.organizations.members');
         abort_unless($organization->members()->whereKey($user->id)->exists(), 404);
 
         $data = $request->validate([
@@ -223,6 +238,19 @@ class PlatformAdminController extends Controller
         $organization->members()->updateExistingPivot($user->id, $data);
         app(PermissionCacheInvalidator::class)->forgetUser($user, $organization->id);
 
+        $this->auditService->record(
+            action: 'admin.org.member.upd',
+            organizationId: null,
+            userId: $request->user()->id,
+            auditable: $user,
+            newValues: [
+                'target_organization_id' => $organization->id,
+                'member_user_id' => $user->id,
+                ...$data,
+            ],
+            request: $request,
+        );
+
         $membership = $organization->members()->whereKey($user->id)->first()?->pivot;
 
         return response()->json([
@@ -236,7 +264,7 @@ class PlatformAdminController extends Controller
 
     public function removeOrganizationMember(Request $request, Organization $organization, User $user): JsonResponse
     {
-        $this->authorizePlatformAdmin($request);
+        $this->authorizePlatformAdmin($request, 'platform.organizations.members');
         abort_unless($organization->members()->whereKey($user->id)->exists(), 404);
 
         abort_if(
@@ -248,6 +276,18 @@ class PlatformAdminController extends Controller
 
         $organization->members()->detach($user->id);
         app(PermissionCacheInvalidator::class)->forgetUser($user, $organization->id);
+
+        $this->auditService->record(
+            action: 'admin.org.member.rm',
+            organizationId: null,
+            userId: $request->user()->id,
+            auditable: $user,
+            newValues: [
+                'target_organization_id' => $organization->id,
+                'member_user_id' => $user->id,
+            ],
+            request: $request,
+        );
 
         return response()->json(['message' => 'Member removed.']);
     }

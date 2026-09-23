@@ -12,6 +12,7 @@ import 'package:wsa_admin/presentation/widgets/metric_card.dart';
 
 import 'package:wsa_admin/presentation/widgets/module_screen_layout.dart';
 
+import 'package:wsa_admin/data/models/paginated_response.dart';
 import 'package:wsa_admin/presentation/widgets/paginated_data_list.dart';
 
 
@@ -58,7 +59,7 @@ class _OrganizationsScreenState extends State<OrganizationsScreen> {
 
 
 
-  bool get _isPlatformAdmin => widget.client.hasPermission('*');
+  bool get _isPlatformAdmin => widget.client.isPlatformAdministrator;
 
 
 
@@ -187,6 +188,42 @@ class _OrganizationsScreenState extends State<OrganizationsScreen> {
   }
 
 
+
+  Future<PaginatedResponse<Map<String, dynamic>>> _fetchOrganizationsPage(int page, int perPage) async {
+    if (OrganizationsScreen.debugLoader != null) {
+      final rows = await OrganizationsScreen.debugLoader!(widget.client);
+      final query = _search.trim().toLowerCase();
+      final filtered = query.isEmpty
+          ? rows
+          : rows
+              .where((org) =>
+                  org.name.toLowerCase().contains(query) || org.slug.toLowerCase().contains(query))
+              .toList();
+
+      return PaginatedResponse(
+        data: filtered
+            .map((org) => <String, dynamic>{
+                  'name': org.name,
+                  'slug': org.slug,
+                  'role': org.role,
+                  'is_active': true,
+                  'members_count': 0,
+                })
+            .toList(),
+        currentPage: 1,
+        lastPage: 1,
+        total: filtered.length,
+        perPage: perPage,
+      );
+    }
+
+    return widget.client.platform.adminOrganizationsPage(
+      search: _search.trim().isEmpty ? null : _search.trim(),
+      isActive: _statusFilter == 'active' ? true : (_statusFilter == 'inactive' ? false : null),
+      page: page,
+      perPage: perPage,
+    );
+  }
 
   Future<void> _createOrg() async {
 
@@ -452,17 +489,7 @@ class _OrganizationsScreenState extends State<OrganizationsScreen> {
 
               key: _paginatedKey,
 
-              fetchPage: (page, perPage) => widget.client.platform.adminOrganizationsPage(
-
-                search: _search.trim().isEmpty ? null : _search.trim(),
-
-                isActive: _statusFilter == 'active' ? true : (_statusFilter == 'inactive' ? false : null),
-
-                page: page,
-
-                perPage: perPage,
-
-              ),
+              fetchPage: _fetchOrganizationsPage,
 
               columns: [
 

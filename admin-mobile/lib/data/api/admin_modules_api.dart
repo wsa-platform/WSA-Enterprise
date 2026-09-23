@@ -27,7 +27,7 @@ class AdminModulesApi {
   }) async {
     final params = <String, String>{};
     if (search != null && search.isNotEmpty) params['search'] = search;
-    return http.getPaginated(paginatedPath('/users', page: page, perPage: perPage, params: params));
+    return http.getPaginated(paginatedPath('/admin/users', page: page, perPage: perPage, params: params));
   }
 
   Future<List<dynamic>> users({String? search, int page = 1}) async {
@@ -36,46 +36,48 @@ class AdminModulesApi {
   }
 
   Future<Map<String, dynamic>> createUser(Map<String, dynamic> body) =>
-      http.postJson('/users', body);
+      http.postJson('/admin/users', body);
 
   Future<Map<String, dynamic>> updateUser(int id, Map<String, dynamic> body) =>
-      http.patchJson('/users/$id', body);
+      http.patchJson('/admin/users/$id', body);
 
   Future<void> deleteUser(int id) => http.delete('/users/$id');
 
   Future<PaginatedResponse<Map<String, dynamic>>> rolesPage({int page = 1, int perPage = 25}) =>
-      http.getPaginated(paginatedPath('/roles', page: page, perPage: perPage));
+      http.getPaginated(paginatedPath('/admin/roles', page: page, perPage: perPage));
 
   Future<List<dynamic>> roles() async => (await rolesPage()).data;
 
   Future<Map<String, dynamic>> createRole(Map<String, dynamic> body) =>
-      http.postJson('/roles', body);
+      http.postJson('/admin/roles', body);
 
   Future<Map<String, dynamic>> updateRole(int id, Map<String, dynamic> body) =>
-      http.patchJson('/roles/$id', body);
+      http.patchJson('/admin/roles/$id', body);
 
-  Future<void> deleteRole(int id) => http.delete('/roles/$id');
+  Future<void> deleteRole(int id) =>
+      throw UnsupportedError('Platform roles are not deleted from the Admin Program.');
 
   Future<PaginatedResponse<Map<String, dynamic>>> permissionsPage({int page = 1, int perPage = 100}) =>
-      http.getPaginated(paginatedPath('/permissions', page: page, perPage: perPage));
+      http.getPaginated(paginatedPath('/admin/permissions', page: page, perPage: perPage));
 
   Future<List<dynamic>> permissions() async => (await permissionsPage()).data;
 
-  Future<Map<String, dynamic>> permissionsCatalog() => http.getJson('/permissions/catalog');
+  Future<Map<String, dynamic>> permissionsCatalog() => http.getJson('/admin/permissions');
 
   Future<Map<String, dynamic>> createPermission(Map<String, dynamic> body) =>
-      http.postJson('/permissions', body);
+      throw UnsupportedError('Organization permissions are not managed from the Admin Program.');
 
   Future<Map<String, dynamic>> updatePermission(int id, Map<String, dynamic> body) =>
-      http.patchJson('/permissions/$id', body);
+      throw UnsupportedError('Organization permissions are not managed from the Admin Program.');
 
-  Future<void> deletePermission(int id) => http.delete('/permissions/$id');
+  Future<void> deletePermission(int id) =>
+      throw UnsupportedError('Organization permissions are not managed from the Admin Program.');
 
-  Future<void> assignRole(int userId, int roleId) =>
-      http.postJson('/users/$userId/roles', {'role_id': roleId});
+  Future<void> assignRole(int userId, String roleSlug) =>
+      http.postJson('/admin/users/$userId/roles', {'role_slug': roleSlug});
 
   Future<void> unassignRole(int userId, int roleId) =>
-      http.delete('/users/$userId/roles/$roleId');
+      throw UnsupportedError('Organization role unassignment is not a Platform Admin operation.');
 
   // ── Organization ────────────────────────────────────────────────
 
@@ -85,10 +87,10 @@ class AdminModulesApi {
       http.patchJson('/organization', body);
 
   Future<Map<String, dynamic>> organizationSettings() =>
-      http.getJson('/organization/settings');
+      http.getJson('/admin/settings');
 
   Future<Map<String, dynamic>> updateOrganizationSettings(Map<String, dynamic> settings) =>
-      http.putJson('/organization/settings', {'settings': settings});
+      http.putJson('/admin/settings', {'settings': settings});
 
   // ── User profile & preferences ──────────────────────────────────
 
@@ -160,7 +162,7 @@ class AdminModulesApi {
   // ── Content / CMS ───────────────────────────────────────────────
 
   Future<PaginatedResponse<Map<String, dynamic>>> libraryItemsPage({int page = 1, int perPage = 25}) =>
-      http.getPaginated(paginatedPath('/library/items', page: page, perPage: perPage));
+      http.getPaginated(paginatedPath('/admin/library/items', page: page, perPage: perPage));
 
   Future<List<dynamic>> libraryItems({int page = 1}) async => (await libraryItemsPage(page: page)).data;
 
@@ -169,12 +171,12 @@ class AdminModulesApi {
   Future<List<dynamic>> libraryTags() => http.getList('/library/tags');
 
   Future<Map<String, dynamic>> createLibraryItem(Map<String, dynamic> body) =>
-      http.postJson('/library/items', body);
+      http.postJson('/admin/library/items', body);
 
   Future<Map<String, dynamic>> updateLibraryItem(int id, Map<String, dynamic> body) =>
-      http.putJson('/library/items/$id', body);
+      http.patchJson('/admin/library/items/$id', body);
 
-  Future<void> deleteLibraryItem(int id) => http.delete('/library/items/$id');
+  Future<void> deleteLibraryItem(int id) => http.delete('/admin/library/items/$id');
 
   Future<List<dynamic>> trainingCourses() => http.getList('/training/courses');
 
@@ -366,7 +368,7 @@ class AdminModulesApi {
   }) async {
     final params = <String, String>{};
     if (action != null && action.isNotEmpty) params['action'] = action;
-    return http.getPaginated(paginatedPath('/audit-logs', page: page, perPage: perPage, params: params));
+    return http.getPaginated(paginatedPath('/admin/audit-logs', page: page, perPage: perPage, params: params));
   }
 
   Future<List<dynamic>> auditLogs({String? action, int page = 1}) async =>
@@ -422,17 +424,17 @@ class AdminModulesApi {
   }) async {
     final params = <String, String>{};
     if (status != null && status.isNotEmpty) params['status'] = status;
-    return http.getPaginated(paginatedPath('/admin/market/listings', page: page, perPage: perPage, params: params));
+    return http.getPaginated(paginatedPath('/admin/marketplace/listings', page: page, perPage: perPage, params: params));
   }
 
   Future<Map<String, dynamic>> approveMarketListing(int id, {String? reason}) =>
-      http.postJson('/admin/market/listings/$id/approve', {if (reason != null) 'reason': reason});
+      http.postJson('/admin/marketplace/listings/$id/approve', {if (reason != null) 'reason': reason});
 
   Future<Map<String, dynamic>> rejectMarketListing(int id, {String? reason}) =>
-      http.postJson('/admin/market/listings/$id/reject', {if (reason != null) 'reason': reason});
+      http.postJson('/admin/marketplace/listings/$id/reject', {if (reason != null) 'reason': reason});
 
   Future<Map<String, dynamic>> suspendMarketListing(int id, {String? reason}) =>
-      http.postJson('/admin/market/listings/$id/suspend', {if (reason != null) 'reason': reason});
+      http.postJson('/admin/marketplace/listings/$id/suspend', {if (reason != null) 'reason': reason});
 
   Future<Map<String, dynamic>> reportsMarketplace({int days = 30}) =>
       http.getJson('/reports/marketplace?days=$days');

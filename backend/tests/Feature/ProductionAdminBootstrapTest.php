@@ -56,6 +56,7 @@ class ProductionAdminBootstrapTest extends TestCase
             ->wherePivot('role', 'admin')
             ->wherePivot('is_active', true)
             ->exists());
+        $this->assertTrue($user->fresh()->isPlatformAdministrator());
     }
 
     public function test_bootstrap_is_idempotent_and_updates_password(): void

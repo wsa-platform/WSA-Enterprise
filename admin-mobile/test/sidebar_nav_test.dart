@@ -11,8 +11,13 @@ void main() {
       client = ApiClient.inMemory();
     });
 
-    test('shows admin routes for access.manage', () {
-      client.setPermissionsForTest(['access.manage']);
+    test('shows platform admin routes from server platform permissions', () {
+      client.setPermissionsForTest([
+        'platform.access',
+        'platform.users.view',
+        'platform.roles.manage',
+        'platform.audit.view',
+      ], isPlatformAdministrator: true);
 
       final paths = SidebarNav.visibleDestinations(client).map((item) => item.path).toList();
 
@@ -23,42 +28,56 @@ void main() {
       expect(paths, isNot(contains(AppRoutes.agriculture)));
     });
 
-    test('shows agriculture routes for farm.view only', () {
-      client.setPermissionsForTest(['farm.view', 'platform.view']);
+    test('hides agriculture without a dedicated platform overlay permission', () {
+      client.setPermissionsForTest(['platform.access', 'platform.reports.view'], isPlatformAdministrator: true);
 
       final paths = SidebarNav.visibleDestinations(client).map((item) => item.path).toList();
 
-      expect(paths, contains(AppRoutes.agriculture));
+      expect(paths, contains(AppRoutes.dashboard));
+      expect(paths, isNot(contains(AppRoutes.agriculture)));
       expect(paths, isNot(contains(AppRoutes.users)));
     });
 
     test('maps selected index against filtered destinations', () {
-      client.setPermissionsForTest(['access.manage']);
+      client.setPermissionsForTest(['platform.users.view'], isPlatformAdministrator: true);
 
       final usersIndex = SidebarNav.indexForLocation(AppRoutes.users, client);
       expect(SidebarNav.pathForIndex(usersIndex, client), AppRoutes.users);
     });
 
     test('bottom nav keeps only primary destinations', () {
-      client.setPermissionsForTest(['access.manage', 'platform.view']);
+      client.setPermissionsForTest([
+        'platform.access',
+        'platform.users.view',
+        'platform.organizations.view',
+        'platform.settings.view',
+      ], isPlatformAdministrator: true);
 
       final paths = SidebarNav.bottomDestinations(client).map((item) => item.path).toList();
 
       expect(paths, contains(AppRoutes.dashboard));
       expect(paths, contains(AppRoutes.users));
       expect(paths, contains(AppRoutes.organizations));
-      expect(paths, contains(AppRoutes.communications));
       expect(paths, contains(AppRoutes.settings));
+      expect(paths, isNot(contains(AppRoutes.communications)));
       expect(paths.length, lessThanOrEqualTo(SidebarNav.bottomNavPaths.length));
     });
 
-    test('shows job seekers for jobs.view', () {
-      client.setPermissionsForTest(['jobs.view']);
+    test('shows job seekers for platform.jobs.view', () {
+      client.setPermissionsForTest(['platform.jobs.view'], isPlatformAdministrator: true);
 
       final paths = SidebarNav.visibleDestinations(client).map((item) => item.path).toList();
 
       expect(paths, contains(AppRoutes.jobSeekers));
       expect(paths, isNot(contains(AppRoutes.users)));
+    });
+
+    test('organization permissions alone show no platform admin destinations', () {
+      client.setPermissionsForTest(['*', 'access.manage', 'jobs.view']);
+
+      final paths = SidebarNav.visibleDestinations(client).map((item) => item.path).toList();
+
+      expect(paths, isEmpty);
     });
   });
 }

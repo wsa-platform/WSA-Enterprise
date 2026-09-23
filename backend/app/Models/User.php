@@ -27,6 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'is_platform_administrator',
     ];
 
     /**
@@ -49,7 +50,18 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_platform_administrator' => 'boolean',
         ];
+    }
+
+    public function isPlatformAdministrator(): bool
+    {
+        return (bool) $this->is_platform_administrator;
+    }
+
+    public function platformRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(PlatformRole::class, 'platform_role_user');
     }
 
     public function organizations(): BelongsToMany

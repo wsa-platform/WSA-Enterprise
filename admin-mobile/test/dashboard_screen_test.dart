@@ -10,7 +10,7 @@ void main() {
 
     setUp(() {
       client = ApiClient.inMemory();
-      client.setPermissionsForTest(['access.manage', 'platform.view']);
+      client.setPermissionsForTest(['platform.access', 'platform.reports.view'], isPlatformAdministrator: true);
       client.setUserForTest({'name': 'أحمد', 'email': 'admin@example.com'});
       client.setOrganizationsForTest(
         [

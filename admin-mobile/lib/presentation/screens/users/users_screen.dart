@@ -290,7 +290,7 @@ class _UsersScreenState extends State<UsersScreen> {
 
   Widget build(BuildContext context) {
 
-    final canManage = widget.client.hasPermission('access.manage');
+    final canManage = widget.client.hasPermission('platform.users.manage');
 
 
 

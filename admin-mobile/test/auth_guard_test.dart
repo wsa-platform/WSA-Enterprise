@@ -48,32 +48,32 @@ void main() {
       auth.permissionsLoaded = true;
     });
 
-    test('redirects to access denied without admin permissions', () {
+    test('redirects to access denied without platform administrator identity', () {
       client.setPermissionsForTest(['platform.view']);
       final state = _FakeGoRouterState(AppRoutes.dashboard);
 
       expect(permissionGuard(auth, state), AppRoutes.accessDenied);
     });
 
-    test('allows dashboard when access.manage is present', () {
+    test('allows dashboard when server marks platform administrator', () {
+      client.setPermissionsForTest(['platform.access'], isPlatformAdministrator: true);
+      final state = _FakeGoRouterState(AppRoutes.dashboard);
+
+      expect(permissionGuard(auth, state), isNull);
+    });
+
+    test('rejects organization access.manage as platform admin proof', () {
       client.setPermissionsForTest(['access.manage']);
       final state = _FakeGoRouterState(AppRoutes.dashboard);
 
-      expect(permissionGuard(auth, state), isNull);
+      expect(permissionGuard(auth, state), AppRoutes.accessDenied);
     });
 
-    test('allows dashboard when services.supervise is present', () {
-      client.setPermissionsForTest(['services.supervise']);
-      final state = _FakeGoRouterState(AppRoutes.dashboard);
-
-      expect(permissionGuard(auth, state), isNull);
-    });
-
-    test('allows dashboard when wildcard permission is present', () {
+    test('rejects organization wildcard as platform admin proof', () {
       client.setPermissionsForTest(['*']);
       final state = _FakeGoRouterState(AppRoutes.dashboard);
 
-      expect(permissionGuard(auth, state), isNull);
+      expect(permissionGuard(auth, state), AppRoutes.accessDenied);
     });
 
     test('allows access denied route without redirect loop', () {
@@ -92,7 +92,7 @@ void main() {
     });
 
     test('redirects hidden routes to dashboard', () {
-      client.setPermissionsForTest(['access.manage']);
+      client.setPermissionsForTest(['platform.access', 'platform.users.view'], isPlatformAdministrator: true);
 
       final state = _FakeGoRouterState(AppRoutes.agriculture);
 
@@ -100,7 +100,7 @@ void main() {
     });
 
     test('allows visible routes', () {
-      client.setPermissionsForTest(['access.manage']);
+      client.setPermissionsForTest(['platform.users.view'], isPlatformAdministrator: true);
 
       final state = _FakeGoRouterState(AppRoutes.users);
 
@@ -125,7 +125,7 @@ void main() {
       auth = AuthController(client);
       auth.status = AuthStatus.authenticated;
       auth.permissionsLoaded = true;
-      client.setPermissionsForTest(['access.manage']);
+      client.setPermissionsForTest(['platform.access'], isPlatformAdministrator: true);
     });
 
     test('blocks protected routes after logout', () async {

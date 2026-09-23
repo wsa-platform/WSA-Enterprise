@@ -106,7 +106,8 @@ Copy `backend/.env.example` to `backend/.env` before starting Compose (`docker-c
 | Variable | Default | Notes |
 | --- | --- | --- |
 | `ALLOW_REGISTRATION` | `false` | Set `true` only if open signup needed |
-| `SANCTUM_TOKEN_EXPIRATION` | empty | Minutes; e.g. `43200` for 30 days |
+| `SANCTUM_TOKEN_EXPIRATION` | empty | Minutes; e.g. `43200` for 30 days. Ordinary users only. |
+| `SANCTUM_ADMIN_TOKEN_EXPIRATION` | `480` | Minutes. Platform Administrator tokens only (`config/sanctum.php` `admin_expiration`). |
 | `SESSION_ENCRYPT` | `false` | Set `true` in production |
 | `LOG_LEVEL` | `warning` | Reduce noise in production |
 

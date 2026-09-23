@@ -442,9 +442,27 @@ class JobSeekersTest extends TestCase
     public function test_unknown_profile_and_malformed_payloads_are_rejected(): void
     {
         $this->getJson('/api/v1/job-seekers/999999', $this->adminHeaders())->assertNotFound();
+
+        // Employer/org-admin cannot use candidate self-service. Authorization
+        // correctly precedes validation (Jobs employer/job-seeker exclusivity).
         $this->putJson('/api/v1/job-seekers/me', [
             'full_name' => ['not-a-string'],
-        ], $this->adminHeaders())->assertUnprocessable();
+        ], $this->adminHeaders())->assertForbidden();
+
+        $org = Organization::first();
+        $seeker = User::create([
+            'name' => 'Malformed Seeker',
+            'email' => 'malformed-seeker@wsa.test',
+            'password' => Hash::make('password'),
+        ]);
+        $org->members()->syncWithoutDetaching([
+            $seeker->id => ['role' => 'member', 'is_active' => true],
+        ]);
+
+        $this->putJson('/api/v1/job-seekers/me', [
+            'full_name' => ['not-a-string'],
+        ], $this->memberHeaders($seeker, $org))->assertUnprocessable();
+
         $this->postJson('/api/v1/job-seekers/'.JobSeekerProfile::first()->id.'/notes', [
             'body' => '',
         ], $this->adminHeaders())->assertUnprocessable();

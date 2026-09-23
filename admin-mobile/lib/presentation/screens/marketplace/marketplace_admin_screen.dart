@@ -80,8 +80,8 @@ class _MarketplaceAdminScreenState extends State<MarketplaceAdminScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final canApprove = widget.client.hasPermission('market.approve');
-    final canSuspend = widget.client.hasPermission('market.suspend');
+    final canApprove = widget.client.hasPermission('platform.marketplace.manage');
+    final canSuspend = widget.client.hasPermission('platform.marketplace.manage');
 
     return ModuleScreenLayout(
       title: Ar.navMarketplace,

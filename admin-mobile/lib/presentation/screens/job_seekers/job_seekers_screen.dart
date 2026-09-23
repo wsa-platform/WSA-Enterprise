@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:wsa_admin/data/api/api_client.dart';
-import 'package:wsa_admin/data/models/paginated_response.dart';
 import 'package:wsa_admin/l10n/m22_strings.dart';
 import 'package:wsa_admin/presentation/widgets/admin_data_list.dart';
 import 'package:wsa_admin/presentation/widgets/crud_helpers.dart';
@@ -70,7 +69,7 @@ class _JobSeekersScreenState extends State<JobSeekersScreen> {
   }
 
   Future<void> _updateStatus(Map<String, dynamic> row) async {
-    if (!widget.client.hasPermission('jobs.status')) return;
+    if (!widget.client.hasPermission('platform.jobs.manage')) return;
     final id = row['id'] as int;
     final status = await showDialog<String>(
       context: context,
@@ -106,7 +105,7 @@ class _JobSeekersScreenState extends State<JobSeekersScreen> {
       profile = JobSeekersScreen.debugProfileLoader != null
           ? await JobSeekersScreen.debugProfileLoader!(id)
           : await widget.client.modules.jobSeekerShow(id);
-      if (widget.client.hasPermission('jobs.notes')) {
+      if (widget.client.hasPermission('platform.jobs.manage')) {
         if (JobSeekersScreen.debugNotesLoader != null) {
           notes = await JobSeekersScreen.debugNotesLoader!(id);
         } else {
@@ -132,17 +131,17 @@ class _JobSeekersScreenState extends State<JobSeekersScreen> {
         profile: profile,
         notes: notes,
         history: history,
-        onAddNote: widget.client.hasPermission('jobs.notes')
+        onAddNote: widget.client.hasPermission('platform.jobs.manage')
             ? (body) => widget.client.modules.addJobSeekerNote(id, body)
             : null,
-        onUpdateStatus: widget.client.hasPermission('jobs.status') ? () => _updateStatus(profile) : null,
+        onUpdateStatus: widget.client.hasPermission('platform.jobs.manage') ? () => _updateStatus(profile) : null,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final canManageStatus = widget.client.hasPermission('jobs.status');
+    final canManageStatus = widget.client.hasPermission('platform.jobs.manage');
 
     return ModuleScreenLayout(
       title: Ar.navJobSeekers,
@@ -237,7 +236,7 @@ class JobSeekerDetailSheet extends StatelessWidget {
   final Future<Map<String, dynamic>> Function(String body)? onAddNote;
   final Future<void> Function()? onUpdateStatus;
 
-  bool get _canViewPrivate => client.hasPermission('jobs.private_data');
+  bool get _canViewPrivate => client.hasPermission('platform.jobs.manage');
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +271,7 @@ class JobSeekerDetailSheet extends StatelessWidget {
                   title: Text(JobSeekerStatuses.labelFor(item['status']?.toString())),
                   subtitle: item.containsKey('notes') ? Text(item['notes']?.toString() ?? '') : null,
                 ),
-              if (client.hasPermission('jobs.notes')) ...[
+              if (client.hasPermission('platform.jobs.manage')) ...[
                 const SizedBox(height: 8),
                 Text(Ar.jobSeekerNotes, style: Theme.of(context).textTheme.titleMedium),
                 if (notes.isEmpty) const Text(Ar.emptyData),

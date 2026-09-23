@@ -74,7 +74,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       Map<String, dynamic> orgSettings = {};
 
-      if (widget.client.hasPermission('access.manage')) {
+      if (widget.client.hasPermission('platform.settings.view')) {
 
         try { orgSettings = await widget.client.adminModules.organizationSettings(); } catch (_) {}
 

@@ -15,7 +15,7 @@ void main() {
 
     setUp(() {
       client = ApiClient.inMemory();
-      client.setPermissionsForTest(['access.manage', 'platform.view']);
+      client.setPermissionsForTest(['platform.access', 'platform.users.view', 'platform.organizations.view', 'platform.settings.view'], isPlatformAdministrator: true);
       auth = AuthController(client);
       auth.status = AuthStatus.authenticated;
       auth.permissionsLoaded = true;

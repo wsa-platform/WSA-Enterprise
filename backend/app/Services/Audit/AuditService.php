@@ -39,7 +39,7 @@ class AuditService
             $newValues = ['request_id' => $requestId];
         }
 
-        return AuditLog::create([
+        $log = AuditLog::create([
             'organization_id' => $organizationId,
             'user_id' => $userId,
             'action' => $action,
@@ -51,6 +51,14 @@ class AuditService
             'user_agent' => $request?->userAgent(),
             'request_id' => is_string($requestId) ? $requestId : null,
         ]);
+
+        // Platform-level admin.* actions must remain organization_id = NULL even if
+        // BelongsToOrganization would stamp leftover TenantContext.
+        if ($organizationId === null && str_starts_with($action, 'admin.') && $log->organization_id !== null) {
+            $log->forceFill(['organization_id' => null])->saveQuietly();
+        }
+
+        return $log;
     }
 
     /** @param  array<string, mixed>|null  $values */

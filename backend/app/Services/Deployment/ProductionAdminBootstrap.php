@@ -5,13 +5,17 @@ namespace App\Services\Deployment;
 use App\Models\Organization;
 use App\Models\User;
 use App\Services\Authorization\EnterpriseRoleService;
+use App\Services\Authorization\PlatformRbacService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class ProductionAdminBootstrap
 {
-    public function __construct(private EnterpriseRoleService $enterpriseRoleService) {}
+    public function __construct(
+        private EnterpriseRoleService $enterpriseRoleService,
+        private PlatformRbacService $platformRbac,
+    ) {}
 
     public function shouldRun(): bool
     {
@@ -75,6 +79,7 @@ class ProductionAdminBootstrap
         ]);
 
         $this->enterpriseRoleService->assignDefaultOwner($user, $organization);
+        $this->platformRbac->grantPlatformAdministrator($user);
 
         return [
             'email' => $user->email,

@@ -15,7 +15,8 @@ WSA-Enterprise is a multi-tenant agricultural platform. Security is enforced at 
 - **Login/register throttle:** 20 requests/minute per IP
 - **Authenticated API throttle:** 120 requests/minute
 - **Registration:** Disabled by default (`ALLOW_REGISTRATION=false`)
-- **Token expiry:** Optional via `SANCTUM_TOKEN_EXPIRATION` (minutes)
+- **Token expiry:** Optional via `SANCTUM_TOKEN_EXPIRATION` (minutes) for ordinary users
+- **Platform Administrator token expiry:** `SANCTUM_ADMIN_TOKEN_EXPIRATION` (minutes, default **480**). Applies only to users with `users.is_platform_administrator`. Does not change organization-user token TTL.
 - **Logout:** Deletes current access token (204 No Content)
 
 ## Authorization

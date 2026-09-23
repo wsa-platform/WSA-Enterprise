@@ -250,7 +250,7 @@ class _ContentScreenState extends State<ContentScreen> {
 
   Widget build(BuildContext context) {
 
-    final canManage = widget.client.hasAnyPermission(['library.manage', 'training.manage']);
+    final canManage = widget.client.hasPermission('platform.library.manage');
 
 
 

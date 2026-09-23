@@ -141,6 +141,17 @@ class AuthController extends Controller
             request: $request,
         );
 
+        if ($user->isPlatformAdministrator()) {
+            $this->auditService->record(
+                action: 'admin.login',
+                organizationId: null,
+                userId: $user->id,
+                auditable: $user,
+                newValues: ['email' => $user->email],
+                request: $request,
+            );
+        }
+
         return $this->authenticatedResponse($user, $data['device_name'] ?? 'web', $request);
     }
 
@@ -331,9 +342,13 @@ class AuthController extends Controller
     /** @return array{token: string, user: array<string, mixed>} */
     private function authenticatedPayload(User $user, string $deviceName): array
     {
+        $expiresAt = $user->isPlatformAdministrator()
+            ? now()->addMinutes(max(1, (int) config('sanctum.admin_expiration', 480)))
+            : null;
+
         return [
-            'token' => $user->createToken($deviceName)->plainTextToken,
-            'user' => $user->only(['id', 'name', 'email']),
+            'token' => $user->createToken($deviceName, ['*'], $expiresAt)->plainTextToken,
+            'user' => $user->only(['id', 'name', 'email', 'is_platform_administrator']),
             'recruitment' => $this->recruitmentRoles->payload($user),
         ];
     }

@@ -29,22 +29,22 @@ class ModulesApi {
     final params = <String, String>{};
     if (search != null && search.isNotEmpty) params['search'] = search;
     if (status != null && status.isNotEmpty) params['status'] = status;
-    return http.getPaginated(paginatedPath('/job-seekers', page: page, perPage: perPage, params: params));
+    return http.getPaginated(paginatedPath('/admin/jobs/seekers', page: page, perPage: perPage, params: params));
   }
 
   Future<Map<String, dynamic>> updateJobSeekerStatus(int id, String status, {String? notes}) =>
-      http.patchJson('/job-seekers/$id/status', {'status': status, if (notes != null) 'notes': notes});
+      http.patchJson('/admin/jobs/seekers/$id/status', {'status': status, if (notes != null) 'notes': notes});
 
-  Future<Map<String, dynamic>> jobSeekerShow(int id) => http.getJson('/job-seekers/$id');
+  Future<Map<String, dynamic>> jobSeekerShow(int id) => http.getJson('/admin/jobs/seekers/$id');
 
   Future<PaginatedResponse<Map<String, dynamic>>> jobSeekerNotesPage(int id, {int page = 1, int perPage = 25}) =>
-      http.getPaginated(paginatedPath('/job-seekers/$id/notes', page: page, perPage: perPage));
+      http.getPaginated(paginatedPath('/admin/jobs/seekers/$id/notes', page: page, perPage: perPage));
 
   Future<Map<String, dynamic>> addJobSeekerNote(int id, String body) =>
-      http.postJson('/job-seekers/$id/notes', {'body': body, 'is_private': true});
+      http.postJson('/admin/jobs/seekers/$id/notes', {'body': body, 'is_private': true});
 
   Future<PaginatedResponse<Map<String, dynamic>>> jobSeekerHistoryPage(int id, {int page = 1, int perPage = 25}) =>
-      http.getPaginated(paginatedPath('/job-seekers/$id/history', page: page, perPage: perPage));
+      http.getPaginated(paginatedPath('/admin/jobs/seekers/$id/history', page: page, perPage: perPage));
 
   Future<Map<String, dynamic>> reportsRecruitment({int days = 30}) =>
       http.getJson('/reports/recruitment?days=$days');
