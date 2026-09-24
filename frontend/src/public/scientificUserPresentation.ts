@@ -12,7 +12,6 @@ export type PresentedSource = {
   journal?: string | null
   publication_year?: number | null
   original_url?: string | null
-  library_file_id?: number
 }
 
 export type PresentedCandidate = {
@@ -71,7 +70,6 @@ function presentedSourceFromCitation(
     journal: citation.journal ?? null,
     publication_year: citation.publication_year ?? null,
     original_url: originalUrl,
-    library_file_id: typeof citation.library_file_id === 'number' ? citation.library_file_id : undefined,
   }
 }
 

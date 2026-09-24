@@ -204,7 +204,6 @@ export function HomeScientificResearchSearchView({
                     organization: source.organization,
                     journal: source.journal,
                     publication_year: source.publication_year,
-                    library_file_id: source.library_file_id,
                   }
                   const label = citationLabel(
                     citation,

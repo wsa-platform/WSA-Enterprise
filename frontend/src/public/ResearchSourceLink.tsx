@@ -1,5 +1,4 @@
 import type { ResearchAgentCitation, ResearchAnswerCandidate } from '../api/researchAgent'
-import { authenticatedLibraryFileContentPath } from '../api/libraryCropFiles'
 import { citationHref } from './citationHref'
 import { isExternalSearchRedirect } from './researchViewer'
 
@@ -33,7 +32,7 @@ function isUnsafeOrInternalViewerHref(url: string): boolean {
   }
 }
 
-/** Trusted original URL, DOI, or existing Library file preview. Never the metadata Viewer. */
+/** Trusted original URL or DOI. Never a Library file fallback or metadata Viewer. */
 export function researchSourceHref(citation: ResearchAgentCitation): string | null {
   const fromEvidence = citationHref({ url: citation.url, doi: citation.doi })
   if (
@@ -44,15 +43,10 @@ export function researchSourceHref(citation: ResearchAgentCitation): string | nu
     return fromEvidence
   }
 
-  const fileId = citation.library_file_id
-  if (typeof fileId === 'number' && Number.isInteger(fileId) && fileId > 0) {
-    return authenticatedLibraryFileContentPath(fileId)
-  }
-
   return null
 }
 
-/** Research title opens the actual source URL or preserved Library file. Never a title-only Viewer. */
+/** Research title opens the actual source URL or DOI. Never a title-only Viewer. */
 export function ResearchSourceLink({
   citation,
   label,
