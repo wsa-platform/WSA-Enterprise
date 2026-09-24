@@ -226,7 +226,7 @@ class Phase6U61CropR5R7AndParityContractTest extends TestCase
         $this->assertNotSame('', (string) $synthesis->status);
     }
 
-    public function test_k_agent_should_run_legacy_always_true_for_crop_profile(): void
+    public function test_k_agent_skips_legacy_when_crop_stage5_is_sufficient(): void
     {
         $agent = app(AgriculturalResearchAgent::class);
         $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
@@ -270,7 +270,7 @@ class Phase6U61CropR5R7AndParityContractTest extends TestCase
             researchMetadata: ['direct_evidence_gate' => 'PASSED'],
             observability: [],
         );
-        $this->assertTrue($method->invoke($agent, $plan, $synthesis));
+        $this->assertFalse($method->invoke($agent, $plan, $synthesis));
     }
 
     private function item(string $id): ScientificEvidenceItem

@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\BindsPublicTenant;
 use App\Http\Controllers\Controller;
 use App\Models\LibraryItem;
-use App\Models\Organization;
 use App\Models\TrainingCourse;
+use App\Services\Tenancy\PublicTenantResolutionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PublicPlatformController extends Controller
 {
+    use BindsPublicTenant;
+
     public function serviceCatalog(): JsonResponse
     {
         return response()->json([
@@ -43,15 +46,33 @@ class PublicPlatformController extends Controller
                 ['key' => 'jobs', 'label' => 'Jobs marketplace', 'requires_auth' => true],
             ],
             'browse_parameters' => [
-                'organization' => 'Organization slug (required for library/training browse)',
-                'organization_id' => 'Organization id (alternative to slug)',
+                'organization' => 'Compatibility only — public tenant is server-resolved',
+                'organization_id' => 'Compatibility only — public tenant is server-resolved',
             ],
         ]);
     }
 
     public function publishedLibraryItems(Request $request): JsonResponse
     {
-        $organization = $this->resolvePublicOrganization($request);
+        try {
+            $organization = $this->bindPublicOrganization($request);
+        } catch (PublicTenantResolutionException) {
+            return response()->json([
+                'status' => 'public_organization_unavailable',
+                'message' => 'Public organization is unavailable.',
+                'error' => [
+                    'code' => 'public_organization_unavailable',
+                    'http_status' => 503,
+                    'message' => 'Public organization is unavailable.',
+                    'details' => null,
+                ],
+            ], 503);
+        }
+
+        $request->validate([
+            'organization' => ['nullable', 'string', 'max:255'],
+            'organization_id' => ['nullable', 'integer'],
+        ]);
 
         // Library product contract: verified scientific research is authenticated-only.
         $query = LibraryItem::query()
@@ -77,7 +98,25 @@ class PublicPlatformController extends Controller
 
     public function publishedTrainingCourses(Request $request): JsonResponse
     {
-        $organization = $this->resolvePublicOrganization($request);
+        try {
+            $organization = $this->bindPublicOrganization($request);
+        } catch (PublicTenantResolutionException) {
+            return response()->json([
+                'status' => 'public_organization_unavailable',
+                'message' => 'Public organization is unavailable.',
+                'error' => [
+                    'code' => 'public_organization_unavailable',
+                    'http_status' => 503,
+                    'message' => 'Public organization is unavailable.',
+                    'details' => null,
+                ],
+            ], 503);
+        }
+
+        $request->validate([
+            'organization' => ['nullable', 'string', 'max:255'],
+            'organization_id' => ['nullable', 'integer'],
+        ]);
 
         $query = TrainingCourse::query()
             ->where('organization_id', $organization->id)
@@ -96,17 +135,4 @@ class PublicPlatformController extends Controller
         ]);
     }
 
-    private function resolvePublicOrganization(Request $request): Organization
-    {
-        $data = $request->validate([
-            'organization' => ['required_without:organization_id', 'string', 'max:255'],
-            'organization_id' => ['required_without:organization', 'integer'],
-        ]);
-
-        if (isset($data['organization_id'])) {
-            return Organization::query()->findOrFail($data['organization_id']);
-        }
-
-        return Organization::query()->where('slug', $data['organization'])->firstOrFail();
-    }
 }

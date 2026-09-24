@@ -273,7 +273,7 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
         $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
     }
 
-    public function test_crop_direct_passed_gate_still_runs_legacy_execute(): void
+    public function test_crop_direct_passed_gate_skips_legacy_execute(): void
     {
         $this->bindP4cHomePipeline($this->p4cSynthesisReport([
             'researchMetadata' => [
@@ -282,7 +282,7 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
                 'sufficiency_mode' => 'sufficient_direct_evidence',
                 'supporting_evidence_count' => 0,
             ],
-        ]), expectLegacyExecute: true);
+        ]), expectLegacyExecute: false);
 
         $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
             'query' => 'sweet potato farming needs',
@@ -294,7 +294,8 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
         ]);
 
         $this->assertSame('crop_profile', $payload['research_agent']['plan']['intent'] ?? null);
-        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+        $this->assertTrue((bool) ($payload['library']['legacy_discovery_skipped'] ?? false));
+        $this->assertSame([], $payload['library']['discoverers_used'] ?? null);
     }
 
     private function enableBlockingProviders(): void

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LibraryItem;
 use App\Models\Organization;
 use App\Services\Audit\AuditService;
+use App\Services\Media\LibraryFilePolicy;
 use App\Services\Media\MediaReferenceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class AdminLibraryController extends Controller
     public function __construct(
         private AuditService $audit,
         private MediaReferenceService $media,
+        private LibraryFilePolicy $filePolicy,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -64,8 +66,12 @@ class AdminLibraryController extends Controller
             'locale' => ['sometimes', 'string', 'max:8'],
             'publication_status' => ['sometimes', 'string', 'max:32'],
             'organization_id' => ['nullable', 'integer', 'exists:organizations,id'],
-            'file' => ['nullable', 'file', 'max:20480'],
+            'file' => ['nullable', 'file', 'max:'.LibraryFilePolicy::MAX_UPLOAD_KILOBYTES],
         ]);
+
+        if ($request->hasFile('file')) {
+            $this->filePolicy->assertSafeUpload($request->file('file'));
+        }
 
         $storageOrganizationId = $this->storageOrganizationId($data['organization_id'] ?? null);
         $slug = $data['slug'] ?? Str::slug($data['title']).'-'.Str::lower(Str::random(6));
@@ -130,8 +136,12 @@ class AdminLibraryController extends Controller
             'summary' => ['nullable', 'string'],
             'item_type' => ['sometimes', 'string', 'max:32'],
             'publication_status' => ['sometimes', 'string', 'max:32'],
-            'file' => ['nullable', 'file', 'max:20480'],
+            'file' => ['nullable', 'file', 'max:'.LibraryFilePolicy::MAX_UPLOAD_KILOBYTES],
         ]);
+
+        if ($request->hasFile('file')) {
+            $this->filePolicy->assertSafeUpload($request->file('file'));
+        }
 
         $old = $libraryItem->only(['title', 'item_type', 'publication_status']);
 

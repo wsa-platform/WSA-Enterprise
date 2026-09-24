@@ -11,6 +11,7 @@ import {
   type ResearchAgentCitation,
   type ResearchAgentQueryResponse,
 } from '../api/researchAgent'
+import { citationHref, sourcePresentationState } from './citationHref'
 
 /** Returns trimmed query, or null when empty (skip submit). */
 export function normalizeResearchQuery(value: string): string | null {
@@ -62,13 +63,6 @@ function citationLabel(citation: ResearchAgentCitation, _index: number, fallback
   return citation.title?.trim() || fallback
 }
 
-function citationHref(citation: ResearchAgentCitation): string | null {
-  const url = citation.url?.trim()
-  if (url && /^https?:\/\//i.test(url)) {
-    return url
-  }
-  return null
-}
 
 /** Presentational scientific research search block for the homepage. */
 export function HomeScientificResearchSearchView({
@@ -211,7 +205,14 @@ export function HomeScientificResearchSearchView({
             </div>
           ) : null}
 
-          {citations.length > 0 ? (
+          {sourcePresentationState(citations) === 'no_eligible_direct_citations' ? (
+            <div className="hp-research-citations" data-testid="home-research-sources-empty">
+              <h3>{t('website.research.sourcesHeading')}</h3>
+              <p>{t('website.research.noEligibleDirectCitations', {
+                defaultValue: 'No eligible direct citations are available for this answer.',
+              })}</p>
+            </div>
+          ) : citations.length > 0 ? (
             <div className="hp-research-citations">
               <h3>{t('website.research.sourcesHeading')}</h3>
               <ul>

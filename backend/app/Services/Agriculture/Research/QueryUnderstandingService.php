@@ -525,14 +525,19 @@ class QueryUnderstandingService
     ): AgriculturalKnowledgeQuery {
         $knowledgeOption = trim((string) ($input['knowledge_option'] ?? $input['service_option'] ?? 'farming-needs'));
         $language = $this->detectLanguage($cropName !== '' ? $cropName : $originalQuestion);
-        $normalizedQuestion = $originalQuestion !== ''
+        $hasUserQuestion = $originalQuestion !== '';
+        // Provider-search support text only. Must not become the semantic authority.
+        $normalizedQuestion = $hasUserQuestion
             ? $this->normalizeQuestion($originalQuestion)
             : $this->normalizeQuestion(sprintf('%s %s', $cropName, $knowledgeOption));
 
-        $topicFactors = AgriculturalEntityCatalog::extractTopicFactors($normalizedQuestion);
-        if ($topicFactors !== []) {
-            $constraints['scientific_factors'] = $topicFactors;
-            $constraints['scientific_topics'] = AgriculturalEntityCatalog::englishLabelsForFactors($topicFactors);
+        $topicFactors = [];
+        if ($hasUserQuestion) {
+            $topicFactors = AgriculturalEntityCatalog::extractTopicFactors($normalizedQuestion);
+            if ($topicFactors !== []) {
+                $constraints['scientific_factors'] = $topicFactors;
+                $constraints['scientific_topics'] = AgriculturalEntityCatalog::englishLabelsForFactors($topicFactors);
+            }
         }
 
         $researchIntent = match ($knowledgeOption) {
@@ -540,16 +545,6 @@ class QueryUnderstandingService
             'industries' => 'agricultural_industry',
             default => 'cultivation',
         };
-
-        if ($topicFactors !== []) {
-            foreach ($topicFactors as $factor) {
-                $mapped = AgriculturalEntityCatalog::intentForTopicFactor($factor);
-                if ($mapped !== null) {
-                    $researchIntent = $mapped;
-                    break;
-                }
-            }
-        }
 
         $agriculturalDomain = $explicitDomain !== ''
             ? AgriculturalDomainCatalog::normalize($explicitDomain)
@@ -560,7 +555,7 @@ class QueryUnderstandingService
             };
 
         $scientificName = FieldCropTaxonomyCatalog::resolveScientificName($cropId, $scientificNameInput);
-        $intentQualifier = $this->detectIntentQualifier($normalizedQuestion);
+        $intentQualifier = $hasUserQuestion ? $this->detectIntentQualifier($normalizedQuestion) : '';
         $scientificSense = $this->resolveScientificSense($researchIntent, $topicFactors, $normalizedQuestion, [], $intentQualifier);
         $constraints['scientific_intent_qualifier'] = $intentQualifier;
         $constraints['scientific_sense'] = $scientificSense;
@@ -569,13 +564,19 @@ class QueryUnderstandingService
             $scientificSense,
             $agriculturalDomain,
         );
-        $questionType = $this->detectQuestionType(
-            $normalizedQuestion,
-            $originalQuestion,
-            $scientificSense,
-            $intentQualifier,
-            $researchIntent,
-        );
+        $questionType = $this->questionTypeForKnowledgeOption($knowledgeOption);
+        if ($hasUserQuestion) {
+            $fromQuestion = $this->detectQuestionType(
+                $normalizedQuestion,
+                $originalQuestion,
+                $scientificSense,
+                $intentQualifier,
+                $researchIntent,
+            );
+            if ($fromQuestion !== 'general' && $fromQuestion !== '') {
+                $questionType = $fromQuestion;
+            }
+        }
         $requested = [$researchIntent, 'verified_evidence'];
         $constraints['question_type'] = $questionType;
         $constraints['requested_information'] = $requested;
@@ -587,8 +588,8 @@ class QueryUnderstandingService
         $negativeConstraints = AgriculturalEntityCatalog::negativeConstraintsForEvidenceType($requiredEvidenceType);
         $constraints['negative_constraints'] = $negativeConstraints;
         $constraints['exclusions'] = $negativeConstraints;
-        // knowledge_option is only a producer of question_type (e.g. "{crop} farming-needs"
-        // → requirements). Knowledge targets come from question semantics, not the option.
+        // knowledge_option is the authoritative Crop knowledge target.
+        // Synthetic "{crop} {option}" text is provider-search support only.
         $this->applyQuestionTypeKnowledgeTargets(
             $constraints,
             $questionType,
@@ -627,6 +628,15 @@ class QueryUnderstandingService
             clarificationRequirements: [],
             researchIntent: $researchIntent,
         );
+    }
+
+    private function questionTypeForKnowledgeOption(string $knowledgeOption): string
+    {
+        return match ($knowledgeOption) {
+            'scientific-research' => 'general',
+            'industries' => 'general',
+            default => 'requirements',
+        };
     }
 
     private function normalizeQuestion(string $question): string

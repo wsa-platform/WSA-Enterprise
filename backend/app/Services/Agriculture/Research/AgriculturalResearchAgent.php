@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Research;
 
+use App\Services\Agriculture\CropKnowledgeOptionCatalog;
 use App\Services\Agriculture\CropProfileIdentityValidator;
 use App\Services\Agriculture\Intelligence\Orchestration\UniversalAnswerOrchestrator;
 use App\Services\Agriculture\Research\Home\HomeEvidenceLifecycleDisposition;
@@ -288,6 +289,29 @@ class AgriculturalResearchAgent
         $plan = $knowledgePlan->toAgriculturalResearchPlan();
 
         if (! $this->shouldRunLegacyPostProcessing($plan, $synthesisReport)) {
+            if ($plan->isCropProfileIntent()) {
+                $legacy = $this->cropCompatibilityEnvelope($plan, $persistenceReport);
+                $legacy['research_agent'] = [
+                    'orchestrated' => true,
+                    'stage' => 5,
+                    'query_understanding' => $knowledgePlan->normalizedQuery->toArray(),
+                    'plan' => $plan->toArray(),
+                    'knowledge_query_plan' => $knowledgePlan->toArray(),
+                    'scientific_search' => $scientificSearch->toArray(),
+                    'scientific_validation' => $scientificValidation->toArray(),
+                    'synthesis' => $synthesisReport->toArray(),
+                    'library_persistence' => $persistenceReport->toArray(),
+                    'discovery' => [
+                        'discoverers_used' => [],
+                        'external_discoverers_used' => [],
+                        'library_discoverers_used' => [],
+                        'internet_first' => $knowledgePlan->isInternetFirst(),
+                    ],
+                ];
+
+                return CropCanonicalStage5Response::dualEmit($legacy, $synthesisReport);
+            }
+
             return $this->stage5ResponseWithoutBlockingPostProcessing(
                 $knowledgePlan,
                 $plan,
@@ -417,17 +441,13 @@ class AgriculturalResearchAgent
     }
 
     /**
-     * Crop-profile HTTP contract is engine-built. Generic research skips blocking
-     * legacy discovery/MCP only when Stage 5 DIRECT evidence already passed.
+     * Home and Crop share the same Stage 5 sufficiency gate.
+     * Sufficient DIRECT synthesis skips CropKnowledgeEngine (no second discovery).
      */
     private function shouldRunLegacyPostProcessing(
         AgriculturalResearchPlan $plan,
         AnswerSynthesisExecutionReport $synthesisReport,
     ): bool {
-        if ($plan->isCropProfileIntent()) {
-            return true;
-        }
-
         return ! $this->hasSufficientScientificSynthesis($synthesisReport);
     }
 
@@ -531,6 +551,49 @@ class AgriculturalResearchAgent
     private function isUniversalOrchestratorEnabled(): bool
     {
         return filter_var(config('agricultural_intelligence.orchestrator_enabled', true), FILTER_VALIDATE_BOOL);
+    }
+
+    /**
+     * Dual-emit siblings without scientific discovery.
+     *
+     * @return array<string, mixed>
+     */
+    private function cropCompatibilityEnvelope(
+        AgriculturalResearchPlan $plan,
+        KnowledgePersistenceExecutionReport $persistenceReport,
+    ): array {
+        $query = $plan->knowledgeQueryPlan?->normalizedQuery;
+        $cropId = trim((string) ($plan->contextInput['selected_crop_id'] ?? $query?->cropId ?? ''));
+        $cropName = trim((string) ($plan->contextInput['selected_crop_name'] ?? $query?->crop ?? ''));
+        $knowledgeOption = trim((string) ($plan->contextInput['knowledge_option'] ?? $query?->subtopic ?? 'farming-needs'));
+        $persistence = $persistenceReport->toArray();
+
+        return [
+            'crop' => [
+                'id' => $cropId,
+                'name' => $cropName,
+                'category_id' => (string) ($plan->contextInput['selected_category_id'] ?? ''),
+                'category_name' => (string) ($plan->contextInput['selected_category_name'] ?? ''),
+                'scientific_name' => (string) ($plan->contextInput['scientific_name'] ?? $query?->scientificName ?? ''),
+            ],
+            'knowledge_option' => $knowledgeOption,
+            'service_option' => $knowledgeOption,
+            'title' => CropKnowledgeOptionCatalog::titleFor($knowledgeOption, $cropName),
+            'load_state' => 'scientific_generated',
+            'message' => null,
+            'sections' => [],
+            'references' => [],
+            'library' => [
+                'item_id' => $persistence['library_persistence']['library_item_id'] ?? $persistenceReport->libraryItemId,
+                'slug' => $persistence['library_persistence']['slug'] ?? $persistenceReport->slug,
+                'reused_existing' => false,
+                'was_missing_before_retrieval' => false,
+                'missing_sections_filled' => [],
+                'scientific_sections_retrieved' => [],
+                'discoverers_used' => [],
+                'legacy_discovery_skipped' => true,
+            ],
+        ];
     }
 
     /**

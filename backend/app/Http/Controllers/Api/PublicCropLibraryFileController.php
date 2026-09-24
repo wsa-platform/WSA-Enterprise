@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\BindsPublicTenant;
 use App\Http\Controllers\Controller;
 use App\Models\LibraryItem;
-use App\Models\Organization;
+use App\Services\Media\LibraryFilePolicy;
 use App\Services\Media\MediaReferenceService;
+use App\Services\Tenancy\PublicTenantResolutionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PublicCropLibraryFileController extends Controller
 {
+    use BindsPublicTenant;
+
     private const SECTIONS = [
         'farming-needs',
         'scientific-research',
@@ -20,12 +23,31 @@ class PublicCropLibraryFileController extends Controller
         'other',
     ];
 
-    public function __construct(private MediaReferenceService $media) {}
+    public function __construct(
+        private MediaReferenceService $media,
+        private LibraryFilePolicy $filePolicy,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $organization = $this->resolvePublicOrganization($request);
+        try {
+            $organization = $this->bindPublicOrganization($request);
+        } catch (PublicTenantResolutionException) {
+            return response()->json([
+                'status' => 'public_organization_unavailable',
+                'message' => 'Public organization is unavailable.',
+                'error' => [
+                    'code' => 'public_organization_unavailable',
+                    'http_status' => 503,
+                    'message' => 'Public organization is unavailable.',
+                    'details' => null,
+                ],
+            ], 503);
+        }
+
         $validated = $request->validate([
+            'organization' => ['nullable', 'string', 'max:255'],
+            'organization_id' => ['nullable', 'integer'],
             'plant_production_category_id' => ['required', 'string', 'max:64'],
             'field_crop_id' => ['required', 'string', 'max:64'],
             'library_file_section' => ['required', 'string', 'in:'.implode(',', self::SECTIONS)],
@@ -35,7 +57,6 @@ class PublicCropLibraryFileController extends Controller
         $cropId = $validated['field_crop_id'];
         $sectionId = $validated['library_file_section'];
 
-        // Library product contract: scientific research originals are not anonymous public files.
         $items = LibraryItem::query()
             ->where('organization_id', $organization->id)
             ->where('publication_status', 'published')
@@ -70,9 +91,27 @@ class PublicCropLibraryFileController extends Controller
         ]);
     }
 
-    public function content(Request $request, int $fileId): StreamedResponse
+    public function content(Request $request, int $fileId): StreamedResponse|JsonResponse
     {
-        $organization = $this->resolvePublicOrganization($request);
+        try {
+            $organization = $this->bindPublicOrganization($request);
+        } catch (PublicTenantResolutionException) {
+            return response()->json([
+                'status' => 'public_organization_unavailable',
+                'message' => 'Public organization is unavailable.',
+                'error' => [
+                    'code' => 'public_organization_unavailable',
+                    'http_status' => 503,
+                    'message' => 'Public organization is unavailable.',
+                    'details' => null,
+                ],
+            ], 503);
+        }
+
+        $request->validate([
+            'organization' => ['nullable', 'string', 'max:255'],
+            'organization_id' => ['nullable', 'integer'],
+        ]);
 
         $item = LibraryItem::query()
             ->where('organization_id', $organization->id)
@@ -96,18 +135,7 @@ class PublicCropLibraryFileController extends Controller
             'file_path' => (string) $item->file_path,
         ])['file_path'];
 
-        abort_unless(Storage::disk($disk)->exists($path), 404);
-
-        $fileName = basename($path);
-        $extension = strtolower((string) pathinfo($fileName, PATHINFO_EXTENSION));
-        $mimeType = $this->mimeTypeForExtension($extension);
-        $disposition = $this->isInlinePreviewable($extension) ? 'inline' : 'attachment';
-
-        return Storage::disk($disk)->response($path, $fileName, [
-            'Content-Type' => $mimeType,
-            'Content-Disposition' => $disposition.'; filename="'.$fileName.'"',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+        return $this->filePolicy->stream($disk, $path, basename($path));
     }
 
     private function presentFile(LibraryItem $item): array
@@ -121,48 +149,7 @@ class PublicCropLibraryFileController extends Controller
             'title_ar' => $item->title_ar ?: $item->title,
             'extension' => $extension,
             'file_name' => $fileName,
-            'preview_mode' => $this->isInlinePreviewable($extension) ? 'inline_browser' : 'download_only',
+            'preview_mode' => $this->filePolicy->isInlinePreviewable($extension) ? 'inline_browser' : 'download_only',
         ];
-    }
-
-    private function isInlinePreviewable(string $extension): bool
-    {
-        return in_array($extension, ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'txt', 'csv'], true);
-    }
-
-    private function mimeTypeForExtension(string $extension): string
-    {
-        return match ($extension) {
-            'pdf' => 'application/pdf',
-            'jpg', 'jpeg' => 'image/jpeg',
-            'png' => 'image/png',
-            'gif' => 'image/gif',
-            'webp' => 'image/webp',
-            'svg' => 'image/svg+xml',
-            'txt' => 'text/plain; charset=UTF-8',
-            'csv' => 'text/csv; charset=UTF-8',
-            'doc' => 'application/msword',
-            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'ppt' => 'application/vnd.ms-powerpoint',
-            'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'xls' => 'application/vnd.ms-excel',
-            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'zip' => 'application/zip',
-            default => 'application/octet-stream',
-        };
-    }
-
-    private function resolvePublicOrganization(Request $request): Organization
-    {
-        $data = $request->validate([
-            'organization' => ['required_without:organization_id', 'string', 'max:255'],
-            'organization_id' => ['required_without:organization', 'integer'],
-        ]);
-
-        if (isset($data['organization_id'])) {
-            return Organization::query()->findOrFail($data['organization_id']);
-        }
-
-        return Organization::query()->where('slug', $data['organization'])->firstOrFail();
     }
 }

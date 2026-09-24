@@ -262,15 +262,15 @@ class PublicTenantBindingSecurityTest extends TestCase
         $this->assertSame($this->publicOrg->id, app(TenantContext::class)->organizationId());
     }
 
-    /** TEST-12 — Plant diagnosis unchanged; published browse remains intentional published-read by client org. */
+    /** TEST-12 — Plant diagnosis unchanged; public browse uses server public tenant, not client org. */
     public function test_12_plant_diagnosis_and_browse_out_of_g1_write_scope(): void
     {
         $this->assertTrue(class_exists(\App\Http\Controllers\Api\PlantAiDiagnosisController::class));
 
         $browse = $this->getJson('/api/v1/public/library/items?organization=victim-tenant');
         $browse->assertOk();
-        $browse->assertJsonPath('organization_slug', 'victim-tenant');
-        $browse->assertJsonPath('organization_id', $this->victimOrg->id);
+        $browse->assertJsonPath('organization_slug', 'wsa-demo');
+        $browse->assertJsonPath('organization_id', $this->publicOrg->id);
     }
 
     public function test_resolver_is_reusable_for_research_and_crop(): void

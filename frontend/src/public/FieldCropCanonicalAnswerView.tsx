@@ -7,6 +7,7 @@ import {
   resolveCanonicalCropAnswerText,
   resolveCropAnswerRenderMode,
 } from '../api/fieldCropCultivation'
+import { citationHref, sourcePresentationState } from './citationHref'
 
 export type FieldCropCanonicalAnswerViewProps = {
   profile: FieldCropCultivationProfile
@@ -16,13 +17,6 @@ function citationLabel(citation: ResearchAgentCitation, _index: number, fallback
   return citation.title?.trim() || fallback
 }
 
-function citationHref(citation: ResearchAgentCitation): string | null {
-  const url = citation.url?.trim()
-  if (url && /^https?:\/\//i.test(url)) {
-    return url
-  }
-  return null
-}
 
 /**
  * P7-U2 — Stage 5 canonical Crop answer presentation.
@@ -169,7 +163,14 @@ export function FieldCropCanonicalAnswerView({ profile }: FieldCropCanonicalAnsw
         </section>
       ) : null}
 
-      {citations.length > 0 ? (
+      {sourcePresentationState(citations) === 'no_eligible_direct_citations' ? (
+        <section className="gs-field-crop-profile-section" data-testid="crop-sources-empty">
+          <h3 id="field-crop-canonical-sources">{t('website.research.sourcesHeading')}</h3>
+          <p>{t('website.research.noEligibleDirectCitations', {
+            defaultValue: 'No eligible direct citations are available for this answer.',
+          })}</p>
+        </section>
+      ) : citations.length > 0 ? (
         <section className="gs-field-crop-profile-section" aria-labelledby="field-crop-canonical-sources">
           <h3 id="field-crop-canonical-sources">{t('website.research.sourcesHeading')}</h3>
           <ul className="gs-field-crop-profile-references" data-testid="crop-citations">

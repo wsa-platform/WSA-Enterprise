@@ -54,34 +54,16 @@ class CropKnowledgeEngine
         $hadLibraryContent = $this->hasVerifiedContent($storedSections, $sectionKeys);
         $libraryWasMissing = $item === null && $storedSections === [];
 
-        $missingKeys = $this->missingSectionKeys($storedSections, $sectionKeys);
-        $discovery = ['sections' => [], 'discoverers_used' => [], 'retrieval_failed' => false];
+        // Library is persistence/reuse only. Missing sections MUST NOT trigger
+        // scientific discovery (OpenAlex/Crossref) or act as a search gate.
+        $discovery = [
+            'sections' => [],
+            'discoverers_used' => [],
+            'external_discoverers_used' => [],
+            'library_discoverers_used' => [],
+            'retrieval_failed' => false,
+        ];
         $scientificRetrieved = [];
-
-        if ($missingKeys !== []) {
-            $discovery = $this->discoveryPipeline->discoverMissingSections(
-                $organizationId,
-                $context,
-                $missingKeys,
-            );
-            $scientificRetrieved = $discovery['sections'];
-
-            if ($scientificRetrieved !== []) {
-                $mergedForSave = $storedSections;
-                foreach ($scientificRetrieved as $key => $section) {
-                    if (! isset($mergedForSave[$key]) || ! $this->sourceValidator->isVerifiedSection($mergedForSave[$key])) {
-                        $mergedForSave[$key] = $section;
-                    }
-                }
-                $this->libraryRepository->mergeSections($organizationId, $context->toArray(), $mergedForSave);
-                $item = $this->libraryRepository->findKnowledgeItem(
-                    $organizationId,
-                    $context->cropId,
-                    $context->knowledgeOption,
-                );
-                $storedSections = $this->sectionsFromLibraryItem($item) ?: $mergedForSave;
-            }
-        }
 
         $merged = $storedSections;
         $stillMissing = $this->missingSectionKeys($merged, $sectionKeys);

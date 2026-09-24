@@ -7,10 +7,10 @@ use App\Http\Controllers\Concerns\ManagesUserOwnedModules;
 use App\Http\Controllers\Concerns\PaginatesOrganizationRecords;
 use App\Http\Controllers\Controller;
 use App\Models\{CropType, LibraryCategory, LibraryItem, LibraryTag};
+use App\Services\Media\LibraryFilePolicy;
 use App\Services\Media\MediaReferenceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LibraryController extends Controller
@@ -32,7 +32,10 @@ class LibraryController extends Controller
         'other',
     ];
 
-    public function __construct(private MediaReferenceService $media) {}
+    public function __construct(
+        private MediaReferenceService $media,
+        private LibraryFilePolicy $filePolicy,
+    ) {}
 
     protected function moduleManagePermission(Request $request, string $module): string
     {
@@ -151,7 +154,7 @@ class LibraryController extends Controller
     }
 
     /**
-     * Authenticated Library Page file browse — complete Library, all orgs/owners/types.
+     * Authenticated Library Page file browse — tenant-scoped.
      */
     public function files(Request $request): JsonResponse
     {
@@ -166,8 +169,10 @@ class LibraryController extends Controller
         $categoryId = $validated['plant_production_category_id'];
         $cropId = $validated['field_crop_id'];
         $sectionId = $validated['library_file_section'];
+        $organizationId = $this->organization($request);
 
         $items = LibraryItem::query()
+            ->where('organization_id', $organizationId)
             ->whereNotNull('file_path')
             ->where('file_path', '!=', '')
             ->where(function ($query) use ($categoryId, $cropId, $sectionId): void {
@@ -190,13 +195,14 @@ class LibraryController extends Controller
     }
 
     /**
-     * Authenticated Library Page file open — any stored Library file, regardless of org/owner.
+     * Authenticated Library Page file open — tenant-scoped.
      */
     public function fileContent(Request $request, int $fileId): StreamedResponse
     {
         abort_unless($request->user() !== null, 401);
 
         $item = LibraryItem::query()
+            ->where('organization_id', $this->organization($request))
             ->whereNotNull('file_path')
             ->where('file_path', '!=', '')
             ->whereKey($fileId)
@@ -208,18 +214,7 @@ class LibraryController extends Controller
             'file_path' => (string) $item->file_path,
         ])['file_path'];
 
-        abort_unless(Storage::disk($disk)->exists($path), 404);
-
-        $fileName = basename($path);
-        $extension = strtolower((string) pathinfo($fileName, PATHINFO_EXTENSION));
-        $mimeType = $this->mimeTypeForExtension($extension);
-        $disposition = $this->isInlinePreviewable($extension) ? 'inline' : 'attachment';
-
-        return Storage::disk($disk)->response($path, $fileName, [
-            'Content-Type' => $mimeType,
-            'Content-Disposition' => $disposition.'; filename="'.$fileName.'"',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+        return $this->filePolicy->stream($disk, $path, basename($path));
     }
 
     public function store(Request $request, string $module): JsonResponse
@@ -296,37 +291,11 @@ class LibraryController extends Controller
             'title_ar' => $item->title_ar ?: $item->title,
             'extension' => $extension,
             'file_name' => $fileName,
-            'preview_mode' => $this->isInlinePreviewable($extension) ? 'inline_browser' : 'download_only',
+            'preview_mode' => $this->filePolicy->isInlinePreviewable($extension) ? 'inline_browser' : 'download_only',
             'organization_id' => (int) $item->organization_id,
             'owner_user_id' => $item->owner_user_id !== null ? (int) $item->owner_user_id : null,
             'item_type' => $item->item_type,
         ];
     }
 
-    private function isInlinePreviewable(string $extension): bool
-    {
-        return in_array($extension, ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'txt', 'csv'], true);
-    }
-
-    private function mimeTypeForExtension(string $extension): string
-    {
-        return match ($extension) {
-            'pdf' => 'application/pdf',
-            'jpg', 'jpeg' => 'image/jpeg',
-            'png' => 'image/png',
-            'gif' => 'image/gif',
-            'webp' => 'image/webp',
-            'svg' => 'image/svg+xml',
-            'txt' => 'text/plain; charset=UTF-8',
-            'csv' => 'text/csv; charset=UTF-8',
-            'doc' => 'application/msword',
-            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'ppt' => 'application/vnd.ms-powerpoint',
-            'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'xls' => 'application/vnd.ms-excel',
-            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'zip' => 'application/zip',
-            default => 'application/octet-stream',
-        };
-    }
 }

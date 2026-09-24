@@ -141,11 +141,15 @@ export async function ensureSpaCsrfCookie(force = false): Promise<void> {
   return csrfCookieInFlight
 }
 
+function isFormDataBody(body: unknown): boolean {
+  return typeof FormData !== 'undefined' && body instanceof FormData
+}
+
 export function buildHeaders(token?: string, organizationId?: number, body?: unknown) {
   return {
     Accept: 'application/json',
     'Accept-Language': getCurrentLanguage(),
-    ...(body ? { 'Content-Type': 'application/json' } : {}),
+    ...(body && !isFormDataBody(body) ? { 'Content-Type': 'application/json' } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(organizationId ? { 'X-Organization-Id': String(organizationId) } : {}),
   }

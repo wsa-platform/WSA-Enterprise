@@ -1,4 +1,4 @@
-import { apiUrl, ApiError, buildHeaders, request } from './client'
+import { request } from './client'
 import type { PaginatedResponse } from './types'
 
 export type AiSuggestedAction = {
@@ -110,16 +110,8 @@ export const executeAssistantAction = (
 export async function uploadVisionImage(token: string, file: File, organizationId?: number) {
   const form = new FormData()
   form.append('file', file)
-  const response = await fetch(`${apiUrl}/ai/vision/uploads`, {
+  return request<AiVisionUpload>('/ai/vision/uploads', {
     method: 'POST',
-    headers: buildHeaders(token, organizationId),
     body: form,
-  })
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { message?: string } | null
-    throw new ApiError(payload?.message ?? 'Unable to upload image.', response.status)
-  }
-
-  return response.json() as Promise<AiVisionUpload>
+  }, token, organizationId)
 }

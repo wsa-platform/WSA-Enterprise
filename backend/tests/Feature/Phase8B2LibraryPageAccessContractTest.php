@@ -197,14 +197,16 @@ class Phase8B2LibraryPageAccessContractTest extends TestCase
             'X-Organization-Id' => (string) $this->orgB->id,
         ])->assertOk()->json('data');
         $fileIds = collect($files)->pluck('id')->all();
-        $this->assertContains($research->id, $fileIds);
+        $this->assertNotContains($research->id, $fileIds);
 
         Sanctum::actingAs($this->memberB);
 
-        $this->get('/api/v1/library/files/'.$cropFile->id.'/content')
-            ->assertOk();
-        $this->get('/api/v1/library/files/'.$research->id.'/content')
-            ->assertOk();
+        $this->get('/api/v1/library/files/'.$cropFile->id.'/content', [
+            'X-Organization-Id' => (string) $this->orgB->id,
+        ])->assertNotFound();
+        $this->get('/api/v1/library/files/'.$research->id.'/content', [
+            'X-Organization-Id' => (string) $this->orgB->id,
+        ])->assertNotFound();
     }
 
     public function test_10_public_endpoints_remain_separated(): void
@@ -213,8 +215,15 @@ class Phase8B2LibraryPageAccessContractTest extends TestCase
         Storage::disk('local')->put('library/public/ok.pdf', '%PDF-1.4 ok');
         Storage::disk('local')->put('library/public/secret.pdf', '%PDF-1.4 secret');
 
+        $publicOrg = Organization::create([
+            'name' => 'WSA Demo',
+            'slug' => 'wsa-demo',
+            'is_active' => true,
+        ]);
+        config(['wsa.public_organization_slug' => 'wsa-demo']);
+
         $allowed = LibraryItem::create([
-            'organization_id' => $this->orgA->id,
+            'organization_id' => $publicOrg->id,
             'slug' => 'public-ok',
             'title' => 'Public OK',
             'title_ar' => 'عام',
@@ -230,7 +239,7 @@ class Phase8B2LibraryPageAccessContractTest extends TestCase
         ]);
 
         $research = LibraryItem::create([
-            'organization_id' => $this->orgA->id,
+            'organization_id' => $publicOrg->id,
             'slug' => 'public-research',
             'title' => 'Secret Research',
             'title_ar' => 'سري',

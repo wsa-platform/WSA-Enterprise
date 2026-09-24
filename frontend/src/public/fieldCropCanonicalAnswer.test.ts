@@ -184,7 +184,23 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
     expect(html).not.toContain('google.')
   })
 
-  it('hides empty Sources and duplicate uncertainty heading', async () => {
+  it('DOI-only citations use https://doi.org/{doi} and title-only stay non-clickable', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderCanonical(
+      canonicalFixture({
+        citations: [
+          { citation_id: 'doi-1', title: 'DOI Paper', doi: '10.1234/crop.doi' },
+          { citation_id: 'title-1', title: 'Title Only' },
+        ],
+      }),
+    )
+    expect(html).toContain('href="https://doi.org/10.1234/crop.doi"')
+    expect(html).toContain('>DOI Paper</a>')
+    expect(html).toContain('Title Only')
+    expect(html).not.toContain('href="">Title Only')
+  })
+
+  it('represents empty citations as an honest ineligible source state', async () => {
     await i18n.changeLanguage('en')
     const limitedAnswer = 'Insufficient evidence for a factual crop answer.'
     const html = renderCanonical(
@@ -195,7 +211,9 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
         citations: [],
       }),
     )
-    expect(html).not.toContain('id="field-crop-canonical-sources"')
+    expect(html).toContain('data-testid="crop-sources-empty"')
+    expect(html).toContain('id="field-crop-canonical-sources"')
+    expect(html).toContain('No eligible direct citations are available for this answer.')
     expect(html).not.toContain('No citations to display.')
     expect(html).not.toContain('data-testid="crop-uncertainty"')
   })

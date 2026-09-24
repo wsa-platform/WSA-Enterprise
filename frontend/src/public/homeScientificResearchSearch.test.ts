@@ -210,11 +210,12 @@ describe('homepage scientific research search', () => {
     expect(html).toContain('Answer only')
     expect(html).not.toContain('data-testid="home-research-conflicts"')
     expect(html).not.toContain('data-testid="home-research-uncertainty"')
-    expect(html).not.toContain('Sources')
+    expect(html).toContain('data-testid="home-research-sources-empty"')
+    expect(html).toContain('No eligible direct citations are available for this answer.')
     expect(html).not.toContain('No citations to display.')
   })
 
-  it('hides empty Sources and duplicate uncertainty heading', async () => {
+  it('represents empty citations as an honest ineligible source state', async () => {
     await i18n.changeLanguage('en')
     const html = renderView({
       query: 'wheat irrigation',
@@ -227,9 +228,10 @@ describe('homepage scientific research search', () => {
         citations: [],
       },
     })
-    expect(html).not.toContain('Sources')
+    expect(html).toContain('data-testid="home-research-sources-empty"')
     expect(html).not.toContain('data-testid="home-research-uncertainty"')
     expect(html).toContain('Insufficient scientific evidence was found for a factual answer.')
+    expect(html).not.toContain('No citations to display.')
   })
 
   it('renders additional information separately from the main answer', async () => {

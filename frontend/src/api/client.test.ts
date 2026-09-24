@@ -58,6 +58,13 @@ describe('buildHeaders', () => {
       'Accept-Language': 'en',
     })
   })
+
+  it('omits Content-Type for FormData so the browser sets the multipart boundary', () => {
+    const headers = buildHeaders('token-1', 7, new FormData())
+    expect(headers['Content-Type']).toBeUndefined()
+    expect(headers.Authorization).toBe('Bearer token-1')
+    expect(headers['X-Organization-Id']).toBe('7')
+  })
 })
 
 describe('response helpers', () => {
@@ -180,6 +187,22 @@ describe('SPA CSRF contract', () => {
     expect(fetchMock).toHaveBeenCalledOnce()
     expect((fetchMock.mock.calls[0][1]?.headers as Record<string, string>)['X-XSRF-TOKEN']).toBeUndefined()
     expect(String(fetchMock.mock.calls[0][0])).not.toContain(SANCTUM_CSRF_COOKIE_PATH)
+  })
+
+  it('sends CSRF on FormData POST uploads without forcing JSON Content-Type', async () => {
+    seedSpaXsrfToken('upload-xsrf')
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    )
+
+    await request('/jobs/talent/me/cv', { method: 'POST', body: new FormData() }, 'token-1', 3)
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    const headers = init.headers as Record<string, string>
+    expect(headers['X-XSRF-TOKEN']).toBe('upload-xsrf')
+    expect(headers['Content-Type']).toBeUndefined()
+    expect(headers.Authorization).toBe('Bearer token-1')
+    expect(init.body).toBeInstanceOf(FormData)
   })
 })
 

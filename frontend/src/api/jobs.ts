@@ -86,18 +86,10 @@ export const upsertMyTalentProfile = (
 export async function uploadTalentCv(token: string, file: File, organizationId?: number) {
   const form = new FormData()
   form.append('cv', file)
-  const response = await fetch(`${apiUrl}/jobs/talent/me/cv`, {
+  return request<JobTalentProfile>('/jobs/talent/me/cv', {
     method: 'POST',
-    headers: buildHeaders(token, organizationId),
     body: form,
-  })
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { message?: string } | null
-    throw new ApiError(payload?.message ?? 'Unable to upload CV.', response.status)
-  }
-
-  return response.json() as Promise<JobTalentProfile>
+  }, token, organizationId)
 }
 
 export const parseTalentCv = (token: string, organizationId?: number) =>
@@ -254,18 +246,10 @@ export const deleteMyJobSeekerApplication = (token: string, organizationId?: num
 export async function uploadMyJobSeekerCv(token: string, file: File, organizationId?: number) {
   const form = new FormData()
   form.append('cv', file)
-  const response = await fetch(`${apiUrl}/job-seekers/me/cv`, {
+  return request<JobSeekerProfile>('/job-seekers/me/cv', {
     method: 'POST',
-    headers: buildHeaders(token, organizationId),
     body: form,
-  })
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { message?: string } | null
-    throw new ApiError(payload?.message ?? 'Unable to upload CV.', response.status)
-  }
-
-  return response.json() as Promise<JobSeekerProfile>
+  }, token, organizationId)
 }
 
 export async function downloadMyJobSeekerCv(token: string, organizationId?: number) {
@@ -284,18 +268,10 @@ export async function downloadMyJobSeekerCv(token: string, organizationId?: numb
 export async function uploadMyJobSeekerPrimaryQualification(token: string, file: File, organizationId?: number) {
   const form = new FormData()
   form.append('document', file)
-  const response = await fetch(`${apiUrl}/job-seekers/me/primary-qualification`, {
+  return request<JobSeekerProfile>('/job-seekers/me/primary-qualification', {
     method: 'POST',
-    headers: buildHeaders(token, organizationId),
     body: form,
-  })
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { message?: string } | null
-    throw new ApiError(payload?.message ?? 'Unable to upload qualification document.', response.status)
-  }
-
-  return response.json() as Promise<JobSeekerProfile>
+  }, token, organizationId)
 }
 
 export async function downloadMyJobSeekerPrimaryQualification(token: string, organizationId?: number) {
