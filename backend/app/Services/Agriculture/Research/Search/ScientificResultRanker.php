@@ -75,10 +75,12 @@ class ScientificResultRanker
                     if ($alignment['relevant']) {
                         $score += 80.0;
                         $metadata['evidence_directness'] = ScientificEvidenceDirectnessAssessor::DIRECT;
+                        $metadata['ranking_class'] = 0;
                     } else {
                         $metadata['rejected_by_relevance_gate'] = true;
                         $metadata['rejection_reasons'] = $alignment['mismatches'];
                         $metadata['evidence_directness'] = ScientificEvidenceDirectnessAssessor::IRRELEVANT;
+                        $metadata['ranking_class'] = 4;
                         $score *= 0.05;
                     }
                 } else {
@@ -111,6 +113,9 @@ class ScientificResultRanker
                     $metadata['context_adequate'] = $assessment['context_adequate'] ?? false;
                     $metadata['relevance_gate'] = $assessment['relevant'];
                     $metadata['evidence_directness'] = $directness['directness'];
+                    $metadata['ranking_class'] = ScientificEvidenceDirectnessAssessor::rankingClass(
+                        (string) $directness['directness'],
+                    );
                     $metadata['directness_reasons'] = $directness['reasons'];
                     $metadata['factor_coverage'] = $directness['factor_coverage'];
                     $metadata['evidence_modality'] = ScientificEvidenceModality::fromResult($result);
@@ -143,21 +148,19 @@ class ScientificResultRanker
         }
 
         usort($ranked, function (ScientificSearchResult $a, ScientificSearchResult $b): int {
+            $aClass = ScientificEvidenceDirectnessAssessor::rankingClass(
+                (string) ($a->relevanceMetadata['evidence_directness'] ?? ''),
+            );
+            $bClass = ScientificEvidenceDirectnessAssessor::rankingClass(
+                (string) ($b->relevanceMetadata['evidence_directness'] ?? ''),
+            );
+            if ($aClass !== $bClass) {
+                return $aClass <=> $bClass;
+            }
+
             $scoreCompare = ($b->relevanceScore ?? 0.0) <=> ($a->relevanceScore ?? 0.0);
             if ($scoreCompare !== 0) {
                 return $scoreCompare;
-            }
-
-            $directnessOrder = [
-                ScientificEvidenceDirectnessAssessor::DIRECT => 0,
-                ScientificEvidenceDirectnessAssessor::SUPPORTING => 1,
-                ScientificEvidenceDirectnessAssessor::BACKGROUND => 2,
-                ScientificEvidenceDirectnessAssessor::IRRELEVANT => 3,
-            ];
-            $aDir = $directnessOrder[$a->relevanceMetadata['evidence_directness'] ?? ''] ?? 9;
-            $bDir = $directnessOrder[$b->relevanceMetadata['evidence_directness'] ?? ''] ?? 9;
-            if ($aDir !== $bDir) {
-                return $aDir <=> $bDir;
             }
 
             return strcmp($a->title, $b->title);

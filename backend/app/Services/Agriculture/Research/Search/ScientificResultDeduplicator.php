@@ -39,14 +39,20 @@ class ScientificResultDeduplicator
     private function dedupeKey(ScientificSearchResult $result): ?string
     {
         $observation = ScientificStructuredObservation::fromResult($result);
-        if (ScientificEvidenceModality::isDirectStatistical($result)
-            && $observation !== null
-            && $observation->isComplete()) {
-            return 'stat:'.ScientificEvidenceModality::DIRECT_STATISTICAL.':'.$observation->identityKey();
+        if (ScientificEvidenceModality::isDirectStatistical($result)) {
+            if ($observation !== null && $observation->isComplete()) {
+                return 'stat:'.ScientificEvidenceModality::DIRECT_STATISTICAL.':'.$observation->identityKey();
+            }
+            if ($result->sourceIdentifier !== null && $result->sourceIdentifier !== '') {
+                return 'id:'.$result->sourceKey.':'.strtolower($result->sourceIdentifier);
+            }
+
+            // Statistical rows must not collapse on a shared query URL.
+            return null;
         }
 
         if ($result->doi !== null && $result->doi !== '') {
-            return 'doi:'.$result->doi;
+            return 'doi:'.strtolower(trim($result->doi));
         }
 
         if ($result->canonicalUrl !== null && $result->canonicalUrl !== '') {
@@ -57,14 +63,8 @@ class ScientificResultDeduplicator
             return 'id:'.$result->sourceKey.':'.strtolower($result->sourceIdentifier);
         }
 
-        $title = $this->normalizeTitle($result->title);
-        if ($title === '') {
-            return null;
-        }
-
-        $year = $result->publicationYear ?? 'unknown';
-
-        return 'title:'.$title.':'.$year;
+        // Title+year is not a unique scholarly identity.
+        return null;
     }
 
     private function mergeResults(ScientificSearchResult $left, ScientificSearchResult $right): ScientificSearchResult
@@ -82,10 +82,61 @@ class ScientificResultDeduplicator
             abstract: $left->abstract ?? $right->abstract,
             journal: $left->journal ?? $right->journal,
             foundBySources: $mergedSources,
-            relevanceMetadata: $left->relevanceMetadata ?? $right->relevanceMetadata,
-            rawMetadata: $left->rawMetadata ?? $right->rawMetadata,
+            relevanceMetadata: $this->mergeAssociative(
+                $left->relevanceMetadata,
+                $right->relevanceMetadata,
+                $mergedSources,
+            ),
+            rawMetadata: $this->mergeAssociative(
+                $left->rawMetadata,
+                $right->rawMetadata,
+                $mergedSources,
+            ),
             relevanceScore: max($left->relevanceScore ?? 0.0, $right->relevanceScore ?? 0.0) ?: null,
         );
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $left
+     * @param  array<string, mixed>|null  $right
+     * @param  list<string>  $foundBySources
+     * @return array<string, mixed>|null
+     */
+    private function mergeAssociative(?array $left, ?array $right, array $foundBySources): ?array
+    {
+        if ($left === null && $right === null) {
+            return ['provenance' => ['found_by_sources' => $foundBySources]];
+        }
+        if ($left === null) {
+            $right['provenance'] = array_merge(
+                is_array($right['provenance'] ?? null) ? $right['provenance'] : [],
+                ['found_by_sources' => $foundBySources],
+            );
+
+            return $right;
+        }
+        if ($right === null) {
+            $left['provenance'] = array_merge(
+                is_array($left['provenance'] ?? null) ? $left['provenance'] : [],
+                ['found_by_sources' => $foundBySources],
+            );
+
+            return $left;
+        }
+
+        $merged = $left;
+        foreach ($right as $key => $value) {
+            if (! array_key_exists($key, $merged) || $merged[$key] === null || $merged[$key] === '') {
+                $merged[$key] = $value;
+            }
+        }
+        $merged['provenance'] = array_merge(
+            is_array($left['provenance'] ?? null) ? $left['provenance'] : [],
+            is_array($right['provenance'] ?? null) ? $right['provenance'] : [],
+            ['found_by_sources' => $foundBySources],
+        );
+
+        return $merged;
     }
 
     private function normalizeTitle(string $title): string

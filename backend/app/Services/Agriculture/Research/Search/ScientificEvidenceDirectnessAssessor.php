@@ -43,6 +43,24 @@ class ScientificEvidenceDirectnessAssessor
     /** Geographic mismatch — evidence fails asked geography (directness axis). */
     public const GEOGRAPHIC_MISMATCH = 'geographic_mismatch';
 
+    /**
+     * Ranking class for Stage-3/Stage-4 ordering. Lower is higher priority.
+     * Statistical DIRECT participates in class 0. SUPPORTING never outranks DIRECT.
+     */
+    public static function rankingClass(string $directness): int
+    {
+        $normalized = strtolower(trim($directness));
+
+        return match ($normalized) {
+            self::DIRECT, 'direct_statistical', 'direct_statistical_evidence' => 0,
+            self::SUPPORTING, self::SUPPORTED => 1,
+            self::RELATED, self::BACKGROUND => 2,
+            self::GEOGRAPHIC_MISMATCH => 3,
+            self::IRRELEVANT => 4,
+            default => 9,
+        };
+    }
+
     public function __construct(
         private ScientificEvidenceRelevanceGate $relevanceGate,
     ) {}

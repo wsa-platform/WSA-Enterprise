@@ -39,7 +39,7 @@ class EvidenceVerificationLayer
         'polyhouse', 'greenhouse', 'greenhouses', 'hydroponics', 'hydroponic',
         'protected cultivation', 'soilless',
         'groundwater', 'microbial diversity', 'microbial',
-        'wheat production', 'wheat yield', 'irrigation system', 'irrigation efficiency',
+        'irrigation system', 'irrigation efficiency',
         'gis', 'remote sensing', 'land evaluation',
         'machine learning', 'deep learning', 'neural network', 'random forest',
         'classification algorithm', 'classification model', 'cnn',
@@ -125,7 +125,7 @@ class EvidenceVerificationLayer
     public function isPrimaryCitationEligible(string $directness): bool
     {
         // Primary citations[]: DIRECT only. SUPPORTING/SUPPORTED remain usable internally elsewhere.
-        return $directness === ScientificEvidenceDirectnessAssessor::DIRECT;
+        return ScientificEvidenceDirectnessAssessor::rankingClass($directness) === 0;
     }
 
     // --- CURRENT TASK: Semantic Scholar / supported_answer eligibility ---

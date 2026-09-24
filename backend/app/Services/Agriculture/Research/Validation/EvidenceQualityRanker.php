@@ -69,14 +69,12 @@ class EvidenceQualityRanker
 
         $claimFactors = is_array($claimMatch['factors'] ?? null) ? $claimMatch['factors'] : [];
         $directness = (string) ($claimFactors['evidence_directness'] ?? '');
-        $directnessScore = match ($directness) {
-            ScientificEvidenceDirectnessAssessor::DIRECT => 30.0,
-            ScientificEvidenceDirectnessAssessor::SUPPORTING,
-            ScientificEvidenceDirectnessAssessor::SUPPORTED => 12.0,
-            ScientificEvidenceDirectnessAssessor::BACKGROUND,
-            ScientificEvidenceDirectnessAssessor::RELATED => -18.0,
-            ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH => -40.0,
-            ScientificEvidenceDirectnessAssessor::IRRELEVANT => -28.0,
+        $directnessScore = match (ScientificEvidenceDirectnessAssessor::rankingClass($directness)) {
+            0 => 30.0,
+            1 => 12.0,
+            2 => -18.0,
+            3 => -40.0,
+            4 => -28.0,
             default => 0.0,
         };
         $score += $directnessScore;
@@ -142,17 +140,12 @@ class EvidenceQualityRanker
     public function rank(array $items): array
     {
         usort($items, function (ScientificEvidenceItem $a, ScientificEvidenceItem $b): int {
-            $directnessOrder = [
-                ScientificEvidenceDirectnessAssessor::DIRECT => 0,
-                ScientificEvidenceDirectnessAssessor::SUPPORTING => 1,
-                ScientificEvidenceDirectnessAssessor::SUPPORTED => 1,
-                ScientificEvidenceDirectnessAssessor::RELATED => 2,
-                ScientificEvidenceDirectnessAssessor::BACKGROUND => 2,
-                ScientificEvidenceDirectnessAssessor::GEOGRAPHIC_MISMATCH => 3,
-                ScientificEvidenceDirectnessAssessor::IRRELEVANT => 4,
-            ];
-            $aDir = $directnessOrder[$a->qualityFactors['evidence_directness'] ?? ''] ?? 9;
-            $bDir = $directnessOrder[$b->qualityFactors['evidence_directness'] ?? ''] ?? 9;
+            $aDir = ScientificEvidenceDirectnessAssessor::rankingClass(
+                (string) ($a->qualityFactors['evidence_directness'] ?? ''),
+            );
+            $bDir = ScientificEvidenceDirectnessAssessor::rankingClass(
+                (string) ($b->qualityFactors['evidence_directness'] ?? ''),
+            );
             if ($aDir !== $bDir) {
                 return $aDir <=> $bDir;
             }

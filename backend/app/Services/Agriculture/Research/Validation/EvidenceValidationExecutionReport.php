@@ -14,6 +14,7 @@ final class EvidenceValidationExecutionReport
      * @param  array<string, int>  $qualityDistribution
      * @param  array<string, mixed>  $searchSummary
      * @param  array<string, mixed>  $observability
+     * @param  list<ScientificEvidenceItem>  $retainedEvidence
      */
     public function __construct(
         public readonly string $status,
@@ -29,6 +30,7 @@ final class EvidenceValidationExecutionReport
         public readonly array $qualityDistribution,
         public readonly array $searchSummary,
         public readonly array $observability,
+        public readonly array $retainedEvidence = [],
     ) {}
 
     /** @return array<string, mixed> */
@@ -56,6 +58,10 @@ final class EvidenceValidationExecutionReport
             'rejected_evidence' => array_map(
                 static fn (ScientificEvidenceItem $item): array => $item->toArray(),
                 $this->rejectedEvidence,
+            ),
+            'retained_evidence' => array_map(
+                static fn (ScientificEvidenceItem $item): array => $item->toArray(),
+                $this->retainedEvidence,
             ),
             'observability' => $this->observability,
             'search_summary' => $this->searchSummary,

@@ -3,6 +3,8 @@
 namespace App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat;
 
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
+use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
+use App\Services\Agriculture\Research\Search\ScientificEvidenceModality;
 use App\Services\Agriculture\Research\Search\ScientificSearchResult;
 use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
 
@@ -33,7 +35,8 @@ final class FaoStatClaimSupportAssessor
             'faostat_claim_kind' => $semantics['kind'],
             'query_element_code' => $observation['query_element_code'] ?? ($result->relevanceMetadata['query_element_code'] ?? null),
             'response_element_code' => $observation['response_element_code'] ?? ($result->relevanceMetadata['response_element_code'] ?? null),
-            'evidence_directness' => 'direct_statistical',
+            'evidence_modality' => ScientificEvidenceModality::DIRECT_STATISTICAL,
+            'evidence_directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
             'observation_year' => $observation['year'] ?? null,
             'publication_year_ignored' => $result->publicationYear,
         ];

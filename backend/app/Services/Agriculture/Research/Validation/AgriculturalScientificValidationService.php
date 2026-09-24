@@ -3,12 +3,15 @@
 namespace App\Services\Agriculture\Research\Validation;
 
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatClaimSupportAssessor;
-use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatEvidenceType;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatObservationRelevanceGate;
+use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatSupportState;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
+use App\Services\Agriculture\Research\Search\ScientificEvidenceModality;
 use App\Services\Agriculture\Research\Search\ScientificSearchExecutionReport;
 use App\Services\Agriculture\Research\Search\ScientificSearchResult;
+use App\Services\Agriculture\Research\Search\ScientificStatisticalClaimAligner;
+use App\Services\Agriculture\Research\Search\ScientificStructuredObservation;
 
 /**
  * Stage 4 scientific evidence validation pipeline.
@@ -27,6 +30,7 @@ class AgriculturalScientificValidationService
         'evidence_conflict_detector',
         'evidence_quality_ranker',
         'evidence_verification_layer',
+        'statistical_observation_validator',
     ];
 
     public function __construct(
@@ -40,6 +44,7 @@ class AgriculturalScientificValidationService
         private ScientificEvidenceDirectnessAssessor $directnessAssessor,
         private EvidenceVerificationLayer $evidenceVerificationLayer,
         private FaoStatClaimSupportAssessor $faostatClaimSupport,
+        private ScientificStatisticalClaimAligner $statisticalClaimAligner,
     ) {}
 
     public function validate(
@@ -77,6 +82,10 @@ class AgriculturalScientificValidationService
 
         $validated = array_values(array_filter($items, fn (ScientificEvidenceItem $item): bool => $item->isUsable()));
         $rejected = array_values(array_filter($items, fn (ScientificEvidenceItem $item): bool => $item->isRejected()));
+        $retained = array_values(array_filter(
+            $items,
+            static fn (ScientificEvidenceItem $item): bool => ! $item->isUsable() && ! $item->isRejected(),
+        ));
 
         $conflictingCount = count(array_filter($items, fn (ScientificEvidenceItem $item): bool => $item->hasConflict));
         $supportedCount = count(array_filter(
@@ -90,8 +99,7 @@ class AgriculturalScientificValidationService
 
         $directCount = count(array_filter(
             $validated,
-            static fn (ScientificEvidenceItem $item): bool => ($item->qualityFactors['evidence_directness'] ?? null)
-                === ScientificEvidenceDirectnessAssessor::DIRECT,
+            fn (ScientificEvidenceItem $item): bool => $this->isDirectClass($item),
         ));
         $supportingCount = count(array_filter(
             $validated,
@@ -120,9 +128,9 @@ class AgriculturalScientificValidationService
 
         $requiresFactualDirect = $this->requiresFactualDirectEvidence($plan);
 
-        // Capability-based sufficiency: DIRECT wins; multiple answer-eligible SUPPORTING may
-        // satisfy as supported_answer without converting SUPPORTING → DIRECT.
-        $evidenceSufficient = match (true) {
+        // Verified-answer sufficiency matches Phase 5: DIRECT is required.
+        // Broader availability remains observable as evidence_capability.
+        $evidenceCapability = match (true) {
             $directCount >= 1 => true,
             $requiresFactualDirect && $answerEligibleSupportingCount >= 2 => true,
             $requiresFactualDirect && $directCount === 0 => false,
@@ -132,6 +140,7 @@ class AgriculturalScientificValidationService
             $supportedCount >= 2 => true,
             default => false,
         };
+        $evidenceSufficient = $directCount >= 1;
 
         $status = match (true) {
             $validated !== [] => 'validation_completed',
@@ -161,6 +170,7 @@ class AgriculturalScientificValidationService
                     'answer_eligible_supporting_count' => $answerEligibleSupportingCount,
                 ],
             ),
+            retainedEvidence: $retained,
             observability: [
                 'failure_reasons' => $this->collectFailureReasons($items),
                 'source_types_used' => array_values(array_unique(array_filter(array_map(
@@ -173,6 +183,8 @@ class AgriculturalScientificValidationService
                     'supporting' => $supportingCount,
                     'answer_eligible_supporting' => $answerEligibleSupportingCount,
                 ],
+                'evidence_capability' => $evidenceCapability,
+                'item_dispositions' => $this->itemDispositions($items),
                 // Phase-4: preserve Phase-3 FAOSTAT pipeline taxonomy (do not collapse to empty).
                 'faostat_pipeline_outcome' => $searchReport->planSummary['faostat_pipeline_outcome'] ?? null,
             ],
@@ -185,8 +197,8 @@ class AgriculturalScientificValidationService
         string $retrievedAt,
         bool $isDuplicate,
     ): ScientificEvidenceItem {
-        if ($this->isFaostatStatistical($result)) {
-            return $this->validateFaostatStatistical($plan, $result, $retrievedAt, $isDuplicate);
+        if ($this->isStatisticalEvidence($result)) {
+            return $this->validateStatisticalEvidence($plan, $result, $retrievedAt, $isDuplicate);
         }
 
         $metadata = $this->metadataValidator->validate($result);
@@ -254,6 +266,14 @@ class AgriculturalScientificValidationService
         $qualityScore['factors']['topic_matched'] = (bool) ($directness['topic_matched'] ?? false);
         $qualityScore['factors']['sense_coverage'] = (bool) ($directness['sense_coverage'] ?? false);
         $qualityScore['factors']['factor_coverage'] = (float) ($directness['factor_coverage'] ?? 0.0);
+        $qualityScore['factors'] = array_merge(
+            $this->preservedUpstreamFacts($result),
+            $qualityScore['factors'],
+        );
+        $qualityScore['factors']['evidence_modality'] = ScientificEvidenceModality::fromResult($result);
+        $qualityScore['factors']['ranking_class'] = ScientificEvidenceDirectnessAssessor::rankingClass(
+            (string) $directness['directness'],
+        );
         $qualityScore['factors']['answer_eligible'] = $directness['directness'] === ScientificEvidenceDirectnessAssessor::DIRECT
             || $this->evidenceVerificationLayer->isAnswerEligibleSupporting(
                 (string) $directness['directness'],
@@ -321,47 +341,90 @@ class AgriculturalScientificValidationService
                 'found_by_sources' => $result->foundBySources,
                 'confidence_level' => $quality['confidence_level'] ?? null,
                 'evidence_directness' => $directness['directness'],
+                'evidence_modality' => ScientificEvidenceModality::fromResult($result),
                 'verification_label' => $directness['verification_label'] ?? null,
+                'provenance' => $this->provenanceFromResult($result),
             ],
             cropOrEntity: is_string($cropOrEntity) ? $cropOrEntity : null,
         );
     }
 
-    private function isFaostatStatistical(ScientificSearchResult $result): bool
+    private function isStatisticalEvidence(ScientificSearchResult $result): bool
     {
-        if ($result->sourceKey !== 'fao_stat') {
-            return false;
-        }
-
-        $meta = is_array($result->relevanceMetadata) ? $result->relevanceMetadata : [];
-
-        return ($meta['not_literature'] ?? false) === true
-            || ($meta['evidence_family'] ?? '') === 'official_statistics'
-            || ($meta['evidence_type'] ?? '') === FaoStatEvidenceType::DIRECT_STATISTICAL_EVIDENCE;
+        return ScientificEvidenceModality::isDirectStatistical($result);
     }
 
-    private function validateFaostatStatistical(
+    private function validateStatisticalEvidence(
         KnowledgeQueryPlan $plan,
         ScientificSearchResult $result,
         string $retrievedAt,
         bool $isDuplicate,
     ): ScientificEvidenceItem {
+        $observationBag = $this->observationBag($result);
+        $observation = ScientificStructuredObservation::fromResult($result);
+        $alignment = $observation !== null
+            ? $this->statisticalClaimAligner->assess($plan, $observation)
+            : ['relevant' => false, 'mismatches' => ['observation']];
+
         $claimMatch = $this->faostatClaimSupport->assess($plan, $result);
-        $relevant = ($claimMatch['factors']['faostat_relevance'] ?? null)
+        $assessorState = (string) ($claimMatch['factors']['faostat_support_state'] ?? '');
+        $rawMeta = is_array($result->rawMetadata) ? $result->rawMetadata : [];
+        $hasOfficialStatisticalBag = is_array($rawMeta['faostat'] ?? null);
+        $assessorRelevant = ($claimMatch['factors']['faostat_relevance'] ?? null)
             === FaoStatObservationRelevanceGate::RELEVANT;
+
+        $complete = $observation !== null && $observation->isComplete();
+        $aligned = $alignment['relevant'] === true;
+        $claimBlocked = in_array((string) ($claimMatch['factors']['faostat_support_reason'] ?? ''), [
+            'causal_claim_not_statistical',
+            'recommendation_claim_not_statistical',
+        ], true);
+        $relevant = match (true) {
+            $claimBlocked => false,
+            $hasOfficialStatisticalBag && $assessorState !== FaoStatSupportState::NOT_APPLICABLE => $assessorRelevant,
+            default => $complete && $aligned,
+        };
+
         $failures = $isDuplicate ? ['duplicate_result'] : [];
-        if (! $relevant) {
-            $failures[] = 'faostat_not_relevant';
+        if ($observationBag === [] || ! $complete) {
+            $failures[] = 'statistical_observation_incomplete';
+        }
+        if ($hasOfficialStatisticalBag && $assessorState !== FaoStatSupportState::NOT_APPLICABLE && ! $assessorRelevant) {
+            $failures[] = 'statistical_not_relevant';
+        }
+        if (! $hasOfficialStatisticalBag && ! $aligned) {
+            $failures[] = 'statistical_claim_mismatch';
         }
 
-        $validationStatus = $relevant && ! $isDuplicate
+        $validationStatus = $relevant && ! $isDuplicate && $complete
             ? EvidenceValidationStatus::EVIDENCE_USABLE
             : EvidenceValidationStatus::REJECTED;
 
-        $observation = is_array($result->rawMetadata['faostat'] ?? null) ? $result->rawMetadata['faostat'] : [];
+        if (! $claimBlocked && (! $hasOfficialStatisticalBag || $assessorState === FaoStatSupportState::NOT_APPLICABLE)) {
+            $claimMatch = [
+                'relationship' => $relevant
+                    ? ClaimEvidenceRelationship::SUPPORTED
+                    : ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE,
+                'confidence' => $relevant ? 0.8 : 0.0,
+                'factors' => [
+                    'evidence_modality' => ScientificEvidenceModality::DIRECT_STATISTICAL,
+                    'statistical_alignment' => $alignment,
+                ],
+            ];
+        }
+
+        $directness = $relevant
+            ? ScientificEvidenceDirectnessAssessor::DIRECT
+            : ScientificEvidenceDirectnessAssessor::IRRELEVANT;
         $sourceId = (string) ($result->sourceIdentifier ?? $result->canonicalUrl ?? md5($result->title));
         $cropOrEntity = $plan->normalizedQuery->cropId
             ?? (is_array($plan->subjectEntity) ? ($plan->subjectEntity['value'] ?? null) : null);
+        $raw = is_array($result->rawMetadata) ? $result->rawMetadata : [];
+        $organization = is_string($raw['organization'] ?? null) && $raw['organization'] !== ''
+            ? $raw['organization']
+            : (is_string($observationBag['source'] ?? null) && $observationBag['source'] !== ''
+                ? (string) $observationBag['source']
+                : null);
 
         return new ScientificEvidenceItem(
             evidenceId: md5($sourceId.'|'.$result->title),
@@ -370,30 +433,45 @@ class AgriculturalScientificValidationService
             sourceType: 'official_statistics',
             publicationTitle: $result->title,
             authors: $result->authors,
-            institution: 'FAO / FAOSTAT',
-            journal: null,
-            doi: null,
+            institution: $organization,
+            journal: $result->journal,
+            doi: $result->doi,
             url: $result->canonicalUrl,
-            publicationYear: is_numeric($observation['year'] ?? null) ? (int) $observation['year'] : null,
+            publicationYear: $result->publicationYear,
             retrievedAt: $retrievedAt,
             agriculturalDomain: $plan->agriculturalDomain,
-            claimTopic: 'official_statistics',
+            claimTopic: $observation !== null && $observation->property !== ''
+                ? $observation->property
+                : 'official_statistics',
             evidenceText: $result->abstract,
             validationStatus: $validationStatus,
             validationFailures: $failures,
             claimRelationship: (string) $claimMatch['relationship'],
             confidence: (float) $claimMatch['confidence'],
             qualityScore: $relevant ? 80.0 : 0.0,
-            qualityFactors: array_merge($claimMatch['factors'], [
+            qualityFactors: array_merge($this->preservedUpstreamFacts($result), $claimMatch['factors'], [
                 'not_literature' => true,
                 'answer_eligible' => $relevant,
-                'evidence_directness' => 'direct_statistical',
+                'evidence_modality' => ScientificEvidenceModality::DIRECT_STATISTICAL,
+                'evidence_directness' => $directness,
+                'ranking_class' => ScientificEvidenceDirectnessAssessor::rankingClass($directness),
+                'observation' => $observationBag,
+                'observation_year' => $observationBag['year'] ?? ($observation?->year ?: null),
+                'observation_location' => $observationBag['area'] ?? ($observation?->location ?: null),
+                'observation_entity' => $observationBag['item'] ?? ($observation?->entity ?: null),
+                'observation_measure' => $observationBag['element'] ?? ($observation?->property ?: null),
+                'observation_unit' => $observationBag['unit'] ?? ($observation?->unit ?: null),
+                'observation_value' => $observationBag['value'] ?? ($observation?->value ?: null),
+                'statistical_alignment' => $alignment,
             ]),
             sourceAttribution: [
-                'organization' => 'FAO / FAOSTAT',
+                'organization' => $organization,
                 'source_type' => 'official_statistics',
                 'found_by_sources' => $result->foundBySources,
-                'evidence_directness' => 'direct_statistical',
+                'evidence_directness' => $directness,
+                'evidence_modality' => ScientificEvidenceModality::DIRECT_STATISTICAL,
+                'provenance' => $this->provenanceFromResult($result),
+                'observation' => $observationBag,
             ],
             cropOrEntity: is_string($cropOrEntity) ? $cropOrEntity : null,
         );
@@ -473,6 +551,8 @@ class AgriculturalScientificValidationService
                     'supporting' => 0,
                     'answer_eligible_supporting' => 0,
                 ],
+                'evidence_capability' => false,
+                'item_dispositions' => [],
             ],
         );
     }
@@ -614,5 +694,108 @@ class AgriculturalScientificValidationService
         }
 
         return $counts;
+    }
+
+    private function isDirectClass(ScientificEvidenceItem $item): bool
+    {
+        return ScientificEvidenceDirectnessAssessor::rankingClass(
+            (string) ($item->qualityFactors['evidence_directness'] ?? ''),
+        ) === 0;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function observationBag(ScientificSearchResult $result): array
+    {
+        $raw = is_array($result->rawMetadata) ? $result->rawMetadata : [];
+        foreach (['observation', 'statistical', 'faostat', 'structured'] as $key) {
+            if (is_array($raw[$key] ?? null) && $raw[$key] !== []) {
+                return $raw[$key];
+            }
+        }
+        $meta = is_array($result->relevanceMetadata) ? $result->relevanceMetadata : [];
+        if (is_array($meta['observation'] ?? null) && $meta['observation'] !== []) {
+            return $meta['observation'];
+        }
+
+        return [];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function preservedUpstreamFacts(ScientificSearchResult $result): array
+    {
+        $meta = is_array($result->relevanceMetadata) ? $result->relevanceMetadata : [];
+        $facts = [];
+        $bag = $this->observationBag($result);
+        if ($bag !== []) {
+            $facts['observation'] = $bag;
+        }
+        if (array_key_exists('species_relation', $meta)) {
+            $facts['species_relation'] = $meta['species_relation'];
+        }
+        if ($result->relevanceScore !== null) {
+            $facts['stage3_relevance_score'] = $result->relevanceScore;
+        }
+        if (isset($meta['evidence_directness'])) {
+            $facts['stage3_directness'] = $meta['evidence_directness'];
+        }
+        if (isset($meta['document_geo_scope'])) {
+            $facts['document_geo_scope'] = $meta['document_geo_scope'];
+        }
+
+        return $facts;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function provenanceFromResult(ScientificSearchResult $result): array
+    {
+        $raw = is_array($result->rawMetadata) ? $result->rawMetadata : [];
+        $meta = is_array($result->relevanceMetadata) ? $result->relevanceMetadata : [];
+        $existing = [];
+        if (is_array($raw['provenance'] ?? null)) {
+            $existing = $raw['provenance'];
+        } elseif (is_array($meta['provenance'] ?? null)) {
+            $existing = $meta['provenance'];
+        }
+
+        return array_merge($existing, [
+            'found_by_sources' => $result->foundBySources,
+            'source_key' => $result->sourceKey,
+            'source_identifier' => $result->sourceIdentifier,
+        ]);
+    }
+
+    /**
+     * @param  list<ScientificEvidenceItem>  $items
+     * @return list<array<string, mixed>>
+     */
+    private function itemDispositions(array $items): array
+    {
+        $dispositions = [];
+        foreach ($items as $item) {
+            $disposition = match (true) {
+                $item->hasConflict => 'conflicting',
+                $item->isUsable() => 'usable',
+                $item->isRejected() => 'rejected',
+                $item->validationStatus === EvidenceValidationStatus::METADATA_VALID => 'metadata_valid',
+                $item->claimRelationship === ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE => 'insufficient',
+                default => $item->validationStatus,
+            };
+            $dispositions[] = [
+                'evidence_id' => $item->evidenceId,
+                'source_key' => $item->sourceKey,
+                'validation_status' => $item->validationStatus,
+                'disposition' => $disposition,
+                'evidence_directness' => $item->qualityFactors['evidence_directness'] ?? null,
+                'evidence_modality' => $item->qualityFactors['evidence_modality'] ?? null,
+            ];
+        }
+
+        return $dispositions;
     }
 }

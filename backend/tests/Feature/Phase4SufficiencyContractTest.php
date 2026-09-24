@@ -79,6 +79,11 @@ class Phase4SufficiencyContractTest extends TestCase
         $this->assertArrayHasKey('supporting_evidence_count', $report->searchSummary);
         $this->assertArrayHasKey('answer_eligible_supporting_count', $report->searchSummary);
         $this->assertIsBool($report->evidenceSufficient);
+        $this->assertArrayHasKey('evidence_capability', $report->observability);
+        $this->assertSame(
+            ((int) ($report->searchSummary['direct_evidence_count'] ?? 0)) >= 1,
+            $report->evidenceSufficient,
+        );
         // Ranker score must not appear as a sufficiency input field.
         $this->assertArrayNotHasKey('relevance_score', $report->observability);
     }

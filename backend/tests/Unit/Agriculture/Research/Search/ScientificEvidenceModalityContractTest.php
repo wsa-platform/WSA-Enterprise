@@ -320,6 +320,7 @@ class ScientificEvidenceModalityContractTest extends TestCase
                 'not_literature' => true,
                 'answer_eligible' => true,
                 'evidence_type' => ScientificEvidenceModality::DIRECT_STATISTICAL,
+                'evidence_modality' => ScientificEvidenceModality::DIRECT_STATISTICAL,
                 'evidence_directness' => 'direct_statistical',
                 'observation' => [
                     'item' => 'Barley',
@@ -333,6 +334,7 @@ class ScientificEvidenceModalityContractTest extends TestCase
             ],
             sourceAttribution: [
                 'source_type' => 'official_statistics',
+                'evidence_modality' => ScientificEvidenceModality::DIRECT_STATISTICAL,
                 'evidence_directness' => 'direct_statistical',
             ],
         );

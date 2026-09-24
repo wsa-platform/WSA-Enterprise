@@ -48,7 +48,7 @@ final class ScientificStructuredObservation
             if (! is_array($meta)) {
                 continue;
             }
-            foreach (['observation', 'statistical', 'structured'] as $key) {
+            foreach (['observation', 'statistical', 'structured', 'faostat'] as $key) {
                 if (is_array($meta[$key] ?? null)) {
                     $bag = $meta[$key];
                     break 2;

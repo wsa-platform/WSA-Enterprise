@@ -20,6 +20,8 @@ use App\Services\Agriculture\Intelligence\Registry\AgriculturalProviderRegistry;
 use App\Services\Agriculture\Research\AgriculturalKnowledgeQuery;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
+use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
+use App\Services\Agriculture\Research\Search\ScientificEvidenceModality;
 use App\Services\Agriculture\Research\Search\ScientificSearchExecutionReport;
 use App\Services\Agriculture\Research\Search\ScientificSearchResult;
 use App\Services\Agriculture\Research\Search\ScientificSourceAdapterRegistry;
@@ -119,9 +121,9 @@ class FaoStatPhase2IntegrationTest extends TestCase
         $item = $validation->validatedEvidence[0];
         $this->assertSame(EvidenceValidationStatus::EVIDENCE_USABLE, $item->validationStatus);
         $this->assertSame(ClaimEvidenceRelationship::SUPPORTED, $item->claimRelationship);
-        $this->assertSame('direct_statistical', $item->qualityFactors['evidence_directness'] ?? null);
+        $this->assertSame(ScientificEvidenceDirectnessAssessor::DIRECT, $item->qualityFactors['evidence_directness'] ?? null);
+        $this->assertSame(ScientificEvidenceModality::DIRECT_STATISTICAL, $item->qualityFactors['evidence_modality'] ?? null);
         $this->assertTrue($item->qualityFactors['not_literature'] ?? false);
-        $this->assertNotSame('direct', $item->qualityFactors['evidence_directness'] ?? null);
     }
 
     public function test_mechanism_question_considers_faostat_but_rejects_unrelated_observation(): void
