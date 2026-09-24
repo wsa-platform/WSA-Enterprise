@@ -176,17 +176,17 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
     expect(html).not.toContain('data-testid="crop-uncertainty"')
   })
 
-  it('H/I citation title opens the original scientific URL and not the metadata Viewer or Google', async () => {
+  it('H/I citation title opens the internal Viewer and not the external URL or Google', async () => {
     await i18n.changeLanguage('en')
     const html = renderCanonical(canonicalFixture())
-    expect(html).toContain('href="https://example.org/wheat-direct"')
+    expect(html).toContain('href="/research/result/cite-1"')
     expect(html).toContain('>Wheat Study</a>')
-    expect(html).not.toContain('href="/research/result/')
+    expect(html).not.toContain('href="https://example.org/wheat-direct"')
     expect(html).not.toContain('google.com')
     expect(html).not.toContain('google.')
   })
 
-  it('does not send Crop source titles through the metadata Viewer when a real URL exists', async () => {
+  it('Crop source titles keep episode identity on the internal Viewer path', async () => {
     await i18n.changeLanguage('en')
     const html = renderToStaticMarkup(
       createElement(
@@ -198,12 +198,12 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
         }),
       ),
     )
-    expect(html).toContain('href="https://example.org/wheat-direct"')
-    expect(html).not.toContain('href="/research/result/cite-1?episode=ep-crop"')
+    expect(html).toContain('href="/research/result/cite-1?episode=ep-crop"')
+    expect(html).not.toContain('href="https://example.org/wheat-direct"')
     expect(html).not.toContain('google.')
   })
 
-  it('DOI citations use doi.org and title-only citations are not fake Viewer links', async () => {
+  it('DOI and title-only citations open the internal Viewer, not doi.org', async () => {
     await i18n.changeLanguage('en')
     const html = renderCanonical(
       canonicalFixture({
@@ -213,11 +213,12 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
         ],
       }),
     )
-    expect(html).toContain('href="https://doi.org/10.1234/crop.doi"')
+    expect(html).toContain('href="/research/result/doi-1"')
+    expect(html).toContain('href="/research/result/title-1"')
     expect(html).toContain('>DOI Paper</a>')
     expect(html).toContain('Title Only')
-    expect(html).toContain('data-testid="research-source-unavailable"')
-    expect(html).not.toContain('href="/research/result/')
+    expect(html).not.toContain('https://doi.org/10.1234/crop.doi')
+    expect(html).not.toContain('data-testid="research-source-unavailable"')
   })
 
   it('represents empty citations as an honest ineligible source state', async () => {

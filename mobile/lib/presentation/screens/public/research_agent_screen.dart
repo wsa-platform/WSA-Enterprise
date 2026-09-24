@@ -4,6 +4,7 @@ import 'package:wsa_enterprise/core/citations/citation_launcher.dart';
 import 'package:wsa_enterprise/data/models/stage8_models.dart';
 import 'package:wsa_enterprise/l10n/ar_strings.dart';
 import 'package:wsa_enterprise/l10n/research_ui_strings.dart';
+import 'package:wsa_enterprise/presentation/screens/public/research_source_viewer_screen.dart';
 import 'package:wsa_enterprise/presentation/widgets/public_async_body.dart';
 
 class ResearchAgentScreen extends StatefulWidget {
@@ -58,7 +59,20 @@ class _ResearchAgentScreenState extends State<ResearchAgentScreen> {
     }
   }
 
-  Future<void> _openCitation(ResearchCitation citation) async {
+  void _openInternalViewer(ResearchCitation citation) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ResearchSourceViewerScreen(
+          citation: citation,
+          uiLang: _uiLang,
+          answer: result?.canonicalAnswerText,
+          citationLauncher: _launcher,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openOriginalSource(ResearchCitation citation) async {
     final launch = await _launcher.openDirectUrl(citation.url);
     if (!mounted) return;
     setState(() {
@@ -141,15 +155,6 @@ class _ResearchAgentScreenState extends State<ResearchAgentScreen> {
                         key: const Key('research-canonical-answer'),
                       ),
                       const SizedBox(height: 12),
-                      Text(ResearchUiStrings.confidence(_uiLang),
-                          style: Theme.of(context).textTheme.titleMedium),
-                      Text(
-                        current.confidence == null
-                            ? '—'
-                            : current.confidence!.toStringAsFixed(2),
-                        key: const Key('research-confidence'),
-                      ),
-                      const SizedBox(height: 12),
                       if (current.limitations.isNotEmpty) ...[
                         Text(ResearchUiStrings.limitations(_uiLang),
                             style: Theme.of(context).textTheme.titleMedium),
@@ -193,24 +198,26 @@ class _ResearchAgentScreenState extends State<ResearchAgentScreen> {
                         const Text(ArStrings.noCitations),
                       for (final citation in current.citations)
                         ListTile(
+                          key: Key(
+                            'research-citation-${citation.citationId ?? citation.title}',
+                          ),
                           title: Text(citation.title),
                           subtitle: Text([
                             if (citation.doi != null &&
                                 citation.doi!.isNotEmpty)
                               'DOI: ${citation.doi}',
-                            if (citation.url != null &&
-                                citation.url!.isNotEmpty)
-                              citation.url!,
                             if (citation.evidenceId != null)
                               'evidence: ${citation.evidenceId}',
                             if (citation.sourceType != null)
                               citation.sourceType!,
                           ].join('\n')),
+                          onTap: () => _openInternalViewer(citation),
                           trailing: citation.url == null ||
                                   citation.url!.trim().isEmpty
                               ? null
                               : TextButton(
-                                  onPressed: () => _openCitation(citation),
+                                  onPressed: () =>
+                                      _openOriginalSource(citation),
                                   child: Text(
                                       ResearchUiStrings.openSource(_uiLang)),
                                 ),

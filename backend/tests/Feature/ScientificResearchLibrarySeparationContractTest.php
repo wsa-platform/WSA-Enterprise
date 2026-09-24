@@ -158,6 +158,50 @@ class ScientificResearchLibrarySeparationContractTest extends TestCase
         $this->assertSame('PASSED', $synthesis->researchMetadata['direct_evidence_gate']);
     }
 
+    public function test_presentation_threshold_excludes_49_99_and_includes_50_and_50_01(): void
+    {
+        $synthesis = new AnswerSynthesisExecutionReport(
+            status: 'synthesis_completed',
+            performed: true,
+            answer: 'Primary scientific answer.',
+            conciseSummary: 'Primary scientific answer.',
+            detailedExplanation: 'Primary scientific answer.',
+            keyFindings: [],
+            claims: [
+                $this->claim('c-below', 'Just below threshold.', 0.4999),
+                $this->claim('c-edge', 'Exact threshold.', 0.50),
+                $this->claim('c-above', 'Just above threshold.', 0.5001),
+                $this->claim('c-high', 'Highest qualifying.', 0.82),
+                $this->claim('c-mid', 'Mid qualifying.', 0.71),
+            ],
+            citations: [$this->citation()],
+            evidenceReferences: [],
+            confidence: 0.8,
+            limitations: [],
+            uncertainty: null,
+            conflicts: [],
+            language: 'en',
+            researchMetadata: [
+                'direct_evidence_gate' => 'PASSED',
+                'evidence_sufficient' => true,
+            ],
+            observability: [],
+        );
+
+        $presented = ScientificAnswerCandidatePresenter::fromSynthesis($synthesis);
+        $answers = array_column($presented['answer_candidates'], 'answer');
+        $this->assertSame([
+            'Highest qualifying.',
+            'Mid qualifying.',
+            'Just above threshold.',
+            'Exact threshold.',
+        ], $answers);
+        $this->assertNotContains('Just below threshold.', $answers);
+        $this->assertFalse($presented['answer_candidate_selection']['confidence_exposed']);
+        $this->assertTrue($presented['answer_candidate_selection']['directness_unchanged']);
+        $this->assertSame(0.50, ScientificAnswerCandidatePresenter::PRESENTATION_THRESHOLD);
+    }
+
     public function test_supporting_confidence_cap_cannot_create_presentable_direct_candidates(): void
     {
         $synthesis = new AnswerSynthesisExecutionReport(

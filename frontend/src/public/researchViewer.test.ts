@@ -110,7 +110,7 @@ describe('research viewer navigation', () => {
     expect(loadResearchViewerRecord('cite-nav')?.title).toBe('Agronomy evidence')
   })
 
-  it('search result title is a real clickable original-source anchor', () => {
+  it('search result title is a clickable internal Viewer anchor', () => {
     const html = renderToStaticMarkup(
       createElement(
         MemoryRouter,
@@ -126,11 +126,11 @@ describe('research viewer navigation', () => {
       ),
     )
 
-    expect(isClickableAnchorMarkup(html, 'https://example.org/paper')).toBe(true)
+    expect(isClickableAnchorMarkup(html, '/research/result/cite-1')).toBe(true)
     expect(html).toContain('data-testid="research-source-viewer-link"')
-    expect(html).not.toContain('/research/result/cite-1')
+    expect(html).not.toContain('https://example.org/paper')
     expect(html).not.toMatch(/google/i)
-    expect(isClickableAnchorMarkup(html, '/research/result/cite-1')).toBe(false)
+    expect(isClickableAnchorMarkup(html, 'https://example.org/paper')).toBe(false)
   })
 
   it('rejects a plain-text URL as a clickable source', () => {

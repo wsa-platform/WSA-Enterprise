@@ -334,7 +334,8 @@ void main() {
       expect(find.byKey(const Key('research-canonical-answer')), findsOneWidget);
       expect(find.text('Scientific answer in English.'), findsOneWidget);
       expect(find.text('الإجابة'), findsOneWidget);
-      expect(find.text('درجة الثقة'), findsOneWidget);
+      expect(find.text('درجة الثقة'), findsNothing);
+      expect(find.byKey(const Key('research-confidence')), findsNothing);
       expect(find.textContaining('en'), findsWidgets);
       // Must not invent Arabic scientific rewrite.
       expect(find.textContaining('إجابة علمية'), findsNothing);
@@ -375,7 +376,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Answer'), findsOneWidget);
-      expect(find.text('Confidence'), findsOneWidget);
+      expect(find.text('Confidence'), findsNothing);
+      expect(find.byKey(const Key('research-confidence')), findsNothing);
       expect(
         find.text('إجابة علمية بالعربية دون ترجمة محلية.'),
         findsOneWidget,
@@ -421,6 +423,66 @@ void main() {
 
       expect(launched.toString(), 'https://example.org/paper');
       expect(launched.toString(), isNot(contains('google')));
+    });
+
+    testWidgets('citation title opens internal viewer without launching URL',
+        (tester) async {
+      Uri? launched;
+      final client = testApiClient(
+        httpClient: MockClient((request) async {
+          return jsonOk(stage5CanonicalFixture());
+        }),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResearchAgentScreen(
+              client: client,
+              citationLauncher: CitationLauncher(
+                launchFn:
+                    (uri, {LaunchMode mode = LaunchMode.platformDefault}) async {
+                  launched = uri;
+                  return true;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextField), 'q');
+      await tester.tap(find.text(ArStrings.submit));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Wheat Study'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('research-source-viewer')), findsOneWidget);
+      expect(find.byKey(const Key('research-source-viewer-title')), findsOneWidget);
+      expect(launched, isNull);
+    });
+
+    testWidgets('confidence is not rendered to the user', (tester) async {
+      final client = testApiClient(
+        httpClient: MockClient((request) async {
+          return jsonOk(stage5CanonicalFixture(confidence: 0.82));
+        }),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: ResearchAgentScreen(client: client)),
+        ),
+      );
+      await tester.enterText(find.byType(TextField), 'q');
+      await tester.tap(find.text(ArStrings.submit));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('research-confidence')), findsNothing);
+      expect(find.text('درجة الثقة'), findsNothing);
+      expect(find.text('0.82'), findsNothing);
+      expect(find.text('82%'), findsNothing);
     });
 
     testWidgets('insufficient evidence shows status not as full conclusion',
