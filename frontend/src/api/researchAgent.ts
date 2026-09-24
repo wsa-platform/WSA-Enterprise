@@ -13,6 +13,7 @@ export type ResearchAgentCitation = {
   citation_id?: string
   source_id?: string
   evidence_id?: string
+  library_file_id?: number
 }
 
 /** Stage 5 conflict item as already emitted by backend synthesis (string or detail map). */
@@ -46,6 +47,7 @@ export type ResearchUserPresentationPayload = {
     journal?: string | null
     publication_year?: number | null
     original_url?: string | null
+    library_file_id?: number
   }>
   answer_language?: string | null
   candidate_selection?: {

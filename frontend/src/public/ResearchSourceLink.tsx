@@ -1,6 +1,7 @@
 import type { ResearchAgentCitation, ResearchAnswerCandidate } from '../api/researchAgent'
-import { activateResearchResult, researchViewerPath, researchViewerRecordFromCitation } from './researchViewer'
-import { viewerPathForResult } from './scientificSearchEpisode'
+import { authenticatedLibraryFileContentPath } from '../api/libraryCropFiles'
+import { citationHref } from './citationHref'
+import { isExternalSearchRedirect } from './researchViewer'
 
 type ResearchSourceLinkProps = {
   citation: ResearchAgentCitation
@@ -12,27 +13,62 @@ type ResearchSourceLinkProps = {
   resultId?: string
 }
 
-/** Search-result title opens the internal WSA Research Viewer. Never Google. */
+function isUnsafeOrInternalViewerHref(url: string): boolean {
+  if (/^(javascript|data|vbscript):/i.test(url.trim())) {
+    return true
+  }
+
+  try {
+    const parsed = new URL(url)
+    const host = parsed.hostname.toLowerCase()
+    if (host === 'bing.com' || host.endsWith('.bing.com')) {
+      return true
+    }
+    if (parsed.pathname.startsWith('/research/result')) {
+      return true
+    }
+    return false
+  } catch {
+    return true
+  }
+}
+
+/** Trusted original URL, DOI, or existing Library file preview. Never the metadata Viewer. */
+export function researchSourceHref(citation: ResearchAgentCitation): string | null {
+  const fromEvidence = citationHref({ url: citation.url, doi: citation.doi })
+  if (
+    fromEvidence
+    && !isExternalSearchRedirect(fromEvidence)
+    && !isUnsafeOrInternalViewerHref(fromEvidence)
+  ) {
+    return fromEvidence
+  }
+
+  const fileId = citation.library_file_id
+  if (typeof fileId === 'number' && Number.isInteger(fileId) && fileId > 0) {
+    return authenticatedLibraryFileContentPath(fileId)
+  }
+
+  return null
+}
+
+/** Research title opens the actual source URL or preserved Library file. Never a title-only Viewer. */
 export function ResearchSourceLink({
   citation,
   label,
-  answer = null,
-  index = 0,
-  alternatives = [],
-  episodeId = null,
-  resultId,
 }: ResearchSourceLinkProps) {
-  const record = researchViewerRecordFromCitation(citation, answer, index, alternatives)
-  const id = resultId || record.resultId
-  const href = episodeId ? viewerPathForResult(id, episodeId) : researchViewerPath(id)
+  const href = researchSourceHref(citation)
+
+  if (!href) {
+    return <span data-testid="research-source-unavailable">{label}</span>
+  }
 
   return (
     <a
       href={href}
+      target="_blank"
+      rel="noreferrer noopener"
       data-testid="research-source-viewer-link"
-      onClick={() => {
-        activateResearchResult(citation, answer, index, alternatives)
-      }}
     >
       {label}
     </a>
