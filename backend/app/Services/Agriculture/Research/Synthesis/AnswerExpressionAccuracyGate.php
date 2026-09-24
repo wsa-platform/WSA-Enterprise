@@ -171,6 +171,15 @@ final class AnswerExpressionAccuracyGate
     }
 
     /**
+     * Public read of the B3 observation-year rule for other Stage-5 consumers.
+     * Does not use publicationYear. Empty when no explicit observation year exists.
+     */
+    public function observationYearForItem(ScientificEvidenceItem $item): string
+    {
+        return $this->explicitObservationYear($item);
+    }
+
+    /**
      * Explicit observation / statistical / structured year only.
      * Never falls back to publicationYear or surface publication metadata.
      */

@@ -180,8 +180,8 @@ class AnswerComposer
                 if ($limitation === '') {
                     continue;
                 }
-                $phrased = $this->phraseAccuracyLimitation($language, $limitation);
-                $entry = $phrased ?? $limitation;
+                $phrased = $this->phraseUserFacingLimitation($language, $limitation);
+                $entry = $phrased;
                 if (! in_array($entry, $limitations, true)) {
                     $limitations[] = $entry;
                 }
@@ -321,7 +321,7 @@ class AnswerComposer
                 'independent_search' => false,
                 'validation_bypassed' => false,
                 'evidence_directness_filter' => true,
-            ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, $usable)
+            ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, $usable, $claims)
               + $this->homeEvidenceLifecycleMetadata(
                 $plan,
                 $validationReport,
@@ -335,14 +335,17 @@ class AnswerComposer
     /**
      * Phase-5 Unit A — embed Question→Claims→Evidence→AnswerStatement matrix.
      * Does not own Phase-4 axes or R5 persistence.
+     * Optional $claims overlay reports already-computed B3 accuracy_* codes onto traces.
      *
      * @param  list<ScientificEvidenceItem>  $usable
+     * @param  list<ResearchAnswerClaim>  $claims
      * @return array<string, mixed>
      */
     private function phase5QuestionClaimMatrix(
         KnowledgeQueryPlan $plan,
         ?EvidenceValidationExecutionReport $validationReport,
         array $usable = [],
+        array $claims = [],
     ): array {
         $report = $validationReport ?? new EvidenceValidationExecutionReport(
             status: 'no_valid_evidence',
@@ -360,14 +363,53 @@ class AnswerComposer
             observability: [],
         );
         $matrix = (new QuestionClaimSynthesisContract)->build($plan, $report, $usable);
+        $traces = $this->overlayB3AccuracyOutcomesOnTraces(
+            is_array($matrix['answer_statement_traces'] ?? null) ? $matrix['answer_statement_traces'] : [],
+            $claims,
+        );
 
         return [
             'phase5_unit_a' => true,
             'question_claims' => $matrix['question_claims'],
             'claim_evidence_bindings' => $matrix['claim_evidence_bindings'],
-            'answer_statement_traces' => $matrix['answer_statement_traces'],
+            'answer_statement_traces' => $traces,
             'question_claim_matrix_version' => $matrix['matrix_version'],
         ];
+    }
+
+    /**
+     * Report B3 accuracy_* codes on traces. Does not re-run the gate or change Unit A status.
+     *
+     * @param  list<array<string, mixed>>  $traces
+     * @param  list<ResearchAnswerClaim>  $claims
+     * @return list<array<string, mixed>>
+     */
+    private function overlayB3AccuracyOutcomesOnTraces(array $traces, array $claims): array
+    {
+        $outcomesByClaim = [];
+        foreach ($claims as $claim) {
+            $questionClaimId = trim((string) $claim->questionClaimId);
+            if ($questionClaimId === '') {
+                continue;
+            }
+            foreach ($claim->limitations as $limitation) {
+                $code = trim((string) $limitation);
+                if ($code !== '' && str_starts_with($code, 'accuracy_')) {
+                    $outcomesByClaim[$questionClaimId][] = $code;
+                }
+            }
+        }
+
+        foreach ($traces as $index => $trace) {
+            if (! is_array($trace)) {
+                continue;
+            }
+            $questionClaimId = (string) ($trace['question_claim_id'] ?? '');
+            $outcomes = array_values(array_unique($outcomesByClaim[$questionClaimId] ?? []));
+            $traces[$index]['accuracy_outcomes'] = $outcomes;
+        }
+
+        return $traces;
     }
 
     /**
@@ -1358,16 +1400,32 @@ class AnswerComposer
      */
     private function phraseAccuracyLimitation(string $language, string $code): ?string
     {
+        $phrased = $this->phraseUserFacingLimitation($language, $code);
+
+        return $phrased;
+    }
+
+    /**
+     * Localized user-facing limitation. Never returns a raw internal key.
+     */
+    private function phraseUserFacingLimitation(string $language, string $code): string
+    {
         $key = match ($code) {
             'accuracy_entity_incompatible' => 'limitation_accuracy_entity',
             'accuracy_property_unsupported' => 'limitation_accuracy_property',
-            'accuracy_geography_unsupported' => 'limitation_accuracy_geography',
-            'accuracy_period_unsupported' => 'limitation_accuracy_period',
+            'accuracy_geography_unsupported', 'accuracy_geography_mismatch' => 'limitation_accuracy_geography',
+            'accuracy_period_unsupported', 'accuracy_period_mismatch' => 'limitation_accuracy_period',
             'accuracy_numeric_unsupported', 'accuracy_numeric_ambiguous' => 'limitation_accuracy_numeric',
-            default => null,
+            'insufficient_validated_evidence_for_question_claim' => 'limitation_insufficient_claim_evidence',
+            'partial_evidence_support' => 'limitation_partial_claim_support',
+            'validation_evidence_insufficient' => 'limitation_validation_insufficient',
+            'conflicting_evidence_for_question_claim' => 'limitation_claim_conflict',
+            'supporting_not_direct_evidence' => 'limitation_supporting_not_direct',
+            'comparison_decomposition_unsupported' => 'limitation_comparison_incomplete',
+            default => 'limitation_generic',
         };
 
-        return $key === null ? null : AnswerComposerPhrases::get($language, $key);
+        return AnswerComposerPhrases::get($language, $key);
     }
 
     /**
@@ -2475,12 +2533,16 @@ class AnswerComposer
             return false;
         }
 
-        $requestedYear = trim((string) ($plan->normalizedQuery->constraints['year'] ?? ''));
-        if ($requestedYear !== ''
-            && preg_match('/^(?:19|20)\d{2}$/', $requestedYear) === 1
-            && $item->publicationYear !== null
-            && (int) $item->publicationYear !== (int) $requestedYear) {
-            return false;
+        $requestedYear = trim((string) ($plan->normalizedQuery->constraints['year']
+            ?? $plan->normalizedQuery->constraints['year_code']
+            ?? $plan->normalizedQuery->constraints['time']
+            ?? ''));
+        if ($requestedYear !== '' && preg_match('/^(?:19|20)\d{2}$/', $requestedYear) === 1) {
+            $observationYear = $this->expressionAccuracyGate->observationYearForItem($item);
+            // Observation year is authoritative. Publication year must not satisfy a year requirement.
+            if ($observationYear === '' || $observationYear !== $requestedYear) {
+                return false;
+            }
         }
 
         $propertyKey = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));

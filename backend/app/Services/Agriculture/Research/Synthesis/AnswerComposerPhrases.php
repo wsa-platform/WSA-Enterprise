@@ -234,6 +234,48 @@ final class AnswerComposerPhrases
                 'tr' => 'Mevcut kanıtlardan istenen ölçüme güvenle bağlanabilecek bir sayısal değer çıkarılamadı.',
                 'fr' => 'Une valeur numérique n’a pas pu être reliée de façon sûre à la mesure demandée à partir des preuves disponibles.',
             ],
+            'limitation_insufficient_claim_evidence' => [
+                'en' => 'Validated scientific evidence is insufficient for this part of the question.',
+                'ar' => 'الأدلة العلمية المعتمدة غير كافية لهذا الجزء من السؤال.',
+                'tr' => 'Bu soru bölümü için doğrulanmış bilimsel kanıt yetersizdir.',
+                'fr' => 'Les preuves scientifiques validées sont insuffisantes pour cette partie de la question.',
+            ],
+            'limitation_partial_claim_support' => [
+                'en' => 'Available evidence provides only partial support for this claim.',
+                'ar' => 'الأدلة المتاحة تقدم دعمًا جزئيًا فقط لهذه الدعوى.',
+                'tr' => 'Mevcut kanıtlar bu iddia için yalnızca kısmi destek sağlar.',
+                'fr' => 'Les preuves disponibles n’apportent qu’un soutien partiel à cette affirmation.',
+            ],
+            'limitation_validation_insufficient' => [
+                'en' => 'Validated evidence is not sufficient to support a confident answer.',
+                'ar' => 'الأدلة المعتمدة غير كافية لدعم إجابة مؤكدة.',
+                'tr' => 'Doğrulanmış kanıtlar güvenli bir yanıtı desteklemek için yeterli değildir.',
+                'fr' => 'Les preuves validées ne suffisent pas à étayer une réponse certaine.',
+            ],
+            'limitation_claim_conflict' => [
+                'en' => 'Conflicting scientific evidence exists for this claim.',
+                'ar' => 'توجد أدلة علمية متعارضة لهذه الدعوى.',
+                'tr' => 'Bu iddia için çelişkili bilimsel kanıtlar vardır.',
+                'fr' => 'Des preuves scientifiques contradictoires existent pour cette affirmation.',
+            ],
+            'limitation_supporting_not_direct' => [
+                'en' => 'Available evidence is supporting rather than direct and cannot be treated as a confident answer.',
+                'ar' => 'الأدلة المتاحة داعمة وليست مباشرة، ولا يمكن التعامل معها كإجابة مؤكدة.',
+                'tr' => 'Mevcut kanıtlar doğrudan değil destekleyicidir ve kesin yanıt olarak ele alınmamalıdır.',
+                'fr' => 'Les preuves disponibles sont complémentaires plutôt que directes et ne doivent pas être traitées comme une réponse certaine.',
+            ],
+            'limitation_comparison_incomplete' => [
+                'en' => 'This comparison could not be completed from the available evidence.',
+                'ar' => 'تعذر إكمال هذه المقارنة من الأدلة المتاحة.',
+                'tr' => 'Bu karşılaştırma mevcut kanıtlardan tamamlanamadı.',
+                'fr' => 'Cette comparaison n’a pas pu être menée à partir des preuves disponibles.',
+            ],
+            'limitation_generic' => [
+                'en' => 'The available scientific evidence is limited for this question.',
+                'ar' => 'الأدلة العلمية المتاحة لهذا السؤال محدودة.',
+                'tr' => 'Bu soru için mevcut bilimsel kanıtlar sınırlıdır.',
+                'fr' => 'Les preuves scientifiques disponibles pour cette question sont limitées.',
+            ],
             'uncertainty_insufficient' => [
                 'en' => 'Available scientific evidence is insufficient for a definitive conclusion.',
                 'ar' => 'الأدلة العلمية المتاحة غير كافية لإعطاء نتيجة مؤكدة.',

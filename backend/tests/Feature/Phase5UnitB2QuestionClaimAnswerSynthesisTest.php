@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
 use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
+use App\Services\Agriculture\Research\Synthesis\AnswerComposerPhrases;
 use App\Services\Agriculture\Research\Synthesis\QuestionClaimSynthesisContract;
 use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
 use Tests\TestCase;
@@ -103,6 +104,10 @@ class Phase5UnitB2QuestionClaimAnswerSynthesisTest extends TestCase
             $byQc['qc-2']->limitations,
         );
         $this->assertContains(
+            AnswerComposerPhrases::get('en', 'limitation_insufficient_claim_evidence'),
+            $report->limitations,
+        );
+        $this->assertNotContains(
             'insufficient_validated_evidence_for_question_claim',
             $report->limitations,
         );

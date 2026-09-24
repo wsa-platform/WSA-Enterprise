@@ -13,6 +13,7 @@ final class AnswerStatementTrace
      * @param  list<string>  $evidenceIds
      * @param  list<string>  $sourceIds
      * @param  list<string>  $limitations
+     * @param  list<string>  $accuracyOutcomes  B3 accuracy_* codes reported after the gate; empty when B3 did not reject. Does not change `status`.
      */
     public function __construct(
         public readonly string $statementId,
@@ -24,6 +25,7 @@ final class AnswerStatementTrace
         public readonly array $sourceIds,
         public readonly bool $answerEligible,
         public readonly array $limitations = [],
+        public readonly array $accuracyOutcomes = [],
     ) {}
 
     /** @return array<string, mixed> */
@@ -39,6 +41,7 @@ final class AnswerStatementTrace
             'source_ids' => $this->sourceIds,
             'answer_eligible' => $this->answerEligible,
             'limitations' => $this->limitations,
+            'accuracy_outcomes' => $this->accuracyOutcomes,
         ];
     }
 }
