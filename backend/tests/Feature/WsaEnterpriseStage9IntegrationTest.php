@@ -115,8 +115,7 @@ class WsaEnterpriseStage9IntegrationTest extends TestCase
         $order = app(ScientificSourceDiscoveryPipeline::class)->discovererOrder();
         $this->assertSame('external_openalex', $order[0]);
         $this->assertSame('external_crossref', $order[1]);
-        $this->assertContains('library_structured', $order);
-        $this->assertTrue(array_search('library_structured', $order, true) > array_search('external_crossref', $order, true));
+        $this->assertNotContains('library_structured', $order);
 
         $this->fakeScholarly([
             $this->openAlexWork(

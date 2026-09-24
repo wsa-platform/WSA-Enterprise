@@ -12,14 +12,15 @@ use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService
 use App\Services\Agriculture\Research\Search\ScientificSearchExecutionReport;
 use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
 use App\Services\Agriculture\Research\Synthesis\AnswerSynthesisExecutionReport;
+use App\Services\Agriculture\Research\Synthesis\ScientificAnswerCandidatePresenter;
 use App\Services\Agriculture\Research\Validation\AgriculturalScientificValidationService;
 use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionReport;
 use Illuminate\Validation\ValidationException;
 
 /**
  * Top-level agricultural research orchestration layer.
- * Coordinates query understanding, planning, scientific search, validation, library memory, and aggregation.
- * When UNIVERSAL_ANSWER_ORCHESTRATOR_ENABLED, synthesizes via UniversalAnswerOrchestrator (ADR-002).
+ * Coordinates query understanding, planning, scientific search, validation, synthesis, and persistence.
+ * Scientific Research terminates at its own Stage 5 result. Library Search is not a research stage.
  */
 class AgriculturalResearchAgent
 {
@@ -30,7 +31,6 @@ class AgriculturalResearchAgent
         private AgriculturalScientificValidationService $scientificValidationService,
         private AnswerComposer $answerComposer,
         private ScientificKnowledgePersistenceService $knowledgePersistenceService,
-        private AgriculturalScientificKnowledgeEngine $knowledgeEngine,
         private HomeEvidenceLifecycleDisposition $homeEvidenceLifecycleDisposition = new HomeEvidenceLifecycleDisposition,
         private ?UniversalAnswerOrchestrator $universalAnswerOrchestrator = null,
     ) {}
@@ -154,17 +154,24 @@ class AgriculturalResearchAgent
             ];
         }
 
+        $startedNs = hrtime(true);
+        $searchStartedNs = hrtime(true);
         $searchReport = $this->scientificSearchService->search(
             $knowledgePlan,
             (int) ($input['limit'] ?? 10),
         );
+        $stage3Ms = $this->elapsedMsSince($searchStartedNs);
+        $validationStartedNs = hrtime(true);
         $validationReport = $this->scientificValidationService->validate($knowledgePlan, $searchReport);
+        $stage4Ms = $this->elapsedMsSince($validationStartedNs);
+        $composeStartedNs = hrtime(true);
         $synthesisReport = $this->answerComposer->compose($knowledgePlan, $validationReport);
         $synthesisReport = $this->applyHomeEvidenceLifecycleDisposition(
             $knowledgePlan,
             $validationReport,
             $synthesisReport,
         );
+        $composerMs = $this->elapsedMsSince($composeStartedNs);
         $persistenceReport = $this->knowledgePersistenceService->persist(
             $organizationId,
             $knowledgePlan,
@@ -172,15 +179,22 @@ class AgriculturalResearchAgent
             $validationReport,
         );
 
+        $candidates = ScientificAnswerCandidatePresenter::fromSynthesis($synthesisReport);
+
         $payload = array_merge(
             $synthesisReport->toArray(),
             $persistenceReport->toArray(),
+            $candidates,
             [
                 'status' => $synthesisReport->status,
                 'persistence_status' => $persistenceReport->status,
                 'observability' => array_merge(
                     $synthesisReport->observability,
                     $persistenceReport->observability,
+                    [
+                        'legacy_post_processing' => 'removed',
+                        'legacy_post_processing_reason' => 'library_search_separated',
+                    ],
                 ),
                 'query_understanding' => $knowledgePlan->normalizedQuery->toArray(),
                 'knowledge_query_plan' => $knowledgePlan->toArray(),
@@ -195,10 +209,19 @@ class AgriculturalResearchAgent
                     $validationReport->rejectedEvidence,
                 ),
                 'internet_first' => $searchReport->internetFirst,
+                'stage_timings' => $this->stageTimings(
+                    stage3Ms: $stage3Ms,
+                    stage4Ms: $stage4Ms,
+                    composerMs: $composerMs,
+                    totalMs: $this->elapsedMsSince($startedNs),
+                    searchReport: $searchReport,
+                    validationReport: $validationReport,
+                    synthesisReport: $synthesisReport,
+                ),
             ],
         );
 
-        return $this->maybeEnrichWithUniversalOrchestrator($payload, $input);
+        return $payload;
     }
 
     /**
@@ -271,14 +294,21 @@ class AgriculturalResearchAgent
             ];
         }
 
+        $startedNs = hrtime(true);
+        $searchStartedNs = hrtime(true);
         $scientificSearch = $this->scientificSearchService->search($knowledgePlan);
+        $stage3Ms = $this->elapsedMsSince($searchStartedNs);
+        $validationStartedNs = hrtime(true);
         $scientificValidation = $this->scientificValidationService->validate($knowledgePlan, $scientificSearch);
+        $stage4Ms = $this->elapsedMsSince($validationStartedNs);
+        $composeStartedNs = hrtime(true);
         $synthesisReport = $this->answerComposer->compose($knowledgePlan, $scientificValidation);
         $synthesisReport = $this->applyHomeEvidenceLifecycleDisposition(
             $knowledgePlan,
             $scientificValidation,
             $synthesisReport,
         );
+        $composerMs = $this->elapsedMsSince($composeStartedNs);
         $persistenceReport = $this->knowledgePersistenceService->persist(
             $organizationId,
             $knowledgePlan,
@@ -287,45 +317,22 @@ class AgriculturalResearchAgent
         );
 
         $plan = $knowledgePlan->toAgriculturalResearchPlan();
-
-        if (! $this->shouldRunLegacyPostProcessing($plan, $synthesisReport)) {
-            if ($plan->isCropProfileIntent()) {
-                $legacy = $this->cropCompatibilityEnvelope($plan, $persistenceReport);
-                $legacy['research_agent'] = [
-                    'orchestrated' => true,
-                    'stage' => 5,
-                    'query_understanding' => $knowledgePlan->normalizedQuery->toArray(),
-                    'plan' => $plan->toArray(),
-                    'knowledge_query_plan' => $knowledgePlan->toArray(),
-                    'scientific_search' => $scientificSearch->toArray(),
-                    'scientific_validation' => $scientificValidation->toArray(),
-                    'synthesis' => $synthesisReport->toArray(),
-                    'library_persistence' => $persistenceReport->toArray(),
-                    'discovery' => [
-                        'discoverers_used' => [],
-                        'external_discoverers_used' => [],
-                        'library_discoverers_used' => [],
-                        'internet_first' => $knowledgePlan->isInternetFirst(),
-                    ],
-                ];
-
-                return CropCanonicalStage5Response::dualEmit($legacy, $synthesisReport);
-            }
-
-            return $this->stage5ResponseWithoutBlockingPostProcessing(
-                $knowledgePlan,
-                $plan,
-                $scientificSearch,
-                $scientificValidation,
-                $synthesisReport,
-                $persistenceReport,
-            );
-        }
-
-        $result = $this->knowledgeEngine->execute($organizationId, $plan);
+        $timings = $this->stageTimings(
+            stage3Ms: $stage3Ms,
+            stage4Ms: $stage4Ms,
+            composerMs: $composerMs,
+            totalMs: $this->elapsedMsSince($startedNs),
+            searchReport: $scientificSearch,
+            validationReport: $scientificValidation,
+            synthesisReport: $synthesisReport,
+        );
 
         if ($plan->isCropProfileIntent()) {
-            $legacy = $result->toLegacyProfileResponse();
+            $legacy = $this->cropCompatibilityEnvelope(
+                $plan,
+                $persistenceReport,
+                $this->scientificLoadState($synthesisReport),
+            );
             $legacy['research_agent'] = [
                 'orchestrated' => true,
                 'stage' => 5,
@@ -337,35 +344,38 @@ class AgriculturalResearchAgent
                 'synthesis' => $synthesisReport->toArray(),
                 'library_persistence' => $persistenceReport->toArray(),
                 'discovery' => [
-                    'discoverers_used' => $result->discoverersUsed,
-                    'external_discoverers_used' => $result->externalDiscoverersUsed,
-                    'library_discoverers_used' => $result->libraryDiscoverersUsed,
-                    'internet_first' => $result->toAgentResponse()['discovery']['internet_first'],
+                    'performed' => false,
+                    'reason' => 'library_search_separated',
+                    'discoverers_used' => [],
+                    'external_discoverers_used' => [],
+                    'library_discoverers_used' => [],
+                    'internet_first' => $knowledgePlan->isInternetFirst(),
                 ],
             ];
 
-            // Phase 7 P7-U1 / STRUCT-03: Stage 5 is the canonical scientific Crop answer
-            // at root; legacy sections/load_state/library remain compatibility siblings.
-            return CropCanonicalStage5Response::dualEmit($legacy, $synthesisReport);
+            $response = CropCanonicalStage5Response::dualEmit($legacy, $synthesisReport);
+
+            return $this->terminateScientificResponse(
+                $response,
+                $knowledgePlan,
+                $plan,
+                $scientificSearch,
+                $scientificValidation,
+                $synthesisReport,
+                $persistenceReport,
+                $timings,
+            );
         }
 
-        $response = $result->toAgentResponse();
-        $response['stage'] = 5;
-        $response['query_understanding'] = $knowledgePlan->normalizedQuery->toArray();
-        $response['knowledge_query_plan'] = $knowledgePlan->toArray();
-        $response['scientific_search'] = $scientificSearch->toArray();
-        $response['scientific_validation'] = $scientificValidation->toArray();
-
-        $merged = array_merge($response, $synthesisReport->toArray(), $persistenceReport->toArray(), [
-            'status' => $response['status'] ?? $synthesisReport->status,
-            'persistence_status' => $persistenceReport->status,
-            'observability' => array_merge(
-                $synthesisReport->observability,
-                $persistenceReport->observability,
-            ),
-        ]);
-
-        return $this->maybeEnrichWithUniversalOrchestrator($merged, $input);
+        return $this->stage5ResponseWithoutBlockingPostProcessing(
+            $knowledgePlan,
+            $plan,
+            $scientificSearch,
+            $scientificValidation,
+            $synthesisReport,
+            $persistenceReport,
+            $timings,
+        );
     }
 
     /**
@@ -412,49 +422,9 @@ class AgriculturalResearchAgent
     }
 
     /**
-     * @param  array<string, mixed>  $payload
-     * @param  array<string, mixed>  $input
-     * @return array<string, mixed>
-     */
-    private function maybeEnrichWithUniversalOrchestrator(array $payload, array $input): array
-    {
-        if ($this->payloadHasSufficientScientificResult($payload)) {
-            return $payload;
-        }
-
-        if (! $this->isUniversalOrchestratorEnabled()) {
-            return $payload;
-        }
-
-        if (! filter_var(config('agricultural_intelligence.enrich_legacy_synthesis', true), FILTER_VALIDATE_BOOL)) {
-            return $payload;
-        }
-
-        try {
-            $orchestrator = $this->universalAnswerOrchestrator ?? app(UniversalAnswerOrchestrator::class);
-
-            return $orchestrator->enrichLegacySynthesis($payload, $input);
-        } catch (\Throwable) {
-            // Backward-compatible: enrichment failures must not break existing consumers.
-            return $payload;
-        }
-    }
-
-    /**
-     * Home and Crop share the same Stage 5 sufficiency gate.
-     * Sufficient DIRECT synthesis skips CropKnowledgeEngine (no second discovery).
-     */
-    private function shouldRunLegacyPostProcessing(
-        AgriculturalResearchPlan $plan,
-        AnswerSynthesisExecutionReport $synthesisReport,
-    ): bool {
-        return ! $this->hasSufficientScientificSynthesis($synthesisReport);
-    }
-
-    /**
-     * Home DIRECT short-circuit: performed synthesis, non-empty answer and citations,
+     * Home DIRECT sufficiency: performed synthesis, non-empty answer and citations,
      * and research_metadata.direct_evidence_gate === PASSED. Does not treat
-     * evidence_sufficient or supported_answer as DIRECT.
+     * evidence_sufficient or supported_answer as DIRECT. Does not start Library Search.
      */
     private function hasSufficientScientificSynthesis(AnswerSynthesisExecutionReport $synthesis): bool
     {
@@ -474,22 +444,7 @@ class AgriculturalResearchAgent
     }
 
     /**
-     * @param  array<string, mixed>  $payload
-     */
-    private function payloadHasSufficientScientificResult(array $payload): bool
-    {
-        if (trim((string) ($payload['answer'] ?? '')) === '') {
-            return false;
-        }
-
-        if (($payload['citations'] ?? []) === []) {
-            return false;
-        }
-
-        return ($payload['research_metadata']['direct_evidence_gate'] ?? null) === 'PASSED';
-    }
-
-    /**
+     * @param  array<string, mixed>  $timings
      * @return array<string, mixed>
      */
     private function stage5ResponseWithoutBlockingPostProcessing(
@@ -499,13 +454,19 @@ class AgriculturalResearchAgent
         EvidenceValidationExecutionReport $scientificValidation,
         AnswerSynthesisExecutionReport $synthesisReport,
         KnowledgePersistenceExecutionReport $persistenceReport,
+        array $timings = [],
     ): array {
+        $sufficient = $this->hasSufficientScientificSynthesis($synthesisReport);
         $synthesis = $synthesisReport->toArray();
         $persistence = $persistenceReport->toArray();
         $citations = is_array($synthesis['citations'] ?? null) ? $synthesis['citations'] : [];
+        $candidates = ScientificAnswerCandidatePresenter::fromSynthesis($synthesisReport);
+        $status = $sufficient ? 'scientific_generated' : $synthesisReport->status;
+        $loadState = $sufficient ? 'scientific_generated' : $synthesisReport->status;
 
-        return array_merge($synthesis, $persistence, [
-            'status' => 'scientific_generated',
+        return array_merge($synthesis, $persistence, $candidates, [
+            'status' => $status,
+            'load_state' => $loadState,
             'stage' => 5,
             'plan' => $plan->toArray(),
             'research' => [
@@ -515,16 +476,17 @@ class AgriculturalResearchAgent
                 'entities' => $plan->entities,
                 'sections' => [],
                 'references' => $citations,
-                'load_state' => 'scientific_generated',
+                'load_state' => $loadState,
                 'library' => [
                     'discoverers_used' => [],
                     'retrieval_failed' => false,
                     'legacy_discovery_skipped' => true,
+                    'library_search_separated' => true,
                 ],
             ],
             'discovery' => [
                 'performed' => false,
-                'reason' => 'sufficient_scientific_result',
+                'reason' => 'library_search_separated',
                 'discoverers_used' => [],
                 'external_discoverers_used' => [],
                 'library_discoverers_used' => [],
@@ -536,16 +498,125 @@ class AgriculturalResearchAgent
             'scientific_validation' => $scientificValidation->toArray(),
             'persistence_status' => $persistenceReport->status,
             'internet_first' => $scientificSearch->internetFirst,
+            'stage_timings' => $timings,
             'observability' => array_merge(
                 $synthesisReport->observability,
                 $persistenceReport->observability,
                 [
-                    'legacy_post_processing' => 'skipped',
-                    'legacy_post_processing_reason' => 'sufficient_scientific_result',
+                    'legacy_post_processing' => 'removed',
+                    'legacy_post_processing_reason' => 'library_search_separated',
                     'synthesis_status' => $synthesisReport->status,
                 ],
             ),
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $response
+     * @param  array<string, mixed>  $timings
+     * @return array<string, mixed>
+     */
+    private function terminateScientificResponse(
+        array $response,
+        KnowledgeQueryPlan $knowledgePlan,
+        AgriculturalResearchPlan $plan,
+        ScientificSearchExecutionReport $scientificSearch,
+        EvidenceValidationExecutionReport $scientificValidation,
+        AnswerSynthesisExecutionReport $synthesisReport,
+        KnowledgePersistenceExecutionReport $persistenceReport,
+        array $timings,
+    ): array {
+        $candidates = ScientificAnswerCandidatePresenter::fromSynthesis($synthesisReport);
+        $sufficient = $this->hasSufficientScientificSynthesis($synthesisReport);
+
+        $status = $sufficient ? 'scientific_generated' : $synthesisReport->status;
+
+        return array_merge($response, $candidates, [
+            'status' => $status,
+            'load_state' => $status,
+            'stage' => 5,
+            'scientific_search' => $scientificSearch->toArray(),
+            'scientific_validation' => $scientificValidation->toArray(),
+            'persistence_status' => $persistenceReport->status,
+            'stage_timings' => $timings,
+            'discovery' => [
+                'performed' => false,
+                'reason' => 'library_search_separated',
+                'discoverers_used' => [],
+                'external_discoverers_used' => [],
+                'library_discoverers_used' => [],
+                'internet_first' => $knowledgePlan->isInternetFirst(),
+            ],
+            'observability' => array_merge(
+                is_array($response['observability'] ?? null) ? $response['observability'] : [],
+                $synthesisReport->observability,
+                $persistenceReport->observability,
+                [
+                    'legacy_post_processing' => 'removed',
+                    'legacy_post_processing_reason' => 'library_search_separated',
+                    'synthesis_status' => $synthesisReport->status,
+                ],
+            ),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function stageTimings(
+        int $stage3Ms,
+        int $stage4Ms,
+        int $composerMs,
+        int $totalMs,
+        ScientificSearchExecutionReport $searchReport,
+        EvidenceValidationExecutionReport $validationReport,
+        AnswerSynthesisExecutionReport $synthesisReport,
+    ): array {
+        $providerMs = $searchReport->planSummary['provider_duration_ms'] ?? [];
+
+        return [
+            'stage_3' => [
+                'executed' => true,
+                'duration_ms' => $stage3Ms,
+                'input_count' => count($searchReport->searchQueries !== [] ? $searchReport->searchQueries : [$searchReport->searchQuery]),
+                'output_count' => count($searchReport->deduplicatedResults),
+                'blocking' => true,
+                'provider_duration_ms' => is_array($providerMs) ? $providerMs : [],
+            ],
+            'stage_4' => [
+                'executed' => true,
+                'duration_ms' => $stage4Ms,
+                'input_count' => count($searchReport->deduplicatedResults),
+                'output_count' => $validationReport->validatedCount,
+                'blocking' => true,
+            ],
+            'stage_5' => [
+                'executed' => true,
+                'duration_ms' => $composerMs,
+                'input_count' => $validationReport->validatedCount,
+                'output_count' => count($synthesisReport->citations),
+                'blocking' => true,
+            ],
+            'answer_composer' => [
+                'executed' => $synthesisReport->performed,
+                'duration_ms' => $composerMs,
+                'input_count' => $validationReport->validatedCount,
+                'output_count' => trim((string) $synthesisReport->answer) !== '' ? 1 : 0,
+                'blocking' => true,
+            ],
+            'final_response' => [
+                'executed' => true,
+                'duration_ms' => $totalMs,
+                'input_count' => 1,
+                'output_count' => 1,
+                'blocking' => true,
+            ],
+        ];
+    }
+
+    private function elapsedMsSince(int $startedNs): int
+    {
+        return (int) round((hrtime(true) - $startedNs) / 1e6);
     }
 
     private function isUniversalOrchestratorEnabled(): bool
@@ -553,14 +624,22 @@ class AgriculturalResearchAgent
         return filter_var(config('agricultural_intelligence.orchestrator_enabled', true), FILTER_VALIDATE_BOOL);
     }
 
+    private function scientificLoadState(AnswerSynthesisExecutionReport $synthesisReport): string
+    {
+        return $this->hasSufficientScientificSynthesis($synthesisReport)
+            ? 'scientific_generated'
+            : $synthesisReport->status;
+    }
+
     /**
-     * Dual-emit siblings without scientific discovery.
+     * Dual-emit siblings without Library Search or scientific rediscovery.
      *
      * @return array<string, mixed>
      */
     private function cropCompatibilityEnvelope(
         AgriculturalResearchPlan $plan,
         KnowledgePersistenceExecutionReport $persistenceReport,
+        string $loadState,
     ): array {
         $query = $plan->knowledgeQueryPlan?->normalizedQuery;
         $cropId = trim((string) ($plan->contextInput['selected_crop_id'] ?? $query?->cropId ?? ''));
@@ -579,7 +658,7 @@ class AgriculturalResearchAgent
             'knowledge_option' => $knowledgeOption,
             'service_option' => $knowledgeOption,
             'title' => CropKnowledgeOptionCatalog::titleFor($knowledgeOption, $cropName),
-            'load_state' => 'scientific_generated',
+            'load_state' => $loadState,
             'message' => null,
             'sections' => [],
             'references' => [],

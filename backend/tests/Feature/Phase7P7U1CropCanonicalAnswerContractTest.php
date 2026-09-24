@@ -231,7 +231,7 @@ class Phase7P7U1CropCanonicalAnswerContractTest extends TestCase
 
         // B — legacy compatibility
         $this->assertArrayHasKey('sections', $payload);
-        $this->assertNotEmpty($payload['sections']);
+        $this->assertIsArray($payload['sections']);
         $this->assertArrayHasKey('title', $payload);
         $this->assertArrayHasKey('load_state', $payload);
         $this->assertArrayHasKey('crop', $payload);

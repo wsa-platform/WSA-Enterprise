@@ -6,38 +6,30 @@ use App\Contracts\ScientificSectionDiscovererInterface;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Orchestrates extensible scientific section discovery (internet-first, no fabrication).
+ * External scholarly section discovery only.
  *
- * External scholarly providers run before library memory/enrichment discoverers.
+ * Library Search discoverers are not registered. Scientific Research does not
+ * dispatch this pipeline; Stage 3 adapters are the research providers.
  */
 class ScientificSourceDiscoveryPipeline
 {
     /** @var list<ScientificSectionDiscovererInterface> */
     private array $externalDiscoverers;
 
-    /** @var list<ScientificSectionDiscovererInterface> */
-    private array $libraryDiscoverers;
-
-    /** @var list<ScientificSectionDiscovererInterface> */
-    private array $discoverers;
-
     public function __construct(
         Discoverers\ExternalScientificSectionDiscoverer $openAlex,
         Discoverers\CrossRefScientificSectionDiscoverer $crossRef,
-        Discoverers\LibraryStructuredSectionDiscoverer $structured,
-        Discoverers\LibraryCropFilesSectionDiscoverer $cropFiles,
-        Discoverers\LibraryRagSectionDiscoverer $rag,
-        Discoverers\LibraryKeywordSectionDiscoverer $keyword,
     ) {
         $this->externalDiscoverers = [$openAlex, $crossRef];
-        $this->libraryDiscoverers = [$structured, $cropFiles, $rag, $keyword];
-        $this->discoverers = array_merge($this->externalDiscoverers, $this->libraryDiscoverers);
     }
 
     /** @return list<string> */
     public function discovererOrder(): array
     {
-        return array_map(fn (ScientificSectionDiscovererInterface $discoverer): string => $discoverer->name(), $this->discoverers);
+        return array_map(
+            fn (ScientificSectionDiscovererInterface $discoverer): string => $discoverer->name(),
+            $this->externalDiscoverers,
+        );
     }
 
     /**
@@ -56,45 +48,35 @@ class ScientificSourceDiscoveryPipeline
         array $missingSectionKeys,
         bool $skipExternalDiscoverers = false,
     ): array {
-        if ($missingSectionKeys === []) {
-            return [
-                'sections' => [],
-                'discoverers_used' => [],
-                'external_discoverers_used' => [],
-                'library_discoverers_used' => [],
-                'retrieval_failed' => false,
-            ];
+        $empty = [
+            'sections' => [],
+            'discoverers_used' => [],
+            'external_discoverers_used' => [],
+            'library_discoverers_used' => [],
+            'retrieval_failed' => false,
+        ];
+
+        if ($missingSectionKeys === [] || $skipExternalDiscoverers) {
+            return $empty;
         }
 
         $found = [];
         $used = [];
-        $externalUsed = [];
-        $libraryUsed = [];
         $externalFailures = 0;
         $externalAttempts = 0;
 
-        $discoverers = $skipExternalDiscoverers ? $this->libraryDiscoverers : $this->discoverers;
-
-        foreach ($discoverers as $discoverer) {
+        foreach ($this->externalDiscoverers as $discoverer) {
             $stillMissing = array_values(array_diff($missingSectionKeys, array_keys($found)));
             if ($stillMissing === []) {
                 break;
             }
 
-            $isExternal = in_array($discoverer, $this->externalDiscoverers, true);
-            if ($isExternal) {
-                $externalAttempts++;
-            }
+            $externalAttempts++;
 
             try {
                 $batch = $discoverer->discoverSections($organizationId, $context, $stillMissing);
                 if ($batch !== []) {
                     $used[] = $discoverer->name();
-                    if ($isExternal) {
-                        $externalUsed[] = $discoverer->name();
-                    } else {
-                        $libraryUsed[] = $discoverer->name();
-                    }
                     foreach ($batch as $key => $section) {
                         if (! isset($found[$key])) {
                             $found[$key] = $section;
@@ -102,9 +84,7 @@ class ScientificSourceDiscoveryPipeline
                     }
                 }
             } catch (\Throwable $exception) {
-                if ($isExternal) {
-                    $externalFailures++;
-                }
+                $externalFailures++;
                 Log::warning('Scientific section discoverer failed', [
                     'discoverer' => $discoverer->name(),
                     'crop_id' => $context->cropId,
@@ -113,17 +93,14 @@ class ScientificSourceDiscoveryPipeline
             }
         }
 
-        $retrievalFailed = $externalAttempts > 0
-            && $externalFailures === $externalAttempts
-            && $found === [];
-
         return [
             'sections' => $found,
             'discoverers_used' => $used,
-            'external_discoverers_used' => $externalUsed,
-            'library_discoverers_used' => $libraryUsed,
-            'retrieval_failed' => $retrievalFailed,
+            'external_discoverers_used' => $used,
+            'library_discoverers_used' => [],
+            'retrieval_failed' => $externalAttempts > 0
+                && $externalFailures === $externalAttempts
+                && $found === [],
         ];
     }
 }
-

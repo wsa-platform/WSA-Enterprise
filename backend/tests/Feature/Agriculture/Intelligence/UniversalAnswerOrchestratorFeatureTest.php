@@ -235,16 +235,10 @@ class UniversalAnswerOrchestratorFeatureTest extends TestCase
         ];
 
         $enriched = app(UniversalAnswerOrchestrator::class)->enrichLegacySynthesis($legacy, ['query' => 'q']);
-        // Direct orchestrator still works; agent enrichment path is gated separately.
         $this->assertArrayHasKey('answer_status', $enriched);
 
-        // Agent synthesize enrichment gate: when flag false, payload must remain untouched.
         $agent = app(AgriculturalResearchAgent::class);
-        $ref = new \ReflectionClass($agent);
-        $method = $ref->getMethod('maybeEnrichWithUniversalOrchestrator');
-        $method->setAccessible(true);
-        $passthrough = $method->invoke($agent, $legacy, ['query' => 'q']);
-        $this->assertSame($legacy, $passthrough);
+        $this->assertFalse((new \ReflectionClass($agent))->hasMethod('maybeEnrichWithUniversalOrchestrator'));
     }
 
     private function mockEmptyScholarlyAdapters(): void

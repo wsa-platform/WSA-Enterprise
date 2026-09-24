@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Organization;
 use App\Services\Agriculture\Research\AgriculturalResearchAgent;
-use App\Services\Agriculture\Research\AgriculturalScientificKnowledgeEngine;
 use App\Services\Agriculture\Research\Persistence\KnowledgePersistenceExecutionReport;
 use App\Services\Agriculture\Research\Persistence\ScientificKnowledgePersistenceService;
 use App\Services\Agriculture\Research\QueryUnderstandingService;
@@ -96,10 +95,6 @@ class CropStructuredIntentAndSinglePipelineTest extends TestCase
         $pipeline = Mockery::mock(ScientificSourceDiscoveryPipeline::class);
         $pipeline->shouldNotReceive('discoverMissingSections');
         $this->app->instance(ScientificSourceDiscoveryPipeline::class, $pipeline);
-
-        $engine = Mockery::mock(AgriculturalScientificKnowledgeEngine::class);
-        $engine->shouldNotReceive('execute');
-        $this->app->instance(AgriculturalScientificKnowledgeEngine::class, $engine);
 
         $persist = Mockery::mock(ScientificKnowledgePersistenceService::class);
         $persist->shouldReceive('persist')->once()->andReturn(new KnowledgePersistenceExecutionReport(

@@ -62,7 +62,7 @@ class AgriculturalResearchAgentStage1Test extends TestCase
         $order = $pipeline->discovererOrder();
 
         $this->assertSame(
-            ['external_openalex', 'external_crossref', 'library_structured', 'library_crop_files', 'library_rag', 'library_keyword'],
+            ['external_openalex', 'external_crossref'],
             $order,
         );
     }
@@ -120,16 +120,10 @@ class AgriculturalResearchAgentStage1Test extends TestCase
         ]));
 
         $response->assertOk();
-        $discoverers = $response->json('library.discoverers_used');
-        $this->assertContains('external_openalex', $discoverers);
+        $this->assertSame([], $response->json('library.discoverers_used'));
+        $this->assertSame('library_search_separated', $response->json('research_agent.discovery.reason'));
+        $this->assertFalse((bool) $response->json('research_agent.discovery.performed'));
         $this->assertTrue($response->json('research_agent.discovery.internet_first'));
-
-        if (in_array('library_crop_files', $discoverers, true)) {
-            $this->assertLessThan(
-                array_search('library_crop_files', $discoverers, true),
-                array_search('external_openalex', $discoverers, true),
-            );
-        }
     }
 
     public function test_library_discovery_remains_available_after_external_research(): void
@@ -176,7 +170,8 @@ class AgriculturalResearchAgentStage1Test extends TestCase
         ]));
 
         $response->assertOk();
-        $this->assertContains('library_crop_files', $response->json('library.discoverers_used'));
+        $this->assertSame([], $response->json('library.discoverers_used'));
+        $this->assertSame('library_search_separated', $response->json('research_agent.discovery.reason'));
     }
 
     public function test_research_agent_api_supports_generic_agricultural_query(): void
@@ -204,7 +199,14 @@ class AgriculturalResearchAgentStage1Test extends TestCase
         ]);
 
         $response->assertOk();
-        $response->assertJsonPath('status', 'scientific_generated');
+        $this->assertContains($response->json('status'), [
+            'scientific_generated',
+            'insufficient_evidence',
+            'no_search_results',
+            'synthesis_completed',
+            'synthesis_completed_partial',
+        ]);
+        $this->assertSame([], $response->json('discovery.discoverers_used'));
         $response->assertJsonPath('plan.intent', 'generic_research');
         $response->assertJsonPath('plan.agricultural_domain', 'irrigation');
         $response->assertJsonStructure([
@@ -340,8 +342,8 @@ class AgriculturalResearchAgentStage1Test extends TestCase
 
         $response->assertOk();
         $response->assertJsonPath('crop.id', 'wheat');
-        $response->assertJsonPath('load_state', 'library_complete');
-        $response->assertJsonCount(13, 'sections');
         $response->assertJsonPath('research_agent.orchestrated', true);
+        $response->assertJsonPath('research_agent.discovery.reason', 'library_search_separated');
+        $this->assertSame([], $response->json('library.discoverers_used'));
     }
 }

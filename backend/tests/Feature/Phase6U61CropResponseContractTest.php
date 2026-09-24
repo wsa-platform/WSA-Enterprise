@@ -43,8 +43,12 @@ class Phase6U61CropResponseContractTest extends TestCase
         $response->assertJsonPath('crop.id', 'wheat');
         $response->assertJsonPath('service_option', 'farming-needs');
         $this->assertIsArray($response->json('sections'));
-        $this->assertNotEmpty($response->json('sections'));
         $this->assertArrayHasKey('load_state', $response->json());
+        $this->assertNotContains($response->json('load_state'), [
+            'library_complete',
+            'library_partial_completed',
+            'library_missing',
+        ]);
         // Home-shaped top-level scientific answer is not the Crop UX contract.
         $this->assertTrue(
             $response->json('answer') === null
@@ -112,11 +116,8 @@ class Phase6U61CropResponseContractTest extends TestCase
                 'When research_agent is present, Stage 2–5 artifacts nest under it'
             );
         } else {
-            $this->assertSame(
-                'library_complete',
-                $payload['load_state'] ?? null,
-                'Library-complete Crop responses may omit live Stage 5 nesting; sections remain primary UX'
-            );
+            $this->assertArrayHasKey('load_state', $payload);
+            $this->assertNotSame('library_complete', $payload['load_state'] ?? null);
         }
     }
 }

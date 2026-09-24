@@ -4,8 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Organization;
 use App\Services\Agriculture\Research\AgriculturalResearchAgent;
-use App\Services\Agriculture\Research\AgriculturalResearchResult;
-use App\Services\Agriculture\Research\AgriculturalScientificKnowledgeEngine;
 use App\Services\Agriculture\Research\Persistence\KnowledgePersistenceExecutionReport;
 use App\Services\Agriculture\Research\Persistence\ScientificKnowledgePersistenceService;
 use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
@@ -57,20 +55,6 @@ class HomeEmptyProviderFirstLossTest extends TestCase
             observability: [],
         ));
         $this->app->instance(ScientificKnowledgePersistenceService::class, $persist);
-
-        $engine = Mockery::mock(AgriculturalScientificKnowledgeEngine::class);
-        $engine->shouldReceive('execute')->once()->andReturn(new AgriculturalResearchResult(
-            researchContext: [
-                'query' => 'wheat irrigation scheduling',
-                'sections' => [],
-                'references' => [],
-                'load_state' => 'insufficient_verified_sources',
-                'library' => ['discoverers_used' => [], 'retrieval_failed' => false],
-            ],
-            planSummary: [],
-            status: 'insufficient_verified_sources',
-        ));
-        $this->app->instance(AgriculturalScientificKnowledgeEngine::class, $engine);
 
         $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
             'query' => 'wheat irrigation scheduling',

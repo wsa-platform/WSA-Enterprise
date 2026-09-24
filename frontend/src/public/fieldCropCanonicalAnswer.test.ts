@@ -137,12 +137,12 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
     expect(html).toContain('data-answer-mode="canonical"')
   })
 
-  it('D/E renders confidence and limitations from backend values', async () => {
+  it('D/E hides confidence and still renders limitations', async () => {
     await i18n.changeLanguage('en')
     const html = renderCanonical(canonicalFixture({ confidence: 0.81, limitations: ['limited_geo_coverage'] }))
-    expect(html).toContain('0.81')
+    expect(html).not.toContain('data-testid="crop-confidence"')
+    expect(html).not.toContain('Confidence:')
     expect(html).toContain('limited_geo_coverage')
-    expect(html).toContain('data-testid="crop-confidence"')
     expect(html).toContain('data-testid="crop-limitations"')
   })
 
@@ -175,16 +175,17 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
     expect(html).toContain('data-testid="crop-conflicts"')
   })
 
-  it('H/I citation URL is direct original and not Google', async () => {
+  it('H/I citation title opens the internal Research Viewer and not Google', async () => {
     await i18n.changeLanguage('en')
     const html = renderCanonical(canonicalFixture())
-    expect(html).toContain('href="https://example.org/wheat-direct"')
+    expect(html).toContain('href="/research/result/cite-1"')
     expect(html).toContain('>Wheat Study</a>')
+    expect(html).not.toContain('href="https://example.org/wheat-direct"')
     expect(html).not.toContain('google.com')
     expect(html).not.toContain('google.')
   })
 
-  it('DOI-only citations use https://doi.org/{doi} and title-only stay non-clickable', async () => {
+  it('DOI and title citations open the Research Viewer instead of a fabricated or publisher redirect', async () => {
     await i18n.changeLanguage('en')
     const html = renderCanonical(
       canonicalFixture({
@@ -194,10 +195,11 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
         ],
       }),
     )
-    expect(html).toContain('href="https://doi.org/10.1234/crop.doi"')
+    expect(html).toContain('href="/research/result/doi-1"')
+    expect(html).toContain('href="/research/result/title-1"')
+    expect(html).not.toContain('href="https://doi.org/10.1234/crop.doi"')
     expect(html).toContain('>DOI Paper</a>')
     expect(html).toContain('Title Only')
-    expect(html).not.toContain('href="">Title Only')
   })
 
   it('represents empty citations as an honest ineligible source state', async () => {
@@ -226,12 +228,17 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
     expect(html).toContain('لغة الإجابة: en')
   })
 
-  it('L preserves claim and evidence identity in the model output', async () => {
+  it('L keeps claim identity on the model and hides it from the user', async () => {
     await i18n.changeLanguage('en')
-    const html = renderCanonical(canonicalFixture())
-    expect(html).toContain('question_claim_id=qc-1')
-    expect(html).toContain('evidence_ids=ev-1')
-    expect(html).toContain('evidence: ev-1')
+    const model = canonicalFixture()
+    expect(model.claims?.[0]?.question_claim_id).toBe('qc-1')
+    expect(model.claims?.[0]?.evidence_ids).toEqual(['ev-1'])
+    const html = renderCanonical(model)
+    expect(html).not.toContain('question_claim_id=')
+    expect(html).not.toContain('evidence_ids=')
+    expect(html).not.toContain('data-testid="crop-confidence"')
+    expect(html).not.toMatch(/>\s*Direct\s*</)
+    expect(html).not.toMatch(/>\s*Supporting\s*</)
   })
 })
 

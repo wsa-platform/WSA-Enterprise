@@ -257,7 +257,7 @@ class WsaEnterpriseStage10ProductionTest extends TestCase
         $order = app(ScientificSourceDiscoveryPipeline::class)->discovererOrder();
         $this->assertSame('external_openalex', $order[0]);
         $this->assertSame('external_crossref', $order[1]);
-        $this->assertTrue(array_search('library_structured', $order, true) > array_search('external_crossref', $order, true));
+        $this->assertNotContains('library_structured', $order);
 
         $diagnosis = new ReflectionClass(PlantAiDiagnosisEngine::class);
         $research = new ReflectionClass(AgriculturalResearchAgent::class);

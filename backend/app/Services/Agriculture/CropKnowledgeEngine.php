@@ -11,7 +11,6 @@ class CropKnowledgeEngine
 {
     public function __construct(
         private FieldCropLibraryRepository $libraryRepository,
-        private ScientificSourceDiscoveryPipeline $discoveryPipeline,
         private ScientificSourceValidator $sourceValidator,
     ) {}
 

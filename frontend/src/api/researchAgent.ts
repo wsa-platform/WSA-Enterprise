@@ -9,6 +9,7 @@ export type ResearchAgentCitation = {
   organization?: string | null
   journal?: string | null
   publication_year?: number | null
+  abstract?: string | null
   citation_id?: string
   source_id?: string
   evidence_id?: string
@@ -25,12 +26,20 @@ export type ResearchAgentConflict =
       [key: string]: unknown
     }
 
+export type ResearchAnswerCandidate = {
+  answer: string
+  result_id?: string
+  evidence_ids?: string[]
+  source_ids?: string[]
+}
+
 export type ResearchAgentQueryResponse = {
   status?: string
   answer?: string | null
   concise_summary?: string | null
   additional_information?: string | null
   citations?: ResearchAgentCitation[]
+  answer_candidates?: ResearchAnswerCandidate[]
   confidence?: number
   limitations?: string[]
   uncertainty?: string | null

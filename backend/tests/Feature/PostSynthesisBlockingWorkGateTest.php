@@ -10,8 +10,6 @@ use App\Services\Agriculture\Intelligence\Adapters\Web\FreeSearchMcpAdapter;
 use App\Services\Agriculture\Intelligence\Orchestration\UniversalAnswerOrchestrator;
 use App\Services\Agriculture\OpenAlexScientificClient;
 use App\Services\Agriculture\Research\AgriculturalResearchAgent;
-use App\Services\Agriculture\Research\AgriculturalResearchResult;
-use App\Services\Agriculture\Research\AgriculturalScientificKnowledgeEngine;
 use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
 use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
 use App\Services\Agriculture\Research\Synthesis\AnswerSynthesisExecutionReport;
@@ -88,8 +86,8 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
         $this->assertNotEmpty($payload['citations'] ?? []);
         $this->assertSame(5, $payload['stage']);
         $this->assertFalse((bool) ($payload['discovery']['performed'] ?? true));
-        $this->assertSame('sufficient_scientific_result', $payload['discovery']['reason'] ?? null);
-        $this->assertSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+        $this->assertSame('library_search_separated', $payload['discovery']['reason'] ?? null);
+        $this->assertSame('removed', $payload['observability']['legacy_post_processing'] ?? null);
         $this->assertArrayHasKey('scientific_search', $payload);
         $this->assertArrayHasKey('scientific_validation', $payload);
         $this->assertArrayHasKey('confidence', $payload);
@@ -97,38 +95,18 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
         $this->assertArrayHasKey('research', $payload);
     }
 
-    public function test_insufficient_scientific_result_keeps_legacy_fallback(): void
+    public function test_insufficient_scientific_result_does_not_run_library_or_mcp(): void
     {
         $query = 'unanswered generic agronomy topic without usable evidence';
 
         $this->bindSearchAndValidation($query, sufficient: false);
 
         $pipeline = Mockery::mock(ScientificSourceDiscoveryPipeline::class);
-        $pipeline->shouldReceive('discoverMissingSections')
-            ->once()
-            ->withArgs(function (int $organizationId, $context, array $sectionKeys, bool $skipExternalDiscoverers = false): bool {
-                return $skipExternalDiscoverers === true;
-            })
-            ->andReturn([
-                'sections' => [],
-                'discoverers_used' => [],
-                'external_discoverers_used' => [],
-                'library_discoverers_used' => [],
-                'retrieval_failed' => false,
-            ]);
+        $pipeline->shouldNotReceive('discoverMissingSections');
         $this->app->instance(ScientificSourceDiscoveryPipeline::class, $pipeline);
 
         $mcp = Mockery::mock(McpToolClientInterface::class);
-        $mcp->shouldReceive('callTool')->once()->andReturn([
-            'is_error' => false,
-            'text' => '',
-            'structured' => ['results' => [[
-                'title' => 'General agronomy note',
-                'url' => 'https://example.com/agronomy',
-                'snippet' => 'General field practices',
-            ]]],
-            'error' => null,
-        ]);
+        $mcp->shouldNotReceive('callTool');
         $this->rebindMcpClient($mcp);
 
         $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
@@ -138,11 +116,11 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
         ]);
 
         $this->assertNotTrue(($payload['research_metadata']['evidence_sufficient'] ?? false) === true);
-        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
-        $this->assertNotSame('sufficient_scientific_result', $payload['discovery']['reason'] ?? null);
+        $this->assertSame('removed', $payload['observability']['legacy_post_processing'] ?? null);
+        $this->assertSame('library_search_separated', $payload['discovery']['reason'] ?? null);
         $this->assertArrayHasKey('discovery', $payload);
         $this->assertArrayHasKey('research', $payload);
-        $this->assertArrayHasKey('universal_orchestrator', $payload);
+        $this->assertArrayNotHasKey('universal_orchestrator', $payload);
     }
 
     public function test_home_direct_passed_gate_skips_legacy_execute(): void
@@ -164,11 +142,11 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
 
         $this->assertSame('scientific_generated', $payload['status']);
         $this->assertSame('PASSED', $payload['research_metadata']['direct_evidence_gate'] ?? null);
-        $this->assertSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+        $this->assertSame('removed', $payload['observability']['legacy_post_processing'] ?? null);
         $this->assertSame('generic_research', $payload['plan']['intent'] ?? null);
     }
 
-    public function test_home_supporting_only_keeps_legacy_execute(): void
+    public function test_home_supporting_only_does_not_run_library_execute(): void
     {
         $this->bindP4cHomePipeline($this->p4cSynthesisReport([
             'status' => 'synthesis_completed_partial',
@@ -178,7 +156,7 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
                 'sufficiency_mode' => 'supporting_only',
                 'supporting_evidence_count' => 2,
             ],
-        ]), expectLegacyExecute: true);
+        ]), expectLegacyExecute: false);
 
         $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
             'query' => 'wheat cultivation practices in dryland agriculture systems',
@@ -186,10 +164,10 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
             'force_execute' => true,
         ]);
 
-        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+        $this->assertSame('removed', $payload['observability']['legacy_post_processing'] ?? null);
     }
 
-    public function test_home_insufficient_direct_evidence_keeps_legacy_execute(): void
+    public function test_home_insufficient_direct_evidence_does_not_run_library_execute(): void
     {
         $this->bindP4cHomePipeline($this->p4cSynthesisReport([
             'status' => 'insufficient_evidence',
@@ -199,7 +177,7 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
                 'sufficiency_mode' => 'insufficient_direct_evidence',
                 'supporting_evidence_count' => 1,
             ],
-        ]), expectLegacyExecute: true);
+        ]), expectLegacyExecute: false);
 
         $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
             'query' => 'wheat cultivation practices in dryland agriculture systems',
@@ -207,10 +185,10 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
             'force_execute' => true,
         ]);
 
-        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+        $this->assertSame('removed', $payload['observability']['legacy_post_processing'] ?? null);
     }
 
-    public function test_home_empty_citations_keep_legacy_execute_even_if_evidence_sufficient(): void
+    public function test_home_empty_citations_do_not_run_library_execute(): void
     {
         $this->bindP4cHomePipeline($this->p4cSynthesisReport([
             'citations' => [],
@@ -220,7 +198,7 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
                 'sufficiency_mode' => 'sufficient_direct_evidence',
                 'supporting_evidence_count' => 0,
             ],
-        ]), expectLegacyExecute: true);
+        ]), expectLegacyExecute: false);
 
         $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
             'query' => 'wheat cultivation practices in dryland agriculture systems',
@@ -228,10 +206,11 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
             'force_execute' => true,
         ]);
 
-        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+        $this->assertSame('removed', $payload['observability']['legacy_post_processing'] ?? null);
+        $this->assertSame([], $payload['discovery']['discoverers_used'] ?? ['missing']);
     }
 
-    public function test_home_empty_answer_keeps_legacy_execute(): void
+    public function test_home_empty_answer_does_not_run_library_execute(): void
     {
         $this->bindP4cHomePipeline($this->p4cSynthesisReport([
             'answer' => '',
@@ -241,7 +220,7 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
                 'sufficiency_mode' => 'sufficient_direct_evidence',
                 'supporting_evidence_count' => 0,
             ],
-        ]), expectLegacyExecute: true);
+        ]), expectLegacyExecute: false);
 
         $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
             'query' => 'wheat cultivation practices in dryland agriculture systems',
@@ -249,10 +228,10 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
             'force_execute' => true,
         ]);
 
-        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+        $this->assertSame('removed', $payload['observability']['legacy_post_processing'] ?? null);
     }
 
-    public function test_home_synthesis_not_performed_keeps_legacy_execute(): void
+    public function test_home_synthesis_not_performed_does_not_run_library_execute(): void
     {
         $this->bindP4cHomePipeline($this->p4cSynthesisReport([
             'performed' => false,
@@ -262,7 +241,7 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
                 'sufficiency_mode' => 'sufficient_direct_evidence',
                 'supporting_evidence_count' => 0,
             ],
-        ]), expectLegacyExecute: true);
+        ]), expectLegacyExecute: false);
 
         $payload = app(AgriculturalResearchAgent::class)->conductResearch(1, [
             'query' => 'wheat cultivation practices in dryland agriculture systems',
@@ -270,7 +249,7 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
             'force_execute' => true,
         ]);
 
-        $this->assertNotSame('skipped', $payload['observability']['legacy_post_processing'] ?? null);
+        $this->assertSame('removed', $payload['observability']['legacy_post_processing'] ?? null);
     }
 
     public function test_crop_direct_passed_gate_skips_legacy_execute(): void
@@ -411,38 +390,8 @@ class PostSynthesisBlockingWorkGateTest extends TestCase
         $composer->shouldReceive('compose')->once()->andReturn($synthesis);
         $this->app->instance(AnswerComposer::class, $composer);
 
-        $engine = Mockery::mock(AgriculturalScientificKnowledgeEngine::class);
-        if ($expectLegacyExecute) {
-            $engine->shouldReceive('execute')->once()->andReturn(new AgriculturalResearchResult(
-                researchContext: [
-                    'query' => 'wheat cultivation practices in dryland agriculture systems',
-                    'sections' => [],
-                    'references' => [],
-                    'load_state' => 'scientific_generated',
-                    'library' => [
-                        'discoverers_used' => [],
-                        'retrieval_failed' => false,
-                    ],
-                ],
-                planSummary: [],
-                status: 'scientific_generated',
-            ));
-        } else {
-            $engine->shouldNotReceive('execute');
-        }
-        $this->app->instance(AgriculturalScientificKnowledgeEngine::class, $engine);
-
         $mcp = Mockery::mock(McpToolClientInterface::class);
-        if ($expectLegacyExecute) {
-            $mcp->shouldReceive('callTool')->zeroOrMoreTimes()->andReturn([
-                'is_error' => false,
-                'text' => '',
-                'structured' => ['results' => []],
-                'error' => null,
-            ]);
-        } else {
-            $mcp->shouldNotReceive('callTool');
-        }
+        $mcp->shouldNotReceive('callTool');
         $this->rebindMcpClient($mcp);
     }
 

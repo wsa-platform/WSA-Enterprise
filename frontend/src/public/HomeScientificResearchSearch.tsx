@@ -11,7 +11,8 @@ import {
   type ResearchAgentCitation,
   type ResearchAgentQueryResponse,
 } from '../api/researchAgent'
-import { citationHref, sourcePresentationState } from './citationHref'
+import { sourcePresentationState } from './citationHref'
+import { ResearchSourceLink } from './ResearchSourceLink'
 
 /** Returns trimmed query, or null when empty (skip submit). */
 export function normalizeResearchQuery(value: string): string | null {
@@ -80,6 +81,8 @@ export function HomeScientificResearchSearchView({
   const answer = result?.answer?.trim() || result?.concise_summary?.trim() || null
   const additionalInformation = result?.additional_information?.trim() || null
   const citations = result?.citations ?? []
+  const answerCandidates = (result?.answer_candidates ?? []).filter((candidate) => candidate.answer.trim() !== '')
+  const alternativeAnswers = answerCandidates.filter((candidate) => candidate.answer.trim() !== (answer ?? ''))
   const conflicts = result?.conflicts ?? []
   const uncertainty = result?.uncertainty?.trim() || null
   const showUncertainty = Boolean(uncertainty) && uncertainty !== answer
@@ -158,13 +161,15 @@ export function HomeScientificResearchSearchView({
             <p className="hp-research-meta">{t('website.research.status', { status: result.status })}</p>
           ) : null}
 
-          {typeof result.confidence === 'number' ? (
-            <p className="hp-research-meta" data-testid="home-research-confidence">
-              {t('website.research.confidence', {
-                confidence: Math.round(result.confidence * 100) / 100,
-                defaultValue: `Confidence: ${Math.round(result.confidence * 100) / 100}`,
-              })}
-            </p>
+          {alternativeAnswers.length > 0 ? (
+            <div className="hp-research-alternatives" data-testid="home-research-alternatives">
+              <h3>{t('website.research.alternativeAnswersHeading', { defaultValue: 'Alternative answers' })}</h3>
+              <ul>
+                {alternativeAnswers.map((candidate, index) => (
+                  <li key={candidate.result_id ?? `alt-${index}`}>{candidate.answer}</li>
+                ))}
+              </ul>
+            </div>
           ) : null}
 
           {additionalInformation ? (
@@ -222,13 +227,17 @@ export function HomeScientificResearchSearchView({
                     index,
                     t('website.research.citationFallback', { index: index + 1 }),
                   )
-                  const href = citationHref(citation)
+                  const hasViewerTarget = Boolean(citation.title?.trim() || citation.citation_id || citation.url || citation.doi)
                   return (
                     <li key={`${citation.doi ?? citation.url ?? citation.title ?? 'c'}-${index}`}>
-                      {href ? (
-                        <a href={href} target="_blank" rel="noreferrer noopener">
-                          {label}
-                        </a>
+                      {hasViewerTarget ? (
+                        <ResearchSourceLink
+                          citation={citation}
+                          label={label}
+                          answer={answer}
+                          index={index}
+                          alternatives={alternativeAnswers}
+                        />
                       ) : (
                         <strong>{label}</strong>
                       )}
@@ -237,9 +246,6 @@ export function HomeScientificResearchSearchView({
                       ) : null}
                       {citation.doi ? (
                         <span className="hp-research-cite-meta"> · DOI: {citation.doi}</span>
-                      ) : null}
-                      {citation.source_type ? (
-                        <span className="hp-research-cite-meta"> · {citation.source_type}</span>
                       ) : null}
                     </li>
                   )

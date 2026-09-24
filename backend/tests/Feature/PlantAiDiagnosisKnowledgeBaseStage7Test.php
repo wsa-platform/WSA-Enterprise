@@ -526,7 +526,8 @@ class PlantAiDiagnosisKnowledgeBaseStage7Test extends TestCase
     public function test_29_stage1_to_5_classes_still_exist_independently(): void
     {
         $this->assertTrue(class_exists(AgriculturalResearchAgent::class));
-        $this->assertTrue(class_exists(AgriculturalScientificKnowledgeEngine::class));
+        $this->assertFileDoesNotExist(app_path('Services/Agriculture/Research/AgriculturalScientificKnowledgeEngine.php'));
+        $this->assertFalse(class_exists(AgriculturalScientificKnowledgeEngine::class, false));
         $this->assertTrue(class_exists(ResearchPlanner::class));
         $this->assertTrue(class_exists(ScientificKnowledgePersistenceService::class));
         $this->assertTrue(class_exists(PlantAiDiagnosisEngine::class));

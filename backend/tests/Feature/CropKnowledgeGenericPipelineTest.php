@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\LibraryItem;
 use App\Models\Organization;
-use App\Services\Agriculture\CropKnowledgeSectionCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -40,7 +39,7 @@ class CropKnowledgeGenericPipelineTest extends TestCase
         ];
     }
 
-  /** @param list<array<string, mixed>> $works */
+    /** @param list<array<string, mixed>> $works */
     private function fakeOpenAlex(array $works): void
     {
         Http::fake([
@@ -93,7 +92,20 @@ class CropKnowledgeGenericPipelineTest extends TestCase
         ]));
     }
 
-    public function test_new_generic_crop_persists_and_reuses_library_without_duplicates(): void
+    /** @param  array<string, mixed>  $payload */
+    private function assertZeroLibrarySearch(array $payload): void
+    {
+        $this->assertSame([], $payload['library']['discoverers_used'] ?? ['missing']);
+        $this->assertSame([], $payload['library']['scientific_sections_retrieved'] ?? ['missing']);
+        $this->assertNotContains('library_crop_files', $payload['library']['discoverers_used'] ?? []);
+        $this->assertNotContains($payload['load_state'] ?? null, [
+            'library_complete',
+            'library_partial_completed',
+            'library_missing',
+        ]);
+    }
+
+    public function test_new_generic_crop_uses_scientific_architecture_without_library_search(): void
     {
         Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
 
@@ -112,29 +124,17 @@ class CropKnowledgeGenericPipelineTest extends TestCase
         $first->assertOk();
         $first->assertJsonPath('crop.id', 'sorghum');
         $first->assertJsonPath('knowledge_option', 'scientific-research');
-        $this->assertContains($first->json('load_state'), [
-            'scientific_generated',
-            'library_partial_completed',
-        ]);
-        $this->assertNotEmpty($first->json('library.scientific_sections_retrieved'));
-
-        $itemId = $first->json('library.item_id');
-        $this->assertNotNull($itemId);
+        $this->assertZeroLibrarySearch($first->json());
 
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => []], 500),
+            'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
         ]);
 
         $second = $this->getJson($url);
         $second->assertOk();
-        $second->assertJsonPath('library.item_id', $itemId);
-        $second->assertJsonPath('library.reused_existing', true);
-        $second->assertJsonPath('library.scientific_sections_retrieved', []);
-
-        $this->assertSame(
-            1,
-            LibraryItem::query()->where('slug', 'field-crop-sorghum-scientific-research')->count(),
-        );
+        $second->assertJsonPath('crop.id', 'sorghum');
+        $this->assertZeroLibrarySearch($second->json());
     }
 
     public function test_scientific_research_and_industries_options_are_generic(): void
@@ -154,29 +154,32 @@ class CropKnowledgeGenericPipelineTest extends TestCase
             $response = $this->getJson($this->profileQuery('oats', 'الشوفان', $option, 'Avena sativa'));
             $response->assertOk();
             $response->assertJsonPath('knowledge_option', $option);
+            $response->assertJsonPath('crop.id', 'oats');
+            $this->assertZeroLibrarySearch($response->json());
             $this->assertNotSame('knowledge_option_not_implemented', $response->json('load_state'));
-            $sectionCount = count(CropKnowledgeSectionCatalog::keysFor($option));
-            $response->assertJsonCount($sectionCount, 'sections');
         }
     }
 
-    public function test_library_search_finds_persisted_crop_knowledge(): void
+    public function test_independent_library_search_still_finds_manually_stored_items(): void
     {
         $organization = Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
         $user = \App\Models\User::factory()->create();
         $organization->members()->attach($user->id, ['role' => 'admin']);
 
-        $this->fakeOpenAlex([
-            $this->openAlexWork(
-                'Sorghum bicolor research overview',
-                'Sorghum bicolor is a major cereal crop with extensive agricultural research.',
-                '10.1000/sorghum-overview',
-                'CIMMYT',
-            ),
+        LibraryItem::query()->create([
+            'organization_id' => $organization->id,
+            'slug' => 'field-crop-sorghum-scientific-research',
+            'title' => 'Crop knowledge profile: sorghum / scientific-research',
+            'title_ar' => 'الذرة الرفيعة scientific research',
+            'item_type' => 'crop_cultivation_profile',
+            'locale' => 'ar',
+            'publication_status' => 'published',
+            'published_at' => now(),
+            'metadata' => [
+                'field_crop_id' => 'sorghum',
+                'knowledge_option' => 'scientific-research',
+            ],
         ]);
-
-        $this->getJson($this->profileQuery('sorghum', 'الذرة الرفيعة', 'scientific-research', 'Sorghum bicolor'))
-            ->assertOk();
 
         $search = $this->actingAs($user)
             ->withHeader('X-Organization-Id', (string) $organization->id)
@@ -195,23 +198,37 @@ class CropKnowledgeGenericPipelineTest extends TestCase
         $user = \App\Models\User::factory()->create();
         $organization->members()->attach($user->id, ['role' => 'admin']);
 
-        $this->fakeOpenAlex([
-            $this->openAlexWork(
-                'Sorghum bicolor breeding genetics',
-                'Sorghum bicolor breeding programs improve drought tolerance and yield stability.',
-                '10.1000/sorghum-genetics',
-                'USDA ARS',
-            ),
+        $item = LibraryItem::query()->create([
+            'organization_id' => $organization->id,
+            'slug' => 'field-crop-sorghum-industries',
+            'title' => 'Crop knowledge profile: sorghum / industries',
+            'title_ar' => 'صناعات محصول الذرة الرفيعة',
+            'item_type' => 'crop_cultivation_profile',
+            'locale' => 'ar',
+            'publication_status' => 'published',
+            'published_at' => now(),
+            'metadata' => [
+                'field_crop_id' => 'sorghum',
+                'knowledge_option' => 'industries',
+                'cultivation_sections' => [
+                    'commercial_scientific_name' => [
+                        'content' => 'Sorghum bicolor.',
+                        'verified' => true,
+                        'source' => [
+                            'organization' => 'USDA ARS',
+                            'title' => 'Sorghum reference',
+                            'year' => 2020,
+                            'url' => 'https://doi.org/10.1000/sorghum',
+                            'source_type' => 'government',
+                        ],
+                    ],
+                ],
+            ],
         ]);
-
-        $profile = $this->getJson($this->profileQuery('sorghum', 'الذرة الرفيعة', 'industries', 'Sorghum bicolor'));
-        $profile->assertOk();
-        $itemId = $profile->json('library.item_id');
-        $this->assertNotNull($itemId);
 
         $show = $this->actingAs($user)
             ->withHeader('X-Organization-Id', (string) $organization->id)
-            ->getJson('/api/v1/library/crop-knowledge/items/'.$itemId);
+            ->getJson('/api/v1/library/crop-knowledge/items/'.$item->id);
 
         $show->assertOk();
         $show->assertJsonStructure([
@@ -222,7 +239,7 @@ class CropKnowledgeGenericPipelineTest extends TestCase
         $show->assertJsonPath('crop.id', 'sorghum');
     }
 
-    public function test_sesame_farming_needs_resolves_taxonomy_and_discovers_externally(): void
+    public function test_sesame_farming_needs_resolves_taxonomy_without_library_search(): void
     {
         Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
 
@@ -239,17 +256,11 @@ class CropKnowledgeGenericPipelineTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('crop.id', 'sesame');
         $response->assertJsonPath('crop.scientific_name', 'Sesamum indicum');
-        $this->assertNotEmpty($response->json('library.scientific_sections_retrieved'));
-        $this->assertContains('external_openalex', $response->json('library.discoverers_used'));
-        $this->assertTrue($response->json('research_agent.discovery.internet_first'));
+        $this->assertZeroLibrarySearch($response->json());
         $this->assertNull($response->json('message'));
-
-        $this->assertDatabaseHas('library_items', [
-            'slug' => 'field-crop-sesame-farming-needs',
-        ]);
     }
 
-    public function test_openalex_failure_falls_back_to_crossref_for_generic_crop(): void
+    public function test_openalex_failure_still_allows_crossref_scientific_search(): void
     {
         Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
 
@@ -271,12 +282,11 @@ class CropKnowledgeGenericPipelineTest extends TestCase
 
         $response = $this->getJson($this->farmingNeedsQuery('sesame', 'السمسم', 'oil', 'المحاصيل الزيتية'));
         $response->assertOk();
-        $this->assertNotEmpty($response->json('library.scientific_sections_retrieved'));
-        $this->assertContains('external_crossref', $response->json('library.discoverers_used'));
+        $this->assertZeroLibrarySearch($response->json());
         $this->assertNotSame('retrieval_error', $response->json('load_state'));
     }
 
-    public function test_library_partial_hit_merges_with_external_discovery(): void
+    public function test_stored_library_item_does_not_trigger_library_search_from_research(): void
     {
         $organization = Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
 
@@ -297,14 +307,6 @@ class CropKnowledgeGenericPipelineTest extends TestCase
                     'commercial_scientific_name' => [
                         'content' => 'Hordeum vulgare is the scientific name for barley.',
                         'verified' => true,
-                        'source' => [
-                            'organization' => 'USDA ARS',
-                            'title' => 'Hordeum vulgare reference',
-                            'year' => 2020,
-                            'url' => 'https://doi.org/10.1000/barley-taxonomy',
-                            'doi' => '10.1000/barley-taxonomy',
-                            'source_type' => 'government',
-                        ],
                     ],
                 ],
             ],
@@ -321,38 +323,27 @@ class CropKnowledgeGenericPipelineTest extends TestCase
 
         $response = $this->getJson($this->farmingNeedsQuery('barley', 'الشعير'));
         $response->assertOk();
-        $response->assertJsonPath('library.reused_existing', true);
-        $this->assertNotEmpty($response->json('library.scientific_sections_retrieved'));
-
-        $scientificSection = collect($response->json('sections'))
-            ->firstWhere('key', 'commercial_scientific_name');
-        $this->assertTrue((bool) ($scientificSection['verified'] ?? false));
-        $this->assertStringContainsString('Hordeum vulgare', (string) ($scientificSection['content'] ?? ''));
+        $response->assertJsonPath('crop.id', 'barley');
+        $this->assertZeroLibrarySearch($response->json());
     }
 
-    public function test_complete_library_skips_external_discovery_on_subsequent_request(): void
+    public function test_seeded_library_does_not_skip_scientific_research(): void
     {
-        $organization = Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
+        Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
         $this->seed(\Database\Seeders\FieldCropCultivationSeeder::class);
-
-        $first = $this->getJson($this->farmingNeedsQuery('wheat', 'القمح'));
-        $first->assertOk();
-        $first->assertJsonPath('load_state', 'library_complete');
 
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => []], 500),
             'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 500),
         ]);
 
-        $second = $this->getJson($this->farmingNeedsQuery('wheat', 'القمح'));
-        $second->assertOk();
-        $second->assertJsonPath('load_state', 'library_complete');
-        $second->assertJsonPath('library.reused_existing', true);
-        $second->assertJsonPath('library.scientific_sections_retrieved', []);
-        $second->assertJsonPath('library.discoverers_used', []);
+        $response = $this->getJson($this->farmingNeedsQuery('wheat', 'القمح'));
+        $response->assertOk();
+        $this->assertZeroLibrarySearch($response->json());
+        $this->assertNotSame('library_complete', $response->json('load_state'));
     }
 
-    public function test_library_crop_files_discoverer_reads_phase_two_metadata(): void
+    public function test_library_crop_files_are_not_used_by_scientific_research(): void
     {
         $organization = Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
 
@@ -371,13 +362,6 @@ class CropKnowledgeGenericPipelineTest extends TestCase
                 'plant_production_category_id' => 'oil',
                 'field_crop_id' => 'sesame',
                 'library_file_section' => 'farming-needs',
-                'scientific_source' => [
-                    'organization' => 'Ministry of Agriculture',
-                    'title' => 'Sesame cultivation extension bulletin',
-                    'year' => 2019,
-                    'url' => 'https://example.org/sesame-bulletin',
-                    'source_type' => 'extension_publication',
-                ],
             ],
         ]);
 
@@ -388,7 +372,7 @@ class CropKnowledgeGenericPipelineTest extends TestCase
 
         $response = $this->getJson($this->farmingNeedsQuery('sesame', 'السمسم', 'oil', 'المحاصيل الزيتية'));
         $response->assertOk();
-        $this->assertContains('library_crop_files', $response->json('library.discoverers_used'));
-        $this->assertNotEmpty($response->json('library.scientific_sections_retrieved'));
+        $this->assertZeroLibrarySearch($response->json());
+        $this->assertNotContains('library_crop_files', $response->json('library.discoverers_used') ?? []);
     }
 }

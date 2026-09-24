@@ -5,8 +5,6 @@ namespace Tests\Feature;
 use App\Models\LibraryItem;
 use App\Models\Organization;
 use App\Services\Agriculture\FieldCropCultivationProfileService;
-use App\Services\Agriculture\FieldCropLibraryRepository;
-use App\Services\Agriculture\ScientificSourceValidator;
 use Database\Seeders\FieldCropCultivationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -16,7 +14,7 @@ class FieldCropCultivationTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function fakeEmptyOpenAlex(): void
+    private function fakeEmptyProviders(): void
     {
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => []], 200),
@@ -32,8 +30,23 @@ class FieldCropCultivationTest extends TestCase
         return $organization;
     }
 
-    public function test_public_wheat_farming_needs_profile_returns_thirteen_sections(): void
+    /** @param  array<string, mixed>  $payload */
+    private function assertScientificCropContract(array $payload, string $cropId): void
     {
+        $this->assertSame($cropId, $payload['crop']['id'] ?? null);
+        $this->assertSame([], $payload['library']['discoverers_used'] ?? ['missing']);
+        $this->assertSame([], $payload['library']['scientific_sections_retrieved'] ?? ['missing']);
+        $this->assertNotContains($payload['load_state'] ?? null, [
+            'library_complete',
+            'library_partial_completed',
+            'library_missing',
+        ]);
+        $this->assertSame('library_search_separated', $payload['research_agent']['discovery']['reason'] ?? $payload['discovery']['reason'] ?? null);
+    }
+
+    public function test_public_wheat_farming_needs_profile_uses_scientific_architecture(): void
+    {
+        $this->fakeEmptyProviders();
         $organization = $this->seedCultivationLibrary();
 
         $response = $this->getJson('/api/v1/public/field-crops/farming-needs-profile?'.http_build_query([
@@ -48,16 +61,8 @@ class FieldCropCultivationTest extends TestCase
         $response->assertJsonPath('crop.id', 'wheat');
         $response->assertJsonPath('crop.name', 'القمح');
         $response->assertJsonPath('service_option', 'farming-needs');
-        $response->assertJsonPath('load_state', 'library_complete');
-        $response->assertJsonCount(13, 'sections');
-        $response->assertJsonPath('sections.0.title', 'اسم المحصول التجاري والاسم العلمي');
-        $response->assertJsonFragment(['title' => 'زراعة واحتياجات محصول القمح']);
-
-        $scientificSection = collect($response->json('sections'))
-            ->firstWhere('key', 'commercial_scientific_name');
-        $this->assertStringContainsString('Triticum aestivum', (string) ($scientificSection['content'] ?? ''));
-        $this->assertTrue((bool) ($scientificSection['verified'] ?? false));
-        $this->assertNotEmpty($scientificSection['source']['url'] ?? null);
+        $this->assertScientificCropContract($response->json(), 'wheat');
+        $this->assertIsArray($response->json('sections'));
 
         $this->assertDatabaseHas('library_items', [
             'organization_id' => $organization->id,
@@ -67,6 +72,7 @@ class FieldCropCultivationTest extends TestCase
 
     public function test_corn_profile_is_crop_specific_not_wheat(): void
     {
+        $this->fakeEmptyProviders();
         $this->seedCultivationLibrary();
 
         $response = $this->getJson('/api/v1/public/field-crops/farming-needs-profile?'.http_build_query([
@@ -79,17 +85,14 @@ class FieldCropCultivationTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonPath('crop.id', 'corn');
-        $response->assertJsonPath('title', 'زراعة واحتياجات محصول الذرة');
-        $response->assertJsonPath('load_state', 'library_complete');
-
-        $scientificSection = collect($response->json('sections'))
-            ->firstWhere('key', 'commercial_scientific_name');
-        $this->assertStringContainsString('Zea mays', (string) ($scientificSection['content'] ?? ''));
-        $this->assertStringNotContainsString('Triticum aestivum', (string) ($scientificSection['content'] ?? ''));
+        $this->assertScientificCropContract($response->json(), 'corn');
+        $body = json_encode($response->json());
+        $this->assertStringNotContainsString('Triticum aestivum', (string) $body);
     }
 
-    public function test_repeat_request_reuses_library_item_without_duplicates(): void
+    public function test_repeat_request_does_not_duplicate_seeded_library_items(): void
     {
+        $this->fakeEmptyProviders();
         $organization = $this->seedCultivationLibrary();
 
         $this->getJson('/api/v1/public/field-crops/farming-needs-profile?'.http_build_query([
@@ -109,8 +112,7 @@ class FieldCropCultivationTest extends TestCase
             'selected_crop_name' => 'القمح',
         ]));
         $second->assertOk();
-        $second->assertJsonPath('library.reused_existing', true);
-        $second->assertJsonPath('load_state', 'library_complete');
+        $this->assertScientificCropContract($second->json(), 'wheat');
 
         $countAfterSecond = LibraryItem::query()
             ->where('organization_id', $organization->id)
@@ -121,9 +123,9 @@ class FieldCropCultivationTest extends TestCase
         $this->assertSame(1, $countAfterSecond);
     }
 
-    public function test_unverified_crop_shows_uncertainty_for_missing_verified_data(): void
+    public function test_unverified_crop_returns_honest_scientific_status(): void
     {
-        $this->fakeEmptyOpenAlex();
+        $this->fakeEmptyProviders();
         Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
 
         $response = $this->getJson('/api/v1/public/field-crops/farming-needs-profile?'.http_build_query([
@@ -135,38 +137,21 @@ class FieldCropCultivationTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertJsonPath('load_state', 'library_missing');
-        $firstSection = $response->json('sections.0');
-        $this->assertStringContainsString(
-            'لا تتوفر حاليًا معلومات علمية موثقة كافية',
-            (string) ($firstSection['content'] ?? ''),
-        );
+        $this->assertScientificCropContract($response->json(), 'tobacco');
+        $this->assertContains($response->json('load_state'), [
+            'scientific_generated',
+            'insufficient_evidence',
+            'no_search_results',
+            'synthesis_completed',
+            'search_empty',
+            'validation_insufficient',
+        ]);
     }
 
-    public function test_partial_library_document_preserves_existing_and_fills_missing(): void
+    public function test_partial_library_document_does_not_become_library_search(): void
     {
-        $this->fakeEmptyOpenAlex();
-        $organization = Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
-        $repository = app(FieldCropLibraryRepository::class);
-
-        $repository->mergeSections($organization->id, [
-            'selected_crop_id' => 'rice',
-            'selected_crop_name' => 'الأرز',
-            'selected_category_id' => 'grains',
-            'selected_category_name' => 'محاصيل الحبوب',
-        ], [
-            'commercial_scientific_name' => [
-                'content' => 'الأرز Oryza sativa L. محصول حبوبي أساسي في أنظمة الري.',
-                'source' => [
-                    'organization' => 'FAO',
-                    'title' => 'Rice market monitor',
-                    'year' => 2024,
-                    'url' => 'https://www.fao.org/worldfoodsituation/foodpricesindex/en/',
-                    'source_type' => 'government',
-                ],
-                'verified' => true,
-            ],
-        ]);
+        $this->fakeEmptyProviders();
+        Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
 
         $response = $this->getJson('/api/v1/public/field-crops/farming-needs-profile?'.http_build_query([
             'organization' => 'wsa-demo',
@@ -175,24 +160,16 @@ class FieldCropCultivationTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertJsonPath('load_state', 'library_partial_completed');
-        $scientificSection = collect($response->json('sections'))
-            ->firstWhere('key', 'commercial_scientific_name');
-        $this->assertStringContainsString('Oryza sativa', (string) ($scientificSection['content'] ?? ''));
-        $seedSection = collect($response->json('sections'))
-            ->firstWhere('key', 'seed_rate');
-        $this->assertStringContainsString(
-            ScientificSourceValidator::UNCERTAINTY_MESSAGE,
-            (string) ($seedSection['content'] ?? ''),
-        );
+        $this->assertScientificCropContract($response->json(), 'rice');
+        $this->assertSame([], $response->json('library.discoverers_used'));
     }
 
     public function test_profile_service_requires_crop_context(): void
     {
-        $this->fakeEmptyOpenAlex();
-        $organization = Organization::create(['name' => 'WSA Demo 2', 'slug' => 'wsa-demo-2']);
+        $this->fakeEmptyProviders();
+        Organization::create(['name' => 'WSA Demo 2', 'slug' => 'wsa-demo-2']);
 
-        $profile = app(FieldCropCultivationProfileService::class)->getProfile($organization->id, [
+        $profile = app(FieldCropCultivationProfileService::class)->getProfile(1, [
             'selected_crop_id' => 'rice',
             'selected_crop_name' => 'الأرز',
             'selected_category_id' => 'grains',
@@ -200,11 +177,11 @@ class FieldCropCultivationTest extends TestCase
         ]);
 
         $this->assertSame('rice', $profile['crop']['id']);
-        $this->assertCount(13, $profile['sections']);
-        $this->assertSame('library_missing', $profile['load_state']);
+        $this->assertIsArray($profile['sections']);
+        $this->assertScientificCropContract($profile, 'rice');
     }
 
-    public function test_oats_without_library_uses_generic_pipeline_not_wheat_data(): void
+    public function test_oats_without_library_uses_same_scientific_pipeline(): void
     {
         Http::fake([
             'api.openalex.org/works*' => Http::response(['results' => [[
@@ -221,6 +198,7 @@ class FieldCropCultivationTest extends TestCase
                     'institutions' => [['display_name' => 'University of Agriculture', 'type' => 'education']],
                 ]],
             ]]], 200),
+            'api.crossref.org/works*' => Http::response(['message' => ['items' => []]], 200),
         ]);
         Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
 
@@ -235,20 +213,15 @@ class FieldCropCultivationTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonPath('crop.id', 'oats');
-        $response->assertJsonPath('library.was_missing_before_retrieval', true);
-        $this->assertNotEmpty($response->json('library.scientific_sections_retrieved'));
+        $this->assertScientificCropContract($response->json(), 'oats');
         $body = json_encode($response->json('sections'));
         $this->assertStringNotContainsString('Triticum aestivum', (string) $body);
         $this->assertStringNotContainsString('Zea mays', (string) $body);
-
-        $this->assertDatabaseHas('library_items', [
-            'slug' => 'field-crop-oats-farming-needs',
-        ]);
     }
 
     public function test_generic_new_crop_uses_same_pipeline_without_special_handler(): void
     {
-        $this->fakeEmptyOpenAlex();
+        $this->fakeEmptyProviders();
         Organization::create(['name' => 'WSA Demo', 'slug' => 'wsa-demo']);
 
         $response = $this->getJson('/api/v1/public/field-crops/farming-needs-profile?'.http_build_query([
@@ -261,7 +234,7 @@ class FieldCropCultivationTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonPath('crop.id', 'sorghum');
-        $response->assertJsonCount(13, 'sections');
+        $this->assertScientificCropContract($response->json(), 'sorghum');
         $response->assertJsonPath('knowledge_option', 'farming-needs');
     }
 }

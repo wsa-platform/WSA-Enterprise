@@ -149,6 +149,7 @@ class AnswerComposer
         $supportingOnly = $this->isSupportingOnlySufficiency($sufficiency);
         // Findings may include supporting for metadata/additional; main answer body gates DIRECT-only.
         $keyFindings = $this->buildKeyFindings($claims, $usable, $plan, $language);
+        $keyFindings = $this->appendDirectStatisticalMeasurements($keyFindings, $usable, $plan);
         if ($this->requiresSupportedMeasurement($plan)) {
             $keyFindings = $this->rejectFindingsWithUnsupportedNumbers($keyFindings, $plan);
             if ($this->collectedNumericalValues($keyFindings, $plan) === []) {
@@ -1633,6 +1634,45 @@ class AnswerComposer
      * @param  list<ScientificEvidenceItem>  $usable
      * @return list<string>
      */
+    /**
+     * Complete aligned DIRECT_STATISTICAL observations already carry the
+     * requested measurement. Surface that value so quantity questions are
+     * not wiped when claim prose omitted the number.
+     *
+     * @param  list<string>  $findings
+     * @param  list<ScientificEvidenceItem>  $usable
+     * @return list<string>
+     */
+    private function appendDirectStatisticalMeasurements(array $findings, array $usable, KnowledgeQueryPlan $plan): array
+    {
+        foreach ($usable as $item) {
+            if (! $this->isDirectStatisticalEvidence($item)) {
+                continue;
+            }
+            $observation = ScientificStructuredObservation::fromEvidenceItem($item);
+            if ($observation === null || ! $observation->isComplete()) {
+                continue;
+            }
+            if (! $this->directStatisticalObservationSupportsClaim($item, $plan)) {
+                continue;
+            }
+            $line = trim(sprintf(
+                '%s %s %s %s. Value: %s %s',
+                $observation->entity,
+                $observation->property,
+                $observation->location,
+                $observation->year,
+                $observation->value,
+                $observation->unit,
+            ));
+            if ($line !== '' && ! in_array($line, $findings, true)) {
+                $findings[] = $line;
+            }
+        }
+
+        return $findings;
+    }
+
     private function buildKeyFindings(array $claims, array $usable, KnowledgeQueryPlan $plan, string $language): array
     {
         if ($claims === []) {

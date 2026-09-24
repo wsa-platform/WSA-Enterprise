@@ -236,7 +236,7 @@ class Phase6U61CropR5R7AndParityContractTest extends TestCase
         ])->toAgriculturalResearchPlan();
         $this->assertTrue($plan->isCropProfileIntent());
 
-        $method = new ReflectionMethod($agent, 'shouldRunLegacyPostProcessing');
+        $method = new ReflectionMethod($agent, 'hasSufficientScientificSynthesis');
         $method->setAccessible(true);
         $synthesis = new AnswerSynthesisExecutionReport(
             status: 'scientific_generated',
@@ -270,7 +270,7 @@ class Phase6U61CropR5R7AndParityContractTest extends TestCase
             researchMetadata: ['direct_evidence_gate' => 'PASSED'],
             observability: [],
         );
-        $this->assertFalse($method->invoke($agent, $plan, $synthesis));
+        $this->assertTrue($method->invoke($agent, $synthesis));
     }
 
     private function item(string $id): ScientificEvidenceItem

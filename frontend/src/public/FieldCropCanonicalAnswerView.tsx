@@ -7,7 +7,8 @@ import {
   resolveCanonicalCropAnswerText,
   resolveCropAnswerRenderMode,
 } from '../api/fieldCropCultivation'
-import { citationHref, sourcePresentationState } from './citationHref'
+import { sourcePresentationState } from './citationHref'
+import { ResearchSourceLink } from './ResearchSourceLink'
 
 export type FieldCropCanonicalAnswerViewProps = {
   profile: FieldCropCultivationProfile
@@ -27,6 +28,9 @@ export function FieldCropCanonicalAnswerView({ profile }: FieldCropCanonicalAnsw
   const mode = resolveCropAnswerRenderMode(profile)
   const answer = resolveCanonicalCropAnswerText(profile)
   const citations = profile.citations ?? []
+  const alternativeAnswers = (profile.answer_candidates ?? []).filter(
+    (candidate) => candidate.answer.trim() !== '' && candidate.answer.trim() !== (answer ?? ''),
+  )
   const limitations = profile.limitations ?? []
   const conflicts = profile.conflicts ?? []
   const claims = profile.claims ?? []
@@ -65,13 +69,15 @@ export function FieldCropCanonicalAnswerView({ profile }: FieldCropCanonicalAnsw
         </p>
       ) : null}
 
-      {typeof profile.confidence === 'number' ? (
-        <p className="gs-field-crop-profile-meta" data-testid="crop-confidence">
-          {t('website.research.confidence', {
-            confidence: Math.round(profile.confidence * 100) / 100,
-            defaultValue: `Confidence: ${Math.round(profile.confidence * 100) / 100}`,
-          })}
-        </p>
+      {alternativeAnswers.length > 0 ? (
+        <section className="gs-field-crop-profile-section" data-testid="crop-research-alternatives">
+          <h3>{t('website.research.alternativeAnswersHeading', { defaultValue: 'Alternative answers' })}</h3>
+          <ul>
+            {alternativeAnswers.map((candidate, index) => (
+              <li key={candidate.result_id ?? `crop-alt-${index}`}>{candidate.answer}</li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       {answer ? (
@@ -180,21 +186,21 @@ export function FieldCropCanonicalAnswerView({ profile }: FieldCropCanonicalAnsw
                 index,
                 t('website.research.citationFallback', { index: index + 1 }),
               )
-              const href = citationHref(citation)
+              const hasViewerTarget = Boolean(citation.title?.trim() || citation.citation_id || citation.url || citation.doi)
               return (
                 <li key={`${citation.citation_id ?? citation.doi ?? citation.url ?? citation.title ?? 'c'}-${index}`}>
-                  {href ? (
-                    <a href={href} target="_blank" rel="noreferrer noopener">
-                      {label}
-                    </a>
+                  {hasViewerTarget ? (
+                    <ResearchSourceLink
+                      citation={citation}
+                      label={label}
+                      answer={answer}
+                      index={index}
+                      alternatives={alternativeAnswers}
+                    />
                   ) : (
                     <strong>{label}</strong>
                   )}
                   {citation.organization ? ` — ${citation.organization}` : null}
-                  {citation.doi ? ` · DOI: ${citation.doi}` : null}
-                  {citation.evidence_id ? (
-                    <span data-evidence-id={citation.evidence_id}>{` · evidence: ${citation.evidence_id}`}</span>
-                  ) : null}
                 </li>
               )
             })}
@@ -216,12 +222,5 @@ function isLimitedLabel(status: string | undefined): boolean {
 }
 
 function formatClaimLine(claim: FieldCropAnswerClaim): string {
-  const parts = [
-    claim.claim_text?.trim() || claim.claim_id || 'claim',
-    claim.question_claim_id ? `question_claim_id=${claim.question_claim_id}` : null,
-    claim.evidence_ids && claim.evidence_ids.length > 0
-      ? `evidence_ids=${claim.evidence_ids.join(',')}`
-      : null,
-  ].filter(Boolean)
-  return parts.join(' · ')
+  return claim.claim_text?.trim() || ''
 }

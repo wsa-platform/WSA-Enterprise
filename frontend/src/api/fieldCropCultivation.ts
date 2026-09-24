@@ -1,5 +1,5 @@
 import { request } from './client'
-import type { ResearchAgentCitation } from './researchAgent'
+import type { ResearchAgentCitation, ResearchAnswerCandidate } from './researchAgent'
 
 export type FieldCropCultivationReference = {
   organization?: string
@@ -90,6 +90,7 @@ export type FieldCropCultivationProfile = {
   key_findings?: string[]
   claims?: FieldCropAnswerClaim[]
   citations?: ResearchAgentCitation[]
+  answer_candidates?: ResearchAnswerCandidate[]
   evidence_references?: Array<Record<string, unknown>>
   confidence?: number
   limitations?: string[]

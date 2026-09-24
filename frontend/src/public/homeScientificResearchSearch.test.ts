@@ -116,7 +116,8 @@ describe('homepage scientific research search', () => {
     expect(html).toContain('إجابة موثقة من الخادم')
     expect(html).toContain('Irrigation Study')
     expect(html).toContain('DOI: 10.1000/irrigation')
-    expect(html).toContain('https://example.test/paper')
+    expect(html).toContain('href="/research/result/')
+    expect(html).not.toContain('https://example.test/paper')
     expect(html).toContain('الحالة: completed')
   })
 
@@ -184,15 +185,18 @@ describe('homepage scientific research search', () => {
       },
     })
     expect(html).toContain('Scientific answer in English.')
-    expect(html).toContain('data-testid="home-research-confidence"')
+    expect(html).not.toContain('data-testid="home-research-confidence"')
+    expect(html).not.toContain('Confidence:')
     expect(html).toContain('limited_geo_coverage')
     expect(html).toContain('data-testid="home-research-uncertainty"')
     expect(html).toContain('competing_sources')
     expect(html).toContain('data-testid="home-research-conflicts"')
     expect(html).toContain('irrigation amounts differ')
     expect(html).toContain('Source A')
-    expect(html).toContain('href="https://example.org/paper"')
+    expect(html).toContain('href="/research/result/')
+    expect(html).not.toContain('href="https://example.org/paper"')
     expect(html).toContain('>Source A</a>')
+    expect(html).not.toContain('google.com')
   })
 
   it('omits conflict and uncertainty blocks when fields are absent', async () => {
@@ -250,6 +254,31 @@ describe('homepage scientific research search', () => {
     expect(html).toContain('Main scientific answer.')
     expect(html).toContain('data-testid="home-research-additional"')
     expect(html).toContain('Supporting context only.')
+    expect(html).not.toContain('data-testid="home-research-confidence"')
+    expect(html).not.toContain('Direct')
+  })
+
+  it('renders alternative answers without confidence labels', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderView({
+      query: 'wheat irrigation',
+      loading: false,
+      error: null,
+      result: {
+        status: 'completed',
+        answer: 'Primary scientific answer.',
+        answer_candidates: [
+          { answer: 'Primary scientific answer.', result_id: 'c-1' },
+          { answer: 'Alternative scientific answer.', result_id: 'c-2' },
+        ],
+        citations: [],
+      },
+    })
+    expect(html).toContain('Primary scientific answer.')
+    expect(html).toContain('data-testid="home-research-alternatives"')
+    expect(html).toContain('Alternative scientific answer.')
+    expect(html).not.toContain('0.91')
+    expect(html).not.toContain('Confidence:')
   })
 
   it('renders positive feedback control and success/error states', async () => {
