@@ -1979,7 +1979,16 @@
       "feedbackPositive": "كانت هذه الإجابة مفيدة",
       "feedbackSubmitting": "جاري إرسال الملاحظات...",
       "feedbackSuccess": "شكراً لك. تم تسجيل ملاحظاتك.",
-      "feedbackError": "تعذر إرسال الملاحظات. يرجى المحاولة مرة أخرى."
+      "feedbackError": "تعذر إرسال الملاحظات. يرجى المحاولة مرة أخرى.",
+      "backToResults": "العودة إلى نتائج البحث",
+      "reviewSourcesNotice": "راجع المصادر المدرجة؛ بعض المصادر العلمية غير متفقة.",
+      "noEligibleDirectCitations": "لا تتوفر استشهادات مباشرة مؤهلة لهذه الإجابة.",
+      "alternativeAnswersHeading": "إجابات بديلة",
+      "viewerHeading": "نتيجة البحث",
+      "viewerNotice": "هذه صفحة عرض لنتائج البحث في منصة WSA. وهي ليست موقع الناشر الأصلي.",
+      "originalSource": "المصدر الأصلي",
+      "noOriginalUrl": "لا يتوفر رابط موثوق للمصدر الأصلي.",
+      "viewerMissing": "لم تعد نتيجة البحث هذه متاحة في هذه الجلسة."
     },
     "categoriesStrip": {
       "title": "اكتشف خدماتنا وأقسامنا الرئيسية"

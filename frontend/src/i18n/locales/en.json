@@ -1979,7 +1979,16 @@
       "feedbackPositive": "This answer was useful",
       "feedbackSubmitting": "Submitting feedback...",
       "feedbackSuccess": "Thank you. Your feedback was recorded.",
-      "feedbackError": "Could not submit feedback. Please try again."
+      "feedbackError": "Could not submit feedback. Please try again.",
+      "backToResults": "Back to search results",
+      "reviewSourcesNotice": "Review the listed sources; some scientific sources disagree.",
+      "noEligibleDirectCitations": "No eligible direct citations are available for this answer.",
+      "alternativeAnswersHeading": "Alternative answers",
+      "viewerHeading": "Research result",
+      "viewerNotice": "This is a WSA research presentation page. It is not the original publisher website.",
+      "originalSource": "Original source",
+      "noOriginalUrl": "No trustworthy original source URL is available.",
+      "viewerMissing": "This research result is no longer available in this session."
     },
     "categoriesStrip": {
       "title": "Discover our main services and categories"

@@ -1979,7 +1979,16 @@
       "feedbackPositive": "Cette réponse était utile",
       "feedbackSubmitting": "Envoi des commentaires...",
       "feedbackSuccess": "Merci. Vos commentaires ont été enregistrés.",
-      "feedbackError": "Impossible d'envoyer les commentaires. Veuillez réessayer."
+      "feedbackError": "Impossible d'envoyer les commentaires. Veuillez réessayer.",
+      "backToResults": "Retour aux résultats de recherche",
+      "reviewSourcesNotice": "Consultez les sources listées ; certaines sources scientifiques divergent.",
+      "noEligibleDirectCitations": "Aucune citation directe éligible n’est disponible pour cette réponse.",
+      "alternativeAnswersHeading": "Réponses alternatives",
+      "viewerHeading": "Résultat de recherche",
+      "viewerNotice": "Ceci est une page de présentation WSA. Ce n’est pas le site de l’éditeur d’origine.",
+      "originalSource": "Source originale",
+      "noOriginalUrl": "Aucune URL de source originale fiable n’est disponible.",
+      "viewerMissing": "Ce résultat de recherche n’est plus disponible dans cette session."
     },
     "categoriesStrip": {
       "title": "Découvrez nos principaux services et catégories"

@@ -7,6 +7,7 @@ import { setUnauthorizedHandler } from './api'
 import { AppShell } from './components/AppShell'
 import { MarketplaceSellerShell } from './components/MarketplaceSellerShell'
 import { HomePage } from './pages/public/HomePage'
+import { PublicLayout } from './public/PublicLayout'
 import { ResearchViewerPage } from './public/ResearchViewerPage'
 import { CropCategoryPage } from './pages/public/CropCategoryPage'
 import { PlantProductionPage } from './pages/public/PlantProductionPage'
@@ -229,7 +230,14 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/research/result/:resultId" element={<ResearchViewerPage />} />
+      <Route
+        path="/research/result/:resultId"
+        element={(
+          <PublicLayout>
+            <ResearchViewerPage />
+          </PublicLayout>
+        )}
+      />
       <Route path="/sections/:sectionId" element={<SectionPage />} />
       <Route path="/crops/:cropCategoryId" element={<CropCategoryPage />} />
       <Route path="/plant-production/:categoryId" element={<PlantProductionPage />} />

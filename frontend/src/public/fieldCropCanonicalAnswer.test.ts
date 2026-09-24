@@ -137,13 +137,13 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
     expect(html).toContain('data-answer-mode="canonical"')
   })
 
-  it('D/E hides confidence and still renders limitations', async () => {
+  it('D/E hides confidence and does not render raw limitations', async () => {
     await i18n.changeLanguage('en')
     const html = renderCanonical(canonicalFixture({ confidence: 0.81, limitations: ['limited_geo_coverage'] }))
     expect(html).not.toContain('data-testid="crop-confidence"')
     expect(html).not.toContain('Confidence:')
-    expect(html).toContain('limited_geo_coverage')
-    expect(html).toContain('data-testid="crop-limitations"')
+    expect(html).not.toContain('limited_geo_coverage')
+    expect(html).not.toContain('data-testid="crop-limitations"')
   })
 
   it('F insufficient evidence is marked limited and shows notice', async () => {
@@ -157,8 +157,8 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
       }),
     )
     expect(html).toContain('gs-field-crop-canonical--limited')
-    expect(html).toContain('insufficient_validated_evidence_for_question_claim')
-    expect(html).toContain('limited by insufficient or conflicting')
+    expect(html).not.toContain('insufficient_validated_evidence_for_question_claim')
+    expect(html).toContain('No sufficiently documented answer is available for this question right now.')
   })
 
   it('G renders conflicts and uncertainty', async () => {
@@ -170,9 +170,10 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
         uncertainty: 'competing_sources',
       }),
     )
-    expect(html).toContain('irrigation amounts differ')
-    expect(html).toContain('competing_sources')
-    expect(html).toContain('data-testid="crop-conflicts"')
+    expect(html).not.toContain('irrigation amounts differ')
+    expect(html).not.toContain('competing_sources')
+    expect(html).not.toContain('data-testid="crop-conflicts"')
+    expect(html).not.toContain('data-testid="crop-uncertainty"')
   })
 
   it('H/I citation title opens the internal Research Viewer and not Google', async () => {
@@ -182,6 +183,22 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
     expect(html).toContain('>Wheat Study</a>')
     expect(html).not.toContain('href="https://example.org/wheat-direct"')
     expect(html).not.toContain('google.com')
+    expect(html).not.toContain('google.')
+  })
+
+  it('passes the originating episode identity into viewer source links', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderToStaticMarkup(
+      createElement(
+        I18nextProvider,
+        { i18n },
+        createElement(FieldCropCanonicalAnswerView, {
+          profile: canonicalFixture(),
+          episodeId: 'ep-crop',
+        }),
+      ),
+    )
+    expect(html).toContain('href="/research/result/cite-1?episode=ep-crop"')
     expect(html).not.toContain('google.')
   })
 
@@ -225,7 +242,7 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
     const html = renderCanonical(canonicalFixture({ language: 'en', answer: 'ENGLISH_ANSWER_BODY' }))
     expect(html).toContain('ENGLISH_ANSWER_BODY')
     expect(html).toContain('data-answer-language="en"')
-    expect(html).toContain('لغة الإجابة: en')
+    expect(html).not.toContain('لغة الإجابة: en')
   })
 
   it('L keeps claim identity on the model and hides it from the user', async () => {
@@ -282,7 +299,8 @@ describe('P7-U2 FieldCropProfileArticle', () => {
     })
     expect(html).toContain('data-crop-answer-mode="limited"')
     expect(html).not.toContain('LEGACY_SECTION_CONTENT_ONLY')
-    expect(html).toContain('insufficient_validated_evidence_for_question_claim')
+    expect(html).not.toContain('insufficient_validated_evidence_for_question_claim')
+    expect(html).toContain('No sufficiently documented answer is available for this question right now.')
   })
 })
 

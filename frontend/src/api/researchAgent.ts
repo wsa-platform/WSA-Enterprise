@@ -33,6 +33,29 @@ export type ResearchAnswerCandidate = {
   source_ids?: string[]
 }
 
+export type ResearchUserPresentationPayload = {
+  primary_answer?: string | null
+  human_status?: 'answered' | 'insufficient'
+  user_notice_code?: string | null
+  candidates?: Array<{ result_id: string; answer: string }>
+  sources?: Array<{
+    result_id: string
+    title: string
+    authors?: string[]
+    organization?: string | null
+    journal?: string | null
+    publication_year?: number | null
+    original_url?: string | null
+  }>
+  answer_language?: string | null
+  candidate_selection?: {
+    threshold: number
+    presented_count: number
+    confidence_exposed: boolean
+    directness_unchanged: boolean
+  }
+}
+
 export type ResearchAgentQueryResponse = {
   status?: string
   answer?: string | null
@@ -40,11 +63,18 @@ export type ResearchAgentQueryResponse = {
   additional_information?: string | null
   citations?: ResearchAgentCitation[]
   answer_candidates?: ResearchAnswerCandidate[]
+  user_presentation?: ResearchUserPresentationPayload
   confidence?: number
   limitations?: string[]
   uncertainty?: string | null
   conflicts?: ResearchAgentConflict[]
   language?: string | null
+  research_metadata?: {
+    direct_evidence_gate?: string
+    evidence_sufficient?: boolean
+    sufficiency_mode?: string
+    [key: string]: unknown
+  }
   message?: string
   error?: {
     code?: string

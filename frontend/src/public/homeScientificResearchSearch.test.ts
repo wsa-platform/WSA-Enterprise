@@ -115,10 +115,11 @@ describe('homepage scientific research search', () => {
     })
     expect(html).toContain('إجابة موثقة من الخادم')
     expect(html).toContain('Irrigation Study')
-    expect(html).toContain('DOI: 10.1000/irrigation')
+    expect(html).not.toContain('DOI: 10.1000/irrigation')
     expect(html).toContain('href="/research/result/')
     expect(html).not.toContain('https://example.test/paper')
-    expect(html).toContain('الحالة: completed')
+    expect(html).not.toContain('الحالة: completed')
+    expect(html).toContain('data-testid="home-research-primary-answer"')
   })
 
   it('maps ApiError to localized user-facing messages without stack traces', async () => {
@@ -168,7 +169,7 @@ describe('homepage scientific research search', () => {
     expect(html).not.toContain('البحث العلمي الزراعي')
   })
 
-  it('renders conflicts and uncertainty from Stage 5 fields without replacing the answer', async () => {
+  it('does not render raw diagnostics, confidence, or conflict JSON', async () => {
     await i18n.changeLanguage('en')
     const html = renderView({
       query: 'wheat irrigation',
@@ -180,18 +181,22 @@ describe('homepage scientific research search', () => {
         confidence: 0.72,
         limitations: ['limited_geo_coverage'],
         uncertainty: 'competing_sources',
-        conflicts: [{ detail: 'irrigation amounts differ' }],
+        conflicts: [{ evidence_id: 'ev-1', source_id: '10.1/x', publication_title: 'Internal' }],
         citations: [{ title: 'Source A', url: 'https://example.org/paper' }],
       },
     })
     expect(html).toContain('Scientific answer in English.')
+    expect(html).toContain('data-testid="home-research-primary-answer"')
     expect(html).not.toContain('data-testid="home-research-confidence"')
     expect(html).not.toContain('Confidence:')
-    expect(html).toContain('limited_geo_coverage')
-    expect(html).toContain('data-testid="home-research-uncertainty"')
-    expect(html).toContain('competing_sources')
-    expect(html).toContain('data-testid="home-research-conflicts"')
-    expect(html).toContain('irrigation amounts differ')
+    expect(html).not.toContain('limited_geo_coverage')
+    expect(html).not.toContain('data-testid="home-research-uncertainty"')
+    expect(html).not.toContain('data-testid="home-research-limitations"')
+    expect(html).not.toContain('data-testid="home-research-conflicts"')
+    expect(html).not.toContain('evidence_id')
+    expect(html).not.toContain('"ev-1"')
+    expect(html).not.toMatch(/>\s*Direct\s*</)
+    expect(html).not.toMatch(/>\s*Supporting\s*</)
     expect(html).toContain('Source A')
     expect(html).toContain('href="/research/result/')
     expect(html).not.toContain('href="https://example.org/paper"')
@@ -214,6 +219,7 @@ describe('homepage scientific research search', () => {
     expect(html).toContain('Answer only')
     expect(html).not.toContain('data-testid="home-research-conflicts"')
     expect(html).not.toContain('data-testid="home-research-uncertainty"')
+    expect(html).not.toContain('data-testid="home-research-limitations"')
     expect(html).toContain('data-testid="home-research-sources-empty"')
     expect(html).toContain('No eligible direct citations are available for this answer.')
     expect(html).not.toContain('No citations to display.')
@@ -234,7 +240,8 @@ describe('homepage scientific research search', () => {
     })
     expect(html).toContain('data-testid="home-research-sources-empty"')
     expect(html).not.toContain('data-testid="home-research-uncertainty"')
-    expect(html).toContain('Insufficient scientific evidence was found for a factual answer.')
+    expect(html).toContain('No sufficiently documented answer is available for this question right now.')
+    expect(html).not.toContain('Insufficient scientific evidence was found for a factual answer.')
     expect(html).not.toContain('No citations to display.')
   })
 
@@ -252,10 +259,9 @@ describe('homepage scientific research search', () => {
       },
     })
     expect(html).toContain('Main scientific answer.')
-    expect(html).toContain('data-testid="home-research-additional"')
-    expect(html).toContain('Supporting context only.')
+    expect(html).not.toContain('data-testid="home-research-additional"')
     expect(html).not.toContain('data-testid="home-research-confidence"')
-    expect(html).not.toContain('Direct')
+    expect(html).not.toMatch(/>\s*Direct\s*</)
   })
 
   it('renders alternative answers without confidence labels', async () => {

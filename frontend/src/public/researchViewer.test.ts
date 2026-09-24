@@ -5,8 +5,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 import i18n from '../i18n/config'
 import { citationHref } from './citationHref'
+import { AuthProvider } from '../context/AuthContext'
+import { PublicLayout } from './PublicLayout'
 import { ResearchSourceLink } from './ResearchSourceLink'
 import { ResearchViewerPage } from './ResearchViewerPage'
+import { createSearchEpisode, homeResultsPath } from './scientificSearchEpisode'
 import {
   activateResearchResult,
   isClickableAnchorMarkup,
@@ -21,6 +24,17 @@ const session = new Map<string, string>()
 
 beforeEach(() => {
   session.clear()
+  const local = new Map<string, string>()
+  vi.stubGlobal('localStorage', {
+    getItem: (key: string) => local.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      local.set(key, String(value))
+    },
+    removeItem: (key: string) => {
+      local.delete(key)
+    },
+    clear: () => local.clear(),
+  })
   vi.stubGlobal('sessionStorage', {
     getItem: (key: string) => session.get(key) ?? null,
     setItem: (key: string, value: string) => {
@@ -170,5 +184,67 @@ describe('research viewer navigation', () => {
     const missingHtml = renderWithRouter(missing.viewerPath)
     expect(missingHtml).toContain('data-testid="research-viewer-no-original"')
     expect(missingHtml).not.toContain('href="https://')
+  })
+
+  it('viewer uses PublicLayout chrome and back-to-results restores the episode', async () => {
+    await i18n.changeLanguage('en')
+    const episode = createSearchEpisode({
+      query: 'generic scientific question',
+      language: 'en',
+      episodeId: 'episode-restore',
+      response: {
+        status: 'scientific_generated',
+        answer: 'Primary documented answer.',
+        citations: [{
+          citation_id: 'cite-layout',
+          title: 'Layout source',
+          url: 'https://example.org/layout',
+        }],
+        user_presentation: {
+          primary_answer: 'Primary documented answer.',
+          human_status: 'answered',
+          user_notice_code: null,
+          candidates: [{ result_id: 'cand-2', answer: 'Second documented answer.' }],
+          sources: [{
+            result_id: 'cite-layout',
+            title: 'Layout source',
+            original_url: 'https://example.org/layout',
+          }],
+        },
+      },
+    })
+
+    const html = renderToStaticMarkup(
+      createElement(
+        AuthProvider,
+        null,
+        createElement(
+          I18nextProvider,
+          { i18n },
+          createElement(
+            MemoryRouter,
+            { initialEntries: [`/research/result/cite-layout?episode=${episode.episodeId}`] },
+            createElement(
+              Routes,
+              null,
+              createElement(Route, {
+                path: '/research/result/:resultId',
+                element: createElement(PublicLayout, null, createElement(ResearchViewerPage)),
+              }),
+            ),
+          ),
+        ),
+      ),
+    )
+
+    expect(html).toContain('class="public-site"')
+    expect(html).toContain('id="public-primary-nav"')
+    expect(html).toContain('data-testid="research-viewer-page"')
+    expect(html).toContain('Primary documented answer.')
+    expect(html).toContain('data-testid="research-viewer-original-source"')
+    expect(html).toContain('href="https://example.org/layout"')
+    expect(html).toContain('data-testid="research-viewer-back"')
+    expect(html).toContain(homeResultsPath(episode.episodeId))
+    expect(html).not.toMatch(/google/i)
   })
 })

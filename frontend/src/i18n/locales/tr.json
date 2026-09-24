@@ -1979,7 +1979,16 @@
       "feedbackPositive": "Bu yanıt faydalıydı",
       "feedbackSubmitting": "Geri bildirim gönderiliyor...",
       "feedbackSuccess": "Teşekkürler. Geri bildiriminiz kaydedildi.",
-      "feedbackError": "Geri bildirim gönderilemedi. Lütfen tekrar deneyin."
+      "feedbackError": "Geri bildirim gönderilemedi. Lütfen tekrar deneyin.",
+      "backToResults": "Arama sonuçlarına dön",
+      "reviewSourcesNotice": "Listelenen kaynakları inceleyin; bazı bilimsel kaynaklar uyuşmuyor.",
+      "noEligibleDirectCitations": "Bu yanıt için uygun doğrudan atıf bulunamadı.",
+      "alternativeAnswersHeading": "Alternatif yanıtlar",
+      "viewerHeading": "Araştırma sonucu",
+      "viewerNotice": "Bu bir WSA araştırma sunum sayfasıdır. Orijinal yayıncı sitesi değildir.",
+      "originalSource": "Orijinal kaynak",
+      "noOriginalUrl": "Güvenilir bir orijinal kaynak URL’si mevcut değil.",
+      "viewerMissing": "Bu araştırma sonucu bu oturumda artık mevcut değil."
     },
     "categoriesStrip": {
       "title": "Ana hizmetlerimizi ve kategorilerimizi keşfedin"

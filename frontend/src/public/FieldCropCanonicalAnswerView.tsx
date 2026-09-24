@@ -1,17 +1,15 @@
 import { useTranslation } from 'react-i18next'
 import type { ResearchAgentCitation } from '../api/researchAgent'
 import {
-  formatCropConflictText,
-  type FieldCropAnswerClaim,
   type FieldCropCultivationProfile,
-  resolveCanonicalCropAnswerText,
   resolveCropAnswerRenderMode,
 } from '../api/fieldCropCultivation'
-import { sourcePresentationState } from './citationHref'
 import { ResearchSourceLink } from './ResearchSourceLink'
+import { toScientificUserPresentation, userNoticeTranslationKey } from './scientificUserPresentation'
 
 export type FieldCropCanonicalAnswerViewProps = {
   profile: FieldCropCultivationProfile
+  episodeId?: string | null
 }
 
 function citationLabel(citation: ResearchAgentCitation, _index: number, fallback: string): string {
@@ -23,22 +21,17 @@ function citationLabel(citation: ResearchAgentCitation, _index: number, fallback
  * P7-U2 — Stage 5 canonical Crop answer presentation.
  * Answer body is server language; chrome uses UI i18n.
  */
-export function FieldCropCanonicalAnswerView({ profile }: FieldCropCanonicalAnswerViewProps) {
+export function FieldCropCanonicalAnswerView({ profile, episodeId = null }: FieldCropCanonicalAnswerViewProps) {
   const { t } = useTranslation()
   const mode = resolveCropAnswerRenderMode(profile)
-  const answer = resolveCanonicalCropAnswerText(profile)
-  const citations = profile.citations ?? []
-  const alternativeAnswers = (profile.answer_candidates ?? []).filter(
-    (candidate) => candidate.answer.trim() !== '' && candidate.answer.trim() !== (answer ?? ''),
-  )
-  const limitations = profile.limitations ?? []
-  const conflicts = profile.conflicts ?? []
-  const claims = profile.claims ?? []
-  const keyFindings = profile.key_findings ?? []
-  const additionalInformation = profile.additional_information?.trim() || null
-  const uncertainty = profile.uncertainty?.trim() || null
-  const showUncertainty = Boolean(uncertainty) && uncertainty !== answer
-  const limited = mode === 'limited' || (mode === 'canonical' && isLimitedLabel(profile.status))
+  const presentation = toScientificUserPresentation(profile)
+  const answer = presentation?.primary_answer ?? null
+  const alternativeAnswers = presentation?.candidates ?? []
+  const sources = presentation?.sources ?? []
+  const noticeKey = userNoticeTranslationKey(presentation?.user_notice_code)
+  const limited = presentation?.human_status === 'insufficient'
+    || mode === 'limited'
+    || (mode === 'canonical' && isLimitedLabel(profile.status))
 
   return (
     <div
@@ -48,36 +41,12 @@ export function FieldCropCanonicalAnswerView({ profile }: FieldCropCanonicalAnsw
     >
       {limited ? (
         <p className="gs-field-crop-profile-notice" role="status">
-          {t('website.research.insufficientNotice', {
-            defaultValue: 'This response is limited by insufficient or conflicting scientific evidence.',
-          })}
+          {t(noticeKey || 'website.research.noAnswer')}
         </p>
-      ) : null}
-
-      {profile.status ? (
-        <p className="gs-field-crop-profile-meta">
-          {t('website.research.status', { status: profile.status })}
+      ) : noticeKey ? (
+        <p className="gs-field-crop-profile-notice" role="status" data-testid="crop-research-notice">
+          {t(noticeKey)}
         </p>
-      ) : null}
-
-      {profile.language ? (
-        <p className="gs-field-crop-profile-meta" data-testid="crop-answer-language">
-          {t('website.research.answerLanguage', {
-            language: profile.language,
-            defaultValue: `Answer language: ${profile.language}`,
-          })}
-        </p>
-      ) : null}
-
-      {alternativeAnswers.length > 0 ? (
-        <section className="gs-field-crop-profile-section" data-testid="crop-research-alternatives">
-          <h3>{t('website.research.alternativeAnswersHeading', { defaultValue: 'Alternative answers' })}</h3>
-          <ul>
-            {alternativeAnswers.map((candidate, index) => (
-              <li key={candidate.result_id ?? `crop-alt-${index}`}>{candidate.answer}</li>
-            ))}
-          </ul>
-        </section>
       ) : null}
 
       {answer ? (
@@ -89,124 +58,65 @@ export function FieldCropCanonicalAnswerView({ profile }: FieldCropCanonicalAnsw
             ))}
           </div>
         </section>
-      ) : mode === 'limited' ? (
+      ) : limited ? (
         <p className="gs-field-crop-profile-notice" role="status">
           {t('website.research.noAnswer')}
         </p>
       ) : null}
 
-      {profile.detailed_explanation?.trim() &&
-      profile.detailed_explanation.trim() !== answer ? (
-        <section className="gs-field-crop-profile-section">
-          <h3>{t('website.research.detailedExplanationHeading', { defaultValue: 'Detailed explanation' })}</h3>
-          <div className="gs-field-crop-profile-content">
-            {profile.detailed_explanation.split('\n').map((paragraph, index) => (
-              <p key={`crop-detail-${index}`}>{paragraph}</p>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {additionalInformation ? (
-        <section className="gs-field-crop-profile-section" data-testid="crop-additional">
-          <h3>{t('website.research.additionalInformationHeading', { defaultValue: 'Additional information' })}</h3>
-          <div className="gs-field-crop-profile-content">
-            {additionalInformation.split('\n').map((paragraph, index) => (
-              <p key={`crop-additional-${index}`}>{paragraph}</p>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {keyFindings.length > 0 ? (
-        <section className="gs-field-crop-profile-section">
-          <h3>{t('website.research.keyFindingsHeading', { defaultValue: 'Key findings' })}</h3>
+      {alternativeAnswers.length > 0 ? (
+        <section className="gs-field-crop-profile-section" data-testid="crop-research-alternatives">
+          <h3>{t('website.research.alternativeAnswersHeading')}</h3>
           <ul>
-            {keyFindings.map((finding, index) => (
-              <li key={`finding-${index}`}>{finding}</li>
+            {alternativeAnswers.map((candidate, index) => (
+              <li key={candidate.result_id ?? `crop-alt-${index}`}>{candidate.answer}</li>
             ))}
           </ul>
         </section>
       ) : null}
 
-      {limitations.length > 0 ? (
-        <section className="gs-field-crop-profile-section" data-testid="crop-limitations">
-          <h3>{t('website.research.limitationsHeading', { defaultValue: 'Limitations' })}</h3>
-          <ul>
-            {limitations.map((limitation, index) => (
-              <li key={`limitation-${index}`}>{limitation}</li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {showUncertainty ? (
-        <section className="gs-field-crop-profile-section" data-testid="crop-uncertainty">
-          <h3>{t('website.research.uncertaintyHeading', { defaultValue: 'Uncertainty' })}</h3>
-          <p>{uncertainty}</p>
-        </section>
-      ) : null}
-
-      {conflicts.length > 0 ? (
-        <section className="gs-field-crop-profile-section" data-testid="crop-conflicts">
-          <h3>{t('website.research.conflictsHeading', { defaultValue: 'Conflicts' })}</h3>
-          <ul>
-            {conflicts.map((conflict, index) => (
-              <li key={`conflict-${index}`}>{formatCropConflictText(conflict)}</li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {claims.length > 0 ? (
-        <section className="gs-field-crop-profile-section" data-testid="crop-claims">
-          <h3>{t('website.research.claimsHeading', { defaultValue: 'Claims' })}</h3>
-          <ul>
-            {claims.map((claim, index) => (
-              <li key={claim.claim_id ?? `claim-${index}`}>{formatClaimLine(claim)}</li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {sourcePresentationState(citations) === 'no_eligible_direct_citations' ? (
+      {sources.length === 0 ? (
         <section className="gs-field-crop-profile-section" data-testid="crop-sources-empty">
           <h3 id="field-crop-canonical-sources">{t('website.research.sourcesHeading')}</h3>
-          <p>{t('website.research.noEligibleDirectCitations', {
-            defaultValue: 'No eligible direct citations are available for this answer.',
-          })}</p>
+          <p>{t('website.research.noEligibleDirectCitations')}</p>
         </section>
-      ) : citations.length > 0 ? (
+      ) : (
         <section className="gs-field-crop-profile-section" aria-labelledby="field-crop-canonical-sources">
           <h3 id="field-crop-canonical-sources">{t('website.research.sourcesHeading')}</h3>
           <ul className="gs-field-crop-profile-references" data-testid="crop-citations">
-            {citations.map((citation, index) => {
+            {sources.map((source, index) => {
+              const citation: ResearchAgentCitation = {
+                citation_id: source.result_id,
+                title: source.title,
+                url: source.original_url,
+                authors: source.authors,
+                organization: source.organization,
+                journal: source.journal,
+                publication_year: source.publication_year,
+              }
               const label = citationLabel(
                 citation,
                 index,
                 t('website.research.citationFallback', { index: index + 1 }),
               )
-              const hasViewerTarget = Boolean(citation.title?.trim() || citation.citation_id || citation.url || citation.doi)
               return (
-                <li key={`${citation.citation_id ?? citation.doi ?? citation.url ?? citation.title ?? 'c'}-${index}`}>
-                  {hasViewerTarget ? (
-                    <ResearchSourceLink
-                      citation={citation}
-                      label={label}
-                      answer={answer}
-                      index={index}
-                      alternatives={alternativeAnswers}
-                    />
-                  ) : (
-                    <strong>{label}</strong>
-                  )}
-                  {citation.organization ? ` — ${citation.organization}` : null}
+                <li key={`${source.result_id}-${index}`}>
+                  <ResearchSourceLink
+                    citation={citation}
+                    label={label}
+                    answer={answer}
+                    index={index}
+                    alternatives={alternativeAnswers}
+                    episodeId={episodeId}
+                    resultId={source.result_id}
+                  />
+                  {source.organization ? ` — ${source.organization}` : null}
                 </li>
               )
             })}
           </ul>
         </section>
-      ) : null}
+      )}
     </div>
   )
 }
@@ -221,6 +131,3 @@ function isLimitedLabel(status: string | undefined): boolean {
   )
 }
 
-function formatClaimLine(claim: FieldCropAnswerClaim): string {
-  return claim.claim_text?.trim() || ''
-}

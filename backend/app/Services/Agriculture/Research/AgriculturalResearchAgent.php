@@ -13,6 +13,7 @@ use App\Services\Agriculture\Research\Search\ScientificSearchExecutionReport;
 use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
 use App\Services\Agriculture\Research\Synthesis\AnswerSynthesisExecutionReport;
 use App\Services\Agriculture\Research\Synthesis\ScientificAnswerCandidatePresenter;
+use App\Services\Agriculture\Research\Synthesis\ScientificUserPresentation;
 use App\Services\Agriculture\Research\Validation\AgriculturalScientificValidationService;
 use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionReport;
 use Illuminate\Validation\ValidationException;
@@ -180,11 +181,14 @@ class AgriculturalResearchAgent
         );
 
         $candidates = ScientificAnswerCandidatePresenter::fromSynthesis($synthesisReport);
+        $sufficient = $this->hasSufficientScientificSynthesis($synthesisReport);
+        $userPresentation = ScientificUserPresentation::fromSynthesis($synthesisReport, $sufficient);
 
         $payload = array_merge(
             $synthesisReport->toArray(),
             $persistenceReport->toArray(),
             $candidates,
+            ['user_presentation' => $userPresentation],
             [
                 'status' => $synthesisReport->status,
                 'persistence_status' => $persistenceReport->status,
@@ -422,9 +426,10 @@ class AgriculturalResearchAgent
     }
 
     /**
-     * Home DIRECT sufficiency: performed synthesis, non-empty answer and citations,
-     * and research_metadata.direct_evidence_gate === PASSED. Does not treat
-     * evidence_sufficient or supported_answer as DIRECT. Does not start Library Search.
+     * User-facing scientific sufficiency: performed synthesis, non-empty answer,
+     * and research_metadata.direct_evidence_gate === PASSED.
+     * Citation presence is independent — empty citations must not erase a valid answer.
+     * Does not treat supported_answer as DIRECT. Does not start Library Search.
      */
     private function hasSufficientScientificSynthesis(AnswerSynthesisExecutionReport $synthesis): bool
     {
@@ -433,10 +438,6 @@ class AgriculturalResearchAgent
         }
 
         if (trim((string) $synthesis->answer) === '') {
-            return false;
-        }
-
-        if ($synthesis->citations === []) {
             return false;
         }
 
@@ -461,10 +462,12 @@ class AgriculturalResearchAgent
         $persistence = $persistenceReport->toArray();
         $citations = is_array($synthesis['citations'] ?? null) ? $synthesis['citations'] : [];
         $candidates = ScientificAnswerCandidatePresenter::fromSynthesis($synthesisReport);
+        $userPresentation = ScientificUserPresentation::fromSynthesis($synthesisReport, $sufficient);
         $status = $sufficient ? 'scientific_generated' : $synthesisReport->status;
         $loadState = $sufficient ? 'scientific_generated' : $synthesisReport->status;
 
         return array_merge($synthesis, $persistence, $candidates, [
+            'user_presentation' => $userPresentation,
             'status' => $status,
             'load_state' => $loadState,
             'stage' => 5,
@@ -528,10 +531,12 @@ class AgriculturalResearchAgent
     ): array {
         $candidates = ScientificAnswerCandidatePresenter::fromSynthesis($synthesisReport);
         $sufficient = $this->hasSufficientScientificSynthesis($synthesisReport);
+        $userPresentation = ScientificUserPresentation::fromSynthesis($synthesisReport, $sufficient);
 
         $status = $sufficient ? 'scientific_generated' : $synthesisReport->status;
 
         return array_merge($response, $candidates, [
+            'user_presentation' => $userPresentation,
             'status' => $status,
             'load_state' => $status,
             'stage' => 5,

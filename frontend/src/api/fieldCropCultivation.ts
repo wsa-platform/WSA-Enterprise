@@ -91,6 +91,7 @@ export type FieldCropCultivationProfile = {
   claims?: FieldCropAnswerClaim[]
   citations?: ResearchAgentCitation[]
   answer_candidates?: ResearchAnswerCandidate[]
+  user_presentation?: import('./researchAgent').ResearchUserPresentationPayload
   evidence_references?: Array<Record<string, unknown>>
   confidence?: number
   limitations?: string[]

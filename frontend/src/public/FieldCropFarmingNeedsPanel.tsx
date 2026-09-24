@@ -10,6 +10,11 @@ import {
 import type { FieldCropOptionId } from './fieldCropCategories'
 import { getFieldCropById } from './fieldCropCategories'
 import { FieldCropCanonicalAnswerView } from './FieldCropCanonicalAnswerView'
+import {
+  createSearchEpisode,
+  loadSearchEpisode,
+} from './scientificSearchEpisode'
+import type { ResearchAgentQueryResponse } from '../api/researchAgent'
 
 type FieldCropFarmingNeedsPanelProps = {
   categoryId: string
@@ -43,6 +48,7 @@ export function FieldCropFarmingNeedsPanel({
 }: FieldCropFarmingNeedsPanelProps) {
   const { t } = useTranslation()
   const [profile, setProfile] = useState<FieldCropCultivationProfile | null>(null)
+  const [episodeId, setEpisodeId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -51,6 +57,17 @@ export function FieldCropFarmingNeedsPanel({
     setLoading(true)
     setError(null)
     setProfile(null)
+    setEpisodeId(null)
+
+    const stored = matchingStoredCropEpisode(categoryId, cropId, knowledgeOption)
+    if (stored) {
+      setProfile(stored.profile)
+      setEpisodeId(stored.episodeId)
+      setLoading(false)
+      return () => {
+        cancelled = true
+      }
+    }
 
     fetchFieldCropKnowledgeProfile({
       selectedCropId: cropId,
@@ -61,9 +78,18 @@ export function FieldCropFarmingNeedsPanel({
       scientificName: getFieldCropById(categoryId, cropId)?.scientificName,
     })
       .then((result) => {
-        if (!cancelled) {
-          setProfile(result)
+        if (cancelled) {
+          return
         }
+        const episode = persistCropSearchEpisode({
+          categoryId,
+          cropId,
+          knowledgeOption,
+          cropName,
+          profile: result,
+        })
+        setProfile(result)
+        setEpisodeId(episode.episodeId)
       })
       .catch((fetchError: unknown) => {
         if (!cancelled) {
@@ -101,11 +127,71 @@ export function FieldCropFarmingNeedsPanel({
     return null
   }
 
-  return <FieldCropProfileArticle profile={profile} />
+  return <FieldCropProfileArticle profile={profile} episodeId={episodeId} />
+}
+
+function matchingStoredCropEpisode(
+  categoryId: string,
+  cropId: string,
+  knowledgeOption: string,
+): { episodeId: string; profile: FieldCropCultivationProfile } | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+  const episode = loadSearchEpisode(new URLSearchParams(window.location.search).get('episode'))
+  const origin = episode?.originState
+  if (!episode || !origin) {
+    return null
+  }
+  if (origin.categoryId !== categoryId || origin.cropId !== cropId || origin.optionId !== knowledgeOption) {
+    return null
+  }
+  return {
+    episodeId: episode.episodeId,
+    profile: episode.response as FieldCropCultivationProfile,
+  }
+}
+
+function persistCropSearchEpisode(input: {
+  categoryId: string
+  cropId: string
+  knowledgeOption: string
+  cropName: string
+  profile: FieldCropCultivationProfile
+}) {
+  const episodeId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `episode-${Date.now()}`
+  const path = typeof window !== 'undefined' ? window.location.pathname : '/plant-production/field-crops'
+  const returnPath = `${path}?episode=${encodeURIComponent(episodeId)}`
+  const episode = createSearchEpisode({
+    episodeId,
+    query: `${input.cropName} ${input.knowledgeOption}`.trim(),
+    language: input.profile.language ?? null,
+    response: input.profile as ResearchAgentQueryResponse,
+    returnPath,
+    originState: {
+      categoryId: input.categoryId,
+      cropId: input.cropId,
+      optionId: input.knowledgeOption,
+    },
+  })
+  if (typeof window !== 'undefined') {
+    const url = new URL(window.location.href)
+    url.searchParams.set('episode', episode.episodeId)
+    window.history.replaceState(null, '', url.pathname + url.search)
+  }
+  return episode
 }
 
 /** Sync presentational Crop profile (used by panel + P7-U2 tests). */
-export function FieldCropProfileArticle({ profile }: { profile: FieldCropCultivationProfile }) {
+export function FieldCropProfileArticle({
+  profile,
+  episodeId = null,
+}: {
+  profile: FieldCropCultivationProfile
+  episodeId?: string | null
+}) {
   const { t } = useTranslation()
   const mode = resolveCropAnswerRenderMode(profile)
   const showLegacySections = mode === 'legacy'
@@ -134,7 +220,7 @@ export function FieldCropProfileArticle({ profile }: { profile: FieldCropCultiva
       ) : null}
 
       {mode === 'canonical' || mode === 'limited' ? (
-        <FieldCropCanonicalAnswerView profile={profile} />
+        <FieldCropCanonicalAnswerView profile={profile} episodeId={episodeId} />
       ) : null}
 
       {showLegacySections ? (

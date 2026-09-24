@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { originStateFromLocation } from './scientificSearchEpisode'
 import { FieldCropFarmingNeedsPanel } from './FieldCropFarmingNeedsPanel'
 import {
   FIELD_CROP_CATEGORIES,
@@ -10,10 +11,17 @@ import {
 } from './fieldCropCategories'
 
 /** Two-level dependent selector for the محاصيل الحقل page. */
+function initialOriginState(): Record<string, string> {
+  return originStateFromLocation() ?? {}
+}
+
 export function FieldCropSelector() {
-  const [categoryId, setCategoryId] = useState<string>('')
-  const [cropId, setCropId] = useState<string>('')
-  const [optionId, setOptionId] = useState<FieldCropOptionId | ''>('')
+  const origin = initialOriginState()
+  const [categoryId, setCategoryId] = useState<string>(origin.categoryId ?? '')
+  const [cropId, setCropId] = useState<string>(origin.cropId ?? '')
+  const [optionId, setOptionId] = useState<FieldCropOptionId | ''>(
+    (origin.optionId as FieldCropOptionId | undefined) ?? '',
+  )
 
   const crops = getFieldCropsForCategory(categoryId || null)
   const selectedCrop = categoryId && cropId ? getFieldCropById(categoryId, cropId) : undefined

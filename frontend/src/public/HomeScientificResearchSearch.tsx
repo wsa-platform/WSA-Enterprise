@@ -1,18 +1,19 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import i18n, { getCurrentLanguage } from '../i18n/config'
 import { ApiError } from '../api/client'
 import { translateApiError } from '../i18n/apiErrors'
 import {
   buildHomePositiveFeedbackPayload,
-  formatResearchConflictText,
   queryPublicResearchAgent,
   submitResearchFeedback,
   type ResearchAgentCitation,
   type ResearchAgentQueryResponse,
 } from '../api/researchAgent'
-import { sourcePresentationState } from './citationHref'
 import { ResearchSourceLink } from './ResearchSourceLink'
+import { createSearchEpisode, loadCurrentSearchEpisode, loadSearchEpisode } from './scientificSearchEpisode'
+import { toScientificUserPresentation, userNoticeTranslationKey } from './scientificUserPresentation'
 
 /** Returns trimmed query, or null when empty (skip submit). */
 export function normalizeResearchQuery(value: string): string | null {
@@ -53,6 +54,7 @@ export type HomeScientificResearchSearchViewProps = {
   loading: boolean
   error: string | null
   result: ResearchAgentQueryResponse | null
+  episodeId?: string | null
   onQueryChange: (value: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   feedbackState?: HomeFeedbackUiState
@@ -71,6 +73,7 @@ export function HomeScientificResearchSearchView({
   loading,
   error,
   result,
+  episodeId = null,
   onQueryChange,
   onSubmit,
   feedbackState = 'idle',
@@ -78,14 +81,11 @@ export function HomeScientificResearchSearchView({
   onPositiveFeedback,
 }: HomeScientificResearchSearchViewProps) {
   const { t } = useTranslation()
-  const answer = result?.answer?.trim() || result?.concise_summary?.trim() || null
-  const additionalInformation = result?.additional_information?.trim() || null
-  const citations = result?.citations ?? []
-  const answerCandidates = (result?.answer_candidates ?? []).filter((candidate) => candidate.answer.trim() !== '')
-  const alternativeAnswers = answerCandidates.filter((candidate) => candidate.answer.trim() !== (answer ?? ''))
-  const conflicts = result?.conflicts ?? []
-  const uncertainty = result?.uncertainty?.trim() || null
-  const showUncertainty = Boolean(uncertainty) && uncertainty !== answer
+  const presentation = toScientificUserPresentation(result)
+  const answer = presentation?.primary_answer ?? null
+  const alternativeAnswers = presentation?.candidates ?? []
+  const sources = presentation?.sources ?? []
+  const noticeKey = userNoticeTranslationKey(presentation?.user_notice_code)
   const showFeedback = Boolean(result) && typeof onPositiveFeedback === 'function'
   const feedbackBusy = feedbackState === 'submitting'
   const feedbackDone = feedbackState === 'success'
@@ -93,6 +93,7 @@ export function HomeScientificResearchSearchView({
 
   return (
     <section
+      id="home-research"
       className="hp-research-section"
       aria-labelledby="home-research-title"
     >
@@ -143,116 +144,92 @@ export function HomeScientificResearchSearchView({
       ) : null}
 
       {!loading && !error && result ? (
-        <div className="hp-research-result" aria-live="polite">
+        <div className="hp-research-result" aria-live="polite" data-testid="home-research-presentation">
           {answer ? (
-            <div className="hp-research-answer">
+            <div className="hp-research-answer" data-testid="home-research-primary-answer">
               <h3>{t('website.research.answerHeading')}</h3>
               {answer.split('\n').map((paragraph, index) => (
                 <p key={`answer-${index}`}>{paragraph}</p>
               ))}
             </div>
           ) : (
-            <p className="hp-research-status" role="status">
+            <p className="hp-research-status" role="status" data-testid="home-research-no-answer">
               {t('website.research.noAnswer')}
             </p>
           )}
 
-          {result.status ? (
-            <p className="hp-research-meta">{t('website.research.status', { status: result.status })}</p>
+          {noticeKey && presentation?.human_status === 'answered' ? (
+            <p className="hp-research-status" data-testid="home-research-notice" role="status">
+              {t(noticeKey)}
+            </p>
           ) : null}
 
           {alternativeAnswers.length > 0 ? (
             <div className="hp-research-alternatives" data-testid="home-research-alternatives">
-              <h3>{t('website.research.alternativeAnswersHeading', { defaultValue: 'Alternative answers' })}</h3>
+              <h3>{t('website.research.alternativeAnswersHeading')}</h3>
               <ul>
                 {alternativeAnswers.map((candidate, index) => (
-                  <li key={candidate.result_id ?? `alt-${index}`}>{candidate.answer}</li>
+                  <li key={candidate.result_id ?? `alt-${index}`}>
+                    {episodeId ? (
+                      <a
+                        href={`/research/result/${encodeURIComponent(candidate.result_id)}?episode=${encodeURIComponent(episodeId)}`}
+                        data-testid="home-research-candidate-link"
+                      >
+                        {candidate.answer}
+                      </a>
+                    ) : (
+                      candidate.answer
+                    )}
+                  </li>
                 ))}
               </ul>
             </div>
           ) : null}
 
-          {additionalInformation ? (
-            <div className="hp-research-additional" data-testid="home-research-additional">
-              <h3>{t('website.research.additionalInformationHeading', { defaultValue: 'Additional information' })}</h3>
-              {additionalInformation.split('\n').map((paragraph, index) => (
-                <p key={`additional-${index}`}>{paragraph}</p>
-              ))}
-            </div>
-          ) : null}
-
-          {Array.isArray(result.limitations) && result.limitations.length > 0 ? (
-            <div className="hp-research-limitations" data-testid="home-research-limitations">
-              <h3>{t('website.research.limitationsHeading', { defaultValue: 'Limitations' })}</h3>
-              <ul>
-                {result.limitations.map((limitation, index) => (
-                  <li key={`limitation-${index}`}>{limitation}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {showUncertainty ? (
-            <div className="hp-research-uncertainty" data-testid="home-research-uncertainty">
-              <h3>{t('website.research.uncertaintyHeading', { defaultValue: 'Uncertainty' })}</h3>
-              <p>{uncertainty}</p>
-            </div>
-          ) : null}
-
-          {conflicts.length > 0 ? (
-            <div className="hp-research-conflicts" data-testid="home-research-conflicts">
-              <h3>{t('website.research.conflictsHeading', { defaultValue: 'Conflicts' })}</h3>
-              <ul>
-                {conflicts.map((conflict, index) => (
-                  <li key={`conflict-${index}`}>{formatResearchConflictText(conflict)}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {sourcePresentationState(citations) === 'no_eligible_direct_citations' ? (
+          {sources.length === 0 ? (
             <div className="hp-research-citations" data-testid="home-research-sources-empty">
               <h3>{t('website.research.sourcesHeading')}</h3>
-              <p>{t('website.research.noEligibleDirectCitations', {
-                defaultValue: 'No eligible direct citations are available for this answer.',
-              })}</p>
+              <p>{t('website.research.noEligibleDirectCitations')}</p>
             </div>
-          ) : citations.length > 0 ? (
+          ) : (
             <div className="hp-research-citations">
               <h3>{t('website.research.sourcesHeading')}</h3>
               <ul>
-                {citations.map((citation, index) => {
+                {sources.map((source, index) => {
+                  const citation: ResearchAgentCitation = {
+                    citation_id: source.result_id,
+                    title: source.title,
+                    url: source.original_url,
+                    authors: source.authors,
+                    organization: source.organization,
+                    journal: source.journal,
+                    publication_year: source.publication_year,
+                  }
                   const label = citationLabel(
                     citation,
                     index,
                     t('website.research.citationFallback', { index: index + 1 }),
                   )
-                  const hasViewerTarget = Boolean(citation.title?.trim() || citation.citation_id || citation.url || citation.doi)
                   return (
-                    <li key={`${citation.doi ?? citation.url ?? citation.title ?? 'c'}-${index}`}>
-                      {hasViewerTarget ? (
-                        <ResearchSourceLink
-                          citation={citation}
-                          label={label}
-                          answer={answer}
-                          index={index}
-                          alternatives={alternativeAnswers}
-                        />
-                      ) : (
-                        <strong>{label}</strong>
-                      )}
-                      {citation.organization ? (
-                        <span className="hp-research-cite-meta"> — {citation.organization}</span>
-                      ) : null}
-                      {citation.doi ? (
-                        <span className="hp-research-cite-meta"> · DOI: {citation.doi}</span>
+                    <li key={`${source.result_id}-${index}`}>
+                      <ResearchSourceLink
+                        citation={citation}
+                        label={label}
+                        answer={answer}
+                        index={index}
+                        alternatives={alternativeAnswers}
+                        episodeId={episodeId}
+                        resultId={source.result_id}
+                      />
+                      {source.organization ? (
+                        <span className="hp-research-cite-meta"> — {source.organization}</span>
                       ) : null}
                     </li>
                   )
                 })}
               </ul>
             </div>
-          ) : null}
+          )}
 
           {showFeedback ? (
             <div className="hp-research-feedback" data-testid="home-research-feedback">
@@ -295,13 +272,27 @@ export function HomeScientificResearchSearchView({
 
 /** Homepage scientific research search — calls Laravel `/public/research-agent/query` only. */
 export function HomeScientificResearchSearch() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ResearchAgentQueryResponse | null>(null)
+  const [episodeId, setEpisodeId] = useState<string | null>(null)
   const [submittedQuestion, setSubmittedQuestion] = useState<string | null>(null)
   const [feedbackState, setFeedbackState] = useState<HomeFeedbackUiState>('idle')
   const [feedbackErrorMessage, setFeedbackErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    const requested = searchParams.get('episode')
+    const episode = loadSearchEpisode(requested) ?? loadCurrentSearchEpisode()
+    if (!episode) {
+      return
+    }
+    setQuery(episode.query)
+    setResult(episode.response)
+    setEpisodeId(episode.episodeId)
+    setSubmittedQuestion(episode.query)
+  }, [searchParams])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -315,12 +306,20 @@ export function HomeScientificResearchSearch() {
 
     try {
       const response = await queryPublicResearchAgent(normalized)
+      const episode = createSearchEpisode({
+        query: normalized,
+        language: getCurrentLanguage(),
+        response,
+      })
       setResult(response)
       setSubmittedQuestion(normalized)
+      setEpisodeId(episode.episodeId)
+      setSearchParams({ episode: episode.episodeId }, { replace: true })
     } catch (submitError: unknown) {
       setError(resolveResearchSearchError(submitError))
       setResult(null)
       setSubmittedQuestion(null)
+      setEpisodeId(null)
     } finally {
       setLoading(false)
     }
@@ -357,6 +356,7 @@ export function HomeScientificResearchSearch() {
       loading={loading}
       error={error}
       result={result}
+      episodeId={episodeId}
       feedbackState={feedbackState}
       feedbackErrorMessage={feedbackErrorMessage}
       onQueryChange={setQuery}
