@@ -5,6 +5,7 @@ import { I18nextProvider } from 'react-i18next'
 import i18n from '../i18n/config'
 import {
   hasCanonicalStage5Answer,
+  isLimitedScientificStatus,
   resolveCanonicalCropAnswerText,
   resolveCropAnswerRenderMode,
   type FieldCropCultivationProfile,
@@ -46,7 +47,7 @@ function baseLegacy(): FieldCropCultivationProfile {
 function canonicalFixture(
   overrides: Partial<FieldCropCultivationProfile> = {},
 ): FieldCropCultivationProfile {
-  return {
+  const profile: FieldCropCultivationProfile = {
     ...baseLegacy(),
     status: 'completed',
     stage: 5,
@@ -79,6 +80,26 @@ function canonicalFixture(
     ],
     ...overrides,
   }
+  if (!('user_presentation' in overrides)) {
+    const insufficient = isLimitedScientificStatus(profile.status) || profile.confidence === 0
+    const primary = insufficient ? null : (profile.answer?.trim() || null)
+    profile.user_presentation = {
+      primary_answer: primary,
+      human_status: primary ? 'answered' : 'insufficient',
+      user_notice_code: primary ? null : 'insufficient_direct_evidence',
+      candidates: [],
+      sources: (profile.citations ?? []).map((citation, index) => ({
+        result_id: citation.citation_id || `src-${index}`,
+        title: citation.title || 'Research source',
+        original_url: citation.url ?? null,
+        authors: citation.authors,
+        organization: citation.organization ?? null,
+        journal: citation.journal ?? null,
+        publication_year: citation.publication_year ?? null,
+      })),
+    }
+  }
+  return profile
 }
 
 function renderCanonical(profile: FieldCropCultivationProfile) {

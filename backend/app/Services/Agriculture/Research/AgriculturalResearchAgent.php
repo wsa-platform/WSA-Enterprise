@@ -427,21 +427,13 @@ class AgriculturalResearchAgent
 
     /**
      * User-facing scientific sufficiency: performed synthesis, non-empty answer,
-     * and research_metadata.direct_evidence_gate === PASSED.
+     * and overallConfidence >= 0.50. Reuses synthesis confidence; does not recompute it.
      * Citation presence is independent — empty citations must not erase a valid answer.
-     * Does not treat supported_answer as DIRECT. Does not start Library Search.
+     * Does not start Library Search.
      */
     private function hasSufficientScientificSynthesis(AnswerSynthesisExecutionReport $synthesis): bool
     {
-        if (! $synthesis->performed) {
-            return false;
-        }
-
-        if (trim((string) $synthesis->answer) === '') {
-            return false;
-        }
-
-        return ($synthesis->researchMetadata['direct_evidence_gate'] ?? null) === 'PASSED';
+        return ScientificUserPresentation::isEligibleForFinalDisplay($synthesis);
     }
 
     /**

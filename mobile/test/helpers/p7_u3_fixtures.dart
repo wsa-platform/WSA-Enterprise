@@ -9,7 +9,14 @@ Map<String, dynamic> stage5CanonicalFixture({
   List<String>? limitations,
   Object? uncertainty,
   List<dynamic>? conflicts,
+  Object? primaryAnswer,
+  bool includeUserPresentation = true,
 }) {
+  final resolvedPrimary = includeUserPresentation
+      ? (primaryAnswer is String
+          ? (primaryAnswer.trim().isEmpty ? null : primaryAnswer.trim())
+          : (answer is String && answer.trim().isNotEmpty ? answer : null))
+      : null;
   return {
     'status': status,
     'stage': 5,
@@ -20,6 +27,15 @@ Map<String, dynamic> stage5CanonicalFixture({
     },
     'answer': answer,
     'concise_summary': conciseSummary,
+    if (includeUserPresentation)
+      'user_presentation': {
+        'primary_answer': resolvedPrimary,
+        'human_status': resolvedPrimary == null ? 'insufficient' : 'answered',
+        'user_notice_code':
+            resolvedPrimary == null ? 'insufficient_direct_evidence' : null,
+        'candidates': <Map<String, dynamic>>[],
+        'sources': <Map<String, dynamic>>[],
+      },
     'detailed_explanation': answer,
     'key_findings': ['Finding A'],
     'claims': [

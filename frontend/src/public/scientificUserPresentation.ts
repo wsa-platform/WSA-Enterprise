@@ -34,23 +34,6 @@ export type ScientificUserPresentation = {
   }
 }
 
-function hasPresentableScientificSufficiency(result: ResearchAgentQueryResponse): boolean {
-  const answer = (result.answer?.trim() || result.concise_summary?.trim() || '')
-  if (answer === '') {
-    return false
-  }
-
-  const gate = result.research_metadata?.direct_evidence_gate
-  if (gate === 'PASSED') {
-    return true
-  }
-  if (typeof gate === 'string' && gate !== '') {
-    return false
-  }
-
-  return !/insufficient/i.test(result.status ?? '')
-}
-
 function presentedSourceFromCitation(
   citation: NonNullable<ResearchAgentQueryResponse['citations']>[number],
   index: number,
@@ -127,28 +110,18 @@ export function toScientificUserPresentation(
     }
   }
 
-  const insufficient = !hasPresentableScientificSufficiency(result)
-  const primary = insufficient
-    ? null
-    : (result.answer?.trim() || result.concise_summary?.trim() || null)
   const sources = (result.citations ?? []).map((citation, index) => presentedSourceFromCitation(citation, index))
-  const hasConflictSignal = Array.isArray(result.conflicts) && result.conflicts.length > 0
-  const notice = insufficient
-    ? 'insufficient_direct_evidence'
-    : hasConflictSignal
-      ? 'review_sources'
-      : null
 
   return {
-    primary_answer: primary,
-    human_status: insufficient ? 'insufficient' : 'answered',
-    user_notice_code: notice,
-    candidates: presentedCandidates(result.answer_candidates, primary),
+    primary_answer: null,
+    human_status: 'insufficient',
+    user_notice_code: 'insufficient_direct_evidence',
+    candidates: presentedCandidates(result.answer_candidates, null),
     sources,
     answer_language: result.language ?? null,
     candidate_selection: {
       threshold: SCIENTIFIC_CANDIDATE_THRESHOLD,
-      presented_count: (primary ? 1 : 0) + presentedCandidates(result.answer_candidates, primary).length,
+      presented_count: presentedCandidates(result.answer_candidates, null).length,
       confidence_exposed: false,
       directness_unchanged: true,
     },

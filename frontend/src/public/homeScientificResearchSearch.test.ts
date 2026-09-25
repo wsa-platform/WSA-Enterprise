@@ -102,7 +102,15 @@ describe('homepage scientific research search', () => {
       error: null,
       result: {
         status: 'completed',
+        confidence: 0.80,
         answer: 'إجابة موثقة من الخادم',
+        user_presentation: {
+          primary_answer: 'إجابة موثقة من الخادم',
+          human_status: 'answered',
+          user_notice_code: null,
+          candidates: [],
+          sources: [{ result_id: 'src-0', title: 'Irrigation Study', original_url: 'https://example.test/paper' }],
+        },
         citations: [
           {
             title: 'Irrigation Study',
@@ -178,6 +186,13 @@ describe('homepage scientific research search', () => {
       result: {
         status: 'completed',
         answer: 'Scientific answer in English.',
+        user_presentation: {
+          primary_answer: 'Scientific answer in English.',
+          human_status: 'answered',
+          user_notice_code: null,
+          candidates: [],
+          sources: [{ result_id: 'src-0', title: 'Source A', original_url: 'https://example.org/paper' }],
+        },
         confidence: 0.72,
         limitations: ['limited_geo_coverage'],
         uncertainty: 'competing_sources',
@@ -212,7 +227,15 @@ describe('homepage scientific research search', () => {
       error: null,
       result: {
         status: 'completed',
+        confidence: 0.80,
         answer: 'Answer only',
+        user_presentation: {
+          primary_answer: 'Answer only',
+          human_status: 'answered',
+          user_notice_code: null,
+          candidates: [],
+          sources: [],
+        },
         citations: [],
       },
     })
@@ -253,7 +276,15 @@ describe('homepage scientific research search', () => {
       error: null,
       result: {
         status: 'completed',
+        confidence: 0.80,
         answer: 'Main scientific answer.',
+        user_presentation: {
+          primary_answer: 'Main scientific answer.',
+          human_status: 'answered',
+          user_notice_code: null,
+          candidates: [],
+          sources: [{ result_id: 'src-0', title: 'Source A', original_url: 'https://example.org/paper' }],
+        },
         additional_information: 'Supporting context only.',
         citations: [{ title: 'Source A', url: 'https://example.org/paper' }],
       },
@@ -272,7 +303,15 @@ describe('homepage scientific research search', () => {
       error: null,
       result: {
         status: 'completed',
+        confidence: 0.80,
         answer: 'Primary scientific answer.',
+        user_presentation: {
+          primary_answer: 'Primary scientific answer.',
+          human_status: 'answered',
+          user_notice_code: null,
+          candidates: [{ result_id: 'c-2', answer: 'Alternative scientific answer.' }],
+          sources: [],
+        },
         answer_candidates: [
           { answer: 'Primary scientific answer.', result_id: 'c-1' },
           { answer: 'Alternative scientific answer.', result_id: 'c-2' },
@@ -293,7 +332,7 @@ describe('homepage scientific research search', () => {
       query: 'q',
       loading: false,
       error: null,
-      result: { status: 'completed', answer: 'A', citations: [] },
+      result: { status: 'completed', confidence: 0.80, answer: 'A', citations: [], user_presentation: { primary_answer: 'A', human_status: 'answered', user_notice_code: null, candidates: [], sources: [] } },
       feedbackState: 'idle',
       onPositiveFeedback: () => undefined,
     })
@@ -304,7 +343,7 @@ describe('homepage scientific research search', () => {
       query: 'q',
       loading: false,
       error: null,
-      result: { status: 'completed', answer: 'A', citations: [] },
+      result: { status: 'completed', confidence: 0.80, answer: 'A', citations: [], user_presentation: { primary_answer: 'A', human_status: 'answered', user_notice_code: null, candidates: [], sources: [] } },
       feedbackState: 'success',
       onPositiveFeedback: () => undefined,
     })
@@ -316,7 +355,7 @@ describe('homepage scientific research search', () => {
       query: 'q',
       loading: false,
       error: null,
-      result: { status: 'completed', answer: 'A', citations: [] },
+      result: { status: 'completed', confidence: 0.80, answer: 'A', citations: [], user_presentation: { primary_answer: 'A', human_status: 'answered', user_notice_code: null, candidates: [], sources: [] } },
       feedbackState: 'error',
       onPositiveFeedback: () => undefined,
     })
@@ -331,7 +370,7 @@ describe('homepage scientific research search', () => {
       query: 'q',
       loading: false,
       error: null,
-      result: { status: 'completed', answer: 'A', citations: [] },
+      result: { status: 'completed', confidence: 0.80, answer: 'A', citations: [], user_presentation: { primary_answer: 'A', human_status: 'answered', user_notice_code: null, candidates: [], sources: [] } },
     })
     expect(html).not.toContain('data-testid="home-research-feedback"')
   })

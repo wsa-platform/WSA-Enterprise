@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Services\Agriculture\Research\AgriculturalResearchAgent;
 use App\Services\Agriculture\Research\Synthesis\AnswerSynthesisExecutionReport;
 use App\Services\Agriculture\Research\Synthesis\ResearchAnswerCitation;
+use App\Services\Agriculture\Research\Synthesis\ResearchAnswerClaim;
 use App\Services\Agriculture\Research\Synthesis\ScientificAnswerCandidatePresenter;
 use App\Services\Agriculture\Research\Synthesis\ScientificUserPresentation;
+use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -15,6 +17,7 @@ class ScientificUserPresentationContractTest extends TestCase
     public function test_candidate_threshold_remains_fifty_percent(): void
     {
         $this->assertSame(0.50, ScientificAnswerCandidatePresenter::PRESENTATION_THRESHOLD);
+        $this->assertSame(0.50, ScientificUserPresentation::FINAL_ANSWER_CONFIDENCE_THRESHOLD);
     }
 
     public function test_original_url_accepts_http_and_doi_but_not_google(): void
@@ -48,7 +51,7 @@ class ScientificUserPresentationContractTest extends TestCase
             citations: [$this->citation()],
         );
         $this->assertTrue($this->isSufficient($synthesis));
-        $presentation = ScientificUserPresentation::fromSynthesis($synthesis, true);
+        $presentation = $this->present($synthesis);
         $this->assertSame('Documented primary answer.', $presentation['primary_answer']);
         $this->assertSame(ScientificUserPresentation::HUMAN_ANSWERED, $presentation['human_status']);
         $this->assertCount(1, $presentation['sources']);
@@ -68,7 +71,7 @@ class ScientificUserPresentationContractTest extends TestCase
             ],
         );
         $this->assertTrue($this->isSufficient($synthesis));
-        $presentation = ScientificUserPresentation::fromSynthesis($synthesis, true);
+        $presentation = $this->present($synthesis);
         $this->assertSame('Supported value is 6609520 t.', $presentation['primary_answer']);
         $this->assertSame(ScientificUserPresentation::HUMAN_ANSWERED, $presentation['human_status']);
         $this->assertSame([], $presentation['sources']);
@@ -76,7 +79,7 @@ class ScientificUserPresentationContractTest extends TestCase
         $this->assertStringNotContainsString('google.', json_encode($presentation));
     }
 
-    public function test_case_c_supporting_only_does_not_present_a_direct_answer(): void
+    public function test_case_c_supporting_only_below_display_threshold_is_hidden(): void
     {
         $synthesis = $this->synthesisReport(
             answer: 'Supporting-only narrative.',
@@ -86,9 +89,10 @@ class ScientificUserPresentationContractTest extends TestCase
                 'direct_evidence_gate' => 'INSUFFICIENT_DIRECT_EVIDENCE',
                 'evidence_sufficient' => false,
             ],
+            confidence: 0.42,
         );
         $this->assertFalse($this->isSufficient($synthesis));
-        $presentation = ScientificUserPresentation::fromSynthesis($synthesis, false);
+        $presentation = $this->present($synthesis);
         $this->assertNull($presentation['primary_answer']);
         $this->assertSame(ScientificUserPresentation::HUMAN_INSUFFICIENT, $presentation['human_status']);
         $this->assertSame('insufficient_direct_evidence', $presentation['user_notice_code']);
@@ -102,7 +106,7 @@ class ScientificUserPresentationContractTest extends TestCase
             citations: [],
         );
         $this->assertFalse($this->isSufficient($synthesis));
-        $presentation = ScientificUserPresentation::fromSynthesis($synthesis, false);
+        $presentation = $this->present($synthesis);
         $this->assertNull($presentation['primary_answer']);
     }
 
@@ -112,9 +116,10 @@ class ScientificUserPresentationContractTest extends TestCase
             answer: 'Insufficient direct scientific evidence was found for a definitive answer.',
             gate: 'INSUFFICIENT_DIRECT_EVIDENCE',
             citations: [],
+            confidence: 0.0,
         );
         $this->assertFalse($this->isSufficient($synthesis));
-        $presentation = ScientificUserPresentation::fromSynthesis($synthesis, false);
+        $presentation = $this->present($synthesis);
         $this->assertNull($presentation['primary_answer']);
         $this->assertSame(ScientificUserPresentation::HUMAN_INSUFFICIENT, $presentation['human_status']);
         $this->assertSame([], $presentation['sources']);
@@ -133,11 +138,118 @@ class ScientificUserPresentationContractTest extends TestCase
             ],
         );
         $this->assertTrue($this->isSufficient($synthesis));
-        $presentation = ScientificUserPresentation::fromSynthesis($synthesis, true);
+        $presentation = $this->present($synthesis);
         $this->assertSame('Wheat Production 2022. Value: 6609520 t', $presentation['primary_answer']);
         $this->assertSame([], $presentation['sources']);
         $this->assertFalse($presentation['candidate_selection']['confidence_exposed']);
         $this->assertTrue($presentation['candidate_selection']['directness_unchanged']);
+    }
+
+    public function test_final_answer_hidden_when_overall_confidence_is_0_49(): void
+    {
+        $this->assertFinalAnswerDisplay(0.49, expectDisplayed: false);
+    }
+
+    public function test_final_answer_shown_when_overall_confidence_is_exactly_0_50(): void
+    {
+        $this->assertFinalAnswerDisplay(0.50, expectDisplayed: true);
+    }
+
+    public function test_final_answer_shown_when_overall_confidence_is_0_51(): void
+    {
+        $this->assertFinalAnswerDisplay(0.51, expectDisplayed: true);
+    }
+
+    public function test_final_answer_hidden_when_overall_confidence_is_0_40_even_if_direct_gate_passed(): void
+    {
+        $synthesis = $this->synthesisReport(
+            answer: 'Synthesized answer that must stay hidden below the display threshold.',
+            gate: 'PASSED',
+            citations: [$this->citation()],
+            confidence: 0.40,
+        );
+        $this->assertFalse($this->isSufficient($synthesis));
+        $presentation = $this->present($synthesis);
+        $this->assertNull($presentation['primary_answer']);
+        $this->assertSame(ScientificUserPresentation::HUMAN_INSUFFICIENT, $presentation['human_status']);
+    }
+
+    public function test_final_answer_shown_when_overall_confidence_is_0_80_even_if_direct_gate_failed(): void
+    {
+        $synthesis = $this->synthesisReport(
+            answer: 'Valid synthesized final answer at high confidence.',
+            gate: 'INSUFFICIENT_DIRECT_EVIDENCE',
+            citations: [$this->citation()],
+            metadata: [
+                'direct_evidence_gate' => 'INSUFFICIENT_DIRECT_EVIDENCE',
+                'evidence_sufficient' => false,
+            ],
+            confidence: 0.80,
+        );
+        $this->assertTrue($this->isSufficient($synthesis));
+        $presentation = $this->present($synthesis);
+        $this->assertSame('Valid synthesized final answer at high confidence.', $presentation['primary_answer']);
+        $this->assertSame(ScientificUserPresentation::HUMAN_ANSWERED, $presentation['human_status']);
+    }
+
+    public function test_high_claim_confidence_cannot_substitute_for_low_overall_confidence(): void
+    {
+        $highClaim = new ResearchAnswerClaim(
+            claimId: 'c-high',
+            claimText: 'High-confidence claim that is not the final-answer gate.',
+            evidenceIds: ['ev-1'],
+            sourceIds: ['src-1'],
+            validationStatus: 'validated',
+            claimRelationship: ClaimEvidenceRelationship::SUPPORTED,
+            confidence: 0.90,
+        );
+        $synthesis = $this->synthesisReport(
+            answer: 'Non-empty final synthesized answer that must stay hidden.',
+            gate: 'PASSED',
+            citations: [$this->citation()],
+            confidence: 0.40,
+            claims: [$highClaim],
+        );
+
+        $this->assertLessThan(ScientificUserPresentation::FINAL_ANSWER_CONFIDENCE_THRESHOLD, $synthesis->confidence);
+        $this->assertGreaterThanOrEqual(ScientificAnswerCandidatePresenter::PRESENTATION_THRESHOLD, $highClaim->confidence);
+        $this->assertFalse($this->isSufficient($synthesis));
+        $this->assertFalse(ScientificUserPresentation::isEligibleForFinalDisplay($synthesis));
+
+        $presentation = $this->present($synthesis);
+        $this->assertNull($presentation['primary_answer']);
+        $this->assertSame(ScientificUserPresentation::HUMAN_INSUFFICIENT, $presentation['human_status']);
+        $this->assertSame(
+            ['High-confidence claim that is not the final-answer gate.'],
+            array_column($presentation['candidates'], 'answer'),
+        );
+    }
+
+    private function assertFinalAnswerDisplay(float $confidence, bool $expectDisplayed): void
+    {
+        $synthesis = $this->synthesisReport(
+            answer: 'Boundary synthesized final answer.',
+            gate: 'PASSED',
+            citations: [$this->citation()],
+            confidence: $confidence,
+        );
+        $this->assertSame($expectDisplayed, $this->isSufficient($synthesis));
+        $presentation = $this->present($synthesis);
+        if ($expectDisplayed) {
+            $this->assertSame('Boundary synthesized final answer.', $presentation['primary_answer']);
+            $this->assertSame(ScientificUserPresentation::HUMAN_ANSWERED, $presentation['human_status']);
+        } else {
+            $this->assertNull($presentation['primary_answer']);
+            $this->assertSame(ScientificUserPresentation::HUMAN_INSUFFICIENT, $presentation['human_status']);
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function present(AnswerSynthesisExecutionReport $synthesis): array
+    {
+        return ScientificUserPresentation::fromSynthesis($synthesis, $this->isSufficient($synthesis));
     }
 
     private function isSufficient(AnswerSynthesisExecutionReport $synthesis): bool
@@ -151,12 +263,15 @@ class ScientificUserPresentationContractTest extends TestCase
     /**
      * @param  list<ResearchAnswerCitation>  $citations
      * @param  array<string, mixed>  $metadata
+     * @param  list<ResearchAnswerClaim>  $claims
      */
     private function synthesisReport(
         string $answer,
         string $gate,
         array $citations,
         array $metadata = [],
+        float $confidence = 0.8,
+        array $claims = [],
     ): AnswerSynthesisExecutionReport {
         return new AnswerSynthesisExecutionReport(
             status: 'scientific_generated',
@@ -165,10 +280,10 @@ class ScientificUserPresentationContractTest extends TestCase
             conciseSummary: null,
             detailedExplanation: null,
             keyFindings: [],
-            claims: [],
+            claims: $claims,
             citations: $citations,
             evidenceReferences: [],
-            confidence: 0.8,
+            confidence: $confidence,
             limitations: [],
             uncertainty: null,
             conflicts: [],

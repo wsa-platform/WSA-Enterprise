@@ -14,6 +14,26 @@ final class ScientificUserPresentation
 
     public const HUMAN_INSUFFICIENT = 'insufficient';
 
+    /** Final-answer display policy. Distinct from candidate PRESENTATION_THRESHOLD. */
+    public const FINAL_ANSWER_CONFIDENCE_THRESHOLD = 0.50;
+
+    /**
+     * Authoritative final-answer eligibility: reuse synthesis overallConfidence.
+     * Displayed iff performed, non-empty answer, and confidence >= 0.50.
+     */
+    public static function isEligibleForFinalDisplay(AnswerSynthesisExecutionReport $synthesis): bool
+    {
+        if (! $synthesis->performed) {
+            return false;
+        }
+
+        if (trim((string) $synthesis->answer) === '') {
+            return false;
+        }
+
+        return $synthesis->confidence >= self::FINAL_ANSWER_CONFIDENCE_THRESHOLD;
+    }
+
     /**
      * @return array{
      *   primary_answer: ?string,
@@ -27,6 +47,7 @@ final class ScientificUserPresentation
      */
     public static function fromSynthesis(AnswerSynthesisExecutionReport $synthesis, bool $sufficient): array
     {
+        $sufficient = self::isEligibleForFinalDisplay($synthesis);
         $selection = ScientificAnswerCandidatePresenter::fromSynthesis($synthesis);
         $primary = $sufficient ? trim((string) $synthesis->answer) : '';
         $primary = $primary !== '' ? $primary : null;

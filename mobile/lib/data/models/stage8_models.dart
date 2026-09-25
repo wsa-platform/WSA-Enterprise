@@ -187,6 +187,7 @@ class ResearchAgentResult {
   const ResearchAgentResult({
     required this.question,
     this.answer,
+    this.primaryAnswer,
     this.conciseSummary,
     this.detailedExplanation,
     this.keyFindings = const [],
@@ -207,6 +208,7 @@ class ResearchAgentResult {
 
   final String question;
   final String? answer;
+  final String? primaryAnswer;
   final String? conciseSummary;
   final String? detailedExplanation;
   final List<String> keyFindings;
@@ -224,12 +226,10 @@ class ResearchAgentResult {
   final bool insufficientEvidence;
   final Map<String, dynamic> raw;
 
-  /// Primary scientific answer text: answer, else concise_summary.
+  /// Authoritative final answer: user_presentation.primary_answer only.
   String? get canonicalAnswerText {
-    final primary = answer?.trim();
+    final primary = primaryAnswer?.trim();
     if (primary != null && primary.isNotEmpty) return primary;
-    final summary = conciseSummary?.trim();
-    if (summary != null && summary.isNotEmpty) return summary;
     return null;
   }
 
@@ -307,9 +307,14 @@ class ResearchAgentResult {
 
     final answerRaw = json['answer']?.toString();
     final concise = json['concise_summary']?.toString();
-    final answer = (answerRaw != null && answerRaw.trim().isNotEmpty)
-        ? answerRaw
-        : ((concise != null && concise.trim().isNotEmpty) ? concise : null);
+    String? primaryAnswer;
+    final presentation = json['user_presentation'];
+    if (presentation is Map) {
+      final rawPrimary = presentation['primary_answer']?.toString();
+      if (rawPrimary != null && rawPrimary.trim().isNotEmpty) {
+        primaryAnswer = rawPrimary.trim();
+      }
+    }
     final status = json['status']?.toString();
     final confidenceRaw = json['confidence'] ??
         (json['synthesis'] is Map ? json['synthesis']['confidence'] : null);
@@ -322,19 +327,14 @@ class ResearchAgentResult {
     final stage = stageRaw is num
         ? stageRaw.toInt()
         : int.tryParse('${stageRaw ?? ''}');
-    final insufficient = status == 'insufficient_evidence' ||
-        status == 'insufficient_verified_sources' ||
-        status == 'conflicted' ||
-        (json['synthesis'] is Map &&
-            json['synthesis']['performed'] == false &&
-            answer == null) ||
-        (answer == null || answer.isEmpty) && citations.isEmpty;
+    final insufficient = primaryAnswer == null;
 
     return ResearchAgentResult(
       question: question,
       answer: (answerRaw != null && answerRaw.trim().isNotEmpty)
           ? answerRaw
           : null,
+      primaryAnswer: primaryAnswer,
       conciseSummary:
           (concise != null && concise.trim().isNotEmpty) ? concise : null,
       detailedExplanation: json['detailed_explanation']?.toString(),

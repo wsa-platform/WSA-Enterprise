@@ -33,6 +33,16 @@ describe('scientific search episode', () => {
       response: {
         status: 'scientific_generated',
         answer: 'Answer A',
+        user_presentation: {
+          primary_answer: 'Answer A',
+          human_status: 'answered',
+          user_notice_code: null,
+          candidates: [{ result_id: 'cand-b', answer: 'Answer B' }],
+          sources: [
+            { result_id: 'src-a', title: 'Source A', original_url: 'https://example.org/a' },
+            { result_id: 'src-b', title: 'Source B', original_url: 'https://doi.org/10.1000/b' },
+          ],
+        },
         citations: [
           { citation_id: 'src-a', title: 'Source A', url: 'https://example.org/a' },
           { citation_id: 'src-b', title: 'Source B', doi: '10.1000/b' },
@@ -63,6 +73,13 @@ describe('scientific search episode', () => {
       response: {
         status: 'scientific_generated',
         answer: 'Crop answer',
+        user_presentation: {
+          primary_answer: 'Crop answer',
+          human_status: 'answered',
+          user_notice_code: null,
+          candidates: [],
+          sources: [],
+        },
         citations: [{ citation_id: 'cite-crop', title: 'Crop source', url: 'https://example.org/c' }],
       },
     })

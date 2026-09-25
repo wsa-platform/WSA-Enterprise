@@ -28,14 +28,43 @@ void main() {
       expect(result.canonicalAnswerText, 'Scientific answer in English.');
     });
 
-    test('B concise_summary fallback works when answer absent', () {
+    test('high claim/candidate text cannot substitute for null primary_answer',
+        () {
+      final result = ResearchAgentResult.fromJson({
+        'status': 'completed',
+        'answer': 'Non-empty raw synthesis.',
+        'confidence': 0.40,
+        'claims': [
+          {
+            'claim_id': 'c-high',
+            'claim_text': 'High-confidence claim text.',
+            'confidence': 0.90,
+          },
+        ],
+        'user_presentation': {
+          'primary_answer': null,
+          'human_status': 'insufficient',
+          'candidates': [
+            {'result_id': 'c-high', 'answer': 'High-confidence claim text.'},
+          ],
+          'sources': [],
+        },
+      }, fallbackQuestion: 'q');
+      expect(result.answer, 'Non-empty raw synthesis.');
+      expect(result.confidence, 0.40);
+      expect(result.canonicalAnswerText, isNull);
+      expect(result.insufficientEvidence, isTrue);
+    });
+
+    test('B concise_summary is not a final-answer substitute', () {
       final result = ResearchAgentResult.fromJson(
-        stage5CanonicalFixture(answer: null),
+        stage5CanonicalFixture(answer: null, primaryAnswer: null),
         fallbackQuestion: 'q',
       );
       expect(result.answer, isNull);
       expect(result.conciseSummary, 'Short English summary.');
-      expect(result.canonicalAnswerText, 'Short English summary.');
+      expect(result.canonicalAnswerText, isNull);
+      expect(result.insufficientEvidence, isTrue);
     });
 
     test('C confidence parses', () {
@@ -140,10 +169,11 @@ void main() {
 
       expect(result.question, 'كيف أروي القمح؟');
       expect(result.answer, contains('القمح'));
+      expect(result.canonicalAnswerText, isNull);
       expect(result.claims, isEmpty);
       expect(result.uncertainty, isNull);
       expect(result.conflicts, isEmpty);
-      expect(result.insufficientEvidence, isFalse);
+      expect(result.insufficientEvidence, isTrue);
     });
 
     test('absent optional fields do not crash', () {
@@ -516,6 +546,83 @@ void main() {
       expect(find.byKey(const Key('research-insufficient')), findsOneWidget);
       expect(find.textContaining('insufficient_verified_sources'), findsOneWidget);
       expect(find.byKey(const Key('research-uncertainty')), findsOneWidget);
+    });
+
+    testWidgets(
+        'raw answer is not the final answer when primary_answer is null',
+        (tester) async {
+      final client = testApiClient(
+        httpClient: MockClient((request) async {
+          return jsonOk({
+            'status': 'completed',
+            'answer': 'Raw ineligible synthesis that must stay hidden.',
+            'concise_summary': 'Raw summary must stay hidden.',
+            'confidence': 0.40,
+            'citations': [
+              {'title': 'Source', 'url': 'https://example.org/p'},
+            ],
+            'user_presentation': {
+              'primary_answer': null,
+              'human_status': 'insufficient',
+              'user_notice_code': 'insufficient_direct_evidence',
+              'candidates': [],
+              'sources': [],
+            },
+            'language': 'en',
+            'stage': 5,
+          });
+        }),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: ResearchAgentScreen(client: client)),
+        ),
+      );
+      await tester.enterText(find.byType(TextField), 'q');
+      await tester.tap(find.text(ArStrings.submit));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Raw ineligible synthesis that must stay hidden.'),
+          findsNothing);
+      expect(find.text('Raw summary must stay hidden.'), findsNothing);
+      expect(find.byKey(const Key('research-canonical-answer')), findsOneWidget);
+      expect(find.text(ArStrings.insufficientEvidence), findsWidgets);
+    });
+
+    testWidgets(
+        'primary_answer is displayed as the final answer at 0.50',
+        (tester) async {
+      final client = testApiClient(
+        httpClient: MockClient((request) async {
+          return jsonOk({
+            'status': 'scientific_generated',
+            'answer': 'Raw dump that must not be preferred.',
+            'confidence': 0.50,
+            'user_presentation': {
+              'primary_answer': 'Authoritative final answer.',
+              'human_status': 'answered',
+              'user_notice_code': null,
+              'candidates': [],
+              'sources': [],
+            },
+            'language': 'en',
+            'stage': 5,
+          });
+        }),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: ResearchAgentScreen(client: client)),
+        ),
+      );
+      await tester.enterText(find.byType(TextField), 'q');
+      await tester.tap(find.text(ArStrings.submit));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Authoritative final answer.'), findsOneWidget);
+      expect(find.text('Raw dump that must not be preferred.'), findsNothing);
     });
   });
 

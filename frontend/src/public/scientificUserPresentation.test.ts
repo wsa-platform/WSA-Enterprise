@@ -34,7 +34,81 @@ describe('scientific user presentation', () => {
     expect(JSON.stringify(presentation)).not.toContain('0.91')
   })
 
-  it('maps insufficient evidence to a human status without fabricating sources', () => {
+  it('does not reconstruct a final answer from raw fields when presentation is absent', () => {
+    const presentation = toScientificUserPresentation({
+      status: 'scientific_generated',
+      answer: 'Supported value is 6609520 t.',
+      confidence: 0.80,
+      citations: [],
+      research_metadata: {
+        direct_evidence_gate: 'PASSED',
+        evidence_sufficient: true,
+      },
+    })
+
+    expect(presentation?.human_status).toBe('insufficient')
+    expect(presentation?.primary_answer).toBeNull()
+    expect(presentation?.user_notice_code).toBe('insufficient_direct_evidence')
+    expect(presentation?.sources).toEqual([])
+  })
+
+  it('does not treat raw answer as final when primary_answer is null and confidence is below 0.50', () => {
+    const presentation = toScientificUserPresentation({
+      status: 'scientific_generated',
+      answer: 'Raw ineligible synthesis.',
+      confidence: 0.40,
+      user_presentation: {
+        primary_answer: null,
+        human_status: 'insufficient',
+        user_notice_code: 'insufficient_direct_evidence',
+        candidates: [],
+        sources: [],
+      },
+    })
+
+    expect(presentation?.primary_answer).toBeNull()
+    expect(presentation?.human_status).toBe('insufficient')
+  })
+
+  it('displays backend primary_answer and ignores raw synthesis.answer', () => {
+    const presentation = toScientificUserPresentation({
+      status: 'scientific_generated',
+      answer: 'Internal dump.',
+      confidence: 0.40,
+      user_presentation: {
+        primary_answer: 'Backend decided this is displayable.',
+        human_status: 'answered',
+        user_notice_code: null,
+        candidates: [],
+        sources: [],
+      },
+    })
+
+    expect(presentation?.primary_answer).toBe('Backend decided this is displayable.')
+    expect(presentation?.human_status).toBe('answered')
+  })
+
+  it('does not treat a high-confidence candidate as the final answer', () => {
+    const presentation = toScientificUserPresentation({
+      status: 'scientific_generated',
+      answer: 'Raw ineligible synthesis.',
+      confidence: 0.40,
+      answer_candidates: [{ result_id: 'c-high', answer: 'High-confidence candidate text.' }],
+      user_presentation: {
+        primary_answer: null,
+        human_status: 'insufficient',
+        user_notice_code: 'insufficient_direct_evidence',
+        candidates: [{ result_id: 'c-high', answer: 'High-confidence candidate text.' }],
+        sources: [],
+      },
+    })
+
+    expect(presentation?.primary_answer).toBeNull()
+    expect(presentation?.human_status).toBe('insufficient')
+    expect(presentation?.candidates[0]?.answer).toBe('High-confidence candidate text.')
+  })
+
+  it('maps insufficient presentation without fabricating sources', () => {
     const presentation = toScientificUserPresentation({
       status: 'insufficient_evidence',
       answer: 'Composer diagnostic sentence.',
@@ -46,39 +120,5 @@ describe('scientific user presentation', () => {
     expect(presentation?.primary_answer).toBeNull()
     expect(presentation?.user_notice_code).toBe('insufficient_direct_evidence')
     expect(presentation?.sources).toEqual([])
-  })
-
-  it('keeps a gate-passed answer when citations are empty and does not fabricate a source', () => {
-    const presentation = toScientificUserPresentation({
-      status: 'synthesis_completed_with_partial_conflicts',
-      answer: 'Supported value is 6609520 t.',
-      citations: [],
-      research_metadata: {
-        direct_evidence_gate: 'PASSED',
-        evidence_sufficient: true,
-      },
-    })
-
-    expect(presentation?.human_status).toBe('answered')
-    expect(presentation?.primary_answer).toBe('Supported value is 6609520 t.')
-    expect(presentation?.sources).toEqual([])
-    expect(JSON.stringify(presentation)).not.toContain('doi.org')
-    expect(JSON.stringify(presentation)).not.toContain('google.')
-  })
-
-  it('does not present an answer when the direct evidence gate failed', () => {
-    const presentation = toScientificUserPresentation({
-      status: 'scientific_generated',
-      answer: 'Supporting-only narrative.',
-      citations: [{ citation_id: 'cite-1', title: 'Paper', url: 'https://example.org/p' }],
-      research_metadata: {
-        direct_evidence_gate: 'INSUFFICIENT_DIRECT_EVIDENCE',
-        evidence_sufficient: false,
-      },
-    })
-
-    expect(presentation?.human_status).toBe('insufficient')
-    expect(presentation?.primary_answer).toBeNull()
-    expect(presentation?.user_notice_code).toBe('insufficient_direct_evidence')
   })
 })

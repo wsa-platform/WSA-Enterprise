@@ -41,7 +41,8 @@ void main() {
     expect(result.evidence.single, contains('Validated'));
     expect(result.confidence, 0.72);
     expect(result.limitations, ['partial_evidence_support']);
-    expect(result.insufficientEvidence, isFalse);
+    expect(result.canonicalAnswerText, isNull);
+    expect(result.insufficientEvidence, isTrue);
   });
 
   test('research result does not invent citations when backend omitted them',
