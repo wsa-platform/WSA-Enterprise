@@ -12,7 +12,7 @@ import {
   type ResearchAgentQueryResponse,
 } from '../api/researchAgent'
 import { ResearchSourceLink } from './ResearchSourceLink'
-import { createSearchEpisode, loadCurrentSearchEpisode, loadSearchEpisode } from './scientificSearchEpisode'
+import { createSearchEpisode, resolveHomeRestoredEpisode } from './scientificSearchEpisode'
 import { toScientificUserPresentation, userNoticeTranslationKey } from './scientificUserPresentation'
 
 /** Returns trimmed query, or null when empty (skip submit). */
@@ -284,8 +284,13 @@ export function HomeScientificResearchSearch() {
 
   useEffect(() => {
     const requested = searchParams.get('episode')
-    const episode = loadSearchEpisode(requested) ?? loadCurrentSearchEpisode()
+    const episode = resolveHomeRestoredEpisode(requested)
     if (!episode) {
+      if (requested) {
+        setResult(null)
+        setEpisodeId(null)
+        setSubmittedQuestion(null)
+      }
       return
     }
     setQuery(episode.query)

@@ -11,8 +11,8 @@ import type { FieldCropOptionId } from './fieldCropCategories'
 import { getFieldCropById } from './fieldCropCategories'
 import { FieldCropCanonicalAnswerView } from './FieldCropCanonicalAnswerView'
 import {
-  createSearchEpisode,
-  loadSearchEpisode,
+  createCropSearchEpisode,
+  matchCropStoredEpisode,
 } from './scientificSearchEpisode'
 import type { ResearchAgentQueryResponse } from '../api/researchAgent'
 
@@ -138,12 +138,9 @@ function matchingStoredCropEpisode(
   if (typeof window === 'undefined') {
     return null
   }
-  const episode = loadSearchEpisode(new URLSearchParams(window.location.search).get('episode'))
-  const origin = episode?.originState
-  if (!episode || !origin) {
-    return null
-  }
-  if (origin.categoryId !== categoryId || origin.cropId !== cropId || origin.optionId !== knowledgeOption) {
+  const episodeId = new URLSearchParams(window.location.search).get('episode')
+  const episode = matchCropStoredEpisode(episodeId, categoryId, cropId, knowledgeOption)
+  if (!episode) {
     return null
   }
   return {
@@ -164,7 +161,7 @@ function persistCropSearchEpisode(input: {
     : `episode-${Date.now()}`
   const path = typeof window !== 'undefined' ? window.location.pathname : '/plant-production/field-crops'
   const returnPath = `${path}?episode=${encodeURIComponent(episodeId)}`
-  const episode = createSearchEpisode({
+  const episode = createCropSearchEpisode({
     episodeId,
     query: `${input.cropName} ${input.knowledgeOption}`.trim(),
     language: input.profile.language ?? null,
