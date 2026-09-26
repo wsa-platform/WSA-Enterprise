@@ -1970,6 +1970,7 @@
       "answerLanguage": "Answer language: {{language}}",
       "insufficientNotice": "This response is limited by insufficient or conflicting scientific evidence.",
       "resultsHeading": "Scientific search results",
+      "viewResult": "View research",
       "sourcesHeading": "Sources",
       "noCitations": "No citations to display.",
       "citationFallback": "Source {{index}}",

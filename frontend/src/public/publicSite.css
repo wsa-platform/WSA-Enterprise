@@ -4038,6 +4038,10 @@ a.hp-promo-card--full-image:focus-visible {
   color: #1e293b;
 }
 
+.hp-research-view-result {
+  margin-inline-start: 0.35rem;
+}
+
 .hp-research-cite-meta {
   color: #64748b;
 }

@@ -220,9 +220,46 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
     expect(html).toContain('data-testid="crop-research-results"')
     expect(html).toContain('Crop Paper Two')
     expect(html).not.toContain('Crop Paper One')
+    expect(html).toContain('>View research</a>')
     expect(html).toContain('href="/research/result/https%3A%2F%2Fopenalex.org%2FWcrop2"')
+    expect(html).not.toMatch(/<a[^>]*>Crop Paper Two<\/a>/)
     expect(html).not.toContain('target="_blank"')
     expect(html).not.toContain('Hidden crop synthesis.')
+  })
+
+  it('keeps the crop view-research action on the Crop episode and separate from original_url', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderToStaticMarkup(
+      createElement(
+        I18nextProvider,
+        { i18n },
+        createElement(FieldCropCanonicalAnswerView, {
+          profile: canonicalFixture({
+            status: 'insufficient_evidence',
+            user_presentation: {
+              primary_answer: null,
+              human_status: 'insufficient',
+              user_notice_code: 'insufficient_direct_evidence',
+              candidates: [],
+              sources: [],
+              results: [{
+                result_id: 'srcid-crop-paper',
+                title: 'Crop drought paper',
+                original_url: 'https://publisher.example/crop-paper',
+                doi: '10.1000/crop-paper',
+                confidence: 0.50,
+              }],
+            },
+          }),
+          episodeId: 'ep-crop',
+        }),
+      ),
+    )
+    expect(html).toContain('>View research</a>')
+    expect(html).toContain('href="/research/result/srcid-crop-paper?episode=ep-crop"')
+    expect(html).not.toMatch(/<a[^>]*>Crop drought paper<\/a>/)
+    expect(html).not.toContain('href="https://publisher.example/crop-paper"')
+    expect(html).not.toContain('target="_blank"')
   })
 
   it('H/I citation title opens the internal Viewer and not the external URL or Google', async () => {

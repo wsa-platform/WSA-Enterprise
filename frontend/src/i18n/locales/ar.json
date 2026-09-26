@@ -1970,6 +1970,7 @@
       "answerLanguage": "لغة الإجابة: {{language}}",
       "insufficientNotice": "هذه الاستجابة محدودة بسبب أدلة علمية غير كافية أو متعارضة.",
       "resultsHeading": "نتائج البحث العلمي",
+      "viewResult": "عرض البحث",
       "sourcesHeading": "المصادر",
       "noCitations": "لا توجد استشهادات معروضة.",
       "citationFallback": "مصدر {{index}}",

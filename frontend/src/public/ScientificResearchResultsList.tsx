@@ -34,9 +34,10 @@ export function ScientificResearchResultsList({
       <h3>{t('website.research.resultsHeading')}</h3>
       <ul>
         {results.map((result, index) => {
+          const resultId = result.result_id?.trim() ?? ''
           const citation: ResearchAgentCitation = {
-            citation_id: result.result_id,
-            source_id: result.result_id,
+            citation_id: resultId,
+            source_id: resultId,
             title: result.title,
             url: result.original_url,
             doi: result.doi,
@@ -47,15 +48,21 @@ export function ScientificResearchResultsList({
           }
           const meta = resultMeta(result)
           return (
-            <li key={result.result_id} data-testid="scientific-research-result">
-              <ResearchSourceLink
-                citation={citation}
-                label={result.title}
-                index={index}
-                episodeId={episodeId}
-                resultId={result.result_id}
-              />
+            <li key={resultId || `result-${index}`} data-testid="scientific-research-result">
+              <span data-testid="scientific-research-result-title">{result.title}</span>
               {meta ? <span className="hp-research-cite-meta"> — {meta}</span> : null}
+              {resultId !== '' ? (
+                <span className="hp-research-view-result">
+                  {' '}
+                  <ResearchSourceLink
+                    citation={citation}
+                    label={t('website.research.viewResult')}
+                    index={index}
+                    episodeId={episodeId}
+                    resultId={resultId}
+                  />
+                </span>
+              ) : null}
             </li>
           )
         })}

@@ -25,6 +25,7 @@ export function ResearchViewerPage() {
   const organization = source?.organization ?? stored?.organization ?? null
   const journal = source?.journal ?? stored?.journal ?? null
   const publicationYear = source?.publication_year ?? stored?.publicationYear ?? null
+  const doi = episodeHit.result?.doi ?? stored?.doi ?? null
   const hasRecord = Boolean(source || candidate || stored)
   const backHref = episode ? resultsPath(episode) : '/'
 
@@ -66,6 +67,7 @@ export function ResearchViewerPage() {
           {organization ? <p>{organization}</p> : null}
           {journal ? <p>{journal}</p> : null}
           {publicationYear ? <p>{publicationYear}</p> : null}
+          {doi ? <p data-testid="research-viewer-doi">{doi}</p> : null}
           {stored?.abstract ? (
             <p data-testid="research-viewer-abstract">{stored.abstract}</p>
           ) : null}

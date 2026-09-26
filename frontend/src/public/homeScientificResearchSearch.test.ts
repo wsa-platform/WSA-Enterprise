@@ -12,6 +12,7 @@ import {
   normalizeResearchQuery,
   resolveResearchSearchError,
 } from './HomeScientificResearchSearch'
+import { ScientificResearchResultsList } from './ScientificResearchResultsList'
 
 beforeAll(() => {
   const store = new Map<string, string>()
@@ -46,6 +47,7 @@ function renderView(props: {
   loading: boolean
   error: string | null
   result: Parameters<typeof HomeScientificResearchSearchView>[0]['result']
+  episodeId?: string | null
   feedbackState?: Parameters<typeof HomeScientificResearchSearchView>[0]['feedbackState']
   onPositiveFeedback?: () => void
 }) {
@@ -405,12 +407,72 @@ describe('homepage scientific research search', () => {
     expect(html).toContain('Eligible Paper Two')
     expect(html).toContain('Eligible Paper Three')
     expect(html).not.toContain('Eligible Paper One')
+    expect(html).toContain('>View research</a>')
     expect(html).toContain('href="/research/result/https%3A%2F%2Fopenalex.org%2FW2"')
     expect(html).toContain('href="/research/result/https%3A%2F%2Fopenalex.org%2FW3"')
+    expect(html).not.toMatch(/<a[^>]*>Eligible Paper Two<\/a>/)
     expect(html).not.toContain('target="_blank"')
     expect(html).toContain('data-testid="home-research-no-answer"')
     expect(html).not.toContain('Hidden raw synthesis.')
     expect(html).not.toContain('Confidence:')
+  })
+
+  it('uses a labeled internal view-research action and never links the title to original_url', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderView({
+      query: 'wheat irrigation',
+      loading: false,
+      error: null,
+      episodeId: 'ep-home',
+      result: {
+        status: 'insufficient_evidence',
+        confidence: 0.40,
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          user_notice_code: 'insufficient_direct_evidence',
+          candidates: [],
+          sources: [],
+          results: [{
+            result_id: 'srcid-home-paper',
+            title: 'Home drought paper',
+            original_url: 'https://publisher.example/home-paper',
+            doi: '10.1000/home-paper',
+            confidence: 0.50,
+          }],
+        },
+      },
+    })
+    expect(html).toContain('data-testid="scientific-research-result-title"')
+    expect(html).toContain('Home drought paper')
+    expect(html).toContain('>View research</a>')
+    expect(html).toContain('href="/research/result/srcid-home-paper?episode=ep-home"')
+    expect(html).not.toMatch(/<a[^>]*>Home drought paper<\/a>/)
+    expect(html).not.toContain('href="https://publisher.example/home-paper"')
+    expect(html).not.toContain('target="_blank"')
+  })
+
+  it('does not invent an internal view-research link when result_id is missing', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderToStaticMarkup(
+      createElement(
+        I18nextProvider,
+        { i18n },
+        createElement(ScientificResearchResultsList, {
+          episodeId: 'ep-home',
+          results: [{
+            result_id: '',
+            title: 'Untitled missing identity',
+            original_url: 'https://publisher.example/missing-id',
+            confidence: 0.90,
+          }],
+        }),
+      ),
+    )
+    expect(html).toContain('Untitled missing identity')
+    expect(html).not.toContain('>View research</a>')
+    expect(html).not.toContain('href="/research/result/')
+    expect(html).not.toContain('href="https://publisher.example/missing-id"')
   })
 
   it('renders Turkish and French research chrome from i18n', async () => {

@@ -1970,6 +1970,7 @@
       "answerLanguage": "Langue de la réponse : {{language}}",
       "insufficientNotice": "Cette réponse est limitée par des preuves scientifiques insuffisantes ou contradictoires.",
       "resultsHeading": "Résultats de recherche scientifique",
+      "viewResult": "Afficher la recherche",
       "sourcesHeading": "Sources",
       "noCitations": "Aucune citation à afficher.",
       "citationFallback": "Source {{index}}",

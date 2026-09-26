@@ -297,9 +297,41 @@ describe('research viewer navigation', () => {
     expect(html).toContain('data-testid="research-viewer-title"')
     expect(html).toContain('Internal topic paper')
     expect(html).not.toMatch(/<h2[^>]*href=/)
+    expect(html).toContain('data-testid="research-viewer-doi"')
+    expect(html).toContain('10.1000/nav')
     expect(isClickableAnchorMarkup(html, 'https://doi.org/10.1000/nav')).toBe(true)
     expect(html).toContain('data-testid="research-viewer-original-source"')
     expect(html).toContain('target="_blank"')
     expect(html).toContain(homeResultsPath(episode.episodeId))
+  })
+
+  it('still opens the internal viewer when original_url is missing', () => {
+    const episode = createSearchEpisode({
+      query: 'wheat irrigation',
+      language: 'en',
+      episodeId: 'episode-no-url',
+      response: {
+        status: 'insufficient_evidence',
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          user_notice_code: 'insufficient_direct_evidence',
+          candidates: [],
+          sources: [],
+          results: [{
+            result_id: 'srcid-no-url',
+            title: 'No original URL paper',
+            confidence: 0.50,
+          }],
+        },
+      },
+    })
+
+    const html = renderWithRouter(`/research/result/srcid-no-url?episode=${episode.episodeId}`)
+    expect(html).toContain('data-testid="research-viewer-page"')
+    expect(html).toContain('No original URL paper')
+    expect(html).toContain('data-testid="research-viewer-no-original"')
+    expect(html).not.toContain('data-testid="research-viewer-original-source"')
+    expect(html).not.toContain('data-testid="research-viewer-missing"')
   })
 })
