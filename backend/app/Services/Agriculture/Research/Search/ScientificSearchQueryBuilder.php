@@ -4,7 +4,9 @@ namespace App\Services\Agriculture\Research\Search;
 
 use App\Services\Agriculture\FieldCropTaxonomyCatalog;
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
+use App\Services\Agriculture\Research\CanonicalScientificQuestion;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
+use App\Services\Agriculture\Research\RetrievalSpecification;
 use App\Services\Agriculture\Research\ScientificQuestionSemantics;
 
 /**
@@ -37,6 +39,21 @@ class ScientificSearchQueryBuilder
      * @return list<string>
      */
     public function buildVariantsFromPlan(KnowledgeQueryPlan $plan): array
+    {
+        if ($plan->normalizedQuery->canonicalQuestion !== null) {
+            return $this->buildVariantsFromCanonicalSpecification($plan);
+        }
+
+        return $this->buildLegacyVariantsFromPlan($plan);
+    }
+
+    /**
+     * Compatibility factory. Used only when CSQ is absent, or Crop has no
+     * independent question-level roles (knowledge-option tails).
+     *
+     * @return list<string>
+     */
+    private function buildLegacyVariantsFromPlan(KnowledgeQueryPlan $plan): array
     {
         $query = $plan->normalizedQuery;
         $entity = $this->resolveEntityTerm($plan);
@@ -310,6 +327,11 @@ class ScientificSearchQueryBuilder
         if ($this->isRequirementSpecificationPlan($plan) && $entity !== null) {
             $requirementVariants = $this->buildRequirementSpecificationVariants($entity, $primaryCommon, $plan);
             $variants = [...$requirementVariants, ...$variants];
+        }
+
+        $rolePrimaries = $this->compileRoleDerivedPrimaryVariants($plan);
+        if ($rolePrimaries !== []) {
+            $variants = [...$rolePrimaries, ...$variants];
         }
 
         $unique = [];
@@ -1282,6 +1304,325 @@ class ScientificSearchQueryBuilder
         }
 
         return array_slice($pairs, 0, 4);
+    }
+
+    /**
+     * CSQ-only compilation. CSQ present → never merge legacy semantic fields.
+     *
+     * @return list<string>
+     */
+    private function buildVariantsFromCanonicalSpecification(KnowledgeQueryPlan $plan): array
+    {
+        $csq = $plan->normalizedQuery->canonicalQuestion;
+        if ($csq === null) {
+            return ['agriculture'];
+        }
+
+        $spec = RetrievalSpecification::fromCanonical($csq);
+
+        $variants = $this->compileCanonicalRoleCombinations($spec);
+        $unique = [];
+        foreach ($variants as $variant) {
+            $trimmed = trim($variant);
+            if ($trimmed === '' || in_array($trimmed, $unique, true)) {
+                continue;
+            }
+            $unique[] = $trimmed;
+            if (count($unique) >= self::MAX_VARIANTS) {
+                break;
+            }
+        }
+
+        return $unique !== [] ? $unique : ['agriculture'];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function compileCanonicalRoleCombinations(RetrievalSpecification $spec): array
+    {
+        $entity = $this->specFrozenRoleSurface($spec, CanonicalScientificQuestion::ROLE_ENTITY);
+        $process = $this->specFrozenRoleSurface($spec, CanonicalScientificQuestion::ROLE_PROCESS);
+        $target = $this->specFrozenRoleSurface($spec, CanonicalScientificQuestion::ROLE_TARGET);
+        $property = $this->specFrozenPropertySurface($spec);
+        $sense = $this->specSupportingSense($spec);
+
+        $required = array_values(array_filter(
+            [$entity, $process, $target, $property],
+            static fn (?string $term): bool => is_string($term) && trim($term) !== '',
+        ));
+        if ($required === []) {
+            return $sense !== null ? [$sense] : [];
+        }
+
+        $combinations = [];
+        $primary = $this->joinTerms($required);
+        if ($sense !== null && $this->senseTermAddsDimension($sense, $required)) {
+            $primary = $this->joinTerms([...$required, $sense]);
+        }
+        if ($primary !== '') {
+            $combinations[] = $primary;
+        }
+        $scholarly = $spec->orderedScholarlyPropertyTerms();
+        if ($scholarly !== []) {
+            $this->pushCanonicalCombination($combinations, [$entity, ...array_slice($scholarly, 0, 4)]);
+        }
+        $this->pushCanonicalCombination($combinations, [$entity, $process, $target, $property]);
+        $this->pushCanonicalCombination($combinations, [$entity, $target, $property]);
+        $this->pushCanonicalCombination($combinations, [$process, $target, $property]);
+        $this->pushCanonicalCombination($combinations, [$entity, $process, $target]);
+        $this->pushCanonicalCombination($combinations, [$entity, $target]);
+        $this->pushCanonicalCombination($combinations, [$process, $target]);
+        $this->pushRelationEndpointCombination($combinations, $spec);
+        $this->pushComparativeOperandCombinations($combinations, $spec);
+        if ($target === null) {
+            $this->pushCanonicalCombination($combinations, [$entity, $property]);
+        }
+        $this->pushCanonicalCombination($combinations, [$target, $property]);
+
+        if ($combinations === []) {
+            $fallback = $this->joinTerms($required);
+            if ($fallback !== '') {
+                $combinations[] = $fallback;
+            }
+        }
+
+        if ($sense !== null && $combinations !== []) {
+            $withSense = $this->joinTerms([...$required, $sense]);
+            if ($withSense !== '' && ! in_array($withSense, $combinations, true)) {
+                $combinations[] = $withSense;
+            }
+        }
+
+        return $combinations;
+    }
+
+    /**
+     * Join CSQ relation endpoints when both sides exist. Does not invent a
+     * missing role and does not substitute a generic relation token.
+     *
+     * @param  list<string>  $variants
+     */
+    private function pushRelationEndpointCombination(array &$variants, RetrievalSpecification $spec): void
+    {
+        $type = trim($spec->relationType);
+        if ($type === '' || $type === CanonicalScientificQuestion::RELATION_NONE) {
+            return;
+        }
+        $fromRole = is_string($spec->relationFrom) ? trim($spec->relationFrom) : '';
+        $toRole = is_string($spec->relationTo) ? trim($spec->relationTo) : '';
+        if ($fromRole === '' || $toRole === '') {
+            return;
+        }
+        $from = $fromRole === CanonicalScientificQuestion::ROLE_PROPERTY
+            ? $this->specFrozenPropertySurface($spec)
+            : $this->specFrozenRoleSurface($spec, $fromRole);
+        $to = $toRole === CanonicalScientificQuestion::ROLE_PROPERTY
+            ? $this->specFrozenPropertySurface($spec)
+            : $this->specFrozenRoleSurface($spec, $toRole);
+        if ($from === null || $to === null) {
+            return;
+        }
+        $this->pushCanonicalCombination($variants, [$from, $to]);
+    }
+
+    /**
+     * @param  list<string>  $variants
+     */
+    private function pushComparativeOperandCombinations(array &$variants, RetrievalSpecification $spec): void
+    {
+        if ($spec->relationType !== CanonicalScientificQuestion::RELATION_COMPARATIVE) {
+            return;
+        }
+        $operands = [];
+        foreach ($spec->conceptsForRole('comparison_operand') as $concept) {
+            $surface = $spec->frozenSurface($concept);
+            if ($surface !== '') {
+                $operands[] = $surface;
+            }
+        }
+        if (count($operands) < 2) {
+            return;
+        }
+        $this->pushCanonicalCombination($variants, $operands);
+        $entity = $this->specFrozenRoleSurface($spec, CanonicalScientificQuestion::ROLE_ENTITY);
+        $property = $this->specFrozenPropertySurface($spec);
+        $this->pushCanonicalCombination($variants, [...$operands, $property]);
+        $this->pushCanonicalCombination($variants, [$entity, ...$operands]);
+    }
+
+    /**
+     * @param  list<string>  $variants
+     * @param  list<?string>  $parts
+     */
+    private function pushCanonicalCombination(array &$variants, array $parts): void
+    {
+        foreach ($parts as $part) {
+            if (! is_string($part) || trim($part) === '') {
+                return;
+            }
+        }
+        $joined = $this->joinTerms($parts);
+        if ($joined !== '' && ! in_array($joined, $variants, true)) {
+            $variants[] = $joined;
+        }
+    }
+
+    private function specFrozenRoleSurface(RetrievalSpecification $spec, string $role): ?string
+    {
+        $projection = $spec->projections[$role] ?? null;
+        if (is_array($projection)) {
+            $surface = trim((string) ($projection['surface'] ?? ''));
+            if ($surface !== '') {
+                return $surface;
+            }
+        }
+        foreach ($spec->conceptsForRole($role) as $concept) {
+            $surface = $spec->frozenSurface($concept);
+            if ($surface !== '') {
+                return $surface;
+            }
+        }
+
+        return null;
+    }
+
+    private function specFrozenPropertySurface(RetrievalSpecification $spec): ?string
+    {
+        $projection = $spec->projections['property'] ?? null;
+        if (is_array($projection)) {
+            $surface = trim((string) ($projection['surface'] ?? ''));
+            if ($surface !== '') {
+                return $surface;
+            }
+        }
+
+        return $this->specFrozenRoleSurface($spec, CanonicalScientificQuestion::ROLE_PROPERTY);
+    }
+
+    private function specSupportingSense(RetrievalSpecification $spec): ?string
+    {
+        $sense = $spec->projections['context']['scientificSense'] ?? null;
+        if (! is_string($sense) || trim($sense) === '') {
+            return null;
+        }
+
+        return str_replace('_', ' ', trim($sense));
+    }
+
+    /**
+     * Compile variant 0+ from frozen CSQ / RetrievalSpecification roles.
+     * Optional expansions may follow; they must not displace required roles.
+     *
+     * @return list<string>
+     */
+    private function compileRoleDerivedPrimaryVariants(KnowledgeQueryPlan $plan): array
+    {
+        $spec = $this->retrievalSpecificationFromPlan($plan);
+        if ($spec === null) {
+            return [];
+        }
+
+        $isCropProfile = trim((string) ($plan->contextInput['selected_crop_id'] ?? '')) !== ''
+            && trim((string) ($plan->contextInput['selected_crop_name'] ?? '')) !== '';
+        $csq = $plan->normalizedQuery->canonicalQuestion;
+        if ($isCropProfile && $csq !== null && ! RetrievalSpecification::csqHasIndependentQuestionRoles($csq)) {
+            return [];
+        }
+        if ($isCropProfile && $csq === null && ! $spec->hasIndependentQuestionRoles) {
+            return [];
+        }
+
+        $entity = $this->firstRoleTerm($spec, CanonicalScientificQuestion::ROLE_ENTITY);
+        $process = $this->firstRoleTerm($spec, CanonicalScientificQuestion::ROLE_PROCESS);
+        $target = $this->firstRoleTerm($spec, CanonicalScientificQuestion::ROLE_TARGET);
+        $property = $this->firstRoleTerm($spec, CanonicalScientificQuestion::ROLE_PROPERTY);
+        $factors = [];
+        foreach ($spec->conceptsForRole('factor') as $concept) {
+            $term = $spec->compileTerm($concept);
+            if ($term !== '') {
+                $factors[] = $term;
+            }
+        }
+        $sense = $this->firstRoleTerm($spec, 'context_sense');
+
+        $required = array_values(array_filter(
+            [$entity, $process, $target, $property, ...$factors],
+            static fn (?string $term): bool => is_string($term) && trim($term) !== '',
+        ));
+        if ($required === []) {
+            return [];
+        }
+
+        $primaryParts = $required;
+        if ($sense !== null && $this->senseTermAddsDimension($sense, $primaryParts)) {
+            $primaryParts[] = $sense;
+        }
+        if ($spec->relationType === CanonicalScientificQuestion::RELATION_CAUSAL
+            && $process !== null
+            && ($target !== null || $entity !== null)
+            && ! in_array('effect', array_map('mb_strtolower', $primaryParts), true)) {
+            $primaryParts[] = 'effect';
+        }
+
+        $variants = [];
+        $primary = $this->joinTerms($primaryParts);
+        if ($primary !== '') {
+            $variants[] = $primary;
+        }
+
+        if ($process !== null && $target !== null) {
+            $causal = $this->joinTerms([
+                $process,
+                $target,
+                $spec->propertyOfRole === CanonicalScientificQuestion::PROPERTY_OF_TARGET ? $property : null,
+            ]);
+            if ($causal !== '' && ! in_array($causal, $variants, true)) {
+                $variants[] = $causal;
+            }
+        }
+        if ($entity !== null && $target !== null) {
+            $pair = $this->joinTerms([$entity, $target]);
+            if ($pair !== '' && ! in_array($pair, $variants, true)) {
+                $variants[] = $pair;
+            }
+        }
+        if ($entity !== null && $property !== null && $target === null) {
+            $pair = $this->joinTerms([$entity, $property, $sense]);
+            if ($pair !== '' && ! in_array($pair, $variants, true)) {
+                $variants[] = $pair;
+            }
+        }
+
+        return $variants;
+    }
+
+    private function retrievalSpecificationFromPlan(KnowledgeQueryPlan $plan): ?RetrievalSpecification
+    {
+        $raw = $plan->normalizedQuery->constraints['retrieval_specification'] ?? null;
+        if (is_array($raw) && $raw !== []) {
+            return RetrievalSpecification::fromArray($raw);
+        }
+        $csq = $plan->normalizedQuery->canonicalQuestion;
+        if ($csq !== null) {
+            return RetrievalSpecification::fromCanonical($csq);
+        }
+
+        $legacy = RetrievalSpecification::fromLegacyQuery($plan->normalizedQuery);
+
+        return $legacy->requiredTerms() !== [] ? $legacy : null;
+    }
+
+    private function firstRoleTerm(RetrievalSpecification $spec, string $role): ?string
+    {
+        foreach ($spec->conceptsForRole($role) as $concept) {
+            $term = $spec->compileTerm($concept);
+            if ($term !== '') {
+                return $term;
+            }
+        }
+
+        return null;
     }
 
     private function resolveEntityTerm(KnowledgeQueryPlan $plan): ?string

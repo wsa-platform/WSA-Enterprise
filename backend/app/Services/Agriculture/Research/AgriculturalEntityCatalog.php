@@ -19,6 +19,7 @@ final class AgriculturalEntityCatalog
             'irrigation',
             'fertilization',
             'soil_management',
+            'land_classification',
             'plant_nutrition',
             'disease',
             'pest',
@@ -48,6 +49,7 @@ final class AgriculturalEntityCatalog
             'insect',
             'fish',
             'soil',
+            'land',
             'disease',
             'pest',
             'nutrient',
@@ -81,6 +83,15 @@ final class AgriculturalEntityCatalog
                 'soil management', 'soil preparation', 'soil fertility', 'soil health',
                 'إدارة التربة', 'تحضير التربة', 'خصوبة التربة',
             ],
+            'land_classification' => [
+                'types of agricultural land', 'agricultural land types', 'land types',
+                'soil types', 'types of soil', 'types of soils', 'types of land',
+                'soil taxonomy', 'classification of soils', 'classification of agricultural land',
+                'أنواع الأراضي', 'انواع الاراضي', 'أنواع التربة', 'انواع التربة',
+                'تصنيف الأراضي', 'تصنيف الاراضي',
+                'toprak türleri', 'toprak turleri', 'toprak tipleri',
+                'types de sols', 'types de sol',
+            ],
             'plant_nutrition' => [
                 'plant nutrition', 'nutrient deficiency', 'potassium', 'بوتاسيوم',
                 'نقص البوتاسيوم', 'تغذية النبات', 'نقص عناصر',
@@ -89,12 +100,19 @@ final class AgriculturalEntityCatalog
             'pest' => ['pest', 'insect pest', 'آفة', 'آفات', 'حشر'],
             'diagnosis_scientific' => ['diagnosis', 'symptom identification', 'تشخيص'],
             'productivity' => ['yield', 'productivity', 'harvest', 'إنتاجية', 'محصول'],
-            'varieties' => ['variety', 'cultivar', 'breeding', 'صنف', 'أصناف'],
+            'varieties' => ['variety', 'varieties', 'cultivar', 'cultivars', 'breeding', 'صنف', 'أصناف', 'اصناف'],
+            // Botanical-family member inventory is resolved primarily via botanicalFamilyAliases()
+            // in QUS; keep light cues here for explicit intent override only.
+            'plant_family_members' => [
+                'family members', 'botanical family', 'plant family', 'plants of the',
+                'members of the', 'species of the family',
+                'نبات العائلة', 'نباتات العائلة', 'العائلة النباتية',
+            ],
             'animal_production' => ['livestock', 'animal production', 'cattle', 'إنتاج حيواني'],
             'poultry_production' => ['poultry', 'broiler', 'layer', 'دواجن'],
             'beekeeping' => ['beekeeping', 'apiculture', 'نحل', 'تربية نحل'],
             'aquaculture' => ['aquaculture', 'fish farming', 'استزراع', 'أسماك', 'اسماك'],
-            'feed' => ['animal feed', 'feed formulation', 'علف', 'تغذية'],
+            'feed' => ['animal feed', 'feed formulation', 'علف', 'تغذية', 'تسمين', 'fattening', 'fatten'],
             'agricultural_economics' => [
                 'farm economics', 'profitability', 'agricultural economics', 'اقتصاد زراعي',
                 'economic feasibility', 'feasibility', 'جدوى', 'اقتصادية', 'اقتصادي',
@@ -237,7 +255,9 @@ final class AgriculturalEntityCatalog
             '/كيف\s+تؤثر|كيف\s+يؤثر|ما\s+تأثير|تأثير\s+.+\s+(?:على|في)|'
             .'\bhow\s+does\b.+\b(?:affect|influence)|\bhow\s+do\s+(?!i\b).+\b(?:affect|influence)|'
             .'\bwhat\s+(?:effect|impact)\b|\beffects?\s+of\b|\bimpact\s+of\b|'
-            .'\baffects?\b.+\b(?:on|by)\b/u',
+            .'\baffects?\b.+\b(?:on|by)\b|'
+            .'nas[ıi]l\s+etkiler|(?:nin|nın|nun|nün)\s+.+\s+(?:üzerindeki\s+)?etkisi|'
+            .'comment\s+.+\baffecte|effet\s+de\s+.+\s+sur|impact\s+de\s+.+\s+sur/u',
             $hay,
         ) === 1;
     }
@@ -264,6 +284,11 @@ final class AgriculturalEntityCatalog
             '/\bwhat\s+(?:is\s+)?the\s+(?:effect|impact)\s+of\s+(.+?)\s+on\s+(.+)/u',
             '/\b(?:effects?|impact)\s+of\s+(.+?)\s+on\s+(.+)/u',
             '/\bwhat\s+does\s+(.+?)\s+do\s+to\s+(.+)/u',
+            '/(.+?)\s+(.+?)\s+nas[ıi]l\s+etkiler/u',
+            '/(\S+?)(?:nin|nın|nun|nün)\s+(.+?)\s+(?:üzerindeki\s+)?etkisi/u',
+            '/comment\s+(.+?)\s+affecte(?:-t-elle)?\s+(.+)/u',
+            '/effet\s+de\s+(.+?)\s+sur\s+(.+)/u',
+            '/impact\s+de\s+(.+?)\s+sur\s+(.+)/u',
         ];
         foreach ($patterns as $pattern) {
             if (preg_match($pattern, $hay, $matches) === 1) {
@@ -414,10 +439,12 @@ final class AgriculturalEntityCatalog
             'effect' => [
                 'effect', 'effects', 'impact', 'influence', 'affect', 'affects', 'affected',
                 'response', 'responses', 'تأثير', 'تؤثر', 'اثر', 'أثر',
+                'etkiler', 'affecte',
             ],
             'requirement' => [
                 'requirement', 'requirements', 'need', 'needs', 'required', 'require',
                 'احتياج', 'احتياجات', 'متطلبات',
+                'ihtiyaç', 'ihtiyacı', 'gereksinim', 'besoin', 'besoins',
             ],
             'economic_feasibility' => ['feasibility', 'profitability', 'جدوى', 'ربحية'],
             'extension_adoption' => ['extension', 'adoption', 'إرشاد', 'تبني'],
@@ -435,6 +462,7 @@ final class AgriculturalEntityCatalog
             'hydroponics' => [
                 'hydroponics', 'hydroponic', 'soilless culture', 'soilless',
                 'الزراعة المائية', 'زراعة مائية', 'هيدروبون', 'هيدروبونيك',
+                'مائيًا', 'مائيا', 'زراعة مائي', 'الطماطم مائي',
             ],
             'greenhouse' => [
                 'greenhouse', 'greenhouses', 'polyhouse', 'polyhouses',
@@ -489,6 +517,10 @@ final class AgriculturalEntityCatalog
             'uae' => 'United Arab Emirates',
             'india' => 'India',
             'الهند' => 'India',
+            'italy' => 'Italy',
+            'italia' => 'Italy',
+            'italien' => 'Italy',
+            'إيطاليا' => 'Italy',
         ];
     }
 
@@ -503,6 +535,400 @@ final class AgriculturalEntityCatalog
             'égypte' => 'Egypt',
             'egypte' => 'Egypt',
         ];
+    }
+
+    // --- Typed factual question / evidence-type helpers (entity-family + varieties + shared) ---
+    // Land-only inventory/method gates live further below under the land mega marker.
+
+    /**
+     * Question-type keyword signals (classification / quantity / timing…).
+     *
+     * @return array<string, list<string>>
+     */
+    public static function questionTypeSignals(): array
+    {
+        return [
+            'classification' => [
+                'types', 'type', 'classification', 'classify', 'categories', 'kinds',
+                'varieties', 'variety', 'cultivars', 'cultivar',
+                'breeds', 'breed', 'strains', 'strain',
+                'أنواع', 'انواع', 'تصنيف', 'صنف', 'أصناف', 'اصناف',
+                'سلالات', 'سلالة',
+                'types de', 'classification des', 'catégories',
+                'türleri', 'türler', 'sınıflandırma', 'siniflandirma',
+            ],
+            'quantity' => [
+                'quantity', 'rate', 'amount', 'dose', 'dosage', 'kg/ha', 'how much',
+                'كمية', 'معدل', 'جرعة', 'كم',
+                'quantité', 'dose', 'combien',
+                'miktar', 'oran', 'ne kadar',
+                'production', 'üretim', 'verim', 'rendement', 'إنتاج',
+            ],
+            'range' => [
+                'optimal', 'optimum', 'best temperature', 'range', 'between',
+                'أفضل درجة', 'النطاق', 'مثلى',
+                'plage', 'optimale', 'température optimale',
+                'en uygun', 'aralık', 'optimal',
+            ],
+            'timing' => [
+                'when', 'timing', 'season', 'period', 'schedule', 'planting date',
+                'متى', 'موعد', 'موسم', 'توقيت',
+                'quand', 'saison', 'période',
+                'ne zaman', 'mevsim', 'dönem',
+            ],
+            'causes' => [
+                'why', 'cause', 'causes', 'reason', 'because',
+                'لماذا', 'سبب', 'أسباب',
+                'pourquoi', 'cause', 'raisons',
+                'neden', 'sebep', 'nedenleri',
+            ],
+            'symptoms' => [
+                'symptom', 'symptoms', 'signs', 'turn yellow', 'yellowing',
+                'أعراض', 'اصفرار', 'تصفر',
+                'symptômes', 'jaunissement',
+                'belirtiler', 'sararma',
+            ],
+            'comparison' => [
+                'compare', 'comparison', 'versus', 'vs', 'difference between',
+                'مقارنة', 'مقابل', 'الفرق بين', 'أيهما', 'ايهما',
+                'comparer', 'différence', 'lequel', 'laquelle',
+                'karşılaştır', 'fark', 'hangisi',
+            ],
+            'species' => [
+                'species', 'species of', 'kinds of fish', 'freshwater fish',
+                'أنواع أسماك', 'انواع اسماك', 'أسماك', 'اسماك',
+                'espèces', 'poissons',
+                'balık türleri', 'türler',
+            ],
+            'definition' => [
+                'define', 'definition', 'meaning of',
+                'تعريف',
+                "qu'est-ce", 'définition',
+                'nedir', 'tanım',
+            ],
+            'recommendation' => [
+                'best method', 'recommend', 'recommendation', 'how to', 'best way',
+                'أفضل طريقة', 'توصية', 'كيف',
+                'meilleure méthode', 'recommandation', 'comment',
+                'en iyi yöntem', 'öneri', 'nasıl',
+            ],
+            'requirements' => [
+                'requirement', 'requirements', 'needs', 'conditions required',
+                'متطلبات', 'احتياجات', 'شروط',
+                'exigences', 'besoins',
+                'gereksinimler', 'şartlar',
+            ],
+        ];
+    }
+
+    /**
+     * What DIRECT evidence must contain for each question type.
+     *
+     * @return array<string, string>
+     */
+    public static function requiredEvidenceTypeForQuestionType(string $questionType): string
+    {
+        return match ($questionType) {
+            'classification' => 'classification_or_types_inventory',
+            'quantity' => 'numeric_rate_or_quantity',
+            'range' => 'numeric_range_or_optimal_value',
+            'timing' => 'temporal_window_or_season',
+            'causes' => 'causal_relationship',
+            'symptoms' => 'symptom_description',
+            'comparison' => 'comparative_evidence',
+            'species' => 'species_list_or_taxonomy',
+            'definition' => 'definitional_statement',
+            'recommendation' => 'recommendation_or_best_practice',
+            'requirements' => 'requirement_specification',
+            default => 'topic_aligned_scientific_claim',
+        };
+    }
+
+    /**
+     * Thermal seed-germination optimal/suitable/range questions.
+     * Narrow family: temperature + germination, framed as a requested
+     * temperature value/range — not tomato-specific and not causal/how-to.
+     */
+    public static function isThermalGerminationRangeQuestion(
+        string $haystack,
+        string $scientificSense = '',
+        string $intentQualifier = '',
+    ): bool {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+        if (self::asksCausalAffectQuestion($hay) || self::asksHowToProcedureQuestion($hay)) {
+            return false;
+        }
+
+        $factors = self::extractTopicFactors($hay);
+        $hasTemperature = in_array('temperature', $factors, true);
+        $hasGermination = in_array('germination', $factors, true)
+            || $scientificSense === 'seed_germination';
+        if (! $hasTemperature || ! $hasGermination) {
+            return false;
+        }
+
+        if ($intentQualifier === 'optimal_range') {
+            return true;
+        }
+
+        foreach ([
+            'مناسبة', 'مناسب', 'أفضل', 'مثلى', 'مثالي',
+            'optimal', 'optimum', 'suitable', 'ideal',
+        ] as $signal) {
+            if (self::matchesSemanticToken($hay, $signal)) {
+                return true;
+            }
+        }
+
+        if (preg_match('/(?<!\p{L})best(?!\p{L})/u', $hay) === 1) {
+            return true;
+        }
+
+        return preg_match(
+            '/كم\s+درجة|ما\s+(?:هي\s+|هو\s+)?درجة\s+(?:الحرارة|حرارة)|'
+            .'\bwhat\s+(?:is|are)\s+(?:the\s+)?(?:suitable\s+|optimal\s+|best\s+)?temperature\b|'
+            .'\bwhat\s+temperature\b|\bhow\s+(?:many|much)\s+degrees?\b|'
+            .'germination\s+temperature|(?:çimlenme|cimlenme)\s+s[ıi]cakl|'
+            .'temp[ée]rature\s+de\s+germination/u',
+            $hay,
+        ) === 1;
+    }
+
+    /**
+     * English search terms that encode required evidence content.
+     *
+     * @return list<string>
+     */
+    public static function requiredEvidenceQueryTerms(string $requiredEvidenceType): array
+    {
+        return match ($requiredEvidenceType) {
+            'classification_or_types_inventory' => [
+                'types', 'classification', 'categories', 'inventory',
+                'varieties', 'cultivars',
+                'soil types', 'land types', 'soil classification', 'land classification',
+            ],
+            'numeric_rate_or_quantity' => ['rate', 'kg/ha', 'quantity', 'dosage'],
+            'numeric_range_or_optimal_value' => ['optimal', 'temperature range', 'optimum'],
+            'temporal_window_or_season' => ['planting date', 'season', 'timing'],
+            'causal_relationship' => ['cause', 'effect', 'because'],
+            'symptom_description' => ['symptoms', 'yellowing', 'chlorosis'],
+            'comparative_evidence' => ['comparison', 'versus', 'compared'],
+            'species_list_or_taxonomy' => [
+                'species', 'taxonomy', 'family members', 'botanical family', 'genera',
+            ],
+            'definitional_statement' => ['definition', 'defined as'],
+            'recommendation_or_best_practice' => ['recommended', 'best practice', 'method'],
+            'requirement_specification' => ['requirements', 'required', 'needs'],
+            default => [],
+        };
+    }
+
+    /**
+     * What the answer body must contain for a required evidence type (generic, not geography-specific).
+     *
+     * @return list<string>
+     */
+    public static function requiredEvidenceCharacteristics(string $requiredEvidenceType): array
+    {
+        return match ($requiredEvidenceType) {
+            'classification_or_types_inventory' => [
+                'explicit_types_or_classes_inventory',
+                'named_soil_or_land_classes',
+                'classification_system_with_listed_types',
+            ],
+            'numeric_rate_or_quantity' => ['numeric_quantity_or_rate'],
+            'numeric_range_or_optimal_value' => ['numeric_range_or_optimum'],
+            'temporal_window_or_season' => ['temporal_window_or_season'],
+            'causal_relationship' => ['stated_cause_or_mechanism'],
+            'symptom_description' => ['described_symptoms'],
+            'species_list_or_taxonomy' => ['species_or_taxa_list'],
+            'recommendation_or_best_practice' => ['stated_recommendation_or_practice'],
+            'requirement_specification' => ['stated_requirement'],
+            'comparative_evidence' => ['comparative_statement'],
+            'definitional_statement' => ['definitional_statement'],
+            default => ['topic_aligned_claim'],
+        };
+    }
+
+    /**
+     * Negative constraints: evidence shapes that must not alone satisfy DIRECT.
+     *
+     * @return list<string>
+     */
+    public static function negativeConstraintsForEvidenceType(string $requiredEvidenceType): array
+    {
+        return match ($requiredEvidenceType) {
+            'classification_or_types_inventory' => [
+                'methodology_only',
+                'machine_learning_model_only',
+                'gis_mapping_only',
+                'remote_sensing_only',
+                'land_evaluation_without_types',
+                'cultivation_without_inventory',
+                'greenhouse_or_protected_culture',
+                'groundwater_or_microbial_focus',
+                'crop_production_without_types',
+            ],
+            'species_list_or_taxonomy' => [
+                'methodology_only',
+                'cultivation_without_inventory',
+                'greenhouse_or_protected_culture',
+            ],
+            default => [],
+        };
+    }
+
+    // --- WIP: land classification mega ---
+    // Land inventory/method gates (asksLandOrSoilTypesInventory, isLandOrSoilClassificationMethodQuestion,
+    // offtopic markers, geo helpers). Keep together; do not delete for current-task splits.
+
+    /**
+     * Off-topic markers for land/soil classification questions (keyword overlap ≠ DIRECT).
+     *
+     * @return list<string>
+     */
+    public static function landClassificationOfftopicMarkers(): array
+    {
+        return [
+            'greenhouse', 'greenhouses', 'polyhouse', 'polyhouses',
+            'protected cultivation', 'protected agriculture', 'hydroponics', 'hydroponic',
+            'soilless', 'ornamental', 'gerbera', 'rose', 'roses', 'cucumber',
+            'groundwater', 'microbial diversity', 'microbial', 'wheat production',
+            'wheat yield', 'irrigation system', 'irrigation efficiency',
+            'gis', 'remote sensing', 'land evaluation', 'land suitability evaluation',
+            'machine learning', 'deep learning', 'neural network', 'random forest',
+            'classification algorithm', 'classification model', 'cnn',
+            'crop cultivation', 'cultivation practices', 'crop production',
+            'production systems', 'protected culture',
+        ];
+    }
+
+    /**
+     * Method / ML / GIS framing that is related to "classification" but does not inventory types.
+     *
+     * @return list<string>
+     */
+    public static function classificationMethodologyOnlyMarkers(): array
+    {
+        return [
+            'machine learning', 'deep learning', 'neural network', 'random forest',
+            'convolutional', 'cnn', 'support vector', 'supervised classification',
+            'automated classification', 'classification algorithm', 'classification model',
+            'prediction model', 'predictive model', 'mapping methodology', 'mapping method',
+            'spectral reflectance', 'image classification', 'feature extraction',
+            'classification method', 'method for soil classification', 'method for land classification',
+            'methodology for', 'proposed method', 'proposed approach', 'proposed framework',
+            'new method for', 'new framework', 'classification framework', 'framework for',
+            'gis-based', 'gis based', 'remote sensing classification', 'remote sensing method',
+            'classification technique', 'classification approach', 'algorithm for',
+            'land evaluation', 'land suitability evaluation', 'suitability scoring',
+        ];
+    }
+
+    /**
+     * Content signals that actually answer land/soil classification/types questions.
+     * Lexical "classification" alone is not sufficient — see hasLandTypeInventoryContent().
+     *
+     * @return list<string>
+     */
+    public static function landClassificationAnswerabilitySignals(): array
+    {
+        return [
+            'soil type', 'soil types', 'land type', 'land types',
+            'soil classification', 'land classification', 'soil taxonomy',
+            'soil survey', 'pedology', 'edaphic', 'soil orders',
+            'alluvial', 'sandy soil', 'calcareous', 'saline soil', 'saline soils',
+            'vertisol', 'arenosol', 'fluvisol', 'calcisol', 'solonchak',
+            'classified as', 'classification of agricultural', 'types of agricultural land',
+            'types of soils', 'agricultural land types', 'soil classes',
+        ];
+    }
+
+    /**
+     * True when haystack inventories concrete land/soil types (not method/ML/GIS alone).
+     */
+    public static function hasLandTypeInventoryContent(string $haystack): bool
+    {
+        $haystack = mb_strtolower(trim($haystack));
+        if ($haystack === '') {
+            return false;
+        }
+
+        $namedClasses = [
+            'alluvial', 'sandy soil', 'sandy soils', 'calcareous', 'saline soil', 'saline soils',
+            'vertisol', 'arenosol', 'fluvisol', 'calcisol', 'solonchak', 'loamy', 'clay soil',
+            'desert soil', 'nile soil', 'entisol', 'aridisol', 'inceptisol', 'vertisols',
+            'entisols', 'aridisols', 'soil orders', 'soil classes', 'land capability classes',
+            'types of agricultural land', 'agricultural land types',
+        ];
+        $hits = 0;
+        foreach ($namedClasses as $class) {
+            if (self::signalPresentPositivelyInHaystack($haystack, $class)) {
+                $hits++;
+            }
+        }
+
+        $inventoryPhrasing = self::hasLandInventoryPhrasing($haystack);
+
+        // Concrete inventory: ≥2 named classes/types, or phrasing + ≥1 class.
+        if ($hits >= 2) {
+            return true;
+        }
+        if ($inventoryPhrasing && $hits >= 1) {
+            return true;
+        }
+        if ($inventoryPhrasing && (
+            self::signalPresentPositivelyInHaystack($haystack, 'soil taxonomy')
+            || self::signalPresentPositivelyInHaystack($haystack, 'soil orders')
+            || self::signalPresentPositivelyInHaystack($haystack, 'major soil types')
+            || self::signalPresentPositivelyInHaystack($haystack, 'major land types')
+            || self::signalPresentPositivelyInHaystack($haystack, 'types of soils')
+        )) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function hasLandInventoryPhrasing(string $haystack): bool
+    {
+        return preg_match(
+            '/\b(?:types?\s+(?:of\s+)?(?:soils?|lands?|agricultural)|(?:soil|land)\s+types?\s+(?:include|are|comprise|consist)|'
+            .'classified\s+into|major\s+(?:soil|land)\s+(?:types?|classes|orders)|'
+            .'inventory\s+of\s+(?:soil|land)|agricultural\s+land\s+types|'
+            .'types\s+of\s+agricultural\s+land|main\s+(?:soil|land)\s+types?)\b/u',
+            $haystack,
+        ) === 1;
+    }
+
+    public static function hasClassificationMethodologyOnlyMarkers(string $haystack): bool
+    {
+        foreach (self::classificationMethodologyOnlyMarkers() as $marker) {
+            $normalized = mb_strtolower(trim($marker));
+            if ($normalized !== '' && (
+                self::containsTerm($haystack, $normalized)
+                || mb_strpos($haystack, $normalized) !== false
+            )) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Methodology/ML primary without a real types inventory → not answerable as DIRECT.
+     */
+    public static function isClassificationMethodologyOnlyWithoutInventory(string $haystack): bool
+    {
+        if (! self::hasClassificationMethodologyOnlyMarkers($haystack)) {
+            return false;
+        }
+
+        return ! self::hasLandTypeInventoryContent($haystack);
     }
 
     /**
@@ -551,13 +977,69 @@ final class AgriculturalEntityCatalog
 
         return preg_match(
             '/(?:types?\s+of\s+(?:agricultural\s+)?(?:land|soil)|(?:agricultural\s+)?land\s+types?|'
-            .'soil\s+types?|types?\s+de\s+terres?\s+agricoles|'
-            .'tar[ıi]m\s+arazilerinin\s+t[üu]rleri|'
+            .'soil\s+types?|types?\s+de\s+terres?\s+agricoles|types?\s+de\s+sols?|'
+            .'tar[ıi]m\s+arazilerinin\s+t[üu]rleri|toprak\s+t[üu]rleri|toprak\s+tipleri|'
             .'انواع\s*(?:ال)?(?:اراضي|أراضي|تربه|تربة)|أنواع\s*(?:ال)?(?:أراضي|اراضي|تربة)|'
             .'تصنيف\s*(?:ال)?(?:اراضي|أراضي|تربة).{0,20}(?:انواع|أنواع|اصناف|أصناف))/u',
             $haystack,
         ) === 1;
     }
+
+    /**
+     * True when evidence haystack mentions the asked location (canonical or alias).
+     */
+    public static function haystackMentionsLocation(string $haystack, string $location): bool
+    {
+        $haystack = mb_strtolower(trim($haystack));
+        $location = mb_strtolower(trim($location));
+        if ($haystack === '' || $location === '') {
+            return false;
+        }
+
+        $targets = [$location];
+        foreach (self::locationAliases() as $alias => $canonical) {
+            if (mb_strtolower($canonical) === $location || mb_strtolower($alias) === $location) {
+                $targets[] = mb_strtolower($alias);
+                $targets[] = mb_strtolower($canonical);
+            }
+        }
+        $targets = array_values(array_unique(array_filter($targets)));
+
+        foreach ($targets as $target) {
+            if ($target !== '' && (
+                self::containsTerm($haystack, $target)
+                || mb_strpos($haystack, $target) !== false
+            )) {
+                return true;
+            }
+        }
+
+        $iso = self::locationToIsoCountryCode($location);
+        if ($iso !== null && preg_match('/\b'.preg_quote($iso, '/').'\b/u', $haystack) === 1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static function signalPresentPositivelyInHaystack(string $haystack, string $signal): bool
+    {
+        if (! self::containsTerm($haystack, $signal) && mb_strpos($haystack, $signal) === false) {
+            return false;
+        }
+
+        $quoted = preg_quote($signal, '/');
+        if (preg_match(
+            '/\b(?:without|no|not|never|lacks?|absent|missing|neither|nor)\b[\s\w\-,]{0,48}'.$quoted.'/u',
+            $haystack,
+        ) === 1) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // --- END WIP: land classification mega ---
 
     /**
      * Map catalog location labels to ISO 3166-1 alpha-2 for Consensus study-country filter.
@@ -638,6 +1120,10 @@ final class AgriculturalEntityCatalog
     {
         return match ($sense) {
             'plant_growth' => ['growth', 'physiology', 'cultivation', 'yield'],
+            'planting_timing' => [
+                'planting date', 'sowing date', 'planting time', 'sowing time',
+                'sowing', 'planting season', 'sowing season',
+            ],
             'varieties' => ['varieties', 'cultivars', 'cultivar classification', 'variety classification'],
             'plant_family_members' => [
                 'family members', 'species', 'taxonomy', 'classification',
@@ -657,6 +1143,10 @@ final class AgriculturalEntityCatalog
             'agricultural_economics' => ['agricultural economics', 'farm profitability'],
             'agricultural_extension' => ['agricultural extension', 'farmer adoption'],
             'agricultural_industry' => ['processing', 'value chain'],
+            'land_classification' => [
+                'land classification', 'soil classification', 'land types',
+                'agricultural land types', 'soil types', 'soil taxonomy',
+            ],
             default => ['agriculture'],
         };
     }
@@ -747,6 +1237,10 @@ final class AgriculturalEntityCatalog
             'irrigation' => ['irrigation', 'water management', 'agriculture'],
             'fertilization' => ['fertilization', 'nutrient management', 'agriculture'],
             'soil_management' => ['soil management', 'agriculture'],
+            'land_classification' => [
+                'land classification', 'soil classification', 'land types',
+                'agricultural land types', 'soil types', 'soil taxonomy',
+            ],
             'plant_nutrition' => ['plant nutrition', 'nutrient deficiency', 'agriculture'],
             'disease' => ['plant disease', 'pathogen', 'agriculture'],
             'pest' => ['pest management', 'agriculture'],
@@ -888,6 +1382,7 @@ final class AgriculturalEntityCatalog
 
             $entries[] = [
                 'crop_id' => $cropId,
+                'category' => FieldCropTaxonomyCatalog::categoryFor($cropId),
                 'labels' => array_values(array_unique(array_filter(array_map(
                     static fn (string $label): string => mb_strtolower(trim($label)),
                     $labels,
@@ -899,239 +1394,6 @@ final class AgriculturalEntityCatalog
     }
 
     // --- CURRENT TASK: Semantic Scholar / QueryBuilder family+potato ---
-
-    // --- Typed factual question / evidence-type helpers (entity-family + varieties) ---
-    /**
-     * Question-type keyword signals (classification / quantity / timing…).
-     *
-     * @return array<string, list<string>>
-     */
-    public static function questionTypeSignals(): array
-    {
-        return [
-            'classification' => [
-                'types', 'type', 'classification', 'classify', 'categories', 'kinds',
-                'varieties', 'variety', 'cultivars', 'cultivar',
-                'أنواع', 'انواع', 'تصنيف', 'صنف', 'أصناف', 'اصناف',
-                'types de', 'classification des', 'catégories',
-                'türleri', 'türler', 'sınıflandırma', 'siniflandirma',
-            ],
-            'quantity' => [
-                'quantity', 'rate', 'amount', 'dose', 'dosage', 'kg/ha', 'how much',
-                'كمية', 'معدل', 'جرعة', 'كم',
-                'quantité', 'dose', 'combien',
-                'miktar', 'oran', 'ne kadar',
-            ],
-            'range' => [
-                'optimal', 'optimum', 'best temperature', 'range', 'between',
-                'أفضل درجة', 'النطاق', 'مثلى',
-                'plage', 'optimale', 'température optimale',
-                'en uygun', 'aralık', 'optimal',
-            ],
-            'timing' => [
-                'when', 'timing', 'season', 'period', 'schedule', 'planting date',
-                'متى', 'موعد', 'موسم', 'توقيت',
-                'quand', 'saison', 'période',
-                'ne zaman', 'mevsim', 'dönem',
-            ],
-            'causes' => [
-                'why', 'cause', 'causes', 'reason', 'because',
-                'لماذا', 'سبب', 'أسباب',
-                'pourquoi', 'cause', 'raisons',
-                'neden', 'sebep', 'nedenleri',
-            ],
-            'symptoms' => [
-                'symptom', 'symptoms', 'signs', 'turn yellow', 'yellowing',
-                'أعراض', 'اصفرار', 'تصفر',
-                'symptômes', 'jaunissement',
-                'belirtiler', 'sararma',
-            ],
-            'comparison' => [
-                'compare', 'comparison', 'versus', 'vs', 'difference between',
-                'مقارنة', 'مقابل', 'الفرق بين',
-                'comparer', 'différence',
-                'karşılaştır', 'fark',
-            ],
-            'species' => [
-                'species', 'species of', 'kinds of fish', 'freshwater fish',
-                'أنواع أسماك', 'انواع اسماك', 'أسماك', 'اسماك',
-                'espèces', 'poissons',
-                'balık türleri', 'türler',
-            ],
-            'definition' => [
-                'define', 'definition', 'meaning of',
-                'تعريف',
-                "qu'est-ce", 'définition',
-                'nedir', 'tanım',
-            ],
-            'recommendation' => [
-                'best method', 'recommend', 'recommendation', 'how to', 'best way',
-                'أفضل طريقة', 'توصية', 'كيف',
-                'meilleure méthode', 'recommandation', 'comment',
-                'en iyi yöntem', 'öneri', 'nasıl',
-            ],
-            'requirements' => [
-                'requirement', 'requirements', 'needs', 'conditions required',
-                'متطلبات', 'احتياجات', 'شروط',
-                'exigences', 'besoins',
-                'gereksinimler', 'şartlar',
-            ],
-        ];
-    }
-    /**
-     * What DIRECT evidence must contain for each question type.
-     *
-     * @return array<string, string>
-     */
-    public static function requiredEvidenceTypeForQuestionType(string $questionType): string
-    {
-        return match ($questionType) {
-            'classification' => 'classification_or_types_inventory',
-            'quantity' => 'numeric_rate_or_quantity',
-            'range' => 'numeric_range_or_optimal_value',
-            'timing' => 'temporal_window_or_season',
-            'causes' => 'causal_relationship',
-            'symptoms' => 'symptom_description',
-            'comparison' => 'comparative_evidence',
-            'species' => 'species_list_or_taxonomy',
-            'definition' => 'definitional_statement',
-            'recommendation' => 'recommendation_or_best_practice',
-            'requirements' => 'requirement_specification',
-            default => 'topic_aligned_scientific_claim',
-        };
-    }
-
-    /**
-     * Thermal seed-germination optimal/suitable/range questions.
-     * Narrow family: temperature + germination, framed as a requested
-     * temperature value/range — not tomato-specific and not causal/how-to.
-     */
-    public static function isThermalGerminationRangeQuestion(
-        string $haystack,
-        string $scientificSense = '',
-        string $intentQualifier = '',
-    ): bool {
-        $hay = mb_strtolower(trim($haystack));
-        if ($hay === '') {
-            return false;
-        }
-        if (self::asksCausalAffectQuestion($hay) || self::asksHowToProcedureQuestion($hay)) {
-            return false;
-        }
-
-        $factors = self::extractTopicFactors($hay);
-        $hasTemperature = in_array('temperature', $factors, true);
-        $hasGermination = in_array('germination', $factors, true)
-            || $scientificSense === 'seed_germination';
-        if (! $hasTemperature || ! $hasGermination) {
-            return false;
-        }
-
-        if ($intentQualifier === 'optimal_range') {
-            return true;
-        }
-
-        foreach ([
-            'مناسبة', 'مناسب', 'أفضل', 'مثلى', 'مثالي',
-            'optimal', 'optimum', 'suitable', 'ideal',
-        ] as $signal) {
-            if (self::matchesSemanticToken($hay, $signal)) {
-                return true;
-            }
-        }
-
-        if (preg_match('/(?<!\p{L})best(?!\p{L})/u', $hay) === 1) {
-            return true;
-        }
-
-        return preg_match(
-            '/كم\s+درجة|ما\s+(?:هي\s+|هو\s+)?درجة\s+(?:الحرارة|حرارة)|'
-            .'\bwhat\s+(?:is|are)\s+(?:the\s+)?(?:suitable\s+|optimal\s+|best\s+)?temperature\b|'
-            .'\bwhat\s+temperature\b|\bhow\s+(?:many|much)\s+degrees?\b/u',
-            $hay,
-        ) === 1;
-    }
-
-    /**
-     * English search terms that encode required evidence content.
-     *
-     * @return list<string>
-     */
-    public static function requiredEvidenceQueryTerms(string $requiredEvidenceType): array
-    {
-        return match ($requiredEvidenceType) {
-            'classification_or_types_inventory' => [
-                'types', 'classification', 'categories', 'inventory',
-                'varieties', 'cultivars',
-            ],
-            'numeric_rate_or_quantity' => ['rate', 'kg/ha', 'quantity', 'dosage'],
-            'numeric_range_or_optimal_value' => ['optimal', 'temperature range', 'optimum'],
-            'temporal_window_or_season' => ['planting date', 'season', 'timing'],
-            'causal_relationship' => ['cause', 'effect', 'because'],
-            'symptom_description' => ['symptoms', 'yellowing', 'chlorosis'],
-            'comparative_evidence' => ['comparison', 'versus', 'compared'],
-            'species_list_or_taxonomy' => [
-                'species', 'taxonomy', 'family members', 'botanical family', 'genera',
-            ],
-            'definitional_statement' => ['definition', 'defined as'],
-            'recommendation_or_best_practice' => ['recommended', 'best practice', 'method'],
-            'requirement_specification' => ['requirements', 'required', 'needs'],
-            default => [],
-        };
-    }
-    /**
-     * What the answer body must contain for a required evidence type (generic, not geography-specific).
-     *
-     * @return list<string>
-     */
-    public static function requiredEvidenceCharacteristics(string $requiredEvidenceType): array
-    {
-        return match ($requiredEvidenceType) {
-            'classification_or_types_inventory' => [
-                'explicit_types_or_classes_inventory',
-                'named_classes_or_types',
-                'classification_system_with_listed_types',
-            ],
-            'numeric_rate_or_quantity' => ['numeric_quantity_or_rate'],
-            'numeric_range_or_optimal_value' => ['numeric_range_or_optimum'],
-            'temporal_window_or_season' => ['temporal_window_or_season'],
-            'causal_relationship' => ['stated_cause_or_mechanism'],
-            'symptom_description' => ['described_symptoms'],
-            'species_list_or_taxonomy' => ['species_or_taxa_list'],
-            'recommendation_or_best_practice' => ['stated_recommendation_or_practice'],
-            'requirement_specification' => ['stated_requirement'],
-            'comparative_evidence' => ['comparative_statement'],
-            'definitional_statement' => ['definitional_statement'],
-            default => ['topic_aligned_claim'],
-        };
-    }
-    /**
-     * Negative constraints: evidence shapes that must not alone satisfy DIRECT.
-     *
-     * @return list<string>
-     */
-    public static function negativeConstraintsForEvidenceType(string $requiredEvidenceType): array
-    {
-        return match ($requiredEvidenceType) {
-            'classification_or_types_inventory' => [
-                'methodology_only',
-                'machine_learning_model_only',
-                'gis_mapping_only',
-                'remote_sensing_only',
-                'land_evaluation_without_types',
-                'cultivation_without_inventory',
-                'greenhouse_or_protected_culture',
-                'groundwater_or_microbial_focus',
-                'crop_production_without_types',
-            ],
-            'species_list_or_taxonomy' => [
-                'methodology_only',
-                'cultivation_without_inventory',
-                'greenhouse_or_protected_culture',
-            ],
-            default => [],
-        };
-    }
 
     /**
      * Botanical family aliases for QueryBuilder / understanding (country-agnostic).
@@ -1166,6 +1428,7 @@ final class AgriculturalEntityCatalog
             ],
         ];
     }
+
     /**
      * Resolve a botanical family from free text via botanicalFamilyAliases().
      * Longest alias wins so nested phrases prefer the most specific match.
@@ -1198,6 +1461,7 @@ final class AgriculturalEntityCatalog
 
         return $bestFamily;
     }
+
     /**
      * Labels / aliases usable for entity matching against evidence text.
      *
@@ -1221,6 +1485,7 @@ final class AgriculturalEntityCatalog
             static fn (string $label): bool => $label !== '',
         )));
     }
+
     /**
      * True when the question asks for members/plants/species of a botanical family
      * (inventory), not merely a one-line definition of the family name.
@@ -1269,6 +1534,7 @@ final class AgriculturalEntityCatalog
             'fava-bean', 'lentil', 'chickpea', 'pea', 'cowpea',
             'cotton', 'flax', 'hemp', 'jute', 'tobacco',
             'tomato', 'potato', 'sweet-potato', 'pepper', 'ginger',
+            'pomegranate', 'olive', 'date-palm',
         ];
     }
 
@@ -1303,10 +1569,11 @@ final class AgriculturalEntityCatalog
             ],
             'pepper' => ['الفلفل', 'فلفل'],
             'ginger' => ['الزنجبيل', 'زنجبيل'],
+            'pomegranate' => ['الرمان', 'رمان'],
+            'olive' => ['الزيتون', 'زيتون'],
+            'date-palm' => ['نخيل التمر', 'النخيل', 'نخيل', 'نخلة'],
         ];
     }
-
-    // --- END CURRENT TASK: Semantic Scholar / QueryBuilder family+potato ---
 
     /**
      * Home Free Question TR/FR crop surfaces. Not merged into cropRecognitionEntries().
@@ -1317,93 +1584,14 @@ final class AgriculturalEntityCatalog
     {
         return [
             'wheat' => ['buğday', 'bugday', 'blé', 'du blé', 'le blé'],
-            'corn' => ['maïs', 'le maïs', 'mısır', 'misir', 'maize'],
+            'corn' => ['maïs', 'le maïs', 'mısır', 'misir'],
             'sweet-potato' => [
                 'tatlı patates', 'tatli patates', 'patate douce', 'la patate douce',
             ],
         ];
     }
 
-    /**
-     * Home-only multilingual topic factors. Crop path keeps extractTopicFactors() unchanged.
-     *
-     * @return list<string>
-     */
-    public static function extractHomeMultilingualTopicFactors(string $normalizedQuestion): array
-    {
-        $signals = [
-            'temperature' => ['sıcaklık', 'sicaklik', 'sıcaklığı', 'température'],
-            'salinity' => ['tuzluluk', 'tuzlu', 'salinité'],
-            'water' => ['sulama', 'sulama suyu', 'eau d irrigation', "eau d'irrigation", 'gereksinimleri'],
-            'germination' => ['çimlenme', 'cimlenme', 'الإنبات', 'انبات'],
-            'soil' => ['toprak', 'تربة', 'التربة', 'sol', 'soil'],
-        ];
-        $matched = [];
-        foreach ($signals as $factor => $keywords) {
-            foreach ($keywords as $keyword) {
-                if (self::matchesSemanticToken($normalizedQuestion, $keyword)
-                    || self::containsTerm($normalizedQuestion, $keyword)) {
-                    $matched[] = $factor;
-                    break;
-                }
-            }
-        }
-
-        return array_values(array_unique($matched));
-    }
-
-    /**
-     * Home Free Question intent keywords. Crop path does not call this.
-     *
-     * @return array<string, list<string>>
-     */
-    public static function homeIntentKeywordSignals(): array
-    {
-        return [
-            'environmental_requirements' => [
-                'sıcaklık', 'sicaklik', 'sıcaklığı', 'température',
-            ],
-            'irrigation' => [
-                'sulama', 'besoin en eau', "eau d'irrigation", 'eau d irrigation',
-                'irriguer', 'sulama gereksinimleri', 'besoins en irrigation',
-            ],
-            'productivity' => [
-                'verim', 'üretim', 'rendement', 'grain yield', 'tane verimi', 'إنتاجية', 'انتاجية',
-            ],
-            'cultivation' => [
-                'toprak', 'تربة', 'التربة', 'sol convient', 'suitable for', 'uygundur', 'مناسبة',
-            ],
-        ];
-    }
-
-    /**
-     * Home: crop-present soil suitability (not bare land-type inventory).
-     */
-    public static function asksHomeCropSoilSuitability(string $normalizedQuestion): bool
-    {
-        $hay = mb_strtolower(trim($normalizedQuestion));
-        if ($hay === '') {
-            return false;
-        }
-        $hasSoil = self::containsTerm($hay, 'soil')
-            || self::containsTerm($hay, 'تربة')
-            || self::containsTerm($hay, 'التربة')
-            || self::containsTerm($hay, 'toprak')
-            || self::containsTerm($hay, 'sol');
-        if (! $hasSoil) {
-            return false;
-        }
-
-        return self::containsTerm($hay, 'suitable')
-            || self::containsTerm($hay, 'suitability')
-            || self::containsTerm($hay, 'مناسبة')
-            || self::containsTerm($hay, 'مناسب')
-            || self::containsTerm($hay, 'uygundur')
-            || self::containsTerm($hay, 'uygun')
-            || self::containsTerm($hay, 'convient')
-            || preg_match('/\b(?:for|için|pour)\b/u', $hay) === 1
-            || preg_match('/مناسبة\s+ل/u', $hay) === 1;
-    }
+    // --- END CURRENT TASK: Semantic Scholar / QueryBuilder family+potato ---
 
     /**
      * @return list<string>
@@ -1438,6 +1626,52 @@ final class AgriculturalEntityCatalog
     }
 
     /**
+     * Home-only TR/FR topic factors. Crop path keeps extractTopicFactors() unchanged.
+     *
+     * @return list<string>
+     */
+    public static function extractHomeMultilingualTopicFactors(string $normalizedQuestion): array
+    {
+        $signals = [
+            'temperature' => ['sıcaklık', 'sicaklik', 'sıcaklığı', 'température'],
+            'salinity' => ['tuzluluk', 'tuzlu', 'salinité'],
+            'water' => ['sulama', 'sulama suyu', 'eau d irrigation', "eau d'irrigation"],
+            'germination' => ['çimlenme', 'cimlenme'],
+        ];
+        $matched = [];
+        foreach ($signals as $factor => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (self::matchesSemanticToken($normalizedQuestion, $keyword)) {
+                    $matched[] = $factor;
+                    break;
+                }
+            }
+        }
+
+        return $matched;
+    }
+
+    /**
+     * Home Free Question TR/FR intent keywords. Crop path does not call this.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function homeIntentKeywordSignals(): array
+    {
+        return [
+            'environmental_requirements' => [
+                'sıcaklık', 'sicaklik', 'sıcaklığı', 'température',
+            ],
+            'irrigation' => [
+                'sulama', 'besoin en eau', "eau d'irrigation", 'eau d irrigation',
+            ],
+            'productivity' => [
+                'verim', 'üretim', 'rendement', 'grain yield', 'tane verimi',
+            ],
+        ];
+    }
+
+    /**
      * @param  list<string>  $factors
      * @return list<string>
      */
@@ -1455,7 +1689,7 @@ final class AgriculturalEntityCatalog
     }
 
     /**
-     * @return array{crop_id: string, label: string}|null
+     * @return array{crop_id: string, label: string, category: string}|null
      */
     public static function recognizeCrop(string $normalizedQuestion): ?array
     {
@@ -1476,12 +1710,132 @@ final class AgriculturalEntityCatalog
                     $best = [
                         'crop_id' => $entry['crop_id'],
                         'label' => $label,
+                        'category' => (string) ($entry['category'] ?? FieldCropTaxonomyCatalog::categoryFor($entry['crop_id'])),
                     ];
                 }
             }
         }
 
         return $best;
+    }
+
+    /**
+     * All globally recognized catalog crops mentioned in free text, earliest first.
+     * Does not apply Home TR/FR surfaces or Home Mısır locative rules.
+     *
+     * @return list<array{crop_id: string, label: string, category: string}>
+     */
+    public static function recognizeAllCrops(string $normalizedQuestion): array
+    {
+        $haystack = mb_strtolower(trim($normalizedQuestion));
+        if ($haystack === '') {
+            return [];
+        }
+
+        $found = [];
+        foreach (self::cropRecognitionEntries() as $entry) {
+            $cropId = (string) $entry['crop_id'];
+            $bestLabel = '';
+            $bestOffset = null;
+            $bestLength = 0;
+            foreach ($entry['labels'] as $label) {
+                $label = mb_strtolower(trim((string) $label));
+                if ($label === '') {
+                    continue;
+                }
+                if (! self::containsTerm($haystack, $label)) {
+                    continue;
+                }
+                $offset = mb_stripos($haystack, $label);
+                if ($offset === false) {
+                    $offset = 0;
+                }
+                $length = mb_strlen($label);
+                if ($bestOffset === null
+                    || $offset < $bestOffset
+                    || ($offset === $bestOffset && $length > $bestLength)) {
+                    $bestOffset = $offset;
+                    $bestLength = $length;
+                    $bestLabel = $label;
+                }
+            }
+            if ($bestOffset === null || $bestLabel === '') {
+                continue;
+            }
+            $found[] = [
+                'crop_id' => $cropId,
+                'label' => $bestLabel,
+                'category' => (string) ($entry['category'] ?? FieldCropTaxonomyCatalog::categoryFor($cropId)),
+                'offset' => $bestOffset,
+            ];
+        }
+
+        usort($found, static function (array $a, array $b): int {
+            $byOffset = $a['offset'] <=> $b['offset'];
+            if ($byOffset !== 0) {
+                return $byOffset;
+            }
+
+            return mb_strlen((string) $b['label']) <=> mb_strlen((string) $a['label']);
+        });
+
+        $filtered = [];
+        foreach ($found as $row) {
+            $label = mb_strtolower((string) $row['label']);
+            $nested = false;
+            foreach ($found as $other) {
+                if ($other['crop_id'] === $row['crop_id']) {
+                    continue;
+                }
+                $otherLabel = mb_strtolower((string) $other['label']);
+                if ($label !== $otherLabel && mb_strlen($otherLabel) > mb_strlen($label)
+                    && mb_strpos($otherLabel, $label) !== false) {
+                    $nested = true;
+                    break;
+                }
+            }
+            if ($nested) {
+                continue;
+            }
+            $filtered[] = $row;
+        }
+
+        return array_map(static function (array $row): array {
+            return [
+                'crop_id' => $row['crop_id'],
+                'label' => $row['label'],
+                'category' => $row['category'],
+            ];
+        }, $filtered);
+    }
+
+    /**
+     * Home: crop-present soil suitability (not bare land-type inventory).
+     */
+    public static function asksHomeCropSoilSuitability(string $normalizedQuestion): bool
+    {
+        $hay = mb_strtolower(trim($normalizedQuestion));
+        if ($hay === '') {
+            return false;
+        }
+        $hasSoil = self::containsTerm($hay, 'soil')
+            || self::containsTerm($hay, 'تربة')
+            || self::containsTerm($hay, 'التربة')
+            || self::containsTerm($hay, 'toprak')
+            || self::containsTerm($hay, 'sol');
+        if (! $hasSoil) {
+            return false;
+        }
+
+        return self::containsTerm($hay, 'suitable')
+            || self::containsTerm($hay, 'suitability')
+            || self::containsTerm($hay, 'مناسبة')
+            || self::containsTerm($hay, 'مناسب')
+            || self::containsTerm($hay, 'uygundur')
+            || self::containsTerm($hay, 'uygun')
+            || self::containsTerm($hay, 'convient')
+            || preg_match('/\b(?:for|için|pour)\b/u', $hay) === 1
+            || preg_match('/مناسبة\s+ل/u', $hay) === 1;
     }
 
     /**
@@ -1518,7 +1872,11 @@ final class AgriculturalEntityCatalog
                     && self::isTurkishMisirCountryLocative($haystack)) {
                     continue;
                 }
-                if (! self::containsTerm($haystack, $label)) {
+                // Home-only: Arabic crop stems may appear with clitics (للقمح، والذرة).
+                // Do not change global containsTerm (protected WIP Arabic boundary rules).
+                $matched = self::containsTerm($haystack, $label)
+                    || (preg_match('/\p{Arabic}/u', $label) === 1 && str_contains($haystack, $label));
+                if (! $matched) {
                     continue;
                 }
                 $offset = mb_stripos($haystack, $label);
@@ -1540,7 +1898,7 @@ final class AgriculturalEntityCatalog
             $found[] = [
                 'crop_id' => $cropId,
                 'label' => $bestLabel,
-                'category' => 'field_crop',
+                'category' => (string) ($entry['category'] ?? FieldCropTaxonomyCatalog::categoryFor($cropId)),
                 'offset' => $bestOffset,
             ];
         }
@@ -1615,6 +1973,31 @@ final class AgriculturalEntityCatalog
         return in_array($folded, ['mısır', 'misir'], true);
     }
 
+    /**
+     * Intents whose answer depends on a named agricultural entity when one is present.
+     *
+     * @return list<string>
+     */
+    public static function intentsRequiringNamedEntity(): array
+    {
+        return [
+            'cultivation',
+            'environmental_requirements',
+            'fertilization',
+            'irrigation',
+            'disease',
+            'pest',
+            'varieties',
+            'plant_family_members',
+            'plant_nutrition',
+        ];
+    }
+
+    public static function intentRequiresNamedEntity(string $researchIntent): bool
+    {
+        return in_array($researchIntent, self::intentsRequiringNamedEntity(), true);
+    }
+
     public static function containsTerm(string $haystack, string $needle): bool
     {
         $needle = mb_strtolower(trim($needle));
@@ -1622,9 +2005,20 @@ final class AgriculturalEntityCatalog
             return false;
         }
 
+        // Arabic has no \b word boundary. Short roots must not match inside longer words
+        // (ري inside ريزوم, زرع inside المستزرعة) while still matching ال+stem (الري).
+        if (preg_match('/\p{Arabic}/u', $needle) === 1 && preg_match('/\s/u', $needle) !== 1) {
+            $stem = preg_replace('/^ال/u', '', $needle) ?? $needle;
+            if ($stem === '') {
+                return false;
+            }
+            $quoted = preg_quote($stem, '/');
+
+            return preg_match('/(?<![\p{L}])(?:ال)?'.$quoted.'(?![\p{L}])/u', mb_strtolower($haystack)) === 1;
+        }
+
         if (mb_strlen($needle) <= 4 && preg_match('/\p{L}/u', $needle) === 1) {
-            return preg_match('/\b'.preg_quote($needle, '/').'\b/u', $haystack) === 1
-                || (preg_match('/\p{Arabic}/u', $needle) === 1 && str_contains($haystack, $needle));
+            return preg_match('/\b'.preg_quote($needle, '/').'\b/u', $haystack) === 1;
         }
 
         return str_contains($haystack, $needle);
@@ -1738,6 +2132,7 @@ final class AgriculturalEntityCatalog
             'vegetables' => ['vegetables', 'vegetable crops', 'خضروات', 'خضر'],
             'fruit_trees' => ['fruit trees', 'orchard crops', 'أشجار الفاكهة', 'اشجار الفاكهة'],
             'livestock' => ['livestock', 'animals', 'ماشية', 'حيوانات'],
+            'fish' => ['fish', 'fishes', 'freshwater fish', 'أسماك', 'اسماك', 'الأسماك'],
         ];
     }
 
@@ -1779,6 +2174,8 @@ final class AgriculturalEntityCatalog
             'cattle' => [
                 'beef cattle', 'dairy cattle',
                 'cattle', 'cows', 'cow',
+                'bovins', 'bovin',
+                'sığırlar', 'sığır',
                 'أبقار', 'ابقار', 'بقر',
             ],
             'buffalo' => ['buffalo', 'جاموس'],
@@ -1814,6 +2211,7 @@ final class AgriculturalEntityCatalog
                         'type' => 'animal',
                         'value' => $canonical,
                         'label' => $canonical,
+                        'surface' => $keyword,
                         'resolution' => 'resolved',
                     ];
                 }
@@ -2040,6 +2438,8 @@ final class AgriculturalEntityCatalog
             'have', 'has', 'had', 'can', 'could', 'should', 'would', 'may', 'might', 'will',
             'humidity', 'climate', 'light', 'nutrient', 'nutrients',
             'emergence', 'by', 'via', 'through',
+            'germination', 'çimlenme', 'cimlenme',
+            'الإنبات', 'انبات', 'إنبات',
             'نمو', 'تأثير', 'عملية', 'آلية', 'اليه',
         ];
 
@@ -2052,6 +2452,10 @@ final class AgriculturalEntityCatalog
             'irrigation scheduling', 'drip irrigation', 'irrigation system',
             'water scheduling', 'crop water requirement', 'water requirement',
             'evapotranspiration', 'كمية الري', 'جدولة الري', 'ري بالتنقيط',
+            'sulama suyu', 'sulama suyu ihtiyacı', 'sulama suyu gereksinimi',
+            'besoin en eau', "eau d'irrigation", 'eau d irrigation',
+            "quantité d'eau d'irrigation", 'irrigation water requirement',
+            'irrigation water needs',
         ] as $signal) {
             if (self::matchesSemanticToken($haystack, $signal)) {
                 return true;
@@ -2059,10 +2463,19 @@ final class AgriculturalEntityCatalog
         }
 
         $hasIrrigationWord = self::containsTerm($haystack, 'ري')
-            || self::matchesSemanticToken($haystack, 'irrigation');
+            || self::matchesSemanticToken($haystack, 'irrigation')
+            || self::matchesSemanticToken($haystack, 'sulama')
+            || self::matchesSemanticToken($haystack, "eau d'irrigation")
+            || self::matchesSemanticToken($haystack, 'eau d irrigation');
         $hasQuantityOrSchedule = self::matchesSemanticToken($haystack, 'كمية')
             || self::matchesSemanticToken($haystack, 'scheduling')
-            || self::matchesSemanticToken($haystack, 'جدولة');
+            || self::matchesSemanticToken($haystack, 'جدولة')
+            || self::matchesSemanticToken($haystack, 'ihtiyacı')
+            || self::matchesSemanticToken($haystack, 'ihtiyaç')
+            || self::matchesSemanticToken($haystack, 'besoin')
+            || self::matchesSemanticToken($haystack, 'quantité')
+            || self::matchesSemanticToken($haystack, 'how much')
+            || self::matchesSemanticToken($haystack, 'ne kadar');
 
         return $hasIrrigationWord && $hasQuantityOrSchedule;
     }
@@ -2078,7 +2491,10 @@ final class AgriculturalEntityCatalog
         ?string $property,
         ?string $propertyKey,
     ): array {
-        if ($property !== null || preg_match('/(?:درجة حرارة|حرارة|temperature)/u', $normalizedQuestion) !== 1) {
+        if ($property !== null || preg_match(
+            '/(?:درجة حرارة|حرارة|temperature|sıcaklık|sicaklik|sıcaklığı|température)/u',
+            $normalizedQuestion,
+        ) !== 1) {
             return [$property, $propertyKey];
         }
 
@@ -2105,23 +2521,66 @@ final class AgriculturalEntityCatalog
         ?string $property,
         ?string $propertyKey,
     ): array {
-        if ($property !== null) {
+        $irrigationAsked = self::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)
+            || preg_match('/(?:احتياج|احتياجات|يحتاج).{0,40}(?:ماء|الماء|مياه|ري|water)/u', $normalizedQuestion) === 1
+            || preg_match('/(?:ماء|الماء|مياه|ري|water).{0,40}(?:احتياج|احتياجات|يحتاج|requirement)/u', $normalizedQuestion) === 1
+            || preg_match('/(?:كم).{0,24}(?:ري|مياه)/u', $normalizedQuestion) === 1
+            || preg_match('/irrigation\s+water|مياه\s*(?:ال)?ري/u', $normalizedQuestion) === 1
+            || preg_match('/\bwater\s+requirements?\b/u', $normalizedQuestion) === 1
+            || preg_match('/sulama\s+suyu/u', $normalizedQuestion) === 1
+            || preg_match('/besoin\s+en\s+eau|eau\s+d[\' ]irrigation/u', $normalizedQuestion) === 1;
+
+        if (! $irrigationAsked) {
+            return [$property, $propertyKey];
+        }
+
+        if ($property !== null && ! in_array((string) $propertyKey, ['', 'quantity', 'yield', 'production'], true)) {
             return [$property, $propertyKey];
         }
 
         if (self::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)) {
-            return ['irrigation', $propertyKey ?: 'irrigation'];
+            return ['irrigation', 'irrigation'];
         }
 
-        if (
-            preg_match('/(?:احتياج|احتياجات).{0,40}(?:ماء|الماء|مياه|water)/u', $normalizedQuestion) === 1
-            || preg_match('/(?:ماء|الماء|مياه|water).{0,40}(?:احتياج|احتياجات|requirement)/u', $normalizedQuestion) === 1
-            || preg_match('/\bwater\s+requirements?\b/u', $normalizedQuestion) === 1
-        ) {
-            return ['water', 'irrigation'];
+        return ['water', 'irrigation'];
+    }
+
+    /**
+     * Grain yield / production-quantity property (Home multilingual contract).
+     * Does not override temperature, irrigation, or classification.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    private static function inferYieldOrProductionPropertyIfRequested(
+        string $normalizedQuestion,
+        ?string $property,
+        ?string $propertyKey,
+    ): array {
+        if ($property !== null && ! in_array((string) $propertyKey, ['', 'quantity'], true)) {
+            return [$property, $propertyKey];
         }
 
-        return [$property, $propertyKey];
+        if (preg_match(
+            '/(?:إنتاجية\s+حبوب|حبوب.{0,12}وحدة\s+المساحة|grain\s+yield|yield\s+per\s+unit\s+area|'
+            .'birim\s+alan.{0,16}verim|tane\s+verimi|rendement\s+en\s+grains|'
+            .'rendement.{0,24}unité\s+de\s+surface)/u',
+            $normalizedQuestion,
+        ) === 1) {
+            return ['grain yield', 'quantity'];
+        }
+
+        if (preg_match(
+            '/(?:إنتاج|انتاج|production|üretim|verim|rendement)/u',
+            $normalizedQuestion,
+        ) !== 1) {
+            return [$property, $propertyKey];
+        }
+
+        if ($propertyKey === 'quantity' && $property !== null) {
+            return [$property, $propertyKey];
+        }
+
+        return ['production', 'quantity'];
     }
 
     public static function hasSuitabilityOrSelectionFraming(string $haystack): bool
@@ -2182,7 +2641,8 @@ final class AgriculturalEntityCatalog
         $semantic = self::extractSemanticTarget($normalizedQuestion);
         if (is_array($semantic) && trim((string) ($semantic['entity_surface'] ?? '')) !== '') {
             $surface = self::trimSemanticPhrase((string) $semantic['entity_surface']);
-            if ($surface !== '' && self::isDistinctiveNamedEntitySurface($surface) && ! self::isLocationAliasToken($surface)
+            if ($surface !== '' && self::isDistinctiveNamedEntitySurface($surface)
+                && ! self::isLocationAliasToken($surface)
                 && ! self::isUnsafeResidualEntitySurface($surface)) {
                 $best = [
                     'surface' => $surface,
@@ -2376,6 +2836,33 @@ final class AgriculturalEntityCatalog
                 $property = null;
                 $propertyKey = null;
             }
+        } elseif (preg_match(
+            '/\b(?:what(?:\'s| is)|whats)\s+the\s+([a-z][a-z\- ]{2,40}?)\s+for\s+(?:the\s+)?([a-z][a-z\-]{2,40})/u',
+            $normalizedQuestion,
+            $matches,
+        ) === 1) {
+            $property = self::trimPropertySurface((string) $matches[1]);
+            $entity = self::trimSemanticPhrase((string) $matches[2]);
+            $propertyKey = self::propertyKeyFromSurface($property);
+            if (in_array($propertyKey, ['definition', 'meaning'], true)
+                || ! self::isDistinctiveNamedEntitySurface($entity)
+                || self::isUnsafeResidualEntitySurface($entity)
+                || self::isGenericScientificProcessToken($entity)) {
+                $entity = null;
+            }
+        } elseif (preg_match(
+            '/\b(?:quelle est|quel est)\s+(?:la |le |l\')?([a-zà-ÿ][a-zà-ÿ\- ]{2,40}?)\s+pour\s+(?:le |la |l\')?([a-zà-ÿ][a-zà-ÿ\-]{2,40})/u',
+            $normalizedQuestion,
+            $matches,
+        ) === 1) {
+            $property = self::trimPropertySurface((string) $matches[1]);
+            $entity = self::trimSemanticPhrase((string) $matches[2]);
+            $propertyKey = self::propertyKeyFromSurface($property);
+            if (! self::isDistinctiveNamedEntitySurface($entity)
+                || self::isUnsafeResidualEntitySurface($entity)
+                || self::isGenericScientificProcessToken($entity)) {
+                $entity = null;
+            }
         }
 
         if ($entity === null && preg_match(
@@ -2398,29 +2885,18 @@ final class AgriculturalEntityCatalog
             $property = $property ?: 'types';
         }
 
-        if ($entity === null && preg_match(
-            '/(?:إنتاج|انتاج|غلة)\s+(?:ال)?(\p{L}{3,}(?:\s+\p{L}{3,}){0,2})/u',
-            $normalizedQuestion,
-            $matches,
-        ) === 1) {
-            $entity = self::trimSemanticPhrase((string) $matches[1]);
-            $property = $property ?: 'yield';
-            $propertyKey = $propertyKey ?: 'quantity';
+        $production = self::extractProductionOutputStructure($normalizedQuestion);
+        if ($production !== null) {
+            $property = $property ?: $production['property_surface'];
+            $propertyKey = $propertyKey ?: $production['property_key'];
         }
 
-        if ($entity === null && preg_match(
-            '/\byield of\s+(?:the\s+)?([a-z][a-z\- ]{2,40})/u',
-            $normalizedQuestion,
-            $matches,
-        ) === 1) {
-            $entity = self::trimSemanticPhrase((string) $matches[1]);
-            $property = $property ?: 'yield';
-            $propertyKey = $propertyKey ?: 'quantity';
-        }
-
-        if ($property === null && preg_match('/(?:كمية|كم)\s+(\p{L}{2,})/u', $normalizedQuestion, $matches) === 1) {
-            $property = self::trimPropertySurface((string) $matches[1]);
-            $propertyKey = $propertyKey ?: 'quantity';
+        $measuredTarget = null;
+        $measure = self::extractMeasureObjectFrame($normalizedQuestion);
+        if ($measure !== null && $production === null) {
+            $property = $property ?: $measure['property_surface'];
+            $propertyKey = $propertyKey ?: $measure['property_key'];
+            $measuredTarget = $measure['target_surface'];
         }
 
         if (method_exists(self::class, 'inferTemperaturePropertyIfRequested')) {
@@ -2438,6 +2914,14 @@ final class AgriculturalEntityCatalog
 
         if (method_exists(self::class, 'inferIrrigationPropertyIfRequested')) {
             [$property, $propertyKey] = self::inferIrrigationPropertyIfRequested(
+                $normalizedQuestion,
+                $property,
+                $propertyKey,
+            );
+        }
+
+        if (method_exists(self::class, 'inferYieldOrProductionPropertyIfRequested')) {
+            [$property, $propertyKey] = self::inferYieldOrProductionPropertyIfRequested(
                 $normalizedQuestion,
                 $property,
                 $propertyKey,
@@ -2465,21 +2949,682 @@ final class AgriculturalEntityCatalog
             $entity = null;
         }
 
-        $livestock = self::recognizeLivestockEntity($normalizedQuestion);
-        if ($livestock !== null) {
-            $entity = (string) ($livestock['label'] ?? $livestock['value']);
+        if ($entity !== null && $production !== null && self::surfaceIsProductionComplement($entity, $production)) {
+            $entity = null;
         }
 
-        if ($entity === null && $property === null && $propertyKey === null) {
+        if ($entity === null) {
+            $crop = self::recognizeCrop($normalizedQuestion);
+            if ($crop !== null) {
+                $entity = (string) ($crop['label'] ?? $crop['crop_id']);
+            }
+        }
+
+        $livestock = self::recognizeLivestockEntity($normalizedQuestion);
+        if ($livestock !== null) {
+            $entity = (string) ($livestock['surface'] ?? $livestock['label'] ?? $livestock['value']);
+        }
+
+        if ($entity !== null && $measuredTarget !== null && self::surfacesCollapse($entity, $measuredTarget)) {
+            $entity = null;
+        }
+
+        $roles = self::completeSemanticRoleGraph($normalizedQuestion, $entity, $property, $propertyKey, $production, $measuredTarget);
+
+        if ($roles['entity_surface'] === null
+            && $roles['target_surface'] === null
+            && $roles['process_surface'] === null
+            && $roles['property_surface'] === null
+            && $roles['property_key'] === null) {
             return null;
+        }
+
+        return $roles;
+    }
+
+    /**
+     * General scientific role graph. Structural — not a per-commodity catalog.
+     *
+     * @param  array{target_surface: string, output_complement: string, property_surface: string, property_key: string}|null  $production
+     * @return array{
+     *     entity_surface: ?string,
+     *     entity_normalized: ?string,
+     *     entity_resolution: string,
+     *     target_surface: ?string,
+     *     target_kind: string,
+     *     target_resolution: string,
+     *     process_surface: ?string,
+     *     process_resolution: string,
+     *     property_surface: ?string,
+     *     property_key: ?string,
+     *     property_of_role: ?string,
+     *     relation_type: string,
+     *     relation_from: ?string,
+     *     relation_to: ?string,
+     *     relation_state: string
+     * }
+     */
+    public static function extractSemanticRoleGraph(string $normalizedQuestion): array
+    {
+        $extracted = self::extractSemanticTarget($normalizedQuestion);
+        if (is_array($extracted)) {
+            return $extracted;
+        }
+
+        return self::completeSemanticRoleGraph($normalizedQuestion, null, null, null, null);
+    }
+
+    /**
+     * Production/output operator + complement + optional entity-scope PP.
+     *
+     * @return array{target_surface: string, output_complement: string, property_surface: string, property_key: string}|null
+     */
+    public static function extractProductionOutputStructure(string $haystack): ?array
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return null;
+        }
+
+        $operatorFirst = [
+            '/(?P<op>إنتاج|انتاج|غلة|إنتاجية)\s+(?P<body>.+)/u',
+            '/(?P<op>production|yield)\s+of\s+(?:the\s+)?(?P<body>.+)/u',
+            '/(?P<op>production|rendement)\s+(?:de|du|des)\s+(?P<body>.+)/u',
+        ];
+        foreach ($operatorFirst as $pattern) {
+            if (preg_match($pattern, $hay, $matches) !== 1) {
+                continue;
+            }
+            $op = self::trimSemanticPhrase((string) ($matches['op'] ?? ''));
+            $body = self::trimSemanticPhrase((string) ($matches['body'] ?? ''));
+            if ($op === '' || $body === '') {
+                continue;
+            }
+            [$core, $scope] = self::splitScopedComplement($body, $hay);
+            $operands = self::splitComparisonOperands($core);
+            $core = $operands[0] ?? $core;
+
+            return [
+                'target_surface' => trim($op.' '.$core),
+                'output_complement' => $core,
+                'property_surface' => 'yield',
+                'property_key' => 'quantity',
+                'entity_scope' => $scope,
+                'comparison_operands' => $operands,
+                'complement_is_recognized_entity' => self::surfaceIsRecognizedAgriculturalEntity($core, $hay),
+            ];
+        }
+
+        $nounThenOperator = [
+            '/(?P<body>[a-z][a-z\-]{2,24})\s+(?P<op>production|yield)\b/u',
+            '/(?P<body>[\p{L}]{3,})\s+(?P<op>üretimi|verimi)\b/u',
+        ];
+        foreach ($nounThenOperator as $pattern) {
+            if (preg_match($pattern, $hay, $matches) !== 1) {
+                continue;
+            }
+            $op = self::trimSemanticPhrase((string) ($matches['op'] ?? ''));
+            $body = self::trimSemanticPhrase((string) ($matches['body'] ?? ''));
+            if ($op === '' || $body === '' || self::isNamedEntityStopToken($body)) {
+                continue;
+            }
+
+            return [
+                'target_surface' => trim($body.' '.$op),
+                'output_complement' => $body,
+                'property_surface' => 'yield',
+                'property_key' => 'quantity',
+                'entity_scope' => null,
+                'comparison_operands' => [$body],
+                'complement_is_recognized_entity' => self::surfaceIsRecognizedAgriculturalEntity($body, $hay),
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array{target_surface: string, output_complement: string, property_surface: string, property_key: string}|null  $production
+     * @return array{
+     *     entity_surface: ?string,
+     *     entity_normalized: ?string,
+     *     entity_resolution: string,
+     *     target_surface: ?string,
+     *     target_kind: string,
+     *     target_resolution: string,
+     *     process_surface: ?string,
+     *     process_resolution: string,
+     *     property_surface: ?string,
+     *     property_key: ?string,
+     *     property_of_role: ?string,
+     *     relation_type: string,
+     *     relation_from: ?string,
+     *     relation_to: ?string,
+     *     relation_state: string
+     * }
+     */
+    public static function completeSemanticRoleGraph(
+        string $normalizedQuestion,
+        ?string $entity,
+        ?string $property,
+        ?string $propertyKey,
+        ?array $production,
+        ?string $measuredTarget = null,
+    ): array {
+        $spans = self::causalArgumentSpans($normalizedQuestion);
+        $process = is_array($spans) ? self::trimProcessPhrase((string) $spans['affector']) : null;
+        $process = $process !== '' ? $process : null;
+
+        $scope = is_string($production['entity_scope'] ?? null) ? trim((string) $production['entity_scope']) : '';
+        if ($entity === null && $scope !== '' && self::surfaceIsRecognizedAgriculturalEntity($scope, $normalizedQuestion)) {
+            $entity = $scope;
+        }
+
+        $targetSurface = $production['target_surface'] ?? null;
+        $targetKind = $production !== null
+            ? CanonicalScientificQuestion::TARGET_KIND_PRODUCT_OUTPUT
+            : CanonicalScientificQuestion::TARGET_KIND_NONE;
+
+        if ($targetSurface === null && is_string($measuredTarget) && trim($measuredTarget) !== '') {
+            $targetSurface = trim($measuredTarget);
+            $targetKind = CanonicalScientificQuestion::TARGET_KIND_PRODUCT_OUTPUT;
+        }
+
+        if ($targetSurface === null && is_array($spans)) {
+            [$affected] = self::splitScopedComplement(
+                self::trimProcessPhrase((string) $spans['target']),
+                $normalizedQuestion,
+            );
+            if ($affected !== '' && ! self::surfaceMatchesRecognizedEntity($affected, $normalizedQuestion)) {
+                $targetSurface = $affected;
+                $targetKind = CanonicalScientificQuestion::TARGET_KIND_AFFECTED_OBJECT;
+            }
+        }
+
+        if ($entity !== null && $targetSurface !== null && self::surfacesCollapse($entity, $targetSurface)) {
+            $entity = null;
+        }
+
+        $assocSpans = self::associativeArgumentSpans($normalizedQuestion);
+        if (is_array($assocSpans) && ! self::asksCausalAffectQuestion($normalizedQuestion)) {
+            $left = self::classifyAssociativeArgument((string) $assocSpans['left'], $normalizedQuestion);
+            $right = self::classifyAssociativeArgument((string) $assocSpans['right'], $normalizedQuestion);
+            $process = $process ?? $left['process'] ?? $right['process'];
+            if ($targetSurface === null && ($left['target'] !== null || $right['target'] !== null)) {
+                $targetSurface = $left['target'] ?? $right['target'];
+                $targetKind = CanonicalScientificQuestion::TARGET_KIND_PRODUCT_OUTPUT;
+            }
+            if ($entity === null) {
+                $entity = $left['entity'] ?? $right['entity'];
+            }
+        }
+
+        $propertySurface = $property !== null && $property !== '' ? $property : null;
+        $ofRole = null;
+        if ($propertySurface !== null || ($propertyKey !== null && $propertyKey !== '')) {
+            if ($targetSurface !== null) {
+                $ofRole = CanonicalScientificQuestion::PROPERTY_OF_TARGET;
+            } elseif ($entity !== null) {
+                $ofRole = CanonicalScientificQuestion::PROPERTY_OF_ENTITY;
+            }
+        }
+
+        $relationType = CanonicalScientificQuestion::RELATION_NONE;
+        $relationFrom = null;
+        $relationTo = null;
+        $relationState = CanonicalScientificQuestion::RESOLUTION_NONE;
+        if (self::asksCausalAffectQuestion($normalizedQuestion) && is_array($spans)) {
+            $relationType = CanonicalScientificQuestion::RELATION_CAUSAL;
+            $relationFrom = $process !== null ? CanonicalScientificQuestion::ROLE_PROCESS : null;
+            $relationTo = $targetSurface !== null
+                ? CanonicalScientificQuestion::ROLE_TARGET
+                : ($entity !== null ? CanonicalScientificQuestion::ROLE_ENTITY : null);
+            $relationState = CanonicalScientificQuestion::RESOLUTION_RESOLVED;
+        } elseif (is_array($assocSpans)) {
+            $relationType = CanonicalScientificQuestion::RELATION_ASSOCIATIVE;
+            $relationFrom = $process !== null
+                ? CanonicalScientificQuestion::ROLE_PROCESS
+                : ($entity !== null ? CanonicalScientificQuestion::ROLE_ENTITY : null);
+            $relationTo = $targetSurface !== null
+                ? CanonicalScientificQuestion::ROLE_TARGET
+                : ($entity !== null ? CanonicalScientificQuestion::ROLE_ENTITY : null);
+            $relationState = CanonicalScientificQuestion::RESOLUTION_RESOLVED;
+        } elseif (self::asksComparativeQuestion($normalizedQuestion)) {
+            $relationType = CanonicalScientificQuestion::RELATION_COMPARATIVE;
+            $relationFrom = $entity !== null ? CanonicalScientificQuestion::ROLE_ENTITY : null;
+            $relationTo = $targetSurface !== null
+                ? CanonicalScientificQuestion::ROLE_TARGET
+                : ($entity !== null ? CanonicalScientificQuestion::ROLE_ENTITY : null);
+            $relationState = CanonicalScientificQuestion::RESOLUTION_RESOLVED;
+        } elseif (self::asksDescriptiveQuestion($normalizedQuestion)) {
+            $relationType = CanonicalScientificQuestion::RELATION_DESCRIPTIVE;
+            $relationFrom = $entity !== null
+                ? CanonicalScientificQuestion::ROLE_ENTITY
+                : ($targetSurface !== null ? CanonicalScientificQuestion::ROLE_TARGET : null);
+            $relationTo = null;
+            $relationState = CanonicalScientificQuestion::RESOLUTION_RESOLVED;
+        }
+
+        $livestock = self::recognizeLivestockEntity($normalizedQuestion);
+        $crop = self::recognizeCrop($normalizedQuestion);
+        $entityResolution = $entity === null
+            ? CanonicalScientificQuestion::RESOLUTION_NONE
+            : (($livestock !== null || $crop !== null)
+                ? CanonicalScientificQuestion::RESOLUTION_RESOLVED
+                : CanonicalScientificQuestion::RESOLUTION_UNRESOLVED);
+        $entityNormalized = $entity === null
+            ? null
+            : (is_array($livestock) ? (string) $livestock['value'] : (is_array($crop) ? (string) ($crop['crop_id'] ?? mb_strtolower($entity)) : mb_strtolower($entity)));
+
+        $operands = [];
+        if (is_array($production['comparison_operands'] ?? null)) {
+            $operands = $production['comparison_operands'];
+        }
+        $comparative = self::comparativeArgumentSpans($normalizedQuestion);
+        if (is_array($comparative)) {
+            $operands = array_values(array_unique(array_filter([
+                ...$operands,
+                $comparative['left'],
+                $comparative['right'],
+            ], static fn ($item): bool => is_string($item) && trim($item) !== '')));
         }
 
         return [
             'entity_surface' => $entity,
-            'entity_normalized' => $entity !== null ? mb_strtolower($entity) : null,
-            'property_surface' => $property !== '' ? $property : null,
-            'property_key' => $propertyKey,
+            'entity_normalized' => $entityNormalized,
+            'entity_resolution' => $entityResolution,
+            'target_surface' => $targetSurface,
+            'target_kind' => $targetKind,
+            'target_resolution' => $targetSurface === null
+                ? CanonicalScientificQuestion::RESOLUTION_NONE
+                : CanonicalScientificQuestion::RESOLUTION_UNRESOLVED,
+            'process_surface' => $process,
+            'process_resolution' => $process === null
+                ? CanonicalScientificQuestion::RESOLUTION_NONE
+                : CanonicalScientificQuestion::RESOLUTION_UNRESOLVED,
+            'property_surface' => $propertySurface,
+            'property_key' => $propertyKey !== '' ? $propertyKey : null,
+            'property_of_role' => $ofRole,
+            'relation_type' => $relationType,
+            'relation_from' => $relationFrom,
+            'relation_to' => $relationTo,
+            'relation_state' => $relationState,
+            'comparison_operands' => $operands,
         ];
+    }
+
+    /**
+     * Process-role trim. Must not reuse the entity stop-list.
+     */
+    public static function trimProcessPhrase(string $phrase): string
+    {
+        $tokens = preg_split('/\s+/u', trim($phrase)) ?: [];
+        while ($tokens !== []) {
+            $first = self::stripGrammaticalArticle((string) $tokens[0]);
+            if ($first === '' || self::isGrammaticalFunctionToken($first)) {
+                array_shift($tokens);
+                continue;
+            }
+            break;
+        }
+        while ($tokens !== []) {
+            $last = self::stripGrammaticalArticle((string) $tokens[count($tokens) - 1]);
+            if ($last === '' || self::isGrammaticalFunctionToken($last)) {
+                array_pop($tokens);
+                continue;
+            }
+            break;
+        }
+
+        return trim(implode(' ', $tokens));
+    }
+
+    /**
+     * Measure-object frame: operator is PROPERTY, object is TARGET.
+     *
+     * @return array{property_surface: string, property_key: string, target_surface: string}|null
+     */
+    public static function extractMeasureObjectFrame(string $haystack): ?array
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === ''
+            || self::asksCausalAffectQuestion($hay)
+            || self::associativeArgumentSpans($hay) !== null
+            || self::extractProductionOutputStructure($hay) !== null) {
+            return null;
+        }
+
+        $patterns = [
+            '/(?:كمية|كم)\s+(?P<object>\p{L}{2,}(?:\s+\p{L}{2,}){0,3})/u' => 'كمية',
+            '/(?:معدل)\s+(?P<object>\p{L}{2,}(?:\s+\p{L}{2,}){0,3})/u' => 'معدل',
+            '/(?:درجة\s+حرارة)\s+(?P<object>\p{L}{2,}(?:\s+\p{L}{2,}){0,3})/u' => 'حرارة',
+            '/(?:احتياج|احتياجات)\s+(?P<object>\p{L}{2,}(?:\s+\p{L}{2,}){0,3})/u' => 'احتياج',
+            '/\bhow\s+much\s+(?P<object>[a-z][a-z\- ]{2,40})/u' => 'quantity',
+            '/\brate\s+of\s+(?P<object>[a-z][a-z\- ]{2,40})/u' => 'rate',
+            '/\btemperature\s+of\s+(?P<object>[a-z][a-z\- ]{2,40})/u' => 'temperature',
+        ];
+        foreach ($patterns as $pattern => $operator) {
+            if (preg_match($pattern, $hay, $matches) !== 1) {
+                continue;
+            }
+            $object = self::trimSemanticPhrase((string) ($matches['object'] ?? ''));
+            if ($object === '') {
+                continue;
+            }
+            $key = self::propertyKeyFromSurface($operator);
+            if ($key === '' || $key === 'definition') {
+                continue;
+            }
+
+            return [
+                'property_surface' => $operator,
+                'property_key' => $key,
+                'target_surface' => $object,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{left: string, right: string}|null
+     */
+    public static function associativeArgumentSpans(string $haystack): ?array
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '' || self::asksCausalAffectQuestion($hay)) {
+            return null;
+        }
+
+        $patterns = [
+            '/(?:العلاقة|علاقة)\s+بين\s+(.+?)\s+و(.+)/u',
+            '/(?:العلاقة|علاقة)\s+بين\s+(.+?)\s+and\s+(.+)/u',
+            '/\b(?:relationship|relation|association|correlation)\s+between\s+(.+?)\s+and\s+(.+)/u',
+            '/(?:الارتباط|ارتباط)\s+بين\s+(.+?)\s+و(.+)/u',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $hay, $matches) === 1) {
+                $left = self::trimProcessPhrase((string) ($matches[1] ?? ''));
+                $right = self::trimProcessPhrase((string) ($matches[2] ?? ''));
+                if ($left !== '' && $right !== '') {
+                    return ['left' => $left, 'right' => $right];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static function asksComparativeQuestion(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+
+        return preg_match(
+            '/(?:مقارنة|قارن\s+بين|قارن)|'
+            .'\bcompar(?:e|ison|ative)\b|\bversus\b|\bvs\.?\b/u',
+            $hay,
+        ) === 1;
+    }
+
+    /**
+     * @return array{left: string, right: string}|null
+     */
+    public static function comparativeArgumentSpans(string $haystack): ?array
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '' || ! self::asksComparativeQuestion($hay)) {
+            return null;
+        }
+
+        $patterns = [
+            '/(?:مقارنة|قارن\s+بين|قارن)\s+(.+?)\s+و(.+)/u',
+            '/(?:مقارنة|قارن\s+بين|قارن)\s+(.+?)\s+and\s+(.+)/u',
+            '/\bcompar(?:e|ison)\s+(.+?)\s+and\s+(.+)/u',
+            '/(.+?)\s+(?:versus|vs\.?)\s+(.+)/u',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $hay, $matches) === 1) {
+                $left = self::trimSemanticPhrase((string) ($matches[1] ?? ''));
+                $right = self::trimSemanticPhrase((string) ($matches[2] ?? ''));
+                if ($left !== '' && $right !== '') {
+                    return ['left' => $left, 'right' => $right];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static function asksDescriptiveQuestion(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === ''
+            || self::asksCausalAffectQuestion($hay)
+            || self::asksComparativeQuestion($hay)
+            || self::associativeArgumentSpans($hay) !== null) {
+            return false;
+        }
+
+        return preg_match(
+            '/^(?:what\s+is|what\'s|whats|describe|information\s+about|properties\s+of|تعريف|ما\s+هو|ما\s+هي)\b/u',
+            $hay,
+        ) === 1;
+    }
+
+    /**
+     * @return array{process: ?string, target: ?string, entity: ?string}
+     */
+    public static function classifyAssociativeArgument(string $argument, string $fullQuestion): array
+    {
+        $argument = self::trimProcessPhrase($argument);
+        $out = ['process' => null, 'target' => null, 'entity' => null];
+        if ($argument === '') {
+            return $out;
+        }
+
+        $production = self::extractProductionOutputStructure($argument);
+        if ($production === null && preg_match('/(?:إنتاج|انتاج|production|yield)/u', $argument) === 1) {
+            $production = self::extractProductionOutputStructure($argument);
+        }
+        if (is_array($production)) {
+            $out['target'] = $production['target_surface'];
+
+            return $out;
+        }
+        if (self::isNamedEntityStopToken($argument) || self::isGenericScientificProcessToken($argument)) {
+            $out['process'] = $argument;
+
+            return $out;
+        }
+        if (self::surfaceIsRecognizedAgriculturalEntity($argument, $fullQuestion)) {
+            $out['entity'] = $argument;
+
+            return $out;
+        }
+        $out['process'] = $argument;
+
+        return $out;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function splitComparisonOperands(string $span): array
+    {
+        $span = trim($span);
+        if ($span === '') {
+            return [];
+        }
+        if (preg_match('/^(.+?)\s+و(.+)$/u', $span, $matches) === 1
+            || preg_match('/^(.+?)\s+(?:and|versus|vs\.?)\s+(.+)$/u', $span, $matches) === 1) {
+            $left = trim((string) $matches[1]);
+            $right = trim((string) $matches[2]);
+            if ($left !== '' && $right !== '') {
+                return [$left, $right];
+            }
+        }
+
+        return [$span];
+    }
+
+    public static function surfaceIsRecognizedAgriculturalEntity(string $surface, string $fullQuestion): bool
+    {
+        $folded = mb_strtolower(trim($surface));
+        if ($folded === '') {
+            return false;
+        }
+
+        return self::recognizeLivestockEntity($folded) !== null
+            || self::recognizeCrop($folded) !== null
+            || self::surfaceMatchesRecognizedEntity($folded, $fullQuestion);
+    }
+
+    public static function surfacesCollapse(string $left, string $right): bool
+    {
+        $a = mb_strtolower(trim(self::stripGrammaticalArticle($left)));
+        $b = mb_strtolower(trim(self::stripGrammaticalArticle($right)));
+        if ($a === '' || $b === '') {
+            $a = mb_strtolower(trim($left));
+            $b = mb_strtolower(trim($right));
+        }
+
+        return $a !== '' && $a === $b;
+    }
+
+    /**
+     * @param  array{target_surface: string, output_complement: string, property_surface: string, property_key: string}  $production
+     */
+    public static function surfaceIsProductionComplement(string $surface, array $production): bool
+    {
+        $folded = mb_strtolower(trim($surface));
+        $complement = mb_strtolower(trim((string) ($production['output_complement'] ?? '')));
+        $target = mb_strtolower(trim((string) ($production['target_surface'] ?? '')));
+        if ($folded === '' || $complement === '') {
+            return false;
+        }
+
+        return $folded === $complement
+            || $folded === $target
+            || str_contains($complement, $folded)
+            || str_contains($folded, $complement);
+    }
+
+    /**
+     * @return array{0: string, 1: ?string}
+     */
+    public static function splitScopedComplement(string $span, string $fullQuestion): array
+    {
+        $span = self::trimSemanticPhrase($span);
+        if ($span === '') {
+            return ['', null];
+        }
+
+        if (preg_match('/^(.+?)\s+(?:في|على|in|under|chez)\s+(.+)$/u', $span, $matches) === 1) {
+            $core = self::trimSemanticPhrase((string) $matches[1]);
+            $scope = self::trimSemanticPhrase((string) $matches[2]);
+            if ($core !== '' && $scope !== '' && self::surfaceMatchesRecognizedEntity($scope, $fullQuestion)) {
+                return [$core, $scope];
+            }
+        }
+
+        if (preg_match('/^(\S+?)((?:lar|ler)?(?:da|de|ta|te))\s+(.+)$/u', $span, $matches) === 1) {
+            $scope = self::trimSemanticPhrase((string) $matches[1].(string) $matches[2]);
+            $core = self::trimSemanticPhrase((string) $matches[3]);
+            if ($core !== '' && $scope !== '' && (
+                self::surfaceMatchesRecognizedEntity($scope, $fullQuestion)
+                || self::surfaceMatchesRecognizedEntity((string) $matches[1], $fullQuestion)
+            )) {
+                return [$core, $scope];
+            }
+        }
+
+        return [$span, null];
+    }
+
+    public static function surfaceMatchesRecognizedEntity(string $surface, string $fullQuestion): bool
+    {
+        $folded = mb_strtolower(trim($surface));
+        if ($folded === '') {
+            return false;
+        }
+
+        $tokens = preg_split('/\s+/u', $folded, -1, PREG_SPLIT_NO_EMPTY);
+        if (! is_array($tokens) || $tokens === []) {
+            return false;
+        }
+
+        $contentTokens = [];
+        foreach ($tokens as $token) {
+            $stripped = self::stripGrammaticalArticle($token);
+            if ($stripped === '' || self::isGrammaticalFunctionToken($stripped)) {
+                continue;
+            }
+            $contentTokens[] = $stripped;
+        }
+        if ($contentTokens === []) {
+            return false;
+        }
+
+        foreach ($contentTokens as $token) {
+            if (! self::tokenIsRecognizedEntityAlias($token, $fullQuestion)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function stripGrammaticalArticle(string $token): string
+    {
+        $token = mb_strtolower(trim($token));
+        if ($token === '') {
+            return '';
+        }
+        if (in_array($token, ['the', 'a', 'an', 'le', 'la', 'les', 'un', 'une', 'el', 'los', 'las'], true)) {
+            return '';
+        }
+        if (preg_match('/^ال(.+)$/u', $token, $matches) === 1) {
+            return (string) $matches[1];
+        }
+
+        return $token;
+    }
+
+    private static function isGrammaticalFunctionToken(string $token): bool
+    {
+        return in_array($token, ['of', 'de', 'du', 'des', 'in', 'on', 'sur', 'for', 'and', 'or', 'و', 'في', 'على'], true);
+    }
+
+    private static function tokenIsRecognizedEntityAlias(string $token, string $fullQuestion): bool
+    {
+        if (self::recognizeLivestockEntity($token) !== null || self::recognizeCrop($token) !== null) {
+            return true;
+        }
+
+        $livestock = self::recognizeLivestockEntity($fullQuestion);
+        if ($livestock !== null) {
+            foreach (self::livestockEntitySignals()[$livestock['value']] ?? [] as $alias) {
+                $alias = mb_strtolower(trim((string) $alias));
+                $bare = self::stripGrammaticalArticle($alias);
+                if ($token === $alias || ($bare !== '' && $token === $bare)) {
+                    return true;
+                }
+            }
+        }
+
+        $crop = self::recognizeCrop($fullQuestion);
+        if ($crop !== null) {
+            $label = self::stripGrammaticalArticle(mb_strtolower(trim((string) ($crop['label'] ?? ''))));
+            $id = mb_strtolower(trim((string) ($crop['crop_id'] ?? '')));
+            if (($label !== '' && $token === $label) || ($id !== '' && $token === $id)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -2494,8 +3639,15 @@ final class AgriculturalEntityCatalog
         if ($surface !== '') {
             $terms[] = $surface;
             $folded = mb_strtolower($surface);
-            if (in_array($folded, ['ري', 'الري', 'irrigation', 'water'], true)) {
+            if (in_array($folded, ['ري', 'الري', 'irrigation', 'water', 'sulama', 'eau'], true)) {
                 $terms = array_merge($terms, ['irrigation', 'water requirement', 'water use']);
+            }
+            if (in_array($folded, ['grain yield', 'yield per unit area', 'tane verimi', 'rendement en grains'], true)
+                || str_contains($folded, 'unit area')
+                || str_contains($folded, 'birim alan')
+                || str_contains($folded, 'unité de surface')
+                || str_contains($folded, 'وحدة المساحة')) {
+                $terms = array_merge($terms, ['grain yield', 'yield per unit area', 'yield']);
             }
         }
 
@@ -2564,7 +3716,7 @@ final class AgriculturalEntityCatalog
             in_array($folded, ['quantity', 'yield', 'rate', 'production', 'amount', 'dose', 'كمية', 'إنتاج', 'انتاج', 'غلة', 'معدل', 'verim', 'üretim', 'rendement', 'إنتاجية', 'انتاجية'], true) => 'quantity',
             in_array($folded, ['temperature', 'range', 'حرارة', 'درجة', 'sıcaklık', 'sicaklik', 'sıcaklığı', 'température'], true) => 'temperature',
             in_array($folded, ['concentration', 'ppm', 'تركيز'], true) => 'concentration',
-            in_array($folded, ['irrigation', 'ري', 'الري', 'ماء', 'الماء', 'water', 'sulama', 'requirements'], true) => 'irrigation',
+            in_array($folded, ['irrigation', 'ري', 'الري', 'ماء', 'الماء', 'water', 'sulama', 'eau', 'requirements'], true) => 'irrigation',
             in_array($folded, ['soil', 'soils', 'تربة', 'التربة', 'toprak', 'sol'], true) => 'soil',
             in_array($folded, ['تقاوي', 'بذور', 'seed', 'seeds', 'seeding', 'sowing', 'seed rate'], true) => 'quantity',
             default => $folded,
@@ -2612,6 +3764,9 @@ final class AgriculturalEntityCatalog
         foreach ([
             'ما هي', 'ما هو', 'ما كمية', 'ما كميه', 'what are', 'what is', 'how much',
             'how many', 'types of', 'kinds of', 'varieties of', 'breeds of',
+            'quelle est', 'quelles sont', 'quels sont', 'nedir', 'nelerdir',
+            'hangisi', 'lequel', 'comment',
+            'effet de', 'effect of', 'impact of', 'impact de', 'üzerindeki etkisi', 'etkisi',
         ] as $frame) {
             $stripped = preg_replace('/'.preg_quote($frame, '/').'/u', ' ', $stripped) ?? $stripped;
         }
@@ -2652,7 +3807,28 @@ final class AgriculturalEntityCatalog
         $phrase = self::trimSemanticPhrase(implode(' ', array_slice($kept, 0, 4)));
         if ($phrase === '' || ! self::isDistinctiveNamedEntitySurface($phrase)
             || self::isUnsafeResidualEntitySurface($phrase)) {
-            return null;
+            $nameTokens = [];
+            foreach ($kept as $token) {
+                if (self::isUnsafeResidualEntitySurface($token)
+                    || self::isGenericScientificProcessToken($token)
+                    || in_array(self::propertyKeyFromSurface($token), [
+                        'temperature', 'irrigation', 'quantity', 'classification',
+                        'concentration', 'soil',
+                    ], true)) {
+                    continue;
+                }
+                if (self::isDistinctiveNamedEntitySurface($token)) {
+                    $nameTokens[] = $token;
+                }
+            }
+            if ($nameTokens === []) {
+                return null;
+            }
+            $phrase = self::trimSemanticPhrase(implode(' ', array_slice($nameTokens, 0, 3)));
+            if ($phrase === '' || ! self::isDistinctiveNamedEntitySurface($phrase)
+                || self::isUnsafeResidualEntitySurface($phrase)) {
+                return null;
+            }
         }
 
         return $phrase;
@@ -2676,6 +3852,7 @@ final class AgriculturalEntityCatalog
         $blocked = [
             'nedir', 'nelerdir', 'quelle', 'quelles', 'quels', 'comment', 'hangisi',
             'lequel', 'laquelle', 'how', 'what', 'which', 'est', 'sont',
+            'effet', 'effect', 'impact', 'etkisi', 'etki',
             'température', 'temperature', 'sıcaklığı', 'sıcaklık', 'sicaklik',
             'germination', 'çimlenme', 'cimlenme', 'الإنبات', 'انبات', 'إنبات', 'sulama', 'ihtiyacı', 'ihtiyaç',
             'quantité', 'besoin', 'besoins', 'types', 'türleri', 'tipleri',
@@ -2753,6 +3930,9 @@ final class AgriculturalEntityCatalog
         }
         if (preg_match('/تقاوي|بذور|\bseeds?\b|\bseeding\b|\bsowing\b|seed rate/u', $folded) === 1) {
             return ['seed rate', 'seeding rate', 'sowing rate'];
+        }
+        if (preg_match('/grain\s+yield|unit\s+area|birim\s+alan|unité\s+de\s+surface|وحدة\s+المساحة|tane\s+verimi/u', $folded) === 1) {
+            return ['grain yield', 'yield per unit area', 'yield'];
         }
 
         return [];

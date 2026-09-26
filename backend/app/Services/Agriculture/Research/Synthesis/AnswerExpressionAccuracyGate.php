@@ -365,25 +365,7 @@ final class AnswerExpressionAccuracyGate
         $q = $plan->normalizedQuery;
 
         return new KnowledgeQueryPlan(
-            normalizedQuery: new AgriculturalKnowledgeQuery(
-                originalQuestion: $q->originalQuestion,
-                normalizedQuestion: $q->normalizedQuestion,
-                language: $q->language,
-                agriculturalDomain: $q->agriculturalDomain,
-                subject: $q->subject,
-                crop: $q->crop,
-                cropId: $q->cropId,
-                scientificName: $q->scientificName,
-                topic: $q->topic,
-                subtopic: $q->subtopic,
-                requestedInformation: $q->requestedInformation,
-                constraints: $constraints,
-                location: $q->location,
-                researchRequired: $q->researchRequired,
-                ambiguityState: $q->ambiguityState,
-                clarificationRequirements: $q->clarificationRequirements,
-                researchIntent: $q->researchIntent,
-            ),
+            normalizedQuery: $q->copyPreservingCanonical($constraints, $q->crop, $q->cropId),
             researchIntent: $plan->researchIntent,
             agriculturalDomain: $plan->agriculturalDomain,
             subjectEntity: $plan->subjectEntity,

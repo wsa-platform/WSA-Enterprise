@@ -53,6 +53,48 @@ final class RetrievalSemanticContract
 
     public function apply(KnowledgeQueryPlan $plan): KnowledgeQueryPlan
     {
+        if ($plan->normalizedQuery->canonicalQuestion !== null) {
+            return $this->applyCanonicalTransport($plan);
+        }
+
+        return $this->applyLegacySemanticContract($plan);
+    }
+
+    /**
+     * CSQ path: transport frozen meaning and apply execution safety only.
+     * Does not reconstruct roles, property families, or topic bags.
+     */
+    private function applyCanonicalTransport(KnowledgeQueryPlan $plan): KnowledgeQueryPlan
+    {
+        $query = $plan->normalizedQuery;
+        $csq = $query->canonicalQuestion;
+        if ($csq === null) {
+            return $this->applyLegacySemanticContract($plan);
+        }
+
+        $constraints = is_array($query->constraints) ? $query->constraints : [];
+        $spec = RetrievalSpecification::fromCanonical($csq);
+        $constraints['retrieval_specification'] = $spec->toArray();
+        $constraints['csq_legacy_entity_divergence'] = $this->csqLegacyEntityDiverges($csq, $query);
+
+        $suppressEntity = $this->shouldSuppressGenericProcessEntity($query);
+        $constraints['retrieval_entity_suppressed'] = $suppressEntity;
+
+        $nextQuery = $this->cloneQuery(
+            $query,
+            $constraints,
+            $suppressEntity ? null : $query->crop,
+            $suppressEntity ? null : $query->cropId,
+        );
+
+        return $this->clonePlan($plan, $nextQuery, $plan->topics);
+    }
+
+    /**
+     * Compatibility path when no CSQ is attached.
+     */
+    private function applyLegacySemanticContract(KnowledgeQueryPlan $plan): KnowledgeQueryPlan
+    {
         $query = $plan->normalizedQuery;
         $constraints = is_array($query->constraints) ? $query->constraints : [];
         $surface = $this->requestedPropertySurface($constraints);
@@ -71,6 +113,14 @@ final class RetrievalSemanticContract
         $constraints['retrieval_property_role'] = $role;
         $constraints['requested_property_unresolved'] = $unresolved;
         $constraints['mandatory_retrieval_terms'] = $this->mandatoryComponents($plan, $role, $constraints['requested_property_query_terms']);
+
+        $spec = RetrievalSpecification::fromLegacyQuery($query);
+        $constraints['retrieval_specification'] = $spec->toArray();
+        $constraints['csq_legacy_entity_divergence'] = false;
+        $constraints['mandatory_retrieval_terms'] = $this->uniqueTerms([
+            ...$spec->requiredTerms(),
+            ...$constraints['mandatory_retrieval_terms'],
+        ]);
 
         $suppressEntity = $this->shouldSuppressGenericProcessEntity($query);
         $constraints['retrieval_entity_suppressed'] = $suppressEntity;
@@ -182,52 +232,7 @@ final class RetrievalSemanticContract
      */
     private function materializePropertyTerms(string $role, string $surface, array $incomingTerms): array
     {
-        $terms = $incomingTerms;
-        if ($surface !== '' && ! $this->containsTerm($terms, $surface)) {
-            array_unshift($terms, $surface);
-        }
-
-        $terms = match ($role) {
-            self::ROLE_IRRIGATION_WATER => $this->uniqueTerms([
-                ...$terms,
-                'irrigation',
-                'water requirement',
-                'evapotranspiration',
-                'quantity',
-            ]),
-            self::ROLE_TEMPERATURE => $this->uniqueTerms([
-                ...$terms,
-                'temperature',
-                'germination',
-            ]),
-            self::ROLE_CLASSIFICATION => $this->uniqueTerms([
-                ...$terms,
-                'classification',
-                'types',
-            ]),
-            self::ROLE_PRODUCTIVITY => $this->uniqueTerms([
-                ...$terms,
-                'production',
-                'quantity',
-            ]),
-            self::ROLE_QUANTITY => $this->uniqueTerms([...$terms, 'quantity', 'rate']),
-            default => $this->uniqueTerms($terms),
-        };
-
-        if (in_array($role, [
-            self::ROLE_IRRIGATION_WATER,
-            self::ROLE_TEMPERATURE,
-            self::ROLE_CLASSIFICATION,
-            self::ROLE_QUANTITY,
-            self::ROLE_UNRESOLVED,
-        ], true)) {
-            $terms = array_values(array_filter(
-                $terms,
-                fn (string $term): bool => ! $this->isProductivityFallbackTerm($term),
-            ));
-        }
-
-        return $terms;
+        return RetrievalSpecification::materializeScholarlyTerms($role, $surface, $incomingTerms);
     }
 
     /**
@@ -240,13 +245,7 @@ final class RetrievalSemanticContract
      */
     private function interleaveRequiredFactors(array $terms, array $factors): array
     {
-        if ($factors === []) {
-            return $terms;
-        }
-        $head = array_slice($terms, 0, 1);
-        $rest = array_slice($terms, 1);
-
-        return $this->uniqueTerms([...$head, ...$factors, ...$rest]);
+        return RetrievalSpecification::interleaveRequiredFactors($terms, $factors);
     }
 
     /**
@@ -288,6 +287,19 @@ final class RetrievalSemanticContract
         return $this->uniqueTerms($parts);
     }
 
+    private function csqLegacyEntityDiverges(?CanonicalScientificQuestion $csq, AgriculturalKnowledgeQuery $query): bool
+    {
+        if ($csq === null || $csq->entity->surface === null) {
+            return false;
+        }
+        $legacy = mb_strtolower(trim((string) ($query->namedEntitySurface() ?? $query->crop ?? '')));
+        $canonical = mb_strtolower(trim((string) ($csq->entity->normalized ?? $csq->entity->surface)));
+
+        return $legacy !== '' && $canonical !== '' && $legacy !== $canonical
+            && ! str_contains($legacy, $canonical)
+            && ! str_contains($canonical, $legacy);
+    }
+
     private function shouldSuppressGenericProcessEntity(AgriculturalKnowledgeQuery $query): bool
     {
         $crop = trim((string) $query->crop);
@@ -307,12 +319,7 @@ final class RetrievalSemanticContract
 
     private function isGenericProcessToken(string $token): bool
     {
-        $folded = mb_strtolower(trim($token));
-        if ($folded === '') {
-            return false;
-        }
-
-        return in_array($folded, self::GENERIC_PROCESS_TOKENS, true);
+        return CanonicalScientificQuestion::isGenericProcessSurface($token);
     }
 
     private function isProductivityFallbackTerm(string $term): bool
@@ -416,25 +423,7 @@ final class RetrievalSemanticContract
         ?string $crop,
         ?string $cropId,
     ): AgriculturalKnowledgeQuery {
-        return new AgriculturalKnowledgeQuery(
-            originalQuestion: $query->originalQuestion,
-            normalizedQuestion: $query->normalizedQuestion,
-            language: $query->language,
-            agriculturalDomain: $query->agriculturalDomain,
-            subject: $query->subject,
-            crop: $crop,
-            cropId: $cropId,
-            scientificName: $query->scientificName,
-            topic: $query->topic,
-            subtopic: $query->subtopic,
-            requestedInformation: $query->requestedInformation,
-            constraints: $constraints,
-            location: $query->location,
-            researchRequired: $query->researchRequired,
-            ambiguityState: $query->ambiguityState,
-            clarificationRequirements: $query->clarificationRequirements,
-            researchIntent: $query->researchIntent,
-        );
+        return $query->copyPreservingCanonical($constraints, $crop, $cropId);
     }
 
     /**

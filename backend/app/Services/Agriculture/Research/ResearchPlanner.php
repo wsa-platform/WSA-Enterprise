@@ -48,6 +48,42 @@ class ResearchPlanner
     }
 
     /**
+     * Execution topics derived from frozen CSQ. Not a second role graph.
+     *
+     * @return list<string>
+     */
+    private function executionTopicsFromCanonical(CanonicalScientificQuestion $csq): array
+    {
+        $topics = [];
+        foreach ([
+            $csq->entity->surface,
+            $csq->process->surface,
+            $csq->target->surface,
+            $csq->property->surface,
+        ] as $surface) {
+            if (is_string($surface) && trim($surface) !== '' && ! in_array(trim($surface), $topics, true)) {
+                $topics[] = trim($surface);
+            }
+        }
+        foreach ($csq->relation->operands as $operand) {
+            $surface = trim((string) ($operand['surface'] ?? ''));
+            if ($surface !== '' && ! in_array($surface, $topics, true)) {
+                $topics[] = $surface;
+            }
+        }
+        $intent = trim((string) ($csq->context->researchIntent ?? ''));
+        if ($topics === [] && $intent !== '') {
+            $topics[] = $intent;
+        }
+        $sense = trim((string) ($csq->context->scientificSense ?? ''));
+        if ($sense === 'land_classification' && ! in_array('land classification', $topics, true)) {
+            array_unshift($topics, 'land classification');
+        }
+
+        return $topics !== [] ? $topics : ['agriculture'];
+    }
+
+    /**
      * @param  array<string, mixed>  $input
      */
     private function buildCropProfileKnowledgePlan(AgriculturalKnowledgeQuery $query, array $input): KnowledgeQueryPlan
@@ -57,13 +93,16 @@ class ResearchPlanner
         if ($sections === []) {
             $sections = ['overview', 'scientific_evidence', 'recommendations'];
         }
+        $topics = $query->canonicalQuestion !== null
+            ? $this->executionTopicsFromCanonical($query->canonicalQuestion)
+            : [$query->researchIntent];
 
         return new KnowledgeQueryPlan(
             normalizedQuery: $query,
             researchIntent: $query->researchIntent,
             agriculturalDomain: $query->agriculturalDomain,
             subjectEntity: $query->subject,
-            topics: [$query->researchIntent],
+            topics: $topics,
             subtopics: [$knowledgeOption],
             requestedInformation: $query->requestedInformation,
             evidenceRequirements: $this->defaultEvidenceTypes(),
@@ -87,7 +126,44 @@ class ResearchPlanner
      */
     private function buildGenericKnowledgePlan(AgriculturalKnowledgeQuery $query, array $input): KnowledgeQueryPlan
     {
+        $sense = trim((string) ($query->constraints['scientific_sense'] ?? ''));
+        if ($query->canonicalQuestion !== null) {
+            $topics = $this->executionTopicsFromCanonical($query->canonicalQuestion);
+            $subtopics = $query->subtopic !== null ? [$query->subtopic] : [];
+            if ($query->canonicalQuestion->context->scientificSense === 'land_classification'
+                && ! in_array('classification_inventory', $subtopics, true)) {
+                array_unshift($subtopics, 'classification_inventory');
+            }
+            $requiredEvidenceType = trim((string) ($query->constraints['required_evidence_type'] ?? ''));
+            $evidenceRequirements = $this->defaultEvidenceTypes();
+            if ($requiredEvidenceType !== '' && ! in_array($requiredEvidenceType, $evidenceRequirements, true)) {
+                array_unshift($evidenceRequirements, $requiredEvidenceType);
+            }
+
+            return new KnowledgeQueryPlan(
+                normalizedQuery: $query,
+                researchIntent: $query->researchIntent,
+                agriculturalDomain: $query->agriculturalDomain,
+                subjectEntity: $query->subject,
+                topics: $topics,
+                subtopics: $subtopics,
+                requestedInformation: $query->requestedInformation,
+                evidenceRequirements: $evidenceRequirements,
+                sourcePriorities: $this->defaultSourcePriorities(),
+                primaryResearchStrategy: KnowledgeQueryPlan::STRATEGY_INTERNET_FIRST,
+                researchSequence: KnowledgeQueryPlan::STAGE_EXECUTION_SEQUENCE,
+                ambiguityState: $query->ambiguityState,
+                clarificationRequirements: $query->clarificationRequirements,
+                contextInput: $input,
+                readyForStage3: $query->researchRequired && $query->ambiguityState !== AgriculturalKnowledgeQuery::AMBIGUITY_NEEDS_CLARIFICATION,
+            );
+        }
+
         $topics = [$query->topic];
+        if ($sense === 'land_classification' || $query->researchIntent === 'land_classification') {
+            // Lead with land/soil inventory topics — never cultivation-first.
+            $topics = ['land classification'];
+        }
         $factorTopics = $query->constraints['scientific_topics'] ?? [];
         if (is_array($factorTopics)) {
             foreach ($factorTopics as $factorTopic) {
@@ -106,6 +182,14 @@ class ResearchPlanner
             }
         }
         $subtopics = $query->subtopic !== null ? [$query->subtopic] : [];
+        if ($sense === 'land_classification' && ! in_array('classification_inventory', $subtopics, true)) {
+            array_unshift($subtopics, 'classification_inventory');
+        }
+        $requiredEvidenceType = trim((string) ($query->constraints['required_evidence_type'] ?? ''));
+        $evidenceRequirements = $this->defaultEvidenceTypes();
+        if ($requiredEvidenceType !== '' && ! in_array($requiredEvidenceType, $evidenceRequirements, true)) {
+            array_unshift($evidenceRequirements, $requiredEvidenceType);
+        }
 
         return new KnowledgeQueryPlan(
             normalizedQuery: $query,
@@ -115,7 +199,7 @@ class ResearchPlanner
             topics: $topics,
             subtopics: $subtopics,
             requestedInformation: $query->requestedInformation,
-            evidenceRequirements: $this->defaultEvidenceTypes(),
+            evidenceRequirements: $evidenceRequirements,
             sourcePriorities: $this->defaultSourcePriorities(),
             primaryResearchStrategy: KnowledgeQueryPlan::STRATEGY_INTERNET_FIRST,
             researchSequence: KnowledgeQueryPlan::STAGE_EXECUTION_SEQUENCE,

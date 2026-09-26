@@ -191,6 +191,16 @@ final class ScientificQuestionSemantics
                 'cultivation practices',
                 'crop management',
                 'agronomy',
+                // Evidence-language family: papers rarely repeat the QUS target label.
+                'requirement',
+                'requirements',
+                'fertilizer',
+                'fertiliser',
+                'fertilization',
+                'fertilisation',
+                'nutrient',
+                'nutrition',
+                'agronomic',
             ],
             self::SENSE_SOIL_REQUIREMENTS => [
                 'soil requirements',
@@ -480,6 +490,31 @@ final class ScientificQuestionSemantics
         }
 
         foreach (['optimal', 'optimum', 'range', 'suitable', 'ideal', 'مثلى', 'مناسبة'] as $marker) {
+            if (AgriculturalEntityCatalog::containsTerm($hay, $marker)
+                || mb_strpos($hay, $marker) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Generic industrial/application framing. Crop identity is not an input.
+     */
+    public static function asksIndustrialApplication(string $normalizedQuestion): bool
+    {
+        $hay = mb_strtolower(trim($normalizedQuestion));
+        if ($hay === '') {
+            return false;
+        }
+
+        foreach ([
+            'industrial uses', 'industrial use', 'industrial application',
+            'industrial applications', 'agricultural industry', 'agro-industry',
+            'agro industry', 'value-added', 'value added',
+            'استخدامات صناعية', 'الصناعات', 'تطبيقات صناعية',
+        ] as $marker) {
             if (AgriculturalEntityCatalog::containsTerm($hay, $marker)
                 || mb_strpos($hay, $marker) !== false) {
                 return true;

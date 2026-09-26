@@ -82,6 +82,9 @@ class QueryUnderstandingService
                 $recognizedCrops,
             ));
         }
+        if (AgriculturalEntityCatalog::asksComparativeQuestion($normalizedQuestion)) {
+            $constraints['is_comparison'] = true;
+        }
         $intentQualifier = $this->detectIntentQualifier($normalizedQuestion);
         $researchIntent = $this->detectResearchIntent(
             $normalizedQuestion,
@@ -413,6 +416,7 @@ class QueryUnderstandingService
         $crop = is_string($cropLabel) && $cropLabel !== ''
             ? $cropLabel
             : $namedEntitySurface;
+        $this->unifyRequestedPropertyKey($constraints, is_array($constraints['semantic_role_graph'] ?? null) ? $constraints['semantic_role_graph'] : []);
 
         return new AgriculturalKnowledgeQuery(
             originalQuestion: $originalQuestion,
@@ -432,6 +436,25 @@ class QueryUnderstandingService
             ambiguityState: $ambiguityState,
             clarificationRequirements: $clarificationRequirements,
             researchIntent: $researchIntent,
+            canonicalQuestion: $this->freezeCanonicalScientificQuestion(
+                originalQuestion: $originalQuestion,
+                language: $language,
+                normalizedQuestion: $normalizedQuestion !== '' ? $normalizedQuestion : $originalQuestion,
+                researchContext: CanonicalScientificQuestion::RESEARCH_CONTEXT_HOME,
+                constraints: $constraints,
+                agriculturalDomain: $agriculturalDomain,
+                researchIntent: $researchIntent,
+                requestedInformation: $requestedInformation,
+                location: $location,
+                ambiguityState: $ambiguityState,
+                clarificationRequirements: $clarificationRequirements,
+                cropBinding: new CsqCropBinding(
+                    cropId: $cropIdResolved,
+                    cropLabel: is_string($cropLabel) ? $cropLabel : null,
+                    scientificName: $scientificName,
+                    context: CanonicalScientificQuestion::RESEARCH_CONTEXT_HOME,
+                ),
+            ),
         );
     }
 
@@ -448,13 +471,17 @@ class QueryUnderstandingService
         ?array $subject,
         string $questionType,
         string $topic,
+        bool $rewriteRetrievalTopics = true,
     ): array {
         $semanticTarget = AgriculturalEntityCatalog::extractSemanticTarget($normalizedQuestion);
         if (is_array($semanticTarget)) {
-            if ($subject === null && trim((string) ($semanticTarget['entity_surface'] ?? '')) !== ''
-                && AgriculturalEntityCatalog::isDistinctiveNamedEntitySurface((string) $semanticTarget['entity_surface'])
-                && ! AgriculturalEntityCatalog::isLocationAliasToken((string) $semanticTarget['entity_surface'])
-                && ! AgriculturalEntityCatalog::isUnsafeResidualEntitySurface((string) $semanticTarget['entity_surface'])) {
+            $entitySurface = trim((string) ($semanticTarget['entity_surface'] ?? ''));
+            $production = AgriculturalEntityCatalog::extractProductionOutputStructure($normalizedQuestion);
+            if ($subject === null && $entitySurface !== ''
+                && ($production === null || ! AgriculturalEntityCatalog::surfaceIsProductionComplement($entitySurface, $production))
+                && AgriculturalEntityCatalog::isDistinctiveNamedEntitySurface($entitySurface)
+                && ! AgriculturalEntityCatalog::isLocationAliasToken($entitySurface)
+                && ! AgriculturalEntityCatalog::isUnsafeResidualEntitySurface($entitySurface)) {
                 $subject = [
                     'type' => 'named_entity',
                     'value' => (string) ($semanticTarget['entity_normalized'] ?? $semanticTarget['entity_surface']),
@@ -473,15 +500,24 @@ class QueryUnderstandingService
                 $constraints['requested_property_surface'] = $propertySurface;
             }
             $constraints['semantic_target'] = $semanticTarget;
+            $this->persistSemanticRoleGraph($constraints, $semanticTarget);
             $causalSpans = AgriculturalEntityCatalog::causalArgumentSpans($normalizedQuestion);
             if (is_array($causalSpans)) {
                 $constraints['causal_affector'] = $causalSpans['affector'];
                 $constraints['causal_target'] = $causalSpans['target'];
                 $constraints['is_causal'] = true;
             }
-        } elseif ($questionType !== '' && ! in_array($questionType, ['general', 'definition', 'comparison'], true)) {
-            $constraints['requested_property'] = $questionType;
+        } else {
+            $roles = AgriculturalEntityCatalog::extractSemanticRoleGraph($normalizedQuestion);
+            $this->persistSemanticRoleGraph($constraints, $roles);
+            if ($questionType !== '' && ! in_array($questionType, ['general', 'definition', 'comparison'], true)) {
+                $constraints['requested_property'] = $questionType;
+            }
         }
+        if (AgriculturalEntityCatalog::asksComparativeQuestion($normalizedQuestion)) {
+            $constraints['is_comparison'] = true;
+        }
+        $this->overlayComparativeRelation($constraints);
 
         $propertyTerms = AgriculturalEntityCatalog::requestedPropertyQueryTerms(
             is_array($semanticTarget) ? $semanticTarget : [
@@ -490,7 +526,7 @@ class QueryUnderstandingService
             ],
             $questionType,
         );
-        if ($propertyTerms !== []) {
+        if ($rewriteRetrievalTopics && $propertyTerms !== []) {
             $constraints['requested_property_query_terms'] = $propertyTerms;
             $topics = is_array($constraints['scientific_topics'] ?? null) ? $constraints['scientific_topics'] : [];
             $topics = array_values(array_filter(
@@ -505,8 +541,265 @@ class QueryUnderstandingService
                 $topic = $propertyTerms[0];
             }
         }
+        $this->unifyRequestedPropertyKey($constraints);
 
         return [$constraints, $subject, $propertyTerms, $topic];
+    }
+
+    /**
+     * Comparative relation is detected independently of the causal role graph.
+     * Dual-write onto constraints and the frozen graph so CSQ does not stay "none".
+     *
+     * @param  array<string, mixed>  $constraints
+     */
+    private function overlayComparativeRelation(array &$constraints): void
+    {
+        if (empty($constraints['is_comparison'])) {
+            return;
+        }
+        $current = (string) ($constraints['relation_type'] ?? CanonicalScientificQuestion::RELATION_NONE);
+        if ($current !== '' && $current !== CanonicalScientificQuestion::RELATION_NONE) {
+            return;
+        }
+        $constraints['relation_type'] = CanonicalScientificQuestion::RELATION_COMPARATIVE;
+        $constraints['relation_state'] = CanonicalScientificQuestion::RESOLUTION_RESOLVED;
+        if (! isset($constraints['semantic_role_graph']) || ! is_array($constraints['semantic_role_graph'])) {
+            return;
+        }
+        $graph = $constraints['semantic_role_graph'];
+        $graph['relation_type'] = CanonicalScientificQuestion::RELATION_COMPARATIVE;
+        $graph['relation_state'] = CanonicalScientificQuestion::RESOLUTION_RESOLVED;
+        $from = $graph['relation_from'] ?? null;
+        $to = $graph['relation_to'] ?? null;
+        if ($from === null && ($graph['entity_surface'] ?? null) !== null) {
+            $from = CanonicalScientificQuestion::ROLE_ENTITY;
+        }
+        if ($to === null && ($graph['target_surface'] ?? null) !== null) {
+            $to = CanonicalScientificQuestion::ROLE_TARGET;
+        } elseif ($to === null && $from === CanonicalScientificQuestion::ROLE_ENTITY) {
+            $to = CanonicalScientificQuestion::ROLE_ENTITY;
+        }
+        $graph['relation_from'] = $from;
+        $graph['relation_to'] = $to;
+        $constraints['relation_from'] = $from;
+        $constraints['relation_to'] = $to;
+        $constraints['semantic_role_graph'] = $graph;
+    }
+
+    /**
+     * @param  array<string, mixed>  $constraints
+     * @param  array<string, mixed>  $graph
+     */
+    private function persistSemanticRoleGraph(array &$constraints, array $graph): void
+    {
+        $constraints['semantic_role_graph'] = $graph;
+        foreach ([
+            'target_surface',
+            'target_kind',
+            'target_resolution',
+            'process_surface',
+            'process_resolution',
+            'property_of_role',
+            'relation_type',
+            'relation_from',
+            'relation_to',
+            'relation_state',
+            'entity_resolution',
+            'comparison_operands',
+        ] as $key) {
+            if (array_key_exists($key, $graph)) {
+                $constraints[$key] = $graph[$key];
+            }
+        }
+    }
+
+    /**
+     * Dual-write requested_property ↔ requested_property_key (R4).
+     *
+     * @param  array<string, mixed>  $constraints
+     * @param  array<string, mixed>  $graph
+     */
+    private function unifyRequestedPropertyKey(array &$constraints, array $graph = []): void
+    {
+        $fromGraph = trim((string) ($graph['property_key'] ?? ''));
+        $fromProperty = trim((string) ($constraints['requested_property'] ?? ''));
+        $fromKey = trim((string) ($constraints['requested_property_key'] ?? ''));
+        $unified = $fromKey !== '' ? $fromKey : ($fromProperty !== '' ? $fromProperty : $fromGraph);
+        if ($unified === '') {
+            return;
+        }
+        $constraints['requested_property'] = $unified;
+        $constraints['requested_property_key'] = $unified;
+    }
+
+    /**
+     * R4/R7/R13 + verified ENTITY IDs only. Never invent TARGET IDs.
+     *
+     * @param  array<string, mixed>  $graph
+     * @return array<string, mixed>
+     */
+    private function canonicalizeRoleGraphForFreeze(array $graph, CsqCropBinding $cropBinding): array
+    {
+        $entitySurface = isset($graph['entity_surface']) ? trim((string) $graph['entity_surface']) : '';
+        $entityNormalized = isset($graph['entity_normalized']) ? trim((string) $graph['entity_normalized']) : '';
+        [$canonicalId, $namespace] = $this->verifiedEntityIdentity(
+            $entityNormalized !== '' ? $entityNormalized : $entitySurface,
+            $cropBinding->cropId,
+        );
+        if ($canonicalId !== null && $namespace !== null) {
+            $graph['entity_canonical_id'] = $canonicalId;
+            $graph['entity_canonical_namespace'] = $namespace;
+            $graph['entity_normalized'] = $canonicalId;
+            $graph['entity_resolution'] = CanonicalScientificQuestion::RESOLUTION_RESOLVED;
+        } elseif ($entitySurface !== '' || $entityNormalized !== '') {
+            $graph['entity_canonical_id'] = null;
+            $graph['entity_canonical_namespace'] = null;
+            if (($graph['entity_resolution'] ?? null) !== CanonicalScientificQuestion::RESOLUTION_RESOLVED) {
+                $graph['entity_resolution'] = CanonicalScientificQuestion::RESOLUTION_UNRESOLVED;
+            }
+        }
+
+        if (CanonicalScientificQuestion::isGenericProcessSurface($entitySurface) && ($graph['entity_canonical_id'] ?? null) === null) {
+            $graph['entity_surface'] = null;
+            $graph['entity_normalized'] = null;
+            $graph['entity_resolution'] = CanonicalScientificQuestion::RESOLUTION_NONE;
+            $graph['entity_canonical_id'] = null;
+            $graph['entity_canonical_namespace'] = null;
+        }
+
+        $propertyKey = isset($graph['property_key']) ? trim((string) $graph['property_key']) : '';
+        $propertySurface = isset($graph['property_surface']) ? trim((string) $graph['property_surface']) : '';
+        $familyKey = RetrievalSpecification::canonicalFamilyKey($propertyKey, $propertySurface);
+        if ($familyKey !== null && in_array($familyKey, RetrievalSpecification::FAMILY_KEYS, true)) {
+            $propertyKey = $familyKey;
+            $graph['property_key'] = $familyKey;
+        }
+        $targetKind = isset($graph['target_kind']) ? (string) $graph['target_kind'] : CanonicalScientificQuestion::TARGET_KIND_NONE;
+        $protectedFamilies = ['irrigation', 'temperature', 'classification'];
+        $stripProductivity = in_array($propertyKey, $protectedFamilies, true)
+            || ($propertyKey === 'quantity' && $targetKind !== CanonicalScientificQuestion::TARGET_KIND_PRODUCT_OUTPUT);
+        if ($stripProductivity && CanonicalScientificQuestion::isProductivityFallbackSurface($propertySurface)) {
+            $graph['property_surface'] = $propertyKey !== '' ? $propertyKey : null;
+        }
+
+        $graph['target_canonical_id'] = null;
+        $graph['target_canonical_namespace'] = null;
+        $graph['target_normalized_key'] = $graph['target_normalized_key'] ?? null;
+
+        return $graph;
+    }
+
+    /**
+     * @return array{0: ?string, 1: ?string}
+     */
+    private function verifiedEntityIdentity(?string $normalized, ?string $cropBindingId): array
+    {
+        $candidate = is_string($normalized) ? trim($normalized) : '';
+        if ($candidate !== '' && array_key_exists($candidate, AgriculturalEntityCatalog::livestockEntitySignals())) {
+            return [$candidate, CanonicalScientificQuestion::NAMESPACE_CATALOG_LIVESTOCK];
+        }
+        if ($candidate !== '' && FieldCropTaxonomyCatalog::entryFor($candidate) !== null) {
+            return [$candidate, CanonicalScientificQuestion::NAMESPACE_TAXONOMY_CROP];
+        }
+        $cropId = is_string($cropBindingId) ? trim($cropBindingId) : '';
+        if ($cropId !== '' && $candidate !== '' && $candidate === $cropId && FieldCropTaxonomyCatalog::entryFor($cropId) !== null) {
+            return [$cropId, CanonicalScientificQuestion::NAMESPACE_TAXONOMY_CROP];
+        }
+
+        return [null, null];
+    }
+
+    /**
+     * @param  array<string, mixed>  $constraints
+     * @param  list<string>  $requestedInformation
+     * @param  list<string>  $clarificationRequirements
+     */
+    private function freezeCanonicalScientificQuestion(
+        string $originalQuestion,
+        string $language,
+        string $normalizedQuestion,
+        string $researchContext,
+        array $constraints,
+        string $agriculturalDomain,
+        string $researchIntent,
+        array $requestedInformation,
+        ?string $location,
+        string $ambiguityState,
+        array $clarificationRequirements,
+        CsqCropBinding $cropBinding,
+    ): CanonicalScientificQuestion {
+        $graph = is_array($constraints['semantic_role_graph'] ?? null)
+            ? $constraints['semantic_role_graph']
+            : AgriculturalEntityCatalog::extractSemanticRoleGraph($normalizedQuestion);
+        $this->overlayComparativeRelation($constraints);
+        if (($constraints['relation_type'] ?? null) === CanonicalScientificQuestion::RELATION_COMPARATIVE) {
+            $graph['relation_type'] = CanonicalScientificQuestion::RELATION_COMPARATIVE;
+            $graph['relation_state'] = CanonicalScientificQuestion::RESOLUTION_RESOLVED;
+            if (! isset($graph['relation_from'])) {
+                $graph['relation_from'] = $constraints['relation_from'] ?? null;
+            }
+            if (! isset($graph['relation_to'])) {
+                $graph['relation_to'] = $constraints['relation_to'] ?? null;
+            }
+            if (! isset($graph['comparison_operands']) && is_array($constraints['comparison_operands'] ?? null)) {
+                $graph['comparison_operands'] = $constraints['comparison_operands'];
+            }
+        }
+
+        $graph = $this->canonicalizeRoleGraphForFreeze($graph, $cropBinding);
+        $this->unifyRequestedPropertyKey($constraints, $graph);
+
+        $year = isset($constraints['year']) ? (int) $constraints['year'] : null;
+        $conditionItems = [];
+        foreach ($constraints['environmental_constraints'] ?? [] as $constraint) {
+            if (! is_array($constraint)) {
+                continue;
+            }
+            $type = trim((string) ($constraint['type'] ?? ''));
+            if ($type === '') {
+                continue;
+            }
+            $conditionItems[] = [
+                'type' => $type,
+                'value' => isset($constraint['value']) ? (string) $constraint['value'] : null,
+                'label' => isset($constraint['label']) ? (string) $constraint['label'] : null,
+            ];
+        }
+
+        return CanonicalScientificQuestion::fromRoleGraph(
+            originalQuestion: $originalQuestion,
+            language: $language,
+            normalizedForm: $normalizedQuestion,
+            researchContext: $researchContext,
+            graph: $graph,
+            context: [
+                'domain' => $agriculturalDomain,
+                'scientific_sense' => $constraints['scientific_sense'] ?? null,
+                'research_intent' => $researchIntent,
+                'question_type' => $constraints['question_type'] ?? null,
+                'requested_information' => $requestedInformation,
+            ],
+            resolution: new CsqResolution(
+                ambiguityState: $ambiguityState,
+                clarificationRequirements: $clarificationRequirements,
+                understandingConfidence: isset($constraints['understanding_confidence'])
+                    ? (float) $constraints['understanding_confidence']
+                    : null,
+            ),
+            cropBinding: $cropBinding,
+            conditions: new CsqConditions($conditionItems),
+            time: new CsqTime(
+                year: $year,
+                period: isset($constraints['time_context']) ? (string) $constraints['time_context'] : null,
+            ),
+            geography: new CsqGeography(label: $location),
+            evidenceRequirement: new CsqEvidenceRequirement(
+                requiredEvidenceType: isset($constraints['required_evidence_type'])
+                    ? (string) $constraints['required_evidence_type']
+                    : null,
+                requiresFactualDirect: null,
+            ),
+        );
     }
 
     /**
@@ -599,6 +892,16 @@ class QueryUnderstandingService
             $intentQualifier,
             $normalizedQuestion,
         );
+        if ($hasUserQuestion) {
+            [$constraints] = $this->applySemanticTargetBaseline(
+                $normalizedQuestion,
+                $constraints,
+                ['type' => 'crop', 'value' => $cropId, 'label' => $cropName],
+                $questionType,
+                $researchIntent,
+                rewriteRetrievalTopics: false,
+            );
+        }
         $constraints['question_language'] = $language;
         // R2: answer language follows question language (UI locale is independent).
         $constraints['answer_language'] = $this->resolveAnswerLanguageFromQuestion($language);
@@ -608,6 +911,7 @@ class QueryUnderstandingService
         if ($explicitYear !== null) {
             $constraints['year'] = $explicitYear;
         }
+        $this->unifyRequestedPropertyKey($constraints, is_array($constraints['semantic_role_graph'] ?? null) ? $constraints['semantic_role_graph'] : []);
 
         return new AgriculturalKnowledgeQuery(
             originalQuestion: $originalQuestion !== '' ? $originalQuestion : $normalizedQuestion,
@@ -627,6 +931,25 @@ class QueryUnderstandingService
             ambiguityState: AgriculturalKnowledgeQuery::AMBIGUITY_CLEAR,
             clarificationRequirements: [],
             researchIntent: $researchIntent,
+            canonicalQuestion: $this->freezeCanonicalScientificQuestion(
+                originalQuestion: $originalQuestion !== '' ? $originalQuestion : $normalizedQuestion,
+                language: $language,
+                normalizedQuestion: $normalizedQuestion,
+                researchContext: CanonicalScientificQuestion::RESEARCH_CONTEXT_CROP_PROFILE,
+                constraints: $constraints,
+                agriculturalDomain: $agriculturalDomain,
+                researchIntent: $researchIntent,
+                requestedInformation: $requested,
+                location: $location,
+                ambiguityState: AgriculturalKnowledgeQuery::AMBIGUITY_CLEAR,
+                clarificationRequirements: [],
+                cropBinding: new CsqCropBinding(
+                    cropId: $cropId,
+                    cropLabel: $cropName,
+                    scientificName: $scientificName !== '' ? $scientificName : null,
+                    context: CanonicalScientificQuestion::RESEARCH_CONTEXT_CROP_PROFILE,
+                ),
+            ),
         );
     }
 
@@ -794,6 +1117,21 @@ class QueryUnderstandingService
 
         if ($categoryRecommendation && in_array($bestIntent, ['general_knowledge', 'productivity'], true)) {
             $bestIntent = 'cultivation';
+        }
+
+        // Home named-crop + requirement qualifier is the same act as Crop farming-needs.
+        // English "cultivating/agronomic requirements" must not stay general_knowledge
+        // while Arabic "احتياجات زراعة" already maps to cultivation.
+        if ($hasNamedCrop
+            && $intentQualifier === 'requirement'
+            && $bestIntent === 'general_knowledge') {
+            $bestIntent = 'cultivation';
+        }
+
+        if ($hasNamedCrop
+            && $bestIntent === 'general_knowledge'
+            && ScientificQuestionSemantics::asksIndustrialApplication($normalizedQuestion)) {
+            $bestIntent = 'agricultural_industry';
         }
 
         return $bestIntent;

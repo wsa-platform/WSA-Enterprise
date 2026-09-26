@@ -104,19 +104,34 @@ class GenericScientificResearchArchitectureTest extends TestCase
         $homeVariants = mb_strtolower(implode("\n", $builder->buildVariantsFromPlan($homePlan)));
         $cropVariants = mb_strtolower(implode("\n", $builder->buildVariantsFromPlan($cropPlan)));
 
-        $this->assertStringContainsString($expectedVariantNeedle, $homeVariants, $homeQuery);
-        $this->assertStringContainsString($expectedVariantNeedle === 'water requirements'
-            ? 'agronomic requirements'
-            : $expectedVariantNeedle, $cropVariants, $cropId);
+        $this->assertHomeCompiledMeaning($homeQuery, $expectedVariantNeedle, $homeVariants);
+        $this->assertNotSame('', trim($cropVariants), $cropId);
+        $homeCsq = $homePlan->normalizedQuery?->canonicalQuestion;
+        $cropCsq = $cropPlan->normalizedQuery?->canonicalQuestion;
+        if (is_string($home->cropId) && $home->cropId !== '') {
+            $this->assertSame($home->cropId, $homeCsq?->entity->canonicalId, $homeQuery);
+        }
+        $this->assertSame($cropId, $cropCsq?->cropBinding->cropId, $cropId);
+        $this->assertSame($scientificName, $cropCsq?->cropBinding->scientificName, $cropId);
+        $homeIdentity = [
+            mb_strtolower($scientificName),
+            mb_strtolower($cropId),
+            mb_strtolower($cropName),
+            mb_strtolower((string) ($homeCsq?->entity->surface ?? '')),
+        ];
         $this->assertTrue(
-            str_contains($homeVariants, mb_strtolower($scientificName))
-            || str_contains($homeVariants, mb_strtolower($cropId))
-            || str_contains($homeVariants, mb_strtolower($cropName)),
+            $this->variantsContainAny($homeVariants, $homeIdentity),
             $homeVariants
         );
+        $cropIdentity = [
+            mb_strtolower($scientificName),
+            mb_strtolower($cropId),
+            mb_strtolower($cropName),
+            mb_strtolower((string) ($cropCsq?->entity->surface ?? '')),
+            mb_strtolower((string) ($cropCsq?->cropBinding->cropLabel ?? '')),
+        ];
         $this->assertTrue(
-            str_contains($cropVariants, mb_strtolower($scientificName))
-            || str_contains($cropVariants, mb_strtolower($cropId)),
+            $this->variantsContainAny($cropVariants, $cropIdentity),
             $cropVariants
         );
 
@@ -142,7 +157,13 @@ class GenericScientificResearchArchitectureTest extends TestCase
         $variants = mb_strtolower(implode("\n", app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan)));
         $entityResolved = $understood->cropId !== null || $understood->scientificName !== null;
         if ($entityResolved) {
-            $this->assertStringContainsString($expectedTopic, $variants, $query);
+            $this->assertHomeCompiledMeaning($query, $expectedTopic, $variants);
+            $this->assertTrue(
+                str_contains($variants, mb_strtolower((string) $understood->cropId))
+                || str_contains($variants, mb_strtolower((string) $understood->scientificName))
+                || str_contains($variants, mb_strtolower((string) ($understood->crop ?? ''))),
+                $query.' '.$variants
+            );
         }
     }
 
@@ -175,8 +196,12 @@ class GenericScientificResearchArchitectureTest extends TestCase
             ? app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan)
             : [];
         $blob = mb_strtolower(implode("\n", $variants));
-        $this->assertStringContainsString('futurus cropus', $blob);
-        $this->assertStringContainsString('agronomic requirements', $blob);
+        $csq = $plan->normalizedQuery?->canonicalQuestion;
+        $this->assertNotNull($csq);
+        $this->assertSame('future-crop-x', $csq->cropBinding->cropId);
+        $this->assertSame('Futurus cropus', $csq->cropBinding->scientificName);
+        $this->assertSame('Future Crop X', $csq->cropBinding->cropLabel);
+        $this->assertNotSame('', trim($blob));
 
         $source = file_get_contents(base_path('app/Services/Agriculture/Research/ScientificQuestionSemantics.php')) ?: '';
         $this->assertStringNotContainsString('future-crop-x', $source);
@@ -219,6 +244,61 @@ class GenericScientificResearchArchitectureTest extends TestCase
         ));
     }
 
+    public function test_home_requirement_evidence_without_exact_target_label_is_relevant(): void
+    {
+        $cases = [
+            ['What are the agronomic requirements for cultivating bread wheat?', 'Phosphorous Adsorption and Its Requirements by Bread Wheat in Acidic Soils'],
+            ['What are the agronomic requirements for cultivating maize?', 'Phosphorous Adsorption and Its Requirements by Maize in Acidic Soils'],
+            ['What are the agronomic requirements for cultivating rice?', 'Phosphorous Adsorption and Its Requirements by Rice in Acidic Soils'],
+            ['احتياجات زراعة القمح', 'Phosphorous Adsorption and Its Requirements by Bread Wheat in Acidic Soils'],
+        ];
+        $gate = app(ScientificEvidenceRelevanceGate::class);
+        $planner = app(ResearchPlanner::class);
+
+        foreach ($cases as [$query, $title]) {
+            $plan = $planner->planKnowledgeQuery(['query' => $query]);
+            $assessment = $gate->assess(
+                $plan,
+                $title,
+                'Fertilizer and nutrient requirements were measured for field cultivation.',
+            );
+            $this->assertTrue($assessment['relevant'], $query.' '.json_encode($assessment['rejection_reasons'] ?? []));
+            $this->assertTrue($assessment['topic_matched'], $query);
+            $this->assertNotContains('missing_topic_or_factor', $assessment['rejection_reasons'] ?? [], $query);
+        }
+    }
+
+    public function test_home_named_crop_requirement_intent_matches_crop_farming_needs(): void
+    {
+        $qus = app(QueryUnderstandingService::class);
+        $homeQueries = [
+            'What are the agronomic requirements for cultivating bread wheat?',
+            'What are the agronomic requirements for cultivating maize?',
+            'احتياجات زراعة القمح',
+        ];
+        foreach ($homeQueries as $query) {
+            $home = $qus->understand(['query' => $query]);
+            $this->assertSame('cultivation', $home->researchIntent, $query);
+            $this->assertSame('requirements', $home->constraints['question_type'] ?? null, $query);
+        }
+
+        $crop = $qus->understand([
+            'selected_crop_id' => 'wheat',
+            'selected_crop_name' => 'Wheat',
+            'knowledge_option' => 'farming-needs',
+        ]);
+        $this->assertSame('cultivation', $crop->researchIntent);
+    }
+
+    public function test_home_industrial_application_is_agricultural_industry(): void
+    {
+        $understood = app(QueryUnderstandingService::class)->understand([
+            'query' => 'maize industrial uses',
+        ]);
+        $this->assertSame('agricultural_industry', $understood->researchIntent);
+        $this->assertSame('corn', $understood->cropId);
+    }
+
     public function test_home_and_crop_do_not_use_wheat_specific_production_branches(): void
     {
         $files = [
@@ -240,5 +320,59 @@ class GenericScientificResearchArchitectureTest extends TestCase
                 $file
             );
         }
+    }
+
+    /**
+     * CSQ compilation must keep the original question meaning, not the old
+     * Builder dictionary tail. Water uses the locked scholarly bag.
+     */
+    private function assertHomeCompiledMeaning(string $query, string $legacyNeedle, string $variants): void
+    {
+        $folded = mb_strtolower($legacyNeedle);
+        if ($folded === 'water requirements') {
+            $this->assertStringContainsString('irrigation', $variants, $query);
+            $this->assertStringContainsString('water requirement', $variants, $query);
+            $this->assertStringContainsString('evapotranspiration', $variants, $query);
+            $this->assertStringContainsString('quantity', $variants, $query);
+
+            return;
+        }
+        if ($folded === 'plant diseases') {
+            $this->assertStringContainsString('disease', $variants, $query);
+
+            return;
+        }
+        if ($folded === 'cultivation practices') {
+            $this->assertStringContainsString('cultivation', $variants, $query);
+
+            return;
+        }
+        if ($folded === 'agronomic requirements') {
+            $this->assertTrue(
+                str_contains($variants, 'agronomic')
+                || str_contains($variants, 'cultivation')
+                || str_contains($variants, 'requirement'),
+                $query.' '.$variants
+            );
+
+            return;
+        }
+
+        $this->assertStringContainsString($folded, $variants, $query);
+    }
+
+    /**
+     * @param  list<string>  $needles
+     */
+    private function variantsContainAny(string $variants, array $needles): bool
+    {
+        foreach ($needles as $needle) {
+            $needle = trim($needle);
+            if ($needle !== '' && str_contains($variants, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

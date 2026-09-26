@@ -3,13 +3,26 @@
 namespace App\Services\Agriculture;
 
 /**
- * Generic botanical taxonomy for all field crops in the platform selector.
+ * Generic botanical taxonomy for agricultural entities in the platform selector.
+ * Covers field crops, vegetables, tubers, spices, and orchard/tree crops.
  * Data is crop-taxonomy metadata — not institution-specific and not crop-specific logic.
  */
 class FieldCropTaxonomyCatalog
 {
+    public const CATEGORY_FIELD_CROP = 'field_crop';
+
+    public const CATEGORY_VEGETABLE = 'vegetable';
+
+    public const CATEGORY_TUBER = 'tuber';
+
+    public const CATEGORY_SPICE = 'spice';
+
+    public const CATEGORY_FRUIT_TREE = 'fruit_tree';
+
+    public const CATEGORY_TREE_CROP = 'tree_crop';
+
     /**
-     * @return array{scientific_name: string, synonyms: list<string>}|null
+     * @return array{scientific_name: string, synonyms: list<string>, category?: string}|null
      */
     public static function entryFor(string $cropId): ?array
     {
@@ -21,6 +34,13 @@ class FieldCropTaxonomyCatalog
     public static function scientificNameFor(string $cropId): string
     {
         return (string) (self::entryFor($cropId)['scientific_name'] ?? '');
+    }
+
+    public static function categoryFor(string $cropId): string
+    {
+        $category = trim((string) (self::entryFor($cropId)['category'] ?? ''));
+
+        return $category !== '' ? $category : self::CATEGORY_FIELD_CROP;
     }
 
     /**
@@ -60,7 +80,7 @@ class FieldCropTaxonomyCatalog
     }
 
     /**
-     * @return array<string, array{scientific_name: string, synonyms: list<string>}>
+     * @return array<string, array{scientific_name: string, synonyms: list<string>, category?: string}>
      */
     private static function entries(): array
     {
@@ -97,17 +117,26 @@ class FieldCropTaxonomyCatalog
             'hemp' => ['scientific_name' => 'Cannabis sativa', 'synonyms' => ['hemp', 'industrial hemp']],
             'jute' => ['scientific_name' => 'Corchorus olitorius', 'synonyms' => ['jute']],
             'tobacco' => ['scientific_name' => 'Nicotiana tabacum', 'synonyms' => ['tobacco']],
-            'tomato' => ['scientific_name' => 'Solanum lycopersicum', 'synonyms' => ['tomato', 'tomatoes', 'lycopersicon esculentum']],
+            'tomato' => ['scientific_name' => 'Solanum lycopersicum', 'synonyms' => ['tomato', 'tomatoes', 'lycopersicon esculentum'], 'category' => self::CATEGORY_VEGETABLE],
             'potato' => ['scientific_name' => 'Solanum tuberosum', 'synonyms' => [
                 'potato', 'potatoes', 'بطاطا', 'البطاطا', 'بطاطس', 'البطاطس',
-            ]],
+            ], 'category' => self::CATEGORY_TUBER],
             'sweet-potato' => ['scientific_name' => 'Ipomoea batatas', 'synonyms' => [
                 'sweet potato', 'sweet potatoes', 'sweetpotato', 'batata',
                 'بطاطا حلوة', 'البطاطا الحلوة', 'بطاطا الحلوة',
                 'بطاطس حلوة', 'البطاطس الحلوة',
-            ]],
-            'pepper' => ['scientific_name' => 'Capsicum annuum', 'synonyms' => ['pepper', 'bell pepper', 'chili', 'chilli', 'chili pepper', 'sweet pepper']],
-            'ginger' => ['scientific_name' => 'Zingiber officinale', 'synonyms' => ['ginger', 'ginger root']],
+            ], 'category' => self::CATEGORY_TUBER],
+            'pepper' => ['scientific_name' => 'Capsicum annuum', 'synonyms' => ['pepper', 'bell pepper', 'chili', 'chilli', 'chili pepper', 'sweet pepper'], 'category' => self::CATEGORY_VEGETABLE],
+            'ginger' => ['scientific_name' => 'Zingiber officinale', 'synonyms' => ['ginger', 'ginger root'], 'category' => self::CATEGORY_SPICE],
+            'pomegranate' => ['scientific_name' => 'Punica granatum', 'synonyms' => [
+                'pomegranate', 'pomegranates',
+            ], 'category' => self::CATEGORY_FRUIT_TREE],
+            'olive' => ['scientific_name' => 'Olea europaea', 'synonyms' => [
+                'olive', 'olives', 'olive tree', 'olive trees',
+            ], 'category' => self::CATEGORY_FRUIT_TREE],
+            'date-palm' => ['scientific_name' => 'Phoenix dactylifera', 'synonyms' => [
+                'date palm', 'date palms', 'date-palm',
+            ], 'category' => self::CATEGORY_TREE_CROP],
         ];
     }
 }

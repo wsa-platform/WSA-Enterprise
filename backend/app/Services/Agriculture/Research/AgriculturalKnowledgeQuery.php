@@ -18,6 +18,7 @@ final class AgriculturalKnowledgeQuery
      * @param  list<string>  $requestedInformation
      * @param  array<string, mixed>  $constraints
      * @param  list<string>  $clarificationRequirements
+     * @param  CanonicalScientificQuestion|null  $canonicalQuestion  Frozen CSQ v1. Public toArray() omits it.
      */
     public function __construct(
         public readonly string $originalQuestion,
@@ -37,6 +38,7 @@ final class AgriculturalKnowledgeQuery
         public readonly string $ambiguityState,
         public readonly array $clarificationRequirements,
         public readonly string $researchIntent,
+        public readonly ?CanonicalScientificQuestion $canonicalQuestion = null,
     ) {}
 
     public function isClear(): bool
@@ -96,7 +98,43 @@ final class AgriculturalKnowledgeQuery
         return $this->namedEntitySurface() !== null ? 'unresolved' : 'none';
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Internal copy. Always preserves the frozen CSQ pointer.
+     *
+     * @param  array<string, mixed>  $constraints
+     */
+    public function copyPreservingCanonical(
+        array $constraints,
+        ?string $crop,
+        ?string $cropId,
+    ): self {
+        return new self(
+            originalQuestion: $this->originalQuestion,
+            normalizedQuestion: $this->normalizedQuestion,
+            language: $this->language,
+            agriculturalDomain: $this->agriculturalDomain,
+            subject: $this->subject,
+            crop: $crop,
+            cropId: $cropId,
+            scientificName: $this->scientificName,
+            topic: $this->topic,
+            subtopic: $this->subtopic,
+            requestedInformation: $this->requestedInformation,
+            constraints: $constraints,
+            location: $this->location,
+            researchRequired: $this->researchRequired,
+            ambiguityState: $this->ambiguityState,
+            clarificationRequirements: $this->clarificationRequirements,
+            researchIntent: $this->researchIntent,
+            canonicalQuestion: $this->canonicalQuestion,
+        );
+    }
+
+    /**
+     * Public/legacy DTO. Does not emit CSQ (frontend/public contract unchanged).
+     *
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [
