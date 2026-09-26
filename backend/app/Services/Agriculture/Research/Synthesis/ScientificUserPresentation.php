@@ -169,6 +169,8 @@ final class ScientificUserPresentation
                 'publication_year' => $item->publicationYear,
                 'doi' => $item->doi,
                 'original_url' => self::originalUrl($item->url, $item->doi),
+                'abstract' => self::abstractFromEvidence($item),
+                'pdf_url' => self::pdfUrlFromEvidence($item),
                 'confidence' => $item->confidence,
             ];
         }
@@ -249,6 +251,57 @@ final class ScientificUserPresentation
         }
 
         return preg_match('#^[a-f0-9]{40}$#i', $trimmed) === 1;
+    }
+
+    /**
+     * Abstract text only. Title-only evidenceText is not treated as an abstract.
+     */
+    public static function abstractFromEvidence(ScientificEvidenceItem $item): ?string
+    {
+        $text = trim((string) $item->evidenceText);
+        if ($text === '') {
+            return null;
+        }
+
+        if (mb_strtolower($text) === mb_strtolower(trim($item->publicationTitle))) {
+            return null;
+        }
+
+        return $text;
+    }
+
+    /**
+     * Provider-agnostic HTTPS PDF URL already supplied by a research adapter.
+     */
+    public static function pdfUrlFromEvidence(ScientificEvidenceItem $item): ?string
+    {
+        $provenance = is_array($item->sourceAttribution['provenance'] ?? null)
+            ? $item->sourceAttribution['provenance']
+            : [];
+        $url = trim((string) ($provenance['open_access_pdf_url'] ?? $provenance['pdf_url'] ?? ''));
+
+        return self::safeHttpsContentUrl($url);
+    }
+
+    public static function safeHttpsContentUrl(?string $url): ?string
+    {
+        $url = trim((string) $url);
+        if ($url === '' || preg_match('#^https://#i', $url) !== 1) {
+            return null;
+        }
+        if (preg_match('/[<>"\']/', $url) === 1) {
+            return null;
+        }
+
+        $parts = parse_url($url);
+        if (! is_array($parts) || ! is_string($parts['host'] ?? null) || $parts['host'] === '') {
+            return null;
+        }
+        if (isset($parts['user']) || isset($parts['pass'])) {
+            return null;
+        }
+
+        return $url;
     }
 
     public static function originalUrl(?string $url, ?string $doi): ?string

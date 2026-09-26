@@ -1990,7 +1990,14 @@
       "viewerNotice": "Bu bir WSA araştırma sunum sayfasıdır. Orijinal yayıncı sitesi değildir.",
       "originalSource": "Orijinal kaynak",
       "noOriginalUrl": "Güvenilir bir orijinal kaynak URL’si mevcut değil.",
-      "viewerMissing": "Bu araştırma sonucu bu oturumda artık mevcut değil."
+      "viewerMissing": "Bu araştırma sonucu bu oturumda artık mevcut değil.",
+      "contentAbstractLabel": "Öz",
+      "contentAbstractNotice": "Yalnızca öz — tam makale WSA içinde görüntülenemiyor.",
+      "contentPdfLabel": "PDF belgesi",
+      "contentPdfUnavailable": "PDF görüntülenemedi.",
+      "contentStructuredLabel": "Makale içeriği",
+      "contentUnavailable": "Bu araştırma içeriği dahili olarak görüntülenemiyor.",
+      "openingOriginalSource": "Orijinal kaynak açılıyor"
     },
     "categoriesStrip": {
       "title": "Ana hizmetlerimizi ve kategorilerimizi keşfedin"

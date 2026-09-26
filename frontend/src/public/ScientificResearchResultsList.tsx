@@ -45,6 +45,8 @@ export function ScientificResearchResultsList({
             organization: result.organization,
             journal: result.journal,
             publication_year: result.publication_year,
+            abstract: result.abstract,
+            pdf_url: result.pdf_url,
           }
           const meta = resultMeta(result)
           return (

@@ -9,7 +9,7 @@ import { AuthProvider } from '../context/AuthContext'
 import { PublicLayout } from './PublicLayout'
 import { ResearchSourceLink } from './ResearchSourceLink'
 import { ResearchViewerPage } from './ResearchViewerPage'
-import { createSearchEpisode, homeResultsPath } from './scientificSearchEpisode'
+import { createCropSearchEpisode, createSearchEpisode, homeResultsPath } from './scientificSearchEpisode'
 import {
   activateResearchResult,
   isClickableAnchorMarkup,
@@ -162,6 +162,7 @@ describe('research viewer navigation', () => {
       authors: ['Dr Researcher'],
       publication_year: 2023,
       abstract: 'Documented cultivation practices under limited rainfall.',
+      pdf_url: 'https://example.org/click.pdf',
       url: 'https://doi.org/10.1000/click',
       doi: '10.1000/click',
     }, 'Selected scientific answer.', 0, [{ answer: 'Alternative genuine answer.' }])
@@ -173,7 +174,7 @@ describe('research viewer navigation', () => {
     expect(html).toContain('Selected scientific answer.')
     expect(html).toContain('Alternative genuine answer.')
     expect(html).toContain('Dr Researcher')
-    expect(html).toContain('Documented cultivation practices under limited rainfall.')
+    expect(html).toContain('data-testid="research-viewer-pdf"')
     expect(isClickableAnchorMarkup(html, 'https://doi.org/10.1000/click')).toBe(true)
     expect(html).toContain('data-testid="research-viewer-original-source"')
     expect(html).not.toMatch(/confidence/i)
@@ -191,6 +192,7 @@ describe('research viewer navigation', () => {
     expect(doiRecord.record.originalUrl).toBe('https://doi.org/10.1000/valid-doi')
     const doiHtml = renderWithRouter(doiRecord.viewerPath)
     expect(isClickableAnchorMarkup(doiHtml, 'https://doi.org/10.1000/valid-doi')).toBe(true)
+    expect(doiHtml).toContain('data-testid="research-viewer-external-fallback"')
 
     const missing = activateResearchResult({
       citation_id: 'cite-none',
@@ -198,7 +200,7 @@ describe('research viewer navigation', () => {
     })
     expect(missing.record.originalUrl).toBeNull()
     const missingHtml = renderWithRouter(missing.viewerPath)
-    expect(missingHtml).toContain('data-testid="research-viewer-no-original"')
+    expect(missingHtml).toContain('data-testid="research-viewer-unavailable"')
     expect(missingHtml).not.toContain('href="https://')
   })
 
@@ -283,6 +285,8 @@ describe('research viewer navigation', () => {
             original_url: 'https://doi.org/10.1000/nav',
             doi: '10.1000/nav',
             authors: ['Researcher'],
+            abstract: 'Documented abstract for internal display.',
+            pdf_url: 'https://example.org/nav.pdf',
             confidence: 0.50,
           }],
         },
@@ -302,7 +306,40 @@ describe('research viewer navigation', () => {
     expect(isClickableAnchorMarkup(html, 'https://doi.org/10.1000/nav')).toBe(true)
     expect(html).toContain('data-testid="research-viewer-original-source"')
     expect(html).toContain('target="_blank"')
+    expect(html).toContain('data-testid="research-viewer-pdf"')
+    expect(html).not.toContain('data-testid="research-viewer-abstract-notice"')
     expect(html).toContain(homeResultsPath(episode.episodeId))
+  })
+
+  it('opens the original source when only an abstract exists and original_url is valid', () => {
+    const episode = createSearchEpisode({
+      query: 'wheat irrigation',
+      language: 'en',
+      episodeId: 'episode-abstract-only',
+      response: {
+        status: 'insufficient_evidence',
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          user_notice_code: 'insufficient_direct_evidence',
+          candidates: [],
+          sources: [],
+          results: [{
+            result_id: 'srcid-abstract-only',
+            title: 'Abstract only paper',
+            original_url: 'https://publisher.example/abstract-paper',
+            abstract: 'This abstract is not the paper.',
+            confidence: 0.50,
+          }],
+        },
+      },
+    })
+
+    const html = renderWithRouter(`/research/result/srcid-abstract-only?episode=${episode.episodeId}`)
+    expect(html).toContain('data-testid="research-viewer-external-fallback"')
+    expect(html).toContain('href="https://publisher.example/abstract-paper"')
+    expect(html).not.toContain('data-testid="research-viewer-title"')
+    expect(html).not.toContain('data-testid="research-viewer-abstract-notice"')
   })
 
   it('still opens the internal viewer when original_url is missing', () => {
@@ -321,6 +358,7 @@ describe('research viewer navigation', () => {
           results: [{
             result_id: 'srcid-no-url',
             title: 'No original URL paper',
+            abstract: 'Abstract remains available without original_url.',
             confidence: 0.50,
           }],
         },
@@ -333,5 +371,149 @@ describe('research viewer navigation', () => {
     expect(html).toContain('data-testid="research-viewer-no-original"')
     expect(html).not.toContain('data-testid="research-viewer-original-source"')
     expect(html).not.toContain('data-testid="research-viewer-missing"')
+    expect(html).toContain('data-testid="research-viewer-abstract"')
+    expect(html).toContain('Abstract only — complete paper unavailable inside WSA.')
+  })
+
+  it('metadata-only results open the original source instead of a fake article page', () => {
+    const episode = createSearchEpisode({
+      query: 'wheat irrigation',
+      language: 'en',
+      episodeId: 'episode-meta',
+      response: {
+        status: 'insufficient_evidence',
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          user_notice_code: 'insufficient_direct_evidence',
+          candidates: [],
+          sources: [],
+          results: [{
+            result_id: 'srcid-meta',
+            title: 'Metadata only paper',
+            original_url: 'https://publisher.example/meta-paper',
+            confidence: 0.50,
+          }],
+        },
+      },
+    })
+
+    const html = renderWithRouter(`/research/result/srcid-meta?episode=${episode.episodeId}`)
+    expect(html).toContain('data-testid="research-viewer-external-fallback"')
+    expect(html).toContain('href="https://publisher.example/meta-paper"')
+    expect(html).not.toContain('data-testid="research-viewer-title"')
+    expect(html).not.toContain('<iframe')
+  })
+
+  it('known result without content or original_url is unavailable, not missing', () => {
+    const episode = createSearchEpisode({
+      query: 'wheat irrigation',
+      language: 'en',
+      episodeId: 'episode-empty',
+      response: {
+        status: 'insufficient_evidence',
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          user_notice_code: 'insufficient_direct_evidence',
+          candidates: [],
+          sources: [],
+          results: [{
+            result_id: 'srcid-empty',
+            title: 'Empty content paper',
+            confidence: 0.50,
+          }],
+        },
+      },
+    })
+
+    const html = renderWithRouter(`/research/result/srcid-empty?episode=${episode.episodeId}`)
+    expect(html).toContain('data-testid="research-viewer-unavailable"')
+    expect(html).not.toContain('data-testid="research-viewer-missing"')
+  })
+
+  it('renders a PDF result inside WSA and keeps the original source separate', () => {
+    const episode = createSearchEpisode({
+      query: 'wheat irrigation',
+      language: 'en',
+      episodeId: 'episode-pdf',
+      response: {
+        status: 'insufficient_evidence',
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          user_notice_code: 'insufficient_direct_evidence',
+          candidates: [],
+          sources: [],
+          results: [{
+            result_id: 'srcid-pdf',
+            title: 'Open PDF paper',
+            original_url: 'https://publisher.example/pdf-paper',
+            pdf_url: 'https://example.org/open.pdf',
+            confidence: 0.50,
+          }],
+        },
+      },
+    })
+
+    const html = renderWithRouter(`/research/result/srcid-pdf?episode=${episode.episodeId}`)
+    expect(html).toContain('data-testid="research-viewer-pdf"')
+    expect(html).toContain('data="https://example.org/open.pdf"')
+    expect(html).toContain('data-testid="research-viewer-original-source"')
+    expect(html).not.toContain('<script')
+  })
+
+  it('keeps Home and Crop episode results isolated in the content viewer', () => {
+    const home = createSearchEpisode({
+      query: 'home query',
+      language: 'en',
+      episodeId: 'ep-home-content',
+      response: {
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          user_notice_code: 'insufficient_direct_evidence',
+          candidates: [],
+          sources: [],
+          results: [{
+            result_id: 'srcid-home-content',
+            title: 'Home content paper',
+            abstract: 'Home abstract.',
+            confidence: 0.50,
+          }],
+        },
+      },
+    })
+    const crop = createCropSearchEpisode({
+      query: 'crop query',
+      language: 'en',
+      episodeId: 'ep-crop-content',
+      returnPath: '/plant-production/field-crops?episode=ep-crop-content',
+      response: {
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          user_notice_code: 'insufficient_direct_evidence',
+          candidates: [],
+          sources: [],
+          results: [{
+            result_id: 'srcid-crop-content',
+            title: 'Crop content paper',
+            abstract: 'Crop abstract.',
+            confidence: 0.50,
+          }],
+        },
+      },
+    })
+
+    const homeHtml = renderWithRouter(`/research/result/srcid-home-content?episode=${home.episodeId}`)
+    const cropHtml = renderWithRouter(`/research/result/srcid-crop-content?episode=${crop.episodeId}`)
+    expect(homeHtml).toContain('Home content paper')
+    expect(homeHtml).toContain('Home abstract.')
+    expect(homeHtml).not.toContain('Crop content paper')
+    expect(cropHtml).toContain('Crop content paper')
+    expect(cropHtml).toContain('Crop abstract.')
+    expect(cropHtml).not.toContain('Home content paper')
+    expect(cropHtml).toContain('/plant-production/field-crops?episode=ep-crop-content')
   })
 })

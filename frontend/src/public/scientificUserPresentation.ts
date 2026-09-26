@@ -23,6 +23,8 @@ export type PresentedSource = {
 
 export type PresentedResearchResult = PresentedSource & {
   doi?: string | null
+  abstract?: string | null
+  pdf_url?: string | null
   confidence?: number
 }
 
@@ -109,6 +111,8 @@ function presentedResearchResults(
       publication_year: row.publication_year ?? null,
       doi: row.doi ?? null,
       original_url: rawUrl && !isExternalSearchRedirect(rawUrl) ? rawUrl : null,
+      abstract: row.abstract?.trim() || null,
+      pdf_url: row.pdf_url?.trim() || null,
     })
   }
   return results

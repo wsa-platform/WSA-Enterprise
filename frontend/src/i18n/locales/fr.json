@@ -1990,7 +1990,14 @@
       "viewerNotice": "Ceci est une page de présentation WSA. Ce n’est pas le site de l’éditeur d’origine.",
       "originalSource": "Source originale",
       "noOriginalUrl": "Aucune URL de source originale fiable n’est disponible.",
-      "viewerMissing": "Ce résultat de recherche n’est plus disponible dans cette session."
+      "viewerMissing": "Ce résultat de recherche n’est plus disponible dans cette session.",
+      "contentAbstractLabel": "Résumé",
+      "contentAbstractNotice": "Résumé seulement — l’article complet n’est pas disponible dans WSA.",
+      "contentPdfLabel": "Document PDF",
+      "contentPdfUnavailable": "Impossible d’afficher le PDF.",
+      "contentStructuredLabel": "Contenu de l’article",
+      "contentUnavailable": "Ce contenu de recherche n’est pas disponible pour un affichage interne.",
+      "openingOriginalSource": "Ouverture de la source originale"
     },
     "categoriesStrip": {
       "title": "Découvrez nos principaux services et catégories"

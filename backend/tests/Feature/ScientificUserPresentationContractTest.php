@@ -315,6 +315,63 @@ class ScientificUserPresentationContractTest extends TestCase
         $this->assertSame(['https://openalex.org/Whigh'], array_column($presentation['results'], 'result_id'));
     }
 
+    public function test_results_pass_abstract_and_pdf_without_changing_identity_or_primary_answer(): void
+    {
+        $item = $this->evidenceItem(
+            'https://openalex.org/Wcontent',
+            'Content paper',
+            0.50,
+            null,
+            EvidenceValidationStatus::EVIDENCE_USABLE,
+            'Documented abstract for the viewer.',
+            ['open_access_pdf_url' => 'https://example.org/open.pdf'],
+        );
+        $rows = ScientificUserPresentation::researchResultsFromValidatedEvidence([$item]);
+        $this->assertSame('https://openalex.org/Wcontent', $rows[0]['result_id']);
+        $this->assertSame('Documented abstract for the viewer.', $rows[0]['abstract']);
+        $this->assertSame('https://example.org/open.pdf', $rows[0]['pdf_url']);
+
+        $synthesis = $this->synthesisReport(
+            answer: 'Hidden final answer.',
+            gate: 'PASSED',
+            citations: [],
+            confidence: 0.40,
+        );
+        $presentation = ScientificUserPresentation::fromSynthesis($synthesis, false, [$item]);
+        $this->assertNull($presentation['primary_answer']);
+        $this->assertSame('https://openalex.org/Wcontent', $presentation['results'][0]['result_id']);
+    }
+
+    public function test_title_only_evidence_is_not_treated_as_an_abstract(): void
+    {
+        $item = $this->evidenceItem(
+            'https://openalex.org/Wtitle',
+            'Title only paper',
+            0.50,
+            null,
+            EvidenceValidationStatus::EVIDENCE_USABLE,
+            'Title only paper',
+        );
+        $rows = ScientificUserPresentation::researchResultsFromValidatedEvidence([$item]);
+        $this->assertNull($rows[0]['abstract']);
+    }
+
+    public function test_unsafe_pdf_url_is_not_forwarded(): void
+    {
+        $item = $this->evidenceItem(
+            'https://openalex.org/Wunsafe',
+            'Unsafe PDF paper',
+            0.50,
+            null,
+            EvidenceValidationStatus::EVIDENCE_USABLE,
+            'Documented abstract.',
+            ['open_access_pdf_url' => 'javascript:alert(1)'],
+        );
+        $rows = ScientificUserPresentation::researchResultsFromValidatedEvidence([$item]);
+        $this->assertNull($rows[0]['pdf_url']);
+        $this->assertSame('Documented abstract.', $rows[0]['abstract']);
+    }
+
     public function test_high_claim_confidence_cannot_substitute_for_low_overall_confidence(): void
     {
         $highClaim = new ResearchAnswerClaim(
@@ -436,6 +493,8 @@ class ScientificUserPresentationContractTest extends TestCase
         float $confidence,
         ?string $sourceId = null,
         string $validationStatus = EvidenceValidationStatus::EVIDENCE_USABLE,
+        string $evidenceText = 'Documented scientific evidence.',
+        array $provenance = [],
     ): ScientificEvidenceItem {
         return new ScientificEvidenceItem(
             evidenceId: md5($sourceIdentifier.'|'.$title),
@@ -452,7 +511,7 @@ class ScientificUserPresentationContractTest extends TestCase
             retrievedAt: '2026-09-25T00:00:00+00:00',
             agriculturalDomain: 'field_crops',
             claimTopic: 'irrigation',
-            evidenceText: 'Documented scientific evidence.',
+            evidenceText: $evidenceText,
             validationStatus: $validationStatus,
             validationFailures: [],
             claimRelationship: ClaimEvidenceRelationship::SUPPORTED,
@@ -460,9 +519,9 @@ class ScientificUserPresentationContractTest extends TestCase
             qualityScore: 80.0,
             qualityFactors: [],
             sourceAttribution: [
-                'provenance' => [
+                'provenance' => array_merge([
                     'source_identifier' => $sourceIdentifier,
-                ],
+                ], $provenance),
             ],
         );
     }

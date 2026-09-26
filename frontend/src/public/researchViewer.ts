@@ -15,6 +15,8 @@ export type ResearchViewerRecord = {
   abstract?: string | null
   doi?: string | null
   originalUrl?: string | null
+  pdfUrl?: string | null
+  fullText?: string | null
 }
 
 const STORAGE_PREFIX = 'wsa.research.viewer.'
@@ -91,6 +93,7 @@ export function researchViewerRecordFromCitation(
     abstract: citation.abstract?.trim() || null,
     doi: citation.doi ?? null,
     originalUrl: citationHref(citation),
+    pdfUrl: citation.pdf_url?.trim() || null,
   }
 }
 

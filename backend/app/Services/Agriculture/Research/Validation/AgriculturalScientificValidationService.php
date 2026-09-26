@@ -763,11 +763,17 @@ class AgriculturalScientificValidationService
             $existing = $meta['provenance'];
         }
 
-        return array_merge($existing, [
+        $merged = array_merge($existing, [
             'found_by_sources' => $result->foundBySources,
             'source_key' => $result->sourceKey,
             'source_identifier' => $result->sourceIdentifier,
         ]);
+        $pdfUrl = trim((string) ($meta['open_access_pdf_url'] ?? $meta['pdf_url'] ?? $merged['open_access_pdf_url'] ?? ''));
+        if ($pdfUrl !== '') {
+            $merged['open_access_pdf_url'] = $pdfUrl;
+        }
+
+        return $merged;
     }
 
     /**

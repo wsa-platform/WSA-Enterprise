@@ -1990,7 +1990,14 @@
       "viewerNotice": "This is a WSA research presentation page. It is not the original publisher website.",
       "originalSource": "Original source",
       "noOriginalUrl": "No trustworthy original source URL is available.",
-      "viewerMissing": "This research result is no longer available in this session."
+      "viewerMissing": "This research result is no longer available in this session.",
+      "contentAbstractLabel": "Abstract",
+      "contentAbstractNotice": "Abstract only — complete paper unavailable inside WSA.",
+      "contentPdfLabel": "PDF document",
+      "contentPdfUnavailable": "The PDF could not be displayed.",
+      "contentStructuredLabel": "Article content",
+      "contentUnavailable": "This research content is not available for internal display.",
+      "openingOriginalSource": "Opening the original source"
     },
     "categoriesStrip": {
       "title": "Discover our main services and categories"

@@ -233,4 +233,29 @@ describe('scientific user presentation', () => {
     expect(presentation?.results).toEqual([])
     expect(presentation?.primary_answer).toBe('Answer only.')
   })
+
+  it('forwards abstract and pdf_url without reconstructing primary_answer', () => {
+    const presentation = toScientificUserPresentation({
+      user_presentation: {
+        primary_answer: null,
+        human_status: 'insufficient',
+        user_notice_code: 'insufficient_direct_evidence',
+        candidates: [],
+        sources: [],
+        results: [{
+          result_id: 'srcid-content',
+          title: 'Content paper',
+          abstract: 'Documented abstract.',
+          pdf_url: 'https://example.org/open.pdf',
+          original_url: 'https://publisher.example/paper',
+          confidence: 0.50,
+        }],
+      },
+    })
+
+    expect(presentation?.primary_answer).toBeNull()
+    expect(presentation?.results[0]?.abstract).toBe('Documented abstract.')
+    expect(presentation?.results[0]?.pdf_url).toBe('https://example.org/open.pdf')
+    expect(presentation?.results[0]?.result_id).toBe('srcid-content')
+  })
 })

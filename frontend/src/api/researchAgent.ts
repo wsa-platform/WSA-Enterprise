@@ -10,6 +10,7 @@ export type ResearchAgentCitation = {
   journal?: string | null
   publication_year?: number | null
   abstract?: string | null
+  pdf_url?: string | null
   citation_id?: string
   source_id?: string
   evidence_id?: string
@@ -42,6 +43,8 @@ export type ResearchPresentationResult = {
   publication_year?: number | null
   doi?: string | null
   original_url?: string | null
+  abstract?: string | null
+  pdf_url?: string | null
   confidence?: number
 }
 
