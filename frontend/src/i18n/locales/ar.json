@@ -1969,6 +1969,7 @@
       "additionalInformationHeading": "معلومات إضافية",
       "answerLanguage": "لغة الإجابة: {{language}}",
       "insufficientNotice": "هذه الاستجابة محدودة بسبب أدلة علمية غير كافية أو متعارضة.",
+      "resultsHeading": "نتائج البحث العلمي",
       "sourcesHeading": "المصادر",
       "noCitations": "لا توجد استشهادات معروضة.",
       "citationFallback": "مصدر {{index}}",

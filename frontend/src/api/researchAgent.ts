@@ -33,6 +33,18 @@ export type ResearchAnswerCandidate = {
   source_ids?: string[]
 }
 
+export type ResearchPresentationResult = {
+  result_id: string
+  title: string
+  authors?: string[]
+  organization?: string | null
+  journal?: string | null
+  publication_year?: number | null
+  doi?: string | null
+  original_url?: string | null
+  confidence?: number
+}
+
 export type ResearchUserPresentationPayload = {
   primary_answer?: string | null
   human_status?: 'answered' | 'insufficient'
@@ -47,6 +59,7 @@ export type ResearchUserPresentationPayload = {
     publication_year?: number | null
     original_url?: string | null
   }>
+  results?: ResearchPresentationResult[]
   answer_language?: string | null
   candidate_selection?: {
     threshold: number

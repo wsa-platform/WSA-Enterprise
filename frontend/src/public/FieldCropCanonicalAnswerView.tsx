@@ -5,6 +5,7 @@ import {
   resolveCropAnswerRenderMode,
 } from '../api/fieldCropCultivation'
 import { ResearchSourceLink } from './ResearchSourceLink'
+import { ScientificResearchResultsList } from './ScientificResearchResultsList'
 import { toScientificUserPresentation, userNoticeTranslationKey } from './scientificUserPresentation'
 
 export type FieldCropCanonicalAnswerViewProps = {
@@ -28,6 +29,7 @@ export function FieldCropCanonicalAnswerView({ profile, episodeId = null }: Fiel
   const answer = presentation?.primary_answer ?? null
   const alternativeAnswers = presentation?.candidates ?? []
   const sources = presentation?.sources ?? []
+  const results = presentation?.results ?? []
   const noticeKey = userNoticeTranslationKey(presentation?.user_notice_code)
   const limited = presentation?.human_status === 'insufficient'
     || mode === 'limited'
@@ -39,6 +41,12 @@ export function FieldCropCanonicalAnswerView({ profile, episodeId = null }: Fiel
       data-answer-mode={mode}
       data-answer-language={profile.language ?? ''}
     >
+      <ScientificResearchResultsList
+        results={results}
+        episodeId={episodeId}
+        testId="crop-research-results"
+      />
+
       {limited ? (
         <p className="gs-field-crop-profile-notice" role="status">
           {t(noticeKey || 'website.research.noAnswer')}

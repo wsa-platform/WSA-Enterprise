@@ -52,6 +52,9 @@ function homeResponse(answer: string): ResearchAgentQueryResponse {
         { result_id: 'src-a', title: 'Source A', original_url: 'https://example.org/a' },
         { result_id: 'src-b', title: 'Source B', original_url: 'https://doi.org/10.1000/b' },
       ],
+      results: [
+        { result_id: 'https://openalex.org/Whome', title: 'Home Paper', original_url: 'https://doi.org/10.1000/home', confidence: 0.50 },
+      ],
     },
     citations: [
       { citation_id: 'src-a', title: 'Source A', url: 'https://example.org/a' },
@@ -92,6 +95,7 @@ describe('scientific search episode', () => {
     expect(restored?.presentation.sources).toHaveLength(2)
     expect(findEpisodeResult(episode, 'src-a').source?.title).toBe('Source A')
     expect(findEpisodeResult(episode, 'src-b').source?.original_url).toBe('https://doi.org/10.1000/b')
+    expect(findEpisodeResult(episode, 'https://openalex.org/Whome').result?.title).toBe('Home Paper')
     expect(homeResultsPath('ep-1')).toBe('/?episode=ep-1#home-research')
     expect(viewerPathForResult('src-a', 'ep-1')).toBe('/research/result/src-a?episode=ep-1')
     expect(viewerPathForResult('src-a', 'ep-1')).not.toMatch(/google/i)

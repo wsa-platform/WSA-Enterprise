@@ -71,6 +71,22 @@ describe('research viewer navigation', () => {
     expect(researchResultId({ citation_id: 'cite-1', title: 'Wheat Study' })).toBe('cite-1')
   })
 
+  it('unknown result ids render the existing missing state without crashing', () => {
+    const html = renderWithRouter('/research/result/missing-result')
+    expect(html).toContain('data-testid="research-viewer-page"')
+    expect(html).toContain('data-testid="research-viewer-missing"')
+  })
+
+  it('does not derive a new identity from title and keeps identity stable if title changes', () => {
+    const first = researchResultId({ source_id: 'https://openalex.org/W9', title: 'Original title' })
+    const renamed = researchResultId({ source_id: 'https://openalex.org/W9', title: 'Changed title' })
+    expect(first).toBe('https://openalex.org/W9')
+    expect(renamed).toBe(first)
+    expect(researchResultId({ title: 'Title only paper' })).toBe('src-0')
+    expect(researchResultId({ title: 'Title only paper' })).not.toContain('Title only')
+    expect(researchResultId({ source_id: '10.1000/doi-as-id', title: 'DOI paper' })).toBe('src-0')
+  })
+
   it('stores a real original URL without fabricating one', () => {
     const record = researchViewerRecordFromCitation({
       citation_id: 'cite-1',
@@ -246,5 +262,44 @@ describe('research viewer navigation', () => {
     expect(html).toContain('data-testid="research-viewer-back"')
     expect(html).toContain(homeResultsPath(episode.episodeId))
     expect(html).not.toMatch(/google/i)
+  })
+
+  it('opens an episode scientific result inside WSA and keeps the original source separate', () => {
+    const episode = createSearchEpisode({
+      query: 'wheat irrigation',
+      language: 'en',
+      episodeId: 'episode-results',
+      response: {
+        status: 'insufficient_evidence',
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          user_notice_code: 'insufficient_direct_evidence',
+          candidates: [],
+          sources: [],
+          results: [{
+            result_id: 'https://openalex.org/Wnav',
+            title: 'Internal topic paper',
+            original_url: 'https://doi.org/10.1000/nav',
+            doi: '10.1000/nav',
+            authors: ['Researcher'],
+            confidence: 0.50,
+          }],
+        },
+      },
+    })
+
+    const html = renderWithRouter(
+      `/research/result/${encodeURIComponent('https://openalex.org/Wnav')}?episode=${episode.episodeId}`,
+    )
+
+    expect(html).toContain('data-testid="research-viewer-page"')
+    expect(html).toContain('data-testid="research-viewer-title"')
+    expect(html).toContain('Internal topic paper')
+    expect(html).not.toMatch(/<h2[^>]*href=/)
+    expect(isClickableAnchorMarkup(html, 'https://doi.org/10.1000/nav')).toBe(true)
+    expect(html).toContain('data-testid="research-viewer-original-source"')
+    expect(html).toContain('target="_blank"')
+    expect(html).toContain(homeResultsPath(episode.episodeId))
   })
 })

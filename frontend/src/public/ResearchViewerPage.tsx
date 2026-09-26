@@ -11,9 +11,9 @@ export function ResearchViewerPage() {
   const resultId = rawId ? decodeURIComponent(rawId) : ''
   const episodeId = searchParams.get('episode')
   const episode = loadSearchEpisode(episodeId)
-  const episodeHit = episode && resultId ? findEpisodeResult(episode, resultId) : { source: undefined, candidate: undefined }
+  const episodeHit = episode && resultId ? findEpisodeResult(episode, resultId) : { result: undefined, source: undefined, candidate: undefined }
   const stored = resultId ? loadResearchViewerRecord(resultId) : null
-  const source = episodeHit.source
+  const source = episodeHit.result ?? episodeHit.source
   const candidate = episodeHit.candidate
   const title = source?.title || stored?.title || (candidate ? t('website.research.answerHeading') : '')
   const answer = candidate?.answer || episode?.presentation.primary_answer || stored?.answer || null

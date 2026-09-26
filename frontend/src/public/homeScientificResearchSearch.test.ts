@@ -240,6 +240,7 @@ describe('homepage scientific research search', () => {
       },
     })
     expect(html).toContain('Answer only')
+    expect(html).not.toContain('data-testid="home-research-results"')
     expect(html).not.toContain('data-testid="home-research-conflicts"')
     expect(html).not.toContain('data-testid="home-research-uncertainty"')
     expect(html).not.toContain('data-testid="home-research-limitations"')
@@ -373,6 +374,43 @@ describe('homepage scientific research search', () => {
       result: { status: 'completed', confidence: 0.80, answer: 'A', citations: [], user_presentation: { primary_answer: 'A', human_status: 'answered', user_notice_code: null, candidates: [], sources: [] } },
     })
     expect(html).not.toContain('data-testid="home-research-feedback"')
+  })
+
+  it('renders multiple eligible scientific results above the final answer', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderView({
+      query: 'wheat irrigation',
+      loading: false,
+      error: null,
+      result: {
+        status: 'scientific_generated',
+        confidence: 0.40,
+        answer: 'Hidden raw synthesis.',
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          user_notice_code: 'insufficient_direct_evidence',
+          candidates: [],
+          sources: [],
+          results: [
+            { result_id: 'https://openalex.org/W1', title: 'Eligible Paper One', confidence: 0.49 },
+            { result_id: 'https://openalex.org/W2', title: 'Eligible Paper Two', confidence: 0.50 },
+            { result_id: 'https://openalex.org/W3', title: 'Eligible Paper Three', confidence: 0.51 },
+          ],
+        },
+      },
+    })
+    expect(html).toContain('data-testid="home-research-results"')
+    expect(html).toContain('Scientific search results')
+    expect(html).toContain('Eligible Paper Two')
+    expect(html).toContain('Eligible Paper Three')
+    expect(html).not.toContain('Eligible Paper One')
+    expect(html).toContain('href="/research/result/https%3A%2F%2Fopenalex.org%2FW2"')
+    expect(html).toContain('href="/research/result/https%3A%2F%2Fopenalex.org%2FW3"')
+    expect(html).not.toContain('target="_blank"')
+    expect(html).toContain('data-testid="home-research-no-answer"')
+    expect(html).not.toContain('Hidden raw synthesis.')
+    expect(html).not.toContain('Confidence:')
   })
 
   it('renders Turkish and French research chrome from i18n', async () => {

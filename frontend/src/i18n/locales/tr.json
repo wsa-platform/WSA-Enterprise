@@ -1969,6 +1969,7 @@
       "additionalInformationHeading": "Ek bilgi",
       "answerLanguage": "Yanıt dili: {{language}}",
       "insufficientNotice": "Bu yanıt yetersiz veya çelişkili bilimsel kanıtlar nedeniyle sınırlıdır.",
+      "resultsHeading": "Bilimsel arama sonuçları",
       "sourcesHeading": "Kaynaklar",
       "noCitations": "Gösterilecek atıf yok.",
       "citationFallback": "Kaynak {{index}}",

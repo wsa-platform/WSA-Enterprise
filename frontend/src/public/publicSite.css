@@ -4006,7 +4006,8 @@ a.hp-promo-card--full-image:focus-visible {
 }
 
 .hp-research-answer h3,
-.hp-research-citations h3 {
+.hp-research-citations h3,
+.hp-research-results h3 {
   margin: 0 0 0.45rem;
   font-size: 1.05rem;
   font-weight: 800;

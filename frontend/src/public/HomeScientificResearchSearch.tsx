@@ -12,6 +12,7 @@ import {
   type ResearchAgentQueryResponse,
 } from '../api/researchAgent'
 import { ResearchSourceLink } from './ResearchSourceLink'
+import { ScientificResearchResultsList } from './ScientificResearchResultsList'
 import { createSearchEpisode, resolveHomeRestoredEpisode } from './scientificSearchEpisode'
 import { toScientificUserPresentation, userNoticeTranslationKey } from './scientificUserPresentation'
 
@@ -85,6 +86,7 @@ export function HomeScientificResearchSearchView({
   const answer = presentation?.primary_answer ?? null
   const alternativeAnswers = presentation?.candidates ?? []
   const sources = presentation?.sources ?? []
+  const results = presentation?.results ?? []
   const noticeKey = userNoticeTranslationKey(presentation?.user_notice_code)
   const showFeedback = Boolean(result) && typeof onPositiveFeedback === 'function'
   const feedbackBusy = feedbackState === 'submitting'
@@ -145,6 +147,12 @@ export function HomeScientificResearchSearchView({
 
       {!loading && !error && result ? (
         <div className="hp-research-result" aria-live="polite" data-testid="home-research-presentation">
+          <ScientificResearchResultsList
+            results={results}
+            episodeId={episodeId}
+            testId="home-research-results"
+          />
+
           {answer ? (
             <div className="hp-research-answer" data-testid="home-research-primary-answer">
               <h3>{t('website.research.answerHeading')}</h3>

@@ -197,6 +197,34 @@ describe('P7-U2 FieldCropCanonicalAnswerView', () => {
     expect(html).not.toContain('data-testid="crop-uncertainty"')
   })
 
+  it('renders eligible scientific results independently of the final answer', async () => {
+    await i18n.changeLanguage('en')
+    const html = renderCanonical(
+      canonicalFixture({
+        status: 'insufficient_evidence',
+        answer: 'Hidden crop synthesis.',
+        confidence: 0.40,
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          user_notice_code: 'insufficient_direct_evidence',
+          candidates: [],
+          sources: [],
+          results: [
+            { result_id: 'https://openalex.org/Wcrop1', title: 'Crop Paper One', confidence: 0.49 },
+            { result_id: 'https://openalex.org/Wcrop2', title: 'Crop Paper Two', confidence: 0.50 },
+          ],
+        },
+      }),
+    )
+    expect(html).toContain('data-testid="crop-research-results"')
+    expect(html).toContain('Crop Paper Two')
+    expect(html).not.toContain('Crop Paper One')
+    expect(html).toContain('href="/research/result/https%3A%2F%2Fopenalex.org%2FWcrop2"')
+    expect(html).not.toContain('target="_blank"')
+    expect(html).not.toContain('Hidden crop synthesis.')
+  })
+
   it('H/I citation title opens the internal Viewer and not the external URL or Google', async () => {
     await i18n.changeLanguage('en')
     const html = renderCanonical(canonicalFixture())

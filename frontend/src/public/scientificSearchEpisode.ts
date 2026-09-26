@@ -1,6 +1,11 @@
 import type { ResearchAgentQueryResponse } from '../api/researchAgent'
 import { researchViewerPath } from './researchViewer'
-import type { PresentedCandidate, PresentedSource, ScientificUserPresentation } from './scientificUserPresentation'
+import type {
+  PresentedCandidate,
+  PresentedResearchResult,
+  PresentedSource,
+  ScientificUserPresentation,
+} from './scientificUserPresentation'
 import { toScientificUserPresentation } from './scientificUserPresentation'
 
 export type ResearchEpisodeOwner = 'home' | 'crop'
@@ -98,6 +103,10 @@ function normalizeEpisode(raw: ScientificSearchEpisode | null, fallbackOwner?: R
   return {
     ...raw,
     owner,
+    presentation: {
+      ...raw.presentation,
+      results: raw.presentation.results ?? [],
+    },
   }
 }
 
@@ -279,8 +288,9 @@ export function createCropSearchEpisode(input: {
 export function findEpisodeResult(
   episode: ScientificSearchEpisode,
   resultId: string,
-): { source?: PresentedSource; candidate?: PresentedCandidate } {
-  const source = episode.presentation.sources.find((item) => item.result_id === resultId)
+): { result?: PresentedResearchResult; source?: PresentedSource; candidate?: PresentedCandidate } {
+  const result = episode.presentation.results.find((item) => item.result_id === resultId)
+  const source = result ?? episode.presentation.sources.find((item) => item.result_id === resultId)
   const candidate = episode.presentation.candidates.find((item) => item.result_id === resultId)
-  return { source, candidate }
+  return { result, source, candidate }
 }

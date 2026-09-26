@@ -182,7 +182,11 @@ class AgriculturalResearchAgent
 
         $candidates = ScientificAnswerCandidatePresenter::fromSynthesis($synthesisReport);
         $sufficient = $this->hasSufficientScientificSynthesis($synthesisReport);
-        $userPresentation = ScientificUserPresentation::fromSynthesis($synthesisReport, $sufficient);
+        $userPresentation = ScientificUserPresentation::fromSynthesis(
+            $synthesisReport,
+            $sufficient,
+            $validationReport->validatedEvidence,
+        );
 
         $payload = array_merge(
             $synthesisReport->toArray(),
@@ -454,7 +458,11 @@ class AgriculturalResearchAgent
         $persistence = $persistenceReport->toArray();
         $citations = is_array($synthesis['citations'] ?? null) ? $synthesis['citations'] : [];
         $candidates = ScientificAnswerCandidatePresenter::fromSynthesis($synthesisReport);
-        $userPresentation = ScientificUserPresentation::fromSynthesis($synthesisReport, $sufficient);
+        $userPresentation = ScientificUserPresentation::fromSynthesis(
+            $synthesisReport,
+            $sufficient,
+            $scientificValidation->validatedEvidence,
+        );
         $status = $sufficient ? 'scientific_generated' : $synthesisReport->status;
         $loadState = $sufficient ? 'scientific_generated' : $synthesisReport->status;
 
@@ -523,7 +531,11 @@ class AgriculturalResearchAgent
     ): array {
         $candidates = ScientificAnswerCandidatePresenter::fromSynthesis($synthesisReport);
         $sufficient = $this->hasSufficientScientificSynthesis($synthesisReport);
-        $userPresentation = ScientificUserPresentation::fromSynthesis($synthesisReport, $sufficient);
+        $userPresentation = ScientificUserPresentation::fromSynthesis(
+            $synthesisReport,
+            $sufficient,
+            $scientificValidation->validatedEvidence,
+        );
 
         $status = $sufficient ? 'scientific_generated' : $synthesisReport->status;
 

@@ -23,14 +23,48 @@ export function researchViewerPath(resultId: string): string {
   return `${RESEARCH_VIEWER_PATH}/${encodeURIComponent(resultId)}`
 }
 
-export function researchResultId(citation: ResearchAgentCitation, fallbackIndex = 0): string {
-  const explicit = citation.citation_id?.trim() || citation.evidence_id?.trim() || citation.source_id?.trim()
-  if (explicit) {
-    return explicit
+function isDoiIdentity(value: string): boolean {
+  const normalized = value.replace(/^(?:doi:|https?:\/\/(?:dx\.)?doi\.org\/)/i, '').trim()
+  return /^10\.\d{4,9}\//.test(normalized)
+}
+
+function isCatalogIdentity(value: string): boolean {
+  if (/(?:^|:\/\/)(?:[a-z0-9.-]+\.)?openalex\.org\//i.test(value)) {
+    return true
   }
-  const title = citation.title?.trim()
-  if (title) {
-    return `src-${fallbackIndex}-${title.slice(0, 48)}`
+  if (/^[WAIC]\d+$/.test(value)) {
+    return true
+  }
+  if (/^(?:consensus|semantic_scholar):/.test(value)) {
+    return true
+  }
+  return /^[a-f0-9]{40}$/i.test(value)
+}
+
+function isInternalIdentity(value: string): boolean {
+  const trimmed = value.trim()
+  if (trimmed === '' || isDoiIdentity(trimmed)) {
+    return false
+  }
+  if (isCatalogIdentity(trimmed)) {
+    return true
+  }
+  return !/^https?:\/\//i.test(trimmed)
+}
+
+/** New IDs are never title-derived. Old src-N-title session keys still load if stored. */
+export function researchResultId(citation: ResearchAgentCitation, fallbackIndex = 0): string {
+  const citationId = citation.citation_id?.trim()
+  if (citationId) {
+    return citationId
+  }
+  const evidenceId = citation.evidence_id?.trim()
+  if (evidenceId) {
+    return evidenceId
+  }
+  const sourceId = citation.source_id?.trim()
+  if (sourceId && isInternalIdentity(sourceId)) {
+    return sourceId
   }
   return `src-${fallbackIndex}`
 }
