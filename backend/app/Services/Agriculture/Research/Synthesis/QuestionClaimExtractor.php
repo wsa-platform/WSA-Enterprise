@@ -145,33 +145,71 @@ final class QuestionClaimExtractor
     private function primaryProperty(KnowledgeQueryPlan $plan): ?string
     {
         $constraints = is_array($plan->normalizedQuery->constraints) ? $plan->normalizedQuery->constraints : [];
-        foreach (['requested_property', 'requested_property_key', 'required_evidence_type'] as $key) {
+        foreach (['requested_property', 'requested_property_key'] as $key) {
             $value = trim((string) ($constraints[$key] ?? ''));
-            if ($value !== '') {
+            if ($value !== '' && ! $this->isNonPropertyRequestedItem(mb_strtolower($value), $plan)) {
                 return $value;
             }
         }
 
-        $topic = trim($plan->normalizedQuery->topic);
+        $factors = is_array($constraints['scientific_factors'] ?? null)
+            ? $constraints['scientific_factors']
+            : [];
+        foreach ($factors as $factor) {
+            $value = trim((string) $factor);
+            if ($value !== '' && ! $this->isNonPropertyRequestedItem(mb_strtolower($value), $plan)) {
+                return $value;
+            }
+        }
 
-        return $topic !== '' ? $topic : null;
+        return null;
     }
 
     /**
+     * Evidence-addressable properties only. Retrieval-intent and pipeline-meta
+     * labels on requestedInformation are not scientific question-claims.
+     *
      * @return list<string>
      */
     private function distinctRequestedInformation(KnowledgeQueryPlan $plan): array
     {
         $items = [];
         foreach ($plan->requestedInformation as $item) {
-            $normalized = strtolower(trim((string) $item));
+            $trimmed = trim((string) $item);
+            $normalized = strtolower($trimmed);
             if ($normalized === '' || isset($items[$normalized])) {
                 continue;
             }
-            $items[$normalized] = trim((string) $item);
+            if ($this->isNonPropertyRequestedItem($normalized, $plan)) {
+                continue;
+            }
+            $items[$normalized] = $trimmed;
         }
 
         return array_values($items);
+    }
+
+    private function isNonPropertyRequestedItem(string $normalized, KnowledgeQueryPlan $plan): bool
+    {
+        if ($normalized === strtolower(trim($plan->researchIntent))) {
+            return true;
+        }
+
+        return in_array($normalized, [
+            'verified_evidence',
+            'evidence_backed_guidance',
+            'topic_answer',
+            'optimal_value_or_range',
+            'types_or_classification',
+            'quantity_or_rate',
+            'timing_or_season',
+            'species_list',
+            'family_members_inventory',
+            'classification_inventory',
+            'agricultural_land_or_soil_types',
+            'requirements',
+            'recommendations',
+        ], true);
     }
 
     private function claimTextForProperty(string $questionText, string $property): string

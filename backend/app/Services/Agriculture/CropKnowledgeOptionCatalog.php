@@ -56,6 +56,26 @@ class CropKnowledgeOptionCatalog
     }
 
     /**
+     * True when $token is a knowledge-option key (intent), not an agricultural entity.
+     */
+    public static function isOptionKey(?string $token): bool
+    {
+        $folded = mb_strtolower(trim((string) $token));
+        if ($folded === '') {
+            return false;
+        }
+        $normalized = str_replace('_', '-', $folded);
+        foreach (self::options() as $option) {
+            $key = mb_strtolower((string) ($option['key'] ?? ''));
+            if ($key !== '' && ($folded === $key || $normalized === $key)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Short option title for a UI language. Option IDs remain language-independent.
      * Unknown languages fall back to Arabic (existing Arabic-first contract).
      */

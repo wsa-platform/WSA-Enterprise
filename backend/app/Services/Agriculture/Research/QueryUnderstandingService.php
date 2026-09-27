@@ -3,6 +3,7 @@
 namespace App\Services\Agriculture\Research;
 
 use App\Http\Middleware\SetLocaleFromHeader;
+use App\Services\Agriculture\CropKnowledgeOptionCatalog;
 use App\Services\Agriculture\FieldCropTaxonomyCatalog;
 
 /**
@@ -700,6 +701,10 @@ class QueryUnderstandingService
         }
         if ($candidate !== '' && FieldCropTaxonomyCatalog::entryFor($candidate) !== null) {
             return [$candidate, CanonicalScientificQuestion::NAMESPACE_TAXONOMY_CROP];
+        }
+        $fromLabel = AgriculturalEntityCatalog::resolveCanonicalCropIdFromLabel($candidate);
+        if ($fromLabel !== null && FieldCropTaxonomyCatalog::entryFor($fromLabel) !== null) {
+            return [$fromLabel, CanonicalScientificQuestion::NAMESPACE_TAXONOMY_CROP];
         }
         $cropId = is_string($cropBindingId) ? trim($cropBindingId) : '';
         if ($cropId !== '' && $candidate !== '' && $candidate === $cropId && FieldCropTaxonomyCatalog::entryFor($cropId) !== null) {
@@ -1506,11 +1511,21 @@ class QueryUnderstandingService
             return 'classification';
         }
 
+        if (AgriculturalEntityCatalog::asksLandOrSoilSuitabilityQuestion($haystack)) {
+            return 'recommendation';
+        }
+
         if (AgriculturalEntityCatalog::asksCausalAffectQuestion($haystack)) {
             return 'causes';
         }
 
         if (AgriculturalEntityCatalog::asksHowToProcedureQuestion($haystack)) {
+            return 'recommendation';
+        }
+
+        // Entity-set selection (which crops/plants) is recommendation even when
+        // temperature/water appear as environmental constraints.
+        if (AgriculturalEntityCatalog::asksAgriculturalEntitySetQuestion($haystack)) {
             return 'recommendation';
         }
 
@@ -1531,6 +1546,16 @@ class QueryUnderstandingService
             return 'range';
         }
 
+        $topicFactorsForType = AgriculturalEntityCatalog::extractTopicFactors($normalizedQuestion);
+        if (ScientificQuestionSemantics::prefersMeasurementValueQuestionType(
+            $haystack,
+            $intentQualifier,
+            $topicFactorsForType,
+            $scientificSense,
+        )) {
+            return 'range';
+        }
+
         $best = 'general';
         $bestScore = 0;
         foreach (AgriculturalEntityCatalog::questionTypeSignals() as $type => $keywords) {
@@ -1547,7 +1572,7 @@ class QueryUnderstandingService
         }
 
         if ($bestScore > 0) {
-            $factors = AgriculturalEntityCatalog::extractTopicFactors($normalizedQuestion);
+            $factors = $topicFactorsForType;
             if (ScientificQuestionSemantics::preferRangeOverRequirements(
                 $best,
                 $intentQualifier,
@@ -1555,6 +1580,15 @@ class QueryUnderstandingService
                 $scientificSense,
                 $haystack,
             )) {
+                return 'range';
+            }
+            if ($best === 'definition'
+                && ScientificQuestionSemantics::prefersMeasurementValueQuestionType(
+                    $haystack,
+                    $intentQualifier,
+                    $factors,
+                    $scientificSense,
+                )) {
                 return 'range';
             }
 
@@ -1574,7 +1608,16 @@ class QueryUnderstandingService
             return 'symptoms';
         }
 
-        // Bare "what is" / "ما هي" is definition only when no typed factual signal matched.
+        if (ScientificQuestionSemantics::prefersMeasurementValueQuestionType(
+            $haystack,
+            $intentQualifier,
+            $topicFactorsForType,
+            $scientificSense,
+        )) {
+            return 'range';
+        }
+
+        // Bare copula interrogative is definition only when no measurement/value framing matched.
         if (preg_match('/\bwhat\s+is\b/u', $haystack) === 1
             || preg_match('/\bwhat\s+are\b/u', $haystack) === 1
             || AgriculturalEntityCatalog::containsTerm($haystack, 'ما هو')
@@ -1853,8 +1896,8 @@ class QueryUnderstandingService
             $constraints['requested_property'] = 'irrigation';
         }
         if (preg_match('/(?:irrigat|sulama|sulan|irriguer)/u', $normalizedQuestion) === 1
-            || str_contains($normalizedQuestion, 'ري')
-            || str_contains($normalizedQuestion, 'الري')) {
+            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'ري')
+            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'الري')) {
             $constraints['requested_property'] = 'irrigation';
         }
 

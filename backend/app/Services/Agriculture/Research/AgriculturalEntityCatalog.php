@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Research;
 
+use App\Services\Agriculture\CropKnowledgeOptionCatalog;
 use App\Services\Agriculture\FieldCropTaxonomyCatalog;
 
 /**
@@ -434,6 +435,8 @@ final class AgriculturalEntityCatalog
             'optimal_range' => [
                 'optimal', 'optimum', 'optima', 'best', 'ideal', 'suitable', 'preferred',
                 'temperature range', 'thermal range',
+                'optimale', 'approprié', 'appropriée', 'convenable',
+                'uygun', 'en uygun',
                 'أفضل', 'أنسب', 'انسب', 'مناسبة', 'مناسب', 'مثلى', 'مثالي',
             ],
             'effect' => [
@@ -566,9 +569,10 @@ final class AgriculturalEntityCatalog
             ],
             'range' => [
                 'optimal', 'optimum', 'best temperature', 'range', 'between',
-                'أفضل درجة', 'النطاق', 'مثلى',
-                'plage', 'optimale', 'température optimale',
-                'en uygun', 'aralık', 'optimal',
+                'suitable', 'appropriate',
+                'أفضل درجة', 'النطاق', 'مثلى', 'مناسبة', 'مناسب',
+                'plage', 'optimale', 'température optimale', 'appropriée',
+                'en uygun', 'uygun', 'aralık', 'optimal',
             ],
             'timing' => [
                 'when', 'timing', 'season', 'period', 'schedule', 'planting date',
@@ -1572,6 +1576,9 @@ final class AgriculturalEntityCatalog
             'pomegranate' => ['الرمان', 'رمان'],
             'olive' => ['الزيتون', 'زيتون'],
             'date-palm' => ['نخيل التمر', 'النخيل', 'نخيل', 'نخلة'],
+            'chickpea' => ['الحمص', 'حمص'],
+            'lentil' => ['العدس', 'عدس'],
+            'alfalfa' => ['الفصة', 'البرسيم الحجازي', 'برسيم حجازي', 'ألفالفا'],
         ];
     }
 
@@ -1585,9 +1592,23 @@ final class AgriculturalEntityCatalog
         return [
             'wheat' => ['buğday', 'bugday', 'blé', 'du blé', 'le blé'],
             'corn' => ['maïs', 'le maïs', 'mısır', 'misir'],
+            'rice' => ['pirinç', 'pirinc', 'riz', 'le riz'],
+            'barley' => ['arpa', 'orge', "l'orge", 'lorge'],
+            'oats' => ['yulaf', 'avoine'],
+            'alfalfa' => ['yonca', 'luzerne'],
+            'sesame' => ['susam', 'sésame', 'sesame'],
+            'lentil' => ['mercimek', 'lentille'],
+            'chickpea' => ['nohut', 'pois chiche', 'pois-chiche'],
+            'potato' => ['patates', 'pomme de terre'],
+            'tomato' => ['domates', 'tomate'],
             'sweet-potato' => [
                 'tatlı patates', 'tatli patates', 'patate douce', 'la patate douce',
             ],
+            'soybean' => ['soya', 'soja'],
+            'sunflower' => ['ayçiçeği', 'aycicegi', 'tournesol'],
+            'cotton' => ['pamuk', 'coton'],
+            'olive' => ['zeytin'],
+            'pepper' => ['biber', 'poivron'],
         ];
     }
 
@@ -1605,6 +1626,174 @@ final class AgriculturalEntityCatalog
         }
 
         return FieldCropTaxonomyCatalog::searchTermsFor($cropId);
+    }
+
+    /**
+     * Resolve a single identity token to a catalog crop id.
+     * Uses taxonomy ids, recognition labels, and Home multilingual surfaces.
+     * Does not parse sentences and does not invent an id from a partial word.
+     */
+    public static function resolveCanonicalCropIdFromLabel(?string $token): ?string
+    {
+        $folded = mb_strtolower(trim((string) $token));
+        if ($folded === '') {
+            return null;
+        }
+        foreach (CanonicalScientificQuestion::inflectionalSurfaceCandidates($folded) as $candidate) {
+            $exact = self::resolveExactCanonicalCropIdFromLabel($candidate);
+            if ($exact !== null) {
+                return $exact;
+            }
+        }
+        $bestId = null;
+        $bestLength = 0;
+        foreach (preg_split('/\s+/u', $folded) ?: [] as $part) {
+            $part = trim((string) $part);
+            if ($part === '') {
+                continue;
+            }
+            $partId = null;
+            foreach (CanonicalScientificQuestion::inflectionalSurfaceCandidates($part) as $candidate) {
+                $partId = self::resolveExactCanonicalCropIdFromLabel($candidate);
+                if ($partId !== null) {
+                    break;
+                }
+            }
+            if ($partId !== null && mb_strlen($part) > $bestLength) {
+                $bestId = $partId;
+                $bestLength = mb_strlen($part);
+            }
+        }
+
+        return $bestId;
+    }
+
+    /**
+     * Longest catalog crop token in free text after inflection normalization.
+     * Preserves the existing Home Mısır-locative country guard.
+     */
+    public static function resolveCatalogCropTokenFromQuestion(string $normalizedQuestion): ?string
+    {
+        $haystack = mb_strtolower(trim($normalizedQuestion));
+        if ($haystack === '') {
+            return null;
+        }
+
+        $bestToken = null;
+        $bestLength = 0;
+        foreach (preg_split('/[^\p{L}]+/u', $haystack) ?: [] as $token) {
+            $token = mb_strtolower(trim((string) $token));
+            if ($token === '' || mb_strlen($token) < 3) {
+                continue;
+            }
+            if (CanonicalScientificQuestion::isGenericProcessSurface($token)
+                || self::isGenericScientificProcessToken($token)
+                || self::isNamedEntityStopToken($token)
+                || self::isLocationAliasToken($token)) {
+                continue;
+            }
+            $cropId = self::resolveCanonicalCropIdFromLabel($token);
+            if ($cropId === null) {
+                continue;
+            }
+            if (self::isTurkishMisirCountryLocative($haystack)) {
+                $maizeSurface = false;
+                foreach (CanonicalScientificQuestion::inflectionalSurfaceCandidates($token) as $candidate) {
+                    if (self::isTurkishMaizeSurfaceLabel($candidate)) {
+                        $maizeSurface = true;
+                        break;
+                    }
+                }
+                if ($maizeSurface) {
+                    continue;
+                }
+            }
+            $length = mb_strlen($token);
+            if ($length > $bestLength) {
+                $bestToken = $token;
+                $bestLength = $length;
+            }
+        }
+
+        return $bestToken;
+    }
+
+    public static function resolveExactCanonicalCropIdFromLabel(?string $token): ?string
+    {
+        $folded = mb_strtolower(trim((string) $token));
+        if ($folded === '') {
+            return null;
+        }
+        if (FieldCropTaxonomyCatalog::entryFor($folded) !== null) {
+            return $folded;
+        }
+        $hyphenated = str_replace(' ', '-', $folded);
+        if ($hyphenated !== $folded && FieldCropTaxonomyCatalog::entryFor($hyphenated) !== null) {
+            return $hyphenated;
+        }
+
+        $bestId = null;
+        $bestLength = 0;
+        foreach (self::cropRecognitionEntries() as $entry) {
+            foreach ($entry['labels'] as $label) {
+                $label = mb_strtolower(trim((string) $label));
+                if ($label === '' || $label !== $folded) {
+                    continue;
+                }
+                $length = mb_strlen($label);
+                if ($length > $bestLength) {
+                    $bestId = (string) $entry['crop_id'];
+                    $bestLength = $length;
+                }
+            }
+        }
+        foreach (self::homeMultilingualCropSurfaceLabels() as $cropId => $labels) {
+            foreach ($labels as $label) {
+                $label = mb_strtolower(trim((string) $label));
+                if ($label === '' || $label !== $folded) {
+                    continue;
+                }
+                $length = mb_strlen($label);
+                if ($length > $bestLength) {
+                    $bestId = (string) $cropId;
+                    $bestLength = $length;
+                }
+            }
+        }
+
+        return $bestId;
+    }
+
+    /**
+     * True when the token is a retrieval-intent / knowledge-option artifact,
+     * not a catalog entity identity.
+     */
+    public static function isIntentRetrievalSurface(?string $token): bool
+    {
+        $folded = mb_strtolower(trim((string) $token));
+        if ($folded === '') {
+            return false;
+        }
+        if (CropKnowledgeOptionCatalog::isOptionKey($folded)) {
+            return true;
+        }
+        foreach (CropKnowledgeOptionCatalog::options() as $option) {
+            foreach (['title_en', 'title_ar', 'title_fr', 'title_tr', 'key'] as $field) {
+                $title = mb_strtolower(trim((string) ($option[$field] ?? '')));
+                if ($title !== '' && $title === $folded) {
+                    return true;
+                }
+            }
+        }
+        foreach (self::researchIntents() as $intent) {
+            foreach (self::englishTermsForIntent($intent) as $term) {
+                if ($folded === mb_strtolower(trim((string) $term))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -1874,8 +2063,7 @@ final class AgriculturalEntityCatalog
                 }
                 // Home-only: Arabic crop stems may appear with clitics (للقمح، والذرة).
                 // Do not change global containsTerm (protected WIP Arabic boundary rules).
-                $matched = self::containsTerm($haystack, $label)
-                    || (preg_match('/\p{Arabic}/u', $label) === 1 && str_contains($haystack, $label));
+                $matched = self::haystackMentionsCropSurfaceLabel($haystack, $label);
                 if (! $matched) {
                     continue;
                 }
@@ -1998,6 +2186,36 @@ final class AgriculturalEntityCatalog
         return in_array($researchIntent, self::intentsRequiringNamedEntity(), true);
     }
 
+    /**
+     * Home crop-surface mention: exact term, Arabic clitic containment, or
+     * inflection-normalized token equality. Does not change global containsTerm.
+     */
+    public static function haystackMentionsCropSurfaceLabel(string $haystack, string $label): bool
+    {
+        $label = mb_strtolower(trim($label));
+        $haystack = mb_strtolower(trim($haystack));
+        if ($label === '' || $haystack === '') {
+            return false;
+        }
+        if (self::containsTerm($haystack, $label)
+            || (preg_match('/\p{Arabic}/u', $label) === 1 && str_contains($haystack, $label))) {
+            return true;
+        }
+        foreach (preg_split('/[^\p{L}]+/u', $haystack) ?: [] as $token) {
+            $token = mb_strtolower(trim((string) $token));
+            if ($token === '') {
+                continue;
+            }
+            foreach (CanonicalScientificQuestion::inflectionalSurfaceCandidates($token) as $candidate) {
+                if ($candidate === $label) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public static function containsTerm(string $haystack, string $needle): bool
     {
         $needle = mb_strtolower(trim($needle));
@@ -2114,7 +2332,13 @@ final class AgriculturalEntityCatalog
     {
         return [
             ['محصول', 'المحصول', 'محاصيل', 'المحاصيل', 'crop', 'crops'],
-            ['زرع', 'زراعة', 'الزراعة', 'زراعتها', 'يزرع', 'أزرع', 'للزراعة', 'cultivate', 'cultivation', 'planting', 'sowing', 'grow', 'grown', 'growing', 'grows'],
+            ['زرع', 'زراعة', 'الزراعة', 'زراعتها', 'يزرع', 'أزرع', 'للزراعة', 'تنمو', 'تصلح',
+                'cultivate', 'cultivation', 'cultivating', 'cultivated', 'planting', 'sowing',
+                'grow', 'grown', 'growing', 'grows', 'farmed', 'farming', 'cultured',
+                'pousser', 'cultiver', 'cultivé', 'cultivée', 'cultivées', 'cultivés',
+                'planter', 'plantation', 'semer', 'élevage', 'élevé', 'élevée', 'élevées',
+                'yetiş', 'yetişmek', 'yetiştirme', 'yetişebilir', 'yetiştirilebilir', 'yetişebilen',
+                'ekim', 'ekimi', 'yetiştirilen'],
             ['ملح', 'ملوحة', 'الملوحة', 'مالحة', 'مالح', 'المالحة', 'saline', 'salinity', 'salt'],
             ['تأثير', 'تؤثر', 'اثر', 'أثر', 'effect', 'effects', 'affect', 'affects', 'impact'],
         ];
@@ -2128,7 +2352,10 @@ final class AgriculturalEntityCatalog
     public static function cropCategorySignals(): array
     {
         return [
-            'crops' => ['crops', 'crop', 'محصول', 'المحصول', 'محاصيل', 'المحاصيل'],
+            'crops' => [
+                'crops', 'crop', 'cultures', 'plants', 'ürünler', 'bitkiler',
+                'محصول', 'المحصول', 'محاصيل', 'المحاصيل',
+            ],
             'vegetables' => ['vegetables', 'vegetable crops', 'خضروات', 'خضر'],
             'fruit_trees' => ['fruit trees', 'orchard crops', 'أشجار الفاكهة', 'اشجار الفاكهة'],
             'livestock' => ['livestock', 'animals', 'ماشية', 'حيوانات'],
@@ -2233,6 +2460,7 @@ final class AgriculturalEntityCatalog
                 'constraint_type' => 'environment',
                 'keywords' => [
                     'desert', 'arid', 'arid region', 'dryland', 'dry region', 'dry regions',
+                    'aride', 'désertique', 'desertique', 'kurak', 'çöl',
                     'صحراء', 'صحراوية', 'صحراوي',
                     'المناطق الجافة', 'مناطق جافة', 'الجافة',
                 ],
@@ -2247,14 +2475,21 @@ final class AgriculturalEntityCatalog
                 'constraint_type' => 'water_availability',
                 'keywords' => [
                     'water scarcity', 'scarce water', 'limited water', 'water is scarce',
-                    'شحة المياه', 'نقص المياه', 'شح المياه',
+                    'little water', 'low water availability', 'water shortage', 'low water supply',
+                    'شحة المياه', 'نقص المياه', 'شح المياه', 'مياه قليلة', 'قلة المياه', 'ندرة المياه',
+                    "peu d'eau", 'peu d eau', "pénurie d'eau", "penurie d'eau", "rareté de l'eau",
+                    'eau est rare', "lorsque l'eau est rare",
+                    'az su', 'su kıtlığı', 'su kitligi', 'su yetersizliği', 'su yetersizligi', 'sınırlı su', 'sinirli su',
                 ],
                 'query_terms' => ['water scarcity', 'limited water'],
             ],
             'saline_water' => [
                 'constraint_type' => 'water_quality',
                 'keywords' => [
-                    'saline water', 'brackish water', 'salt water irrigation',
+                    'saline water', 'brackish water', 'salt water', 'salty water',
+                    'salt water irrigation',
+                    'eau salée', 'eau salee', 'eau saline', 'eaux salées', 'eaux salees', 'eaux salines',
+                    'tuzlu su', 'tuzlu sular',
                     'مياه مالحة', 'ماء مالح',
                 ],
                 'query_terms' => ['saline water', 'salinity', 'salt tolerance'],
@@ -2263,6 +2498,7 @@ final class AgriculturalEntityCatalog
                 'constraint_type' => 'soil',
                 'keywords' => [
                     'saline soil', 'soil salinity', 'salt-affected soil',
+                    'sol salin', 'sols salins', 'tuzlu toprak', 'tuzlu topraklar',
                     'ملوحة التربة', 'تربة مالحة', 'أراضي ملحية',
                 ],
                 'query_terms' => ['saline soil', 'soil salinity', 'salt-affected soil'],
@@ -2337,6 +2573,96 @@ final class AgriculturalEntityCatalog
         }
 
         return $out;
+    }
+
+    /**
+     * Catalog environmental-condition vocabulary. Membership here is a
+     * constraint-class signal, not an entity assignment.
+     */
+    public static function isEnvironmentalConstraintVocabularyToken(string $token): bool
+    {
+        $token = mb_strtolower(trim($token, " \t\n\r-?؟"));
+        if ($token === '' || mb_strlen($token) < 3) {
+            return false;
+        }
+
+        foreach (self::environmentalConstraintSignals() as $spec) {
+            if (! is_array($spec)) {
+                continue;
+            }
+            $needles = array_merge(
+                is_array($spec['keywords'] ?? null) ? $spec['keywords'] : [],
+                is_array($spec['query_terms'] ?? null) ? $spec['query_terms'] : [],
+            );
+            foreach ($needles as $needle) {
+                $needle = mb_strtolower(trim((string) $needle));
+                if ($needle === '') {
+                    continue;
+                }
+                if ($token === $needle || preg_match('/\b'.preg_quote($token, '/').'\b/u', $needle) === 1) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * True when $token participates in environmental-condition vocabulary or
+     * a constraint already detected for this question. Role is compositional:
+     * the same catalog concept can be a definition subject in another question.
+     */
+    public static function isDetectedEnvironmentalConstraintToken(string $token, string $haystack): bool
+    {
+        $token = mb_strtolower(trim($token, " \t\n\r-?؟"));
+        if ($token === '' || mb_strlen($token) < 3) {
+            return false;
+        }
+        if (self::isEnvironmentalConstraintVocabularyToken($token)) {
+            return true;
+        }
+
+        foreach (self::extractEnvironmentalConstraints($haystack) as $constraint) {
+            if (! is_array($constraint)) {
+                continue;
+            }
+            $needle = mb_strtolower(trim((string) ($constraint['source_phrase'] ?? '')));
+            if ($needle !== '' && ($token === $needle || preg_match('/\b'.preg_quote($token, '/').'\b/u', $needle) === 1)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Phrase-level guard: a leftover residual must not smuggle a constraint
+     * token into the ENTITY slot.
+     */
+    public static function surfaceOccupiesEnvironmentalConstraintRole(string $surface, string $haystack): bool
+    {
+        if (self::isDetectedEnvironmentalConstraintToken($surface, $haystack)) {
+            return true;
+        }
+        foreach (preg_split('/[^\p{L}]+/u', $surface) ?: [] as $token) {
+            if (self::isDetectedEnvironmentalConstraintToken((string) $token, $haystack)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Constraint leftovers must not occupy ENTITY when the asked target is a
+     * crop/entity set or a named host crop.
+     */
+    public static function environmentalConstraintMustNotOccupyEntity(string $haystack): bool
+    {
+        return self::asksAgriculturalEntitySetQuestion($haystack)
+            || self::recognizeCrop($haystack) !== null
+            || self::recognizeHomeMultilingualCrops($haystack) !== [];
     }
 
     /**
@@ -2432,7 +2758,10 @@ final class AgriculturalEntityCatalog
             'osmotic', 'osmosis', 'physiology', 'physiological',
             'effect', 'effects', 'impact', 'impacts', 'influence', 'influences',
             'affect', 'affects', 'process', 'processes', 'mechanism', 'mechanisms',
-            'growth', 'development', 'response', 'responses', 'tolerance', 'adjustment',
+            'growth', 'growing', 'grow', 'grown', 'grows',
+            'planting', 'planted', 'cultivate', 'cultivating', 'cultivation',
+            'farmed', 'farming', 'cultured', 'élevage', 'élevé', 'élevée', 'yetiştirilen',
+            'development', 'response', 'responses', 'tolerance', 'adjustment',
             'relations', 'relationship', 'how', 'does', 'did', 'do', 'doing',
             'what', 'which', 'why', 'are', 'is', 'was', 'were', 'been', 'being',
             'have', 'has', 'had', 'can', 'could', 'should', 'would', 'may', 'might', 'will',
@@ -2440,10 +2769,25 @@ final class AgriculturalEntityCatalog
             'emergence', 'by', 'via', 'through',
             'germination', 'çimlenme', 'cimlenme',
             'الإنبات', 'انبات', 'إنبات',
-            'نمو', 'تأثير', 'عملية', 'آلية', 'اليه',
+            'نمو', 'زراعة', 'زرع', 'تأثير', 'عملية', 'آلية', 'اليه',
+            'يمكن', 'تنمو', 'تصلح',
+            'croissance', 'culture', 'cultivation', 'développement', 'development',
+            'pousser', 'cultiver', 'cultivé', 'cultivée', 'cultivées', 'cultivés',
+            'peuvent', 'peut', 'conviennent', 'convient', 'développer', 'développent',
+            'maladie', 'maladies', 'disease', 'diseases', 'rendement', 'yield',
+            'température', 'temperature', 'sol', 'soil',
+            'büyüme', 'gelişme', 'yetiştirme', 'sulama', 'hastalık', 'verim',
+            'yetiş', 'yetişmek', 'yetişebilir', 'yetiştirilebilir', 'yetişebilen',
+            'sıcaklık', 'toprak', 'gereksinim', 'أمراض', 'مرض',
         ];
 
-        return in_array($normalized, $process, true);
+        foreach (self::morphologicalProcessStemCandidates($normalized) as $candidate) {
+            if (in_array($candidate, $process, true)) {
+                return true;
+            }
+        }
+
+        return self::tokenMatchesCultivationProcessFamily($normalized);
     }
 
     public static function asksExplicitIrrigationOrWaterRequirement(string $haystack): bool
@@ -2583,16 +2927,205 @@ final class AgriculturalEntityCatalog
         return ['production', 'quantity'];
     }
 
+    /**
+     * Land/soil is the evaluated object of a suitability relation.
+     * Measurable-property "suitable X" frames are excluded.
+     */
+    public static function asksLandOrSoilSuitabilityQuestion(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '' || self::asksMeasurablePropertyAsPrimaryAnswer($hay)
+            || self::haystackAsksSuitableMeasurableProperty($hay)) {
+            return false;
+        }
+
+        $hasLandOrSoil = false;
+        foreach ([
+            'land', 'lands', 'soil', 'soils',
+            'أراضي', 'الاراضي', 'الأراضي', 'أرض', 'ارض',
+            'تربة', 'التربة',
+            'terres', 'terre', 'sols', 'sol',
+            'toprak', 'arazi', 'araziler',
+        ] as $object) {
+            if (self::containsTerm($hay, $object) || self::matchesSemanticToken($hay, $object)) {
+                $hasLandOrSoil = true;
+                break;
+            }
+        }
+        if (! $hasLandOrSoil) {
+            return false;
+        }
+
+        foreach ([
+            'suitable', 'suitability', 'مناسبة', 'مناسب', 'المناسبة',
+            'uygun', 'uygundur', 'convient', 'conviennent', 'convenable',
+            'ملاءمة', 'صلاحية',
+        ] as $relation) {
+            if (self::containsTerm($hay, $relation) || self::matchesSemanticToken($hay, $relation)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * "Suitable" modifies a measurable scientific property, not land/soil.
+     */
+    public static function haystackAsksSuitableMeasurableProperty(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+
+        foreach ([
+            'temperature', 'température', 'sıcaklık', 'حرارة',
+            'ph', 'pH',
+            'salinity', 'ملوحة',
+            'moisture', 'humidité', 'رطوبة',
+        ] as $property) {
+            if (! self::containsTerm($hay, $property) && ! self::matchesSemanticToken($hay, $property)) {
+                continue;
+            }
+            foreach (['suitable', 'suitability', 'مناسبة', 'مناسب', 'المناسبة', 'uygun', 'convient'] as $cue) {
+                if (self::containsTerm($hay, $cue) || self::matchesSemanticToken($hay, $cue)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public static function hasSuitabilityOrSelectionFraming(string $haystack): bool
     {
         foreach ([
             'can be grown', 'can be cultivated', 'suitable crops', 'crop suitability',
-            'which crops', 'best crops', 'recommended crops', 'crops for',
+            'which crops', 'what crops', 'what plants', 'which plants',
+            'best crops', 'recommended crops', 'crops for',
+            'quelles cultures', 'quels cultures', 'hangi ürünler',
             'recommended', 'are recommended',
             'يمكن زراعتها', 'يمكن زراعة', 'تصلح ل', 'صالحة ل', 'ملاءمة', 'صلاحية',
+            'ما المحاصيل', 'أفضل المحاصيل',
         ] as $signal) {
             if (self::matchesSemanticToken($haystack, $signal)) {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * True when the asked answer is a set of agricultural entities
+     * (crops/plants), not a measurable property of a named host.
+     * Contextual temperature/water/salinity remain constraints.
+     */
+    public static function asksAgriculturalEntitySetQuestion(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+
+        if (self::asksMeasurablePropertyAsPrimaryAnswer($hay)) {
+            return false;
+        }
+
+        if (self::hasExplicitDefinitionCopulaFrame($hay)
+            && ! self::hasSuitabilityOrSelectionFraming($hay)
+            && ! self::interrogativeFocusIsEntityCategory($hay)) {
+            return false;
+        }
+
+        return self::mentionsAgriculturalEntitySet($hay)
+            || self::hasSuitabilityOrSelectionFraming($hay);
+    }
+
+    /**
+     * Copula definition frames ("what is X"), not plural "what are" entity-set prompts.
+     */
+    public static function hasExplicitDefinitionCopulaFrame(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+        foreach ([
+            'what is', 'ما هي', 'ما هو', "qu'est-ce", 'quelle est', 'quel est', 'nedir',
+        ] as $frame) {
+            if (str_contains($hay, $frame)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Collective/plural category tokens. Singular "crop" is a modifier, not a set.
+     */
+    public static function mentionsAgriculturalEntitySet(string $haystack): bool
+    {
+        $modifierOnly = ['crop', 'محصول', 'المحصول', 'vegetable', 'fish'];
+        foreach (self::cropCategorySignals() as $keywords) {
+            foreach ($keywords as $keyword) {
+                $keyword = mb_strtolower(trim((string) $keyword));
+                if ($keyword === '' || in_array($keyword, $modifierOnly, true)) {
+                    continue;
+                }
+                if (self::matchesSemanticToken($haystack, $keyword)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * The interrogative noun is a measurable property (temperature, pH, range),
+     * not an entity category. Presence of a constraint word is not enough.
+     */
+    public static function asksMeasurablePropertyAsPrimaryAnswer(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '' || self::interrogativeFocusIsEntityCategory($hay)) {
+            return false;
+        }
+
+        return preg_match(
+            '/(?:\bwhat\b|\bwhich\b|quelle|quel|ما\s+هي|ما\s+هو).{0,48}'
+            .'(?:temperature|température|sıcaklık|درجة(?:\s+ال)?حرارة|pH\b|\bph\b|range|نطاق|'
+            .'concentration|تركيز)/u',
+            $hay,
+        ) === 1;
+    }
+
+    /**
+     * Interrogative determiner + agricultural entity-set noun.
+     */
+    public static function interrogativeFocusIsEntityCategory(string $haystack): bool
+    {
+        $modifierOnly = ['crop', 'محصول', 'المحصول', 'vegetable', 'fish'];
+        foreach (self::cropCategorySignals() as $keywords) {
+            foreach ($keywords as $keyword) {
+                $keyword = mb_strtolower(trim((string) $keyword));
+                if ($keyword === '' || in_array($keyword, $modifierOnly, true)) {
+                    continue;
+                }
+                $quoted = preg_quote($keyword, '/');
+                if (preg_match(
+                    '/(?:\bwhat\b|\bwhich\b|quelles?|quels?|hangi|ما(?:\s+هي|\s+هو)?)'
+                    .'\s+(?:are\s+|is\s+|est\s+|sont\s+)?'
+                    .'(?:the\s+|les\s+|le\s+|la\s+)?'
+                    .'(?:best\s+|أفضل\s+)?'
+                    .$quoted.'/u',
+                    $haystack,
+                ) === 1) {
+                    return true;
+                }
             }
         }
 
@@ -2641,9 +3174,16 @@ final class AgriculturalEntityCatalog
         $semantic = self::extractSemanticTarget($normalizedQuestion);
         if (is_array($semantic) && trim((string) ($semantic['entity_surface'] ?? '')) !== '') {
             $surface = self::trimSemanticPhrase((string) $semantic['entity_surface']);
+            $tokenCount = count(array_values(array_filter(
+                preg_split('/\s+/u', $surface) ?: [],
+                static fn (string $token): bool => trim($token) !== '',
+            )));
+            $catalogResolved = self::resolveCanonicalCropIdFromLabel($surface) !== null
+                || self::recognizeCrop($surface) !== null;
             if ($surface !== '' && self::isDistinctiveNamedEntitySurface($surface)
                 && ! self::isLocationAliasToken($surface)
-                && ! self::isUnsafeResidualEntitySurface($surface)) {
+                && ! self::isUnsafeResidualEntitySurface($surface)
+                && ($catalogResolved || $tokenCount === 1)) {
                 $best = [
                     'surface' => $surface,
                     'normalized' => mb_strtolower($surface),
@@ -2870,7 +3410,10 @@ final class AgriculturalEntityCatalog
             $normalizedQuestion,
             $matches,
         ) === 1) {
-            $entity = self::trimSemanticPhrase((string) $matches[1]);
+            $entity = self::promoteSurfaceToEntityRole(
+                (string) $matches[1],
+                $normalizedQuestion,
+            );
             $propertyKey = 'classification';
             $property = $property ?: 'types';
         }
@@ -2880,7 +3423,10 @@ final class AgriculturalEntityCatalog
             $normalizedQuestion,
             $matches,
         ) === 1) {
-            $entity = self::trimSemanticPhrase((string) $matches[1]);
+            $entity = self::promoteSurfaceToEntityRole(
+                (string) $matches[1],
+                $normalizedQuestion,
+            );
             $propertyKey = 'classification';
             $property = $property ?: 'types';
         }
@@ -2937,12 +3483,36 @@ final class AgriculturalEntityCatalog
             }
         }
 
+        $processFromEntityFrame = null;
+        if ($entity !== null) {
+            $entity = self::stripProcessTokensFromSurface($entity);
+        }
+        if ($entity !== null && (
+            CanonicalScientificQuestion::isGenericProcessSurface($entity)
+            || self::isGenericScientificProcessToken($entity)
+        )) {
+            $processFromEntityFrame = self::trimProcessPhrase($entity);
+            $entity = null;
+        }
+
         if ($entity !== null && (! self::isDistinctiveNamedEntitySurface($entity) || self::isLocationAliasToken($entity))) {
             $entity = null;
         }
 
         if ($entity === null) {
             $entity = self::extractResidualEntitySurface($normalizedQuestion, $property, $propertyKey);
+        }
+        if ($entity === null) {
+            $definitionSubject = self::extractExplicitDefinitionSubject($normalizedQuestion);
+            if ($definitionSubject !== null) {
+                $entity = self::promoteSurfaceToEntityRole($definitionSubject, $normalizedQuestion);
+            }
+        }
+
+        if ($entity !== null
+            && self::environmentalConstraintMustNotOccupyEntity($normalizedQuestion)
+            && self::surfaceOccupiesEnvironmentalConstraintRole($entity, $normalizedQuestion)) {
+            $entity = null;
         }
 
         if ($entity !== null && (! self::isDistinctiveNamedEntitySurface($entity) || self::isLocationAliasToken($entity))) {
@@ -2969,7 +3539,21 @@ final class AgriculturalEntityCatalog
             $entity = null;
         }
 
+        if ($entity !== null && (
+            CanonicalScientificQuestion::isGenericProcessSurface($entity)
+            || self::isGenericScientificProcessToken($entity)
+        )) {
+            $processFromEntityFrame = $processFromEntityFrame ?: self::trimProcessPhrase($entity);
+            $entity = null;
+        }
+
         $roles = self::completeSemanticRoleGraph($normalizedQuestion, $entity, $property, $propertyKey, $production, $measuredTarget);
+        if (($roles['process_surface'] ?? null) === null
+            && is_string($processFromEntityFrame)
+            && $processFromEntityFrame !== '') {
+            $roles['process_surface'] = $processFromEntityFrame;
+            $roles['process_resolution'] = CanonicalScientificQuestion::RESOLUTION_UNRESOLVED;
+        }
 
         if ($roles['entity_surface'] === null
             && $roles['target_surface'] === null
@@ -3205,16 +3789,60 @@ final class AgriculturalEntityCatalog
             $relationState = CanonicalScientificQuestion::RESOLUTION_RESOLVED;
         }
 
+        if ($entity !== null) {
+            $entity = self::stripProcessTokensFromSurface($entity);
+        }
+
+        if ($entity !== null && (
+            CanonicalScientificQuestion::isGenericProcessSurface($entity)
+            || self::isGenericScientificProcessToken($entity)
+        )) {
+            $process = $process ?? self::trimProcessPhrase($entity);
+            $process = $process !== '' ? $process : null;
+            $entity = null;
+        }
+
+        if ($entity !== null
+            && self::environmentalConstraintMustNotOccupyEntity($normalizedQuestion)
+            && self::surfaceOccupiesEnvironmentalConstraintRole($entity, $normalizedQuestion)) {
+            $entity = null;
+        }
+
+        if ($process === null) {
+            $process = self::extractCultivationProcessSurface($normalizedQuestion);
+        }
+
+        if ($entity !== null && $process !== null
+            && (self::surfacesCollapse($entity, $process) || self::tokenMatchesCultivationProcessFamily($entity))
+            && self::recognizeCrop($entity) === null
+            && self::recognizeLivestockEntity($entity) === null
+            && self::resolveCanonicalCropIdFromLabel($entity) === null
+            && ! self::surfaceIsExplicitDefinitionSubject($entity, $normalizedQuestion)) {
+            $entity = null;
+        }
+
+        if ($entity === null) {
+            $catalogEntity = self::resolveCatalogCropTokenFromQuestion($normalizedQuestion);
+            if ($catalogEntity !== null) {
+                $entity = $catalogEntity;
+            }
+        }
+
         $livestock = self::recognizeLivestockEntity($normalizedQuestion);
         $crop = self::recognizeCrop($normalizedQuestion);
+        $fromLabel = $entity !== null ? self::resolveCanonicalCropIdFromLabel($entity) : null;
         $entityResolution = $entity === null
             ? CanonicalScientificQuestion::RESOLUTION_NONE
-            : (($livestock !== null || $crop !== null)
+            : (($livestock !== null || $crop !== null || $fromLabel !== null)
                 ? CanonicalScientificQuestion::RESOLUTION_RESOLVED
                 : CanonicalScientificQuestion::RESOLUTION_UNRESOLVED);
         $entityNormalized = $entity === null
             ? null
-            : (is_array($livestock) ? (string) $livestock['value'] : (is_array($crop) ? (string) ($crop['crop_id'] ?? mb_strtolower($entity)) : mb_strtolower($entity)));
+            : (is_array($livestock)
+                ? (string) $livestock['value']
+                : (is_array($crop)
+                    ? (string) ($crop['crop_id'] ?? mb_strtolower($entity))
+                    : ($fromLabel ?? mb_strtolower($entity))));
 
         $operands = [];
         if (is_array($production['comparison_operands'] ?? null)) {
@@ -3595,7 +4223,12 @@ final class AgriculturalEntityCatalog
 
     private static function isGrammaticalFunctionToken(string $token): bool
     {
-        return in_array($token, ['of', 'de', 'du', 'des', 'in', 'on', 'sur', 'for', 'and', 'or', 'و', 'في', 'على'], true);
+        return in_array($token, [
+            'of', 'de', 'du', 'des', 'dans', 'avec', 'aux', 'under', 'into',
+            'among', 'in', 'on', 'sur', 'for', 'and', 'or',
+            'pour', 'la', 'le', 'les', 'the', 'için', 'ile', 'içinde',
+            'و', 'في', 'على', 'من', 'إلى', 'الى',
+        ], true);
     }
 
     private static function tokenIsRecognizedEntityAlias(string $token, string $fullQuestion): bool
@@ -3755,11 +4388,252 @@ final class AgriculturalEntityCatalog
      * Leftover distinctive tokens after stripping question frames and property cues.
      * Preserves unresolved named entities without catalog membership.
      */
+    /**
+     * True when the interrogative asks for a concept/definition subject.
+     * Residual may keep that subject; leftover text elsewhere is not an entity.
+     */
+    public static function hasExplicitRequestedConceptFrame(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+        foreach ([
+            'what is', 'what are', 'ما هي', 'ما هو', "qu'est-ce", 'quelle est',
+            'quelles sont', 'quels sont', 'nedir', 'nelerdir',
+        ] as $frame) {
+            if (self::matchesSemanticToken($hay, $frame) || str_contains($hay, $frame)) {
+                return true;
+            }
+        }
+        foreach (self::questionTypeSignals()['definition'] ?? [] as $keyword) {
+            if (self::matchesSemanticToken($hay, (string) $keyword)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Residual leftover is not entity evidence. Only catalog/named agricultural
+     * identity, or an explicit definition subject, may occupy ENTITY.
+     */
+    public static function residualSurfaceHasEntityEvidence(string $surface, string $haystack): bool
+    {
+        $surface = self::stripProcessTokensFromSurface($surface) ?? '';
+        if ($surface === '') {
+            return false;
+        }
+
+        if (self::surfaceIsRecognizedAgriculturalEntity($surface, $haystack)
+            || self::resolveCanonicalCropIdFromLabel($surface) !== null
+            || self::recognizeCrop($surface) !== null
+            || self::recognizeLivestockEntity($surface) !== null) {
+            return true;
+        }
+
+        return self::surfaceIsExplicitDefinitionSubject($surface, $haystack);
+    }
+
+    /**
+     * The leftover surface is the copula subject of a definition question.
+     * A definition/interrogative word elsewhere is not identity evidence.
+     */
+    public static function surfaceIsExplicitDefinitionSubject(string $surface, string $haystack): bool
+    {
+        $subject = self::extractExplicitDefinitionSubject($haystack);
+        if ($subject === null) {
+            return false;
+        }
+
+        return self::surfacesCollapse($surface, $subject)
+            || mb_strtolower(trim($surface)) === mb_strtolower(trim($subject));
+    }
+
+    public static function extractExplicitDefinitionSubject(string $haystack): ?string
+    {
+        $hay = mb_strtolower(trim($haystack, " \t\n\r?؟"));
+        if ($hay === '' || ! self::hasExplicitDefinitionCopulaFrame($hay)) {
+            return null;
+        }
+
+        foreach ([
+            '/^(?:what is|what\'s)\s+(?:a |an |the )?(.+)$/u',
+            '/^(?:ما هو|ما هي)\s+(.+)$/u',
+            '/^qu[\'’]est-ce que\s+(?:l[\'’]|le |la |les )?(.+)$/u',
+            '/^(.+?)\s+nedir$/u',
+        ] as $pattern) {
+            if (preg_match($pattern, $hay, $matches) !== 1) {
+                continue;
+            }
+            $subject = self::stripProcessTokensFromSurface((string) $matches[1]);
+            if ($subject === null) {
+                continue;
+            }
+            $tokens = preg_split('/\s+/u', $subject) ?: [];
+            if (count($tokens) > 3) {
+                return null;
+            }
+
+            return $subject;
+        }
+
+        return null;
+    }
+
+    /**
+     * Process participles and process stems cannot occupy ENTITY.
+     */
+    public static function stripProcessTokensFromSurface(string $surface): ?string
+    {
+        $kept = [];
+        foreach (preg_split('/\s+/u', trim($surface)) ?: [] as $token) {
+            $token = self::normalizeSemanticTokenEdge((string) $token);
+            if ($token === ''
+                || self::isGrammaticalFunctionToken($token)
+                || self::surfaceOccupiesProcessRole($token)) {
+                continue;
+            }
+            $kept[] = $token;
+        }
+        $phrase = self::trimSemanticPhrase(implode(' ', $kept));
+
+        return $phrase !== '' ? $phrase : null;
+    }
+
+    /**
+     * Promote leftover text to ENTITY only with positive identity evidence.
+     */
+    public static function promoteSurfaceToEntityRole(string $surface, string $haystack): ?string
+    {
+        $phrase = self::stripProcessTokensFromSurface($surface);
+        if ($phrase === null
+            || ! self::isDistinctiveNamedEntitySurface($phrase)
+            || self::isUnsafeResidualEntitySurface($phrase)
+            || ! self::residualSurfaceHasEntityEvidence($phrase, $haystack)) {
+            return null;
+        }
+
+        return $phrase;
+    }
+
+    /**
+     * Token plus morphological stems that may occupy PROCESS.
+     * Arabic participial surfaces (مست + root) reduce to the existing process family,
+     * not to an invented entity.
+     *
+     * @return list<string>
+     */
+    public static function morphologicalProcessStemCandidates(string $token): array
+    {
+        $folded = mb_strtolower(trim($token));
+        if ($folded === '') {
+            return [];
+        }
+
+        $candidates = CanonicalScientificQuestion::inflectionalSurfaceCandidates($folded);
+        $stripped = CanonicalScientificQuestion::stripProcessProclitics($folded);
+        $stripped = preg_replace('/(?:ات|ة|يّة|ية)$/u', '', $stripped) ?? $stripped;
+        $stripped = trim((string) $stripped);
+        if ($stripped !== '' && ! in_array($stripped, $candidates, true)) {
+            $candidates[] = $stripped;
+        }
+        if ($stripped !== '' && preg_match('/^مست(.{3,6})$/u', $stripped, $matches) === 1) {
+            $stem = trim((string) $matches[1]);
+            if ($stem !== '' && ! in_array($stem, $candidates, true)) {
+                $candidates[] = $stem;
+            }
+        }
+        if ($stripped !== '' && preg_match('/^(.+e)s$/u', $stripped, $matches) === 1) {
+            $stem = trim((string) $matches[1]);
+            if ($stem !== '' && ! in_array($stem, $candidates, true)) {
+                $candidates[] = $stem;
+            }
+        }
+
+        return array_values(array_unique($candidates));
+    }
+
+    /**
+     * Grow/cultivate morphological family used for PROCESS assignment.
+     * Distinct from CSQ GENERIC_PROCESS_SURFACES (yield, water, temperature).
+     *
+     * @return list<string>
+     */
+    public static function cultivationProcessFamilyMembers(): array
+    {
+        foreach (self::morphologicalFamilies() as $members) {
+            if (in_array('grow', $members, true) || in_array('cultivate', $members, true)) {
+                return $members;
+            }
+        }
+
+        return [];
+    }
+
+    public static function tokenMatchesCultivationProcessFamily(string $token): bool
+    {
+        $family = self::cultivationProcessFamilyMembers();
+        if ($family === []) {
+            return false;
+        }
+        foreach (self::morphologicalProcessStemCandidates($token) as $candidate) {
+            if (in_array($candidate, $family, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function surfaceOccupiesProcessRole(string $surface): bool
+    {
+        return CanonicalScientificQuestion::isGenericProcessSurface($surface)
+            || self::isGenericScientificProcessToken($surface);
+    }
+
+    public static function normalizeSemanticTokenEdge(string $token): string
+    {
+        $token = preg_replace('/^[\s\-\?؟]+|[\s\-\?؟]+$/u', '', $token) ?? $token;
+
+        return trim($token);
+    }
+
+    /**
+     * First grow/cultivate process token already classified by existing families.
+     */
+    public static function extractCultivationProcessSurface(string $haystack): ?string
+    {
+        foreach (preg_split('/[^\p{L}]+/u', mb_strtolower($haystack)) ?: [] as $token) {
+            $token = self::normalizeSemanticTokenEdge((string) $token);
+            if ($token === '' || mb_strlen($token) < 3) {
+                continue;
+            }
+            if (self::tokenMatchesCultivationProcessFamily($token)) {
+                $phrase = self::trimProcessPhrase($token);
+
+                return $phrase !== '' ? $phrase : $token;
+            }
+        }
+
+        return null;
+    }
+
     public static function extractResidualEntitySurface(
         string $normalizedQuestion,
         ?string $propertySurface,
         ?string $propertyKey,
     ): ?string {
+        if (self::asksAgriculturalEntitySetQuestion($normalizedQuestion)) {
+            return null;
+        }
+        if (self::recognizeCrop($normalizedQuestion) !== null
+            || self::recognizeHomeMultilingualCrops($normalizedQuestion) !== []
+            || self::recognizeLivestockEntity($normalizedQuestion) !== null) {
+            return null;
+        }
+
         $stripped = $normalizedQuestion;
         foreach ([
             'ما هي', 'ما هو', 'ما كمية', 'ما كميه', 'what are', 'what is', 'how much',
@@ -3784,18 +4658,23 @@ final class AgriculturalEntityCatalog
         $tokens = preg_split('/\s+/u', trim($stripped)) ?: [];
         $kept = [];
         foreach ($tokens as $token) {
-            $token = trim((string) $token, " \t\n\r-?؟");
-            if ($token === '' || self::isNamedEntityStopToken($token) || mb_strlen($token) < 3) {
+            $token = self::normalizeSemanticTokenEdge((string) $token);
+            if ($token === '' || self::isNamedEntityStopToken($token)
+                || self::isGrammaticalFunctionToken($token)
+                || mb_strlen($token) < 3) {
                 continue;
             }
-            if (method_exists(self::class, 'isGenericScientificProcessToken')
-                && self::isGenericScientificProcessToken($token)) {
+            if (self::surfaceOccupiesProcessRole($token)) {
                 continue;
             }
             if ($propertyKey !== null && self::propertyKeyFromSurface($token) === $propertyKey) {
                 continue;
             }
             if (self::isCatalogCategoryKeyword($token) || self::isLocationAliasToken($token)) {
+                continue;
+            }
+            if (self::environmentalConstraintMustNotOccupyEntity($normalizedQuestion)
+                && self::isDetectedEnvironmentalConstraintToken($token, $normalizedQuestion)) {
                 continue;
             }
             $kept[] = $token;
@@ -3829,6 +4708,10 @@ final class AgriculturalEntityCatalog
                 || self::isUnsafeResidualEntitySurface($phrase)) {
                 return null;
             }
+        }
+
+        if (! self::residualSurfaceHasEntityEvidence($phrase, $normalizedQuestion)) {
+            return null;
         }
 
         return $phrase;
@@ -3907,6 +4790,7 @@ final class AgriculturalEntityCatalog
             $token = trim((string) $token, " \t\n\r-?؟");
             if ($token === ''
                 || self::isNamedEntityStopToken($token)
+                || self::isGrammaticalFunctionToken($token)
                 || (method_exists(self::class, 'isGenericScientificProcessToken')
                     && self::isGenericScientificProcessToken($token))
                 || self::isCatalogCategoryKeyword($token)) {

@@ -270,6 +270,60 @@ final class ScientificQuestionSemantics
      *
      * @param  list<string>  $topicFactors
      */
+    /**
+     * Value/range questions ask for a measurable property of a host, not a
+     * definition of a concept. Copula interrogatives (what is / ما هي / nedir)
+     * are not definition signals when this framing is present.
+     *
+     * @param  list<string>  $topicFactors
+     */
+    public static function prefersMeasurementValueQuestionType(
+        string $haystack,
+        string $intentQualifier,
+        array $topicFactors,
+        string $scientificSense,
+        string $requestedProperty = '',
+    ): bool {
+        if (AgriculturalEntityCatalog::asksCausalAffectQuestion($haystack)
+            || AgriculturalEntityCatalog::asksHowToProcedureQuestion($haystack)
+            || AgriculturalEntityCatalog::asksAgriculturalEntitySetQuestion($haystack)
+            || AgriculturalEntityCatalog::asksLandOrSoilSuitabilityQuestion($haystack)) {
+            return false;
+        }
+
+        if (AgriculturalEntityCatalog::asksMeasurablePropertyAsPrimaryAnswer($haystack)) {
+            return true;
+        }
+
+        $property = mb_strtolower(trim($requestedProperty));
+        $measurableFactors = ['temperature', 'water'];
+        $measurableProperties = ['temperature', 'irrigation', 'quantity'];
+        $constraints = AgriculturalEntityCatalog::extractEnvironmentalConstraints($haystack);
+        $requestedFactors = [];
+        foreach ($measurableFactors as $factor) {
+            if (! in_array($factor, $topicFactors, true)) {
+                continue;
+            }
+            if (AgriculturalEntityCatalog::topicFactorRole($haystack, $factor, $constraints) === 'constraint') {
+                continue;
+            }
+            $requestedFactors[] = $factor;
+        }
+        $hasMeasurable = $requestedFactors !== []
+            || in_array($property, $measurableProperties, true)
+            || $scientificSense === 'seed_germination'
+            || $scientificSense === 'crop_water_requirement';
+        if (! $hasMeasurable) {
+            return false;
+        }
+
+        if ($intentQualifier === 'optimal_range') {
+            return true;
+        }
+
+        return self::haystackMentionsRange($haystack);
+    }
+
     public static function preferRangeOverRequirements(
         string $questionType,
         string $intentQualifier,
@@ -489,7 +543,11 @@ final class ScientificQuestionSemantics
             return false;
         }
 
-        foreach (['optimal', 'optimum', 'range', 'suitable', 'ideal', 'مثلى', 'مناسبة'] as $marker) {
+        foreach ([
+            'optimal', 'optimum', 'range', 'suitable', 'ideal', 'appropriate',
+            'optimale', 'appropriée', 'uygun',
+            'مثلى', 'مناسبة', 'مناسب',
+        ] as $marker) {
             if (AgriculturalEntityCatalog::containsTerm($hay, $marker)
                 || mb_strpos($hay, $marker) !== false) {
                 return true;

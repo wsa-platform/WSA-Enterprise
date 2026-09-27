@@ -2,6 +2,7 @@
 
 namespace App\Services\Agriculture\Research\Search;
 
+use App\Services\Agriculture\CropKnowledgeOptionCatalog;
 use App\Services\Agriculture\FieldCropTaxonomyCatalog;
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\CanonicalScientificQuestion;
@@ -1321,6 +1322,7 @@ class ScientificSearchQueryBuilder
         $spec = RetrievalSpecification::fromCanonical($csq);
 
         $variants = $this->compileCanonicalRoleCombinations($spec);
+        $variants = $this->prependCanonicalConstraintCombinations($plan, $spec, $variants);
         $unique = [];
         foreach ($variants as $variant) {
             $trimmed = trim($variant);
@@ -1337,15 +1339,48 @@ class ScientificSearchQueryBuilder
     }
 
     /**
+     * Catalog environmental-constraint query terms (arid, saline water, …)
+     * are not CSQ roles. They remain on the plan and must still reach retrieval
+     * without using raw user-language surfaces.
+     *
+     * @param  list<string>  $variants
+     * @return list<string>
+     */
+    private function prependCanonicalConstraintCombinations(
+        KnowledgeQueryPlan $plan,
+        RetrievalSpecification $spec,
+        array $variants,
+    ): array {
+        $constraintTerms = $this->resolveConstraintQueryTerms($plan);
+        if ($constraintTerms === []) {
+            return $variants;
+        }
+
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        $actTerms = AgriculturalEntityCatalog::userActQueryTerms($plan->researchIntent, $questionType);
+        $anchor = $this->specExecutableEntityTerm($spec)
+            ?? $this->resolveCategoryLabel($plan)
+            ?? ($actTerms[0] ?? null);
+        $leading = [];
+        $this->pushCanonicalCombination($leading, [$anchor, $actTerms[0] ?? null, ...array_slice($constraintTerms, 0, 3)]);
+        $this->pushCanonicalCombination($leading, [$anchor, ...array_slice($constraintTerms, 0, 3)]);
+
+        return [...$leading, ...$variants];
+    }
+
+    /**
      * @return list<string>
      */
     private function compileCanonicalRoleCombinations(RetrievalSpecification $spec): array
     {
-        $entity = $this->specFrozenRoleSurface($spec, CanonicalScientificQuestion::ROLE_ENTITY);
-        $process = $this->specFrozenRoleSurface($spec, CanonicalScientificQuestion::ROLE_PROCESS);
-        $target = $this->specFrozenRoleSurface($spec, CanonicalScientificQuestion::ROLE_TARGET);
-        $property = $this->specFrozenPropertySurface($spec);
+        $entity = $this->specExecutableEntityTerm($spec);
+        $process = $this->specExecutableNonEntityRole($spec, CanonicalScientificQuestion::ROLE_PROCESS);
+        $target = $this->specExecutableNonEntityRole($spec, CanonicalScientificQuestion::ROLE_TARGET);
+        $property = $this->specExecutablePropertyTerm($spec);
         $sense = $this->specSupportingSense($spec);
+        if ($property === null && $process === null && $target === null) {
+            $property = $this->specIntentRetrievalTerm($spec);
+        }
 
         $required = array_values(array_filter(
             [$entity, $process, $target, $property],
@@ -1394,7 +1429,7 @@ class ScientificSearchQueryBuilder
             }
         }
 
-        return $combinations;
+        return $this->retainVariantsThatPreserveExecutableEntity($combinations, $entity);
     }
 
     /**
@@ -1414,12 +1449,8 @@ class ScientificSearchQueryBuilder
         if ($fromRole === '' || $toRole === '') {
             return;
         }
-        $from = $fromRole === CanonicalScientificQuestion::ROLE_PROPERTY
-            ? $this->specFrozenPropertySurface($spec)
-            : $this->specFrozenRoleSurface($spec, $fromRole);
-        $to = $toRole === CanonicalScientificQuestion::ROLE_PROPERTY
-            ? $this->specFrozenPropertySurface($spec)
-            : $this->specFrozenRoleSurface($spec, $toRole);
+        $from = $this->specExecutableRelationEndpoint($spec, $fromRole);
+        $to = $this->specExecutableRelationEndpoint($spec, $toRole);
         if ($from === null || $to === null) {
             return;
         }
@@ -1445,8 +1476,8 @@ class ScientificSearchQueryBuilder
             return;
         }
         $this->pushCanonicalCombination($variants, $operands);
-        $entity = $this->specFrozenRoleSurface($spec, CanonicalScientificQuestion::ROLE_ENTITY);
-        $property = $this->specFrozenPropertySurface($spec);
+        $entity = $this->specExecutableEntityTerm($spec);
+        $property = $this->specExecutablePropertyTerm($spec);
         $this->pushCanonicalCombination($variants, [...$operands, $property]);
         $this->pushCanonicalCombination($variants, [$entity, ...$operands]);
     }
@@ -1466,6 +1497,333 @@ class ScientificSearchQueryBuilder
         if ($joined !== '' && ! in_array($joined, $variants, true)) {
             $variants[] = $joined;
         }
+    }
+
+    private function specExecutableRelationEndpoint(RetrievalSpecification $spec, string $role): ?string
+    {
+        if ($role === CanonicalScientificQuestion::ROLE_PROPERTY) {
+            return $this->specExecutablePropertyTerm($spec);
+        }
+        if ($role === CanonicalScientificQuestion::ROLE_ENTITY) {
+            return $this->specExecutableEntityTerm($spec);
+        }
+
+        return $this->specExecutableNonEntityRole($spec, $role);
+    }
+
+    /**
+     * Provider identity for ENTITY: scientific / canonical / catalog term.
+     * Frozen surface is used only when it is a real entity label, never as a
+     * substitute for a known canonical identity.
+     */
+    private function specExecutableEntityTerm(RetrievalSpecification $spec): ?string
+    {
+        $entity = is_array($spec->projections['entity'] ?? null) ? $spec->projections['entity'] : [];
+        $binding = is_array($spec->projections['crop_binding'] ?? null) ? $spec->projections['crop_binding'] : [];
+        $surface = trim((string) ($entity['surface'] ?? ''));
+        $normalized = trim((string) ($entity['normalized'] ?? ''));
+        $canonicalId = trim((string) ($entity['canonicalId'] ?? ''));
+        $cropId = trim((string) ($binding['cropId'] ?? ''));
+        $bindingScientific = trim((string) ($binding['scientificName'] ?? ''));
+
+        $catalogFromCanonical = AgriculturalEntityCatalog::resolveCanonicalCropIdFromLabel($canonicalId);
+        $catalogFromNormalized = AgriculturalEntityCatalog::resolveCanonicalCropIdFromLabel($normalized);
+        $catalogFromSurface = AgriculturalEntityCatalog::resolveCanonicalCropIdFromLabel($surface);
+
+        $resolvedId = $canonicalId !== '' ? $canonicalId : $normalized;
+        if ($resolvedId === '' && $catalogFromSurface !== null) {
+            $resolvedId = $catalogFromSurface;
+        }
+        $catalogResolved = $catalogFromCanonical ?? $catalogFromNormalized ?? $catalogFromSurface;
+        $independentOfCrop = $this->entityIdentitySupersedesCropBinding(
+            $resolvedId,
+            $catalogResolved,
+            $cropId,
+        );
+
+        $identityId = '';
+        foreach ([$canonicalId, $normalized, $catalogFromCanonical, $catalogFromNormalized, $catalogFromSurface] as $candidate) {
+            if (is_string($candidate) && $candidate !== '' && FieldCropTaxonomyCatalog::entryFor($candidate) !== null) {
+                $identityId = $candidate;
+                break;
+            }
+        }
+        $mayConsumeCropBinding = ! $independentOfCrop
+            && $cropId !== ''
+            && FieldCropTaxonomyCatalog::entryFor($cropId) !== null
+            && (
+                $identityId === $cropId
+                || $identityId === '' && (
+                    ! $spec->hasIndependentQuestionRoles
+                    || $this->independentRolesAreIntentArtifactsOnly($spec)
+                )
+            );
+        if ($identityId === '' && $mayConsumeCropBinding) {
+            $identityId = $cropId;
+        }
+
+        $scientific = '';
+        if ($mayConsumeCropBinding && $bindingScientific !== '') {
+            $scientific = $bindingScientific;
+        } elseif ($identityId !== '') {
+            $scientific = trim(FieldCropTaxonomyCatalog::scientificNameFor($identityId));
+        }
+
+        $surfaceConfused = $this->surfaceIsNotExecutableEntityIdentity($surface, $resolvedId, $identityId);
+
+        if ($scientific !== '') {
+            $common = $identityId !== '' ? str_replace('-', ' ', $identityId) : '';
+            $sameIdentitySurface = '';
+            if ($surface !== ''
+                && ! $surfaceConfused
+                && $identityId !== ''
+                && AgriculturalEntityCatalog::resolveExactCanonicalCropIdFromLabel($surface) === $identityId
+                && ! str_contains(mb_strtolower($scientific.' '.$common), mb_strtolower($surface))) {
+                $sameIdentitySurface = $surface;
+            }
+            if ($common !== '' && ! str_contains(mb_strtolower($scientific), mb_strtolower($common))) {
+                return $this->joinTerms([$scientific, $common, $sameIdentitySurface]);
+            }
+
+            return $this->joinTerms([$scientific, $sameIdentitySurface]);
+        }
+
+        if ($identityId !== '') {
+            return str_replace('-', ' ', $identityId);
+        }
+
+        if ($resolvedId !== '' && array_key_exists($resolvedId, AgriculturalEntityCatalog::livestockEntitySignals())) {
+            if ($surface !== '' && ! $surfaceConfused) {
+                return $surface;
+            }
+
+            return str_replace('-', ' ', $resolvedId);
+        }
+
+        if (! $surfaceConfused && $surface !== '' && ! AgriculturalEntityCatalog::isIntentRetrievalSurface($surface)) {
+            return $surface;
+        }
+
+        if ($resolvedId !== '' && ! $this->surfaceIsNotExecutableEntityIdentity($resolvedId, $resolvedId, $identityId)) {
+            return str_replace('-', ' ', $resolvedId);
+        }
+
+        return null;
+    }
+
+    private function entityIdentitySupersedesCropBinding(string $resolvedId, ?string $catalogResolved, string $cropId): bool
+    {
+        if ($cropId === '') {
+            return false;
+        }
+        $candidate = is_string($catalogResolved) && $catalogResolved !== '' ? $catalogResolved : $resolvedId;
+        if ($candidate === '' || $candidate === $cropId) {
+            return false;
+        }
+        if (FieldCropTaxonomyCatalog::entryFor($candidate) !== null && $candidate !== $cropId) {
+            return true;
+        }
+
+        return array_key_exists($candidate, AgriculturalEntityCatalog::livestockEntitySignals());
+    }
+
+    /**
+     * Process/property/target surfaces that are only retrieval-intent artifacts
+     * do not make cropBinding irrelevant. Genuine independent question roles still do.
+     */
+    private function independentRolesAreIntentArtifactsOnly(RetrievalSpecification $spec): bool
+    {
+        if (! $spec->hasIndependentQuestionRoles) {
+            return false;
+        }
+        foreach ([
+            CanonicalScientificQuestion::ROLE_PROCESS,
+            CanonicalScientificQuestion::ROLE_TARGET,
+            CanonicalScientificQuestion::ROLE_PROPERTY,
+        ] as $role) {
+            $surface = $this->specFrozenRoleSurface($spec, $role);
+            if ($surface === null || $surface === '') {
+                continue;
+            }
+            if ($this->surfaceIsRetrievalIntentArtifact($spec, $surface)) {
+                continue;
+            }
+
+            return false;
+        }
+
+        $relationType = trim($spec->relationType);
+
+        return $relationType === '' || $relationType === CanonicalScientificQuestion::RELATION_NONE;
+    }
+
+    private function surfaceIsRetrievalIntentArtifact(RetrievalSpecification $spec, string $surface): bool
+    {
+        if (CropKnowledgeOptionCatalog::isOptionKey($surface)) {
+            return true;
+        }
+        foreach (CropKnowledgeOptionCatalog::options() as $option) {
+            foreach (['title_en', 'title_ar', 'title_fr', 'title_tr', 'key'] as $field) {
+                if (mb_strtolower(trim((string) ($option[$field] ?? ''))) === mb_strtolower($surface)) {
+                    return true;
+                }
+            }
+        }
+        $context = is_array($spec->projections['context'] ?? null) ? $spec->projections['context'] : [];
+        $intent = trim((string) ($context['researchIntent'] ?? ''));
+        $questionType = trim((string) ($context['questionType'] ?? ''));
+        if ($intent === '') {
+            return false;
+        }
+        $terms = array_merge(
+            AgriculturalEntityCatalog::userActQueryTerms($intent, $questionType),
+            AgriculturalEntityCatalog::englishTermsForIntent($intent),
+        );
+        $folded = mb_strtolower($surface);
+        foreach ($terms as $term) {
+            if ($folded === mb_strtolower(trim((string) $term))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  list<string>  $variants
+     * @return list<string>
+     */
+    private function retainVariantsThatPreserveExecutableEntity(array $variants, ?string $entityTerm): array
+    {
+        $entityTerm = is_string($entityTerm) ? trim($entityTerm) : '';
+        if ($entityTerm === '') {
+            return $variants;
+        }
+        $kept = [];
+        foreach ($variants as $variant) {
+            if ($this->variantPreservesExecutableIdentity($variant, $entityTerm)) {
+                $kept[] = $variant;
+            }
+        }
+
+        return $kept !== [] ? $kept : [$entityTerm];
+    }
+
+    private function variantPreservesExecutableIdentity(string $variant, string $entityTerm): bool
+    {
+        $variantFolded = mb_strtolower(trim($variant));
+        $entityFolded = mb_strtolower(trim($entityTerm));
+        if ($variantFolded === '' || $entityFolded === '') {
+            return false;
+        }
+        if (str_contains($variantFolded, $entityFolded)) {
+            return true;
+        }
+        if (preg_match('/^([a-z×]+(?:\s+[a-z×]+)?)/u', $entityFolded, $matches) === 1
+            && mb_strlen($matches[1]) >= 5
+            && str_contains($variantFolded, $matches[1])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function specExecutableNonEntityRole(RetrievalSpecification $spec, string $role): ?string
+    {
+        $surface = $this->specFrozenRoleSurface($spec, $role);
+        if ($surface === null) {
+            return null;
+        }
+        if (CropKnowledgeOptionCatalog::isOptionKey($surface)) {
+            return $this->specIntentRetrievalTerm($spec);
+        }
+
+        return $surface;
+    }
+
+    private function specExecutablePropertyTerm(RetrievalSpecification $spec): ?string
+    {
+        $surface = $this->specFrozenPropertySurface($spec);
+        if ($surface !== null && CropKnowledgeOptionCatalog::isOptionKey($surface)) {
+            return $this->specIntentRetrievalTerm($spec);
+        }
+
+        return $surface;
+    }
+
+    private function specIntentRetrievalTerm(RetrievalSpecification $spec): ?string
+    {
+        $context = is_array($spec->projections['context'] ?? null) ? $spec->projections['context'] : [];
+        $intent = trim((string) ($context['researchIntent'] ?? ''));
+        $questionType = trim((string) ($context['questionType'] ?? ''));
+        $terms = AgriculturalEntityCatalog::userActQueryTerms($intent, $questionType);
+        $lead = trim((string) ($terms[0] ?? ''));
+
+        return $lead !== '' ? $lead : null;
+    }
+
+    private function surfaceIsNotExecutableEntityIdentity(string $surface, string $resolvedId, string $identityId): bool
+    {
+        if ($surface === '') {
+            return true;
+        }
+        if (CropKnowledgeOptionCatalog::isOptionKey($surface)
+            || AgriculturalEntityCatalog::isIntentRetrievalSurface($surface)) {
+            return true;
+        }
+        if (CanonicalScientificQuestion::isGenericProcessSurface($surface)
+            || AgriculturalEntityCatalog::isGenericScientificProcessToken($surface)) {
+            return true;
+        }
+
+        $tokens = preg_split('/\s+/u', mb_strtolower(trim($surface))) ?: [];
+        if (count($tokens) >= 2) {
+            $first = CanonicalScientificQuestion::stripProcessProclitics((string) $tokens[0]);
+            if (AgriculturalEntityCatalog::isGenericScientificProcessToken($first)
+                || CanonicalScientificQuestion::isGenericProcessSurface($first)) {
+                return true;
+            }
+        }
+
+        if ($this->surfaceMatchesCanonicalEntityLabel($surface, $resolvedId, $identityId)) {
+            return false;
+        }
+
+        return false;
+    }
+
+    private function surfaceMatchesCanonicalEntityLabel(string $surface, string $resolvedId, string $identityId): bool
+    {
+        $folded = mb_strtolower(trim($surface));
+        foreach ([$resolvedId, $identityId] as $id) {
+            if ($id === '') {
+                continue;
+            }
+            if ($folded === mb_strtolower($id) || $folded === mb_strtolower(str_replace('-', ' ', $id))) {
+                return true;
+            }
+            if (FieldCropTaxonomyCatalog::entryFor($id) !== null) {
+                foreach (FieldCropTaxonomyCatalog::searchTermsFor($id) as $term) {
+                    if ($folded === mb_strtolower(trim($term))) {
+                        return true;
+                    }
+                }
+                foreach (AgriculturalEntityCatalog::recognitionLabelsForCrop($id) as $label) {
+                    if ($folded === mb_strtolower(trim($label))) {
+                        return true;
+                    }
+                }
+            }
+            if (array_key_exists($id, AgriculturalEntityCatalog::livestockEntitySignals())) {
+                foreach (AgriculturalEntityCatalog::livestockEntitySignals()[$id] as $label) {
+                    if (is_string($label) && $folded === mb_strtolower(trim($label))) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     private function specFrozenRoleSurface(RetrievalSpecification $spec, string $role): ?string

@@ -564,6 +564,8 @@ class ClaimEvidenceMatcher
         $productionSystem = trim((string) ($plan->normalizedQuery->constraints['production_system'] ?? ''));
         $location = $this->askedLocation($plan);
 
+        // Overlap uses canonical roles / controlled terms only — never the raw
+        // user-language question surface (AR/FR/TR/EN wording is not evidence).
         $parts = array_filter([
             $plan->researchIntent,
             $plan->agriculturalDomain,
@@ -576,10 +578,6 @@ class ClaimEvidenceMatcher
             $productionSystem !== '' ? $productionSystem : null,
             $location,
             implode(' ', $synonymText),
-            // Prefer controlled English terms over raw Arabic question text.
-            preg_match('/\p{Arabic}/u', $plan->normalizedQuery->normalizedQuestion) === 1
-                ? null
-                : $plan->normalizedQuery->normalizedQuestion,
         ]);
 
         return implode(' ', $parts);

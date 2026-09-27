@@ -314,9 +314,111 @@ final readonly class CanonicalScientificQuestion
 
     public static function isGenericProcessSurface(?string $surface): bool
     {
-        $folded = mb_strtolower(trim((string) $surface));
+        $folded = self::foldGenericProcessSurface((string) $surface);
+        if ($folded === '') {
+            return false;
+        }
+        foreach (self::inflectionalSurfaceCandidates($folded) as $candidate) {
+            if (in_array($candidate, self::GENERIC_PROCESS_SURFACES, true)) {
+                return true;
+            }
+        }
 
-        return $folded !== '' && in_array($folded, self::GENERIC_PROCESS_SURFACES, true);
+        return false;
+    }
+
+    /**
+     * Fold a surface for generic-process matching. Does not invent an entity.
+     */
+    public static function foldGenericProcessSurface(string $surface): string
+    {
+        return mb_strtolower(trim($surface));
+    }
+
+    /**
+     * Arabic proclitics attached to a process token (لـ / ال / بـ / و).
+     */
+    public static function stripProcessProclitics(string $folded): string
+    {
+        $stripped = preg_replace('/^(?:ال|لل|ل|ب|و)+/u', '', $folded);
+
+        return is_string($stripped) ? trim($stripped) : $folded;
+    }
+
+    /**
+     * Catalog lookup candidates for a single identity token.
+     * Strips Arabic proclitics and agglutinative possessive/case/plural suffixes,
+     * then tries terminal-consonant voicing variants. Does not invent an id.
+     *
+     * @return list<string>
+     */
+    public static function inflectionalSurfaceCandidates(string $folded): array
+    {
+        $folded = mb_strtolower(trim($folded));
+        if ($folded === '') {
+            return [];
+        }
+
+        $bases = [$folded];
+        $stripped = self::stripProcessProclitics($folded);
+        if ($stripped !== '' && $stripped !== $folded) {
+            $bases[] = $stripped;
+        }
+
+        $suffixes = [
+            'nın', 'nin', 'nun', 'nün',
+            'dan', 'den', 'tan', 'ten',
+            'lar', 'ler',
+            'ın', 'in', 'un', 'ün',
+            'sı', 'si', 'su', 'sü',
+            'da', 'de', 'ta', 'te',
+        ];
+
+        $out = $bases;
+        foreach ($bases as $base) {
+            $baseLen = mb_strlen($base);
+            foreach ($suffixes as $suffix) {
+                $suffixLen = mb_strlen($suffix);
+                if ($baseLen - $suffixLen < 3) {
+                    continue;
+                }
+                if (mb_substr($base, $baseLen - $suffixLen) !== $suffix) {
+                    continue;
+                }
+                $stem = mb_substr($base, 0, $baseLen - $suffixLen);
+                if ($stem === '') {
+                    continue;
+                }
+                $out[] = $stem;
+                foreach (self::terminalConsonantVariants($stem) as $variant) {
+                    $out[] = $variant;
+                }
+            }
+        }
+
+        return array_values(array_unique(array_filter(
+            $out,
+            static fn (string $candidate): bool => $candidate !== '',
+        )));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function terminalConsonantVariants(string $stem): array
+    {
+        $map = [
+            'c' => 'ç', 'ç' => 'c',
+            'k' => 'ğ', 'ğ' => 'k',
+            'p' => 'b', 'b' => 'p',
+            't' => 'd', 'd' => 't',
+        ];
+        $last = mb_substr($stem, -1);
+        if ($last === '' || ! isset($map[$last])) {
+            return [];
+        }
+
+        return [mb_substr($stem, 0, mb_strlen($stem) - 1).$map[$last]];
     }
 
     public static function isProductivityFallbackSurface(?string $surface): bool

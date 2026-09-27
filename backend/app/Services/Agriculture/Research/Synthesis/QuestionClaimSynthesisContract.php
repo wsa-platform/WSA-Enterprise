@@ -97,7 +97,9 @@ final class QuestionClaimSynthesisContract
             } elseif ($aggregate === ClaimEvidenceRelationship::CONFLICTING) {
                 $status = 'conflict';
                 $limitations[] = 'conflicting_evidence_for_question_claim';
-                $answerEligible = false;
+                // Conflict remains the aggregate axis. Supported siblings may still
+                // express the claim; they must not erase the conflict label.
+                $answerEligible = $this->hasNonConflictingSupport($claimBindings);
                 $statementText = $claim->claimText;
             } elseif ($aggregate === ClaimEvidenceRelationship::PARTIALLY_SUPPORTED) {
                 $status = 'partially_supported';
@@ -129,5 +131,26 @@ final class QuestionClaimSynthesisContract
         }
 
         return $traces;
+    }
+
+    /**
+     * @param  list<QuestionClaimEvidenceBinding>  $bindings
+     */
+    private function hasNonConflictingSupport(array $bindings): bool
+    {
+        foreach ($bindings as $binding) {
+            if ($binding->hasConflict
+                || $binding->claimRelationship === ClaimEvidenceRelationship::CONFLICTING) {
+                continue;
+            }
+            if (in_array($binding->claimRelationship, [
+                ClaimEvidenceRelationship::SUPPORTED,
+                ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+            ], true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
