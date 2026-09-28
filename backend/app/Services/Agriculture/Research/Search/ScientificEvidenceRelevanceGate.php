@@ -6,6 +6,7 @@ use App\Services\Agriculture\FieldCropTaxonomyCatalog;
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\ScientificQuestionSemantics;
+use App\Services\Agriculture\Research\Synthesis\AnswerExpressionAccuracyGate;
 
 /**
  * Relevance gate: candidate topical relevance before scientific evaluation (Phase 4).
@@ -20,6 +21,10 @@ use App\Services\Agriculture\Research\ScientificQuestionSemantics;
  */
 class ScientificEvidenceRelevanceGate
 {
+    public function __construct(
+        private AnswerExpressionAccuracyGate $expressionAccuracyGate = new AnswerExpressionAccuracyGate,
+    ) {}
+
     private const MIN_SCORE_CROP_TOPIC = 70.0;
 
     private const SPECIES_EXACT = 'exact_species';
@@ -555,7 +560,7 @@ class ScientificEvidenceRelevanceGate
                 }
             }
             if ($best !== 'none') {
-                return $best;
+                return $this->upgradeTopicStrengthWithMeasurementSense($plan, $haystack, $best);
             }
             foreach (AgriculturalEntityCatalog::englishTermsForIntent($plan->researchIntent) as $term) {
                 if (in_array($term, ['agriculture', 'farming'], true)) {
@@ -566,7 +571,7 @@ class ScientificEvidenceRelevanceGate
                 }
             }
 
-            return $best;
+            return $this->upgradeTopicStrengthWithMeasurementSense($plan, $haystack, $best);
         }
 
         foreach ($factors as $factor) {
@@ -590,7 +595,36 @@ class ScientificEvidenceRelevanceGate
             }
         }
 
+        return $this->upgradeTopicStrengthWithMeasurementSense($plan, $haystack, $best);
+    }
+
+    /**
+     * @return 'none'|'weak'|'strong'
+     */
+    private function upgradeTopicStrengthWithMeasurementSense(
+        KnowledgeQueryPlan $plan,
+        string $haystack,
+        string $best,
+    ): string {
+        if ($this->haystackHasMeasurementClassSense($plan, $haystack)) {
+            return 'strong';
+        }
+
         return $best;
+    }
+
+    /**
+     * Measurement-class topic sense: consume frozen CSQ/RS family, then AccuracyGate
+     * unit/class compatibility. Not a property-identity resolver.
+     */
+    private function haystackHasMeasurementClassSense(KnowledgeQueryPlan $plan, string $haystack): bool
+    {
+        $family = $this->expressionAccuracyGate->frozenMeasurementFamily($plan);
+        if ($family === '') {
+            return false;
+        }
+
+        return $this->expressionAccuracyGate->haystackHasMeasurementClassSense($haystack, $family);
     }
 
     private function matchesAgriculturalContext(string $haystack): bool
