@@ -468,6 +468,12 @@ class ScientificEvidenceRelevanceGate
 
         $targetLabels = [];
         $cropId = $plan->normalizedQuery->cropId;
+        foreach ([$cropId, $plan->normalizedQuery->crop] as $identityToken) {
+            $normalized = mb_strtolower(trim((string) $identityToken));
+            if ($normalized !== '') {
+                $targetLabels[$normalized] = true;
+            }
+        }
         if ($cropId !== null && $cropId !== '') {
             foreach (array_merge(
                 AgriculturalEntityCatalog::recognitionLabelsForCrop($cropId),
@@ -493,11 +499,50 @@ class ScientificEvidenceRelevanceGate
             if ($genus === $targetGenus || isset($skip[$genus]) || isset($skip[$epithet])) {
                 continue;
             }
-            if (isset($targetLabels[$genus.' '.$epithet])) {
+            if (isset($targetLabels[$genus]) || isset($targetLabels[$epithet]) || isset($targetLabels[$genus.' '.$epithet])) {
                 continue;
             }
+            $requestedCropId = mb_strtolower(trim((string) ($cropId ?? '')));
+            if ($requestedCropId !== ''
+                && AgriculturalEntityCatalog::resolveCanonicalCropIdFromLabel($genus) === $requestedCropId) {
+                continue;
+            }
+            $resolvedPair = AgriculturalEntityCatalog::resolveCanonicalCropIdFromLabel($genus.' '.$epithet);
+            if ($requestedCropId !== '' && $resolvedPair === $requestedCropId) {
+                continue;
+            }
+            if ($resolvedPair !== null && $resolvedPair !== $requestedCropId) {
+                return true;
+            }
+            if ($this->isKnownForeignScientificGenus($genus, $targetGenus)) {
+                return true;
+            }
+        }
 
-            return true;
+        return false;
+    }
+
+    private function isKnownForeignScientificGenus(string $genus, string $targetGenus): bool
+    {
+        $genus = mb_strtolower(trim($genus));
+        $targetGenus = mb_strtolower(trim($targetGenus));
+        if ($genus === '' || $genus === $targetGenus) {
+            return false;
+        }
+
+        foreach (AgriculturalEntityCatalog::cropRecognitionEntries() as $entry) {
+            $cropId = trim((string) ($entry['crop_id'] ?? ''));
+            if ($cropId === '') {
+                continue;
+            }
+            $scientific = mb_strtolower(trim(FieldCropTaxonomyCatalog::scientificNameFor($cropId)));
+            if ($scientific === '') {
+                continue;
+            }
+            $entryGenus = trim((string) (explode(' ', str_replace(['× ', '×'], '', $scientific))[0] ?? ''));
+            if ($entryGenus !== '' && $entryGenus === $genus) {
+                return true;
+            }
         }
 
         return false;
