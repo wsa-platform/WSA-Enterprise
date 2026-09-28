@@ -518,14 +518,20 @@ class AnswerComposer
             return false;
         }
 
-        $propertyTerms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
-        $propertyKey = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));
+        $propertyKey = $this->expressionAccuracyGate->canonicalMeasurementProperty(
+            (string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''),
+            $plan,
+        );
+        $propertyTerms = $propertyKey !== ''
+            ? $this->expressionAccuracyGate->propertyAddressTerms($propertyKey)
+            : [];
         $directnessIsPrimary = in_array($directness, [
             ScientificEvidenceDirectnessAssessor::DIRECT,
             ScientificEvidenceDirectnessAssessor::SUPPORTED,
         ], true);
-        if ($directnessIsPrimary && is_array($propertyTerms) && $propertyTerms !== []
-            && ! in_array($propertyKey, ['general', 'definition', ''], true)) {
+        if ($directnessIsPrimary && $propertyTerms !== []
+            && ! in_array($propertyKey, ['general', 'definition', ''], true)
+            && $this->expressionAccuracyGate->requestedPropertyUnitClasses($propertyKey) !== null) {
             $hay = mb_strtolower(trim(implode(' ', array_filter([
                 $item->publicationTitle,
                 $item->evidenceText,
@@ -1333,6 +1339,13 @@ class AnswerComposer
     private function groundingNeedles(KnowledgeQueryPlan $plan): array
     {
         $needles = [];
+        $canonicalProperty = $this->expressionAccuracyGate->canonicalMeasurementProperty(
+            (string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''),
+            $plan,
+        );
+        foreach ($this->expressionAccuracyGate->propertyAddressTerms($canonicalProperty) as $term) {
+            $needles[] = mb_strtolower(trim((string) $term));
+        }
         $propertyTerms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
         if (is_array($propertyTerms)) {
             foreach ($propertyTerms as $term) {
@@ -1458,7 +1471,9 @@ class AnswerComposer
             return [];
         }
 
-        $pattern = '/(?<![\/.\w])(\d+(?:[.,]\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?)\s*(?:million|billion)?\s*(%|kg\/ha|kg\s*ha-1|t\/ha|mg\/l|mg\/kg|kg\/day|kg\s*d-1|l\/day|mm\/day|m3\/ha|°c|deg c|celsius|kelvin|ppm|ph|tons?|tonnes?|hectares?|t|kg|g|mg|l|ml|mm|cm|m|ha|days?|weeks?|months?|c)\b/iu';
+        $text = preg_replace('/[\x{00A0}\x{202F}]/u', ' ', $text) ?? $text;
+
+        $pattern = '/(?<![\/.\w])(\d+(?:[.,]\d+)?(?:\s*[-–—\/]\s*\d+(?:[.,]\d+)?)?)\s*(?:million|billion)?\s*(%|kg\/ha|kg\s*ha-1|t\/ha|mg\/l|mg\/kg|kg\/day|kg\s*d-1|l\/day|mm\/day|m3\/ha|°c|deg c|celsius|kelvin|ppm|ph|tons?|tonnes?|hectares?|t|kg|g|mg|l|ml|mm|cm|m|ha|days?|weeks?|months?|c)\b/iu';
         preg_match_all($pattern, $text, $matches, PREG_SET_ORDER);
         $matches = is_array($matches) ? $matches : [];
 
@@ -1533,11 +1548,12 @@ class AnswerComposer
         string $unit,
         bool $structuredStatistical = false,
     ): bool {
-        $propertyKey = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));
-        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
-        $target = $propertyKey !== '' ? $propertyKey : $questionType;
+        $propertyKey = $this->expressionAccuracyGate->canonicalMeasurementProperty(
+            (string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''),
+            $plan,
+        );
         $unitClass = $this->measurementUnitClass($unit);
-        $allowed = $this->requestedPropertyUnitClasses($target);
+        $allowed = $this->requestedPropertyUnitClasses($propertyKey);
         if ($allowed !== null && ! in_array($unitClass, $allowed, true)) {
             return false;
         }
@@ -1546,16 +1562,7 @@ class AnswerComposer
             return $number !== '';
         }
 
-        $propertyTerms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
-        $surface = trim((string) ($plan->normalizedQuery->constraints['requested_property_surface'] ?? ''));
-        if ($surface !== '' && is_array($propertyTerms) && $propertyTerms !== []) {
-            $hay = mb_strtolower($text);
-            if (! $this->haystackAddressesPropertyTerms($hay, $propertyTerms)) {
-                return false;
-            }
-        }
-
-        // Claim/property lexical window around the measurement (Catalog-free).
+        // Canonical measurement class — not the user-language surface phrase.
         if ($propertyKey !== '' && ! $this->measurementWindowAddressesProperty($text, $number, $propertyKey)) {
             return false;
         }
@@ -2271,24 +2278,33 @@ class AnswerComposer
 
     private function findingContainsUnsupportedNumeric(string $text, KnowledgeQueryPlan $plan): bool
     {
-        preg_match_all('/\b\d+(?:[.,]\d+)?\b/u', $text, $matches);
-        $candidates = array_values(array_unique($matches[0] ?? []));
-        if ($candidates === []) {
+        $text = preg_replace('/[\x{00A0}\x{202F}]/u', ' ', $text) ?? $text;
+        $supported = $this->extractMeasurementAssertions($text, $plan);
+        $pattern = '/(?<![\/.\w])(\d+(?:[.,]\d+)?(?:\s*[-–—\/]\s*\d+(?:[.,]\d+)?)?)\s*(?:million|billion)?\s*(%|kg\/ha|kg\s*ha-1|t\/ha|mg\/l|mg\/kg|kg\/day|kg\s*d-1|l\/day|mm\/day|m3\/ha|°c|deg c|celsius|kelvin|ppm|ph|tons?|tonnes?|hectares?|t|kg|g|mg|l|ml|mm|cm|m|ha|days?|weeks?|months?|c)\b/iu';
+        preg_match_all($pattern, $text, $matches, PREG_SET_ORDER);
+        $matches = is_array($matches) ? $matches : [];
+        if ($matches === []) {
             return false;
         }
 
-        $supported = $this->extractMeasurementAssertions($text, $plan);
-        foreach ($candidates as $raw) {
-            $digits = preg_replace('/[^\d]/', '', (string) $raw) ?? '';
-            if ($digits === '' || $this->isBibliographicNumericContext($text, (string) $raw, '')) {
+        foreach ($matches as $match) {
+            $raw = trim((string) ($match[0] ?? ''));
+            $number = trim((string) ($match[1] ?? ''));
+            if ($raw === '' || $number === '') {
                 continue;
             }
+            if ($this->isBibliographicNumericContext($text, $number, (string) ($match[2] ?? ''))) {
+                continue;
+            }
+            $digits = preg_replace('/[^\d]/', '', $number) ?? '';
             if (preg_match('/^(?:19|20)\d{2}$/', $digits) === 1) {
                 continue;
             }
             $covered = false;
             foreach ($supported as $value) {
-                if (str_contains($value, (string) $raw)) {
+                $value = mb_strtolower((string) $value);
+                if (str_contains($value, mb_strtolower($number))
+                    || str_contains(mb_strtolower($raw), $value)) {
                     $covered = true;
                     break;
                 }
