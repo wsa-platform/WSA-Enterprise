@@ -4,6 +4,8 @@ namespace App\Services\Agriculture\Research\Synthesis;
 
 use App\Services\Agriculture\Research\AgriculturalKnowledgeQuery;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
+use App\Services\Agriculture\Research\RetrievalSemanticContract;
+use App\Services\Agriculture\Research\RetrievalSpecification;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
 use App\Services\Agriculture\Research\Search\ScientificStructuredObservation;
 use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
@@ -15,6 +17,8 @@ use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
  *
  * Consumes Phase-4 signals and QuestionClaim metadata. Does not own relevance,
  * directness, claim_relation, FAOSTAT alignment, Catalog, persistence, or feedback.
+ * Canonical property identity is CSQ/RS. This gate projects measurement class,
+ * unit compatibility, and answerability from that frozen family.
  */
 final class AnswerExpressionAccuracyGate
 {
@@ -39,7 +43,7 @@ final class AnswerExpressionAccuracyGate
         callable $requiresSupportedMeasurement,
     ): array {
         $reasons = [];
-        $property = mb_strtolower(trim((string) ($questionClaim['property'] ?? '')));
+        $property = $this->frozenMeasurementFamily($plan);
         $askedLocation = trim((string) ($questionClaim['location'] ?? $plan->normalizedQuery->location ?? ''));
         $askedTime = trim((string) ($questionClaim['time'] ?? ''));
         if ($askedTime === '') {
@@ -92,7 +96,7 @@ final class AnswerExpressionAccuracyGate
             }
         }
 
-        if ($property !== '' && ! in_array($property, ['general', 'definition'], true)) {
+        if ($property !== '' && $this->isMeasurementProperty($property)) {
             $hay = mb_strtolower(trim(implode(' ', array_filter([
                 (string) $item->publicationTitle,
                 (string) $item->evidenceText,
@@ -116,8 +120,12 @@ final class AnswerExpressionAccuracyGate
         }
 
         $claimText = $groundedText;
+        // Incidental numbers in non-measurement questions (cultivation, literature)
+        // are not a numeric-answer contract. Measurement questions still require
+        // supported values via requiresSupportedMeasurement().
         $needsMeasurement = (bool) $requiresSupportedMeasurement($numericPlan)
-            || $this->textContainsMeasurementCandidate($groundedText);
+            || ($this->isMeasurementProperty($property)
+                && $this->textContainsMeasurementCandidate($groundedText));
 
         if ($numericalValues !== [] && $this->findingHasUncoveredMeasurement($groundedText, $numericalValues)) {
             // Keep supported values only when uncovered tokens are a different unit class;
@@ -216,13 +224,15 @@ final class AnswerExpressionAccuracyGate
 
     /**
      * Catalog-free property-term address check (Phase 5 B3).
-     * Consumes plan/mapper lexical terms only — does not call AgriculturalEntityCatalog.
+     * Alphabetic terms are token-safe. Unit glyphs use normalized containment.
+     * Does not call AgriculturalEntityCatalog. Does not decide canonical identity.
      *
      * @param  list<mixed>  $propertyTerms
      */
     public function haystackAddressesPropertyTerms(string $haystack, array $propertyTerms): bool
     {
         $haystack = mb_strtolower(trim($haystack));
+        $haystack = preg_replace('/[\x{00A0}\x{202F}]/u', ' ', $haystack) ?? $haystack;
         if ($haystack === '') {
             return false;
         }
@@ -232,7 +242,7 @@ final class AnswerExpressionAccuracyGate
             if ($normalized === '' || in_array($normalized, ['general_knowledge', 'agriculture', 'farming', 'general', 'definition'], true)) {
                 continue;
             }
-            if (mb_strpos($haystack, $normalized) === false) {
+            if (! $this->haystackContainsAddressTerm($haystack, $normalized)) {
                 continue;
             }
             if ($this->propertyMentionIsNegated($haystack, $normalized)) {
@@ -243,6 +253,25 @@ final class AnswerExpressionAccuracyGate
         }
 
         return false;
+    }
+
+    /**
+     * Alphabetic family terms match at word boundaries. Unit glyphs (°, /, digits)
+     * use normalized containment. Short English synonyms cannot match inside
+     * unrelated tokens (heat ⊂ wheat).
+     */
+    private function haystackContainsAddressTerm(string $haystack, string $term): bool
+    {
+        if (preg_match('/[^\p{L}\s]/u', $term) === 1) {
+            return mb_strpos($haystack, $term) !== false;
+        }
+
+        $quoted = preg_quote($term, '/');
+        if (str_contains($term, ' ') || mb_strlen($term) <= 4) {
+            return preg_match('/\b'.$quoted.'\b/u', $haystack) === 1;
+        }
+
+        return preg_match('/\b'.$quoted.'\w*\b/u', $haystack) === 1;
     }
 
     /**
@@ -274,13 +303,24 @@ final class AnswerExpressionAccuracyGate
             return true;
         }
 
-        $hay = mb_strtolower($text);
+        $hay = mb_strtolower(preg_replace('/[\x{00A0}\x{202F}]/u', ' ', $text) ?? $text);
         if ($this->haystackAddressesPropertyTerms($hay, $terms)) {
             return true;
         }
 
-        $digits = preg_replace('/[^\d.,]/', '', $number) ?? '';
-        $pos = $digits !== '' ? mb_strpos($hay, mb_strtolower($digits)) : false;
+        $needles = array_values(array_filter([
+            mb_strtolower(trim($number)),
+            preg_replace('/[^\d.,]/', '', $number) ?? '',
+            ...preg_split('/[\s\x{00A0}\x{202F}]*[-–—\/][\s\x{00A0}\x{202F}]*/u', $number) ?: [],
+        ], static fn (string $part): bool => trim($part) !== ''));
+        $pos = false;
+        foreach ($needles as $needle) {
+            $found = mb_strpos($hay, mb_strtolower(trim((string) $needle)));
+            if ($found !== false) {
+                $pos = $found;
+                break;
+            }
+        }
         if ($pos === false) {
             return false;
         }
@@ -316,6 +356,106 @@ final class AnswerExpressionAccuracyGate
         )));
     }
 
+    /**
+     * Sense-bearing measurement-class terms: units and synonyms, not the bare class key.
+     * The bare class label remains a weak topic keyword at the relevance layer.
+     *
+     * @return list<string>
+     */
+    public function measurementExpressionTerms(string $property): array
+    {
+        $property = mb_strtolower(trim($property));
+        $bare = [$property];
+
+        return array_values(array_filter(
+            $this->propertyAddressTerms($property),
+            static fn (string $term): bool => $term !== '' && ! in_array($term, $bare, true),
+        ));
+    }
+
+    /**
+     * Topic-sense check for a measurement class: expressed unit of that class,
+     * or morphological class form (temperatures). Bare class keywords and
+     * ambiguous synonyms (heat/thermal in "thermal sensor") are not sense.
+     * Does not decide numeric claim expressibility.
+     */
+    public function haystackHasMeasurementClassSense(string $haystack, string $property): bool
+    {
+        $property = mb_strtolower(trim($property));
+        $allowed = $this->requestedPropertyUnitClasses($property);
+        if ($property === '' || $allowed === null || $allowed === []) {
+            return false;
+        }
+
+        $hay = mb_strtolower(preg_replace('/[\x{00A0}\x{202F}]/u', ' ', $haystack) ?? $haystack);
+        foreach ($this->measurementUnitClassesInText($hay) as $class) {
+            if (in_array($class, $allowed, true)) {
+                return true;
+            }
+        }
+        foreach ($this->measurementExpressionTerms($property) as $term) {
+            if (! $this->isMeasurementUnitTerm($term)) {
+                continue;
+            }
+            if ($this->measurementTermAddressesHaystack($hay, $term)) {
+                return true;
+            }
+        }
+
+        return preg_match('/\b'.preg_quote($property, '/').'\w+\b/u', $hay) === 1;
+    }
+
+    private function isMeasurementUnitTerm(string $term): bool
+    {
+        $term = mb_strtolower(trim($term));
+        if ($term === '') {
+            return false;
+        }
+        if (preg_match('/[^\p{L}\s]/u', $term) === 1) {
+            return true;
+        }
+
+        return in_array($term, ['celsius', 'kelvin', 'tonnage', 'tonnes', 'tons', 'hectares'], true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function measurementUnitClassesInText(string $text): array
+    {
+        $text = preg_replace('/[\x{00A0}\x{202F}]/u', ' ', $text) ?? $text;
+        $pattern = '/(?<![\/.\w])(\d+(?:[.,]\d+)?(?:\s*[-–—\/]\s*\d+(?:[.,]\d+)?)?)\s*(?:million|billion)?\s*(%|kg\/ha|kg\s*ha-1|t\/ha|mg\/l|mg\/kg|kg\/day|kg\s*d-1|l\/day|mm\/day|m3\/ha|°c|deg c|celsius|kelvin|ppm|ph|tons?|tonnes?|hectares?|t|kg|g|mg|l|ml|mm|cm|m|ha|days?|weeks?|months?|c)\b/iu';
+        preg_match_all($pattern, $text, $matches, PREG_SET_ORDER);
+        $classes = [];
+        foreach (is_array($matches) ? $matches : [] as $match) {
+            $unit = mb_strtolower(trim((string) ($match[2] ?? '')));
+            if ($unit === '') {
+                continue;
+            }
+            $classes[$this->measurementUnitClass($unit)] = true;
+        }
+
+        return array_keys($classes);
+    }
+
+    public function measurementTermAddressesHaystack(string $haystack, string $term): bool
+    {
+        $haystack = mb_strtolower(trim($haystack));
+        $term = mb_strtolower(trim($term));
+        if ($haystack === '' || $term === '') {
+            return false;
+        }
+        if (preg_match('/[^\p{L}\s]/u', $term) === 1) {
+            return mb_strpos($haystack, $term) !== false;
+        }
+        $quoted = preg_quote($term, '/');
+        if (mb_strlen($term) <= 4) {
+            return preg_match('/\b'.$quoted.'\b/u', $haystack) === 1;
+        }
+
+        return preg_match('/\b'.$quoted.'\w*\b/u', $haystack) === 1;
+    }
+
     public function measurementUnitClass(string $unit): string
     {
         $unit = mb_strtolower(trim($unit));
@@ -329,6 +469,80 @@ final class AnswerExpressionAccuracyGate
             in_array($unit, ['days', 'day', 'weeks', 'week', 'months', 'month'], true) => 'time',
             default => 'quantity',
         };
+    }
+
+    /**
+     * Frozen CSQ/RS measurement family for this plan. Not a second identity resolver:
+     * surfaces, question_type, and factors are not votes. The $property argument is
+     * ignored so leftover callers cannot promote user-language text to identity.
+     */
+    public function canonicalMeasurementProperty(string $property, KnowledgeQueryPlan $plan): string
+    {
+        return $this->frozenMeasurementFamily($plan);
+    }
+
+    /**
+     * Canonical measurement family already frozen on CSQ / RetrievalSpecification.
+     */
+    public function frozenMeasurementFamily(KnowledgeQueryPlan $plan): string
+    {
+        $query = $plan->normalizedQuery;
+        $csq = $query->canonicalQuestion;
+        if ($csq !== null) {
+            $family = RetrievalSpecification::canonicalFamilyKey(
+                $csq->property->key,
+                $csq->property->surface,
+                $csq->context->scientificSense,
+            );
+            if ($this->isFrozenMeasurementFamily($family)) {
+                return mb_strtolower(trim((string) $family));
+            }
+        }
+
+        $spec = $csq !== null ? RetrievalSpecification::fromCanonical($csq) : null;
+        $raw = $query->constraints['retrieval_specification'] ?? null;
+        if ($spec === null && is_array($raw) && $raw !== []) {
+            $spec = RetrievalSpecification::fromArray($raw);
+        }
+        if ($spec !== null) {
+            $fromRole = match ($spec->scholarlyPropertyRole()) {
+                RetrievalSemanticContract::ROLE_TEMPERATURE => 'temperature',
+                RetrievalSemanticContract::ROLE_IRRIGATION_WATER => 'irrigation',
+                RetrievalSemanticContract::ROLE_CLASSIFICATION => 'classification',
+                RetrievalSemanticContract::ROLE_QUANTITY, RetrievalSemanticContract::ROLE_PRODUCTIVITY => 'quantity',
+                default => '',
+            };
+            if ($this->isFrozenMeasurementFamily($fromRole)) {
+                return $fromRole;
+            }
+        }
+
+        return '';
+    }
+
+    private function isFrozenMeasurementFamily(?string $family): bool
+    {
+        $family = mb_strtolower(trim((string) $family));
+        if ($family === '') {
+            return false;
+        }
+
+        return in_array($family, [
+            ...RetrievalSpecification::FAMILY_KEYS,
+            'concentration', 'yield', 'rate', 'production',
+        ], true);
+    }
+
+    private function isMeasurementProperty(string $property): bool
+    {
+        $property = mb_strtolower(trim($property));
+        if ($property === '' || in_array($property, ['general', 'definition'], true)) {
+            return false;
+        }
+
+        $classes = $this->requestedPropertyUnitClasses($property);
+
+        return is_array($classes) && $classes !== [];
     }
 
     /**
@@ -348,19 +562,16 @@ final class AnswerExpressionAccuracyGate
 
     private function planWithClaimProperty(KnowledgeQueryPlan $plan, string $property): KnowledgeQueryPlan
     {
-        if ($property === '') {
+        $family = $this->frozenMeasurementFamily($plan);
+        if ($family === '') {
             return $plan;
         }
 
         $constraints = is_array($plan->normalizedQuery->constraints) ? $plan->normalizedQuery->constraints : [];
-        $constraints['requested_property'] = $property;
-        if (! isset($constraints['requested_property_query_terms'])
-            || ! is_array($constraints['requested_property_query_terms'])
-            || $constraints['requested_property_query_terms'] === []) {
-            $constraints['requested_property_query_terms'] = $this->propertyAddressTerms($property);
-        }
+        $constraints['requested_property'] = $family;
+        $constraints['requested_property_query_terms'] = $this->propertyAddressTerms($family);
         $constraints['requested_property_surface'] = $constraints['requested_property_surface']
-            ?? $property;
+            ?? $family;
 
         $q = $plan->normalizedQuery;
 
