@@ -4,9 +4,12 @@ namespace App\Services\Agriculture\Research\Validation;
 
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
+use App\Services\Agriculture\Research\RetrievalSemanticContract;
+use App\Services\Agriculture\Research\RetrievalSpecification;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceRelevanceGate;
 use App\Services\Agriculture\Research\Search\ScientificSearchResult;
+use App\Services\Agriculture\Research\Synthesis\AnswerExpressionAccuracyGate;
 
 /**
  * Generic claim-to-evidence matching without inventing support (Phase 4 / R6 claim_relation).
@@ -22,6 +25,7 @@ class ClaimEvidenceMatcher
         private ScientificEvidenceRelevanceGate $relevanceGate,
         private ScientificEvidenceDirectnessAssessor $directnessAssessor,
         private EvidenceVerificationLayer $verificationLayer,
+        private AnswerExpressionAccuracyGate $expressionAccuracyGate,
     ) {}
 
     /**
@@ -224,21 +228,24 @@ class ClaimEvidenceMatcher
         $propertyTerms = $plan->normalizedQuery->constraints['requested_property_query_terms'] ?? [];
         $propertySurface = trim((string) ($plan->normalizedQuery->constraints['requested_property_surface'] ?? ''));
         $propertyKey = trim((string) ($plan->normalizedQuery->constraints['requested_property'] ?? ''));
-        $requiresSpecificProperty = $propertySurface !== ''
-            || in_array($propertyKey, [
+        $canonicalProperty = $this->canonicalRequestedPropertyIdentity($plan, $propertyKey, $propertySurface);
+        $requiresSpecificProperty = $canonicalProperty !== ''
+            || $propertySurface !== ''
+            || in_array(mb_strtolower($propertyKey), [
                 'temperature', 'concentration', 'classification', 'irrigation',
                 'quantity', 'yield', 'rate', 'production',
             ], true);
-        if ($requiresSpecificProperty && is_array($propertyTerms) && $propertyTerms !== []
-            && ! AgriculturalEntityCatalog::haystackAddressesRequestedProperty($haystack, $propertyTerms)) {
+        $propertyAddressed = $requiresSpecificProperty
+            && $this->haystackAddressesCanonicalProperty($plan, $haystack, $canonicalProperty, $propertyTerms);
+        if ($requiresSpecificProperty && ! $propertyAddressed) {
             return [
                 'relationship' => ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE,
                 'confidence' => 0.08,
                 'factors' => [
                     'reason' => 'missing_requested_property',
-                    'requested_property' => $propertyKey !== '' ? $propertyKey : $propertySurface,
+                    'requested_property' => $canonicalProperty !== '' ? $canonicalProperty : ($propertyKey !== '' ? $propertyKey : $propertySurface),
                     'entity_matched' => $assessment['entity_matched'],
-                    'topic_matched' => false,
+                    'topic_matched' => $assessment['topic_matched'],
                     'evidence_directness' => $directness['directness'],
                 ],
             ];
@@ -593,6 +600,146 @@ class ClaimEvidenceMatcher
         $fromConstraints = trim((string) ($plan->normalizedQuery->constraints['location'] ?? ''));
 
         return $fromConstraints !== '' ? $fromConstraints : null;
+    }
+
+    /**
+     * Canonical scientific property family already frozen on CSQ / RetrievalSpecification.
+     * User-language surface phrases are not identity.
+     */
+    private function canonicalRequestedPropertyIdentity(
+        KnowledgeQueryPlan $plan,
+        string $propertyKey,
+        string $propertySurface,
+    ): string {
+        $query = $plan->normalizedQuery;
+        $sense = trim((string) ($query->constraints['scientific_sense'] ?? ''));
+        $csq = $query->canonicalQuestion;
+        if ($csq !== null) {
+            $csqSense = trim((string) $csq->context->scientificSense);
+            $family = RetrievalSpecification::canonicalFamilyKey(
+                $csq->property->key,
+                $csq->property->surface,
+                $csqSense !== '' ? $csqSense : $sense,
+            );
+            if ($this->isCanonicalPropertyFamily($family)) {
+                return $family;
+            }
+        }
+
+        $spec = $this->retrievalSpecificationFromPlan($plan);
+        if ($spec !== null) {
+            $fromRole = match ($spec->scholarlyPropertyRole()) {
+                RetrievalSemanticContract::ROLE_TEMPERATURE => 'temperature',
+                RetrievalSemanticContract::ROLE_IRRIGATION_WATER => 'irrigation',
+                RetrievalSemanticContract::ROLE_CLASSIFICATION => 'classification',
+                RetrievalSemanticContract::ROLE_QUANTITY, RetrievalSemanticContract::ROLE_PRODUCTIVITY => 'quantity',
+                default => '',
+            };
+            if ($fromRole !== '') {
+                return $fromRole;
+            }
+        }
+
+        $family = RetrievalSpecification::canonicalFamilyKey($propertyKey, $propertySurface, $sense);
+        if ($this->isCanonicalPropertyFamily($family)) {
+            return $family;
+        }
+
+        $questionType = trim((string) ($query->constraints['question_type'] ?? ''));
+        $family = RetrievalSpecification::canonicalFamilyKey($questionType, $propertySurface, $sense);
+
+        return $this->isCanonicalPropertyFamily($family) ? $family : '';
+    }
+
+    private function isCanonicalPropertyFamily(?string $family): bool
+    {
+        $family = mb_strtolower(trim((string) $family));
+        if ($family === '') {
+            return false;
+        }
+
+        return in_array($family, [
+            ...RetrievalSpecification::FAMILY_KEYS,
+            'concentration', 'yield', 'rate', 'production',
+        ], true);
+    }
+
+    /**
+     * @param  mixed  $surfaceTerms
+     */
+    private function haystackAddressesCanonicalProperty(
+        KnowledgeQueryPlan $plan,
+        string $haystack,
+        string $canonicalProperty,
+        mixed $surfaceTerms,
+    ): bool {
+        $identityTerms = $this->canonicalPropertyIdentityTerms($plan, $canonicalProperty);
+        if ($identityTerms !== []
+            && AgriculturalEntityCatalog::haystackAddressesRequestedProperty($haystack, $identityTerms)) {
+            return true;
+        }
+
+        if ($canonicalProperty !== ''
+            && $this->expressionAccuracyGate->haystackAddressesPropertyTerms(
+                $haystack,
+                $this->expressionAccuracyGate->propertyAddressTerms($canonicalProperty),
+            )) {
+            return true;
+        }
+
+        if ($canonicalProperty === '' && is_array($surfaceTerms) && $surfaceTerms !== []
+            && AgriculturalEntityCatalog::haystackAddressesRequestedProperty($haystack, $surfaceTerms)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function canonicalPropertyIdentityTerms(KnowledgeQueryPlan $plan, string $canonicalProperty): array
+    {
+        $terms = [];
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        if ($canonicalProperty !== '') {
+            $terms = AgriculturalEntityCatalog::requestedPropertyQueryTerms([
+                'property_key' => $canonicalProperty,
+                'property_surface' => '',
+            ], $questionType);
+        }
+
+        $spec = $this->retrievalSpecificationFromPlan($plan);
+        if ($spec !== null) {
+            foreach ($spec->orderedScholarlyPropertyTerms() as $term) {
+                $folded = mb_strtolower(trim($term));
+                if ($folded === '' || in_array($folded, $terms, true)) {
+                    continue;
+                }
+                if ($canonicalProperty !== ''
+                    && RetrievalSpecification::canonicalFamilyKey($folded, $folded) !== $canonicalProperty
+                    && $folded !== $canonicalProperty) {
+                    continue;
+                }
+                $terms[] = $term;
+            }
+        }
+
+        return array_values($terms);
+    }
+
+    private function retrievalSpecificationFromPlan(KnowledgeQueryPlan $plan): ?RetrievalSpecification
+    {
+        $csq = $plan->normalizedQuery->canonicalQuestion;
+        if ($csq !== null) {
+            return RetrievalSpecification::fromCanonical($csq);
+        }
+        $raw = $plan->normalizedQuery->constraints['retrieval_specification'] ?? null;
+        if (! is_array($raw) || $raw === []) {
+            return null;
+        }
+
+        return RetrievalSpecification::fromArray($raw);
     }
 
     /**
