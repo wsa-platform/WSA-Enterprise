@@ -687,7 +687,7 @@ class QueryUnderstandingService
         $graph['target_canonical_namespace'] = null;
         $graph['target_normalized_key'] = $graph['target_normalized_key'] ?? null;
 
-        return $graph;
+        return $this->consumeVerifiedCropBindingIdentity($graph, $cropBinding);
     }
 
     /**
@@ -712,6 +712,107 @@ class QueryUnderstandingService
         }
 
         return [null, null];
+    }
+
+    /**
+     * Freeze-time consumption of a taxonomy-verified crop-profile binding.
+     * Home bindings are not a fallback. Independently verified entities win.
+     *
+     * @param  array<string, mixed>  $graph
+     * @return array<string, mixed>
+     */
+    private function consumeVerifiedCropBindingIdentity(array $graph, CsqCropBinding $cropBinding): array
+    {
+        if ($cropBinding->context !== CanonicalScientificQuestion::RESEARCH_CONTEXT_CROP_PROFILE) {
+            return $graph;
+        }
+
+        $cropId = trim((string) $cropBinding->cropId);
+        if ($cropId === '' || FieldCropTaxonomyCatalog::entryFor($cropId) === null) {
+            return $graph;
+        }
+
+        $surface = isset($graph['entity_surface']) ? trim((string) $graph['entity_surface']) : '';
+        $normalized = isset($graph['entity_normalized']) ? trim((string) $graph['entity_normalized']) : '';
+        $canonicalId = isset($graph['entity_canonical_id']) ? trim((string) $graph['entity_canonical_id']) : '';
+        $identityToken = $canonicalId !== '' ? $canonicalId : ($normalized !== '' ? $normalized : $surface);
+        [$verifiedId] = $this->verifiedEntityIdentity($identityToken !== '' ? $identityToken : null, $cropId);
+        if ($verifiedId !== null && $verifiedId !== $cropId) {
+            return $graph;
+        }
+        if ($verifiedId === $cropId) {
+            if (! $this->surfaceIsProcessWrapperAroundVerifiedBinding($surface, $cropId)) {
+                return $graph;
+            }
+            $label = trim((string) $cropBinding->cropLabel);
+            if ($label !== '') {
+                $graph['entity_surface'] = $label;
+            }
+
+            return $graph;
+        }
+        if (! $this->entitySlotIsNonEntityForBindingConsumption($surface, $normalized, $canonicalId, $cropId)) {
+            return $graph;
+        }
+
+        $graph['entity_canonical_id'] = $cropId;
+        $graph['entity_canonical_namespace'] = CanonicalScientificQuestion::NAMESPACE_TAXONOMY_CROP;
+        $graph['entity_normalized'] = $cropId;
+        $graph['entity_resolution'] = CanonicalScientificQuestion::RESOLUTION_RESOLVED;
+        $label = trim((string) $cropBinding->cropLabel);
+        $graph['entity_surface'] = $label !== '' ? $label : $cropId;
+
+        return $graph;
+    }
+
+    private function entitySlotIsNonEntityForBindingConsumption(
+        string $surface,
+        string $normalized,
+        string $canonicalId,
+        string $cropId,
+    ): bool {
+        if ($surface === '' && $normalized === '' && $canonicalId === '') {
+            return true;
+        }
+        if ($this->surfaceIsNonEntityRole($surface) || $this->surfaceIsNonEntityRole($normalized)) {
+            return true;
+        }
+
+        return $this->surfaceIsProcessWrapperAroundVerifiedBinding($surface, $cropId);
+    }
+
+    private function surfaceIsNonEntityRole(string $surface): bool
+    {
+        $surface = trim($surface);
+        if ($surface === '') {
+            return false;
+        }
+        if (CropKnowledgeOptionCatalog::isOptionKey($surface)) {
+            return true;
+        }
+
+        return AgriculturalEntityCatalog::isGenericScientificProcessToken($surface)
+            || AgriculturalEntityCatalog::tokenMatchesCultivationProcessFamily($surface);
+    }
+
+    private function surfaceIsProcessWrapperAroundVerifiedBinding(string $surface, string $cropId): bool
+    {
+        $tokens = preg_split('/\s+/u', mb_strtolower(trim($surface))) ?: [];
+        if (count($tokens) < 2) {
+            return false;
+        }
+        $first = CanonicalScientificQuestion::stripProcessProclitics((string) $tokens[0]);
+        if (! AgriculturalEntityCatalog::isGenericScientificProcessToken($first)
+            && ! AgriculturalEntityCatalog::tokenMatchesCultivationProcessFamily($first)) {
+            return false;
+        }
+        $rest = trim(implode(' ', array_slice($tokens, 1)));
+        if ($rest === '') {
+            return false;
+        }
+        [$verifiedRest] = $this->verifiedEntityIdentity($rest, $cropId);
+
+        return $verifiedRest === $cropId;
     }
 
     /**
