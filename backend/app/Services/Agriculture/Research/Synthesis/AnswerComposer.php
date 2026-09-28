@@ -1083,9 +1083,12 @@ class AnswerComposer
             $validationStatus = 'insufficient_evidence';
             $conditions = null;
 
+            $mayExpressThroughConflict = $answerEligible
+                && $relationship === ClaimEvidenceRelationship::CONFLICTING
+                && $this->traceHasNonConflictingSupport($evidenceIds, $itemsById);
             if ($answerEligible
-                && $relationship !== ClaimEvidenceRelationship::CONFLICTING
                 && $relationship !== ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE
+                && ($relationship !== ClaimEvidenceRelationship::CONFLICTING || $mayExpressThroughConflict)
             ) {
                 foreach ($evidenceIds as $evidenceId) {
                     $item = $itemsById[$evidenceId] ?? null;
@@ -1154,12 +1157,22 @@ class AnswerComposer
 
                 // Eligible but no grounded/accurate snippet — keep claim identity without factual prose.
                 if ($claimText === '') {
-                    $answerEligible = false;
-                    if (! in_array('insufficient_validated_evidence_for_question_claim', $limitations, true)
-                        && ! $this->hasAccuracyLimitation($limitations)) {
-                        $limitations[] = 'insufficient_validated_evidence_for_question_claim';
+                    if ($relationship === ClaimEvidenceRelationship::CONFLICTING) {
+                        $validationStatus = 'conflicting';
+                        if (! in_array('conflicting_evidence_for_question_claim', $limitations, true)) {
+                            $limitations[] = 'conflicting_evidence_for_question_claim';
+                        }
+                    } else {
+                        $answerEligible = false;
+                        if (! in_array('insufficient_validated_evidence_for_question_claim', $limitations, true)
+                            && ! $this->hasAccuracyLimitation($limitations)) {
+                            $limitations[] = 'insufficient_validated_evidence_for_question_claim';
+                        }
+                        $relationship = ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE;
                     }
-                    $relationship = ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE;
+                } elseif ($relationship === ClaimEvidenceRelationship::CONFLICTING
+                    && ! in_array('conflicting_evidence_for_question_claim', $limitations, true)) {
+                    $limitations[] = 'conflicting_evidence_for_question_claim';
                 }
             } elseif ($relationship === ClaimEvidenceRelationship::CONFLICTING) {
                 // Preserve conflict identity without selecting a convenient conflicting value as fact.
@@ -1402,6 +1415,31 @@ class AnswerComposer
     {
         foreach ($limitations as $limitation) {
             if (str_starts_with((string) $limitation, 'accuracy_')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  list<string>  $evidenceIds
+     * @param  array<string, ScientificEvidenceItem>  $itemsById
+     */
+    private function traceHasNonConflictingSupport(array $evidenceIds, array $itemsById): bool
+    {
+        foreach ($evidenceIds as $evidenceId) {
+            $item = $itemsById[$evidenceId] ?? null;
+            if ($item === null) {
+                continue;
+            }
+            if ($item->hasConflict || $item->claimRelationship === ClaimEvidenceRelationship::CONFLICTING) {
+                continue;
+            }
+            if (in_array($item->claimRelationship, [
+                ClaimEvidenceRelationship::SUPPORTED,
+                ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+            ], true)) {
                 return true;
             }
         }
