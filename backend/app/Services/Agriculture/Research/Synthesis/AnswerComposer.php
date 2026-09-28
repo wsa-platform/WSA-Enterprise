@@ -1924,43 +1924,25 @@ class AnswerComposer
             return 0.0;
         }
 
-        $total = array_sum(array_map(fn (ResearchAnswerClaim $claim): float => $claim->confidence, $claims));
-        $confidence = min(0.95, $total / count($claims));
+        // Confidence tracks remaining expressible claims only. Empty / unanswered
+        // claim rows must not occupy the denominator.
+        $expressible = array_values(array_filter(
+            $claims,
+            static fn (ResearchAnswerClaim $claim): bool => trim($claim->claimText) !== '',
+        ));
+        if ($expressible === []) {
+            return 0.0;
+        }
+
+        $expressibleTotal = array_sum(array_map(
+            static fn (ResearchAnswerClaim $claim): float => $claim->confidence,
+            $expressible,
+        ));
+        $confidence = min(0.95, $expressibleTotal / count($expressible));
 
         // Supporting-only must never look like a high-confidence DIRECT answer.
         if (((int) ($sufficiency['direct_count'] ?? 0)) === 0) {
             $confidence = min($confidence, 0.42);
-        }
-
-        // Accuracy-filtered claims contribute 0 confidence already; when every claim
-        // was blocked by an accuracy limitation, confidence remains zero.
-        $expressible = array_values(array_filter(
-            $claims,
-            static fn (ResearchAnswerClaim $claim): bool => trim($claim->claimText) !== ''
-                && $claim->claimRelationship !== ClaimEvidenceRelationship::CONFLICTING
-                && $claim->claimRelationship !== ClaimEvidenceRelationship::INSUFFICIENT_EVIDENCE,
-        ));
-        if ($expressible === []) {
-            $hasAccuracyBlock = false;
-            foreach ($claims as $claim) {
-                if ($this->hasAccuracyLimitation($claim->limitations)) {
-                    $hasAccuracyBlock = true;
-                    break;
-                }
-            }
-            if ($hasAccuracyBlock) {
-                return 0.0;
-            }
-        } else {
-            // Confidence tracks remaining expressible claims only (no invented constants).
-            $expressibleTotal = array_sum(array_map(
-                static fn (ResearchAnswerClaim $claim): float => $claim->confidence,
-                $expressible,
-            ));
-            $confidence = min($confidence, min(0.95, $expressibleTotal / count($expressible)));
-            if (((int) ($sufficiency['direct_count'] ?? 0)) === 0) {
-                $confidence = min($confidence, 0.42);
-            }
         }
 
         return round($confidence, 3);
