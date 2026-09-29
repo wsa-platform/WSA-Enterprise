@@ -36,6 +36,7 @@ class MultiSourceScientificSearchOrchestrator
         private ScientificSearchQueryBuilder $queryBuilder,
         private ScientificResultDeduplicator $deduplicator,
         private ScientificResultRanker $ranker,
+        private ScientificQueryCompiler $queryCompiler = new ScientificQueryCompiler(),
     ) {}
 
     public function execute(KnowledgeQueryPlan $plan, int $limit = 10, ?array $sourceKeys = null): ScientificSearchExecutionReport
@@ -241,10 +242,39 @@ class MultiSourceScientificSearchOrchestrator
             // Internal orchestration hint only — never sent as a FAOSTAT query parameter.
             $primary['_faostat_canonical_queries'] = $queries !== [] ? $queries : [$primary];
 
-            return $primary;
+            return $this->attachCompiledQueryMetadata($sourceKey, $plan, $primary);
         }
 
-        return $this->queryBuilder->buildConsensusRequestOptions($plan);
+        return $this->attachCompiledQueryMetadata(
+            $sourceKey,
+            $plan,
+            $this->queryBuilder->buildConsensusRequestOptions($plan),
+        );
+    }
+
+    /**
+     * Additive local compilation metadata only — does not add provider HTTP calls,
+     * does not replace NL variants, and does not execute adapters.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    private function attachCompiledQueryMetadata(string $sourceKey, KnowledgeQueryPlan $plan, array $options): array
+    {
+        $csq = $plan->normalizedQuery->canonicalQuestion;
+        if ($csq === null) {
+            return $options;
+        }
+
+        $profile = ScientificSourceProfileCatalog::get($sourceKey);
+        if ($profile === null) {
+            return $options;
+        }
+
+        $bundle = $this->queryCompiler->compile($csq, $plan, $profile);
+        $options['scientific_query_compilation'] = $bundle->toArray();
+
+        return $options;
     }
 
     private static function isRateLimitedOutcome(ScientificSourceSearchOutcome $outcome): bool
