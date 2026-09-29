@@ -1,11 +1,11 @@
-# WSA-ENTERPRISE — Architectural Decisions R1–R7
+# WSA-ENTERPRISE — Architectural Decisions R1–R8
 
 **Status:** Approved and implemented (Phase 2)  
 **Authority:** Phase-2 Master Implementation Prompt + ADR-021  
 **HEAD baseline:** `23c57b87c695366ad2a7a2ea0e4c981629a99cdd`  
 **Date:** 2026-09-21
 
-These decisions are normative for Phase 2. Documentation must match runtime.
+These decisions are normative for the project. Documentation must match runtime where implemented; R8 is an approved architectural decision with implementation pending.
 
 ---
 
@@ -95,3 +95,104 @@ Never collapse these dimensions:
 See `docs/architecture/CANONICAL-CONTRACT-SPECIFICATION-v1.md`.
 
 Phase 8 security / Library Page closeout (no change to R1–R7 semantics): `docs/architecture/PHASE-8-CLOSEOUT.md`.
+
+
+---
+
+## R8 — R33-OD-1 Independent Multi-Answer Architecture
+
+**Status:** Approved architectural decision; implementation pending  
+**Date:** 2026-09-29  
+**Scope:** Home Web + Crop Web
+
+R33-OD-1 introduces a **new independent Multi-Answer scientific-answer model**.
+
+### R8.1 — Independent Producer
+
+- Multi-Answers are produced by a **dedicated independent Multi-Answer Producer**.
+- The Producer is architecturally separate from Composer Units A/B/C.
+- The existing `ScientificAnswerCandidatePresenter` / `candidates[]` path is **not** the Multi-Answer producer.
+- Claims must not be silently reinterpreted as independent scientific answers.
+- Composer Units A/B/C remain CLOSED and are not reopened by R33-OD-1.
+
+### R8.2 — Primary Answer Relationship
+
+- `primary_answer` remains singular.
+- Existing final-answer eligibility and the **0.50 threshold** remain unchanged.
+- R33-OD-1 adds `multi_answers[]`; it does not replace `primary_answer`.
+
+Conceptual presentation contract:
+
+`primary_answer` + `multi_answers[]` + `candidates[]` + `results[]` + `sources`
+
+### R8.3 — Existing Candidates Contract
+
+- Existing `candidates[]` remains a separate claim-alternative presentation feature.
+- `candidates[]` must not be migrated, renamed, or silently aliased to `multi_answers[]`.
+- The semantics of the existing candidates contract remain unchanged.
+
+### R8.4 — Multi-Answer Identity
+
+Each independent Multi-Answer has its own deterministic `answer_id`.
+
+- `answer_id` is semantically distinct from `claim_id`, `result_id`, `evidence_id`, and `source_id`.
+- The detailed deterministic identity inputs and normalization rules are part of the later R33-OD-1 Identity Contract / implementation specification and must not be invented implicitly.
+
+### R8.5 — Multi-Answer Payload
+
+The authoritative Multi-Answer object is defined conceptually as:
+
+- `answer_id`
+- `answer`
+- `result_id`
+- `evidence_ids`
+- `source_ids`
+- `position`
+- `provenance`
+
+The payload is expected to be carried through the existing `user_presentation` boundary as `multi_answers[]`, subject to the later implementation-specification audit.
+
+### R8.6 — Provenance
+
+- Backend maintains the complete provenance relationship needed to connect: **Answer → Evidence → Sources → Result**.
+- User presentation exposes relevant source/evidence/result navigation rather than internal provenance implementation details.
+- Internal provenance structures must not be promoted to public API merely by reuse.
+- Confidence is not user-visible unless separately authorized.
+
+### R8.7 — Ordering
+
+- The Multi-Answer Producer is authoritative for `position`.
+- Presentation layers must preserve the Producer-defined order.
+- The frontend must not invent a scientific ranking rule from confidence, claim order, result order, or source order.
+
+### R8.8 — Carousel
+
+- Carousel is a **presentation mechanism only**.
+- It navigates among backend-provided Multi-Answers.
+- It does not determine scientific correctness.
+- It is not a voting, ranking, or truth-selection mechanism.
+- Detailed visual behavior is an implementation/UI decision and is not part of this architectural contract.
+
+### R8.9 — Scope and Closed Boundaries
+
+- R33-OD-1 applies to **Home Web + Crop Web**.
+- Flutter is outside R33-OD-1 scope.
+- Stage-4 Results List and `results[]` remain CLOSED and unchanged.
+- Viewer/Results contracts must not be redesigned by R33-OD-1.
+- R33-OD-2, R33-OD-3, and R33-OD-4 remain separate decisions.
+- Protected WIP remains outside this decision.
+
+### R8.10 — Implementation Gate
+
+This decision authorizes the architectural direction only.
+
+Before implementation, a separate read-only implementation-specification audit must define and verify:
+
+- the exact Producer boundary and inputs/outputs;
+- deterministic `answer_id` inputs and normalization;
+- concrete provenance schema;
+- `position` validation/invariants;
+- exact backend/frontend insertion points;
+- required regression and R33-OD-1 contract tests.
+
+No code change is authorized by this document alone.
