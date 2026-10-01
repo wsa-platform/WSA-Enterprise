@@ -1,0 +1,859 @@
+{
+  "schema_id": "adr023.membership_register.v1",
+  "governance_reference": "ADR-023/D-09",
+  "membership_revision": "109.v1",
+  "adr_baseline_commit": "9de9ed874510dad1970abe14b2aadb4441e9137a",
+  "total_current_seats": 109,
+  "group_counts": {
+    "G1": 22,
+    "G2": 25,
+    "G3": 14,
+    "G4": 7,
+    "G5": 19,
+    "G6": 22
+  },
+  "seats": [
+    {
+      "adr_id": "G1-01",
+      "group_id": "G1",
+      "ordinal": 1,
+      "display_name": "FAO AGRIS",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G1-02",
+      "group_id": "G1",
+      "ordinal": 2,
+      "display_name": "Organic Eprints",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G1-03",
+      "group_id": "G1",
+      "ordinal": 3,
+      "display_name": "Turkish Journal of Agriculture and Forestry",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G1-04",
+      "group_id": "G1",
+      "ordinal": 4,
+      "display_name": "AgroSpace",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G1-05",
+      "group_id": "G1",
+      "ordinal": 5,
+      "display_name": "AgriRxiv",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G1-06",
+      "group_id": "G1",
+      "ordinal": 6,
+      "display_name": "AgroPortal",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G1-07",
+      "group_id": "G1",
+      "ordinal": 7,
+      "display_name": "YYU Journal of Agricultural Sciences",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G1-08",
+      "group_id": "G1",
+      "ordinal": 8,
+      "display_name": "J. Korean Soc. Int. Agriculture",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G1-09",
+      "group_id": "G1",
+      "ordinal": 9,
+      "display_name": "Int. J. Horticultural Science",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G1-10",
+      "group_id": "G1",
+      "ordinal": 10,
+      "display_name": "JISHS / eJHS",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G1-11",
+      "group_id": "G1",
+      "ordinal": 11,
+      "display_name": "Sarhad Journal of Agriculture",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G1-12",
+      "group_id": "G1",
+      "ordinal": 12,
+      "display_name": "FlowerBase",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G6-01"
+    },
+    {
+      "adr_id": "G1-13",
+      "group_id": "G1",
+      "ordinal": 13,
+      "display_name": "HortDB V1.0",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G6-03"
+    },
+    {
+      "adr_id": "G1-14",
+      "group_id": "G1",
+      "ordinal": 14,
+      "display_name": "Tropicals.cn",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G6-02"
+    },
+    {
+      "adr_id": "G1-15",
+      "group_id": "G1",
+      "ordinal": 15,
+      "display_name": "sCentInDB",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G6-04"
+    },
+    {
+      "adr_id": "G1-16",
+      "group_id": "G1",
+      "ordinal": 16,
+      "display_name": "AromaDb",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G6-05"
+    },
+    {
+      "adr_id": "G1-17",
+      "group_id": "G1",
+      "ordinal": 17,
+      "display_name": "Dr. Duke's Databases",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G6-06"
+    },
+    {
+      "adr_id": "G1-18",
+      "group_id": "G1",
+      "ordinal": 18,
+      "display_name": "MPNS — Kew",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G6-07"
+    },
+    {
+      "adr_id": "G1-19",
+      "group_id": "G1",
+      "ordinal": 19,
+      "display_name": "Fruit and Nut Cultivars Database",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G6-08"
+    },
+    {
+      "adr_id": "G1-20",
+      "group_id": "G1",
+      "ordinal": 20,
+      "display_name": "FEAtl",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G6-09"
+    },
+    {
+      "adr_id": "G1-21",
+      "group_id": "G1",
+      "ordinal": 21,
+      "display_name": "CRFG",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G6-10"
+    },
+    {
+      "adr_id": "G1-22",
+      "group_id": "G1",
+      "ordinal": 22,
+      "display_name": "GrainGenes",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-01",
+      "group_id": "G2",
+      "ordinal": 1,
+      "display_name": "Poultry Science",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-02",
+      "group_id": "G2",
+      "ordinal": 2,
+      "display_name": "Journal of Applied Poultry Research",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-03",
+      "group_id": "G2",
+      "ordinal": 3,
+      "display_name": "European Poultry Science",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-04",
+      "group_id": "G2",
+      "ordinal": 4,
+      "display_name": "Brazilian Journal of Poultry Science",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-05",
+      "group_id": "G2",
+      "ordinal": 5,
+      "display_name": "Journal of Poultry Science",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-06",
+      "group_id": "G2",
+      "ordinal": 6,
+      "display_name": "Journal of Animal Science and Biotechnology",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-07",
+      "group_id": "G2",
+      "ordinal": 7,
+      "display_name": "Animal Frontiers",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-08",
+      "group_id": "G2",
+      "ordinal": 8,
+      "display_name": "Veterinary and Animal Science",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-09",
+      "group_id": "G2",
+      "ordinal": 9,
+      "display_name": "Turkish Journal of Veterinary & Animal Sciences",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-10",
+      "group_id": "G2",
+      "ordinal": 10,
+      "display_name": "Journal of Animal Production (Hayvansal Üretim)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-11",
+      "group_id": "G2",
+      "ordinal": 11,
+      "display_name": "Aquaculture and Fisheries",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-12",
+      "group_id": "G2",
+      "ordinal": 12,
+      "display_name": "Turkish Journal of Fisheries and Aquatic Sciences",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-13",
+      "group_id": "G2",
+      "ordinal": 13,
+      "display_name": "Marine and Fishery Sciences (MAFIS)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-14",
+      "group_id": "G2",
+      "ordinal": 14,
+      "display_name": "AIMS Animal Science",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-15",
+      "group_id": "G2",
+      "ordinal": 15,
+      "display_name": "Andalasian Livestock",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-16",
+      "group_id": "G2",
+      "ordinal": 16,
+      "display_name": "Hayvan Bilimi ve Ürünleri Dergisi (JASP)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-17",
+      "group_id": "G2",
+      "ordinal": 17,
+      "display_name": "REMVT",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-18",
+      "group_id": "G2",
+      "ordinal": 18,
+      "display_name": "Farm Animal Health and Nutrition",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-19",
+      "group_id": "G2",
+      "ordinal": 19,
+      "display_name": "Animal Bioscience",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-20",
+      "group_id": "G2",
+      "ordinal": 20,
+      "display_name": "Aquaculture Journal",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-21",
+      "group_id": "G2",
+      "ordinal": 21,
+      "display_name": "Aquaculture Reports",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-22",
+      "group_id": "G2",
+      "ordinal": 22,
+      "display_name": "LIVEMAP",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-23",
+      "group_id": "G2",
+      "ordinal": 23,
+      "display_name": "LivestockDev",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-24",
+      "group_id": "G2",
+      "ordinal": 24,
+      "display_name": "IDEAL Project",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G2-25",
+      "group_id": "G2",
+      "ordinal": 25,
+      "display_name": "CIRAD Portals",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-01",
+      "group_id": "G3",
+      "ordinal": 1,
+      "display_name": "APIS",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-02",
+      "group_id": "G3",
+      "ordinal": 2,
+      "display_name": "Uludag Bee Journal",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-03",
+      "group_id": "G3",
+      "ordinal": 3,
+      "display_name": "Journal of Apicultural Science",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-04",
+      "group_id": "G3",
+      "ordinal": 4,
+      "display_name": "Frontiers in Bee Science",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-05",
+      "group_id": "G3",
+      "ordinal": 5,
+      "display_name": "OSMIA",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-06",
+      "group_id": "G3",
+      "ordinal": 6,
+      "display_name": "EUNK",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-07",
+      "group_id": "G3",
+      "ordinal": 7,
+      "display_name": "Apidologie",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-08",
+      "group_id": "G3",
+      "ordinal": 8,
+      "display_name": "USDA-ARS Carl Hayden Honey Bee Research Center",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-09",
+      "group_id": "G3",
+      "ordinal": 9,
+      "display_name": "USDA-ARS Bee Research Laboratory — Beltsville",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-10",
+      "group_id": "G3",
+      "ordinal": 10,
+      "display_name": "Harry H. Laidlaw Jr. Honey Bee Research Facility — UC Davis",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-11",
+      "group_id": "G3",
+      "ordinal": 11,
+      "display_name": "University of Minnesota Bee Lab",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-12",
+      "group_id": "G3",
+      "ordinal": 12,
+      "display_name": "Washington State University Bee Program",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-13",
+      "group_id": "G3",
+      "ordinal": 13,
+      "display_name": "MSPB",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G3-14",
+      "group_id": "G3",
+      "ordinal": 14,
+      "display_name": "UrBAN",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G4-01",
+      "group_id": "G4",
+      "ordinal": 1,
+      "display_name": "SilkBase",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G4-02",
+      "group_id": "G4",
+      "ordinal": 2,
+      "display_name": "KAIKObase",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G4-03",
+      "group_id": "G4",
+      "ordinal": 3,
+      "display_name": "Silkworm Gene Resources Database (SGRDB / NAAS)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G4-04",
+      "group_id": "G4",
+      "ordinal": 4,
+      "display_name": "SilkDB / Silkworm Knowledgebase",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G4-05",
+      "group_id": "G4",
+      "ordinal": 5,
+      "display_name": "International Sericultural Commission (ISC / INSERCO)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G4-06",
+      "group_id": "G4",
+      "ordinal": 6,
+      "display_name": "Sericologia",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G4-07",
+      "group_id": "G4",
+      "ordinal": 7,
+      "display_name": "Queen Sirikit Department of Sericulture (QSDS)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-01",
+      "group_id": "G5",
+      "ordinal": 1,
+      "display_name": "InsectBrainDatabase (IBdb)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-02",
+      "group_id": "G5",
+      "ordinal": 2,
+      "display_name": "AGRICOLA (USDA/NAL)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-03",
+      "group_id": "G5",
+      "ordinal": 3,
+      "display_name": "ELIE — Entomological Label Information Extraction",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-04",
+      "group_id": "G5",
+      "ordinal": 4,
+      "display_name": "GBIF",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-05",
+      "group_id": "G5",
+      "ordinal": 5,
+      "display_name": "Journal of Insect Science (JIS)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-06",
+      "group_id": "G5",
+      "ordinal": 6,
+      "display_name": "npj Entomology",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-07",
+      "group_id": "G5",
+      "ordinal": 7,
+      "display_name": "Insects (MDPI)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-08",
+      "group_id": "G5",
+      "ordinal": 8,
+      "display_name": "Current Research in Insect Science",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-09",
+      "group_id": "G5",
+      "ordinal": 9,
+      "display_name": "Frontiers in Insect Science",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-10",
+      "group_id": "G5",
+      "ordinal": 10,
+      "display_name": "Florida Entomologist",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-11",
+      "group_id": "G5",
+      "ordinal": 11,
+      "display_name": "Egyptian Academic Journal of Biological Sciences A — Entomology",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-12",
+      "group_id": "G5",
+      "ordinal": 12,
+      "display_name": "PhytoFrontiers™",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-13",
+      "group_id": "G5",
+      "ordinal": 13,
+      "display_name": "Phytopathology Research",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-14",
+      "group_id": "G5",
+      "ordinal": 14,
+      "display_name": "Tropical Plant Pathology",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-15",
+      "group_id": "G5",
+      "ordinal": 15,
+      "display_name": "BMC Plant Biology",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-16",
+      "group_id": "G5",
+      "ordinal": 16,
+      "display_name": "Pathogens (MDPI)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-17",
+      "group_id": "G5",
+      "ordinal": 17,
+      "display_name": "Journal of Plant Protection and Pathology — Mansoura University",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-18",
+      "group_id": "G5",
+      "ordinal": 18,
+      "display_name": "Iranian Journal of Plant Pathology",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G5-19",
+      "group_id": "G5",
+      "ordinal": 19,
+      "display_name": "Plant Pathology Journal — ANSInet",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-01",
+      "group_id": "G6",
+      "ordinal": 1,
+      "display_name": "FlowerBase",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G1-12"
+    },
+    {
+      "adr_id": "G6-02",
+      "group_id": "G6",
+      "ordinal": 2,
+      "display_name": "Tropicals.cn",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G1-14"
+    },
+    {
+      "adr_id": "G6-03",
+      "group_id": "G6",
+      "ordinal": 3,
+      "display_name": "HortDB V1.0",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G1-13"
+    },
+    {
+      "adr_id": "G6-04",
+      "group_id": "G6",
+      "ordinal": 4,
+      "display_name": "sCentInDB",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G1-15"
+    },
+    {
+      "adr_id": "G6-05",
+      "group_id": "G6",
+      "ordinal": 5,
+      "display_name": "AromaDb",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G1-16"
+    },
+    {
+      "adr_id": "G6-06",
+      "group_id": "G6",
+      "ordinal": 6,
+      "display_name": "Dr. Duke's Phytochemical and Ethnobotanical Databases",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G1-17"
+    },
+    {
+      "adr_id": "G6-07",
+      "group_id": "G6",
+      "ordinal": 7,
+      "display_name": "MPNS – Kew",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G1-18"
+    },
+    {
+      "adr_id": "G6-08",
+      "group_id": "G6",
+      "ordinal": 8,
+      "display_name": "Fruit and Nut Cultivars Database (FNCD)",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G1-19"
+    },
+    {
+      "adr_id": "G6-09",
+      "group_id": "G6",
+      "ordinal": 9,
+      "display_name": "FEAtl – Fruit Expression Atlas",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G1-20"
+    },
+    {
+      "adr_id": "G6-10",
+      "group_id": "G6",
+      "ordinal": 10,
+      "display_name": "CRFG – California Rare Fruit Growers",
+      "membership_status": "CURRENT",
+      "dual_peer_adr_id": "G1-21"
+    },
+    {
+      "adr_id": "G6-11",
+      "group_id": "G6",
+      "ordinal": 11,
+      "display_name": "Chrysanthemum Genome Database (CGD)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-12",
+      "group_id": "G6",
+      "ordinal": 12,
+      "display_name": "OfIR – Osmanthus fragrans Information Resource",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-13",
+      "group_id": "G6",
+      "ordinal": 13,
+      "display_name": "PGRDEU",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-14",
+      "group_id": "G6",
+      "ordinal": 14,
+      "display_name": "GDR – Genome Database for Rosaceae",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-15",
+      "group_id": "G6",
+      "ordinal": 15,
+      "display_name": "PeachMD",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-16",
+      "group_id": "G6",
+      "ordinal": 16,
+      "display_name": "Citrus Genome Database (CGD)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-17",
+      "group_id": "G6",
+      "ordinal": 17,
+      "display_name": "HarnesstomDB",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-18",
+      "group_id": "G6",
+      "ordinal": 18,
+      "display_name": "INIA Peru – Banco de Germoplasma",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-19",
+      "group_id": "G6",
+      "ordinal": 19,
+      "display_name": "BINA – Paraguay",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-20",
+      "group_id": "G6",
+      "ordinal": 20,
+      "display_name": "Biodiversity Heritage Library (BHL)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-21",
+      "group_id": "G6",
+      "ordinal": 21,
+      "display_name": "New York Botanical Garden (NYBG)",
+      "membership_status": "CURRENT"
+    },
+    {
+      "adr_id": "G6-22",
+      "group_id": "G6",
+      "ordinal": 22,
+      "display_name": "PG Syllabus – UBKV",
+      "membership_status": "CURRENT"
+    }
+  ],
+  "dual_pairs": [
+    {
+      "seat_a": "G1-12",
+      "seat_b": "G6-01",
+      "label": "FlowerBase"
+    },
+    {
+      "seat_a": "G1-13",
+      "seat_b": "G6-03",
+      "label": "HortDB V1.0"
+    },
+    {
+      "seat_a": "G1-14",
+      "seat_b": "G6-02",
+      "label": "Tropicals.cn"
+    },
+    {
+      "seat_a": "G1-15",
+      "seat_b": "G6-04",
+      "label": "sCentInDB"
+    },
+    {
+      "seat_a": "G1-16",
+      "seat_b": "G6-05",
+      "label": "AromaDb"
+    },
+    {
+      "seat_a": "G1-17",
+      "seat_b": "G6-06",
+      "label": "Dr. Duke's"
+    },
+    {
+      "seat_a": "G1-18",
+      "seat_b": "G6-07",
+      "label": "MPNS"
+    },
+    {
+      "seat_a": "G1-19",
+      "seat_b": "G6-08",
+      "label": "FNCD"
+    },
+    {
+      "seat_a": "G1-20",
+      "seat_b": "G6-09",
+      "label": "FEAtl"
+    },
+    {
+      "seat_a": "G1-21",
+      "seat_b": "G6-10",
+      "label": "CRFG"
+    }
+  ],
+  "provenance": {
+    "adr_path": "ADR-023",
+    "decision_id": "D-09",
+    "decision_date": "2026-10-01",
+    "enumeration_source": "preserved ADR-023 enumeration / IU-10A design closure",
+    "baseline_git": "9de9ed874510dad1970abe14b2aadb4441e9137a"
+  }
+}
