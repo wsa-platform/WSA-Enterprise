@@ -3,6 +3,8 @@
 namespace App\Services\Agriculture\Research\Synthesis;
 
 use App\Services\Agriculture\Research\AgriculturalEntityCatalog;
+use App\Services\Agriculture\Research\Coexistence\CoexistenceDisclosureContext;
+use App\Services\Agriculture\Research\Disclosure\FidelityDisclosureHandoff;
 use App\Services\Agriculture\Research\Home\HomeEvidenceLifecycleDisposition;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
@@ -314,7 +316,7 @@ class AnswerComposer
                 composerEligibleCount: count($usable),
                 disposition: 'composer_used',
             ),
-            observability: [
+            observability: $this->withCoexistenceDisclosure([
                 'usable_evidence_count' => count($usable),
                 'claims_generated' => count($claims),
                 'citations_mapped' => count($citations),
@@ -328,7 +330,7 @@ class AnswerComposer
                 $validationReport,
                 composerEligibleCount: count($usable),
                 disposition: 'composer_used',
-            ),
+            )),
             additionalInformation: $additionalInformation,
         );
     }
@@ -2739,7 +2741,7 @@ class AnswerComposer
                 composerEligibleCount: count($usable),
                 disposition: 'insufficient_direct_supporting_retained',
             ),
-            observability: [
+            observability: $this->withCoexistenceDisclosure([
                 'usable_evidence_count' => count($usable),
                 'claims_generated' => 0,
                 'citations_mapped' => 0,
@@ -2753,7 +2755,7 @@ class AnswerComposer
                 $validationReport,
                 composerEligibleCount: count($usable),
                 disposition: 'insufficient_direct_supporting_retained',
-            ),
+            )),
             additionalInformation: trim($additionalSection) !== '' ? $additionalSection : null,
         );
     }
@@ -2837,7 +2839,7 @@ class AnswerComposer
                 'internet_first' => $plan->isInternetFirst(),
                 'evidence_sufficient' => false,
             ] + $lifecycle,
-            observability: [
+            observability: $this->withCoexistenceDisclosure([
                 'usable_evidence_count' => 0,
                 'claims_generated' => 0,
                 'citations_mapped' => 0,
@@ -2846,7 +2848,46 @@ class AnswerComposer
                 'validation_bypassed' => false,
                 'failure_reason' => $reason,
             ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, [])
-              + $lifecycle,
+              + $lifecycle),
         );
+    }
+
+    /**
+     * IU-08/IU-09: merge coexistence fidelity disclosure into Stage-5 observability.
+     * Does not recalculate C9, confidence, R6, or Units A/B/C.
+     *
+     * @param  array<string, mixed>  $observability
+     * @return array<string, mixed>
+     */
+    private function withCoexistenceDisclosure(array $observability): array
+    {
+        $handoffs = CoexistenceDisclosureContext::instance()->all();
+        if ($handoffs === []) {
+            return $observability;
+        }
+
+        $payloads = [];
+        $qualificationRequired = false;
+        $unqualifiedExactForbidden = false;
+
+        foreach ($handoffs as $handoff) {
+            $payloads[] = $handoff->toArray();
+            if ($handoff->qualificationRequired) {
+                $qualificationRequired = true;
+            }
+            if ($handoff->unqualifiedExactScientificClaimForbidden) {
+                $unqualifiedExactForbidden = true;
+            }
+        }
+
+        $observability[FidelityDisclosureHandoff::OBSERVABILITY_KEY] = [
+            'handoffs' => $payloads,
+            'qualification_required' => $qualificationRequired,
+            'unqualified_exact_scientific_claim_forbidden' => $unqualifiedExactForbidden,
+        ];
+        $observability['c9_qualification_required'] = $qualificationRequired;
+        $observability['c9_unqualified_exact_scientific_claim_forbidden'] = $unqualifiedExactForbidden;
+
+        return $observability;
     }
 }

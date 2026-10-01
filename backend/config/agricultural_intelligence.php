@@ -63,6 +63,15 @@ return [
         'enabled' => filter_var(env('CROSSREF_ENABLED', true), FILTER_VALIDATE_BOOL),
     ],
 
+    /*
+    | IU-09 Stage-3 ↔ CGHIA coexistence gate.
+    | Default LEGACY_ONLY preserves current Stage-3 behavior.
+    | Set CGHIA_COEXISTENCE_MODE=cghia_attached to attach Cap/Path/Projection/B7/C9 plans.
+    */
+    'cghia_coexistence' => [
+        'mode' => env('CGHIA_COEXISTENCE_MODE', 'legacy_only'),
+    ],
+
     'open_meteo' => [
         'enabled' => filter_var(env('OPEN_METEO_ENABLED', true), FILTER_VALIDATE_BOOL),
         'base_url' => env('OPEN_METEO_BASE_URL', 'https://api.open-meteo.com/v1/forecast'),

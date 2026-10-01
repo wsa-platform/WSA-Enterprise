@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Services\Agriculture\Research\Coexistence;
+
+/**
+ * IU-09 coexistence event taxonomy — distinct failure classes (OD-06 / auth gate).
+ */
+enum CoexistenceEventCode: string
+{
+    case IDENTITY_UNRESOLVED = 'IDENTITY_UNRESOLVED';
+    case CAP_UNVERIFIED = 'CAP_UNVERIFIED';
+    case CAP_UNAVAILABLE = 'CAP_UNAVAILABLE';
+    case PATH_INELIGIBLE = 'PATH_INELIGIBLE';
+    case PATH_DEFERRED = 'PATH_DEFERRED';
+    case PROJECTION_INVARIANT = 'PROJECTION_INVARIANT';
+    case RUNTIME_FAILURE = 'RUNTIME_FAILURE';
+    case TIMEOUT = 'TIMEOUT';
+    case RATE_LIMIT = 'RATE_LIMIT';
+    case EMPTY_RESULT = 'EMPTY_RESULT';
+    case LICENSE_RESTRICTION = 'LICENSE_RESTRICTION';
+    case CORRELATION_INVARIANT = 'CORRELATION_INVARIANT';
+    case SELECTOR_NOT_SELECTED = 'SELECTOR_NOT_SELECTED';
+    case LEGACY_COMPATIBLE = 'LEGACY_COMPATIBLE';
+    case CGHIA_ATTACHED = 'CGHIA_ATTACHED';
+    case EXTERNAL_ONLY_NO_ADR_BINDING = 'EXTERNAL_ONLY_NO_ADR_BINDING';
+}

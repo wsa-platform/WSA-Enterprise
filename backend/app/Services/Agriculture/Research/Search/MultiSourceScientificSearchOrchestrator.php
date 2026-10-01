@@ -7,6 +7,10 @@ use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatPro
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatQclDimensionResolver;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatRuntimePolicy;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatSearchOptionsResolver;
+use App\Services\Agriculture\Research\Coexistence\CoexistenceDisclosureContext;
+use App\Services\Agriculture\Research\Coexistence\CoexistenceMode;
+use App\Services\Agriculture\Research\Coexistence\CoexistenceRetrievalPlan;
+use App\Services\Agriculture\Research\Coexistence\Stage3CghiaCoexistenceBoundary;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use Illuminate\Support\Facades\Concurrency;
 use Illuminate\Support\Facades\Log;
@@ -37,6 +41,7 @@ class MultiSourceScientificSearchOrchestrator
         private ScientificResultDeduplicator $deduplicator,
         private ScientificResultRanker $ranker,
         private ScientificQueryCompiler $queryCompiler = new ScientificQueryCompiler(),
+        private Stage3CghiaCoexistenceBoundary $coexistenceBoundary = new Stage3CghiaCoexistenceBoundary(),
     ) {}
 
     public function execute(KnowledgeQueryPlan $plan, int $limit = 10, ?array $sourceKeys = null): ScientificSearchExecutionReport
@@ -50,6 +55,9 @@ class MultiSourceScientificSearchOrchestrator
         $selectedSources = $sourceKeys !== null
             ? $this->filterEnabledSources($sourceKeys, $plan)
             : $selectionTrace['selected'];
+
+        $coexistencePlan = $this->buildCoexistencePlan($plan, $selectedSources, $searchQuery);
+
         if ($selectedSources === []) {
             return $this->emptyReport(
                 plan: $plan,
@@ -68,6 +76,7 @@ class MultiSourceScientificSearchOrchestrator
                     dedupCount: 0,
                     finalCount: 0,
                     concurrencyMode: 'none',
+                    coexistencePlan: $coexistencePlan,
                 ),
             );
         }
@@ -91,6 +100,7 @@ class MultiSourceScientificSearchOrchestrator
                     dedupCount: 0,
                     finalCount: 0,
                     concurrencyMode: 'none',
+                    coexistencePlan: $coexistencePlan,
                 ),
             );
         }
@@ -115,6 +125,7 @@ class MultiSourceScientificSearchOrchestrator
                     dedupCount: 0,
                     finalCount: 0,
                     concurrencyMode: 'none',
+                    coexistencePlan: $coexistencePlan,
                 ),
             );
         }
@@ -186,6 +197,7 @@ class MultiSourceScientificSearchOrchestrator
             dedupCount: count($deduplicated),
             finalCount: count($ranked),
             concurrencyMode: $concurrencyMode,
+            coexistencePlan: $coexistencePlan,
         );
 
         return new ScientificSearchExecutionReport(
@@ -998,6 +1010,7 @@ class MultiSourceScientificSearchOrchestrator
         int $dedupCount,
         int $finalCount,
         string $concurrencyMode,
+        ?CoexistenceRetrievalPlan $coexistencePlan = null,
     ): array {
         $providerVariantCounts = [];
         $executionCount = 0;
@@ -1044,7 +1057,7 @@ class MultiSourceScientificSearchOrchestrator
             };
         }
 
-        return [
+        $payload = [
             'selected_providers' => array_values($selectedSources),
             'skipped_providers' => array_values(array_unique(array_merge(
                 $selectionTrace['skipped_inactive'] ?? [],
@@ -1073,5 +1086,38 @@ class MultiSourceScientificSearchOrchestrator
             'concurrency_mode' => $concurrencyMode,
             'provider_status' => $adapterStatus,
         ];
+
+        if ($coexistencePlan !== null) {
+            $payload = array_merge($payload, $coexistencePlan->toObservabilityFragment());
+        }
+
+        return $payload;
+    }
+
+    /**
+     * IU-09 coexistence attach — does not replace Selector/Registry/Builder.
+     *
+     * @param  list<string>  $selectedSources
+     */
+    private function buildCoexistencePlan(
+        KnowledgeQueryPlan $plan,
+        array $selectedSources,
+        string $searchQuery,
+    ): CoexistenceRetrievalPlan {
+        CoexistenceDisclosureContext::instance()->clear();
+
+        $nq = $plan->normalizedQuery;
+        $questionIdentity = 'q:'.hash('sha256', $nq->originalQuestion);
+        $csqIdentity = $nq->canonicalQuestion !== null
+            ? 'csq:'.hash('sha256', 'frozen|'.$nq->normalizedQuestion)
+            : 'csq:'.hash('sha256', 'uncanonical|'.$nq->normalizedQuestion);
+
+        return $this->coexistenceBoundary->plan(
+            CoexistenceMode::fromConfig(),
+            $selectedSources,
+            $searchQuery,
+            $questionIdentity,
+            $csqIdentity,
+        );
     }
 }
