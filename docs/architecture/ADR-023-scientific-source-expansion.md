@@ -646,3 +646,102 @@ Full record: [`science-source-expansion/2026-09-30-G3-01-APIS-identity-governanc
 - Expansion work has a stable identity baseline.
 - Capability assessment (GO-1) can fill UNKNOWN fields without renumbering.
 - Runtime Stage-3 behavior is unchanged by GO-0-A documentation.
+
+---
+
+## 8. Preservation Appendix — D-09 Governance Chain and Conversation Record
+
+**Purpose:** Preserve the substantive prompts, forensic reports, governance reviews, corrections, approvals, and execution records produced during the recovery and formalization of the current 109-source membership SoT. This appendix is **append-only**. Existing ADR text, prior decisions, historical records, and earlier wording are not deleted or rewritten.
+
+### 8.1 Preservation rule
+
+The project conversation history for this phase is preserved as a **consolidated architectural record**, not as a claim of verbatim transcript completeness. Where a full prompt/report already exists under `science-source-expansion/` or in preserved ADR artifacts, that original artifact remains the detailed record. This ADR records the chain of authority, purpose, result, and disposition so the architectural decision remains self-contained.
+
+No earlier decision is deleted because a later decision supersedes or clarifies it.
+
+### 8.2 109 Enumeration Recovery — preserved prompt/report chain
+
+1. **IU-10A Enumeration / Governance Recovery Gate — READ-ONLY**
+   - Objective: recover the complete 109-seat enumeration from repository-local and preserved architectural artifacts.
+   - Prohibitions: no new manifest, no runtime registry, no identity minting, no SAME_AS, no ADR mutation, no commit/push.
+   - Required identity protections: historical 62 numbering remains `historical_62_xref`; G3-15 must not be resurrected; recovered names must not be promoted to canonical identities.
+   - Result: the initial repository-only conclusion that 109 was not recoverable was later superseded by discovery of preserved ADR artifacts containing the enumeration.
+
+2. **ADR-023 — 109 ENUMERATION EXTRACTION CROSS-VERSION FORENSIC RECONCILIATION REPORT**
+   - Result: **COMPLETE 109 ENUMERATION RECOVERED — NO MATERIAL CONFLICT**.
+   - G1=22, G2=25, G3=14, G4=7, G5=19, G6=22, TOTAL=109.
+   - G3-15 = REMOVED; replacement = NONE.
+   - G2-17 = REMVT; G2-19 = Animal Bioscience.
+   - Intentional G1/G6 duplicate seats remain separate; no SAME_AS minted.
+   - Historical 62 remains historical cross-reference only.
+   - Latest preserved enumeration artifact: `ADR-023-Scientific-Source-Expansion-Full-Source-Architecture-PRESERVED-20261001-v4.docx`.
+   - Governance gap identified: the 109 universe was accepted in preserved ADR material but was not yet formally established as the current numbered membership SoT in the tracked ADR.
+
+### 8.3 D-09 Governance Acceptance and wording chain
+
+3. **ADR-023 — 109 Membership SoT Governance Acceptance Gate**
+   - Result: **ACCEPTABLE WITH EXPLICIT GOVERNANCE WORDING REQUIRED**.
+   - Determination: enumeration complete, but formal current-membership SoT closure required an explicit ADR decision.
+   - Required closure: establish 109 as current membership authority and establish the D-06 historical scope boundary without rewriting D-06's original wording.
+   - IU-10A remained unauthorized.
+
+4. **D-09 CURRENT 109 MEMBERSHIP SoT — FINAL GOVERNANCE WORDING REVISION GATE**
+   - READ-ONLY; no mutation.
+   - Three mandatory corrections were applied to the proposed wording:
+     1. D-09, not D-06 retroactively, establishes the historical-62 scope boundary.
+     2. D-09 establishes the current historical role of the 62-register; D-06's original history is preserved.
+     3. Proposed status remained `PROPOSED — PENDING GOVERNANCE APPROVAL` until explicit user approval and actual ADR mutation.
+   - All previously closed invariants remained unchanged.
+
+5. **User governance approval**
+   - Explicit approval was given to apply the revised D-09 wording because it was determined to be the appropriate project governance form.
+
+6. **D-09 Governance Mutation & Forensic Verification**
+   - Mutation boundary: ADR-023 only.
+   - D-09 inserted exactly once with status `ACCEPTED`, date 2026-10-01.
+   - 109 counts and required G2/G3 pins verified.
+   - Dual seats preserved; no SAME_AS.
+   - D-06 original body preserved; D-09 clarification added.
+   - IU-10A not implemented and not authorized.
+   - Runtime, database, Capability Store, and Source Registry unchanged.
+
+### 8.4 D-09 commit/push execution record
+
+7. **D-09 Commit & Push Forensic Report**
+   - Branch: `phase-18-m18-ai-marketing-communications`.
+   - Commit: `9de9ed874510dad1970abe14b2aadb4441e9137a`.
+   - Subject: `docs(research): establish current 109 membership SoT`.
+   - Exactly one file committed: `docs/architecture/ADR-023-scientific-source-expansion.md`.
+   - Push succeeded.
+   - Local and remote HEAD matched; ahead/behind = 0/0 at execution time.
+   - Pre-existing WIP was preserved.
+   - IU-10A remained separate and unauthorized.
+   - Runtime and database remained unchanged.
+
+### 8.5 Architectural conversation decisions preserved by this chain
+
+The following conversation-level constraints remain part of the ADR record:
+
+- The current 109 universe must never be silently merged with the historical 62 universe.
+- Membership identity is distinct from canonical source identity.
+- Duplicate-looking G1/G6 seats remain separate until an explicit SAME_AS identity decision exists.
+- G3-15 is permanently removed from the current 109 membership universe unless a future explicit governance decision changes membership.
+- G2-17 and G2-19 remain pinned as REMVT and Animal Bioscience respectively.
+- Membership does not imply execution, capability verification, adapter availability, runtime registration, or source selection.
+- D-09 is governance-only and does not authorize IU-10A implementation.
+- IU-01 through IU-09 remain closed and unchanged by D-09.
+- CSQ remains scientific semantic authority; source/provider syntax must never redefine scientific identity.
+- No destructive Git operation, unrelated file mutation, or silent architecture change is authorized by this preservation record.
+- Later decisions may supersede earlier decisions, but **earlier records must remain preserved**.
+
+### 8.6 Preservation references
+
+The detailed records consulted for this chain include, where present:
+
+- `ADR-023-Scientific-Source-Expansion-Full-Source-Architecture-v2.docx`
+- `ADR-023-Scientific-Source-Expansion-Full-Source-Architecture-PRESERVED-20261001-v4.docx`
+- `Pasted text(20261001-162021).txt` — 109 enumeration forensic report
+- `Pasted markdown(20261001-164702).md` — D-09 proposal/revision gate and governance wording
+- Existing `science-source-expansion/` prompts, reports, assessments, and decision records referenced elsewhere in this ADR
+
+**Preservation invariant:** this appendix supplements the existing ADR. It does not replace, delete, rewrite, or invalidate any earlier architectural record.
