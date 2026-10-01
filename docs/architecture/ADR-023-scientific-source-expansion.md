@@ -745,3 +745,120 @@ The detailed records consulted for this chain include, where present:
 - Existing `science-source-expansion/` prompts, reports, assessments, and decision records referenced elsewhere in this ADR
 
 **Preservation invariant:** this appendix supplements the existing ADR. It does not replace, delete, rewrite, or invalidate any earlier architectural record.
+
+### 8.7 IU-10A Implementation, Integration, Push and Closure Record
+
+**Purpose:** Preserve the chronological IU-10A lifecycle that occurred **after** the D-09 preservation chain (§8.2–§8.6). This subsection is **append-only**. It does not rewrite D-06, D-09, §8.2–§8.6, earlier GO decisions, or any historical statement.
+
+**Chronology rule:** Statements in §8.3–§8.5 such as “IU-10A not implemented and not authorized,” “IU-10A remained unauthorized,” and “D-09 … does not authorize IU-10A implementation” remain **historical D-09-era snapshots** and **D-09 scope statements**. They stay exactly where they historically belong. They are **not** deleted. They are **superseded for present-tense IU-10A status** only by this later, separately authorized IU-10A chain—not by rewriting those earlier lines.
+
+#### H — IU-10A implementation authorization / design
+
+- D-09 did **not** authorize IU-10A implementation.
+- Later, a **separate** IU-10A implementation authorization gate was opened.
+- Design selected **Option E / Hybrid**: an authoritative JSON membership register with **no database** and **no runtime registry authority**.
+- Final membership artifact path: `docs/architecture/science-source-expansion/ADR-023-109-MEMBERSHIP-REGISTER.v1.json`
+- Contract test: `backend/tests/Unit/Agriculture/Research/Membership/Adr023109MembershipRegisterContractTest.php`
+- **No PHP loader** was included in IU-10A.
+- PHP loader was deferred as future design work and was **not** automatically established as **IU-10B**.
+
+#### I — IU-10A design closure / enumeration integrity
+
+- Full **109** enumeration recovered and verified.
+- Counts: G1=22, G2=25, G3=14, G4=7, G5=19, G6=22; **TOTAL=109**.
+- G3-15 **ABSENT** / **REMOVED**; replacement = **NONE**.
+- G2-17 = **REMVT**; G2-19 = **Animal Bioscience**.
+- All intentional G1/G6 dual seats preserved as separate membership seats.
+- No SAME_AS; no canonical identity minting by IU-10A.
+- Exact preserved labels verified (including G5-11: Egyptian Academic Journal of Biological Sciences A — Entomology).
+- `historical_62_xref` omitted from v1.
+- PHP loader deferred as separate future work.
+- Stage-3 boundary unchanged.
+
+#### J — IU-10A implementation
+
+Exactly two files were implemented:
+
+1. `docs/architecture/science-source-expansion/ADR-023-109-MEMBERSHIP-REGISTER.v1.json`
+2. `backend/tests/Unit/Agriculture/Research/Membership/Adr023109MembershipRegisterContractTest.php`
+
+The JSON register is **membership-only**. It does **not** become Source Registry, Capability Store, Stage-3 authority, `sourceKey` authority, adapter authority, provider authority, path authority, or canonical identity authority. Validation is **fail-closed**.
+
+#### K — IU-10A verification
+
+- Node fail-closed validation: **PASS** (0 errors).
+- PHPUnit: **1 test**, **5243 assertions**, **0 failures**, **0 errors**, **0 skipped**.
+- Register facts: `total_current_seats = 109`; group counts 22/25/14/7/19/22; 109 seats; 10 dual pairs; G3-15 absent; G2-17 = REMVT; G2-19 = Animal Bioscience; forbidden runtime/identity keys absent.
+
+#### L — IU-10A scoped commit
+
+- Original implementation commit: `0439142d0a214657e4a2e8c7201159bb7d502555`
+- Subject: `fix(research): add ADR-023 109 membership register`
+- Exactly the two IU-10A files above.
+- No ADR-023 markdown; no ADR-021; no unrelated WIP in that commit.
+
+#### M — Remote divergence
+
+After `9de9ed874510dad1970abe14b2aadb4441e9137a`, two sibling children existed:
+
+- **Remote:** `53c5a9caafc9940de244f1367a142e57a1c376b1` — D-09 Preservation Appendix.
+- **Local:** `0439142d0a214657e4a2e8c7201159bb7d502555` — IU-10A.
+
+The initial IU-10A push was rejected as non-fast-forward. No force push. No reset/rebase/merge used to destroy history.
+
+#### N — Integration plan
+
+- Divergence was **path-disjoint** (remote touched ADR-023 markdown only; IU-10A touched the two membership files only).
+- Approved strategy: remote `53c5a9` → isolated worktree → cherry-pick `0439142` → new commit → fast-forward push.
+- The original `0439142` SHA could not be preserved because its parent changed from `9de9ed8` to `53c5a9`.
+
+#### O — Integration execution
+
+- Temporary clean worktree: `G:\WSA-IU10A-integrate` at base `53c5a9caafc9940de244f1367a142e57a1c376b1`.
+- Cherry-pick of `0439142` was clean.
+- New integrated commit: `83b5b9b8b2c6c77bd53e8e9aa1303c047607775b`
+- Parent: `53c5a9caafc9940de244f1367a142e57a1c376b1`
+- The two IU-10A files were byte-equivalent to the original `0439142` implementation.
+- The IU-10A commit did **not** modify ADR-023 markdown.
+
+#### P — Final push
+
+- Remote before push: `53c5a9caafc9940de244f1367a142e57a1c376b1`
+- Push: **fast-forward** (no `--force`, no `--force-with-lease`)
+- Remote after push: `83b5b9b8b2c6c77bd53e8e9aa1303c047607775b`
+- Final: HEAD == upstream; ahead/behind = 0/0
+
+#### Q — Final forensic verification
+
+- D-09 present; §8 Preservation Appendix present.
+- IU-10A JSON present; IU-10A contract test present.
+- Pre-existing WIP before/after remained unchanged.
+- IU-01…IU-09 remained untouched.
+- No ADR-023 content was rewritten during IU-10A integration.
+
+#### R — Worktree cleanup
+
+- Temporary worktree `G:\WSA-IU10A-integrate` was removed successfully.
+- `git worktree list` confirmed it was no longer listed.
+- Main worktree remained unchanged except for its pre-existing WIP.
+
+#### S — IU-10A final closure
+
+| Item | Status |
+|------|--------|
+| IU-10A | **CLOSED** |
+| Implementation | COMPLETE |
+| Verification | COMPLETE |
+| Commit | COMPLETE (`83b5b9b8…`, replay of `0439142d…`) |
+| Push | COMPLETE |
+| Worktree cleanup | COMPLETE |
+| Remote synchronization | COMPLETE |
+| Current HEAD at closure | `83b5b9b8b2c6c77bd53e8e9aa1303c047607775b` |
+
+#### Next-unit governance boundary (explicit)
+
+- **No IU-10B** currently exists as an accepted implementation unit.
+- The PHP loader was deferred during IU-10A design but was **not** formally accepted as IU-10B.
+- **No next implementation unit is authorized by this appendix.**
+- A separate design/discovery gate is required before any post-IU-10A implementation begins.
+- This appendix does **not** create that next unit.
