@@ -862,3 +862,318 @@ The initial IU-10A push was rejected as non-fast-forward. No force push. No rese
 - **No next implementation unit is authorized by this appendix.**
 - A separate design/discovery gate is required before any post-IU-10A implementation begins.
 - This appendix does **not** create that next unit.
+
+
+---
+
+## 8.8 — Detailed Preservation Record: Unarchived IU-10A / D-09 Prompts, Reports, Gates and Conversation Decisions
+
+**Purpose:** This section is an append-only preservation record for the substantive prompts, reports, gate outputs, user approvals, corrections, and execution messages that were produced during the D-09 → IU-10A transition and were not fully represented in the earlier ADR preservation sections. It supplements §8.2–§8.7 and does not delete, rewrite, reinterpret, or replace any earlier record.
+
+**Preservation rule:** Existing ADR text remains immutable historical context. Where an earlier section records a historical status such as “IU-10A not implemented and not authorized,” that wording remains unchanged. The records below establish the later chronology under separate authorization.
+
+### 8.8.1 — IU-10A Implementation Authorization Gate / Forensic Readiness
+
+**Prompt purpose:** Read-only determination of whether IU-10A could proceed after D-09 governance closure.
+
+**Required scope and prohibitions preserved:**
+- Verify D-09 is ACCEPTED and establishes the current 109 membership SoT.
+- Verify G1=22, G2=25, G3=14, G4=7, G5=19, G6=22, TOTAL=109.
+- Verify G2-17 = REMVT, G2-19 = Animal Bioscience, G3-15 removed with no replacement.
+- Preserve all intentional G1/G6 dual seats without SAME_AS.
+- Inspect IU-01…IU-09 dependencies and verify that no machine-readable 109 membership artifact existed yet.
+- Do not implement, mutate ADR-023, create runtime registry behavior, modify Capability Store, Stage-3, CSQ, Builder, Catalog, Compiler, Composer, gates, Results/Viewer, canonical identity, SAME_AS, or sourceKey behavior.
+- Do not commit or push.
+
+**Forensic result:** **READY WITH EXPLICIT DESIGN CONDITIONS.**
+
+The gate established that D-09 closed membership governance but did not itself authorize implementation. A separate detailed IU-10A design was required.
+
+### 8.8.2 — IU-10A Detailed Implementation Design Specification
+
+**Design decision preserved:** IU-10A is a governance-owned, machine-readable **CURRENT MEMBERSHIP REGISTER** answering only which seats belong to the D-09 109-source universe.
+
+**Selected representation:** **OPTION E — Hybrid**
+- Authoritative: canonical JSON membership manifest.
+- Optional derived PHP loader/DTO binder: non-authoritative and deferred.
+- No database table.
+- No Stage-3 wiring.
+- No canonical identity minting.
+- No SAME_AS inference.
+- No Capability Store population.
+- G3-15 must not appear.
+
+**Authoritative artifact path:**
+`docs/architecture/science-source-expansion/ADR-023-109-MEMBERSHIP-REGISTER.v1.json`
+
+**Contract test:**
+`backend/tests/Unit/Agriculture/Research/Membership/Adr023109MembershipRegisterContractTest.php`
+
+**Schema closure preserved:**
+- Root: schema_id, governance_reference, membership_revision, adr_baseline_commit, total_current_seats, group_counts, seats, dual_pairs, provenance.
+- Per seat: adr_id, group_id, ordinal, display_name, membership_status=CURRENT.
+- historical_62_xref omitted in v1.
+- dual_peer_adr_id optional.
+- canonical_identity_id, sourceKey, adapter, provider, capability, and path are forbidden as runtime-authority fields.
+- Fail closed on duplicate/missing IDs, invalid group/ordinal, wrong total, missing dual pair, G3-15 present, forbidden authority fields, or corrupted provenance.
+- No silent repair, dedupe, renumbering, inference, or invention of seats.
+
+**Design closure:** implementation remained unauthorized until a separate implementation authorization gate.
+
+### 8.8.3 — IU-10A Design Closure Gate
+
+**Result:** **DESIGN CLOSED — READY FOR IMPLEMENTATION AUTHORIZATION.**
+
+The closure verified:
+- complete 109-seat enumeration;
+- exact group counts 22/25/14/7/19/22;
+- G2-17 = REMVT;
+- G2-19 = Animal Bioscience;
+- G3-15 absent;
+- all 10 intentional G1/G6 dual pairs preserved;
+- no SAME_AS;
+- no canonical identity sharing;
+- exact preserved labels, including G5-11 = “Egyptian Academic Journal of Biological Sciences A — Entomology”;
+- historical_62_xref omitted from v1;
+- Stage-3 boundary unchanged;
+- JSON path fixed as above;
+- no PHP loader included in IU-10A;
+- no next implementation unit was thereby authorized.
+
+### 8.8.4 — IU-10A Implementation Authorization Prompt and Execution
+
+**Implementation authorization scope:** JSON membership register + fail-closed contract test only.
+
+**Explicitly forbidden during implementation:**
+- PHP loader;
+- database/migration;
+- Source Registry;
+- Capability Store;
+- Stage-3 wiring;
+- AdapterRegistry;
+- sourceKey/provider inference;
+- canonical identity minting;
+- SAME_AS;
+- Builder/Catalog/Compiler/Composer/gate changes;
+- Results List/Viewer changes;
+- ADR-023 mutation;
+- unrelated WIP staging;
+- commit/push outside the separately scoped commit gate.
+
+**Implementation result:**
+Exactly two files:
+1. `docs/architecture/science-source-expansion/ADR-023-109-MEMBERSHIP-REGISTER.v1.json`
+2. `backend/tests/Unit/Agriculture/Research/Membership/Adr023109MembershipRegisterContractTest.php`
+
+### 8.8.5 — IU-10A Verification Report
+
+**Validation results preserved:**
+- Node fail-closed validator: PASS.
+- PHPUnit: **1 test / 5243 assertions / 0 failures / 0 errors / 0 skipped**.
+- 109 seats verified.
+- Group counts 22/25/14/7/19/22.
+- 10 dual pairs verified.
+- G3-15 absent.
+- G2-17 = REMVT.
+- G2-19 = Animal Bioscience.
+- Forbidden runtime/identity authority keys absent.
+- Membership artifact remained membership-only.
+
+A separate `git diff --check` observation identified pre-existing trailing whitespace in `docs/architecture/ADR-021-system-wide-fastest-safe-remediation-plan.md`; this was unrelated to IU-10A and was not repaired or included.
+
+### 8.8.6 — IU-10A Scoped Commit Record
+
+**Original implementation commit:**
+- SHA: `0439142d0a214657e4a2e8c7201159bb7d502555`
+- Subject: `fix(research): add ADR-023 109 membership register`
+- Exactly the two IU-10A files were committed.
+- ADR-023 markdown and ADR-021 were not committed.
+- Pre-existing WIP remained untouched.
+
+### 8.8.7 — Remote Divergence Forensic Report
+
+After the D-09 commit chain, the expected remote and local histories diverged:
+
+- Remote-only commit: `53c5a9caafc9940de244f1367a142e57a1c376b1`
+  - D-09 Preservation Appendix.
+- Local-only commit: `0439142d0a214657e4a2e8c7201159bb7d502555`
+  - IU-10A membership register + contract test.
+- Common ancestor: `9de9ed874510dad1970abe14b2aadb4441e9137a`.
+
+The initial IU-10A push was correctly rejected as non-fast-forward.
+
+**Safety decisions preserved:**
+- no force push;
+- no force-with-lease;
+- no reset;
+- no rebase;
+- no destructive merge;
+- no deletion of either branch history.
+
+The forensic comparison established that the two commits were path-disjoint.
+
+### 8.8.8 — IU-10A Integration Plan
+
+**Approved strategy:**
+`9de9ed8 → 53c5a9 → NEW-IU10A`
+
+Execution model:
+1. Use an isolated clean worktree.
+2. Start at remote `53c5a9`.
+3. Cherry-pick local `0439142`.
+4. Verify clean replay.
+5. Resulting commit necessarily receives a new SHA because its parent changes.
+6. Move the working branch reference safely.
+7. Synchronize ADR-023 working-tree state without touching protected WIP.
+8. Push only after remote ancestry is reverified.
+
+No merge commit was required.
+
+### 8.8.9 — IU-10A Integration Execution Report
+
+Temporary worktree:
+`G:\WSA-IU10A-integrate`
+
+Base:
+`53c5a9caafc9940de244f1367a142e57a1c376b1`
+
+The cherry-pick of `0439142` completed cleanly.
+
+Resulting integrated commit:
+`83b5b9b8b2c6c77bd53e8e9aa1303c047607775b`
+
+Parent:
+`53c5a9caafc9940de244f1367a142e57a1c376b1`
+
+The two IU-10A files were verified byte-equivalent to the original implementation. ADR-023 markdown was not changed by the IU-10A implementation commit.
+
+### 8.8.10 — IU-10A Final Sync / Push / Cleanup
+
+**Final push before Preservation Appendix:**
+- Remote before push: `53c5a9caafc9940de244f1367a142e57a1c376b1`
+- Remote after push: `83b5b9b8b2c6c77bd53e8e9aa1303c047607775b`
+- Fast-forward only.
+- HEAD == upstream.
+- Ahead/behind = 0/0.
+- No force operation.
+
+The temporary worktree `G:\WSA-IU10A-integrate` was then removed and verified absent.
+
+### 8.8.11 — Post-IU-10A Transition & Preservation Forensic Report
+
+The post-IU-10A read-only audit established:
+- HEAD/upstream = `83b5b9b8b2c6c77bd53e8e9aa1303c047607775b`.
+- Ahead/behind = 0/0.
+- Pre-existing dirty/untracked WIP remained untouched.
+- IU-10A was CLOSED in Git reality.
+- ADR-023 preservation narrative initially lagged behind the implementation history.
+- D-09 statements remained valid as D-09-era scope/history and must not be rewritten.
+- No accepted IU-10B existed.
+- PHP loader remained deferred and was not IU-10B.
+- The exact next gate was an append-only ADR-023 Preservation Appendix update before any next implementation unit.
+
+### 8.8.12 — Preservation Appendix Mutation Forensic Report
+
+**Mutation boundary:**
+Only:
+`docs/architecture/ADR-023-scientific-source-expansion.md`
+
+**Mutation:**
+`117 insertions / 0 deletions`
+
+**Result:**
+- §8.7 added.
+- H–S records present.
+- D-06, D-09, §8.2–§8.6 and earlier records untouched.
+- Historical/current status distinction explicitly recorded.
+- IU-10A CLOSED at `83b5b9b8...`.
+- No IU-10B accepted.
+- PHP loader deferred.
+- No next implementation unit authorized.
+- ADR-023 remained the only working-tree mutation for this gate.
+- Nothing was staged at the time of this report.
+
+### 8.8.13 — IU-10A Preservation Appendix Commit + Push Report
+
+The preservation mutation was subsequently committed and pushed separately.
+
+**Commit:**
+- SHA: `924c80c1eb35d8fcaa8382d91f9df27d6af19639`
+- Parent: `83b5b9b8b2c6c77bd53e8e9aa1303c047607775b`
+- Subject: `docs(research): preserve IU-10A closure record`
+- File: `docs/architecture/ADR-023-scientific-source-expansion.md`
+- Change: +117 / -0.
+
+**Push:**
+- Remote before: `83b5b9b8b2c6c77bd53e8e9aa1303c047607775b`
+- Remote after: `924c80c1eb35d8fcaa8382d91f9df27d6af19639`
+- Fast-forward successful.
+- HEAD == upstream.
+- Ahead/behind = 0/0.
+- No force push, rebase, reset, or merge.
+- Pre-existing WIP remained uncommitted.
+
+### 8.8.14 — Exact Commit + Push Prompt Preserved
+
+The scoped commit/push gate required:
+- inspect `git status --short`;
+- inspect only ADR-023 diff;
+- verify +117/-0 and `git diff --check`;
+- stage only ADR-023 using `git add -- <exact path>`;
+- reject `git add -A`, `git add .`, `git commit -am`;
+- verify cached diff contains only §8.7;
+- commit as `docs(research): preserve IU-10A closure record`;
+- verify the commit contains only ADR-023;
+- verify remote ancestry before push;
+- push normally only if remote remained at `83b5b9b8...`;
+- verify HEAD == upstream and 0/0;
+- stop after the task without starting IU-10B.
+
+### 8.8.15 — Conversation-Level Governance Messages Preserved
+
+The following substantive conversation decisions are preserved as architectural messages rather than omitted chat context:
+
+1. The user explicitly required that all unpreserved prompts, reports, and substantive messages be saved **inside ADR-023** and that **nothing old be deleted**.
+2. The user confirmed approval of the final D-09 governance wording before mutation.
+3. The project path was deliberately kept unchanged: governance → design → authorization → implementation → verification → forensic integration → preservation; no jump to accuracy fixes or unrelated architecture.
+4. The user required preservation of historical records even when later status superseded them.
+5. The user required strict separation between membership, source identity, capability, path, Stage-3 runtime identity, and canonical scientific identity.
+6. The user required preservation of pre-existing WIP and prohibition of destructive Git operations.
+7. The user required that no next implementation unit be inferred merely because a deferred PHP loader exists.
+8. The current stopping point after the preservation commit is:
+   - branch `phase-18-m18-ai-marketing-communications`;
+   - HEAD/remote `924c80c1eb35d8fcaa8382d91f9df27d6af19639`;
+   - IU-10A CLOSED;
+   - no IU-10B authorized;
+   - PHP loader deferred;
+   - next unit requires a separate discovery/design/authorization gate.
+
+### 8.8.16 — Preservation Source Index
+
+The following preserved conversation artifacts were used to reconstruct the unarchived chain and remain available as supporting records:
+
+- `Pasted markdown(20261001-170543).md` — IU-10A implementation authorization / forensic readiness.
+- `Pasted text(20261001-171038).txt` — IU-10A detailed implementation design.
+- `Pasted text(20261001-171525).txt` — IU-10A design closure / implementation preconditions.
+- `Pasted markdown(20261001-184017).md` — POST-IU-10A transition and preservation forensic report.
+- `ADR-023-Scientific-Source-Expansion-Full-Source-Architecture-PRESERVED-20261001-v4.docx` — preserved 109-source enumeration baseline.
+- Earlier preserved ADR-023 v2/v3 artifacts and the existing `science-source-expansion/` decision/report archive.
+
+**Important:** These supporting artifacts are references to the detailed source records. Their existence does not create a second architectural authority. ADR-023 remains the single authoritative architectural path.
+
+### 8.8.17 — Final Append-Only Preservation Invariant
+
+This section does not delete, rewrite, or replace:
+- D-06;
+- D-09;
+- GO-0 through later accepted decisions;
+- §8.2–§8.7;
+- historical 62 records;
+- current 109 membership governance;
+- IU-01…IU-09 closure records.
+
+Later records supersede earlier status only by explicit chronology and governance; they do not erase history.
+
+**Current preservation status:** COMPLETE for the identified D-09/IU-10A post-closure prompt/report/message chain.
+
+**Current architectural status remains:** IU-10A CLOSED. No IU-10B is accepted or authorized. PHP loader remains deferred. No next implementation unit is authorized by this appendix.
