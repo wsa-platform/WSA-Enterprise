@@ -1177,3 +1177,186 @@ Later records supersede earlier status only by explicit chronology and governanc
 **Current preservation status:** COMPLETE for the identified D-09/IU-10A post-closure prompt/report/message chain.
 
 **Current architectural status remains:** IU-10A CLOSED. No IU-10B is accepted or authorized. PHP loader remains deferred. No next implementation unit is authorized by this appendix.
+
+## 8.9 — Post-IU-10A Follow-on Necessity Decision and Current Stopping Point
+
+This section is an append-only preservation record for the post-IU-10A discovery/design/decision chain. It preserves the substantive prompts, reports, governance messages, final architectural decision, and stopping point. It does not delete, rewrite, or replace any earlier ADR-023 record.
+
+### 8.9.1 — Next-Unit Discovery Prompt
+
+A read-only gate was issued to determine the actual architectural next step after IU-10A. It required forensic verification of Git and ADR state; verification of the 109 Membership Register; verification of IU-01 through IU-10A closure; inspection of Source Identity, Capability, Path, Projection/C9, Correlation, Disclosure, and Coexistence boundaries; investigation of the PHP Loader; search for existing next-unit references; identification of evidence-backed gaps; and determination of the next read-only/design gate.
+
+The prompt explicitly prohibited file, code, ADR, database, migration, staging, commit, push, reset, rebase, merge, IU-10B creation, and PHP Loader implementation. It required a final report containing Git baseline, ADR preservation state, IU-10A verification, unit status, architecture boundaries, next-unit references, PHP Loader status, downstream dependency analysis, Scientific Source Expansion completion analysis, evidence-backed gaps, candidate gate classification, and one exact next action.
+
+### 8.9.2 — Next-Unit Discovery Report
+
+The resulting report established:
+
+- IU-10A Membership JSON is complete within its designed scope and is a Membership Source of Truth only.
+- IU-10A does not populate Source Identity, Capability, Path, Projection, Stage-3, sourceKey, adapter, provider, canonical identity, or SAME_AS state.
+- IU-01 through IU-09 remain closed and are not reopened by IU-10A.
+- No current backend runtime consumer of the Membership JSON was found.
+- Current runtime is not blocked by the unread Membership JSON.
+- PHP Loader has no accepted design, ADR authorization, implementation authorization, contract, or runtime consumer; it remains deferred and non-authoritative.
+- Future Source Identity, CapVer, Path/Projection, and adapter work is not automatically required for all 109 seats.
+- Future runtime work, if authorized later, must be selective or explicitly governed; ALL-109 activation is not implied by membership.
+- No IU-10B exists as an accepted unit.
+- The immediate state required an architectural decision before any next unit could be defined.
+
+The report also recorded a Git preservation divergence: local HEAD was 924c80c1eb35d8fcaa8382d91f9df27d6af19639 while the actual remote tip was a05a73d2e1b0e6caae14089e9fb5c93fc024e21c. No synchronization was performed because pre-existing WIP was present and Git synchronization was intentionally a separate gate.
+
+### 8.9.3 — Design / Discovery Gate Prompt
+
+A second read-only Design/Discovery Gate was issued. Its purpose was to determine whether a real downstream architectural dependency existed after IU-10A, without assuming PHP Loader or IU-10B.
+
+It required examination of:
+- local, tracking, and actual remote Git state;
+- D-06, D-09, §8.7 and §8.8 preservation state;
+- the 109 Membership Register schema and forbidden runtime-authority fields;
+- Source Identity dependency;
+- Capability dependency;
+- Path/Projection/C9 dependency;
+- Stage-3/CGHIA dependency;
+- PHP Loader consumer/design/authorization status;
+- candidate future units;
+- global versus selective scope;
+- scientific identity preservation;
+- current runtime blocking status.
+
+It explicitly preserved the boundary:
+Membership Register ≠ Source Identity ≠ Capability ≠ Path ≠ Projection ≠ Runtime Adapter/Provider ≠ Stage-3 ≠ Scientific Entity Identity.
+
+No implementation, ADR mutation, Git synchronization, IU-10B creation, or PHP Loader coding was permitted.
+
+### 8.9.4 — Design / Discovery Gate Report
+
+The report confirmed:
+
+- Local HEAD/tracking state was 924c80c at inspection.
+- Actual remote tip was a05a73d, one commit ahead, containing the remote-only preservation appendix.
+- Local §8.7 contained IU-10A closure; remote §8.8 contained the expanded preservation record.
+- Membership Register is complete within its intended scope.
+- Source Identity population for all 109 seats is not a mandatory consequence of membership.
+- 109 membership does not imply 109 CapVer records.
+- Path/Projection/C9 are not automatically required per membership seat.
+- CGHIA/IU-09 does not require loading all 109 seats into Stage-3.
+- PHP Loader has no current runtime consumer and is not architecturally required for current runtime.
+- Current runtime is not blocked by unread Membership JSON.
+- No accepted next implementation unit exists.
+- The classification was CASE D — ARCHITECTURAL DECISION REQUIRED BEFORE A UNIT CAN BE DEFINED.
+
+### 8.9.5 — Follow-on Necessity Decision Gate Prompt
+
+A decision-only gate titled “WSA-Enterprise — POST-IU-10A FOLLOW-ON NECESSITY — ARCHITECTURAL DECISION GATE — READ ONLY” was issued.
+
+Its primary question was whether the project should begin any new implementation after IU-10A.
+
+The only allowed outcomes were:
+
+DECISION A — NO NEXT IMPLEMENTATION UNIT NOW
+
+or
+
+DECISION B — OPEN DESIGN CLOSURE FOR ONE SPECIFIC FOLLOW-ON UNIT
+
+The gate evaluated these evidence-backed possibilities without ranking:
+A. Keep Membership Register as docs/config Source of Truth.
+B. Membership Loader / read-only binder.
+C. Runtime Source Identity population.
+D. Capability Verification campaign.
+E. Path/Projection/C9 campaign.
+F. Stage-3 / Adapter integration.
+G. Other evidence-backed architectural unit.
+H. No new unit now.
+
+The gate prohibited ranking, scoring, inventing IU-10B, implementing an option, modifying ADR-023, synchronizing Git, or treating a deferred idea as authorization.
+
+### 8.9.6 — Final Architectural Decision
+
+The final report reached:
+
+DECISION A — NO NEXT IMPLEMENTATION UNIT NOW
+
+Evidence:
+
+1. IU-10A is complete within its Option E membership-only scope.
+2. The 109 JSON is a Membership Source of Truth, not a runtime source registry.
+3. No backend/app consumer of the Membership JSON exists.
+4. Current runtime is not blocked by unread Membership JSON.
+5. IU-01 through IU-09 do not mandate 109-to-runtime population.
+6. PHP Loader is deferred and unauthorized.
+7. No accepted IU-10B exists.
+8. No non-deferrable dependency forces immediate implementation.
+9. Future Identity, CapVer, Path/Projection, and adapter work can be opened selectively under separate design and authorization gates.
+10. Leaving the system in the current state does not create an architectural correctness defect.
+
+Decision B was not used because there is no current requirement, dependency, accepted design, or named unit boundary that forces a Design Closure now.
+
+### 8.9.7 — Final Architectural Boundary
+
+The following separation remains authoritative:
+
+Membership Register
+≠ Source Identity
+≠ Canonical Identity
+≠ Capability
+≠ Path
+≠ Projection
+≠ Provider
+≠ Adapter
+≠ Stage-3
+≠ sourceKey
+≠ CSQ
+≠ Scientific Entity Identity
+
+The 109 seats are governed membership seats, not automatically executable runtime sources. No automatic activation of the 109 seats is authorized.
+
+Any future runtime expansion must be opened by a separate architectural/design/authorization chain and must preserve scientific identity, CSQ identity, provenance, capability truth, and the existing Stage-3/CGHIA boundaries.
+
+### 8.9.8 — CURRENT PROJECT STOPPING POINT
+
+STOPPING POINT — 2026-10-01
+
+- Scientific Source Expansion governance baseline: established.
+- Current Membership Source of Truth: 109 seats, governed by D-09.
+- Historical 62 universe: remains separate historical lineage and traceability domain.
+- IU-01 through IU-09: CLOSED.
+- IU-10A: CLOSED.
+- IU-10A Membership Register: COMPLETE within scope.
+- IU-10A JSON: Membership Source of Truth only; no runtime registry authority.
+- PHP Loader: DEFERRED / NOT AUTHORIZED.
+- IU-10B: NOT CREATED / NOT ACCEPTED / NOT AUTHORIZED.
+- Runtime Source Identity population for 109: NOT AUTHORIZED.
+- 109-seat CapVer campaign: NOT AUTHORIZED.
+- 109-seat Path/Projection campaign: NOT AUTHORIZED.
+- 109-seat Stage-3/Adapter activation: NOT AUTHORIZED.
+- Current runtime blocker caused by Membership JSON: NONE.
+- Next implementation unit: NONE AUTHORIZED NOW.
+- Next action: STOP and wait for a future evidence-backed architectural need.
+
+### 8.9.9 — Git State at Decision Time
+
+The decision report recorded:
+
+- Branch: phase-18-m18-ai-marketing-communications.
+- Local HEAD: 924c80c1eb35d8fcaa8382d91f9df27d6af19639.
+- Tracking HEAD: 924c80c.
+- Actual remote at inspection: a05a73d2e1b0e6caae14089e9fb5c93fc024e21c.
+- Remote was one commit ahead of local at that inspection.
+- Pre-existing WIP remained untouched.
+- No fetch, pull, merge, rebase, reset, staging, commit, or push was performed by the read-only decision gate.
+
+This Git divergence is a preservation/synchronization issue separate from the architectural decision. It does not authorize implementation work.
+
+### 8.9.10 — User Stop and Preservation Instruction
+
+The user explicitly requested to stop at this point and preserve all relevant prompts, reports, substantive governance messages, the final architectural decision, and the exact stopping point inside ADR-023 without deleting any previous content.
+
+This section fulfills that preservation requirement by appending the post-IU-10A decision chain to ADR-023 without deleting or rewriting earlier records.
+
+Preservation invariant: future work must continue from this stopping point. No later action may silently treat PHP Loader as IU-10B, activate all 109 seats, or reopen IU-01 through IU-09 without an explicit new architectural gate and authorization.
+
+CURRENT ARCHITECTURAL STOP:
+IU-10A CLOSED → FOLLOW-ON NECESSITY DECISION A → NO NEXT IMPLEMENTATION UNIT NOW
+
+No implementation is authorized from this stopping point.
