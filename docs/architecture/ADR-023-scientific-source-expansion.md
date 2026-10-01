@@ -418,6 +418,8 @@ Known technical debt; **not** a blocker for documenting or assessing expansion s
 
 [`SCIENCE-SOURCE-EXPANSION-62-REGISTER.md`](./SCIENCE-SOURCE-EXPANSION-62-REGISTER.md) is the **sole** authoritative numbered identity register (IDs 1–62). Membership ≠ execution.
 
+**D-09 scope clarification:** D-09 hereby limits the applicability of D-06’s “sole authoritative numbered identity register” statement to the historical 62-register domain. This limitation is established by D-09; D-06’s original wording is not retroactively rewritten. Current ADR-023 membership authority is established by D-09 (Current 109 Membership SoT).
+
 ### D-07 — Documentation split
 
 | Document | Role |
@@ -431,6 +433,64 @@ Do **not** move CSQ semantics into the register. Do **not** modify ADR-021 or AD
 ### D-08 — Archive rule
 
 Every Cursor prompt and report for this phase must be archived under `science-source-expansion/` with date/phase labels. Later decisions **SUPERSEDE** earlier ones without deleting them.
+
+### D-09 — Current 109 Membership Source of Truth — D-06 Historical Scope Clarification
+
+**Status:** ACCEPTED  
+**Date:** 2026-10-01  
+**Scope:** Current ADR-023 membership authority only. No implementation.
+
+#### Decision
+
+1. **Current membership.** The current ADR-023 membership universe is exactly **109** seats:
+   - G1-01 … G1-22 (22)
+   - G2-01 … G2-25 (25)
+   - G3-01 … G3-14 (14)
+   - G4-01 … G4-07 (7)
+   - G5-01 … G5-19 (19)
+   - G6-01 … G6-22 (22)
+   - **TOTAL = 109**
+
+2. **CURRENT MEMBERSHIP SoT.** The recovered 109 enumeration, preserved in the ADR-023 corpus and represented by the latest preserved decision record, is the **CURRENT MEMBERSHIP Source of Truth** and is **authoritative for current ADR-023 membership**.
+
+3. **D-06 scope boundary (established by D-09).** D-09 hereby limits the applicability of D-06’s “sole authoritative numbered identity register” statement to the historical 62-register domain. This limitation is established by **D-09**; it is not a claim that D-06 originally contained a historical-only scope. D-06’s original text remains unchanged as historical governance record. Under this D-09 boundary, D-06 does **not** override D-09’s authority over **current 109 membership**.
+
+4. **Historical 62 under D-09.** Under D-09, the 62-register (`SCIENCE-SOURCE-EXPANSION-62-REGISTER.md`) is retained as the historical numbered register for historical identity traceability, `historical_62_xref`, and historical source lineage. It does **not** define current membership, current seat creation/deletion/renumbering/replacement, or the current enumeration.
+
+5. **G3-15.** G3-15 remains **REMOVED**. Replacement = **NONE**. No recreation, renumbering, or placeholder.
+
+6. **G2 pins.** G2-17 = **REMVT**. G2-19 = **Animal Bioscience**. No reallocation.
+
+7. **Dual seats.** Intentional dual G1/G6 memberships remain **separate ADR seats**, including:
+   - G1-12/G6-01 FlowerBase
+   - G1-13/G6-03 HortDB
+   - G1-14/G6-02 Tropicals.cn
+   - G1-15/G6-04 sCentInDB
+   - G1-16/G6-05 AromaDb
+   - G1-17/G6-06 Dr. Duke's
+   - G1-18/G6-07 MPNS
+   - G1-19/G6-08 FNCD
+   - G1-20/G6-09 FEAtl
+   - G1-21/G6-10 CRFG
+
+   No automatic deduplication.  
+   No SAME_AS minting by this decision.
+
+8. **Change control.** Any future addition, removal, replacement, renumbering, merge, split, or other membership change to the 109-source universe requires an **explicit ADR governance decision**. Implementation must never silently mutate membership.
+
+9. **Implementation boundary.** This decision does **NOT** authorize:
+   - IU-10A implementation
+   - runtime Source Registry population
+   - Capability Store population
+   - adapters
+   - projections
+   - migrations
+   - database changes
+   - runtime wiring
+   - source integrations
+   - creation/population of a machine-readable 109 register
+
+   It establishes **governance authority only**.
 
 ---
 
