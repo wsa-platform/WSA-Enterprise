@@ -1,3 +1,42 @@
+# ADR-023 — Scientific Source Expansion
+
+**Status:** ACCEPTED (governance + master-register freeze; implementation not started)  
+**Date:** 2026-09-29 (ACCEPTED governance evolved through 2026-09-30)  
+**Branch baseline:** `phase-18-m18-ai-marketing-communications` @ `505f3e6f5d29d087b1303794b224236784563d43`  
+**Related:**
+- [`ADR-internet-first-agricultural-ai-research-agent.md`](./ADR-internet-first-agricultural-ai-research-agent.md)
+- [`../adr/ADR-001-provider-adapter-architecture.md`](../adr/ADR-001-provider-adapter-architecture.md)
+- [`ADR-022-canonical-scientific-question-v1.md`](./ADR-022-canonical-scientific-question-v1.md) (**do not modify**; CSQ semantic authority)
+- [`SCIENCE-SOURCE-EXPANSION-62-REGISTER.md`](./SCIENCE-SOURCE-EXPANSION-62-REGISTER.md) (**authoritative 62-source identity register**)
+
+**Archive:** [`science-source-expansion/`](./science-source-expansion/)
+
+---
+
+## Provenance (reconciliation)
+
+This document is the **single authoritative ADR-023 path**. It was reconstructed after merging remote history with local IU-01…IU-08 commits, combining two historical generations of ADR-023 content without silent deletion.
+
+| Source | Identity | Role |
+|--------|----------|------|
+| Remote GO-0 archive commit | `3d16a7a6077647f7ab06f56a70b56b5cdcfe5db6` | Original GO-0 / STEP-1 governance archive introduction |
+| Remote ADR blob (Git) | `707bfb2694f08b43a7ec997c513533a23e16144b` | Exact historical ADR-023 body as committed on remote |
+| Pre-reconciliation local WIP | SHA-256 `23829F9CEA08F699A38DE8E8888519A498566DF0CC7C1AA131FD3C87C564BE22` | Later evolved ACCEPTED governance (D-01…D-08 + GO log through GO-ID-G3-01) |
+| Merge commit preserving both histories | `ce907424351926a9d1bf12b8ff1f0bc26e9f1cf6` | Parents: `820bb763…` (local IU tip) + `3d16a7a…` (remote) |
+
+**Authority rule:** Content labeled **HISTORICAL** below records GO-0 / STEP-1 as **PROPOSED at the time** and is **SUPERSEDED as current architectural authority**. Content under **Current Accepted Decisions** and the chronological GO decision log (from GO-0-A onward as ACCEPTED evolution) is the **current authoritative governance state**.
+
+Later decisions **SUPERSEDE** earlier ones without deleting them (D-08).
+
+---
+
+## Historical GO-0 / STEP-1 Record
+
+> **HISTORICAL — PROPOSED AT THE TIME — SUPERSEDED AS CURRENT AUTHORITY**  
+> Verbatim body from commit `3d16a7a6077647f7ab06f56a70b56b5cdcfe5db6`  
+> (blob `707bfb2694f08b43a7ec997c513533a23e16144b`).  
+> Do not treat the historical **PROPOSED** status line as the current ADR status.
+
 # ADR-023 — Scientific Source Expansion Governance and GO-0 / STEP-1 Record
 
 **Status:** PROPOSED — Source Expansion governance record  
@@ -337,3 +376,213 @@ Therefore GO-0 is ready for the human documentation-placement decision and subse
 
 Scope: documentation-only registration of the already-established 62 identities. No source selection and no implementation.
 
+---
+
+## Current Accepted Decisions
+
+The following sections preserve the later local ACCEPTED ADR-023 generation (pre-reconciliation WIP SHA-256 `23829F9C…`). This is the **current authoritative architectural state**.
+
+## 1. Context
+
+WSA-Enterprise Stage-3 scientific search executes OpenAlex, Crossref, Semantic Scholar, FAOSTAT (when enabled), and optional Consensus via `ScientificSourceAdapterInterface` + `ScientificSourceAdapterRegistry` + `ScientificSourceSelector`.
+
+A separate expansion set of **62** scientific source identities was audited and must be frozen as a repository reference before GO-1 capability assessment or any adapter work.
+
+There is **no** dedicated named “Source Integration Layer.” The official extension boundary remains Adapter + Registry (+ Selector for auto-select). Commit `505f3e6` added profile/compiler **metadata** only.
+
+---
+
+## 2. Decision
+
+### D-01 — No new Source Integration Layer (this phase)
+
+Do not create a parallel integration framework. Extend via existing Stage-3 adapter/registry boundary.
+
+### D-02 — CSQ remains semantic authority
+
+Canonical Scientific Question (ADR-022) remains the meaning of the user’s scientific question. Source queries are execution representations only.
+
+### D-03 — Answer identity remains protected
+
+Evidence, claim relation, directness, relevance/accuracy contracts, AnswerComposer, and confidence rules remain answer authority. Source ranking/API wording must not replace evidence.
+
+### D-04 — Strong scientific query construction
+
+`ScientificSearchQueryBuilder` is HTTP query execution authority. `ScientificQueryCompiler` is metadata/compilation support only unless a later GO supersedes this with explicit adapter consumption.
+
+### D-05 — Hardcoded Registry
+
+Known technical debt; **not** a blocker for documenting or assessing expansion sources. Not fixed in GO-0-A.
+
+### D-06 — Authoritative 62-source register
+
+[`SCIENCE-SOURCE-EXPANSION-62-REGISTER.md`](./SCIENCE-SOURCE-EXPANSION-62-REGISTER.md) is the **sole** authoritative numbered identity register (IDs 1–62). Membership ≠ execution.
+
+### D-07 — Documentation split
+
+| Document | Role |
+|----------|------|
+| This ADR-023 | Governance, invariants, GO log, supersession |
+| 62-REGISTER | Source identities + status fields |
+| `science-source-expansion/` | Append-only prompts, reports, assessments |
+
+Do **not** move CSQ semantics into the register. Do **not** modify ADR-021 or ADR-022 for expansion logistics.
+
+### D-08 — Archive rule
+
+Every Cursor prompt and report for this phase must be archived under `science-source-expansion/` with date/phase labels. Later decisions **SUPERSEDE** earlier ones without deleting them.
+
+---
+
+## 3. Frozen scientific invariants
+
+### Invariant 1 — Scientific Question Identity
+
+ENTITY, TARGET, PROCESS, PROPERTY, RELATION, required geography/time/material constraints, evidence requirements, and resolution state must be preserved. Source-specific syntax may differ; scientific meaning must not.
+
+### Invariant 2 — Scientific Answer Identity
+
+Adding a source must not redefine the scientific answer via ranking, metadata, or API semantics.
+
+### Invariant 3 — Strong Scientific Query Construction
+
+Adapt the same scientific intent to source capabilities without changing CSQ, without storing provider strings as semantic authority, and without weakening constraints merely to make a source searchable.
+
+---
+
+## 4. Extension boundary (reference)
+
+| Component | Auto-selected source | Optional source |
+|-----------|----------------------|-----------------|
+| Adapter | REQUIRED | REQUIRED |
+| Registry | REQUIRED | REQUIRED |
+| Selector | REQUIRED | NOT REQUIRED |
+| Profile / Compiler change | OPTIONAL | OPTIONAL |
+| CSQ / RSC / AnswerComposer | NOT REQUIRED | NOT REQUIRED |
+
+---
+
+## 5. GO decision log
+
+### GO-0 / STEP-1 — Architectural discovery (2026-09-29)
+
+**Status:** COMPLETE (read-only; no files created at time of discovery)  
+**Preserved summary:**
+
+- No committed Document of Record for expansion existed before GO-0-A.
+- Recommended ADR-023 + 62-register + archive folder (now created in GO-0-A).
+- Semantic authority = CSQ; HTTP authority = Builder; Compiler = metadata.
+- Extension boundary = Adapter + Registry (+ Selector if auto).
+- 62-list existed in audit history, not in git tree — freeze deferred to GO-0-A.
+- No source selected.
+
+Full discovery report: [`science-source-expansion/2026-09-29-GO-0-STEP-1-architectural-discovery-report.md`](./science-source-expansion/2026-09-29-GO-0-STEP-1-architectural-discovery-report.md)
+
+### GO-0-A — Freeze and register 62-source master list (2026-09-29)
+
+**Status:** COMPLETE (documentation only)  
+**Actions:**
+
+- Created this ADR-023 (first commit to tree; embeds STEP-1 preservation).
+- Created authoritative [`SCIENCE-SOURCE-EXPANSION-62-REGISTER.md`](./SCIENCE-SOURCE-EXPANSION-62-REGISTER.md).
+- Archived GO-0-A prompt + report under `science-source-expansion/`.
+- Indexed ADR-023 in `docs/adr/README.md`.
+
+**Not done:** source selection, adapters, registry/selector/runtime changes, push.
+
+### GO-1 — Source Capability Contract / First-Source Assessment (2026-09-29)
+
+**Status:** COMPLETE (documentation + forensic assessment; no runtime changes)  
+**Actions:**
+
+- Established [`science-source-expansion/SOURCE-CAPABILITY-CONTRACT.md`](./science-source-expansion/SOURCE-CAPABILITY-CONTRACT.md).
+- Archived GO-1 prompt + report under `science-source-expansion/`.
+- Assessed 62-register candidates against repository evidence only.
+- **FIRST-SOURCE DECISION: NOT YET DETERMINED** (insufficient factual API/capability evidence; inactive profiles ≠ selection).
+
+**Not done:** source selection, adapters, registry/selector/runtime changes, commit/push.
+
+Full report: [`science-source-expansion/2026-09-29-GO-1-report.md`](./science-source-expansion/2026-09-29-GO-1-report.md)
+
+### GO-1b — External Capability Investigation (2026-09-30)
+
+**Status:** COMPLETE (documentation + external official-docs verification; no runtime changes)  
+**Actions:**
+
+- Archived GO-1b prompt + report under `science-source-expansion/`.
+- Verified external capabilities for the 62 identities using official documentation priority (deep pass on AGRIS, AGRICOLA, GBIF, Organic Eprints, CIRAD composite, InsectBrainDatabase; category boundaries for journal/institutional cohorts without identity merge).
+- Built factual capability matrix + Query/Evidence fidelity classes A–D/U (classifications, not rankings).
+- Confirmed inactive profiles ≠ capability proof; GBIF structured API externally confirmed; AGRIS UI/ODS documented but public search API unproven; AGRICOLA successor SEARCH UI only.
+- Recorded aggregator coverage as INDIRECT only.
+- Checked FC-1…FC-7; no source cleared for implementation planning as literature first-source.
+- **FIRST-SOURCE DECISION: NOT AUTOMATICALLY SELECTED**
+- **FIRST-SOURCE READINESS: NOT ESTABLISHED**
+
+**Not done:** source selection, adapters, registry/selector/runtime changes, commit/push.
+
+Full report: [`science-source-expansion/2026-09-30-GO-1b-report.md`](./science-source-expansion/2026-09-30-GO-1b-report.md)
+
+### GO-1c — AGRIS Full Integration Path Discovery (2026-09-30)
+
+**Status:** COMPLETE (read-only discovery; no path selection; no runtime changes)  
+**Target:** AGRIS (`master_id=1`) only.
+
+**Actions:**
+
+- Archived GO-1c prompt + full path-discovery report under `science-source-expansion/`.
+- Investigated categories A–Y without anchoring on ODS as the assumed architecture.
+- Confirmed official machine-use channel = AGRIS ODS (AP + RDF; CC BY 3.0 IGO; opt-in subset).
+- Confirmed no official public bibliographic REST/GraphQL search API found.
+- Confirmed OAI-PMH is inbound (providers → AGRIS), not outbound consumer harvest.
+- Observed undocumented SSR HTML search surface (`/search/{lang}?q=&…`); client JS does not expose a JSON API; HTTP 429 under automated access — recorded as observation only, not a production path.
+- Separated AGROVOC REST/SPARQL (vocabulary enrichment) from AGRIS literature evidence.
+- Historical AGRIS SPARQL/Solr/OpenAGRIS marked third-party/historical — requires official verification.
+- Produced neutral comparison matrix; **no winner / no recommendation / no first-source selection**.
+
+**Not done:** path selection, adapters, registry/selector/runtime changes, commit/push, GO-2.
+
+Full report: [`science-source-expansion/2026-09-30-GO-1c-AGRIS-all-integration-paths-report.md`](./science-source-expansion/2026-09-30-GO-1c-AGRIS-all-integration-paths-report.md)
+
+### GO-ID-G3-01 — APIS Identity Governance Pin (2026-09-30)
+
+**Status:** COMPLETE (governance / identity documentation only; no runtime changes)  
+**Scope:** ADR-023 membership **G3-01** / label **APIS** only (IB-01).
+
+**Governance decision (accepted):**
+
+| Field | Value |
+|-------|--------|
+| ADR membership | G3-01 |
+| Source label | APIS |
+| Canonical source | **Apis** (scientific journal) |
+| ISSN | 3058-0382 |
+| Official URL | https://ojs.mtak.hu/index.php/Apis/index |
+| Operator / publisher | Hungarian Apitherapy Society |
+| External identity status | **VERIFIED** |
+| ADR membership status | **PINNED** |
+| IB-01 | **CLOSED / PINNED** |
+| Runtime register | **NOT_PRESENT** (not implemented) |
+
+**Historical boundary:** 62-REGISTER **#35** remains historical label-only evidence and is **not** rewritten by this pin.  
+**Universe boundary:** 109 membership count unchanged (G3=14; G3-15 remains removed).
+
+**Not done:** Capability Contract Alignment execution, Capability Verification, API/OAI/RSS, adapters, projection, Builder/CSQ/Catalog, runtime register population, commit/push.
+
+Full record: [`science-source-expansion/2026-09-30-G3-01-APIS-identity-governance-pin.md`](./science-source-expansion/2026-09-30-G3-01-APIS-identity-governance-pin.md)
+
+---
+
+## 6. Out of scope (GO-0-A)
+
+- Implementing any of the 62 sources
+- Selecting or ranking a first source
+- Changing CSQ, RSC, Builder, Compiler execution, Composer, gates, Results List, Viewer
+- Modifying ADR-021 or ADR-022
+
+---
+
+## 7. Consequences
+
+- Expansion work has a stable identity baseline.
+- Capability assessment (GO-1) can fill UNKNOWN fields without renumbering.
+- Runtime Stage-3 behavior is unchanged by GO-0-A documentation.
