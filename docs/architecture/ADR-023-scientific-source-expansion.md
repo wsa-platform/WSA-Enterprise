@@ -1694,3 +1694,120 @@ Do not rewrite past decisions to make later evidence appear contemporaneous. Cor
 Architectural design acceptance with non-blocking clarifications means **design accepted**. It does **not** mean implementation authorized, IU assigned, PHP Loader authorized, Membership→runtime eligibility, or any seat ACTIVE.
 
 Any future implementation requires separate **Implementation Design** and **Implementation Authorization** gates after this preservation is committed/pushed under later gates.
+
+## 8.12 — FS-01-ID Implementation, Commit, Push, and Stopping-Point Preservation Record
+
+**Record type:** PRESERVATION / TRACEABILITY RECORD
+
+This section preserves the historical execution chain and does not create a new architectural authority or implementation authorization.
+
+### 8.12.1 — Scope
+
+Preserves the FS-01-ID (Identity Binding Persistence) chain from scope reconciliation through defect repair, verification, atomic commit, push, and intentional stop. Does **not** authorize CapVer, Path, Projection, Onboarding implementation, D-10 runtime implementation, IU-10B, PHP Loader, source activation, selector second lane, or protocol-family expansion.
+
+### 8.12.2 — Discovery / Scope Reconciliation
+
+A prior Commit Gate stopped because `IdentityBindingPersistenceTest.php` was **UNTRACKED**. The assumption of a tracked repair-only delta was therefore **invalid**.
+
+Forensic finding:
+
+- FS-01-ID consisted of exactly **12 untracked files**.
+- No prior FS-01-ID commit existed in Git history.
+- The persistence test belonged to the new FS-01-ID unit (not a post-baseline repair of a tracked file).
+
+Sequencing decision: **CASE A** — complete untracked implementation unit; **one atomic FS-01-ID commit** was correct. A separate repair-only commit was rejected because no prior FS-01-ID baseline commit existed.
+
+### 8.12.3 — Exact 12-File FS-01-ID Unit
+
+1. `backend/database/migrations/2026_10_02_160000_create_cghia_identity_binding_records_table.php`
+2. `backend/app/Models/CghiaIdentityBinding.php`
+3. `backend/app/Services/Agriculture/Research/Identity/IdentityBindingStatus.php`
+4. `backend/app/Services/Agriculture/Research/Identity/IdentityDecisionIdentity.php`
+5. `backend/app/Services/Agriculture/Research/Identity/Persistence/IdentityBindingLifecycleState.php`
+6. `backend/app/Services/Agriculture/Research/Identity/Persistence/IdentityBindingInvariantViolation.php`
+7. `backend/app/Services/Agriculture/Research/Identity/Persistence/IdentityBindingRecordId.php`
+8. `backend/app/Services/Agriculture/Research/Identity/Persistence/IdentityBindingPersistenceContract.php`
+9. `backend/app/Services/Agriculture/Research/Identity/Persistence/IdentityBindingRecord.php`
+10. `backend/app/Services/Agriculture/Research/Identity/Persistence/IdentityBindingRepository.php`
+11. `backend/app/Services/Agriculture/Research/Identity/Persistence/EloquentIdentityBindingRepository.php`
+12. `backend/tests/Unit/Agriculture/Research/Identity/Persistence/IdentityBindingPersistenceTest.php`
+
+### 8.12.4 — Dependency Boundary
+
+| Boundary | Status |
+|----------|--------|
+| IU-01 (`d62a082`) | EXTERNAL COMMITTED DEPENDENCY — not re-authored; `SourceIdentityDomainContract` remains authoritative for namespace distinctness |
+| B7 / Correlation | SEPARATE — unchanged; isolation tested only |
+| ADR-023 | SEPARATE until this preservation append |
+| 36 pre-existing WIP paths | SEPARATE — unstaged / uncommitted |
+
+FS-01-ID does **not** re-author namespace identity authority.
+
+### 8.12.5 — Defect-1 — Exception Contract Alignment
+
+**Root cause:** `IdentityBindingRecord::draftAttributes` correctly delegates namespace distinction to IU-01 `SourceIdentityDomainContract::assertDistinctNamespaces`, which throws authoritative `SourceIdentityInvariantViolation`. The original test expected `IdentityBindingInvariantViolation`.
+
+**Repair:** test expectation aligned to `SourceIdentityInvariantViolation::class`.
+
+**Safety preserved:** `adr_id == canonical_identity_id` remains rejected. No production exception translation, no duplicate identity authority, no silent normalize/mint/SAME_AS.
+
+### 8.12.6 — Defect-2 — Supersession Named-Parameter Mismatch
+
+**Root cause:** supersede call used invalid named parameter `evidenceRefs`. Authoritative API parameter is `$identityEvidenceRefs`.
+
+**Repair:** call-site renamed to `identityEvidenceRefs:`. No alias. No dual vocabulary. No production API duplication.
+
+### 8.12.7 — Verification Evidence
+
+| Suite | Tests | Assertions | Failures | Errors | Skipped |
+|-------|-------|------------|----------|--------|---------|
+| FS-01-ID (`IdentityBindingPersistenceTest`) | 22 | 85 | 0 | 0 | 0 |
+| IU-01 regression (`SourceIdentityDomainContractTest`) | 13 | 81 | 0 | 0 | 0 |
+
+**Environment:** Docker `backend-test`; PHP **8.4.24**; PHPUnit **11.5.56**; SQLite `:memory:` via `phpunit.xml` force; `FORBIDDEN_TEST_DATABASES=wsa_enterprise`. Host PHP / Composer / winget **not** used.
+
+B7 remained unchanged. 36 WIP fingerprint remained unchanged through repair / commit / push.
+
+### 8.12.8 — Atomic Commit
+
+| Item | Value |
+|------|--------|
+| Commit | `2e670096ebd2ee115d803db31440aa47a1613634` |
+| Parent | `f9ff12dde306512c66d306a161bdba7cd0edfbb4` |
+| Subject | `feat(research): add identity binding persistence` |
+| Files | **12** (exact FS-01-ID set above) |
+| Insertions | **1394** |
+| Deletions | **0** |
+
+Scope: EXACTLY the 12 FS-01-ID files. No WIP. No ADR. No B7. No IU-01.
+
+### 8.12.9 — Push
+
+| Item | Value |
+|------|--------|
+| Remote before | `f9ff12dde306512c66d306a161bdba7cd0edfbb4` |
+| Remote race check | PASS |
+| Push | fast-forward only (`f9ff12dd..2e67009`) |
+| Force push | **NO** |
+| Remote after | `2e670096ebd2ee115d803db31440aa47a1613634` |
+| Local after | `2e670096ebd2ee115d803db31440aa47a1613634` |
+| Local == Remote | YES |
+| Ahead / Behind | 0 / 0 |
+
+### 8.12.10 — Final FS-01-ID State
+
+| Item | Status |
+|------|--------|
+| FS-01-ID | **IMPLEMENTED · COMMITTED · PUSHED · CLOSED** |
+| 36 WIP paths | preserved |
+| ADR-023 (pre-this-section) | unchanged by implementation / commit / push gates |
+| B7 | unchanged |
+| IU-01 | unchanged external dependency (`d62a082`) |
+
+### 8.12.11 — Current Stopping Point
+
+The project intentionally stopped immediately after the successful FS-01-ID Push Gate. No subsequent implementation unit was started.
+
+After this mutation, a separate **FS-01-ID ADR PRESERVATION COMMIT GATE** is required, then a separate preservation push gate. Completing this preservation record does **not** authorize CapVer, Path, Projection, Onboarding implementation, D-10 runtime implementation, IU-10B, PHP Loader, or any source activation.
+
+**Stopping SHA (implementation closed):** `2e670096ebd2ee115d803db31440aa47a1613634`
