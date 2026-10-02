@@ -1360,3 +1360,185 @@ CURRENT ARCHITECTURAL STOP:
 IU-10A CLOSED → FOLLOW-ON NECESSITY DECISION A → NO NEXT IMPLEMENTATION UNIT NOW
 
 No implementation is authorized from this stopping point.
+
+---
+
+### D-10 — Runtime Activation Architecture (Post-IU-10A)
+
+**Status:** ACCEPTED WITH NON-BLOCKING CLARIFICATIONS  
+**Date:** 2026-10-02  
+**Scope:** Architectural governance for future selective runtime activation of D-09 / IU-10A membership seats. **Does not authorize implementation, population, adapters, loaders, migrations, Selector changes, Stage-3 changes, or any source activation.**
+
+**Chronology note:** §8.9 records Follow-on Necessity **DECISION A — NO NEXT IMPLEMENTATION UNIT NOW**. D-10 does **not** revoke that stopping point for implementation units. D-10 records accepted **architecture** only. Architecture acceptance ≠ implementation authorization. No Implementation Unit is authorized by D-10 alone.
+
+#### Decision
+
+##### D-10.1 — Scope
+
+1. D-10 governs future **selective** runtime activation of governed ADR membership seats.
+2. D-10 does **not** activate any source.
+3. D-10 does **not** authorize implementation.
+4. D-10 does **not** authorize IU-10B.
+5. D-10 does **not** authorize a PHP Loader.
+
+##### D-10.2 — Activation Strategy
+
+1. Runtime eligibility is **Capability-first**.
+2. Onboarding is **source-by-source**.
+3. The sole atomic runtime onboarding unit is a single **`adr_id`**.
+4. Group / Wave labels are **governance packaging only**.
+5. Group / Wave must **not** batch-promote Identity, Capability, Path, Projection, Binding, Activation, or Selector participation.
+6. **All-109** activation as one operation is **FORBIDDEN**.
+7. Membership enumeration alone **never** confers runtime eligibility.
+
+##### D-10.3 — Identity Binding
+
+1. The Membership JSON remains **membership authority only**.
+2. Runtime binding requires **separate governed artifacts**.
+3. Display-name matching alone is **insufficient** for binding.
+4. `canonical_identity_id` remains **NULL** until explicit SAME_AS or resource-unification evidence is recorded.
+5. No silent identity binding. No silent SAME_AS.
+6. Distinct namespaces remain distinct: `adr_id`, `canonical_identity_id`, external identity, Stage-3 `sourceKey`, aggregator identity, provider identity, protocol endpoint, source resource, and article/record.
+7. `Stage3SourceKeyIdentityBridge` consumes **explicit bindings only**. It must not mint identity. It must not mint SAME_AS.
+
+##### D-10.4 — Dual Seats
+
+1. G1 ↔ G6 dual seats remain **independent identities by default**.
+2. Membership `dual_pairs` ≠ SAME_AS.
+3. Shared adapter implementation, provider, or endpoint **may** be reused without merging seats.
+4. Shared `canonical_identity_id` requires explicit SAME_AS / resource-unification evidence.
+5. Shared Capability subject must **not** be assumed from dual membership.
+
+##### D-10.5 — Capability Evidence Authority
+
+1. Missing Cap record = **UNVERIFIED** (never UNAVAILABLE by absence alone).
+2. STALE evidence must **not** auto-promote to VERIFIED.
+3. Required capabilities use **AND** semantics.
+4. License / access / reuse remain separate dimensions.
+5. `content_about` ≠ `query_constrainable`.
+6. EMPTY_RESULT ≠ CAP_UNAVAILABLE.
+7. Automated probes and documentation are **supporting evidence inputs**, not CapVer.
+8. Only the abstract **Governed Verification Authority (CapVer)** may assign Cap state **VERIFIED**.
+9. Concrete organizational ownership of CapVer remains **DEFERRED**.
+10. Cap state alone never equals Activation **ACTIVE**.
+
+##### D-10.6 — Population Model
+
+1. Membership Source of Truth remains the IU-10A **JSON** register.
+2. Runtime binding / activation / capability require separate governed artifacts.
+3. Future population may use onboarding manifests and/or persistent stores under later authorization.
+4. PHP Loader remains **DEFERRED / NOT AUTHORIZED** and is **not** the default population mechanism.
+
+##### D-10.7 — Stage-3 / Selector Entry
+
+1. New ADR seats must **not** automatically enter Selector.
+2. New ADR seats must **not** automatically enter Internet-First defaults.
+3. Adapter / `sourceKey` registration ≠ activation.
+4. Adapter registration ≠ Selector default membership.
+5. Existing Stage-3 Internet-First behavior must **not** regress.
+6. Runtime retrieval participation requires the governed chain: Identity → Capability → Path → Projection → Binding → Activation → coexistence allowance.
+
+##### D-10.8 — Per-Seat Integration Classification
+
+1. Every seat requires a **verified per-seat integration classification** artifact, separate from Membership JSON, before runtime binding.
+2. No protocol, API, OAI-PMH, bulk, license, or aggregator class may be inferred from display name, website existence, membership metadata, similarity, or assumption.
+3. The populated 109-seat integration inventory remains **OPEN**.
+4. D-10 does **not** populate that inventory.
+
+##### D-10.9 — Scientific Fidelity
+
+1. CSQ remains **semantic authority**.
+2. `ScientificSearchQueryBuilder` remains **scholarly lexical construction authority**.
+3. `ScientificQueryCompiler` remains **metadata-only** (not HTTP execution authority).
+4. `AgriculturalEntityCatalog` is **not** a Source Registry.
+5. Projection + C9 enforce fidelity; unsupported / omitted / unresolved facets must remain explicit.
+6. No silent scientific identity loss. No silent facet loss.
+
+##### D-10.10 — Activation Safety Gate (conceptual)
+
+1. Conceptual activation states include: NOT_READY, UNVERIFIED, CONDITIONALLY_ELIGIBLE, ELIGIBLE, ACTIVE.
+2. Operational / governance side states include: SUSPENDED, DEFERRED.
+3. Activation state is orthogonal to Cap v2 states, Path `eligibility_state`, and PathStatus.
+4. Membership must **never** transition directly to ACTIVE.
+
+##### D-10.11 — Onboarding Contract
+
+1. An accepted **Onboarding Contract** is **mandatory** before the first runtime binding or activation of any ADR seat.
+2. Atomic unit = single `adr_id`.
+3. All-109 is **not** an atomic activation operation.
+4. Group / Wave remain governance labels only.
+
+##### D-10.12 — Persistence Direction
+
+1. Membership remains file-backed JSON SoT.
+2. Future durable domains may include Identity, Capability, Path, Projection, Binding, Activation, and Correlation when authorized.
+3. Concrete schemas are **not** authorized by D-10.
+4. Database migrations are **not** authorized by D-10.
+
+##### D-10.13 — Deferred Items
+
+- Concrete CapVer organizational ownership
+- 109 per-seat integration inventory population
+- PHP Loader
+- Concrete DB schemas and migrations
+- First-seat onboarding execution
+- Runtime activation of any seat
+- Second-lane Selector implementation detail
+- Any Implementation Unit (including any IU-10B)
+
+##### D-10.14 — Explicit Non-Goals
+
+D-10 does **not** authorize: adapters; Selector changes; Stage-3 modification; Capability population; Identity population; Path population; Projection population; `sourceKey` creation; SAME_AS minting; runtime activation; database migration; PHP Loader; IU-10B; Onboarding Contract implementation; commit; or push.
+
+##### D-10.15 — Future Implementation Boundary
+
+Any implementation requires:
+
+1. an **Onboarding Contract Design Gate**, then
+2. a separate **Implementation Authorization Gate**.
+
+D-10 itself does **not** grant implementation authorization.
+
+#### Invariants (non-negotiable)
+
+Membership ≠ Runtime; Membership ≠ Identity; Identity ≠ Scientific Entity; Capability ≠ Membership; Missing Cap = UNVERIFIED; UNVERIFIED ≠ UNAVAILABLE; EMPTY_RESULT ≠ CAP_UNAVAILABLE; no silent SAME_AS; dual_pairs ≠ SAME_AS; no automatic canonical identity minting; CSQ semantic authority; ScientificSearchQueryBuilder lexical authority; AgriculturalEntityCatalog ≠ Source Registry; ScientificQueryCompiler ≠ HTTP executor; no silent scientific facet loss; Projection remains source-native projection authority; C9 remains fidelity authority; no Path / Capability / Projection bypass; no Membership → ACTIVE; no Membership → Selector auto-registration; no new source auto-enters Internet-First; Stage-3 Internet-First must not regress; no silent ADR seat ↔ Stage-3 `sourceKey` binding; Historical 62 ≠ current 109; 109 Membership ≠ 109 Runtime; PHP Loader remains deferred unless separately authorized; architecture acceptance ≠ implementation authorization; D-10 acceptance ≠ source activation / Cap / Identity / Path / Projection population / adapter creation / Selector or Stage-3 modification; no Implementation Unit is authorized by D-10 alone.
+
+#### Deferred
+
+Concrete CapVer organizational ownership; 109 integration inventory population; PHP Loader; DB migrations / concrete store schemas; first-seat onboarding; any Implementation Unit; second-lane Selector detail.
+
+#### Explicit non-goals
+
+This decision does not authorize adapters, Selector changes, Stage-3 modification, Cap/Identity/Path/Projection population, `sourceKey` creation, SAME_AS minting, runtime activation of any seat, PHP Loader, IU-10B, or commits/pushes.
+
+#### Future activation boundary
+
+Any implementation requires a separate Implementation Authorization Gate after Onboarding Contract acceptance.
+
+---
+
+## 8.10 — D-10 Acceptance Chain Preservation Record (Post-§8.9)
+
+**Purpose:** Append-only preservation of the post-§8.9 Runtime Activation Architecture chain that produced D-10. This subsection does **not** rewrite D-09, §8.7–§8.9, DECISION A’s historical stopping point, or any earlier record. It is **not** a second D-10 decision.
+
+### 8.10.1 — Post-IU-10A Runtime Activation Discovery
+
+A read-only forensic discovery established that IU-01…IU-09 contracts exist, IU-10A Membership Register is membership-only, Stage-3 runs a fixed small adapter set, 109 seats are not populated as runtime Identity/Cap/Path/Projection records, and no complete governed 109 activation lifecycle exists. Classification: CASE D — multiple architectural decisions required before implementation.
+
+### 8.10.2 — Runtime Activation Architecture Decision Gate
+
+A decision-only gate formulated Decisions A–L (strategy, binding, CapVer, population, Stage-3 entry, dual seats, persistence, adapter/protocol model, fidelity, activation gate, onboarding granularity, future boundaries) as **PROPOSED**, without implementation.
+
+### 8.10.3 — Runtime Activation Architecture Acceptance Gate
+
+Acceptance outcome: **ARCHITECTURE ACCEPTED WITH NON-BLOCKING CLARIFICATIONS**. Clarifications recorded for strategy packaging, CapVer organizational ownership (deferred), persistence direction without migration, per-seat integration inventory (OPEN), and activation-state orthogonality. **Implementation authorized: NO** for all decisions.
+
+### 8.10.4 — Remote Divergence and Preservation Sync
+
+D-10 mutation was initially blocked because live remote tip `d585e90…` was ahead of local `924c80c…` with append-only §8.8 + §8.9 (498 insertions / 0 deletions, ADR-only). After Remote Divergence Forensic (CASE A) and Sync Design, an Execution Gate fast-forwarded local HEAD to `d585e90…` without touching WIP, without new commit, and without push. D-10 remained absent until this mutation.
+
+### 8.10.5 — D-10 Mutation Boundary
+
+D-10 is appended as governance only. No Membership Register change. No runtime change. No IU-10B. No PHP Loader. No source activation. No commit/push authorized by the mutation gate alone.
+
+**Preservation invariant:** §8.9 DECISION A remains the historical record that no next **implementation unit** was authorized at that stop. D-10 adds accepted **architecture** for future selective activation and still requires Onboarding Contract Design and Implementation Authorization before any unit may begin.
