@@ -1977,3 +1977,191 @@ Append-only history; no deletion; no rewrite; no retroactive correction; no auth
 ### 8.13.18 — Post-Preservation Stopping Point
 
 This mutation closes the IC Design/Acceptance ADR preservation step only. After a separate **INTEGRATION CLASSIFICATION ADR PRESERVATION COMMIT GATE** (and later push if authorized), the next step must be a **NEW explicit** design/implementation gate. Completing §8.13 does **not** authorize IC implementation or inventory population.
+
+## 8.14 — IC Persistence Design and Acceptance Preservation Record
+
+**Record type:** PRESERVATION / TRACEABILITY RECORD
+
+This section preserves the historical Integration Classification (IC) **Persistence** Design and Acceptance chain after §8.13. It is **append-only historical traceability**. It does **not** create a new architectural authority, does **not** authorize implementation, does **not** create migrations/models/repositories/services, does **not** create an IC inventory or populate 109 seats, and does **not** authorize runtime activation of any seat.
+
+### 8.14.1 — Traceability Chain
+
+1. **Integration Classification Design Gate** produced: **DESIGN COMPLETE WITH NON-BLOCKING CLARIFICATIONS** (preserved in §8.13).
+2. **Integration Classification Design Acceptance Gate** produced: **ACCEPTED WITH NON-BLOCKING CLARIFICATIONS** (40/40; preserved in §8.13).
+3. **Post-IC Preservation Readiness Discovery** identified **IC Persistence Design Gate** as the earliest next design gate (implementation authorization remained **NO**).
+4. **IC Persistence Design Gate** produced: **B — DESIGN COMPLETE WITH NON-BLOCKING CLARIFICATIONS**.
+5. **IC Persistence Design Acceptance Gate** produced: **B — ACCEPTED WITH NON-BLOCKING CLARIFICATIONS** (40/40 adversarial acceptance checks **PASS**).
+6. **Implementation Authorization** remained **NO**. ADR mutation was **not** authorized during acceptance; this §8.14 mutation is the authorized ADR preservation step only.
+
+### 8.14.2 — Design and Acceptance Decisions Preserved
+
+| Decision | Result |
+|----------|--------|
+| IC Persistence Design | **B — DESIGN COMPLETE WITH NON-BLOCKING CLARIFICATIONS** |
+| IC Persistence Design Acceptance | **B — ACCEPTED WITH NON-BLOCKING CLARIFICATIONS** |
+| Adversarial acceptance | **40 / 40 PASS** |
+| Implementation Authorization | **NO** |
+| ADR Mutation Authorization (during acceptance) | **NO** (preservation is this separate gate) |
+
+### 8.14.3 — Aggregate / Atomicity
+
+Aggregate root = one Integration Classification Decision for one `adr_id`. Atomic unit = **one `adr_id`**. Explicitly **not** permitted as aggregate keys: group, wave, all-109, dual-seat pair, protocol-family batch. Group/Wave remain GOVERNANCE-ONLY and cannot create `CLASSIFIED` state or runtime eligibility.
+
+### 8.14.4 — Persistence Identities
+
+| Identity | Role |
+|----------|------|
+| `persistence_record_id` | Storage PK only (`bigint` `id()`, FS-01-ID/B7 convention) |
+| `adr_id` | REQUIRED business subject (Membership/IU-01 namespace; referential) |
+| `classification_decision_identity` | REQUIRED opaque decision identity; **IC-owned** |
+| `canonical_identity_id` | OPTIONAL nullable referential; **never minted by IC** |
+| `identity_binding_ref` | OPTIONAL nullable opaque FS-01-ID reference; **no domain FK** |
+| `idempotency_key` | UNIQUE replay identity |
+
+Forbidden: canonical minting; SAME_AS minting; display-name identity; sourceKey-as-canonical; adapter-class identity; domain FKs where bounded-context architecture forbids them.
+
+### 8.14.5 — Orthogonal State Namespaces
+
+**`classification_status` (IC semantic authority):** `CLASSIFIED` · `PARTIALLY_CLASSIFIED` · `UNCLASSIFIED` · `UNCLASSIFIABLE` · `NOT_APPLICABLE`.
+
+**`lifecycle_state` (persistence control only):** `ACTIVE` · `SUPERSEDED` · `INVALIDATED`.
+
+Rules: missing IC record ⇒ `UNCLASSIFIED`; `PARTIALLY_CLASSIFIED` is a state of **one** decision revision; **lifecycle `ACTIVE` ≠ D-10 `ACTIVE`**; no automatic mapping to Cap `CapabilityState`, Path `eligibility_state`, `PathStatus`, D-10 `activation_state`, or FAOSTAT Stage-3 `activation_state`.
+
+### 8.14.6 — Revision / Supersession / Invalidation
+
+Selected model: **append-only immutable decision rows** + lifecycle pointer (FS-01-ID/B7 Option C pattern).
+
+- Domain payload immutable after insert.
+- Mutable only: `lifecycle_state`, `superseded_by` (and storage `updated_at`).
+- At most one `ACTIVE` head per `adr_id`.
+- Supersession is **transactional**: `lockForUpdate` prior ACTIVE → insert new ACTIVE → mark prior `SUPERSEDED` + set `superseded_by`.
+- Invalidation changes lifecycle only; historical rows retained.
+- Concurrent create with different keys while ACTIVE exists is rejected unless supersede API is used.
+
+### 8.14.7 — Hybrid Storage and Dimension Payload
+
+Selected architecture: **HYBRID** — relational authoritative columns + JSON multi-value claims/references.
+
+IC dimensions persisted under IC authority: `access_modality_claims`; `integration_nature`; `integration_boundary`; `protocol_family`; `source_specific_requirement`; `source_specific_rationale`; `path_family_hint`; `existing_adapter_reference`; `external_dependency_reference`; `rationale`.
+
+`path_family_hint` is **NON-AUTHORITATIVE** (Path owns PathFamily P01–P18 semantics). `FUTURE_ADAPTER_PLANNING_ONLY` remains **GOVERNANCE-ONLY** and cannot produce runtime eligibility, Cap verification, Path selection, or D-10 ACTIVE. `CapabilityAccessMethod` code-string overlap remains intentional with **split ownership**.
+
+### 8.14.8 — Evidence Model
+
+Fields: `evidence_references` (opaque/structured refs); `evidence_fingerprint` (REQUIRED). Logical evidence classes include: access; protocol; endpoint; machine-access; native-vs-aggregator; license; access-terms; reuse. Identity evidence may be **referenced** (e.g. via `identity_binding_ref`) and is **not** duplicated as an IC-owned identity store. **No universal Evidence System** is introduced by this design.
+
+### 8.14.9 — Provenance
+
+`decision_actor`; `verified_at` / `decision_timestamp`; `schema_version` (start = 1); `metadata` (JSON nullable, non-authoritative diagnostics only). **Provenance ≠ scientific evidence.**
+
+Forbidden metadata authority includes: Cap states; Path eligibility/status; D-10 activation; C9 fidelity/facets; CSQ/R6 keys; `same_as`; display_name-as-identity.
+
+### 8.14.10 — Idempotency
+
+Deterministic conceptual key: `SHA-256(canonical_json({ adr_id, evidence_fingerprint, normalized_dimension_claim_set, actor_policy_version }))`.
+
+Normalized claim set includes: modalities; nature; boundary; protocol_family; source_specific_requirement; path_family_hint. Excluded by default: actor display name; wall-clock alone; persistence ID; lifecycle; free-text rationale. Unique `idempotency_key`; same key ⇒ deterministic replay (no duplicate row).
+
+### 8.14.11 — Concurrency
+
+Same idempotency key ⇒ replay. Different keys for same `adr_id` ⇒ at most one ACTIVE. Supersession ⇒ `lockForUpdate`. No cross-seat locking. State transitions are transactional.
+
+### 8.14.12 — Staleness / UNKNOWN
+
+Evidence timestamp/snapshot live in evidence refs; verification time in `verified_at` / `decision_timestamp`. Staleness is **DERIVED** at read/evaluation time. **UNKNOWN remains UNKNOWN.** Stale evidence does not auto-promote classification. Stale `CLASSIFIED` requires a **new decision via supersession**, not in-place rewrite. `snapshot_version = UNKNOWN` remains UNKNOWN.
+
+### 8.14.13 — License / Access / Reuse
+
+Distinct referential fields: `license_reference`; `access_reference`; `reuse_reference`. No boolean collapse. Public search ≠ machine access ≠ reuse. These remain evidence claims, not legal conclusions.
+
+### 8.14.14 — Bounded-Context Boundaries
+
+| Boundary | Preservation |
+|----------|--------------|
+| Identity / FS-01-ID | Referential only; no canonical/SAME_AS mint; dual seats independent |
+| CapVer | No `CapabilityState` / Cap decision IDs / Cap evidence bodies; CLASSIFIED ⇏ Cap VERIFIED; CapVer org ownership remains **DEFERRED** |
+| Path | `path_family_hint` non-authoritative; no eligibility / PathStatus / selected path / projection identity |
+| Projection / C9 | No `source_query` / facets / `fidelity_class` / unsupported/omitted/unresolved facet sets |
+| B7 | IC owns `classification_decision_identity`; B7 remains correlation SoT; **no second correlation table**; optional future B7 column **DEFERRED** |
+| Onboarding | May later consume `integration_classification_ref`; IC does not implement onboarding |
+| D-10 | CLASSIFIED ≠ ELIGIBLE ≠ ACTIVE; **no `activation_state` in IC** |
+| Stage-3 / CGHIA | No Stage-3 writes / adapter registration / activation; `STAGE3_ADAPTER` is classification claim only |
+| Aggregator | `EXTERNAL_DEPENDENCY` ≠ `SOURCE_NATIVE`; no silent native upgrade |
+| Membership | Membership JSON separate; no 109 inventory population; no group/name/URL/protocol inference |
+
+### 8.14.15 — Persistence Pattern Decision
+
+Compatible with **FS-01-ID** and **B7**: bigint PK; append-only lifecycle; opaque references; idempotency; `lockForUpdate`; timestamps; evidence fingerprint; metadata firewall; no domain FKs. Clarification whether IC follows FS-01-ID/B7 row pattern is **RESOLVED: YES**.
+
+Deliberate IC-specific differences: classification columns; `classification_status` vs `lifecycle_state`; license/access/reuse refs; non-authoritative `path_family_hint`.
+
+### 8.14.16 — Conceptual Schema (DESIGN ONLY — NOT IMPLEMENTED)
+
+Conceptual table: `cghia_integration_classification_records`.
+
+Conceptual fields: `id`; `adr_id`; `canonical_identity_id`; `identity_binding_ref`; `classification_decision_identity`; `classification_status`; `access_modality_claims`; `integration_nature`; `integration_boundary`; `protocol_family`; `source_specific_requirement`; `source_specific_rationale`; `path_family_hint`; `existing_adapter_reference`; `external_dependency_reference`; `evidence_references`; `evidence_fingerprint`; `license_reference`; `access_reference`; `reuse_reference`; `rationale`; `decision_actor`; `verified_at`; `decision_timestamp`; `lifecycle_state`; `schema_version`; `idempotency_key`; `superseded_by`; `metadata`; timestamps.
+
+Conceptual repository API only: `persist`; `findById`; `findByIdempotencyKey`; `findCurrentByAdrId`; `supersede`; `invalidate`.
+
+**DESIGN ONLY — NOT IMPLEMENTED.** No migration/model/repository/service/enum/test/inventory was created by this preservation record.
+
+### 8.14.17 — Security / Integrity Controls
+
+Actor attribution; immutable history; idempotency + replay protection; `adr_id` validation; no cross-seat transactions; canonical null-by-default; metadata authority firewall; fingerprint + immutable rows + actor/timestamp provenance. CapVer organizational ownership remains **DEFERRED** (no invented tenant model).
+
+### 8.14.18 — Adversarial Acceptance Result (40/40)
+
+Acceptance Gate adversarial suite: **40 / 40 PASS**. Categories preserved include: missing → UNCLASSIFIED; `adr_id` validation; canonical nullability; no canonical/SAME_AS mint; dual-seat isolation; no group/109 aggregate; state/lifecycle separation; no Cap/Path/D-10/C9/CSQ/R6 leakage; no Stage-3 write; aggregator/native separation; UNKNOWN semantics; stale evidence; immutable payload; transactional supersession; single ACTIVE; concurrency; idempotency; evidence fingerprint; evidence source isolation; license/access/reuse separation; B7 separation; Membership separation; implementation remains unauthorized.
+
+No blocking design defect found.
+
+### 8.14.19 — Non-Blocking Clarifications (Preserved Unresolved for Implementation Encoding)
+
+1. Inventory serialization / 109 population encoding remains **DEFERRED**.
+2. CapVer organizational ownership remains **DEFERRED**.
+3. Optional future B7 `classification_decision_identity` column remains **DEFERRED**.
+4. Partial unique ACTIVE(`adr_id`) index remains **OPEN / optional** for v1 (repository invariant matches FS-01-ID).
+5. Exact SHA-256 canonical JSON byte rules remain **NON-BLOCKING** (must be fixed at implementation).
+6. Replay payload equality exactness remains **NON-BLOCKING** (recommended: verify fingerprint + claims + status on replay).
+7. PathFamily hint mapping tables remain **Path-owned**.
+8. `CapabilityAccessMethod` code-string overlap remains intentional **split ownership**.
+
+These clarifications do **not** authorize implementation.
+
+### 8.14.20 — Contradiction Matrix Result
+
+| Authority | Result |
+|-----------|--------|
+| §8.13 IC Design/Acceptance | COMPATIBLE |
+| FS-01-ID | COMPATIBLE |
+| B7 | COMPATIBLE |
+| IU-02 Cap | COMPATIBLE |
+| IU-03 Path | COMPATIBLE |
+| Projection/C9 | COMPATIBLE |
+| Onboarding §8.11 | COMPATIBLE |
+| D-10 / D-10.8 | COMPATIBLE |
+| IU-09 / Stage-3 | COMPATIBLE |
+| Membership IU-10A | COMPATIBLE |
+
+**Final:** NO BLOCKING CONTRADICTION.
+
+### 8.14.21 — Implementation Authorization
+
+**IMPLEMENTATION AUTHORIZATION = NO.**
+
+This preservation record does **not** authorize: migration; model; repository; service; enum; DTO; factory; seeder; test implementation; inventory; CapVer; Onboarding; D-10; activation; adapters; Stage-3 changes; PHP Loader; IU-10B.
+
+### 8.14.22 — Preservation Invariants
+
+Append-only history; no deletion; no rewrite of prior ADR bytes; no retroactive correction; no authority migration; no implementation authorization; no runtime activation; no automatic 109 classification; no automatic 109 activation.
+
+### 8.14.23 — Post-Preservation Stopping Point
+
+Current gate: **IC Persistence ADR Preservation Mutation Gate**.
+
+After a separate **IC Persistence ADR Preservation Commit Gate** (and later Push Gate if authorized), the exact next gate is:
+
+**IC Persistence Implementation Authorization Gate**
+
+Completing §8.14 does **not** authorize IC persistence implementation or inventory population.
