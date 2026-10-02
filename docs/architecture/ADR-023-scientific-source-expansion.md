@@ -1542,3 +1542,155 @@ D-10 mutation was initially blocked because live remote tip `d585e90…` was ahe
 D-10 is appended as governance only. No Membership Register change. No runtime change. No IU-10B. No PHP Loader. No source activation. No commit/push authorized by the mutation gate alone.
 
 **Preservation invariant:** §8.9 DECISION A remains the historical record that no next **implementation unit** was authorized at that stop. D-10 adds accepted **architecture** for future selective activation and still requires Onboarding Contract Design and Implementation Authorization before any unit may begin.
+
+---
+
+## 8.11 — Onboarding Contract Acceptance / ADR Preservation Record
+
+**Purpose:** Append-only preservation of the Onboarding Contract Design that was reviewed under the Adversarial Acceptance Gate and recommended **ACCEPTED WITH NON-BLOCKING CLARIFICATIONS**.
+
+**This subsection is a preservation record.** It does **not**:
+- create a new Implementation Unit;
+- authorize implementation;
+- authorize runtime activation or source activation;
+- create IU-10B;
+- authorize a PHP Loader;
+- alter D-09, D-10, IU-01 through IU-10A, or §8.7–§8.10;
+- rewrite historical decisions;
+- mutate Membership Register contents;
+- authorize concrete persistence schemas or migrations.
+
+**Chronology:** Follows D-10 and §8.10. §8.9 DECISION A (no next implementation unit at that stop) remains historical record. Design acceptance ≠ implementation authorization.
+
+### 8.11.1 — Acceptance Result
+
+| Item | Value |
+|------|--------|
+| Acceptance | **ACCEPTED WITH NON-BLOCKING CLARIFICATIONS** |
+| Blocking issues | **NONE** |
+| Adversarial tests | **38 PASS** / **2 PARTIAL** / **0 FAIL** |
+
+**PARTIAL (not rewritten as PASS):**
+
+1. **Test #38 — Future Implementability — PARTIAL** pending frozen Field-Ownership Matrix (this section).
+2. **Test #39 — Field Completeness — PARTIAL** pending frozen Field-Ownership Matrix and explicit post-ACTIVE mutation rules (this section).
+
+### 8.11.2 — Accepted Scope of the Onboarding Contract
+
+The Onboarding Contract is **ORCHESTRATION + AUDIT** only.
+
+It coordinates existing authorities. It does **not** replace:
+
+Membership · Source Identity · Capability · Path · Projection · C9 · Coexistence · Selector · ScientificSearchQueryBuilder · AgriculturalEntityCatalog · ScientificQueryCompiler · Composer · R6 · B7.
+
+It is the governed precondition for **individual** `adr_id` runtime binding/activation decisions when later implemented and authorized. It is **not** Membership authority and **not** a Runtime Registry.
+
+### 8.11.3 — Field-Ownership Matrix (FROZEN)
+
+Ownership classes used below: **AUTHORITATIVE** | **DERIVED** | **REFERENTIAL** | **GOVERNANCE-ONLY** | **RUNTIME-RELEVANT** | **AUDIT-ONLY**.
+
+| Field | Ownership | Owning authority | Req / Opt / Null | Derived? | Runtime? | Persist later? | Audit? | Immutable? | Mutation / re-verification |
+|-------|-----------|------------------|------------------|----------|----------|----------------|--------|------------|----------------------------|
+| `onboarding_decision_id` | AUTHORITATIVE + AUDIT-ONLY | Onboarding decision record (orchestration id) | REQUIRED | No | Yes | Yes | Yes | **Immutable** after mint | Never rewrite; supersede via new decision id |
+| `adr_id` | REFERENTIAL → Membership/Identity boundary | D-09 / IU-10A Membership; IU-01 identity subject | REQUIRED | No | Yes | Yes | Yes | **Immutable** in a decision | Seat change = new decision |
+| `canonical_identity_id` | AUTHORITATIVE (Identity) / REFERENTIAL here | IU-01 Source Identity | OPTIONAL; **NULL default** | No | Yes | Yes | Yes | Mutable only via governed SAME_AS / identity decision | Re-verify identity; no silent fill |
+| `identity_evidence_ref[]` | AUTHORITATIVE (Identity) / REFERENTIAL here | IU-01 | REQUIRED before binding | No | Yes | Yes | Yes | Historical refs immutable | New evidence = new/versioned decision |
+| `integration_classification_ref` | AUTHORITATIVE for classification artifact / REFERENTIAL here | Per-seat integration classification (D-10.8) | REQUIRED before binding | No | Yes | Yes | Yes | Versioned | Material change → re-verify before ACTIVE |
+| `capability_decision_identity` | AUTHORITATIVE (Capability) / REFERENTIAL here | IU-02 | REQUIRED for eligibility | No | Yes | Yes | Yes | Historical immutable | New Cap decision id on material Cap change |
+| `capability_dimension_states` | AUTHORITATIVE (Capability) / REFERENTIAL here | IU-02 Cap v2 | REQUIRED (AND set) | No (asserted by Cap) | Yes | Yes | Yes | Current state may change; history preserved | Stale/material change → re-verification; no auto VERIFIED |
+| `capability_evidence_ref[]` | AUTHORITATIVE (Capability) / REFERENTIAL here | IU-02 | REQUIRED | No | Yes | Yes | Yes | Historical immutable | Append/version; do not overwrite history |
+| `access_methods[]` | AUTHORITATIVE (Capability access dims) / REFERENTIAL here | IU-02 `CapabilityAccessMethod` vocabulary | REQUIRED as claimed | No | Yes | Yes | Yes | Versioned | Claiming new method requires CapVer evidence |
+| `license_state` | AUTHORITATIVE (license domain) / REFERENTIAL here | License evidence authority (governed) | REQUIRED for intended use | No | Yes | Yes | Yes | Versioned | Change may force SUSPENDED; ≠ access/reuse |
+| `access_state` | AUTHORITATIVE (access domain) / REFERENTIAL here | Access evidence authority | REQUIRED | No | Yes | Yes | Yes | Versioned | Orthogonal to license/reuse |
+| `reuse_state` | AUTHORITATIVE (reuse domain) / REFERENTIAL here | Reuse evidence authority | REQUIRED | No | Yes | Yes | Yes | Versioned | Orthogonal to license/access |
+| `path_id` | AUTHORITATIVE (Path) / REFERENTIAL here | IU-03 | REQUIRED when ELIGIBLE+ | No | Yes | Yes | Yes | Historical immutable | Invalid path → new path decision |
+| `path_decision_identity` | AUTHORITATIVE (Path) / REFERENTIAL here | IU-03 | REQUIRED when path selected | No | Yes | Yes | Yes | Historical immutable | Supersede; do not rewrite |
+| `path_eligibility_state` | **DERIVED** from Cap AND (IU-03 mapper) | IU-03 Path eligibility | DERIVED | **Yes** | Yes | Optional | Yes | Recomputed | Recompute on Cap change; **not** D-10 activation_state |
+| `path_status` | AUTHORITATIVE (Path selection status) / may be suggested | IU-03 PathStatus | Per Path policy | Partial | Yes | Optional | Yes | Selection mutable under Path rules | **Not** activation_state |
+| `projection_identity` | AUTHORITATIVE (Projection) / REFERENTIAL here | IU-04 | REQUIRED when ELIGIBLE+ | No | Yes | Yes | Yes | Historical immutable | Material change → new projection identity |
+| `fidelity_class` | AUTHORITATIVE (C9/Projection) / REFERENTIAL here | IU-04/05 C9 | REQUIRED with projection | Aggregated per C9 rules | Yes | Yes | Yes | Re-evaluate on projection change | No EXACT without valid C9 basis |
+| `facet_accounting` | AUTHORITATIVE (Projection) / REFERENTIAL here | IU-04 | REQUIRED with projection | No | Yes | Yes | Yes | Versioned with projection | Identity-critical loss cannot be hidden |
+| `stage3_relationship` | AUTHORITATIVE (Coexistence) / REFERENTIAL here | IU-09 | OPTIONAL | No | Yes | Yes | Yes | Versioned | Explicit Bridge bindings only; no silent ADR bind |
+| `selector_eligibility` | GOVERNANCE-ONLY until separately authorized | Selector / Stage-3 governance | OPTIONAL | Policy | Conditional | Later | Yes | Policy-controlled | **Not** Membership-driven; no auto Internet-First |
+| `activation_state` | AUTHORITATIVE (D-10 lifecycle) | D-10 activation lifecycle | REQUIRED | No | Yes | Yes | Yes | Transition-controlled only | Explicit governed transition; never Membership→ACTIVE |
+| `group_wave_label` | GOVERNANCE-ONLY | Governance packaging | OPTIONAL | No | No | Optional | Yes | Mutable as label only | **Cannot** promote Cap/Path/Activation/Selector |
+| `decision_actor` | AUDIT-ONLY | Onboarding audit | REQUIRED | No | No | Yes | Yes | **Immutable** after decision | Corrections via new decision |
+| `decision_timestamp` | AUDIT-ONLY | Onboarding audit | REQUIRED | No | No | Yes | Yes | **Immutable** after decision | Never backdate |
+| `rationale` | AUDIT-ONLY | Onboarding audit | REQUIRED | No | No | Yes | Yes | Immutable in record; supersede | New decision for revised rationale |
+| `staleness_policy_ref` | REFERENTIAL / GOVERNANCE | Cap freshness policy (IU-02 B4 aligned) | REQUIRED | No | Yes | Yes | Yes | Versioned | STALE ≠ VERIFIED; triggers re-verify |
+| `correlation_hooks` | REFERENTIAL → B7 | IU-06/07 Correlation | OPTIONAL | No | Yes | Later | Yes | Per B7 lifecycle | Must not invent competing correlation SoT |
+
+**Authority ownership rule (frozen):** Onboarding Contract fields that are REFERENTIAL **point to** Membership, Identity, Capability, Path, Projection/C9, Coexistence, Selector, or B7. The Contract does **not** redefine those authorities.
+
+### 8.11.4 — Namespace Separation (FROZEN)
+
+Similar English words do **not** imply shared semantic authority.
+
+| Namespace | Values (representative) | Authority | Must not be treated as |
+|-----------|-------------------------|-----------|------------------------|
+| **D-10 `activation_state`** | NOT_READY, UNVERIFIED, CONDITIONALLY_ELIGIBLE, ELIGIBLE, ACTIVE, SUSPENDED, DEFERRED | D-10 activation lifecycle | Path eligibility; Cap v2; FAOSTAT Stage-3 activation |
+| **Path `eligibility_state`** | ELIGIBLE, CONDITIONAL, INELIGIBLE, DEFERRED | IU-03 Path Model | D-10 activation_state |
+| **Path `PathStatus`** | SELECTED, CONDITIONALLY_SELECTED, DEFERRED_PENDING_CAPABILITY | IU-03 Path selection status | D-10 activation_state; Cap v2 |
+| **Capability v2 `capability_state`** | VERIFIED, PARTIAL, UNVERIFIED, UNAVAILABLE, NOT_APPLICABLE | IU-02 Capability Store | Activation; PathStatus |
+| **Stage-3 FAOSTAT `FaoStatActivationPolicy::activation_state`** | FAOSTAT/QCL policy-specific values in Stage-3 adapters | Stage-3 / FAOSTAT runtime policy only | Global D-10 activation_state; Membership eligibility |
+
+**Rule:** Cap VERIFIED alone ≠ Path ELIGIBLE ≠ Path SELECTED ≠ D-10 ACTIVE ≠ FAOSTAT activation_state.
+
+### 8.11.5 — Post-ACTIVE / Immutability Rules (FROZEN)
+
+**Immutable after a decision is recorded:**
+`onboarding_decision_id`, `adr_id`, `decision_timestamp`, `decision_actor`, original identity evidence references, original `capability_decision_identity`, original `path_decision_identity`, original `projection_identity` (as recorded for that decision).
+
+**Mutable / re-verifiable (versioned; do not rewrite history):**
+capability evidence and current Cap states; access / license / reuse states; endpoint/provider evidence; staleness evidence; runtime readiness; path validity; projection validity; fidelity assessment.
+
+**Transition-controlled only:**
+`activation_state` (explicit governed events only). Material triggers may require SUSPENDED or DEFERRED (capability stale, license change, endpoint/provider change, projection invalid, material runtime failure, identity ambiguity).
+
+**Historical integrity:**
+Do not rewrite past decisions to make later evidence appear contemporaneous. Corrections use new decision / supersession / versioning under a future persistence design (**not authorized here**).
+
+**Identity:** `canonical_identity_id` remains NULL by default; no automatic SAME_AS.
+**Capability:** STALE ≠ VERIFIED; no silent retention of VERIFIED under material change.
+**Path:** Path authority remains IU-03.
+**Projection/C9:** material change may require new projection identity; identity-critical loss cannot be silently cleared to EXACT.
+**License / access / reuse:** remain separate; one does not rewrite the others.
+
+### 8.11.6 — Safety Invariants Preserved
+
+1. Membership Register = membership authority only (not Runtime / Cap / Provider / Activation / Onboarding / Selector registry).
+2. No automatic 109 onboarding or activation.
+3. Atomic unit = one `adr_id`. Group/Wave = GOVERNANCE-ONLY.
+4. Dual seats independent by default; shared adapter/provider/endpoint ≠ shared identity/Cap/path/activation.
+5. Stage-3 coexistence preserved; no automatic selector expansion.
+6. B7 remains correlation authority; onboarding may reference existing keys only.
+7. EMPTY_RESULT ≠ CAP_UNAVAILABLE. Fallback must not increase scientific fidelity. Aggregator = EXTERNAL_DEPENDENCY when applicable.
+8. CSQ semantic authority; Builder lexical authority; Compiler metadata-only; Catalog ≠ Source Registry.
+
+### 8.11.7 — Non-Blocking Clarifications (accepted)
+
+1. Vocabulary collision risk among D-10 activation / Path eligibility / PathStatus / Cap v2 / FAOSTAT `activation_state` — resolved by §8.11.4 namespace freeze (no runtime rename in this gate).
+2. CapVer organizational ownership remains **DEFERRED**.
+3. 109 per-seat integration inventory remains **OPEN / DEFERRED** (population not performed here).
+4. Design lived in gate reports until this preservation; this section freezes it in ADR-023.
+5. Formal Field-Ownership Matrix and post-ACTIVE rules frozen herein (closes Tests #38/#39 PARTIAL for preservation purposes; does **not** authorize implementation).
+
+### 8.11.8 — Deferred / Not Authorized
+
+| Item | Status |
+|------|--------|
+| CapVer organizational ownership | DEFERRED |
+| 109 integration inventory population | OPEN / DEFERRED |
+| PHP Loader | DEFERRED / NOT AUTHORIZED |
+| IU-10B / any IU number | NOT AUTHORIZED / NOT CREATED |
+| Concrete persistence schema / migrations | DEFERRED |
+| Selector second lane | DEFERRED |
+| Runtime onboarding implementation | NOT AUTHORIZED |
+| Source / runtime activation | NONE |
+| Membership JSON mutation | NOT AUTHORIZED by this record |
+
+### 8.11.9 — Acceptance ≠ Implementation / Activation
+
+Architectural design acceptance with non-blocking clarifications means **design accepted**. It does **not** mean implementation authorized, IU assigned, PHP Loader authorized, Membership→runtime eligibility, or any seat ACTIVE.
+
+Any future implementation requires separate **Implementation Design** and **Implementation Authorization** gates after this preservation is committed/pushed under later gates.
