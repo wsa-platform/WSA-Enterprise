@@ -1811,3 +1811,169 @@ The project intentionally stopped immediately after the successful FS-01-ID Push
 After this mutation, a separate **FS-01-ID ADR PRESERVATION COMMIT GATE** is required, then a separate preservation push gate. Completing this preservation record does **not** authorize CapVer, Path, Projection, Onboarding implementation, D-10 runtime implementation, IU-10B, PHP Loader, or any source activation.
 
 **Stopping SHA (implementation closed):** `2e670096ebd2ee115d803db31440aa47a1613634`
+
+## 8.13 — Integration Classification Design and Acceptance Preservation Record
+
+**Record type:** PRESERVATION / TRACEABILITY RECORD
+
+This section preserves the historical Integration Classification (IC) Design and Acceptance chain. It does **not** create a new architectural authority, does **not** authorize implementation, does **not** create an IC package/inventory/persistence, and does **not** authorize runtime activation of any seat.
+
+### 8.13.1 — Traceability Chain
+
+1. **Post-FS-01-ID First Runtime Source Readiness** identified Integration Classification as the earliest missing pipeline dependency after Membership + FS-01-ID Identity Binding Persistence.
+2. **Integration Classification Design Gate** produced: **DESIGN COMPLETE WITH NON-BLOCKING CLARIFICATIONS**.
+3. **Integration Classification Design Acceptance Gate** produced: **ACCEPTED WITH NON-BLOCKING CLARIFICATIONS** (40/40 adversarial tests PASS).
+4. **Implementation Authorization** remained **NO**.
+5. Exact next gate after acceptance became this ADR preservation mutation (§8.13).
+
+### 8.13.2 — Design Decision Preserved
+
+**Design completeness:** DESIGN COMPLETE WITH NON-BLOCKING CLARIFICATIONS.
+
+**IC answers:** For a given `adr_id`, based only on verified evidence, what integration/access mechanism(s) are actually available or supportable for *reaching* this source?
+
+**IC does not answer:** scientific supportability (Capability); path eligibility/selection (Path); scientific fidelity (Projection/C9); runtime activation (D-10); Stage-3 default membership.
+
+### 8.13.3 — IC Authority
+
+**IC owns:** classification decision; classification status; access modality claims; integration nature; protocol family; source-specific requirement; integration boundary; IC evidence set; `classification_decision_identity`.
+
+**IC does not own:** Identity; Capability; Path; Projection/C9; Onboarding; D-10; Stage-3 selection; Composer.
+
+### 8.13.4 — Classification Dimensions
+
+| Dimension | Accepted vocabulary / note |
+|-----------|----------------------------|
+| Access modality claims | Share *code strings* with IU-02 `CapabilityAccessMethod` where applicable (`web_ui_search`, `machine_access`, `api`, `oai_pmh`, `rss`, `atom`, `bulk_download`, `static_download`, `metadata_access`, `full_text_access`); **split ownership** — IC claims vs Cap-verified methods |
+| Integration nature | `SOURCE_NATIVE` · `EXTERNAL_DEPENDENCY` · `MANUAL_ONLY` · `NATURE_UNVERIFIED` |
+| Integration boundary | `PROTOCOL_FAMILY_ADAPTER` · `SOURCE_SPECIFIC_ADAPTER` · `STAGE3_ADAPTER` · `EXTERNAL_AGGREGATOR` · `MANUAL_STATIC` · `FUTURE_ADAPTER_PLANNING_ONLY` |
+| Protocol family | Evidence-backed family label only; not inferred from name/URL alone |
+| Source-specific requirement | Boolean + rationale (does **not** mean adapter exists) |
+| Path family hint | Optional, **NON-AUTHORITATIVE**, Path-referential (`PathFamily` P01–P18 semantics remain Path-owned) |
+
+`FUTURE_ADAPTER_PLANNING_ONLY` is **GOVERNANCE-ONLY** and cannot produce runtime eligibility, Cap verification, Path selection, or D-10 ACTIVE.
+
+### 8.13.5 — Classification Status Vocabulary
+
+| `classification_status` | Meaning |
+|-------------------------|---------|
+| `CLASSIFIED` | Claimed modalities/nature/boundary fully evidence-backed for this revision |
+| `PARTIALLY_CLASSIFIED` | Some dimensions evidenced; material gaps remain |
+| `UNCLASSIFIED` | Default when no IC decision exists (**missing record**) |
+| `UNCLASSIFIABLE` | Evidence shows classification cannot be established |
+| `NOT_APPLICABLE` | Rare governed exception only; must not skip D-10.8 for ordinary seats |
+
+Missing IC record ⇒ `UNCLASSIFIED`. IC status does **not** automatically map to Cap `CapabilityState`, Path `eligibility_state`, `PathStatus`, D-10 `activation_state`, or FAOSTAT Stage-3 `activation_state`.
+
+### 8.13.6 — Evidence Model
+
+Evidence classes (distinct): Identity (referential); Access; Protocol; Endpoint; Machine-access; Source-native vs aggregator; License; Access terms; Reuse terms.
+
+Evidence metadata: source; timestamp; snapshot/version; verification method; scope; strength; expiry/staleness. **UNKNOWN remains UNKNOWN.** Stale evidence does not silently become `CLASSIFIED`.
+
+### 8.13.7 — Record Identity / History / Atomicity
+
+Subject: one `adr_id` (REQUIRED). Opaque `classification_decision_identity` (REQUIRED). Revision/supersession; evidence fingerprint; status; verified_at; verifier/actor; rationale; license/access/reuse references (distinct); provenance; idempotency key.
+
+One `adr_id` may have multiple historical decisions. Historical rows immutable. New material evidence ⇒ new decision/revision. Atomic unit = **one `adr_id`**. Group/Wave/protocol-family/batch = GOVERNANCE-ONLY (cannot create `CLASSIFIED` or runtime eligibility).
+
+### 8.13.8 — 109 Inventory Boundary
+
+Future IC inventory remains **SEPARATE** from `ADR-023-109-MEMBERSHIP-REGISTER.v1.json`. Membership remains membership-only. Inventory is **not** created by this preservation. Seats are **not** automatically classified. Population remains OPEN until a later Implementation Authorization + inventory gate.
+
+### 8.13.9 — Boundary Preservations
+
+| Boundary | Preservation |
+|----------|--------------|
+| Capability | IC = how reachable/integrated?; Cap = what scientifically supportable?; CLASSIFIED may coexist with Cap UNVERIFIED; IC never implies Cap VERIFIED |
+| Path | `path_family_hint` optional/non-authoritative; Path owns eligibility/selection/fallback/PathStatus |
+| Projection/C9 | Protocol availability ≠ fidelity; no EXACT claim, CSQ rewrite, facet drop, or C9 bypass |
+| Aggregator | Aggregator-only ⇒ `EXTERNAL_DEPENDENCY` unless native evidence; no silent native upgrade |
+| License/Access/Reuse | Three distinct refs; public search ≠ machine access ≠ reuse/redistribution/commercial |
+| Stage-3 | Preserve `openalex`, `crossref`, `semantic_scholar`, `consensus`, `fao_stat`; no 109→Stage-3 auto-map; registration ≠ CGHIA ACTIVE |
+| FS-01-ID / IU-01 | IC may reference identity bindings; must not mint identity/SAME_AS/canonical or override IU-01 |
+| B7 | `classification_decision_identity` IC-owned; B7 remains correlation SoT; no competing B7 schema |
+| Onboarding | Consumes `integration_classification_ref`; does not invent IC; ORCHESTRATION+AUDIT only |
+| D-10 / D-10.8 | Per-seat verified IC artifact required before runtime binding; no inference from display name/website/membership/similarity; no CLASSIFIED→ACTIVE auto-transition |
+
+### 8.13.10 — Staleness / Idempotency (Design Only)
+
+Reverification triggers include: endpoint/protocol/API retirement; license/access/reuse change; provider/source/aggregator move; material contradiction. Stale `CLASSIFIED` requires new decision; history immutable.
+
+Conceptual idempotency key = hash(`adr_id` + evidence fingerprint + dimension claim set + actor policy version). Same key ⇒ replay same decision identity. Concurrent writers ⇒ single active head via governed supersession. **Implementation deferred.**
+
+### 8.13.11 — Field Ownership (Accepted)
+
+| Field | Ownership |
+|-------|-----------|
+| `adr_id` | REFERENTIAL → Membership/Identity |
+| `canonical_identity_id` | REFERENTIAL → Identity (nullable) |
+| `identity_binding_ref` | REFERENTIAL → FS-01-ID |
+| `classification_decision_identity` | AUTHORITATIVE (IC) |
+| `access_modality_claims[]` | AUTHORITATIVE (IC); Cap owns Cap-verified methods separately |
+| `integration_nature` / `protocol_family` / `source_specific_requirement` / `integration_boundary` | AUTHORITATIVE (IC) |
+| `existing_adapter_reference` | REFERENTIAL / AUDIT |
+| `external_dependency_reference` | REFERENTIAL |
+| `path_family_hint` | NON-AUTHORITATIVE REFERENTIAL → Path |
+| `evidence_references[]` | AUTHORITATIVE (IC evidence set) |
+| `classification_status` | AUTHORITATIVE (IC) |
+| `license_reference` / `access_reference` / `reuse_reference` | REFERENTIAL (distinct) |
+| `verified_at` / `verifier` / `rationale` / `revision` | AUTHORITATIVE / AUDIT metadata |
+| `staleness` | DERIVED |
+| Group / Wave | GOVERNANCE-ONLY |
+
+### 8.13.12 — Namespace Separation
+
+`classification_status` ≠ Cap `CapabilityState` ≠ Path `eligibility_state` ≠ `PathStatus` ≠ D-10 `activation_state` ≠ FAOSTAT Stage-3 `activation_state`. **No implicit automatic mapping.**
+
+### 8.13.13 — Acceptance Result (40/40)
+
+Acceptance Gate adversarial suite: **40 / 40 PASS**. Categories preserved: missing/unknown `adr_id`; display/URL/endpoint/provider/adapter identity abuse; auto SAME_AS/canonical mint; Membership/group/wave → CLASSIFIED; API/OAI → Cap VERIFIED; public UI → machine access; access → reuse; protocol inference; historical/stale evidence; aggregator → native; Stage-3 → identity/ACTIVE; IC → Path / D-10 / EXACT; CSQ rewrite; facet drop; C9 bypass; license/access/reuse conflation; EMPTY_RESULT → CAP_UNAVAILABLE; future adapter → runtime ready; source-specific flag → adapter exists; path hint → selection; IC state → Cap/D-10 state; 109 membership → activation; batch classification → eligibility.
+
+No additional blocking attack surface found in repository reality check.
+
+### 8.13.14 — Non-Blocking Clarifications (Preserved Unresolved)
+
+1. PathFamily hint mapping tables remain Path-owned.
+2. CapVer organizational ownership remains deferred.
+3. Inventory serialization/persistence encoding remains implementation-design scope.
+4. Whether IC persistence follows FS-01-ID/B7 row pattern remains implementation-design scope.
+5. `CapabilityAccessMethod` code-string reuse is intentional vocabulary reuse with split ownership.
+
+These clarifications are **not** resolved by this preservation record.
+
+### 8.13.15 — Contradiction Matrix Result
+
+| Authority | Result |
+|-----------|--------|
+| D-09 / IU-10A Membership | COMPATIBLE |
+| D-10 / D-10.8 | COMPATIBLE |
+| IU-01 / FS-01-ID | COMPATIBLE |
+| IU-02 Capability | COMPATIBLE WITH CLARIFICATION |
+| IU-03 Path | COMPATIBLE WITH CLARIFICATION |
+| IU-04/05 Projection/C9 | COMPATIBLE |
+| IU-06/07 B7 | COMPATIBLE |
+| IU-08 Disclosure | COMPATIBLE |
+| IU-09 Coexistence / Stage-3 | COMPATIBLE |
+| Onboarding §8.11 | COMPATIBLE |
+| §8.12 FS-01-ID preservation | COMPATIBLE |
+
+**Final:** NO BLOCKING CONTRADICTION.
+
+### 8.13.16 — Implementation Gap / Authorization
+
+Repository reality at acceptance: IC package = ABSENT; IC persistence = ABSENT; IC inventory = ABSENT. Existing separately: Identity/FS-01-ID; Capability domain; Path domain; Projection/C9 domain; B7; Stage-3; Coexistence.
+
+**Acceptance decision:** INTEGRATION CLASSIFICATION DESIGN — **ACCEPTED WITH NON-BLOCKING CLARIFICATIONS**.
+
+Meaning: the design is sufficiently complete, bounded, scientifically safe, and compatible with ADR-023 as the authoritative foundation for a **FUTURE** implementation gate.
+
+**IMPLEMENTATION AUTHORIZATION = NO.** Explicitly: no IC implementation; no IC inventory population; no 109 runtime classification; no source/group/all-109 activation; no IU-10B; no PHP Loader; no migration/schema created by this record.
+
+### 8.13.17 — Preservation Invariants
+
+Append-only history; no deletion; no rewrite; no retroactive correction; no authority migration; no implementation authorization; no runtime activation; no automatic 109 classification; no automatic 109 activation.
+
+### 8.13.18 — Post-Preservation Stopping Point
+
+This mutation closes the IC Design/Acceptance ADR preservation step only. After a separate **INTEGRATION CLASSIFICATION ADR PRESERVATION COMMIT GATE** (and later push if authorized), the next step must be a **NEW explicit** design/implementation gate. Completing §8.13 does **not** authorize IC implementation or inventory population.
