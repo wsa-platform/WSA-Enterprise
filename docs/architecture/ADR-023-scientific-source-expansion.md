@@ -2931,3 +2931,728 @@ This §8.16 record preserves the authorized Capability Persistence Design Decisi
 **FINAL STATUS FOR THIS RECORD: CAPABILITY PERSISTENCE DESIGN DECISIONS PRESERVED.**
 
 **NEXT GATE: Capability Store Persistence Implementation Authorization Gate (separate; not performed by this preservation).**
+
+
+---
+
+## 8.17 — Continuity Archive — Unexecuted Prompt, Reports, and Current Stop Point
+
+### 8.17.1 — Purpose
+
+This section is an **append-only continuity archive** for the architectural work immediately following §8.16.
+
+It records the relevant prompt, forensic reports, decisions, and conversation-derived stopping point that had not yet been persisted in ADR-023 at the time of archival.
+
+**No previous ADR section is deleted, rewritten, merged, or replaced.**
+
+This section is archival/continuity material. It does not silently authorize work that was previously marked as unauthorized.
+
+### 8.17.2 — Current Repository Stop Point
+
+At the time of this archive:
+
+- Repository: `wsa-platform/WSA-Enterprise`
+- Branch: `phase-18-m18-ai-marketing-communications`
+- Expected/current HEAD: `12f70590052325da8caf274b6f7e7576cf72339d`
+- Last committed architectural change: preservation of §8.16.
+- §8.16 CPD-A through CPD-D: preserved successfully.
+- Capability Store Persistence implementation: **NOT YET EXECUTED**.
+- The previously prepared Capability Store Persistence Implementation Authorization Gate prompt was **not executed because the Cursor session expired before execution**.
+- Existing WIP remains protected and must not be discarded, reset, stashed, cleaned, or rewritten.
+- Closed units remain closed and must not be reopened merely because this archive exists.
+
+### 8.17.3 — Exact Next Architectural Unit
+
+The exact next unit remains:
+
+**Capability Store Persistence Implementation Authorization Gate**
+
+This is a gate before implementation, not an implementation task by itself.
+
+The gate must:
+
+1. verify the expected HEAD and branch;
+2. verify ADR-023 §8.16;
+3. verify the existing WIP state;
+4. reconcile Capability domain/tests with CPD-A–D;
+5. determine the exact persistence representation;
+6. determine evidence-reference storage from repository/database evidence;
+7. freeze CURRENT/HISTORICAL semantics;
+8. freeze NULL-safe uniqueness;
+9. freeze repository API;
+10. freeze mapping boundary;
+11. freeze DI binding;
+12. freeze write-authority enforcement;
+13. freeze the exact implementation file allowlist;
+14. return **READY FOR IMPLEMENTATION** or **NOT READY**.
+
+No implementation is permitted if the gate is NOT READY.
+
+### 8.17.4 — Consolidated Continuity Findings
+
+The preceding forensic sequence established:
+
+- Capability domain exists and is tested.
+- Capability Store production persistence was not yet implemented.
+- CapVer producer/authority implementation was not present and must not be invented.
+- Runtime Source Registry is separate and not part of this unit.
+- The 109-source Membership Register is architectural membership, not a runtime registry or Capability Store.
+- IC persistence is closed and may be used only as a structural Laravel/Eloquent pattern reference.
+- Capability persistence must not copy IC ACTIVE/SUPERSEDE lifecycle semantics.
+- Capability evidence is an opaque reference list, not a new Evidence entity.
+- Capability facts are append-only.
+- CURRENT/HISTORICAL is Cap-native.
+- `seat_override_applied` is the persistence layer distinction.
+- Shared and override CURRENT rows may coexist for the same subject/dimension.
+- Current uniqueness must be PostgreSQL NULL-safe.
+- Ambiguous CURRENT state must fail closed.
+- There is no latest-wins rule.
+- Missing Cap must not automatically create a persisted UNVERIFIED row.
+- VERIFIED assignment remains CapVer-only.
+- Persistence may store an already-authorized VERIFIED fact without becoming CapVer.
+- Population authority remains open and must not be invented.
+- Shared canonical → seat inheritance remains deferred.
+- CapabilityRecord evidence-field/test alignment remains an implementation concern and must not be silently changed before the authorization gate resolves the boundary.
+
+### 8.17.5 — Previously Prepared Master Prompt
+
+The following is the authoritative prompt prepared for the next Cursor execution. It is archived here so the next session can continue without reconstructing the task from chat history.
+
+```text
+# WSA-Enterprise — MASTER PROMPT
+# Capability Store Persistence Implementation Authorization Gate
+# + Conditional Bounded Implementation + Verification + Commit/Push
+#
+# IMPORTANT:
+# This is an architecture-first, forensic, fail-closed task.
+# Do NOT begin implementation before completing the Authorization Gate.
+# The Authorization Gate is the authority for deciding whether implementation
+# may proceed.
+#
+# Current expected HEAD:
+# 12f70590052325da8caf274b6f7e7576cf72339d
+#
+# Current branch:
+# phase-18-m18-ai-marketing-communications
+#
+# Previous architectural state:
+# ADR-023 §8.16 — Capability Persistence Design Decisions (CPD-A–D)
+# has already been preserved in the ADR.
+#
+# The exact next authorized unit is:
+# Capability Store Persistence Implementation Authorization Gate
+#
+# Do not jump to unrelated accuracy fixes, Source Expansion onboarding,
+# Runtime Source Registry, Stage-3 work, CSQ, QueryBuilder, AnswerComposer,
+# AccuracyGate, RelevanceGate, Results List, Viewer, or IC redesign.
+
+## PRIMARY OBJECTIVE
+
+Perform a final forensic authorization gate for implementing Capability Store
+Persistence based strictly on the current repository state and ADR-023 §8.16.
+
+Two outcomes are permitted:
+
+A) NOT READY
+   Stop before implementation.
+   Explain every blocking contradiction/open issue.
+   Do not modify production code, tests, migrations, ADRs, or WIP.
+
+B) READY FOR IMPLEMENTATION
+   Freeze the exact implementation scope and file allowlist.
+   Implement ONLY the authorized Capability Store persistence unit.
+   Verify all required invariants and tests.
+   Commit ONLY the authorized changes.
+   Push only after all verification passes.
+   Confirm local/remote HEAD synchronization.
+
+## HARD SAFETY RULES
+
+1. Never reset, revert, stash, clean, checkout unrelated changes, or discard WIP.
+
+2. Before touching anything record:
+   git status --short
+   git branch --show-current
+   git rev-parse HEAD
+   git rev-parse origin/phase-18-m18-ai-marketing-communications
+   git diff --stat
+   git diff --name-only
+   git diff --cached --name-only
+
+3. Expected HEAD:
+   12f70590052325da8caf274b6f7e7576cf72339d
+
+4. If HEAD differs, STOP and report.
+
+5. If branch differs, STOP and report.
+
+6. Existing WIP is protected. Modify it only if it falls inside the exact
+   authorized Capability Store persistence allowlist.
+
+7. No broad formatting, automated refactoring, or unrelated lint fixes.
+
+8. Do not modify ADR-023 during implementation unless a genuine architecture
+   contradiction makes implementation impossible. In that case STOP rather
+   than silently rewriting architecture.
+
+9. Do not create:
+   - CapVer service
+   - CapVer evidence store
+   - universal evidence store
+   - population service
+   - runtime source registry
+   - source adapter
+   - new capability onboarding mechanism
+   - inheritance mechanism
+   - IC replacement
+   - new generic evidence abstraction
+   - unrelated resolver/service
+
+10. No silent semantic changes.
+
+## FORENSIC SNAPSHOT
+
+Inspect:
+- Git state
+- ADR-023
+- Capability domain
+- Capability tests
+- IC persistence as pattern reference only
+- Laravel/Eloquent conventions
+- PostgreSQL migration conventions
+- Service provider DI conventions
+- existing repositories/interfaces
+- existing Capability migrations/models
+- existing persistence DTO/mapping conventions
+- existing exception/invariant conventions
+
+Search systematically for:
+CapabilityRecord
+CapabilityRecordId
+CapabilityState
+CapabilityDimension
+CapabilitySubject
+CapabilityEvidenceFreshness
+CapabilityRequirementEvaluator
+CapabilityDecisionIdentity
+CapabilityStoreDomainContract
+HistoricalGo1CapabilityState
+CapabilityRepository
+CapabilityStore
+capability_evidence_ref
+seat_override_applied
+CURRENT
+HISTORICAL
+
+## ADR-023 §8.16 VERIFICATION
+
+Verify CPD-A–D in full.
+
+CPD-A:
+- evidence is opaque immutable reference strings;
+- no Cap Evidence body entity;
+- no CapVer evidence store;
+- no universal Evidence System;
+- evidence identity is not CapRecordId, DecisionIdentity, sourceKey,
+  IC classification decision identity, or identity_binding_ref;
+- one Cap fact may have N refs;
+- same ref may appear across facts;
+- order is semantically irrelevant;
+- duplicate identical refs inside one array are invalid;
+- VERIFIED requires >=1 ref;
+- PARTIAL requires >=1 ref + limitation;
+- UNAVAILABLE requires >=1 ref;
+- UNVERIFIED optional;
+- NOT_APPLICABLE optional;
+- MISSING is not persisted.
+
+CPD-B:
+- append-only immutable facts;
+- state change creates a new fact;
+- previous CURRENT becomes HISTORICAL;
+- no in-place semantic mutation;
+- Cap-native CURRENT/HISTORICAL;
+- no IC ACTIVE/SUPERSEDE;
+- CURRENT is explicit, not latest timestamp;
+- historical facts are retained but excluded from ordinary current evaluation;
+- supersession is atomic;
+- CapabilityRecordId identifies the immutable fact;
+- DecisionIdentity remains separate.
+
+CPD-C:
+- persistence identity = CapabilitySubject + CapabilityDimension +
+  seat_override_applied;
+- false = shared/base;
+- true = seat override;
+- no override_id, seat_id, dossier_id;
+- shared + override CURRENT coexistence is valid;
+- evaluator restrictive-wins;
+- no shared-to-seat inheritance.
+
+CPD-D:
+- <=1 CURRENT for:
+  (adr_id, canonical_identity_id, dimension_family, dimension_code,
+   seat_override_applied)
+- CapabilityRecordId globally unique;
+- evidence refs are not part of natural uniqueness;
+- historical rows may share natural tuple;
+- PostgreSQL nullable uniqueness must be dialect-safe;
+- application must fail closed on >1 CURRENT.
+
+## DOMAIN VS ADR RECONCILIATION
+
+Current CapabilityRecord does not contain capability_evidence_ref[].
+
+Current tests may construct VERIFIED records without evidence.
+
+Do not silently mutate the domain.
+
+Determine the correct boundary from repository evidence:
+- persistence representation/DTO,
+- bounded domain evolution if explicitly justified,
+- or existing mapping convention.
+
+If unresolved without guessing:
+NOT READY.
+
+## EVIDENCE REFERENCE STORAGE
+
+Determine from actual PostgreSQL/Laravel conventions whether refs belong in:
+- JSON/JSONB array,
+- text array,
+- child table,
+- or another existing supported representation.
+
+Do not choose by preference.
+
+Preserve:
+- opaque identity,
+- exact string,
+- immutability,
+- duplicate detection,
+- historical correctness,
+- semantic order irrelevance.
+
+Do not create an evidence body table.
+
+## PERSISTENCE MODEL
+
+Represent only approved facts, including where applicable:
+- CapabilityRecordId
+- existing identity fields
+- canonical identity
+- dimension family/code
+- capability state
+- limitation
+- freshness where already part of domain
+- seat_override_applied
+- CURRENT/HISTORICAL
+- evidence refs
+- timestamps only if existing conventions require them
+
+Do not invent semantic fields.
+
+## WRITE AUTHORITY
+
+Capability Store != CapVer.
+
+Persistence may store an already-authorized VERIFIED fact but may not:
+- assign scientific verification authority,
+- perform CapVer,
+- create verification events,
+- create CapVer evidence,
+- decide scientific truth,
+- become organizational authority.
+
+CapVer-only VERIFIED assignment remains closed.
+
+Do not invent population workflows.
+
+## REPOSITORY API
+
+Design the smallest repository contract actually required.
+
+No generic CRUD.
+No delete for immutable facts.
+No in-place semantic update.
+No timestamp-based latest.
+No speculative methods.
+
+Determine current-load, append, and atomic supersession needs from actual
+consumers and conventions.
+
+## CURRENT/HISTORICAL
+
+Enforce:
+- immutable identity;
+- no semantic update;
+- state change = new fact;
+- previous current -> historical;
+- <=1 current per natural tuple/layer;
+- shared + override may coexist;
+- ambiguous current fails closed;
+- historical excluded from ordinary evaluation.
+
+## NULL-SAFE UNIQUENESS
+
+Inspect nullable natural-key fields.
+
+Do not rely on naive PostgreSQL UNIQUE.
+
+Use a proven project-compatible strategy such as:
+- partial unique indexes,
+- UNIQUE NULLS NOT DISTINCT where supported,
+- or equivalent dialect-safe enforcement.
+
+Also add application-level fail-closed behavior.
+
+## DUPLICATE / INVALID DATA
+
+Reject:
+- duplicate CapabilityRecordId;
+- duplicate current same layer;
+- invalid/empty evidence refs;
+- duplicate identical ref in one fact;
+- VERIFIED/PARTIAL/UNAVAILABLE without required refs;
+- PARTIAL without limitation;
+- malformed override;
+- invalid history transition;
+- illegal immutable fact mutation.
+
+Allow:
+- same evidence ref across facts;
+- shared + override current coexistence;
+- historical duplicate natural tuple;
+- optional evidence for UNVERIFIED/NOT_APPLICABLE.
+
+## IC COMPARISON
+
+Inspect IC persistence only for:
+- DI,
+- repository structure,
+- Eloquent,
+- transactions,
+- tests,
+- provider registration.
+
+Do not copy IC:
+- ACTIVE/SUPERSEDE,
+- classification decision identity,
+- evidence semantics,
+- duplicate rules,
+- write authority,
+- FK assumptions,
+- idempotency semantics.
+
+## MIGRATION / ELOQUENT / MAPPING / DI
+
+Inspect actual project conventions before deciding:
+- table name,
+- columns,
+- types,
+- nullability,
+- indexes,
+- unique constraints,
+- lifecycle representation,
+- evidence representation,
+- model,
+- casts,
+- mapping,
+- provider binding.
+
+Do not invent foreign keys to conceptual/nonexistent authorities.
+
+Persistence model is not the domain entity.
+
+## TEST PLAN
+
+Freeze tests before implementation.
+
+Minimum categories:
+- repository contract
+- round-trip
+- evidence refs
+- evidence validation
+- state/evidence rules
+- current/history
+- append-only
+- duplicate current
+- NULL-safe uniqueness
+- shared/override coexistence
+- same-layer rejection
+- ambiguous-current fail closed
+- duplicate record ID
+- historical coexistence
+- transaction
+- DI
+- mapping round-trip
+
+## AUTHORIZATION DECISION
+
+Produce:
+
+CAPABILITY STORE PERSISTENCE IMPLEMENTATION GATE
+
+HEAD:
+BRANCH:
+WORKTREE:
+WIP STATUS:
+
+ADR-023 §8.16:
+- present
+- CPD-A verified
+- CPD-B verified
+- CPD-C verified
+- CPD-D verified
+
+DOMAIN:
+DATABASE:
+WRITE AUTHORITY:
+REPOSITORY:
+TESTS:
+
+DECISION:
+[READY FOR IMPLEMENTATION]
+or
+[NOT READY]
+
+BLOCKERS:
+...
+
+AUTHORIZED SCOPE:
+...
+
+AUTHORIZED FILE ALLOWLIST:
+...
+
+FORBIDDEN SCOPE:
+...
+
+## NOT READY RULE
+
+If any of these is unresolved:
+- ADR conflict
+- evidence ownership
+- evidence storage representation
+- domain boundary
+- CURRENT/HISTORICAL
+- NULL-safe uniqueness
+- write authority
+- repository contract
+- migration dependencies
+- WIP isolation
+- branch/HEAD mismatch
+- architecture contradiction
+- need to reopen unrelated closed unit
+
+then STOP, do not modify, do not commit, do not push.
+
+## READY RULE
+
+Only if all gates pass:
+- freeze architecture;
+- freeze schema;
+- freeze repository API;
+- freeze mapping;
+- freeze DI;
+- freeze tests;
+- freeze file allowlist.
+
+Then implementation may begin.
+
+## BOUNDED IMPLEMENTATION
+
+Implement only the frozen Capability Store persistence unit.
+
+Potential categories:
+- repository interface
+- repository implementation
+- Eloquent model if justified
+- migration(s)
+- mapper/DTO if justified
+- DI binding
+- tests
+
+Do not reopen:
+- AnswerComposer
+- AccuracyGate
+- RelevanceGate
+- Units A/B/C
+- Results List
+- Viewer
+- IC
+- Stage 3
+- CSQ
+- QueryBuilder
+- Source Registry
+- 109-source onboarding
+
+Do not modify ADR-023 during normal implementation.
+Do not modify pre-existing WIP.
+
+## IMPLEMENTATION INVARIANTS
+
+Continuously verify:
+A. opaque evidence refs
+B. immutable refs
+C. duplicate ref rejection inside fact
+D. same ref across facts allowed
+E. VERIFIED evidence required
+F. PARTIAL evidence + limitation required
+G. UNAVAILABLE evidence required
+H. UNVERIFIED optional
+I. NOT_APPLICABLE optional
+J. explicit CURRENT
+K. explicit HISTORICAL
+L. append-only
+M. no latest-wins
+N. shared + override coexistence
+O. same-layer duplicate rejection
+P. NULL-safe uniqueness
+Q. ambiguous current fail closed
+R. persistence is not CapVer
+S. no CapVer evidence store
+T. no population service
+U. no inheritance
+V. no IC lifecycle leakage
+
+## TEST EXECUTION
+
+Run focused tests first, then the narrowest relevant broader suite.
+
+Do not fix unrelated pre-existing failures.
+
+Newly introduced failures must be fixed only within authorized scope.
+
+## STATIC VERIFICATION
+
+Search the diff for:
+latest
+orderBy
+first
+last
+update
+delete
+ACTIVE
+SUPERSEDE
+CapVer
+Evidence
+sourceKey
+seat_id
+override_id
+dossier_id
+
+Every occurrence must be justified.
+
+## GIT DIFF FORENSICS
+
+Before commit:
+git status --short
+git diff --name-only
+git diff --stat
+git diff --check
+git diff
+
+Every changed file must belong to the frozen allowlist.
+
+If unrelated files changed:
+STOP and preserve them; do not revert automatically.
+
+## COMMIT
+
+Only after:
+- tests pass,
+- schema verified,
+- diff clean,
+- no unauthorized files,
+- no WIP contamination,
+- CPD-A–D verified.
+
+Suggested commit:
+feat(research): implement capability store persistence
+
+## PUSH
+
+Push only after commit verification.
+
+Then:
+git status --short
+git rev-parse HEAD
+git rev-parse origin/phase-18-m18-ai-marketing-communications
+
+Require local HEAD == origin HEAD.
+No force push.
+No rebase.
+No unrelated amend.
+
+## FINAL REPORT
+
+Return:
+1. gate result
+2. git baseline
+3. ADR §8.16 verification
+4. forensic findings
+5. persistence design
+6. exact file allowlist
+7. implementation result
+8. test results
+9. static verification
+10. commit/push state
+11. final status
+12. next exact architectural unit
+
+## ABSOLUTE FINAL RULE
+
+Architecture authority order:
+
+1. ADR-023 §8.16
+2. approved Capability domain contracts
+3. repository/database conventions
+4. test contracts
+5. IC persistence only as structural pattern
+6. implementation inference only where all above agree
+
+If evidence is insufficient:
+STOP and report NOT READY.
+
+If sufficient:
+freeze the boundary, implement only that boundary, verify, commit, push,
+and report the exact final state.
+```
+
+### 8.17.6 — Conversation-Derived Operational Report
+
+The conversation immediately preceding this archive established the following:
+
+- The user requested preservation of the current stopping point because Cursor's session expired before executing the prepared prompt.
+- The prepared prompt was explicitly identified as the next step.
+- The user then requested that all relevant prompts, reports, and unpersisted conversation-derived architectural material be preserved in the architectural decision without deleting old content.
+- This section is the durable record of that request and its resulting continuity state.
+- The intent is continuity across a new Cursor session/chat without requiring reconstruction of the architectural path.
+
+### 8.17.7 — Non-Deletion / Append-Only Rule
+
+This archive does not replace:
+
+- §8.11
+- D-10.5
+- §8.14
+- §8.15
+- §8.16
+- any earlier ADR material.
+
+Future archival additions must be appended as new subsections.
+
+Do not delete historical prompts or reports merely because a later prompt supersedes them. If a later decision changes an earlier proposal, preserve the earlier proposal and explicitly record the superseding decision.
+
+### 8.17.8 — Continuation Rule
+
+When work resumes, the first action is to execute the archived **Capability Store Persistence Implementation Authorization Gate** against the actual repository state.
+
+Do not assume that expiration of Cursor changes authorization status.
+
+Do not assume that archival of this prompt equals implementation authorization.
+
+**FINAL STATUS: CONTINUITY MATERIAL PRESERVED; IMPLEMENTATION NOT YET EXECUTED.**
+
+**NEXT GATE: Capability Store Persistence Implementation Authorization Gate.**
