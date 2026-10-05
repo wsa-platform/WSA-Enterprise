@@ -2165,3 +2165,430 @@ After a separate **IC Persistence ADR Preservation Commit Gate** (and later Push
 **IC Persistence Implementation Authorization Gate**
 
 Completing §8.14 does **not** authorize IC persistence implementation or inventory population.
+
+
+## 8.15 — Cumulative Conversation / Forensic Preservation Record — IC Persistence Implementation and Final Push — 2026-10-03
+
+### 8.15.1 — Preservation Purpose
+
+This append-only record preserves the substantive prompts, execution reports, corrections, Git/forensic decisions, implementation results, and stopping point produced after §8.14. It is part of the same ADR-023 architectural record. No previous ADR content is deleted, replaced, silently reconciled, or rewritten. This record does not create a new ADR and does not authorize work outside the decisions explicitly recorded below.
+
+The user explicitly required that substantive prompts, forensic reports, reports, and conversation decisions that were not yet preserved be retained in ADR-023, with append-only history.
+
+### 8.15.2 — IC Persistence Implementation Authorization Gate — Accepted Result
+
+The IC Persistence Implementation Authorization Gate was executed after §8.14 preservation.
+
+Authoritative Git baseline at the gate:
+
+- Branch: `phase-18-m18-ai-marketing-communications`
+- HEAD / remote: `097583a97954edaac812367577d8b48cafb7610a`
+- Ahead / behind: 0 / 0
+- Staged: EMPTY
+- Protected WIP: 36
+- ADR-023: CLEAN
+
+Authorization result:
+
+**A — IMPLEMENTATION AUTHORIZED**
+
+Authorization was restricted to IC Persistence only:
+
+1. migration
+2. model / persistence representation
+3. repository / persistence API
+4. validation / contract layer if required
+5. transactional supersession / invalidation
+6. idempotency
+7. persistence-contract tests
+
+Explicitly forbidden by that gate:
+
+- 109 IC inventory
+- CapVer
+- Path
+- Projection/C9
+- Onboarding runtime
+- D-10
+- Stage-3
+- adapters
+- selectors
+- activation
+- source registration
+- IU-10B
+- PHP Loader
+- ADR mutation
+- WIP modification.
+
+The gate verified that the eight previously recorded non-blocking clarifications remained non-blocking and that there were no blocking dependencies.
+
+### 8.15.3 — Implementation Execution Master Prompt — Preserved Operational Contract
+
+The implementation prompt required the following sequence:
+
+**DISCOVER → PLAN → IMPLEMENT → TEST → FORENSIC VERIFY → COMMIT → PUSH → POST-PUSH VERIFY → STOP**
+
+It explicitly protected WIP=36 and forbade implementation outside IC Persistence.
+
+The authorized persistence aggregate was:
+
+`cghia_integration_classification_records`
+
+with one `adr_id` as the atomic aggregate subject.
+
+The implementation contract preserved:
+
+- bigint persistence PK
+- `adr_id`
+- opaque `classification_decision_identity`
+- nullable `canonical_identity_id`
+- nullable `identity_binding_ref`
+- `classification_status`
+- `lifecycle_state`
+- hybrid relational + JSON storage
+- access modality claims
+- integration nature
+- integration boundary
+- protocol family
+- source-specific requirement/rationale
+- non-authoritative `path_family_hint`
+- adapter/external dependency references
+- evidence references + fingerprint
+- separate license/access/reuse references
+- provenance
+- metadata firewall
+- idempotency
+- supersession
+- invalidation
+- concurrency controls.
+
+The prompt explicitly required the two orthogonal state namespaces:
+
+`CLASSIFIED | PARTIALLY_CLASSIFIED | UNCLASSIFIED | UNCLASSIFIABLE | NOT_APPLICABLE`
+
+and:
+
+`ACTIVE | SUPERSEDED | INVALIDATED`
+
+It required append-only decision payloads, transactional supersession with `lockForUpdate`, at most one ACTIVE decision per `adr_id`, deterministic SHA-256 idempotency, replay protection, evidence/provenance separation, and no authority leakage into CapVer, Path, Projection/C9, D-10, Stage-3, B7, Membership, CSQ, or Identity.
+
+The prompt required targeted tests plus FS-01-ID/B7/relevant Research regression tests, forensic changed-file classification, path-scoped staging, a precise commit, remote safety verification, fast-forward push only, and final post-push verification.
+
+### 8.15.4 — Cursor Pre-Execution Skip / Safety Correction
+
+Cursor presented an execution path containing Git push commands before the implementation lifecycle had completed. The user was instructed to select **Skip**, not Run, because push must occur only after implementation, tests, forensic verification, and commit verification.
+
+The user confirmed the Skip action.
+
+No unauthorized implementation or push was accepted from that premature step.
+
+### 8.15.5 — Post-Skip Execution Master Prompt — Preserved Operational Contract
+
+After Skip, the execution prompt was corrected to enforce this exact order:
+
+1. PHASE 1 — read-only Git baseline
+2. PHASE 2 — read-only architecture/pattern discovery
+3. PHASE 3 — implement IC Persistence
+4. PHASE 4 — targeted tests
+5. PHASE 5 — regression
+6. PHASE 6 — forensic diff
+7. PHASE 7 — commit
+8. PHASE 8 — remote safety check
+9. PHASE 9 — push
+10. PHASE 10 — post-push forensic verification
+11. PHASE 11 — final report
+12. PHASE 12 — stop
+
+The corrected prompt explicitly prohibited early push, early commit, force operations, WIP modification, ADR mutation, and all out-of-scope runtime work.
+
+### 8.15.6 — IC Persistence Implementation Execution Result
+
+Implementation completed successfully.
+
+Files created:
+
+**15 files**, consisting of:
+
+- migration:
+  `backend/database/migrations/2026_10_02_230000_create_cghia_integration_classification_records_table.php`
+- model:
+  `backend/app/Models/CghiaIntegrationClassification.php`
+- IntegrationClassification enums/value object surface
+- Persistence record/ID/contract/idempotency/invariant/repository/Eloquent persistence surface
+- IC persistence unit test:
+  `backend/tests/.../IntegrationClassificationPersistenceTest.php`
+
+No previously tracked file was modified by the implementation report; the authorized implementation surface was new files only.
+
+Implementation findings:
+
+- hybrid schema implemented
+- dual status/lifecycle axes implemented
+- one ACTIVE / `adr_id` invariant implemented
+- transactional supersession implemented
+- SHA-256 idempotency implemented
+- metadata firewall implemented
+- Cap/Path/D-10 leakage blocked
+- no 109 inventory
+- no activation
+- no Stage-3 mutation
+- no CapVer/Path/Projection/D-10 runtime implementation.
+
+### 8.15.7 — Test and Regression Results
+
+IC Persistence:
+
+**23 passed / 110 assertions / EC=0**
+
+FS-01-ID:
+
+**22 passed / 85 assertions / EC=0**
+
+B7:
+
+**15 passed / 239 assertions / EC=0**
+
+Environment:
+
+Docker `backend-test` + PostgreSQL.
+
+Regression:
+
+**PASS** — no IC-caused FS-01-ID/B7 persistence regression.
+
+Static/syntax verification:
+
+**PASS**
+
+IC implementation diff-check:
+
+**PASS**
+
+Unauthorized staged paths:
+
+**0**
+
+### 8.15.8 — IC Persistence Commit
+
+Commit created:
+
+`814ae0661b1ab2d30392917a30f31bdc33802a4f`
+
+Subject:
+
+`feat(research): add IC persistence`
+
+Parent:
+
+`097583a97954edaac812367577d8b48cafb7610a`
+
+Commit scope:
+
+**15 authorized files only**
+
+No CapVer / Path / Projection / Onboarding / D-10 / Stage-3 / B7 / FS-01-ID / Membership / CSQ / Composer / inventory / activation changes were included.
+
+### 8.15.9 — Push-State Reconciliation
+
+The first implementation execution report stated that push had not been executed because approval was skipped and recorded local ahead=1 / behind=0.
+
+A subsequent final Push + Post-Push forensic check established that the remote had already advanced to the same implementation commit:
+
+Local:
+`814ae0661b1ab2d30392917a30f31bdc33802a4f`
+
+Remote:
+`814ae0661b1ab2d30392917a30f31bdc33802a4f`
+
+Ahead / behind:
+**0 / 0**
+
+Therefore no additional push was required. The commit was already present remotely as:
+
+`097583a..814ae06`
+
+The final state was treated as:
+
+**A — IC PERSISTENCE PUSH + POST-PUSH VERIFICATION SUCCESSFUL**
+
+This is a reconciliation of the two reports: the earlier report was a pre-push snapshot; the later report verified that the remote had subsequently fast-forwarded. No force push or destructive Git operation was used.
+
+### 8.15.10 — Final IC Persistence State
+
+IC Persistence is now:
+
+**IMPLEMENTED + TESTED + COMMITTED + PUSHED**
+
+Final Git state:
+
+- Branch: `phase-18-m18-ai-marketing-communications`
+- Local HEAD: `814ae0661b1ab2d30392917a30f31bdc33802a4f`
+- Remote HEAD: `814ae0661b1ab2d30392917a30f31bdc33802a4f`
+- Ahead / behind: 0 / 0
+- Staged: EMPTY
+- Protected WIP: 36
+- ADR-023: CLEAN
+
+IC test evidence retained:
+
+- IC: 23/23, 110 assertions
+- FS-01-ID: 22/22, 85 assertions
+- B7: 15/15, 239 assertions
+
+### 8.15.11 — Architectural Non-Changes Preserved
+
+The IC Persistence implementation did NOT implement or activate:
+
+- CapVer
+- Path
+- Projection/C9
+- Onboarding runtime
+- D-10
+- Stage-3
+- source adapters
+- selectors
+- 109 runtime inventory
+- source activation
+- Membership changes
+- B7 schema changes
+- CSQ changes
+- ScientificSearchQueryBuilder changes
+- AgriculturalEntityCatalog changes
+- ScientificQueryCompiler changes
+- AnswerComposer changes
+- R6 changes
+- canonical identity minting
+- SAME_AS.
+
+IC classification remains a bounded persistence authority only.
+
+In particular:
+
+**IC CLASSIFIED ≠ Cap VERIFIED ≠ Path SELECTED ≠ D-10 ACTIVE**
+
+and:
+
+**Membership ≠ Runtime Eligibility**
+
+### 8.15.12 — Final Push / Post-Push Master Prompt Preservation
+
+The final push gate required:
+
+1. verify local commit `814ae066`
+2. fetch remote
+3. verify no unexpected divergence
+4. require fast-forward-only conditions
+5. never use force / force-with-lease / no-verify
+6. verify local=remote after push
+7. verify ahead/behind=0/0
+8. verify staged EMPTY
+9. verify WIP=36
+10. verify ADR clean
+11. verify commit contains IC Persistence only
+12. stop after verification.
+
+The actual post-push result satisfied the required end state, and no second push was necessary because the remote already contained `814ae066`.
+
+### 8.15.13 — Conversation / Correction Chain
+
+The substantive conversation chain preserved here is:
+
+1. IC Persistence Design Acceptance was accepted with non-blocking clarifications.
+2. §8.14 ADR preservation mutation succeeded.
+3. §8.14 preservation was committed and pushed as:
+   `097583a97954edaac812367577d8b48cafb7610a`
+4. Implementation Authorization Gate returned:
+   **A — IMPLEMENTATION AUTHORIZED**
+5. Cursor showed an unsafe/preliminary push execution path; user selected **Skip**.
+6. A corrected post-Skip execution prompt enforced the safe execution order.
+7. IC Persistence implementation completed.
+8. IC 23/23, FS-01-ID 22/22, B7 15/15 passed.
+9. Commit `814ae066` was created.
+10. Final remote reconciliation verified `814ae066` was already pushed.
+11. Local and remote became equal at `814ae066`.
+12. The current stopping point became the Post-IC-Persistence Runtime Readiness / Next-Unit Discovery Gate.
+
+### 8.15.14 — Exact Current Stopping Point
+
+Current completed unit:
+
+**IC Persistence**
+
+Status:
+
+**CLOSED — IMPLEMENTED + TESTED + COMMITTED + PUSHED**
+
+Current branch/HEAD:
+
+`phase-18-m18-ai-marketing-communications`
+`814ae0661b1ab2d30392917a30f31bdc33802a4f`
+
+Protected WIP:
+
+**36**
+
+Current Git state:
+
+**local = remote; ahead/behind = 0/0; staged EMPTY**
+
+Current architectural state:
+
+- Membership Register remains membership authority only.
+- IC Persistence exists as durable persistence only.
+- CapVer remains separate.
+- Path remains separate.
+- Projection/C9 remains separate.
+- Onboarding remains design-only.
+- D-10 remains architecture-only.
+- Stage-3 remains unchanged.
+- No concrete source activation has occurred.
+
+### 8.15.15 — Exact Next Gate
+
+The exact next gate is:
+
+**Post-IC-Persistence Runtime Readiness / Next-Unit Discovery Gate**
+
+This gate must begin as a separate forensic/discovery gate.
+
+It must NOT automatically implement:
+
+- IC inventory
+- CapVer
+- Path
+- Projection
+- Onboarding
+- D-10
+- Stage-3
+- source activation.
+
+The next unit must be selected only after the runtime-readiness/dependency graph is inspected.
+
+### 8.15.16 — Preservation Invariants
+
+The following remain mandatory:
+
+- append-only ADR history
+- no deletion of previous decisions
+- no silent reconciliation of historical records
+- no implementation authorization inferred from preservation
+- no runtime activation inferred from membership
+- no capability inferred from classification
+- no path inferred from classification
+- no canonical identity inferred from name similarity
+- no source-native capability inferred from aggregator evidence
+- no CSQ semantic mutation to satisfy a provider
+- no Git destructive operation without explicit authorization
+- WIP protection remains mandatory
+- each implementation unit requires its own authorization and forensic closure.
+
+### 8.15.17 — Preservation Completion
+
+This §8.15 record preserves the substantive post-§8.14 prompts, reports, corrections, execution results, Git decisions, implementation/test results, push reconciliation, and exact stopping point available in the current project conversation.
+
+No implementation is authorized by this preservation record beyond the already-closed IC Persistence unit.
+
+**FINAL CURRENT STATUS: IC PERSISTENCE CLOSED.**
+
+**NEXT GATE: Post-IC-Persistence Runtime Readiness / Next-Unit Discovery Gate.**
+
