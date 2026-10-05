@@ -121,11 +121,20 @@ final class EloquentIntegrationClassificationRepository implements IntegrationCl
 
     public function findCurrentByAdrId(AdrMembershipId $adrId): ?IntegrationClassificationRecord
     {
-        $row = CghiaIntegrationClassification::query()
+        $rows = CghiaIntegrationClassification::query()
             ->where('adr_id', $adrId->value)
             ->where('lifecycle_state', IntegrationClassificationLifecycleState::ACTIVE->value)
             ->orderByDesc('id')
-            ->first();
+            ->limit(2)
+            ->get();
+
+        if ($rows->count() > 1) {
+            throw new IntegrationClassificationInvariantViolation(
+                'Multiple ACTIVE IC decisions for adr_id; current-head is corrupt and must fail closed.'
+            );
+        }
+
+        $row = $rows->first();
 
         return $row === null ? null : $this->mapRow($row);
     }

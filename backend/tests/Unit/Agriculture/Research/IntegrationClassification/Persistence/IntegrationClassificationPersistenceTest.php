@@ -16,6 +16,7 @@ use App\Services\Agriculture\Research\IntegrationClassification\Persistence\Inte
 use App\Services\Agriculture\Research\IntegrationClassification\Persistence\IntegrationClassificationLifecycleState;
 use App\Services\Agriculture\Research\IntegrationClassification\Persistence\IntegrationClassificationPersistenceContract;
 use App\Services\Agriculture\Research\IntegrationClassification\Persistence\IntegrationClassificationRecord;
+use App\Services\Agriculture\Research\IntegrationClassification\Persistence\IntegrationClassificationRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -601,6 +602,175 @@ final class IntegrationClassificationPersistenceTest extends TestCase
         $this->assertFalse(Schema::hasColumn(IntegrationClassificationPersistenceContract::TABLE, 'source_key'));
     }
 
+    public function test_exactly_one_active_returns_current_record(): void
+    {
+        $record = $this->persistFixture(
+            adrId: 'ABSTRACT_IC_CURRENT',
+            decisionId: 'ic-dec-current',
+            status: ClassificationStatus::CLASSIFIED,
+            modalities: ['api'],
+            nature: IntegrationNature::SOURCE_NATIVE,
+            boundary: IntegrationBoundary::PROTOCOL_FAMILY_ADAPTER,
+            fingerprint: 'fp-current',
+            idempotencyKey: 'ic:current',
+        );
+
+        $current = $this->repo->findCurrentByAdrId(AdrMembershipId::fromString('ABSTRACT_IC_CURRENT'));
+        $this->assertNotNull($current);
+        $this->assertSame($record->persistenceRecordId->value, $current->persistenceRecordId->value);
+        $this->assertSame('ic-dec-current', $current->classificationDecisionIdentity->value);
+        $this->assertSame(IntegrationClassificationLifecycleState::ACTIVE, $current->lifecycleState);
+    }
+
+    public function test_no_active_and_unknown_adr_return_null_unclassified(): void
+    {
+        $this->assertNull(
+            $this->repo->findCurrentByAdrId(AdrMembershipId::fromString('ABSTRACT_UNKNOWN_SEAT_IC'))
+        );
+        $this->assertSame(
+            ClassificationStatus::UNCLASSIFIED,
+            IntegrationClassificationRecord::missingImpliesUnclassified()
+        );
+        $this->assertSame(0, CghiaIntegrationClassification::query()->count());
+    }
+
+    public function test_only_superseded_returns_null_for_current(): void
+    {
+        $this->insertCorruptLifecycleRow(
+            adrId: 'ABSTRACT_IC_SUPERSEDED_ONLY',
+            decisionId: 'ic-dec-sup-only',
+            idempotencyKey: 'ic:sup-only',
+            fingerprint: 'fp-sup-only',
+            lifecycle: IntegrationClassificationLifecycleState::SUPERSEDED,
+        );
+
+        $this->assertSame(
+            1,
+            CghiaIntegrationClassification::query()
+                ->where('adr_id', 'ABSTRACT_IC_SUPERSEDED_ONLY')
+                ->where('lifecycle_state', IntegrationClassificationLifecycleState::SUPERSEDED->value)
+                ->count()
+        );
+        $this->assertSame(
+            0,
+            CghiaIntegrationClassification::query()
+                ->where('adr_id', 'ABSTRACT_IC_SUPERSEDED_ONLY')
+                ->where('lifecycle_state', IntegrationClassificationLifecycleState::ACTIVE->value)
+                ->count()
+        );
+        $this->assertNull(
+            $this->repo->findCurrentByAdrId(AdrMembershipId::fromString('ABSTRACT_IC_SUPERSEDED_ONLY'))
+        );
+    }
+
+    public function test_only_invalidated_returns_null_for_current(): void
+    {
+        $record = $this->persistFixture(
+            adrId: 'ABSTRACT_IC_INVALIDATED_ONLY',
+            decisionId: 'ic-dec-inv-only',
+            status: ClassificationStatus::CLASSIFIED,
+            modalities: ['api'],
+            nature: IntegrationNature::SOURCE_NATIVE,
+            boundary: IntegrationBoundary::PROTOCOL_FAMILY_ADAPTER,
+            fingerprint: 'fp-inv-only',
+            idempotencyKey: 'ic:inv-only',
+        );
+        $this->repo->invalidate($record->persistenceRecordId);
+
+        $this->assertSame(
+            1,
+            CghiaIntegrationClassification::query()
+                ->where('adr_id', 'ABSTRACT_IC_INVALIDATED_ONLY')
+                ->where('lifecycle_state', IntegrationClassificationLifecycleState::INVALIDATED->value)
+                ->count()
+        );
+        $this->assertNull(
+            $this->repo->findCurrentByAdrId(AdrMembershipId::fromString('ABSTRACT_IC_INVALIDATED_ONLY'))
+        );
+    }
+
+    public function test_multiple_active_fail_closed_does_not_return_latest(): void
+    {
+        $this->insertCorruptLifecycleRow(
+            adrId: 'ABSTRACT_IC_MULTI_ACTIVE',
+            decisionId: 'ic-dec-multi-a',
+            idempotencyKey: 'ic:multi-a',
+            fingerprint: 'fp-multi-a',
+            lifecycle: IntegrationClassificationLifecycleState::ACTIVE,
+        );
+        $this->insertCorruptLifecycleRow(
+            adrId: 'ABSTRACT_IC_MULTI_ACTIVE',
+            decisionId: 'ic-dec-multi-b',
+            idempotencyKey: 'ic:multi-b',
+            fingerprint: 'fp-multi-b',
+            lifecycle: IntegrationClassificationLifecycleState::ACTIVE,
+        );
+
+        $this->assertSame(
+            2,
+            CghiaIntegrationClassification::query()
+                ->where('adr_id', 'ABSTRACT_IC_MULTI_ACTIVE')
+                ->where('lifecycle_state', IntegrationClassificationLifecycleState::ACTIVE->value)
+                ->count()
+        );
+
+        $beforeCount = CghiaIntegrationClassification::query()->count();
+
+        try {
+            $this->repo->findCurrentByAdrId(AdrMembershipId::fromString('ABSTRACT_IC_MULTI_ACTIVE'));
+            $this->fail('Expected IntegrationClassificationInvariantViolation for multiple ACTIVE rows.');
+        } catch (IntegrationClassificationInvariantViolation $e) {
+            $this->assertStringContainsString('Multiple ACTIVE', $e->getMessage());
+        }
+
+        $this->assertSame($beforeCount, CghiaIntegrationClassification::query()->count());
+        $this->assertSame(
+            2,
+            CghiaIntegrationClassification::query()
+                ->where('adr_id', 'ABSTRACT_IC_MULTI_ACTIVE')
+                ->where('lifecycle_state', IntegrationClassificationLifecycleState::ACTIVE->value)
+                ->count()
+        );
+    }
+
+    public function test_find_current_read_path_does_not_write(): void
+    {
+        $this->persistFixture(
+            adrId: 'ABSTRACT_IC_READ_ONLY',
+            decisionId: 'ic-dec-ro',
+            status: ClassificationStatus::CLASSIFIED,
+            modalities: ['api'],
+            nature: IntegrationNature::SOURCE_NATIVE,
+            boundary: IntegrationBoundary::PROTOCOL_FAMILY_ADAPTER,
+            fingerprint: 'fp-ro',
+            idempotencyKey: 'ic:ro',
+        );
+
+        $before = CghiaIntegrationClassification::query()->get(['id', 'lifecycle_state', 'updated_at'])->toArray();
+        $current = $this->repo->findCurrentByAdrId(AdrMembershipId::fromString('ABSTRACT_IC_READ_ONLY'));
+        $this->assertNotNull($current);
+
+        $after = CghiaIntegrationClassification::query()->get(['id', 'lifecycle_state', 'updated_at'])->toArray();
+        $this->assertSame($before, $after);
+
+        $missingBefore = CghiaIntegrationClassification::query()->count();
+        $this->assertNull(
+            $this->repo->findCurrentByAdrId(AdrMembershipId::fromString('ABSTRACT_IC_READ_MISSING'))
+        );
+        $this->assertSame($missingBefore, CghiaIntegrationClassification::query()->count());
+    }
+
+    public function test_container_resolves_integration_classification_repository(): void
+    {
+        $resolved = $this->app->make(IntegrationClassificationRepository::class);
+
+        $this->assertInstanceOf(IntegrationClassificationRepository::class, $resolved);
+        $this->assertInstanceOf(EloquentIntegrationClassificationRepository::class, $resolved);
+
+        $again = $this->app->make(IntegrationClassificationRepository::class);
+        $this->assertSame($resolved, $again);
+    }
+
     /**
      * @param  list<string>  $modalities
      * @param  list<string>|null  $evidenceRefs
@@ -652,5 +822,44 @@ final class IntegrationClassificationPersistenceTest extends TestCase
             null,
             $metadata,
         );
+    }
+
+    private function insertCorruptLifecycleRow(
+        string $adrId,
+        string $decisionId,
+        string $idempotencyKey,
+        string $fingerprint,
+        IntegrationClassificationLifecycleState $lifecycle,
+    ): void {
+        CghiaIntegrationClassification::query()->create([
+            'adr_id' => $adrId,
+            'canonical_identity_id' => null,
+            'identity_binding_ref' => null,
+            'classification_decision_identity' => $decisionId,
+            'classification_status' => ClassificationStatus::CLASSIFIED->value,
+            'access_modality_claims' => ['api'],
+            'integration_nature' => IntegrationNature::SOURCE_NATIVE->value,
+            'integration_boundary' => IntegrationBoundary::PROTOCOL_FAMILY_ADAPTER->value,
+            'protocol_family' => null,
+            'source_specific_requirement' => false,
+            'source_specific_rationale' => null,
+            'path_family_hint' => null,
+            'existing_adapter_reference' => null,
+            'external_dependency_reference' => null,
+            'evidence_references' => [],
+            'evidence_fingerprint' => $fingerprint,
+            'license_reference' => null,
+            'access_reference' => null,
+            'reuse_reference' => null,
+            'rationale' => null,
+            'decision_actor' => 'corruption-fixture',
+            'verified_at' => '2026-10-02T00:00:00Z',
+            'decision_timestamp' => '2026-10-02T00:00:00Z',
+            'lifecycle_state' => $lifecycle->value,
+            'schema_version' => IntegrationClassificationRecord::CURRENT_SCHEMA_VERSION,
+            'idempotency_key' => $idempotencyKey,
+            'superseded_by' => null,
+            'metadata' => null,
+        ]);
     }
 }

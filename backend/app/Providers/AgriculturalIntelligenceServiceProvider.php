@@ -47,6 +47,8 @@ use App\Services\Agriculture\Intelligence\Orchestration\AnswerEligibilityResolve
 use App\Services\Agriculture\Intelligence\Orchestration\CapabilityDrivenSourceSelector;
 use App\Services\Agriculture\Intelligence\Orchestration\UniversalAnswerOrchestrator;
 use App\Services\Agriculture\Intelligence\Registry\AgriculturalProviderRegistry;
+use App\Services\Agriculture\Research\IntegrationClassification\Persistence\EloquentIntegrationClassificationRepository;
+use App\Services\Agriculture\Research\IntegrationClassification\Persistence\IntegrationClassificationRepository;
 use App\Services\Agriculture\Research\Search\Adapters\CrossRefScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\OpenAlexScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\SemanticScholarScientificSourceAdapter;
@@ -82,6 +84,11 @@ class AgriculturalIntelligenceServiceProvider extends ServiceProvider
         $this->app->singleton(AnswerEligibilityResolver::class);
         $this->app->singleton(CapabilityDrivenSourceSelector::class);
         $this->app->singleton(ProviderHealthChecker::class);
+
+        $this->app->singleton(
+            IntegrationClassificationRepository::class,
+            EloquentIntegrationClassificationRepository::class
+        );
 
         $this->app->singleton(LaravelStdioMcpToolClient::class);
         $this->app->singleton(McpToolClientInterface::class, LaravelStdioMcpToolClient::class);

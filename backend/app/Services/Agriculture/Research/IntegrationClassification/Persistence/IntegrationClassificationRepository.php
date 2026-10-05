@@ -59,7 +59,9 @@ interface IntegrationClassificationRepository
 
     /**
      * Current ACTIVE lifecycle row for adr_id, if any.
-     * Missing ⇒ logical UNCLASSIFIED (no automatic row).
+     * Missing / zero ACTIVE ⇒ null (logical UNCLASSIFIED; no automatic row).
+     * Exactly one ACTIVE ⇒ that record.
+     * More than one ACTIVE ⇒ IntegrationClassificationInvariantViolation (fail closed).
      */
     public function findCurrentByAdrId(AdrMembershipId $adrId): ?IntegrationClassificationRecord;
 
