@@ -2592,3 +2592,342 @@ No implementation is authorized by this preservation record beyond the already-c
 
 **NEXT GATE: Post-IC-Persistence Runtime Readiness / Next-Unit Discovery Gate.**
 
+
+## 8.16 — Capability Persistence Design Decisions (CPD-A–D)
+
+**Record type:** PRESERVATION / DESIGN DECISION RECORD
+
+This section preserves the Capability Persistence Design Decision Authorization Gate outcomes **CPD-A** through **CPD-D** after IC §8.15. It is **append-only architectural history**. It does **not** authorize Capability Store implementation, migrations, models, repositories, DI bindings, CapVer, population services, Runtime Source Registry, Stage-3 changes, CSQ/QueryBuilder changes, IC changes, Onboarding implementation, or runtime activation of any seat.
+
+### 8.16.1 — Purpose
+
+Preserve authorized architectural design decisions required before any future Capability Store Persistence Implementation Authorization, so that Cap cell persistence, Cap evidence references, seat-override layers, and CURRENT uniqueness can proceed later **without inventing** evidence semantics, lifecycle semantics, override identity, uniqueness rules, CapVer ownership, or population authority.
+
+### 8.16.2 — Scope
+
+| In scope | Out of scope |
+|----------|--------------|
+| Capability Evidence **reference** model for Persistence Acceptance | Cap Evidence body / artifact store |
+| Cap cell CURRENT / HISTORICAL persistence semantics | Cap Store migration / repository / ORM / DI implementation |
+| Seat-override persistence identity and coexistence | Shared canonical → seat inheritance (Population) |
+| CURRENT natural uniqueness and duplicate / fail-closed policy | CapVer producer / CapVer organizational ownership |
+| Write-authority boundary (storage vs assignment) | Runtime Source Registry; 109 onboarding; Stage-3; CSQ; QueryBuilder; IC |
+
+### 8.16.3 — Authority and Traceability
+
+1. Cap v2 domain under `backend/app/Services/Agriculture/Research/Capability/` (committed).
+2. ADR-023 D-10.5 (Capability Evidence Authority) and §8.11 Onboarding Cap field ownership (`capability_evidence_ref[]`, Cap dimension states).
+3. ADR-023 §8.14.8 (IC evidence model; **no universal Evidence System**; Cap evidence bodies out of IC).
+4. Capability Persistence forensic reconciliation and Design Decision Authorization Gate (CPD-A–D).
+5. WIP `backend/e2e-tmp/_cap_store_design_extract.md` remains **historical / non-authoritative** and is **not** promoted by this section.
+
+**Authority:** IU-02 Capability Store (scientific supportability). Cap Store ≠ CapVer. Cap Store ≠ IC. Cap Store ≠ Path / Projection / CSQ / Stage-3 / Membership.
+
+### 8.16.4 — Decision Summary
+
+| Decision ID | Title | Result |
+|-------------|-------|--------|
+| **CPD-A** | Capability Evidence Model | Opaque Cap-owned evidence reference strings; no Cap Evidence body entity; no CapVer-owned evidence store |
+| **CPD-B** | Cap Cell Current / History | Append-only immutable Cap cell facts; Cap-native CURRENT / HISTORICAL |
+| **CPD-C** | Seat Override Persistence Identity | Layer = `seat_override_applied`; shared + override CURRENT coexistence |
+| **CPD-D** | Natural Uniqueness / Duplicates | ≤1 CURRENT per (subject, dimension, override layer); CapRecordId unique; PG NULL-safe CURRENT uniqueness |
+| Implementation Authorization | — | **NO** (this section is preservation only) |
+
+### 8.16.5 — CPD-A — Capability Evidence Model
+
+For Persistence Acceptance, Capability Evidence is modeled as **opaque immutable evidence reference strings** owned by **Capability / Cap Store**.
+
+This decision does **not** introduce:
+
+- a separate Capability Evidence body entity;
+- a CapVer-owned evidence storage subsystem;
+- a universal Evidence System (reaffirm §8.14.8).
+
+#### Ownership split
+
+| Concern | Owner |
+|---------|-------|
+| Evidence **reference list** | Capability / Cap Store |
+| Universal evidence body / artifact store | **NOT INTRODUCED** |
+| VERIFIED **assignment** authority | CapVer (abstract) |
+| CapVer organizational ownership | **DEFERRED** |
+| IC evidence | IC-owned; orthogonal |
+| Identity evidence | Identity-owned; orthogonal |
+
+Cap Store ≠ CapVer. CapVer ≠ universal evidence store.
+
+#### Evidence identity
+
+References are opaque non-empty strings. They are **not**:
+
+- `CapabilityRecordId`
+- `CapabilityDecisionIdentity`
+- Stage-3 `sourceKey`
+- IC `classification_decision_identity`
+- `identity_binding_ref`
+
+Cap Persistence does **not** resolve evidence bodies and does **not** define a Cap Evidence body identity scheme.
+
+#### Cardinality
+
+One Cap cell **fact** → **N** opaque references (`capability_evidence_ref[]`).
+
+- Where the Cap state requires evidence: **N ≥ 1**.
+- Where evidence is optional: **N may be 0**.
+- The same opaque string **may** appear on multiple Cap cell facts (reference-level reuse). That does **not** create a shared Cap Evidence entity.
+- Ordering has **no** evaluation semantics (semantically a set).
+- Duplicate identical strings within one fact: **REJECT** (fail-closed).
+
+#### Evidence lifecycle
+
+References attached to an immutable Cap cell fact are **immutable with that fact**. Historical evidence is preserved; evidence history is **not overwritten**. A later Cap cell fact may carry different references.
+
+Do **not** equate evidence lifecycle with Cap cell CURRENT/HISTORICAL lifecycle, `CapabilityDecisionIdentity`, or IC ACTIVE/SUPERSEDE.
+
+### 8.16.6 — `capability_evidence_ref[]`
+
+Meaning: opaque Capability-owned references to external/supporting evidence artifacts that justify a Cap cell claim.
+
+| Attribute | Decision |
+|-----------|----------|
+| Owner | Capability (IU-02) |
+| Persist association | Cap cell persistence **fact** (CPD-A Option A) |
+| Mutability | Immutable once recorded on a fact |
+| Historical | Frozen on HISTORICAL facts; new CURRENT facts may carry new refs |
+| Current `CapabilityRecord` PHP shape | **Does not yet contain this field** |
+
+This ADR section does **not** modify `CapabilityRecord`. Domain / test alignment is deferred to a later Implementation Authorization / implementation unit.
+
+### 8.16.7 — State → Evidence Matrix (normative for Persist writes)
+
+| Cap state | Evidence | `limitation_text` | Notes |
+|-----------|----------|---------------------|-------|
+| **VERIFIED** | **Required** (≥1 opaque ref) | Optional | CapVer-quality claim |
+| **PARTIAL** | **Required** (≥1 opaque ref) | **Required** (domain) | Documented limited support |
+| **UNAVAILABLE** | **Required** (≥1 opaque ref) | Optional | Supports negative claim |
+| **UNVERIFIED** | Optional / not required | Optional | Includes insufficient evidence |
+| **NOT_APPLICABLE** | Optional / not required | Optional | Structural N/A |
+| **MISSING** | Not persisted | — | Evaluator may derive UNVERIFIED; do **not** auto-insert UNVERIFIED |
+
+**Known domain/test alignment issue (deferred):** current Cap domain tests may construct VERIFIED CapRecords without evidence objects. Architectural Persist write policy still requires evidence for VERIFIED / PARTIAL / UNAVAILABLE. Do **not** modify tests in this preservation gate.
+
+**MISSING** remains a non-persisted evaluation condition (missing → UNVERIFIED). Explicit UNVERIFIED may be persisted only if later authorized; missing ≠ auto-persisted UNVERIFIED.
+
+### 8.16.8 — CPD-B — Cap Cell Current / History
+
+Capability cell persistence is **append-only immutable facts**.
+
+- A Cap state change creates a **new** Cap cell fact.
+- The previous CURRENT fact becomes **HISTORICAL**.
+- Cap claim fields are **not** mutated in place.
+- This fits the readonly `CapabilityRecord` domain model.
+
+#### Cap-native vocabulary
+
+Use:
+
+- **CURRENT**
+- **HISTORICAL**
+
+Do **not** use IC `ACTIVE` / `SUPERSEDED` terminology for Cap cells. Do **not** copy IC lifecycle enums or IC FK semantics into Cap.
+
+Exact database column names remain **implementation-deferred**. Representation may be an explicit CURRENT/HISTORICAL marker or equivalent.
+
+#### Current determinism
+
+CURRENT is **explicit**. Do **not** use `created_at`, `observed_at`, `verified_at`, or `snapshot_version` alone as a current pointer. Two reads of identical persisted state MUST produce the same CURRENT result. No "latest wins."
+
+#### History and evaluation
+
+HISTORICAL Cap facts are immutable and retained. They are **not** selected by default on Cap Store current-load. Current-load feeds `CapabilityRequirementEvaluator`. Historical facts are not silently mixed into ordinary evaluation.
+
+#### Supersession
+
+Insert new CURRENT fact; prior CURRENT → HISTORICAL. Transition must be **atomic** at implementation time. Exact SQL is not defined here.
+
+#### `CapabilityRecordId`
+
+`CapabilityRecordId` identifies the immutable Cap cell **fact** (stable identity of that fact). It is **not** DecisionIdentity, evidence identity, `sourceKey`, or IC classification decision identity. Logical continuity across time is the natural CURRENT uniqueness tuple (CPD-D), not DecisionIdentity.
+
+`CapabilityDecisionIdentity` remains an **evaluation snapshot** identity (Path/B7/Correlation consumers). It is **not** Cap cell PK, Cap version, current pointer, or evidence identity. `durable_correlation_records.capability_decision_identity` remains Correlation concern.
+
+### 8.16.9 — CPD-C — Seat Override Persistence Identity
+
+Override layer identity for persistence is:
+
+`CapabilitySubject` + `CapabilityDimension` + `seat_override_applied`
+
+| `seat_override_applied` | Meaning |
+|---------------------------|---------|
+| `false` | Shared / base layer for that subject |
+| `true` | Seat-override layer for that **same** subject |
+
+No additional `override_id`, `seat_id`, or `dossier_id` is introduced (not present in committed Cap domain).
+
+#### Shared + override coexistence
+
+Persistence **allows** simultaneously:
+
+- one CURRENT shared/base cell (`seat_override_applied = false`), and
+- one CURRENT override cell (`seat_override_applied = true`),
+
+for the same `CapabilitySubject` + `CapabilityDimension`.
+
+Evaluator retains **restrictive-wins** when both are supplied. Persistence does **not** collapse the two rows. Evaluator restrictive-wins is evaluation behavior only and does **not** authorize arbitrary database duplicates.
+
+#### Shared dossier inheritance
+
+**DEFERRED** to Capability Population Design.
+
+Committed evaluator uses exact `CapabilitySubject` matching and does **not** define canonical-shared → seat-scoped inheritance. Persistence identity is closed without inheritance.
+
+### 8.16.10 — CPD-D — Natural Uniqueness
+
+At most **one CURRENT** Cap cell fact exists for:
+
+`(adr_id, canonical_identity_id, dimension_family, dimension_code, seat_override_applied)`
+
+Historical facts may share the same natural tuple; they are distinguished by CURRENT/HISTORICAL lifecycle and by `CapabilityRecordId`.
+
+`CapabilityRecordId` is **globally unique** among Cap cell facts. Duplicate `CapabilityRecordId` is invalid.
+
+`capability_evidence_ref[]` does **not** participate in Cap cell uniqueness. Changing evidence for a new claim produces a **new** Cap cell fact.
+
+### 8.16.11 — PostgreSQL NULL Semantics
+
+`canonical_identity_id` may be NULL. Naive PostgreSQL UNIQUE treats NULLs as distinct, so CURRENT uniqueness must later use a dialect-safe strategy, including for example:
+
+- partial unique indexes separating NULL / non-NULL cases; or
+- `UNIQUE … NULLS NOT DISTINCT` where supported; or
+- an equivalent dialect-safe mechanism,
+
+plus application fail-closed on read if more than one CURRENT exists for the natural key.
+
+Exact DDL is **not** part of this preservation. Do **not** treat this section as a migration.
+
+### 8.16.12 — Duplicate Policy
+
+| Scenario | Policy |
+|----------|--------|
+| Duplicate `CapabilityRecordId` | **REJECT** |
+| Two CURRENT cells with the same natural tuple | **REJECT** / invariant violation |
+| Same subject + dimension + different override layers (both CURRENT) | **VALID** coexistence |
+| Historical rows with the same natural tuple | **VALID** |
+| Conflicting CURRENT same layer | **REJECT** |
+| Duplicate identical evidence ref in one fact | **REJECT** |
+| Same opaque evidence ref across multiple Cap facts | **VALID** |
+| Evaluator restrictive-wins | Evaluation only — not DB duplicate permission |
+
+### 8.16.13 — Fail-Closed Policy
+
+| Condition | Invariant |
+|-----------|-----------|
+| Ambiguous CURRENT (>1 same natural key) | **FAIL CLOSED** (no silent pick) |
+| Duplicate CURRENT same layer | Reject write / fail closed |
+| Malformed Cap cell | Fail closed |
+| PARTIAL without `limitation_text` | `CapabilityInvariantViolation` (domain) |
+| Invalid / empty evidence ref | Reject |
+| Missing required evidence for VERIFIED / PARTIAL / UNAVAILABLE | Reject Persist write |
+| Invalid override layer | Reject |
+| Invalid history transition | Reject |
+| Concrete exception class mapping | **DEFERRED** to implementation |
+
+### 8.16.14 — Write Authority
+
+| Concern | Decision |
+|---------|----------|
+| Cap Store may persist Cap cell facts + opaque refs | Yes (when Implementation Authorization later grants Persist) |
+| VERIFIED **assignment** | CapVer only |
+| CapVer organizational ownership | **DEFERRED** |
+| Cap Store may persist an already-authorized VERIFIED fact | Yes — without becoming CapVer |
+| PARTIAL / UNVERIFIED / UNAVAILABLE / NOT_APPLICABLE producers | **POPULATION AUTHORITY OPEN** — do not invent producers |
+| Persist until Population Design | **Writer-neutral** (empty store + current-load allowed under later Persist Implementation Authorization) |
+
+Enforcement of CapVer-only VERIFIED assignment belongs above repository and/or as defensive Persist write checks; exact enforcement placement is deferred to Implementation Authorization.
+
+### 8.16.15 — CapVer Boundary
+
+| Closed | Deferred |
+|--------|----------|
+| Cap Store ≠ CapVer | CapVer organizational ownership |
+| CapVer-only assignment of VERIFIED | CapVer producer implementation |
+| Cap Store stores opaque refs + Cap cell facts | CapVer-owned universal evidence body store (**not introduced**) |
+| IC must not hold Cap evidence bodies (§8.14) | — |
+
+### 8.16.16 — Domain Alignment (deferred)
+
+The current `CapabilityRecord` domain does not yet contain `capability_evidence_ref[]`. Current tests may construct states that would fail Persist write requirements under §8.16.7. That is a **deferred implementation/test alignment** item, not an error to fix in this preservation gate.
+
+### 8.16.17 — Deferred Items
+
+- CapVer organizational ownership
+- CapVer producer
+- Non-VERIFIED population services
+- Shared canonical → seat inheritance (Population Design)
+- `CapabilityRecord` evidence-field alignment
+- Test alignment for Persist write evidence requirements
+- Cap Store migration / repository / ORM / DI implementation
+- Exact exception classes
+- Cap Evidence body artifact schemes
+- Runtime Source Registry
+- 109 source onboarding
+- Stage-3 changes
+- CSQ / QueryBuilder / IC changes
+
+### 8.16.18 — Explicit Non-Goals / Non-Authorization
+
+This §8.16 record does **not** authorize:
+
+- Cap Store implementation
+- migration
+- repository
+- Eloquent model
+- DI binding
+- CapVer
+- population services
+- Runtime Source Registry
+- Stage-3 expansion
+- CSQ / QueryBuilder / IC changes
+- Onboarding / D-10 runtime implementation
+
+### 8.16.19 — WIP Disposition
+
+| WIP proposal (Cap Store Design extract) | Disposition |
+|-----------------------------------------|-------------|
+| Cap purpose / Cap v2 / subject / AND / B3–B6 | Already accepted in Cap domain (not reopened here) |
+| Restrictive-wins | Accepted (evaluation + Persist coexistence under CPD-C) |
+| Capability Evidence **entity** | **REJECTED** for Persistence Acceptance (CPD-A Option A) |
+| Shared dossier + seat inheritance | **DEFERRED** to Population |
+| Runtime Cap Store / migration authorization claims | **REJECTED** |
+| Capability Snapshot / Verification Event entities | **DEFERRED** / historical |
+| "Cap Store Design COMPLETE → Persist ready" | **HISTORICAL ONLY** |
+
+The WIP file itself remains untouched and non-authoritative.
+
+### 8.16.20 — Implementation Authorization Boundary
+
+**IMPLEMENTATION AUTHORIZATION = NO.**
+
+Completing this §8.16 preservation does **not** authorize Cap Store Persistence Implementation. After commit/push of this preservation record (when separately authorized), the exact next unit is:
+
+**Capability Store Persistence Implementation Authorization Gate**
+
+That gate must be explicitly requested and authorized later. It must not automatically invent CapVer, population services, Runtime Registry, Stage-3, CSQ, QueryBuilder, or IC changes.
+
+### 8.16.21 — Preservation Invariants
+
+- Append-only ADR history; no deletion or silent rewrite of §8.11 / D-10.5 / §8.14 / §8.15.
+- CPD-A–D identifiers remain stable; do not rename or merge.
+- Cap Store ≠ CapVer ≠ IC ≠ Path ≠ Membership ≠ Stage-3.
+- Missing Cap ≠ auto-persisted UNVERIFIED.
+- STALE ≠ auto VERIFIED (D-10.5 / Cap domain B4 remain).
+- WIP protection remains mandatory.
+- Each implementation unit requires its own authorization and forensic closure.
+
+### 8.16.22 — Preservation Completion
+
+This §8.16 record preserves the authorized Capability Persistence Design Decisions **CPD-A** through **CPD-D**.
+
+**FINAL STATUS FOR THIS RECORD: CAPABILITY PERSISTENCE DESIGN DECISIONS PRESERVED.**
+
+**NEXT GATE: Capability Store Persistence Implementation Authorization Gate (separate; not performed by this preservation).**
