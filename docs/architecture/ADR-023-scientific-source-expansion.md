@@ -3878,3 +3878,111 @@ This record does **not** authorize:
 - changes to FS-01-ID.
 
 **FINAL STATUS: IC PERSISTENCE INTEGRITY D1–D6 IMPLEMENTED IN COMMIT `2b856a2` (PUSHED) AND VERIFIED ON POSTGRESQL 16 AND SQLITE; THIS ADR RECORD UNCOMMITTED; IC NOT ACTIVATED.**
+
+
+---
+
+## 8.20 — Stop Point: CI Investigation Interrupted by Local Disk Exhaustion (2026-10-10)
+
+### 8.20.1 — Purpose and preservation rule
+
+This section is append-only. It preserves the latest user-provided CI investigation report, the IC Persistence Integrity Remediation execution prompt, and the current stopping point. It does not replace, rewrite, or delete any earlier ADR content. Historical reports remain historical evidence and must not be treated as a fresh Git/WIP verification.
+
+### 8.20.2 — Local environment failure
+
+The investigation stopped because the local machine ran out of disk space. Shell commands failed with `ENOSPC: no space left on device`, including a minimal liveness command. The shell session appeared stuck; attempting to retrieve GitHub Actions logs did not return exit statuses. The investigator did not free disk space or delete files because that would have been a mutating operation and was outside the read-only investigation scope.
+
+The likely affected disk was suspected to be the Windows system disk (possibly C:), but this was not confirmed. The cause of the disk exhaustion and the files consuming the space remain unknown.
+
+### 8.20.3 — CI findings preserved from the interrupted investigation
+
+Four GitHub Actions runs were reported as failed:
+
+| Run | Commit | Reported state |
+|---|---|---|
+| [37932365430](https://github.com/wsa-platform/WSA-Enterprise/actions/runs/37932365430) | `31a6ee3` | Completed / failure |
+| [37944382988](https://github.com/wsa-platform/WSA-Enterprise/actions/runs/37944382988) | `f7b9b71` | Completed / failure |
+| [37990122413](https://github.com/wsa-platform/WSA-Enterprise/actions/runs/37990122413) | `2b856a2` | Completed / failure |
+| [37993458720](https://github.com/wsa-platform/WSA-Enterprise/actions/runs/37993458720) | `ffea580` | Completed / failure |
+
+Confirmed from the available log evidence for run `37993458720`:
+- The backend, security, and stage10 jobs failed at container initialization because pulling `pgvector/pgvector:pg16` hit the unauthenticated Docker Hub pull rate limit; token requests to `auth.docker.io` also timed out. Three attempts ended with Docker pull exit code 1. Those jobs did not reach project tests in that run.
+- `openapi` and `docker-validate` passed in all four runs.
+- In the three earlier runs, stage10 reportedly passed. In the latest run it failed at image initialization, not at its tests.
+- The frontend `npm run build` and mobile `flutter test` steps failed in all four runs according to the workflow summary, but their actual logs were not retrieved. Their causes remain unknown.
+- The backend `php artisan test` and security `php artisan test --group=security` steps failed in the three earlier runs according to the workflow summary, but actual failing test names and errors were not retrieved. Their causes remain unknown.
+- The current run did not provide evidence that backend/security tests pass or fail once PostgreSQL is available, because those steps never executed.
+- The documentation-only nature of commit `ffea580` and earlier failures on commits predating it make attribution to that documentation change unlikely, but this is not a substitute for the missing logs.
+
+Run links:
+- https://github.com/wsa-platform/WSA-Enterprise/actions/runs/37993458720
+- https://github.com/wsa-platform/WSA-Enterprise/actions/runs/37990122413
+- https://github.com/wsa-platform/WSA-Enterprise/actions/runs/37944382988
+- https://github.com/wsa-platform/WSA-Enterprise/actions/runs/37932365430
+
+### 8.20.4 — CI diagnosis: confidence boundaries
+
+**Confirmed:** the Docker Hub rate limit / token timeout blocked container initialization for backend, security, and stage10 in run `37993458720`.
+
+**Not diagnosed:** frontend build failures, mobile tests, backend tests in the three earlier runs, and security tests in the three earlier runs. The log retrieval was interrupted before their actual errors could be captured. Do not infer root causes from exit codes alone.
+
+**Not verified:** whether the latest commit's tests pass after the Docker pull problem is resolved; whether the four runs have the same underlying test failure; and the complete end of the auth token error line.
+
+### 8.20.5 — Last known Git/WIP state (not re-verified at stop)
+
+Last verified immediately after the push:
+- Branch: `phase-18-m18-ai-marketing-communications`
+- HEAD: `ffea580a484861853f9c3786cf4d862d91e91cdf`
+- Local branch and `origin` were reported synchronized.
+- No staged changes were reported.
+- WIP inventory: 580 entries (14 modified files and 566 untracked files).
+- The latest push included commit `ffea580`, subject `docs(architecture): reconcile ADR-023 section 8.19`.
+
+**Important:** after disk exhaustion, Git status and WIP were not re-checked. Treat the branch/HEAD/WIP information above as the last known snapshot, not the current verified state. No local files, staging, commits, pushes, tests, migrations, or CI reruns were performed during the interrupted read-only investigation.
+
+### 8.20.6 — Safe resumption sequence
+
+1. Recover disk capacity using a careful Windows storage inspection; do not delete project files, untracked WIP, or repository data indiscriminately.
+2. Restart Cursor's terminal/shell environment and verify that basic commands complete and return exit statuses.
+3. Re-check branch, HEAD, upstream, staged changes, modified files, untracked files, and WIP fingerprint before any repository operation. Preserve all existing WIP.
+4. Resume read-only retrieval of the missing logs from the four recorded runs. Record exact failed steps, error text, and test names; do not rerun CI without separate approval.
+5. Keep CI diagnosis separate from IC Persistence remediation. Do not change workflows, authenticate Docker pulls, use a mirror, or rerun GitHub Actions without separate authorization.
+6. Resume the IC Persistence Integrity Remediation gate only after the local environment is stable and the current Git/WIP state is verified. The CI report alone does not close that gate.
+
+### 8.20.7 — Preserved IC Persistence Integrity Remediation master prompt
+
+The following execution brief was provided to Cursor. It is preserved here so the work can resume without reconstructing the prompt. Its restrictions remain part of the intended task.
+
+**Mission:** Complete IC Persistence Integrity Remediation, resolve verified integrity defects in scope, test on the actual supported database engine, and return evidence-backed gate status. This is continuation of existing work, not a new implementation or a repeat of the completed forensic audit.
+
+**Git/WIP safety:** Establish a read-only baseline before changes; preserve every modified, staged, and untracked file; use a path-level ownership map. Prohibited: reset, clean, stash, checkout, switch, restore, rebase, merge, cherry-pick, revert, deleting/overwriting unrelated WIP, staging unrelated files, commit, push, source activation, or unrelated CI changes. If a required file overlaps protected WIP and safe isolation is uncertain, stop that edit and report the conflict.
+
+**In-scope investigation and remediation:**
+- ACTIVE-record concurrency and uniqueness, with database-level enforcement where required by the contract; pre-existing duplicate ACTIVE rows require an explicit auditable repair rule.
+- Transaction boundaries, supersede ordering, rollback, and failure transitions; do not invent policy when the ADR is ambiguous.
+- Idempotency/replay: compare `evidence_references` order-insensitively using a sorted local copy; preserve duplicates and persisted ordering; genuinely different evidence must not match; preserve `computeKey()`/`persist()` signatures and the 18-field contract unless an approved change is indispensable.
+- Isolation and persist-vs-persist races, including uncommitted concurrent writers, unique violations, deadlocks, serialization failures, and bounded safe retries.
+- PostgreSQL-specific proof on PostgreSQL itself; SQLite is not an acceptable substitute for PostgreSQL guarantees. If PostgreSQL cannot run, mark the gate blocked.
+- Migration/deployment order, existing-data preflight, recovery paths, and stale verification behavior.
+- Only implement minimal justified changes for confirmed defects; never weaken tests or assertions merely to get a green result.
+
+**Execution phases:** (1) baseline and defect-to-file-to-test map; (2) minimal in-scope remediation; (3) focused, concurrency, idempotency, rollback, recovery, PostgreSQL, and regression tests; (4) acceptance audit mapping every finding to a fix and actual test evidence. Report exact commands, exit codes, test counts, database engine, and failures. Tests not executed must be marked NOT RUN.
+
+**Architectural constraints:** Inspect ADR-023 and existing IC decisions. Do not edit ADR during the implementation task; provide a proposed ADR closure delta separately. Do not activate IC, populate capabilities, create Runtime Source Registry, activate any of the 109 source seats, or change FS-01-ID. Do not begin Capability Verification or onboarding in this task.
+
+**Required final disposition:** Use exactly one:
+- `READY_FOR_FORMAL_CLOSURE`: all technical criteria are evidenced, PostgreSQL verification passed, and only separately authorized formal ADR closure remains.
+- `BLOCKED`: a required test, environment, architectural decision, or safety prerequisite remains unresolved.
+- `NOT_CLOSED`: an in-scope integrity defect remains.
+
+**Final report:** baseline Git/WIP, findings and root causes, files and migrations changed, test matrix with actual engine and evidence, concurrency/idempotency/supersede/rollback/recovery results, PostgreSQL proof, final diff and WIP preservation audit, proposed ADR delta, disposition, and one next action. No commit, push, source activation, or new workstream.
+
+### 8.20.8 — Explicit stopping point
+
+The user instructed to stop at this point and preserve the current state. No further shell/Git/CI investigation is authorized until the environment is recovered and the task is resumed.
+
+Current immediate blocker: local disk exhaustion (`ENOSPC`) and unresponsive shell.
+
+Next action: recover local disk capacity safely, reopen the shell, verify Git/WIP state, then finish read-only CI log collection. Afterward, return to IC Persistence Integrity Remediation without conflating it with the 109-source integration plan.
+
+No claim is made here that IC Persistence Integrity Remediation is closed. No claim is made that the current local WIP inventory remains exactly 580 entries.
