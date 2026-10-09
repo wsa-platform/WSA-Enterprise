@@ -44,18 +44,6 @@ final class EloquentIntegrationClassificationRepository implements IntegrationCl
         ?string $rationale = null,
         ?array $metadata = null,
     ): IntegrationClassificationRecord {
-        $existing = $this->findByIdempotencyKey($idempotencyKey);
-        if ($existing !== null) {
-            return $existing;
-        }
-
-        $current = $this->findCurrentByAdrId($adrId);
-        if ($current !== null) {
-            throw new IntegrationClassificationInvariantViolation(
-                'Cannot persist a second ACTIVE IC decision for adr_id; use supersede().'
-            );
-        }
-
         $attributes = IntegrationClassificationRecord::draftAttributes(
             $adrId,
             $classificationDecisionIdentity,
@@ -84,14 +72,39 @@ final class EloquentIntegrationClassificationRepository implements IntegrationCl
             $metadata,
         );
 
+        $existing = $this->findByIdempotencyKey($attributes['idempotency_key']);
+        if ($existing !== null) {
+            return $this->assertReplayMatches($existing, $attributes);
+        }
+
+        // The violation is resolved only after DB::transaction has rolled back (or rolled back to
+        // its savepoint): PostgreSQL rejects every statement inside an aborted transaction.
         try {
-            $row = CghiaIntegrationClassification::query()->create($attributes);
-        } catch (QueryException $e) {
-            if ($this->isUniqueIdempotencyViolation($e)) {
-                $replay = $this->findByIdempotencyKey($idempotencyKey);
-                if ($replay !== null) {
-                    return $replay;
+            $row = DB::transaction(function () use ($adrId, $attributes): CghiaIntegrationClassification {
+                if ($this->findCurrentByAdrId($adrId) !== null) {
+                    throw new IntegrationClassificationActiveConflict(
+                        'Cannot persist a second ACTIVE IC decision for adr_id; use supersede().'
+                    );
                 }
+
+                return CghiaIntegrationClassification::query()->create($attributes);
+            });
+        } catch (QueryException $e) {
+            if (! $this->isUniqueViolation($e)) {
+                throw $e;
+            }
+
+            $replay = $this->findByIdempotencyKey($attributes['idempotency_key']);
+            if ($replay !== null) {
+                return $this->assertReplayMatches($replay, $attributes);
+            }
+
+            if ($this->isSingleActiveViolation($e)) {
+                throw new IntegrationClassificationActiveConflict(
+                    'Cannot persist a second ACTIVE IC decision for adr_id; use supersede().',
+                    0,
+                    $e,
+                );
             }
 
             throw $e;
@@ -167,8 +180,7 @@ final class EloquentIntegrationClassificationRepository implements IntegrationCl
         ?string $rationale = null,
         ?array $metadata = null,
     ): IntegrationClassificationRecord {
-        return DB::transaction(function () use (
-            $priorId,
+        $attributes = IntegrationClassificationRecord::draftAttributes(
             $adrId,
             $classificationDecisionIdentity,
             $classificationStatus,
@@ -194,91 +206,196 @@ final class EloquentIntegrationClassificationRepository implements IntegrationCl
             $reuseReference,
             $rationale,
             $metadata,
-        ): IntegrationClassificationRecord {
-            $prior = CghiaIntegrationClassification::query()->lockForUpdate()->find($priorId->toInt());
-            if ($prior === null) {
-                throw new IntegrationClassificationInvariantViolation(
-                    'Cannot supersede: prior persistence_record_id not found.'
-                );
-            }
+        );
 
-            if ((string) $prior->adr_id !== $adrId->value) {
-                throw new IntegrationClassificationInvariantViolation(
-                    'Cannot supersede: adr_id mismatch between prior record and new decision.'
-                );
-            }
+        try {
+            return DB::transaction(function () use ($priorId, $adrId, $attributes): IntegrationClassificationRecord {
+                $prior = CghiaIntegrationClassification::query()->lockForUpdate()->find($priorId->toInt());
+                $this->assertSupersedablePriorIdentity($prior, $adrId);
 
-            if ((string) $prior->lifecycle_state !== IntegrationClassificationLifecycleState::ACTIVE->value) {
-                throw new IntegrationClassificationInvariantViolation(
-                    'Cannot supersede: prior record is not ACTIVE.'
-                );
-            }
+                $existing = $this->findByIdempotencyKey($attributes['idempotency_key']);
+                if ($existing !== null) {
+                    return $this->assertSupersedeReplayMatches($prior, $existing, $attributes);
+                }
 
-            // Temporarily clear ACTIVE so persist() single-ACTIVE invariant allows the new row.
-            $prior->lifecycle_state = IntegrationClassificationLifecycleState::SUPERSEDED->value;
-            $prior->save();
+                if ((string) $prior->lifecycle_state !== IntegrationClassificationLifecycleState::ACTIVE->value) {
+                    throw new IntegrationClassificationInvariantViolation(
+                        'Cannot supersede: prior record is not ACTIVE.'
+                    );
+                }
 
-            try {
-                $newRecord = $this->persist(
-                    $adrId,
-                    $classificationDecisionIdentity,
-                    $classificationStatus,
-                    $accessModalityClaims,
-                    $integrationNature,
-                    $integrationBoundary,
-                    $sourceSpecificRequirement,
-                    $evidenceFingerprint,
-                    $newIdempotencyKey,
-                    $decisionActor,
-                    $verifiedAt,
-                    $decisionTimestamp,
-                    $canonicalIdentityId,
-                    $identityBindingRef,
-                    $protocolFamily,
-                    $sourceSpecificRationale,
-                    $pathFamilyHint,
-                    $existingAdapterReference,
-                    $externalDependencyReference,
-                    $evidenceReferences,
-                    $licenseReference,
-                    $accessReference,
-                    $reuseReference,
-                    $rationale,
-                    $metadata,
-                );
-            } catch (\Throwable $e) {
-                $prior->lifecycle_state = IntegrationClassificationLifecycleState::ACTIVE->value;
+                // The partial unique index cannot be deferred, so the prior leaves ACTIVE first.
+                $prior->lifecycle_state = IntegrationClassificationLifecycleState::SUPERSEDED->value;
                 $prior->save();
+
+                if ($this->findCurrentByAdrId($adrId) !== null) {
+                    throw new IntegrationClassificationActiveConflict(
+                        'Cannot supersede: another ACTIVE IC decision exists for adr_id.'
+                    );
+                }
+
+                $row = CghiaIntegrationClassification::query()->create($attributes);
+
+                $prior->superseded_by = (int) $row->id;
+                $prior->save();
+
+                return $this->mapRow($row);
+            });
+        } catch (QueryException $e) {
+            if (! $this->isUniqueViolation($e)) {
                 throw $e;
             }
 
-            $prior->superseded_by = $newRecord->persistenceRecordId->toInt();
-            $prior->save();
+            $existing = $this->findByIdempotencyKey($attributes['idempotency_key']);
+            if ($existing !== null) {
+                $prior = CghiaIntegrationClassification::query()->find($priorId->toInt());
+                $this->assertSupersedablePriorIdentity($prior, $adrId);
 
-            return $newRecord;
-        });
+                return $this->assertSupersedeReplayMatches($prior, $existing, $attributes);
+            }
+
+            if ($this->isSingleActiveViolation($e)) {
+                throw new IntegrationClassificationActiveConflict(
+                    'Cannot supersede: another ACTIVE IC decision exists for adr_id.',
+                    0,
+                    $e,
+                );
+            }
+
+            throw $e;
+        }
     }
 
     public function invalidate(IntegrationClassificationRecordId $id): IntegrationClassificationRecord
     {
-        $row = CghiaIntegrationClassification::query()->find($id->toInt());
-        if ($row === null) {
+        return DB::transaction(function () use ($id): IntegrationClassificationRecord {
+            $row = CghiaIntegrationClassification::query()->lockForUpdate()->find($id->toInt());
+            if ($row === null) {
+                throw new IntegrationClassificationInvariantViolation(
+                    'Cannot invalidate: persistence_record_id not found.'
+                );
+            }
+
+            if ((string) $row->lifecycle_state !== IntegrationClassificationLifecycleState::ACTIVE->value) {
+                throw new IntegrationClassificationInvariantViolation(
+                    'Cannot invalidate: only ACTIVE records may be invalidated.'
+                );
+            }
+
+            // Lifecycle control only — domain columns on row remain immutable.
+            $row->lifecycle_state = IntegrationClassificationLifecycleState::INVALIDATED->value;
+            $row->save();
+
+            return $this->mapRow($row->fresh());
+        });
+    }
+
+    private function assertSupersedablePriorIdentity(?CghiaIntegrationClassification $prior, AdrMembershipId $adrId): void
+    {
+        if ($prior === null) {
             throw new IntegrationClassificationInvariantViolation(
-                'Cannot invalidate: persistence_record_id not found.'
+                'Cannot supersede: prior persistence_record_id not found.'
             );
         }
 
-        if ((string) $row->lifecycle_state !== IntegrationClassificationLifecycleState::ACTIVE->value) {
+        if ((string) $prior->adr_id !== $adrId->value) {
             throw new IntegrationClassificationInvariantViolation(
-                'Cannot invalidate: only ACTIVE records may be invalidated.'
+                'Cannot supersede: adr_id mismatch between prior record and new decision.'
+            );
+        }
+    }
+
+    /**
+     * A replayed supersede returns the replacement as stored (its lifecycle may have moved on);
+     * it never re-applies the transition and never links a key that does not belong to this prior.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function assertSupersedeReplayMatches(
+        CghiaIntegrationClassification $prior,
+        IntegrationClassificationRecord $existing,
+        array $attributes,
+    ): IntegrationClassificationRecord {
+        if ($existing->persistenceRecordId->toInt() === (int) $prior->id) {
+            throw new IntegrationClassificationIdempotencyConflict(
+                'Cannot supersede: newIdempotencyKey belongs to the prior record itself.'
             );
         }
 
-        // Lifecycle control only — domain columns on row remain immutable.
-        $row->lifecycle_state = IntegrationClassificationLifecycleState::INVALIDATED->value;
-        $row->save();
+        $this->assertReplayMatches($existing, $attributes);
 
-        return $this->mapRow($row->fresh());
+        if ($prior->superseded_by === null || (int) $prior->superseded_by !== $existing->persistenceRecordId->toInt()) {
+            throw new IntegrationClassificationIdempotencyConflict(
+                'Cannot supersede: newIdempotencyKey belongs to a record that is not the replacement of this prior.'
+            );
+        }
+
+        return $existing;
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes  Normalized draft attributes of the request.
+     */
+    private function assertReplayMatches(IntegrationClassificationRecord $existing, array $attributes): IntegrationClassificationRecord
+    {
+        $stored = $existing->toArray();
+        $mismatched = [];
+        foreach (IntegrationClassificationPersistenceContract::REPLAY_CONTRACT_FIELDS as $field) {
+            if ($this->replayComparable($field, $stored[$field] ?? null) !== $this->replayComparable($field, $attributes[$field] ?? null)) {
+                $mismatched[] = $field;
+            }
+        }
+
+        if ($mismatched !== []) {
+            throw new IntegrationClassificationIdempotencyConflict(
+                'idempotency_key is already bound to a different IC decision contract; mismatched fields: ['
+                .implode(', ', $mismatched).'].'
+            );
+        }
+
+        return $existing;
+    }
+
+    /**
+     * evidence_references is an unordered evidence set (ADR-023 §8.13.11): order is ignored, duplicates
+     * still count, and the stored order is never rewritten.
+     */
+    private function replayComparable(string $field, mixed $value): mixed
+    {
+        if ($field === 'evidence_references' && is_array($value)) {
+            sort($value, SORT_STRING);
+        }
+
+        return $value;
+    }
+
+    private function isUniqueViolation(QueryException $e): bool
+    {
+        $sqlState = (string) ($e->errorInfo[0] ?? $e->getCode());
+
+        return $sqlState === '23505'
+            || ($sqlState === '23000' && str_contains(strtolower($this->driverMessage($e)), 'unique constraint failed'));
+    }
+
+    private function isSingleActiveViolation(QueryException $e): bool
+    {
+        $message = $this->driverMessage($e);
+
+        return str_contains($message, '"'.IntegrationClassificationPersistenceContract::SINGLE_ACTIVE_INDEX.'"')
+            || str_contains($message, IntegrationClassificationPersistenceContract::TABLE.'.adr_id');
+    }
+
+    /**
+     * Driver message only: QueryException::getMessage() also embeds the SQL, which names every column.
+     */
+    private function driverMessage(QueryException $e): string
+    {
+        $message = $e->errorInfo[2] ?? null;
+        if (is_string($message) && $message !== '') {
+            return $message;
+        }
+
+        return $e->getPrevious()?->getMessage() ?? '';
     }
 
     private function mapRow(CghiaIntegrationClassification $row): IntegrationClassificationRecord
@@ -318,13 +435,5 @@ final class EloquentIntegrationClassificationRepository implements IntegrationCl
             $supersededBy,
             is_array($row->metadata) ? $row->metadata : null,
         );
-    }
-
-    private function isUniqueIdempotencyViolation(QueryException $e): bool
-    {
-        $message = strtolower($e->getMessage());
-
-        return str_contains($message, 'idempotency_key')
-            || (str_contains($message, 'unique') && str_contains($message, 'idempotency'));
     }
 }

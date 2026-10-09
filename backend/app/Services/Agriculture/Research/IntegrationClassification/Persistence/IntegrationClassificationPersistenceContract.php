@@ -13,6 +13,37 @@ final class IntegrationClassificationPersistenceContract
 
     public const TABLE = 'cghia_integration_classification_records';
 
+    /** Partial unique index: at most one ACTIVE row per adr_id. */
+    public const SINGLE_ACTIVE_INDEX = 'cghia_ic_records_single_active_uq';
+
+    /**
+     * Columns compared on idempotency replay. Excluded by design: free text
+     * (rationale, source_specific_rationale), provenance/wall clock (decision_actor,
+     * verified_at, decision_timestamp), non-authoritative metadata, and lifecycle/storage columns.
+     *
+     * @var list<string>
+     */
+    public const REPLAY_CONTRACT_FIELDS = [
+        'adr_id',
+        'classification_decision_identity',
+        'classification_status',
+        'canonical_identity_id',
+        'identity_binding_ref',
+        'access_modality_claims',
+        'integration_nature',
+        'integration_boundary',
+        'protocol_family',
+        'source_specific_requirement',
+        'path_family_hint',
+        'existing_adapter_reference',
+        'external_dependency_reference',
+        'evidence_references',
+        'evidence_fingerprint',
+        'license_reference',
+        'access_reference',
+        'reuse_reference',
+    ];
+
     /**
      * Access modality claim code strings (intentional vocabulary overlap with Cap AccessMethod;
      * split ownership — IC claims ≠ Cap-verified methods).

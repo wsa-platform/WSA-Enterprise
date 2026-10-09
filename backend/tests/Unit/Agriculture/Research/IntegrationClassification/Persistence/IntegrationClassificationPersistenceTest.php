@@ -691,6 +691,9 @@ final class IntegrationClassificationPersistenceTest extends TestCase
 
     public function test_multiple_active_fail_closed_does_not_return_latest(): void
     {
+        // Legacy corruption predating the single-ACTIVE index; the index would reject the second row.
+        DB::statement('DROP INDEX '.IntegrationClassificationPersistenceContract::SINGLE_ACTIVE_INDEX);
+
         $this->insertCorruptLifecycleRow(
             adrId: 'ABSTRACT_IC_MULTI_ACTIVE',
             decisionId: 'ic-dec-multi-a',
