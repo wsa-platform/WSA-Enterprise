@@ -3767,3 +3767,114 @@ Runtime readiness discovery does not authorize onboarding or activation. No earl
 **FINAL STATUS: CAPABILITY STORE PERSISTENCE IMPLEMENTED AND PUSHED; NO NEXT IMPLEMENTATION UNIT AUTHORIZED.**
 
 **RECOMMENDED NEXT GATE (NOT AUTHORIZED): CapVer Authority & Capability Population Design Gate.**
+
+## 8.19 — IC Persistence Integrity (D1–D6) Implementation Record
+
+**Status:** APPEND-ONLY CONTINUITY RECORD
+
+**Date:** 2026-10-09 (status reconciled 2026-10-10)
+
+**Scope:** Records the implementation and verification of the user-approved IC Persistence Integrity decisions D1–D6 for Integration Classification (IC) Persistence (§8.13–§8.15). The implementation is **committed and pushed** as `2b856a2fd235c677e5511320ee11d47687806364` (`fix(research): normalize IC evidence reference replay`; parent `f7b9b7105e4dd36ef9b9c97692bab39d91e19585`) on `phase-18-m18-ai-marketing-communications` [V]. This §8.19 record itself is still an **uncommitted** ADR-023 working-tree change; committing it requires separate user authorization. No earlier section is rewritten.
+
+Evidence labels: **[V]** verified by a run or inspection in this session (2026-10-09 to 2026-10-10); **[I]** inferred from cited evidence; **[U]** not verified.
+
+### 8.19.1 — Approved decisions and how they were applied
+
+| Decision | Applied as |
+|----------|-----------|
+| D1 = C | New migration `2026_10_09_190000_add_single_active_index_to_cghia_integration_classification_records.php` creates partial unique index `cghia_ic_records_single_active_uq` on `(adr_id) WHERE lifecycle_state = 'ACTIVE'`. The committed migration `2026_10_02_230000_…` is unchanged. Zero ACTIVE rows per `adr_id` stay valid; no anchor table or active pointer [V] |
+| D2 = C | `persist()` checks for an existing ACTIVE and inserts in one `DB::transaction`; a unique violation is resolved only after that transaction (or its savepoint, when nested) has rolled back, so no statement runs inside an aborted PostgreSQL transaction. `supersede()` runs lock → checks → transition → insert → pointer in one transaction without manual restore; the original exception propagates. `invalidate()` uses a transaction plus `lockForUpdate()`. Unique violations are classified by SQLSTATE (`23505`; SQLite `23000` + `UNIQUE constraint failed`) and by constraint name taken from the driver message, not from the SQL text. Other errors are rethrown unchanged. No write is retried; the only recovery after a unique violation is one read-only idempotency lookup [V] |
+| D3 = B | Replay requires equality on `IntegrationClassificationPersistenceContract::REPLAY_CONTRACT_FIELDS` (18 fields), compared after the normalization in `IntegrationClassificationRecord::draftAttributes()`: modality claims are a sorted set, optional references are trimmed with blank treated as null, null equals null, and the evidence-reference list (entries trimmed, null stored as empty) is compared as an unordered multiset: the repository compares sorted copies (`SORT_STRING`), so a different order alone is not a mismatch, while a changed, added, or removed entry is, and duplicates are kept and counted (whether duplicates carry meaning is not decided; see §8.19.5); the stored order is never rewritten (commit `2b856a2`). The compared fields are the 11 audit-candidate fields plus the IC-authoritative structured references (`identity_binding_ref`, `existing_adapter_reference`, `external_dependency_reference`, `evidence_references`, `license_reference`, `access_reference`, `reuse_reference`). Excluded fields: free text (`rationale`, `source_specific_rationale`), provenance and wall-clock fields (`decision_actor`, `verified_at`, `decision_timestamp`), non-authoritative `metadata`, and lifecycle/storage columns. Mismatch ⇒ `IntegrationClassificationIdempotencyConflict` listing field names only. A matching replay of a SUPERSEDED or INVALIDATED record returns that record as stored, with its `lifecycleState` visible; nothing is written or reactivated, and `findCurrentByAdrId()` remains the only current-head read. `persist()` signature and `IntegrationClassificationIdempotency::computeKey()` are unchanged; caller-supplied keys remain authoritative [V] |
+| D4 = B | `supersede()` order: validate the new payload → lock the prior → prior exists and shares `adr_id` → look up the new key. If the key exists, the stored replacement is returned only if it is not the prior itself, its contract matches (including `adr_id`), and `prior.superseded_by` points to it; otherwise `IntegrationClassificationIdempotencyConflict` with no write. If the key is new, the prior must be ACTIVE. A replacement is always a newly inserted row, so `superseded_by` cannot be self-referencing, cross-ADR, or cyclic. `invalidate()` and `supersede()` serialize on the prior's row lock; the loser is rejected as not ACTIVE. No new FK or CHECK constraint [V] |
+| D5 = A | Opt-in PostgreSQL path: `backend/phpunit.pgsql.xml` + `backend/tests/bootstrap-pgsql.php` on connection `pgsql_testing`. It requires explicit `DB_TEST_HOST`, `DB_TEST_PORT`, `DB_TEST_DATABASE`, `DB_TEST_USERNAME`, and `DB_TEST_PASSWORD`, plus `DB_TEST_ALLOW_DESTRUCTIVE_RESET` repeating the database name exactly. It refuses a database not ending in `_test` or listed in `FORBIDDEN_TEST_DATABASES`, a non-loopback host, a non-empty `DB_URL`/`DATABASE_URL`, and conflicting connection variables; before any test runs it checks, read-only, that the server holds no database other than the target and the PostgreSQL system databases (`tests/Support/PostgresTestDatabaseGuard.php`). It pins all `DB_*` variables to the test server, and never falls back to SQLite. The default `phpunit.xml` / `tests/bootstrap.php` SQLite path is unchanged [V] |
+| D6 = A+B | Before creating the index, the migration runs a read-only preflight. If any `adr_id` holds more than one ACTIVE row, it fails, naming each such `adr_id` with its count (at most 50 listed), and changes nothing. It has no repair, winner selection, or lifecycle rewrite. Unsupported drivers (anything other than pgsql or sqlite) fail explicitly. `down()` drops the index [V] |
+
+### 8.19.2 — Changed files (implementation commit `2b856a2`)
+
+Modified [V]:
+
+- `EloquentIntegrationClassificationRepository.php`: D2–D4 behaviour, including the order-insensitive `evidence_references` replay comparison (`replayComparable()`).
+- `IntegrationClassificationRepository.php`: PHPDoc contract only; signatures unchanged.
+- `IntegrationClassificationPersistenceContract.php`: adds `SINGLE_ACTIVE_INDEX` and `REPLAY_CONTRACT_FIELDS`.
+- `IntegrationClassificationInvariantViolation.php`: `final` removed so the two conflicts can subclass it; existing callers that catch it are unaffected.
+- `IntegrationClassificationPersistenceTest.php`: `test_multiple_active_fail_closed_does_not_return_latest` first drops the new index to model legacy pre-constraint corruption; its assertions are unchanged.
+
+Added [V]:
+
+- `IntegrationClassificationIdempotencyConflict.php`
+- `IntegrationClassificationActiveConflict.php`
+- The D1/D6 migration above
+- `phpunit.pgsql.xml`
+- `tests/bootstrap-pgsql.php`
+- `tests/Support/IntegrationClassificationFixtures.php`
+- `tests/Support/PostgresTestDatabaseGuard.php`: the D5 guard called by `tests/bootstrap-pgsql.php`.
+- `tests/Unit/Support/PostgresTestDatabaseGuardTest.php`: guard rejection and acceptance tests; no database connection.
+- `IntegrationClassificationPersistenceIntegrityTest.php`: engine-agnostic.
+- `tests/Pgsql/IntegrationClassificationPostgresConcurrencyTest.php`
+- `tests/Pgsql/bin/ic-invalidate-worker.php`: runs `invalidate()` in a separate process for the concurrency test.
+
+Commit `2b856a2` contains exactly these 16 paths (5 modified, 11 added) [V]. FS-01-ID, Capability Store, providers, `config/`, Docker, scripts, CI, and this ADR are not part of it [V].
+
+### 8.19.3 — Test evidence (2026-10-09)
+
+| Suite | Engine | Result | Label |
+|-------|--------|--------|-------|
+| IC persistence (30) + Identity Binding persistence (22) + `SourceIdentityDomainContractTest` (13), before the change (baseline) | SQLite `:memory:` | 65 passed / 299 assertions | [V] |
+| Earlier working-tree state, superseded by the commit-content rows below: IC (legacy 30 + integrity 51) + Identity Binding + Capability Store persistence | SQLite `:memory:` | 163 passed / 676 assertions | [V] |
+| Earlier working-tree state, superseded by the commit-content rows below: `phpunit.pgsql.xml`: IC legacy 30, IC integrity 51 (constraint, transaction, idempotency, lifecycle, migration preflight), 11 cross-connection tests | PostgreSQL 16.14 | 92 passed / 422 assertions | [V] |
+| PostgreSQL bootstrap refusal (missing `DB_TEST_*`, name `wsa_enterprise`, name without `_test`) | none (refused before autoload) | 3 of 3 refused | [V] |
+| Commit content: `phpunit.xml` over `tests/Unit/Agriculture/Research/IntegrationClassification`, `…/Identity`, `…/Capability`, and `tests/Unit/Support` (includes the guard tests and 3 unrelated `ScientificHttpRateLimitBudgetTest` tests) | SQLite `:memory:` | 204 passed / 800 assertions | [V] |
+| Commit content: full `phpunit.pgsql.xml` (`tests/Unit/Agriculture/Research/IntegrationClassification` + `tests/Pgsql`) | PostgreSQL 16.14 | 108 passed / 639 assertions | [V] |
+| New evidence-reference and supersede-recovery tests, against the code before `replayComparable()` (fail-first) | SQLite `:memory:` | 11 tests / 29 assertions; 4 errors, all `IntegrationClassificationIdempotencyConflict … [evidence_references]` on reordered references | [V] |
+| The same new tests plus the committed-competitor concurrency test | PostgreSQL 16.14 | 12 passed / 64 assertions | [V] |
+| `tests/bootstrap-pgsql.php` without `DB_TEST_ALLOW_DESTRUCTIVE_RESET` | none (configuration check) | refused, exit 1 | [V] |
+| Same PostgreSQL suite against the pre-change repository (counter-factual) | n/a | not executed | [U] |
+
+"Commit content" rows ran on 2026-10-09 against working-tree files whose diff for the 16 committed paths is byte-identical to commit `2b856a2` (SHA-256 `0B3CFEEBEC2143E130AECFD6C62A11C3A0068CFEF7D1967B37E8B46F45E13419`); they were not rerun after the commit [V].
+
+The PostgreSQL runs used a throwaway `postgres:16-alpine` container with tmpfs storage, no volume, and no published port, and the server held no database other than the test database and system databases [V]. Correction to the earlier wording of this paragraph: the 92-test run attached the test containers to Docker's default bridge network, where the compose `postgres` service publishes `0.0.0.0:5432`, so that database was reachable from the test container; it was not contacted [I]. The 108- and 12-test runs started the server with `--network none`, and the PHP container shared only that container's loopback-only network namespace [V]. No production, Render, or shared database was migrated or inspected [I].
+
+The cross-connection tests inject the competing request at the exact interleaving point, using an Eloquent model event in test code only, on a second independent PostgreSQL connection; one test instead runs `invalidate()` in a separate PHP process and polls `pg_blocking_pids` at 10 ms intervals until PostgreSQL reports it blocked. Lock waits are bounded by `lock_timeout` (SQLSTATE `55P03`); no fixed sleep is used to create an interleaving. They demonstrate:
+
+- a concurrent first write leaves exactly one ACTIVE, and the loser receives `IntegrationClassificationActiveConflict` caused by `23505`;
+- a concurrent same-key, same-contract request replays the committed record;
+- a concurrent same-key, different-contract request raises `IntegrationClassificationIdempotencyConflict`;
+- a unique violation inside a caller's transaction leaves that transaction usable;
+- an SQL error during supersede surfaces its original SQLSTATE (`22012`) and leaves the prior ACTIVE;
+- supersede vs supersede and supersede vs invalidate serialize without lost update, including an `invalidate()` that PostgreSQL reports blocked by an open supersede and that is rejected as not ACTIVE after it commits;
+- a `persist()` racing an open `supersede()` on the same `adr_id` receives `IntegrationClassificationActiveConflict` at each tested interleaving;
+- a supersede whose new key was already committed by another `adr_id` raises `IntegrationClassificationIdempotencyConflict` and leaves the prior ACTIVE (commit `2b856a2`).
+
+### 8.19.4 — PostgreSQL vs SQLite and guarantee limits
+
+- Concurrency guarantees are demonstrated on PostgreSQL only. SQLite `:memory:` cannot model cross-connection races. On SQLite the same partial index rejects duplicates and the logic tests pass [V].
+- The standard compose `backend-test` service still runs on SQLite because `tests/bootstrap.php` forces it. PostgreSQL verification requires invoking `phpunit.pgsql.xml` explicitly against a disposable `*_test` database [V].
+- Classifying a single-ACTIVE violation depends on the PostgreSQL constraint name in the driver message, or on the SQLite column list `<table>.adr_id`. Both were verified on the engines above [V]. Other engines are unsupported by the migration [V].
+- The preflight and `CREATE UNIQUE INDEX` run in the migration transaction. A duplicate committed between them makes index creation fail with a database error instead of the preflight message, which is still a safe failure [I].
+- Whether any deployed database holds duplicate ACTIVE IC rows was not checked. The deploy start script runs `migrate --force`, so such data would stop the migration with the preflight message until a reviewed manual repair is made [U]/[I].
+- `scripts/deploy-production.sh` starts the new containers (`up -d`, line 45) before `migrate --force` (line 48), so new code can serve before the single-active index exists [V]/[I].
+- Unique-violation recovery assumes READ COMMITTED, as the repository interface PHPDoc states. Under a caller transaction at REPEATABLE READ or SERIALIZABLE it is expected to fail closed; this is not tested [I]/[U].
+- In `supersede()`, the recovery sub-branch that returns a legitimate replacement after a unique violation is not exercised by any test; under READ COMMITTED the prior's row lock is expected to make it unreachable [I]. The `IntegrationClassificationActiveConflict` translation and the rethrow branch are tested on both engines, and the committed-competitor `IntegrationClassificationIdempotencyConflict` branch on PostgreSQL [V].
+- Two concurrent `persist()` calls that are both still uncommitted when they collide are not covered by a dedicated test [U].
+
+### 8.19.5 — Open items and non-authorization
+
+Still open:
+
+- committing this ADR record (separate authorization); the implementation itself is committed in `2b856a2`;
+- running the PostgreSQL suite in CI;
+- the counter-factual run against the pre-change repository;
+- a reviewed preflight on any real environment before deployment, and the deployment ordering in §8.19.4;
+- test coverage for REPEATABLE READ / SERIALIZABLE callers, for two uncommitted concurrent `persist()` calls, and for the legitimate-replacement recovery sub-branch (§8.19.4);
+- whether duplicate evidence references carry meaning; they are currently kept and counted, which is not a decision;
+- reconciling §8.14.6, which lists supersession as insert new ACTIVE → mark prior SUPERSEDED, with D2/D4, which mark the prior SUPERSEDED before inserting the replacement and look up the new key before requiring an ACTIVE prior. This is a documentation decision on an earlier section and is not made here.
+
+This record does **not** authorize:
+
+- an IC production writer or consumer, IC inventory population, or IC activation (D7);
+- CapVer or Capability population;
+- a Runtime Source Registry;
+- activation of any of the 109 seats;
+- changes to FS-01-ID.
+
+**FINAL STATUS: IC PERSISTENCE INTEGRITY D1–D6 IMPLEMENTED IN COMMIT `2b856a2` (PUSHED) AND VERIFIED ON POSTGRESQL 16 AND SQLITE; THIS ADR RECORD UNCOMMITTED; IC NOT ACTIVATED.**
