@@ -3656,3 +3656,114 @@ Do not assume that archival of this prompt equals implementation authorization.
 **FINAL STATUS: CONTINUITY MATERIAL PRESERVED; IMPLEMENTATION NOT YET EXECUTED.**
 
 **NEXT GATE: Capability Store Persistence Implementation Authorization Gate.**
+
+
+---
+
+## 8.18 — Capability Store Persistence Implementation and Post-Persistence Readiness Record
+
+**Status:** APPEND-ONLY CONTINUITY RECORD
+
+**Date:** 2026-10-09
+
+**Scope:** Records (1) the implementation, commit, and push of Capability Store Persistence and (2) the read-only Post-Persistence Runtime Readiness discovery that followed. **Does not authorize any implementation unit.**
+
+**Chronology:** Follows §8.17. §8.17.2 and §8.17.8 recorded Capability Store Persistence as **NOT YET EXECUTED** at the time of that archive (archive HEAD `12f70590052325da8caf274b6f7e7576cf72339d`; archive committed as `0b463955669fe117a318898059683a62d1ecb63d`). That statement is preserved unchanged as historical record. This section records the later implementation as a new historical event and does not rewrite §8.17.
+
+Evidence labels used in this section:
+
+| Label | Meaning |
+|-------|---------|
+| **[V]** | Verified directly in the repository on 2026-10-09 |
+| **[R]** | Verified against the live remote (`git ls-remote`) on 2026-10-09 |
+| **[P]** | Reported by an earlier Cursor run on 2026-10-09; not re-run for this record |
+| **[I]** | Inferred from the cited evidence |
+| **[U]** | Not verified |
+
+### 8.18.1 — Implementation Record
+
+#### Authorization and delivery
+
+- Authorization: the §8.17.8 Capability Store Persistence Implementation Authorization Gate was first run and returned NOT READY because no test runtime was available [P]. According to the 2026-10-09 conversation record (user instructions, as relayed in earlier Cursor run reports; not repository artifacts), implementation then proceeded under a later user-issued Capability Store Persistence implementation prompt, followed by a user-issued final safe-completion prompt, and the push was authorized separately by the user [P]. These user instructions authorized only the bounded eight-file unit and its delivery; they are not ADR architectural decisions [I].
+- Implementation commit: `31a6ee3984c800ff771508f8e496ea75e2cd0938` — `feat(research): persist capability store facts` [V]
+- Parent: `0b463955669fe117a318898059683a62d1ecb63d` [V]
+- Scope: 8 files, 1139 insertions, 0 deletions [V]:
+  - `backend/app/Models/CghiaCapabilityCell.php`
+  - `backend/app/Providers/AgriculturalIntelligenceServiceProvider.php` (container binding only, +7/−0)
+  - `backend/app/Services/Agriculture/Research/Capability/Persistence/CapabilityCellFact.php`
+  - `backend/app/Services/Agriculture/Research/Capability/Persistence/CapabilityCellLifecycle.php`
+  - `backend/app/Services/Agriculture/Research/Capability/Persistence/CapabilityStoreRepository.php`
+  - `backend/app/Services/Agriculture/Research/Capability/Persistence/EloquentCapabilityStoreRepository.php`
+  - `backend/database/migrations/2026_10_09_140000_create_cghia_capability_cell_records_table.php`
+  - `backend/tests/Unit/Agriculture/Research/Capability/Persistence/CapabilityStorePersistenceTest.php`
+- Push: normal fast-forward `0b46395..31a6ee3` to `origin/phase-18-m18-ai-marketing-communications` on 2026-10-09. Live remote branch verified at `31a6ee3984c800ff771508f8e496ea75e2cd0938`; local / remote ahead-behind 0/0 [R].
+- Protected WIP was not included in the commit [V].
+
+#### CPD-A–D implementation boundaries
+
+| Decision | Implementation | Limitation |
+|----------|----------------|------------|
+| CPD-A evidence | `CapabilityCellFact` stores opaque `capability_evidence_ref[]`; rejects non-string, blank, whitespace-padded, and duplicate refs; requires ≥1 ref for VERIFIED / PARTIAL / UNAVAILABLE; set semantics (sorted) [V] | No evidence artifact resolver; refs are neither resolved nor checked for sufficiency (consistent with CPD-A) [V] |
+| CPD-B current / history | Explicit `cell_lifecycle` CURRENT / HISTORICAL; `supersedeCurrent()` is atomic (transaction, row lock, natural-key and CURRENT-head checks); repository exposes no update or delete operation [V] | Append-only and immutability are enforced at repository level [V]. The inspected migration defines no database trigger or privilege restriction enforcing append-only immutability [V]; operational database permissions and external database-level controls were not independently verified [U] |
+| CPD-C override layer | `seat_override_applied` is part of the natural key; shared and seat-override CURRENT facts coexist [V] | Shared → seat inheritance not implemented (deferred to Population Design, §8.16.9) [V] |
+| CPD-D uniqueness | `capability_record_id` unique; two partial unique indexes (canonical NULL / non-NULL) for single CURRENT; fail-closed on ambiguous CURRENT in `findCurrentFact()` and `loadCurrentForSubject()` [V] | PostgreSQL behaviour of the partial indexes is prior-run evidence [P] |
+
+Additional boundaries:
+
+- **CapVer-only assignment of VERIFIED is NOT enforced in code.** Any caller of `CapabilityStoreRepository::persistCurrent()` can persist a VERIFIED fact, and no column records the assigning authority. Enforcement placement remains deferred under §8.16.14 [V].
+- Missing cells are not auto-inserted as UNVERIFIED [V].
+- Restrictive-wins is applied by `CapabilityRequirementEvaluator::evaluate()`. The pre-existing `CapabilityRequirementEvaluator::resolveState()` returns the first matching record and does not apply restrictive-wins; it has no production caller and was not changed by this commit [V].
+- The commit does not modify CSQ, `ScientificSearchQueryBuilder`, `AgriculturalEntityCatalog`, Selector, Stage-3, or the orchestrator [V].
+
+#### Test evidence
+
+| Evidence | Result | Label |
+|----------|--------|-------|
+| Capability + Integration Classification + Identity unit tests, SQLite `:memory:` | 112 passed / 486 assertions (2026-10-09) | [V] |
+| `CapabilityStorePersistenceTest` | 27 test methods, included in the 112 | [V] |
+| PostgreSQL 16 on an isolated ephemeral container: migration up/down, partial unique indexes, repository behaviour | PASS | [P] — not re-run |
+| Full `tests/Unit/Agriculture/Research` suite | 899 passed / 21 failed | [P] — not re-run |
+
+The 21 failures (5 test classes) have **no verified pre-commit baseline** and are **not** recorded as proven pre-existing. None of the five classes references a file in this commit [V]; four depend on `CanonicalScientificQuestion` and/or `QueryUnderstandingService`, which carry uncommitted WIP [V]. Two of the classes (`EntitySpecificityPreservationContractTest`, `ScientificStatisticalClaimAlignerTest`) extend `Tests\TestCase` and therefore boot the application, including the provider modified by this commit [V]; whether that affects their results was not established [U]. Attribution of the failures to that WIP is an inference only [I].
+
+### 8.18.2 — Post-Persistence Runtime Readiness Discovery
+
+Read-only discovery on 2026-10-09. No code, schema, database, registry, or configuration was changed by the discovery.
+
+#### Findings
+
+- Membership register `ADR-023-109-MEMBERSHIP-REGISTER.v1.json` (`membership_revision` `109.v1`): 109 unique CURRENT seats; G1 22, G2 25, G3 14, G4 7, G5 19, G6 22; G3-15 absent by decision; 10 `dual_pairs` [V]. It remains **membership authority only** (D-10.3.1). Membership ≠ identity binding ≠ Capability facts ≠ adapter ≠ activation ≠ runtime readiness.
+- Seats with an ADR identity binding to a Stage-3 `sourceKey`, a Capability fact written by production code, an adapter, or a seat activation state: **none found** in the inspected scope [V]. No D-10.10 seat activation-state model was identified in the inspected implementation [I]. FAOSTAT-specific domain activation constructs (`FaoStatDomainActivationState`, `FaoStatActivationPolicy`) exist for FAOSTAT domains used by the Stage-3 `fao_stat` adapter [V]; they do not establish implementation of the general ADR seat activation-state model and do not activate any of the 109 seats [I].
+- Capability Store: **no production writer or reader** found in application code [V]. A search of `backend/` (excluding `vendor/`, `e2e-tmp/`, and `tests/`) for `CapabilityStoreRepository`, `EloquentCapabilityStoreRepository`, `CghiaCapabilityCell`, and `cghia_capability_cell_records` found, outside the Capability Store implementation files (persistence package, model, and migration), only the container binding in `AgriculturalIntelligenceServiceProvider` [V]. Contents of any non-test database: **not verified** [U].
+- CapVer: no class, service, or policy acting as CapVer was identified in `backend/app` (class / enum / interface name search for CapVer-equivalent authorities, plus inspection of the repository write path) [V].
+- Runtime Source Registry: **none identified** in the inspected implementation [I]. `ScientificSourceAdapterRegistry` is a fixed registry of five Stage-3 adapters (`openalex`, `crossref`, `semantic_scholar`, `consensus`, `fao_stat`) and is not a registry of the 109 seats [V].
+- The only production call site of `CapabilityRequirementEvaluator::evaluate()` found in `backend/app` is the private `Stage3CghiaCoexistenceBoundary::planAdrBoundSource()`, reached from `plan()` only in `cghia_attached` mode for `ADR_BOUND` keys [V]. `MultiSourceScientificSearchOrchestrator` calls `plan()` without Capability records [V].
+- Coexistence mode defaults to `legacy_only` (`config/agricultural_intelligence.php`, `CGHIA_COEXISTENCE_MODE`) [V]. `MultiSourceScientificSearchOrchestrator` is resolved through the Laravel container (constructor injection into `AgriculturalScientificSearchService`) [V]. The orchestrator declares `new Stage3CghiaCoexistenceBoundary()` and the boundary declares `new Stage3SourceKeyIdentityBridge()` as constructor defaults; the bridge's `array $adrBindingsBySourceKey` defaults to `[]` [V]. No explicit or contextual container binding for the orchestrator, boundary, or bridge, and no code supplying `adrBindingsBySourceKey`, was found in `backend/app`, `backend/config`, `backend/bootstrap`, or `backend/routes` [V]. Whether the container autowires the boundary and bridge or uses the declared defaults was not verified against framework source; on either path the inspected code supplies no ADR bindings, so `Stage3SourceKeyIdentityBridge::resolve()` classifies the five Stage-3 keys as `EXTERNAL_ONLY` in both coexistence modes [I]. In `legacy_only`, `Stage3CghiaCoexistenceBoundary::plan()` records that classification on each plan entry only; retrieval proceeds on the legacy path, no Capability/Path/Projection artifacts are attached, and the only event is `LEGACY_COMPATIBLE` [V]. In `cghia_attached`, an `EXTERNAL_ONLY` entry carries the events `EXTERNAL_ONLY_NO_ADR_BINDING`, `CAP_UNVERIFIED`, `PATH_DEFERRED`, and `LEGACY_COMPATIBLE`; retrieval remains permitted, `CapabilityRequirementEvaluator` is not invoked, and no Capability/Path/Projection artifacts are attached [V]. `EXTERNAL_ONLY` is an identity classification only; it does not indicate source readiness, Capability Store population, retrieval success, or activation [I]. The configured mode of any deployed environment was not verified [U].
+- IU-07 Durable Correlation Persistence (`3a14c76`), built on the IU-06 B7 Correlation Domain Contract (`d0a4dca`), is a separate track from Capability Store persistence [V]. The IU-07 repository is not bound in `backend/app/Providers` and is optional (default `null`) in `Stage3CghiaCoexistenceBoundary` [V]. Capability Store Persistence is not evidence about IU-06 / IU-07, and vice versa [I].
+- Ordering: D-10.2.1 (Capability-first runtime eligibility) and D-10.8.1 (verified per-seat IC artifact before runtime binding) both apply. No explicit decision fixing the order of Capability population versus IC inventory population was identified in the reviewed scope (D-10, ADR-023 §8.13–§8.16, and a keyword search of ADR-023) [I].
+
+#### Result
+
+**DISCOVERY COMPLETE. NO NEXT IMPLEMENTATION UNIT IS AUTHORIZED.**
+
+**Recommended next gate (recommendation only — NOT an accepted or authorized decision):** CapVer Authority & Capability Population Design Gate (design / governance only). Opening it requires an explicit user decision. Questions it would need to address include CapVer organizational ownership, auditability of the assigning authority, evidence sufficiency, STALE re-verification, shared → seat inheritance, and the order of Capability population versus IC inventory population.
+
+#### Non-authorization
+
+This §8.18 record does **not** authorize:
+
+- CapVer implementation or Capability population;
+- IC inventory population;
+- Runtime Source Registry;
+- Path or Projection population;
+- Onboarding;
+- adapters;
+- Selector, Stage-3, or orchestrator changes;
+- activation of any seat;
+- implementation of any other unit.
+
+Runtime readiness discovery does not authorize onboarding or activation. No earlier section is deleted or rewritten by this record.
+
+**FINAL STATUS: CAPABILITY STORE PERSISTENCE IMPLEMENTED AND PUSHED; NO NEXT IMPLEMENTATION UNIT AUTHORIZED.**
+
+**RECOMMENDED NEXT GATE (NOT AUTHORIZED): CapVer Authority & Capability Population Design Gate.**
