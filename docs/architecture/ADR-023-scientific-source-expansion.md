@@ -4146,3 +4146,636 @@ Stop without risky mutation if the branch/base cannot be reconciled, an ADR deci
 - Older ADR content: retained; no historical section intentionally removed or rewritten.
 - IC Persistence Integrity: remains `BLOCKED` until the required technical and architectural evidence is produced.
 - Source expansion: not claimed complete; no claim that the 109 sources are implemented or activated.
+
+
+---
+
+## 8.22 — IC Persistence Integrity: Post-Commit Verification and Corrections (2026-10-12)
+
+**Status:** APPEND-ONLY CONTINUITY RECORD
+
+**Scope:** Records the IC Persistence Integrity verification resumed under §8.20.6–§8.20.7 after the local environment recovered. It corrects stale statements in §8.19 and reconciles §8.14.6 without rewriting either section. Evidence labels follow §8.19: **[V]** verified by a run or inspection on 2026-10-12; **[I]** inferred; **[U]** not verified.
+
+### 8.22.1 — Repository state and status correction
+
+- Branch `phase-18-m18-ai-marketing-communications`, HEAD `ba24abda21f40359014b3e2b43927c059c3a397a`, equal to `origin`, nothing staged [V]. The WIP inventory was 580 entries (14 modified, 566 untracked) and was unchanged by this verification [V].
+- §8.19 was committed in `ffea580` and pushed [V]. The §8.19 statements "This §8.19 record itself is still an uncommitted…" and "THIS ADR RECORD UNCOMMITTED" are superseded by this fact.
+- Commit `2b856a2` contains the 16 IC paths listed in §8.19.2, and none of them changed afterwards [V]. The earlier proposed diff kept outside the repository (`wsa-ic-commit-proposed.diff`, 2026-10-09 22:16) lists the same 16 paths but predates the commit and differs from it; it is a historical artifact only [V].
+
+### 8.22.2 — Post-commit verification
+
+All runs used a snapshot of `ba24abda` produced by `git archive` outside the repository (95 in-scope files checked against Git, 0 mismatches), the image `wsa-enterprise-backend-test:latest` (PHP 8.4.24, PHPUnit 11.5.56, `pdo_pgsql`, `pdo_sqlite`), and the existing vendor volume mounted read-only [V].
+
+| Run | Engine | Result | Label |
+|-----|--------|--------|-------|
+| `phpunit.xml` over `tests/Unit/Agriculture/Research/IntegrationClassification`, `…/Identity`, `…/Capability`, `tests/Unit/Support` | SQLite `:memory:` | 204 passed / 800 assertions | [V] |
+| `phpunit.pgsql.xml` (full) | PostgreSQL 16.14 | 108 passed / 639 assertions | [V] |
+| `tests/bootstrap-pgsql.php`: no destructive opt-in; opt-in naming another database; non-loopback host; server also hosting `wsa_enterprise` | none / PostgreSQL 16.14 | 4 of 4 refused, exit 1; the valid configuration accepted | [V] |
+| Counter-factual: `f7b9b71` production code with the `2b856a2` tests, full `phpunit.pgsql.xml` | PostgreSQL 16.14 | 108 tests, 18 errors, 36 failures, including `25P02` (statement inside an aborted transaction) | [V] |
+
+These counts equal the "commit content" rows of §8.19.3, which were not rerun after the commit; they now are. The counter-factual closes the §8.19.3 [U] row: the suite discriminates between the pre-change and committed repository [V].
+
+The PostgreSQL servers were throwaway `postgres:16-alpine` containers with `--network none` (interface `lo` only, no routes), no published port, no mount, and tmpfs storage; the PHP container shared only that loopback namespace, and the server held only the test database and system databases [V]. No compose, shared, production, or legacy deployment database was contacted [V].
+
+### 8.22.3 — SQL-level concurrency probes
+
+Run with `psql` on the same disposable server against the migrated table [V]:
+
+- The §8.14.6 order (insert the new ACTIVE before marking the prior SUPERSEDED) fails immediately with `23505` on `cghia_ic_records_single_active_uq`.
+- Two writers both uncommitted, same `adr_id`, different keys: the second blocks until the first ends; it receives `23505` if the first commits and succeeds if the first rolls back. Exactly one ACTIVE row remains.
+- Same idempotency key from two uncommitted writers: the second receives `23505` on the idempotency-key unique index after the first commits.
+- A waiter at REPEATABLE READ or SERIALIZABLE receives `23505` (fail-closed); no `40001` was observed in these probes.
+
+These probes establish database behaviour only. Repository-level behaviour against an uncommitted competitor is covered by the test-only files `backend/tests/Pgsql/IntegrationClassificationPostgresIsolationTest.php` and `backend/tests/Pgsql/bin/ic-persist-worker.php` (working tree, not committed). The competitor runs in a worker process, and the test commits or rolls back only after PostgreSQL reports the worker blocked by the test connection. On the `ba24abda` snapshot plus these two files the new class passed 13 tests / 165 assertions in three consecutive runs, and the full `phpunit.pgsql.xml` passed 121 tests / 804 assertions on PostgreSQL 16.14 [V]. They show:
+
+- uncommitted competitor commits → the waiting `persist()` raises `IntegrationClassificationActiveConflict` caused by `23505`; it rolls back → the waiter's row becomes the single ACTIVE;
+- same key from an uncommitted competitor → replay of the committed record when the contract matches (including reordered evidence references), `IntegrationClassificationIdempotencyConflict` when it does not (including a duplicated evidence reference and a changed fingerprint);
+- REPEATABLE READ / SERIALIZABLE caller → fail-closed: `IntegrationClassificationActiveConflict` for a different key; for the same key the raw `UniqueConstraintViolationException` (`23505`) surfaces, because the replay lookup runs in the caller's snapshot — consistent with the documented READ COMMITTED assumption;
+- a `supersede()` waiting on the same prior with the same new key replays the committed replacement without any INSERT attempt, so the unique-violation recovery sub-branch is not reached under READ COMMITTED;
+- opposite-order supersede composition across two ADRs deadlocks; PostgreSQL aborts exactly one side (`40P01`), whose whole transaction rolls back, and each ADR ends with one ACTIVE pointed to by its prior;
+- a reader during an open supersede sees exactly the committed prior as current.
+
+### 8.22.4 — Reconciliation of §8.14.6
+
+The authoritative supersession order is the one recorded in §8.19.1 (D2/D4) and implemented in commit `2b856a2`: lock the prior → validate → mark the prior SUPERSEDED → insert the replacement as ACTIVE → set `superseded_by`, in one transaction. The §8.14.6 order ("insert new ACTIVE → mark prior SUPERSEDED") cannot execute under the non-deferrable partial unique index of D1 (§8.22.3). §8.14.6 is not rewritten; this section governs where they differ.
+
+### 8.22.5 — Duplicate evidence references
+
+User decision: `evidence_references` are compared order-insensitively, multiplicity is significant (`[a, b, b]` ≠ `[a, b]`), and the stored order is preserved. This matches the committed behaviour and its test (`duplicate reference is not merged`) and closes the corresponding §8.19.5 item.
+
+### 8.22.6 — IC-AUDIT findings
+
+- Closed with evidence: IC-AUDIT-001 (lost-update test is discriminating), IC-AUDIT-004 (destructive-run guard), IC-AUDIT-007 (persist after invalidate; persist racing supersede) [V].
+- IC-AUDIT-005 (§8.19 wording): resolved by `ffea580` and §8.22.1 [V].
+- IC-AUDIT-006 (READ COMMITTED assumption): documented in the repository interface; database and repository behaviour verified fail-closed (§8.22.3), with tests not yet committed.
+- IC-AUDIT-002 (PostgreSQL suite not in CI) and IC-AUDIT-003 (duplicate ACTIVE rows in a deployed database would stop `migrate --force`): open.
+
+### 8.22.7 — Remaining open items and disposition
+
+Open:
+
+- committing the two test-only files of §8.22.3 (separate authorization);
+- running the PostgreSQL suite in CI;
+- a reviewed duplicate-ACTIVE preflight on any real environment before deployment;
+- deployment ordering: `scripts/deploy-production.sh` starts new containers (line 45) before `migrate --force` (line 48).
+
+No in-scope integrity defect was found in the committed code. Disposition under §8.20.7: **BLOCKED** — the new tests are uncommitted, and the CI and real-environment prerequisites above remain unresolved.
+
+This record does **not** authorize an IC production writer or consumer, IC inventory population, IC activation, CapVer implementation, Capability population, a Runtime Source Registry, activation of any of the 109 seats, or changes to FS-01-ID.
+
+**FINAL STATUS: IC PERSISTENCE INTEGRITY VERIFIED POST-COMMIT ON POSTGRESQL 16.14 AND SQLITE; COUNTER-FACTUAL DISCRIMINATES; §8.14.6 RECONCILED; DISPOSITION BLOCKED; IC NOT ACTIVATED.**
+
+### 8.22.8 — Update from the Phase 1 execution (2026-10-12, later the same day)
+
+The statements above remain the record of the first verification. This subsection adds evidence produced later the same day under the Phase 1 directive (§8.24.1). All items are **[V]** unless marked.
+
+- **Worker hardening.** `finishWorker()` in `IntegrationClassificationPostgresIsolationTest` now reads worker output with a 60-second deadline, terminates the worker and fails the test when the deadline passes, and asserts that the worker exited with status 0 and printed a `returned` or `threw` outcome. A crashed, hung, or silent worker therefore fails the test instead of being read as a result. Assertions were added; none was removed or relaxed.
+- **Rerun.** On a `ba24abda` snapshot plus the hardened files, against a fresh `postgres:16-alpine` server (`--network none`, tmpfs storage, database `wsa_ic_ci_test`): the isolation class passed 13 tests / 201 assertions in three consecutive runs, and the full `phpunit.pgsql.xml` passed 121 tests / 840 assertions. `tests/bootstrap-pgsql.php` without `DB_TEST_ALLOW_DESTRUCTIVE_RESET` refused with exit 1. The server held only `wsa_ic_ci_test` and the system databases before and after. The 165 / 804 assertion counts in §8.22.3 belong to the pre-hardening file; the difference (36) is the new worker-exit assertions.
+- **Disposable-server disappearance.** During the first verification attempt the throwaway server vanished during setup. Docker events show an orderly client-issued stop (`kill`, `stop`, `die` with exit code 0, `destroy`) one to three seconds after a successful `psql` exec; there was no `oom` event and no non-zero exit. Classification: **lifecycle event, not a crash or resource exhaustion**. The issuing client was not identified because the event buffer had aged out; the most probable cause **[I]** is an overlapping teardown from another command in the same session that reused session-wide container-name variables. Mitigation: each run uses its own locally scoped container name. No recurrence in the later runs. Issuer: **UNKNOWN**.
+- **Snapshot artifact, not a defect.** On this Windows checkout (`core.autocrlf=true`) `git archive` writes the membership register with CRLF line endings, and `Adr023109MembershipRegisterContractTest` (which requires the deterministic LF serialization) failed once on such a snapshot. With the raw blob (`git cat-file`, object `af67418c1c070c6e53ffb3ab1eef62890149c4b7`, equal to HEAD) the SQLite subset passed 205 tests / 6043 assertions. The working-tree register is LF-only.
+- **IC-AUDIT-002.** A PostgreSQL CI job was added to the working tree (§8.25.5).
+
+The open items of §8.22.7 are re-evaluated in §8.25.
+
+---
+
+## 8.23 — CapVer and C+A Governance: Design Record (2026-10-12)
+
+**Status:** DESIGN RECORD — PENDING ARCHITECTURE-OWNER ACCEPTANCE. **Implementation authorized: NO.**
+
+**Scope:** Consolidates the CapVer authority model already decided in D-10.5, §8.16.7, and §8.16.13–§8.16.17 and confirmed against the code in §8.18, and states the evidence, lifecycle, rejection, conflict, audit, failure, and test requirements that a future implementation must satisfy. It does not change those decisions. Where an earlier section deferred a question, it stays deferred here.
+
+### 8.23.1 — Term and current implementation
+
+- "C+A" does not occur in any tracked ADR, contract, or code file, or in the working-tree extracts [V]. In this section it denotes the **Collector + Authority** separation named in the Phase 1 directive: collectors gather evidence and the authority assigns VERIFIED, with the evaluator and the Capability Store as adjacent roles. If a different meaning was intended, this section must be amended before acceptance.
+- No CapVer component, CapVer producer, or CapVer evidence store exists [V] (§8.18.2).
+- Present in `backend/app/Services/Agriculture/Research/Capability` [V]:
+  - `CapabilityState` (VERIFIED, PARTIAL, UNVERIFIED, UNAVAILABLE, NOT_APPLICABLE);
+  - `CapabilityRequirementEvaluator`, which applies restrictive-wins. Its only production call site is `Stage3CghiaCoexistenceBoundary::planAdrBoundSource()`, reached only in `cghia_attached` mode; the default mode is `legacy_only` (§8.18.2);
+  - `CapabilityStoreDomainContract`, which forbids promoting STALE evidence to VERIFIED;
+  - `CapabilityStoreRepository` and its Eloquent implementation, which are container-bound and have no production caller.
+- `FaoStatDomainVerifier` is an adapter-internal check of the Stage-3 FAOSTAT adapter. It is not CapVer and assigns no Cap state [V].
+
+### 8.23.2 — Roles and authority boundaries
+
+| Role | May | Must not |
+|------|-----|----------|
+| **Collector** (probe, documentation review, manual observation) | Gather evidence inputs and emit opaque evidence references with provenance | Assign or persist any Cap state; mark anything VERIFIED (D-10.5.7) |
+| **Evaluator** (`CapabilityRequirementEvaluator`) | Evaluate requirement satisfaction from CURRENT facts (missing → UNVERIFIED, AND semantics, restrictive-wins); produce a recommendation | Persist; promote; grant VERIFIED; treat restrictive-wins as permission for duplicate facts (§8.16.12) |
+| **CapVer** (abstract Governed Verification Authority) | Assign VERIFIED to one capability cell of one seat on CURRENT evidence | Activate a seat; bind identity; classify integration (IC); change membership; hold evidence bodies |
+| **Capability Store** | Persist already-authorized Cap facts and opaque evidence references; keep CURRENT and HISTORICAL facts | Decide or promote a state; auto-insert UNVERIFIED; become CapVer (§8.16.14) |
+| IC, Identity, Membership, Activation | Their own decisions (§8.14, D-10.3, D-09, D-10.10) | Imply a Cap state; CLASSIFIED ⇏ VERIFIED |
+
+CapVer organizational ownership, the CapVer producer, and the enforcement location of CapVer-only VERIFIED assignment remain **DEFERRED** (D-10.5.9, §8.16.14). Producers of PARTIAL, UNVERIFIED, UNAVAILABLE, and NOT_APPLICABLE facts remain **POPULATION AUTHORITY OPEN** (§8.16.14).
+
+### 8.23.3 — Evidence requirements
+
+- §8.16.7 is normative: VERIFIED, PARTIAL, and UNAVAILABLE require at least one opaque evidence reference; PARTIAL also requires limitation text; MISSING is never persisted.
+- VERIFIED requires CURRENT evidence. STALE or UNKNOWN freshness never yields VERIFIED (D-10.5.2).
+- Each decision covers one dimension of one seat. There is no source-wide VERIFIED. `content_about` ≠ `query_constrainable`, and license, access, and reuse are separate dimensions (D-10.5.4–5).
+- The subject is the `adr_id` seat. A dual-membership pair does not share a Capability subject (D-10.4.5).
+- A source existing, an endpoint answering, a mock passing, or an adapter class existing is not evidence of any capability.
+
+### 8.23.4 — Decision lifecycle and state transitions
+
+1. Collectors produce evidence references.
+2. The evaluator may produce a recommendation.
+3. CapVer decides VERIFIED, or declines.
+4. The Capability Store persists the authorized fact as a new CURRENT fact, and the previous CURRENT fact of the same cell becomes HISTORICAL (CPD-B, §8.16.8). Cap fields are never mutated in place.
+
+| Transition | Rule |
+|------------|------|
+| any → VERIFIED | CapVer only, with CURRENT evidence |
+| MISSING → any persisted state | Only through an authorized producer; MISSING itself is never written |
+| VERIFIED → another state | A new fact from an authorized producer. A downgrade producer is not yet designated (POPULATION AUTHORITY OPEN) |
+| evidence becomes STALE | No automatic promotion. Automatic demotion is not decided (OPEN) |
+| empty probe result | Not UNAVAILABLE (EMPTY_RESULT ≠ CAP_UNAVAILABLE, D-10.5.6) |
+
+### 8.23.5 — Validation and rejection
+
+A write is rejected, not repaired, when:
+- the required evidence is missing;
+- the override layer is invalid;
+- the history transition is invalid (§8.16.13);
+- VERIFIED is asserted without CapVer authorization;
+- STALE evidence is promoted (`CapabilityStoreDomainContract`).
+
+Concrete exception mapping is deferred to implementation (§8.16.13).
+
+### 8.23.6 — Persistence, provenance, conflicts, versioning, audit
+
+- **Persistence and provenance.** Facts are append-only and immutable, and evidence references are immutable once recorded (§8.16.6). Each decision must carry the deciding authority, a timestamp, and its evidence references. The identifier format for CapVer decisions is **DEFERRED**.
+- **Conflicts.** At most one CURRENT fact may exist per cell and override layer (§8.16.10–§8.16.12). A second concurrent writer must fail closed at the database, following the pattern verified for IC in §8.22.3. Conflicting evidence is decided by CapVer and never merged automatically.
+- **Versioning.** The Cap v2 vocabulary (`CapabilityState`) governs. The GO-1 vocabulary of `SOURCE-CAPABILITY-CONTRACT.md` (SUPPORTED / PARTIALLY_SUPPORTED / UNSUPPORTED / UNKNOWN) is historical (`HistoricalGo1CapabilityState`) and is not mapped automatically. Vocabulary changes require an ADR amendment.
+- **Audit.** HISTORICAL facts are retained and not loaded by default (§8.16.8). The history of a cell must be reconstructible from facts alone.
+
+### 8.23.7 — Failure modes
+
+| Failure | Required behaviour |
+|---------|--------------------|
+| CapVer unavailable or undecided | No promotion; existing facts unchanged; missing remains UNVERIFIED |
+| Evidence reference unresolvable | No VERIFIED |
+| Store write fails | No partial fact; the previous CURRENT fact stays CURRENT |
+| Probe error or empty result | Neither UNAVAILABLE nor VERIFIED |
+| Concurrent decisions on one cell | Exactly one succeeds; the other fails closed |
+
+### 8.23.8 — Test requirements for a future implementation
+
+- CapVer-only VERIFIED: every other role is rejected.
+- Evidence and freshness rules of §8.23.3.
+- CURRENT → HISTORICAL on supersession; no in-place mutation.
+- Single CURRENT per cell under concurrency, on PostgreSQL.
+- Rejection cases of §8.23.5.
+- No automatic population: an empty store evaluates to UNVERIFIED.
+- Seat isolation: no cross-seat or dual-pair inheritance.
+- Cap ≠ IC ≠ Identity ≠ Activation.
+
+### 8.23.9 — Prohibited shortcuts
+
+- Bulk or automatic VERIFIED for any group of seats, including all 109.
+- Deriving VERIFIED from membership, display name, IC classification, endpoint reachability, mocks, adapter existence, or documentation alone.
+- Auto-inserting UNVERIFIED, or treating absence as UNAVAILABLE.
+- Mapping GO-1 historical states to Cap v2 automatically.
+- Letting the Capability Store, an evaluator, a collector, or an adapter assign VERIFIED.
+- Activating a seat because of a Cap state (D-10.5.10).
+
+This section does **not** authorize a CapVer implementation, a CapVer producer or service, Capability population, CapVer organizational ownership, or activation of any seat.
+
+---
+
+## 8.24 — Phase 1 Design Gate (2026-10-12)
+
+**Status:** DESIGN GATE OUTCOME. **Implementation of the source-expansion foundation: BLOCKED.**
+
+### 8.24.1 — Two-phase plan
+
+User directive (2026-10-12): the Scientific Source Expansion has exactly two implementation phases.
+
+- **Phase 1:** architectural foundation, design decisions, IC Persistence Integrity closure, the approved source-integration implementation, and Phase 1 verification. The design gate opens Phase 1; it is not a separate phase.
+- **Phase 2:** comprehensive source acceptance, regression validation, controlled activation, and final source-by-source acceptance.
+
+There is no Phase 3. Earlier ADR sections do not mention this plan; it is recorded here and remains in force. §8.23–§8.25 are Phase 1 artifacts. Phase 2 has not started.
+
+### 8.24.2 — Runtime Source Registry
+
+| Question | Finding [V] |
+|----------|-------------|
+| Does a Runtime Source Registry exist? | **No** (§8.18.2) |
+| What registry runs today? | `ScientificSourceAdapterRegistry`: a hard-coded set of the five Stage-3 adapters (`openalex`, `crossref`, `semantic_scholar`, `consensus`, `fao_stat`), queried through `registeredSourceKeys()`, `get()`, and `resolveMany()`; known debt (D-05) |
+| How are sources identified? | By Stage-3 source-key strings. `Stage3SourceKeyIdentityBridge` receives no ADR bindings, so the five keys resolve as EXTERNAL and none is bound to an `adr_id` (§8.18.2) |
+| Are capabilities represented at the registry? | No |
+| Configuration-driven or hard-coded? | Hard-coded |
+| Seat literals in runtime code? | None in `backend/app`, `config`, `database`, `routes`, or `bootstrap` |
+
+**Decision.** Under D-01, any future Runtime Source Registry must extend the existing adapter + registry structure and must not become a parallel source-integration layer or a second source of truth beside the membership register (D-09).
+
+The minimum viable contract **proposed for later authorization** is:
+- entries keyed by `adr_id`;
+- each entry references, without copying, its IC record, identity binding, and Capability facts;
+- an activation state per D-10.10, plus explicit DISABLED, UNAVAILABLE, UNSUPPORTED, and FAILED execution outcomes;
+- adapter resolution by verified access family;
+- source identity and provenance carried into normalized results.
+
+Not implemented: no Implementation Authorization exists (D-10.15; §8.9.8 and §8.18, "NO NEXT IMPLEMENTATION UNIT IS AUTHORIZED").
+
+### 8.24.3 — Capability Contract
+
+- **Defined and implemented** [V]:
+  - Cap v2 states, `CapabilityDimensionFamily`, `CapabilityAccessMethod`, freshness, and cell lifecycle;
+  - the evaluator, the domain contract, and the store with its repository.
+
+  These are validated by unit tests and, for persistence, by the PostgreSQL suite.
+- **Documented only:** the per-source states in `docs/architecture/science-source-expansion/SOURCE-CAPABILITY-CONTRACT.md`. That file is untracked working-tree content, uses the historical GO-1 vocabulary, and is not runtime authority.
+- **Source-specific capabilities:** none is persisted or written by production code.
+- **Discrepancies:**
+  - the two vocabularies above are not mapped automatically (§8.23.6);
+  - `CapabilityRecord` still lacks the evidence-reference field required by §8.16.7 (§8.16.16).
+
+  Resolving either changes production code and requires Implementation Authorization. **Not resolved in Phase 1.**
+
+### 8.24.4 — The 109 seats and identity bindings
+
+- **Membership.** The register `ADR-023-109-MEMBERSHIP-REGISTER.v1.json` (`109.v1`) is authoritative under D-09. It holds 109 CURRENT seats in groups G1 22, G2 25, G3 14, G4 7, G5 19, and G6 22, with ten dual pairs. `Adr023109MembershipRegisterContractTest` passed [V].
+- **Identity.** `adr_id` values are unique and stable [V]. Display names are not identifiers (D-10.3.3), and dual pairs ≠ SAME_AS (D-10.4.2).
+- **Bindings.** Zero identity bindings are persisted. `IdentityBindingRepository` has no production writer [V]. `canonical_identity_id` stays NULL until SAME_AS evidence exists (D-10.3.4). G3-01 has a pinned external identity (GO-ID-G3-01) but no persisted binding.
+- **Policy.** Missing and ambiguous mappings remain explicit blockers.
+- **State separation.** Membership, identity binding, adapter implementation, capability evidence, acceptance, and activation are separate states (D-10). The source matrix (§8.25.8) records each of them per seat.
+
+### 8.24.5 — Adapter and protocol-family strategy
+
+- No seat can be assigned an access family. A family requires a verified per-seat integration classification (D-10.8), and none exists: the IC inventory is OPEN and IC persistence is BLOCKED (§8.25).
+- Families must not be inferred from names or websites (D-10.8.2).
+- **Strategy for later authorization:**
+  - one adapter per verified access family, with per-seat query constraints where needed;
+  - existing Stage-3 adapters are reused only for a seat whose identity binding proves the same resource;
+  - no 109 speculative adapters.
+
+**Implemented: none.**
+
+### 8.24.6 — `CGHIA T10+T8+T2`
+
+- **Evidence [V].** The combination appears only in two untracked working-tree extracts, `backend/e2e-tmp/_path_model_design_extract.md` and `backend/e2e-tmp/_projection_c9_design_extract.md`, as a "frozen input". It does not appear in this ADR or in any code.
+- **Conflict.** In those extracts, T2 is a family adapter plus a per-source Projection in which "Projection owns query". That conflicts with D-04, D-10.9.2, and the Phase 1 boundary, under which `ScientificSearchQueryBuilder` constructs source queries.
+- **Decision: BLOCKED.** It is not an approved design and is not implemented. Approval would require an explicit decision that reconciles T2 with D-04.
+
+### 8.24.7 — Gate outcome
+
+The design gate is documented. The foundation implementation of the Phase 1 directive §7 (registry, capability alignment, identity bindings, adapters, query projection, activation states) was **not started**, because each part depends on an unresolved decision:
+- Implementation Authorization (D-10.15);
+- CapVer ownership (§8.23);
+- per-seat IC (D-10.8);
+- IC closure (§8.25);
+- `T10+T8+T2` (§8.24.6).
+
+Work that does not prejudice those decisions was completed: IC verification and test hardening, the PostgreSQL CI job, §8.23, and the source matrix.
+
+### 8.24.8 — Open decisions and required authorization
+
+All of the following belong to the user or architecture owner:
+1. Accept or amend §8.23 and this section.
+2. Issue an Implementation Authorization Gate for the Runtime Source Registry contract of §8.24.2.
+3. Designate CapVer organizational ownership and its enforcement location.
+4. Authorize IC inventory population (per-seat integration classification).
+5. Approve, amend, or reject `T10+T8+T2`.
+6. Map, or explicitly not map, the GO-1 capability vocabulary.
+7. Decide the deployment order (§8.25.6).
+8. Decide whether same-key replay at REPEATABLE READ / SERIALIZABLE is a product requirement (§8.25.4).
+
+### 8.24.9 — Acceptance criteria for the rest of Phase 1
+
+1. Decisions 1–5 of §8.24.8 are recorded.
+2. IC is CLOSED under §8.25.9.
+3. The Runtime Source Registry and the Capability alignment are implemented under authorization, with focused tests.
+4. Each seat is either classified and bound with evidence, or listed as blocked with its reason.
+5. Family adapters are implemented only for verified families.
+6. The source matrix is updated from evidence only.
+7. All mandatory tests pass on SQLite and on isolated PostgreSQL.
+
+---
+
+## 8.25 — Phase 1 Implementation and Verification Report; IC Closure Delta (2026-10-12)
+
+**Status:** PHASE 1 BLOCKED. IC disposition: **BLOCKED**. Phase 2: **NOT STARTED**. The two-phase plan of §8.24.1 remains in force.
+
+### 8.25.1 — Baseline and changes
+
+- **Baseline [V].** Branch `phase-18-m18-ai-marketing-communications`, HEAD `ba24abda21f40359014b3e2b43927c059c3a397a`, equal to `origin` (0 ahead, 0 behind), nothing staged, 583 working-tree entries. Status and content fingerprints of the 580 pre-existing entries were taken before this execution and compared after it.
+- **Changed by this execution (uncommitted):**
+  - this ADR (§8.22.8, §8.23–§8.25, appended after §8.22);
+  - `.github/workflows/ci.yml` (new job only);
+  - `backend/tests/Pgsql/IntegrationClassificationPostgresIsolationTest.php` (hardening of §8.22.8);
+  - `docs/architecture/science-source-expansion/2026-10-12-PHASE-1-SOURCE-MATRIX.md` (new);
+  - `backend/tests/Pgsql/bin/ic-persist-worker.php`, which is unchanged since §8.22 and remains uncommitted.
+- **Not done.** No commit, push, deployment, migration against a real database, or source activation took place.
+
+### 8.25.2 — E2b: supersede ordering — **PASS**
+
+- **Contract.** Reconciled in §8.22.4. The governing order is D2/D4 as implemented in `2b856a2`, in one transaction:
+  1. lock the prior row `FOR UPDATE`;
+  2. validate;
+  3. mark the prior SUPERSEDED;
+  4. insert the replacement as ACTIVE;
+  5. set `superseded_by`.
+
+  Concurrent supersedes of one prior serialize on that row lock, and the partial unique index `cghia_ic_records_single_active_uq` enforces a single ACTIVE row per `adr_id`.
+- **Verified by the isolation class:**
+  - a waiting same-key supersede replays the committed replacement with zero INSERT attempts;
+  - a competitor rollback leaves the waiter's record ACTIVE.
+
+### 8.25.3 — E6: concurrent persist and isolation — **PASS for the documented contract**
+
+All of the following were verified on PostgreSQL 16.14 against committed database state (active-row counts, keys, pointers), not only exceptions:
+- uncommitted competitor commits / rolls back;
+- same-key replay, including reordered evidence;
+- same-key conflict on a duplicated reference or a changed fingerprint;
+- different-key conflict;
+- READ COMMITTED;
+- REPEATABLE READ and SERIALIZABLE;
+- deadlock.
+
+| Case | Result |
+|------|--------|
+| Application exceptions | `IntegrationClassificationActiveConflict`, `IntegrationClassificationIdempotencyConflict` |
+| Raw database error at REPEATABLE READ / SERIALIZABLE, same key | `UniqueConstraintViolationException` (`23505`) |
+| Deadlock | `40P01` (`DeadlockException`) on exactly one side, chosen by PostgreSQL. The test does not depend on which side loses. The loser's transaction rolls back completely, and each ADR keeps exactly one ACTIVE row |
+
+The repository interface documents READ COMMITTED as its isolation assumption (§8.22.6). The raw `23505` at stricter isolation is fail-closed: no duplicate ACTIVE row and no partial write. Same-key replay at stricter isolation is not part of the documented contract, and promising it would be a product decision (§8.24.8 item 8).
+
+### 8.25.4 — Isolation and test-infrastructure safety (Phase 1 directive §6.1) — **PASS**
+
+- The suite runs only through `phpunit.pgsql.xml` and `tests/bootstrap-pgsql.php`. The guard refuses unless:
+  - every `DB_TEST_*` variable is set and the database name ends in `_test`;
+  - the host is loopback and `DB_URL` / `DATABASE_URL` are empty;
+  - the destructive opt-in names the target database;
+  - the server holds nothing but the target and system databases.
+- The test file creates no containers. Its destructive operations (one `migrate:fresh`, then deletion of IC rows between tests) run only on that guarded connection.
+- Workers have a deadline and checked exit status (§8.22.8).
+- The disposable servers used here had no network and no published port. The Compose PostgreSQL service on port 5432 was not contacted.
+
+### 8.25.5 — IC-AUDIT-002: PostgreSQL in CI — **BLOCKED (external)**
+
+- `tests/bootstrap.php` still forces SQLite for the default suite [V].
+- A new job `backend-pgsql` in `.github/workflows/ci.yml` (+43 lines; existing jobs byte-identical; the file parses as YAML):
+  - provisions a job-scoped `postgres:16-alpine` service whose credential is derived from the run ID (no secret, no hard-coded password);
+  - installs `pdo_pgsql`;
+  - first asserts that `tests/bootstrap-pgsql.php` refuses without the destructive opt-in;
+  - then runs `phpunit.pgsql.xml` with the opt-in naming the service database.
+- The job fails if PostgreSQL is unreachable or the guard rejects the server, so it cannot fall back to SQLite. Its local equivalent passed (§8.22.8).
+- **Blocked on:** the job has not run on GitHub, because that requires commit and push authorization. Docker Hub pull limits (§8.20.3) remain an external risk. `actionlint` was not run.
+
+### 8.25.6 — E8: migration and deployment ordering — **BLOCKED (operational decision)**
+
+- **Current order [V].** `scripts/deploy-production.sh` pulls images, starts the new containers (`up -d --no-build --wait`, line 45), and only then runs `php artisan migrate --force` (line 48). `docs/deploy-production.md` documents the same order. `scripts/rollback-production.sh` runs no migrations. No other path runs migrations.
+- **Preflight [V].** Migration `2026_10_09_190000_add_single_active_index_to_cghia_integration_classification_records` is itself a read-only preflight: it refuses and names the `adr_id` values that hold several ACTIVE rows, changes nothing, and never picks a winner.
+- **Risk.**
+  - If the preflight fails, or until the migration completes, the new application code runs against a schema without the single-ACTIVE index.
+  - IC currently has no production writer, so the exposure is latent.
+  - No ADR section defines an approved deployment order.
+- **Proposed order, not implemented:**
+  1. Start the database only.
+  2. Run the read-only diagnostic of §8.25.7.
+  3. Run `migrate --force` in a one-off container (`run --rm --no-deps backend`).
+  4. Start the application containers.
+  5. Run the smoke checks.
+- **Blocked on.** Changing the production script is an operational decision, and it cannot be validated without staging or production execution, which this task does not authorize. **Requires:** an order decision, then validation in a staging environment.
+
+### 8.25.7 — IC-AUDIT-003: duplicate ACTIVE records — **PROCEDURE DEFINED; real environments UNKNOWN**
+
+- **Invariant.** Verified on isolated PostgreSQL (§8.22.3, §8.25.3). No real or shared database was inspected.
+- **Procedure for an authorized operator:**
+  - Run on a read-only connection (or `BEGIN READ ONLY`) of the target environment, under a role with `SELECT` on `cghia_integration_classification_records` only:
+
+    `SELECT adr_id, COUNT(*) AS active_count FROM cghia_integration_classification_records WHERE lifecycle_state = 'ACTIVE' GROUP BY adr_id HAVING COUNT(*) > 1 ORDER BY adr_id;`
+
+    This is the same predicate as the migration preflight.
+  - Expected output: zero rows. If the table is absent, the IC migrations have not run and there is nothing to check.
+  - Escalation: if any rows are returned, stop the deployment, do not run the migration, and do not modify data. Hand the listed `adr_id` values to the architecture owner for a reviewed manual repair; the migration header forbids automatic winner selection.
+
+### 8.25.8 — Source matrix (Phase 1 directive §8)
+
+- **Location:** [`science-source-expansion/2026-10-12-PHASE-1-SOURCE-MATRIX.md`](./science-source-expansion/2026-10-12-PHASE-1-SOURCE-MATRIX.md).
+- **Contents.** 109 rows, generated in register order from blob `af67418c` of `109.v1`. Display names were checked against the UTF-8 register (0 mismatches).
+
+| State | Seats |
+|-------|-------|
+| Membership CURRENT | 109 |
+| Verified access family | 0 |
+| Persisted identity binding | 0 |
+| Runtime Registry entry | 0 |
+| Capability fact | 0 |
+| Adapter IMPLEMENTED | 0 |
+| VERIFIED | 0 |
+| ACTIVE | 0 |
+| ACCEPTED | 0 |
+| BLOCKED | 109 |
+
+### 8.25.9 — Test evidence (this execution)
+
+Common environment for every row:
+- image `wsa-enterprise-backend-test:latest` (PHP 8.4.24, PHPUnit 11.5.56);
+- source: a `ba24abda` snapshot plus the working-tree test files, mounted read-only;
+- the existing vendor volume, mounted read-only;
+- `--network none`, or the network namespace of the disposable server only.
+
+| Command (inside the container) | Driver | Result | Exit |
+|--------------------------------|--------|--------|------|
+| `vendor/bin/phpunit -c phpunit.xml …/IntegrationClassification …/Identity …/Capability …/Membership tests/Unit/Support` | SQLite `:memory:` | 205 tests, 6043 assertions, 0 failures | 0 |
+| `php tests/bootstrap-pgsql.php` without the destructive opt-in | PostgreSQL 16 (`postgres:16-alpine`) | refused | 1 |
+| `vendor/bin/phpunit -c phpunit.pgsql.xml tests/Pgsql/IntegrationClassificationPostgresIsolationTest.php` (three consecutive runs) | PostgreSQL 16 | 13 tests, 201 assertions each | 0, 0, 0 |
+| `vendor/bin/phpunit -c phpunit.pgsql.xml` | PostgreSQL 16 | 121 tests, 840 assertions | 0 |
+
+Logs are kept outside the repository. No test was skipped, deleted, or weakened.
+
+### 8.25.10 — IC closure delta
+
+**IC may be CLOSED only when all of the following hold:**
+1. The test files of §8.22.3 are committed.
+2. The `backend-pgsql` job has passed on GitHub.
+3. The deployment order is decided and validated in staging.
+4. An authorized operator has run §8.25.7 on each real environment before deployment and recorded zero rows.
+
+| Item | Status |
+|------|--------|
+| E2b | PASS |
+| E6 / supersede race / deadlock | PASS |
+| Test-infrastructure safety | PASS |
+| Disposable-server disappearance | Classified (lifecycle); issuer UNKNOWN |
+| IC-AUDIT-002 | BLOCKED (commit and push authorization; GitHub run) |
+| E8 | BLOCKED (operational decision; staging validation) |
+| IC-AUDIT-003 | Procedure defined; real environments UNKNOWN |
+
+**IC disposition: BLOCKED.** No defect was found in the committed IC code.
+
+### 8.25.11 — Phase 1 status and authorizations required
+
+**Status: PHASE 1 BLOCKED.**
+
+Unmet mandatory gates:
+- Runtime Source Registry;
+- Capability alignment;
+- identity bindings;
+- family adapters;
+- IC closure;
+- `T10+T8+T2`.
+
+The decisions needed are listed in §8.24.8. Phase 2 must not start until Phase 1 passes its exit gate and the user authorizes it.
+
+Separate authorizations are still required:
+- a commit for each artifact of §8.25.1;
+- the push;
+- each decision of §8.24.8.
+
+This section does **not** authorize any of the above, any Implementation Unit, CapVer, Capability population, identity binding, a Runtime Source Registry, IC activation, deployment, or activation of any of the 109 seats.
+
+**FINAL STATUS: PHASE 1 BLOCKED; DESIGN GATE RECORDED (§8.23–§8.24), FOUNDATION IMPLEMENTATION NOT AUTHORIZED; IC VERIFIED ON ISOLATED POSTGRESQL, DISPOSITION BLOCKED; PHASE 2 NOT STARTED; NOTHING COMMITTED OR PUSHED.**
+
+---
+
+## 8.26 — Corrections, Remaining Design-Gate Items, and Consolidated Phase 1 Decision Package (2026-10-12)
+
+**Status:** APPEND-ONLY CORRECTION AND DECISION RECORD. No earlier section is edited. **[V]** means verified on 2026-10-12 by inspection or tooling; tests were not rerun because the code, tests, and configuration are byte-identical to those measured in §8.22.8 (same SHA-256 for both test files and for `ci.yml`).
+
+### 8.26.1 — Corrections
+
+**C-1 — Section-number collision with the published branch (verification result).**
+- **Finding [V].** `git ls-remote` shows the remote branch at `4dbf547811a09de47248e8a2e4a45c5a547d8632`. The local HEAD and the local remote-tracking ref are still `ba24abda`. The GitHub compare API shows that `4dbf547` is one commit ahead of `ba24abda` (0 behind). It changes only this ADR, adding 160 lines: a section numbered 8.21, "Conversation, Audit Reports, and Two-Phase Source Expansion Plan". The `ba24abda` copy of this ADR is a byte prefix of the `4dbf547` copy (blob `96140b9d57093fea65973eea9359e0600fb93e3f`).
+- **Effect.** As first written in the `ba24abda` working tree, the local sections numbered 8.21 to 8.25 were uncommitted and duplicated that published number. They must not be committed under their current numbers. On integration with `4dbf547`, the local sections 8.21, 8.22, 8.23, 8.24 and 8.25 become 8.22, 8.23, 8.24, 8.25 and 8.26, and every internal reference moves with them. The published section 8.21 stays unchanged and precedes them. The source matrix's references are renumbered in the same way. No local section has been renumbered yet, because integration requires a `fetch` that is not authorized.
+- **Type:** verification result.
+
+**C-2 — §8.24.1, the two-phase plan.**
+- **Old statement.** "Earlier ADR sections do not mention this plan."
+- **Correction.** That is true of `ba24abda` only. The published section 8.21.4 (`4dbf547`) already records the two-phase plan as the current planning decision. §8.24.1 restates that decision and is not its first record.
+- **Type:** verification result. It does not change the plan.
+
+**C-3 — §8.23, the C+A decision.**
+- **Old statement.** §8.23.1 expands "C+A" as "Collector + Authority", and §8.23's header marks the section "PENDING ARCHITECTURE-OWNER ACCEPTANCE".
+- **Correction.** C+A is an approved user decision, recorded here as given:
+  1. Evidence collection, evidence evaluation, and state assignment are separate.
+  2. Collectors gather evidence and references; they neither assign nor persist states.
+  3. The evaluator recommends a state; it has no authority to assign it or to store it as a final decision.
+  4. CapVer holds the central decision authority, within the approved design.
+  5. The Capability Store stores decisions that were already authorized; it does not create architectural authority.
+  6. The existing CapVer-only VERIFIED authority is not open to renegotiation.
+  7. UNVERIFIED must not be persisted explicitly without a separate authorization (consistent with §8.16.7).
+  8. No Capability population of the 109 seats is performed under this decision.
+- **Effect.**
+  - The "Collector + Authority" expansion in §8.23.1 is withdrawn. Tracked text does not expand the label; the decision is defined by the eight points above.
+  - The acceptance status in §8.23's header is superseded for the C+A separation.
+  - Items that §8.23 marks DEFERRED or OPEN remain so: CapVer organizational ownership, the producer, enforcement placement, the producers of non-VERIFIED states, and automatic demotion.
+  - In §8.23.4, the row "MISSING → any persisted state" also requires the separate authorization of point 7 whenever the target state is UNVERIFIED.
+  - Approval of the design is not implementation, activation, or Git authorization. The published section 8.21.5 refers to the same boundary as "the existing approved C+A boundary".
+- **Type:** approved user decision.
+
+**C-4 — §8.24.3, evidence references.**
+- **Old statement.** "`CapabilityRecord` still lacks the evidence-reference field required by §8.16.7 … Resolving either changes production code."
+- **Correction [V].** The §8.16.7 evidence requirement is implemented in the persistence layer. `CapabilityCellFact` (introduced in `31a6ee3984c800ff771508f8e496ea75e2cd0938`, recorded in §8.18.1) wraps `CapabilityRecord` with opaque `capability_evidence_ref[]`. It rejects blank, padded, and duplicate references, and it requires at least one reference for VERIFIED, PARTIAL, and UNAVAILABLE. The domain `CapabilityRecord` carries no references, which matches CPD-A.
+- **Effect.** This item is removed from the Capability Contract gaps. The only remaining gap is the unmapped GO-1 vocabulary (§8.26.4).
+- **Type:** verification result.
+
+**C-5 — §8.25.5, `actionlint`.**
+- **Old statement.** "`actionlint` was not run."
+- **Correction [V].** `actionlint` 1.7.12 (Windows release; SHA-256 checked against the release checksums) reported 0 findings, with exit 0, for both the working-tree `ci.yml` and the HEAD copy (blob `baf6327a`). `shellcheck` was not installed, so the `run:` scripts were not shell-linted. No GitHub run exists.
+- **Type:** verification result.
+
+**C-6 — §8.24.4, membership verification detail [V].**
+- **Register.** It holds 109 CURRENT seats with 109 unique `adr_id` values, all of the form `G<group>-<ordinal>` and consistent with their group and ordinal fields. Group counts equal the declared `group_counts`. The ten dual pairs reference only existing seats.
+- **Repeated names.** Five display names repeat (FlowerBase, HortDB V1.0, Tropicals.cn, sCentInDB, AromaDb). Each repeat is exactly one declared dual pair, so there are no undeclared aliases. Dual pairs ≠ SAME_AS (D-10.4.2).
+- **Matrix.** It holds 109 unique rows in register order, with 0 mismatches in `adr_id`, display name, group, or dual flag, and a uniform column count. Identity is NONE for 108 seats. For G3-01 it is "PINNED external identity (GO-ID-G3-01); no persisted binding". No seat has a registry entry or activation.
+- **Type:** verification result; it changes nothing.
+
+### 8.26.2 — Remaining design-gate item: Capability versus IC ordering
+
+Published section 8.21.4 lists "the dependency/order between Capability and IC inventory" as a design-gate item; §8.24 did not decide it.
+
+**Evidence.** Tracked text constrains but does not fix the order:
+- the IC artifact comes before runtime binding (D-10.8.1);
+- the Onboarding Contract comes before the first binding or activation (D-10.11.1);
+- Cap ≠ IC (§8.16.3);
+- a Cap subject is one seat (D-10.4.5).
+
+**Proposal, not decided — per seat:**
+1. IC classification (access family and evidence);
+2. identity binding;
+3. Capability evidence collection and CapVer decisions per dimension;
+4. Onboarding Contract;
+5. Runtime Source Registry entry;
+6. activation gate.
+
+Under this proposal, no Capability fact is written for a seat without an IC record. This needs a decision (§8.26.5, item 10).
+
+### 8.26.3 — `CGHIA T10+T8+T2` decision memo
+
+- **Tracked text.** In tracked text the combination appears only in published section 8.21.4/8.21.5 (`4dbf547`), as an open question that "is not approved merely because it appears in WIP extracts". No tracked file defines it; the only definition is in untracked working-tree extracts, which are not architectural authority.
+- **Proposed definition (untracked).**
+  - T10: Capability-gated multi-layer primary path selection;
+  - T8: layered fallback with no upgrade of evidence class;
+  - T2: a family adapter plus a per-source Projection, with "Projection owns query".
+- **Conflicts.** T2 conflicts with D-04 and D-10.9.2, under which `ScientificSearchQueryBuilder` constructs source queries. D-10.9.5 gives Projection a fidelity-enforcement role, not query ownership.
+- **Options.**
+  - A: reject.
+  - B: accept T10 and T8 as design candidates, and amend T2 so that Projection emits per-source constraint metadata that the Builder consumes, with the Builder keeping construction.
+  - C: accept as written and explicitly supersede D-04 and D-10.9.2.
+- **Recommendation.** B, once the Path Model design is committed as tracked text. B keeps the approved query authority, and C would reopen a settled boundary without evidence of a defect. Until then: **BLOCKED**.
+
+### 8.26.4 — Capability vocabulary mapping proposal
+
+`SOURCE-CAPABILITY-CONTRACT.md` (untracked; preserved unchanged) uses SUPPORTED, PARTIALLY_SUPPORTED, UNSUPPORTED, and UNKNOWN. The code uses the Cap v2 `CapabilityState`. The GO-1 values are kept as `HistoricalGo1CapabilityState`.
+
+| Option | Description |
+|--------|-------------|
+| **1 (recommended)** | No state mapping. GO-1 states are historical collector inputs only. Each Cap v2 state is decided afresh under C+A |
+| 2 | Advisory correspondence for review only: SUPPORTED → evidence toward VERIFIED or PARTIAL; PARTIALLY_SUPPORTED → PARTIAL candidate; UNSUPPORTED → UNAVAILABLE candidate (evidence required); UNKNOWN → nothing persisted (missing = UNVERIFIED). Every candidate still needs CapVer or an authorized producer |
+| 3 | Automatic mapping. Prohibited by §8.23.9 and C-3 |
+
+### 8.26.5 — E8 staging evidence required
+
+**Status.** The order proposed in §8.25.6 is not decided.
+
+**Evidence required in a staging environment before the order can be accepted:**
+1. The §8.25.7 diagnostic returns zero rows on a staging copy.
+2. A deploy with the proposed order shows that `migrate --force` finished and that `cghia_ic_records_single_active_uq` exists in `pg_indexes` before any new application container starts (compose event timestamps).
+3. A drill with a seeded duplicate ACTIVE row shows that the migration refuses, no new application container starts, the previous release keeps serving, and no row changes.
+4. `scripts/rollback-production.sh` restores the previous release.
+5. Smoke checks pass.
+
+`scripts/deploy-production.sh` is unchanged.
+
+### 8.26.6 — Consolidated Phase 1 decision package (supersedes the list in §8.24.8)
+
+| # | Decision | Current state | Recommendation | Blocks | Kind |
+|---|----------|---------------|----------------|--------|------|
+| 1 | Accept or amend §8.24 (registry contract, identity policy, family strategy) | Recorded, not accepted | Accept | Phase 1 | Design |
+| 2 | Implementation Authorization for the Runtime Source Registry (§8.24.2) | None | Authorize after item 1, extending `ScientificSourceAdapterRegistry` | Phase 1 | Implementation |
+| 3 | CapVer organizational ownership and enforcement placement | DEFERRED | Name an owner; enforce above the repository plus a defensive write check | Phase 1 | Design / organization |
+| 4 | Authorize per-seat integration classification (IC inventory) | OPEN | Authorize seat by seat, starting with seats that already have evidence | Phase 1 | Implementation + external evidence |
+| 5 | `T10+T8+T2` | BLOCKED | Option B (§8.26.3) | Phase 1 | Design |
+| 6 | Capability vocabulary mapping | None | Option 1 (§8.26.4) | Phase 1 | Design |
+| 7 | Deployment order and staging validation | Not decided | Order of §8.25.6, with the evidence of §8.26.5 | IC | Design + external |
+| 8 | Same-key replay at REPEATABLE READ / SERIALIZABLE | Not in contract; fail-closed `23505` | Keep the READ COMMITTED contract | Neither | Design |
+| 9 | Git: integrate `4dbf547`, commit the separated artifacts, push, and let GitHub run `backend-pgsql` | Not authorized | Authorize the sequence of the final report | IC and Phase 1 | Git / external |
+| 10 | Capability versus IC ordering | Not decided | §8.26.2 proposal | Phase 1 | Design |
+| 11 | Operator run of §8.25.7 on each real environment | Not run | Run before the next deployment | IC | External access |
+
+C+A is not in this package: it was decided (C-3).
+
+### 8.26.7 — Status
+
+| Area | Status |
+|------|--------|
+| IC | **BLOCKED — EXTERNAL DEPENDENCY** (items 7, 9, 11). The technical items (E2b, E6, isolation) pass |
+| Phase 1 | **BLOCKED** pending items 1–6 and 10 |
+| Phase 2 | Not started |
+| Git | Nothing committed or pushed. The local working tree has not been integrated with `4dbf547` |
+
+This section does not authorize any implementation, population, activation, deployment, or Git operation.
+
+**FINAL STATUS: CORRECTIONS C-1…C-6 RECORDED; C+A RECORDED AS APPROVED USER DECISION; LOCAL SECTION NUMBERS COLLIDE WITH PUBLISHED SECTION 8.21 AND REQUIRE RENUMBERING ON INTEGRATION; IC BLOCKED — EXTERNAL DEPENDENCY; PHASE 1 BLOCKED; PHASE 2 NOT STARTED.**
+
+### 8.26.8 — Integration record
+
+- **Placement.** §8.22–§8.26 were written in the `ba24abda` working tree, numbered 8.21 to 8.25, before the published §8.21 (`4dbf547`) was present locally. They now follow the published §8.21, renumbered as stated in C-1 (§8.26.1): the headings and the `§` references to these sections were shifted by one. The published §8.21 is unchanged. The six mentions of "section 8.21" without `§` refer to the published §8.21 and were not changed. No other text in §8.22–§8.26 was changed; reversing the renumbering reproduces the original text exactly.
+- **What the integration commits.** Two files enter the branch history, each in its own commit: this ADR, and the Phase 1 source matrix `docs/architecture/science-source-expansion/2026-10-12-PHASE-1-SOURCE-MATRIX.md` cited in §8.25.8. The matrix changes only in its seven references to this ADR, which now use the final numbers (§8.22–§8.25). Its rows, counts, status codes, and blockers are unchanged.
+- **What stays uncommitted.** These files cited in §8.22–§8.26 are not committed by the integration and remain working-tree files: `backend/tests/Pgsql/IntegrationClassificationPostgresIsolationTest.php`, `backend/tests/Pgsql/bin/ic-persist-worker.php`, the `backend-pgsql` job in `.github/workflows/ci.yml`, `docs/architecture/science-source-expansion/SOURCE-CAPABILITY-CONTRACT.md`, and the `backend/e2e-tmp` design extracts. Statements in §8.22–§8.26 that these files are uncommitted or untracked remain true.
+- **Statements that describe the pre-integration state.** These statements describe this ADR and the source matrix before the integration: the "uncommitted" label of the §8.25.1 change list as it applies to these two files, the last sentence of C-1 (§8.26.1), the final-status line of §8.25.11 ("NOTHING COMMITTED OR PUSHED"), and the Git row and final-status line of §8.26.7.
+- **Tests and CI.** The test results in §8.22–§8.25 come from the runs recorded there. No PHP or database test was rerun for the integration. GitHub has not run the `backend-pgsql` job, because that job is not committed. IC-AUDIT-002 remains BLOCKED.
+- **Status.** The integration changes no decision or status. IC disposition remains BLOCKED, Phase 1 remains BLOCKED, and Phase 2 has not started. No source seat is activated. The matrix remains an accountability artifact, not a runtime registry, membership authority, or acceptance record.
