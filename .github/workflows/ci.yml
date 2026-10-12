@@ -44,6 +44,58 @@ jobs:
           DB_PASSWORD: secret
           FORBIDDEN_TEST_DATABASES: wsa_enterprise
 
+  # Destructive PostgreSQL suite (phpunit.pgsql.xml). The default suite above runs on SQLite because
+  # tests/bootstrap.php forces it; this job is the only one that exercises PostgreSQL semantics.
+  # tests/bootstrap-pgsql.php refuses a server that hosts anything but the test database or that
+  # answers on a non-loopback address. A service container reached through a published port answers
+  # on its bridge address, so the server runs in the runner's network namespace, bound to loopback.
+  backend-pgsql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DB_TEST_HOST: 127.0.0.1
+      DB_TEST_PORT: '55432'
+      DB_TEST_DATABASE: wsa_ic_ci_test
+      DB_TEST_USERNAME: ic_test
+      # Throwaway credential for a job-scoped server; not a secret.
+      DB_TEST_PASSWORD: ic-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start disposable PostgreSQL on loopback
+        run: |
+          docker run -d --name ic-pg --network host --tmpfs /var/lib/postgresql/data \
+            -e PGPORT="$DB_TEST_PORT" -e POSTGRES_DB="$DB_TEST_DATABASE" \
+            -e POSTGRES_USER="$DB_TEST_USERNAME" -e POSTGRES_PASSWORD="$DB_TEST_PASSWORD" \
+            postgres:16-alpine -c listen_addresses=127.0.0.1
+          for _ in $(seq 1 30); do
+            if docker exec ic-pg pg_isready -h 127.0.0.1 -U "$DB_TEST_USERNAME" -d "$DB_TEST_DATABASE"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs ic-pg
+          exit 1
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql
+      - run: composer install --prefer-dist --no-progress
+      - name: Guard refuses a run without destructive opt-in
+        run: |
+          if php tests/bootstrap-pgsql.php; then
+            echo "tests/bootstrap-pgsql.php accepted a run without DB_TEST_ALLOW_DESTRUCTIVE_RESET" >&2
+            exit 1
+          fi
+      - run: vendor/bin/phpunit -c phpunit.pgsql.xml --no-progress --do-not-cache-result
+        env:
+          DB_TEST_ALLOW_DESTRUCTIVE_RESET: wsa_ic_ci_test
+      - name: PostgreSQL server log
+        if: failure()
+        run: docker logs ic-pg
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
