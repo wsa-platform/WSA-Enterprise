@@ -3986,3 +3986,163 @@ Current immediate blocker: local disk exhaustion (`ENOSPC`) and unresponsive she
 Next action: recover local disk capacity safely, reopen the shell, verify Git/WIP state, then finish read-only CI log collection. Afterward, return to IC Persistence Integrity Remediation without conflating it with the 109-source integration plan.
 
 No claim is made here that IC Persistence Integrity Remediation is closed. No claim is made that the current local WIP inventory remains exactly 580 entries.
+
+
+---
+
+## 8.21 — Conversation, Audit Reports, and Two-Phase Source Expansion Plan (2026-10-12)
+
+### 8.21.1 — Preservation and authority
+
+This section is an append-only continuation record. It preserves the material conclusions from the 2026-10-12 conversation, the available environment/IC audit reports, and the consolidated two-phase execution prompt for the 109-source expansion. It does not delete, replace, or retroactively rewrite §8.20 or any earlier decision/report/prompt.
+
+The user's latest planning decision is to finish Scientific Source Expansion in **two implementation phases only**. This supersedes the earlier three-phase planning proposal for future execution planning; the earlier proposal remains preserved as historical context. The design gate is embedded at the start of Phase 1 and is not a third phase.
+
+This documentation append does not itself claim that IC is closed, that sources are implemented or activated, that tests have run, or that the saved prompt has been executed.
+
+### 8.21.2 — Sources and reports preserved
+
+Reports consulted for this continuation:
+
+- `Pasted text(20261012-164511).txt` — forensic Git/ADR/WIP and IC status audit.
+- `Pasted markdown(20261012-173151).md` — `Environment Readiness + IC Persistence Integrity Closure Audit`, including the E1–E9 matrix, CI failure matrix, environment constraints, and the recommended next steps.
+- The earlier IC remediation brief archived in §8.20.7 remains preserved verbatim in its existing location.
+
+These report files remain in the conversation/library archive; this ADR section records their relevant conclusions so the project decision history remains understandable without treating a report summary as a replacement for the source reports.
+
+### 8.21.3 — Latest reported baseline and findings (not a new live verification)
+
+The latest report available for this record reported:
+
+- Repository: `wsa-platform/WSA-Enterprise`.
+- Branch: `phase-18-m18-ai-marketing-communications`.
+- Reported HEAD and origin: `ba24abda21f40359014b3e2b43927c059c3a397a`, ahead/behind `0/0` at the time of that audit.
+- Worktree: 580 entries (14 modified, 566 untracked, none staged/deleted/renamed); the report recorded content fingerprints as matching its then-current comparison baseline. This is historical evidence, not a claim about a future/current worktree.
+- `backend/composer.lock` and `docs/architecture/science-source-expansion/SOURCE-CAPABILITY-CONTRACT.md` were untracked and explicitly required preservation.
+- The current production runtime source registry was reported to contain five adapters: `openalex`, `crossref`, `semantic_scholar`, `consensus`, and `fao_stat`. The 109-seat membership register is not equivalent to runtime activation.
+- IC Persistence Integrity disposition: `BLOCKED`, because current-state PostgreSQL evidence was absent, E6 and E8 remained unverified, and the supersede ordering decision remained unresolved.
+- E1 and E2a were reported as PASS on historical PostgreSQL evidence, not rerun in that audit. E3–E5 had historical test/source evidence. E7 was historical PostgreSQL evidence, while the standard CI path forced SQLite. E9 current execution evidence was not verified.
+- E2b: §8.14.6 describes a supersede ordering inconsistent with the implementation/accepted D2/D4 behavior. This requires an explicit architectural reconciliation; do not silently choose a behavior.
+- E6: missing required PostgreSQL tests for concurrent uncommitted `persist()` calls and applicable higher isolation/recovery paths; define retry policy only through the existing approved decision or a separately approved decision.
+- E8: deployment ordering and migration preflight/recovery were not fully verified. Do not run migrations against a production/shared database.
+- The report noted unrelated CI failures: frontend build, mobile, backend, and security. These are separate from IC and must not be attributed to IC or local WIP without evidence. The backend failure count blocks final 109-source acceptance, but does not itself prove an IC defect.
+- Docker/PostgreSQL constraints recorded in the report: a compose PostgreSQL service was exposed on port 5432 and must not be touched; a disposable test PostgreSQL must be isolated (network none or loopback-only) and use the existing test guard. Docker storage/environment and PHP extension availability must be verified before execution.
+- Git synchronization was previously marked `FAST_FORWARD_CANDIDATE — NOT EXECUTED` in the earlier audit. The later report records a newer remote-synchronized baseline; every new execution must re-check Git before acting and must not rely on either historic baseline without verification.
+
+### 8.21.4 — Two-phase plan (current planning decision)
+
+#### Phase 1 — Close the foundation and prepare source integration
+
+**Mandatory no-code design gate at the beginning of this same phase:** decide and document CapVer authority; Capability population rules; Runtime Source Registry contract; the 109 membership-seat identity bindings; whether `CGHIA T10+T8+T2` is an approved architectural path; and the dependency/order between Capability and IC inventory. Do not implement code until this design gate is accepted and implementation is separately authorized.
+
+Then close IC Persistence Integrity on actual isolated PostgreSQL evidence:
+
+1. Re-verify repository branch, HEAD, upstream, index, worktree, and all WIP fingerprints before any mutation. Preserve all modified and untracked files.
+2. Reconcile E2b (supersede ordering) with the ADR through an explicit approved decision.
+3. Add/execute tests for E6 concurrency, applicable transaction isolation and failure/recovery paths; do not retry writes unless authorized policy allows it.
+4. Verify E8 migration preflight, ordering, failure behavior, and documented recovery without touching a production/shared database.
+5. Run the dedicated PostgreSQL suite on the exact verified code. SQLite is supplemental and cannot prove PostgreSQL concurrency.
+6. Record exact commands, exit codes, engine/version, test counts, assertions, and failures. Tests not run must be marked `NOT RUN`.
+7. Append a formal IC closure delta to this ADR only after the required evidence and decisions exist. Do not call IC closed if a blocking item remains.
+8. After the design gate is accepted and implementation authorization is granted, implement the approved Runtime Source Registry, identity bindings, and adapters grouped by access/protocol/path family (not one adapter per source by assumption). Preserve CSQ semantics, the existing five-source runtime path, and the 109-seat membership register. Do not bulk-populate Capability facts or activate all 109 seats.
+
+#### Phase 2 — Comprehensive acceptance and controlled activation
+
+1. Establish a reproducible CI baseline and diagnose the known frontend, mobile, backend, and security failures as separate clusters. Do not misattribute them to IC or WIP without evidence.
+2. Test each source and adapter family for access, source identity/provenance, capability claims, source-specific query projection, normalization, reference integrity, timeout/error behavior, and regression protection.
+3. Preserve CSQ as the semantic authority; `ScientificSearchQueryBuilder` remains the source-query execution authority and `ScientificQueryCompiler` remains metadata-only unless a separately approved ADR changes that contract.
+4. Verify the existing five-source path and Home/Crop isolation; do not reopen AnswerComposer, AccuracyGate, RelevanceGate, Units A/B/C, Results List, or Viewer without direct evidence of a defect.
+5. Activate only sources that pass their own identity, capability, access, integration, and test gates. Membership in the 109-seat register is not activation.
+6. Publish a final source-by-source acceptance matrix with evidence, activation status, limitations, and explicit `PASS` / `FAIL` / `BLOCKED` / `NOT RUN` statuses.
+
+**Completion rule:** The expansion is complete only when both phases pass their required gates and the final report distinguishes implemented, tested, and activated sources from sources still blocked or unavailable. Two phases are a planning structure, not permission to bypass architectural approvals or safety checks.
+
+### 8.21.5 — Consolidated master prompt preserved for Cursor
+
+The following prompt is saved for future execution. It has not been executed by this ADR update.
+
+```text
+WSA-Enterprise — SCIENTIFIC SOURCE EXPANSION
+CONSOLIDATED TWO-PHASE MASTER PROMPT
+Repository: wsa-platform/WSA-Enterprise
+Branch expected: phase-18-m18-ai-marketing-communications
+Canonical decision: docs/architecture/ADR-023-scientific-source-expansion.md
+
+MISSION
+Complete the 109-source expansion in EXACTLY TWO IMPLEMENTATION PHASES.
+Do not create a third phase. The no-code design gate is the opening gate of Phase 1, not a separate phase. Preserve the existing ADR history and append new decisions/reports only; never delete or silently rewrite historical content.
+
+GLOBAL SAFETY
+- First inspect the current branch, HEAD, upstream, index, staged/modified/untracked paths, active operations, and WIP fingerprints.
+- Do not assume any historical SHA or WIP inventory is current.
+- Preserve every pre-existing WIP file, including backend/e2e-tmp, admin-mobile/e2e-tmp, docs/architecture, tests, backend/composer.lock, and SOURCE-CAPABILITY-CONTRACT.md.
+- Never use reset, clean, stash, checkout/switch, restore, rebase, merge, cherry-pick, revert, history rewrite, force push, broad staging, or deletion/overwriting of unrelated work.
+- Do not fetch/merge/pull, commit, or push unless the user has explicitly authorized that exact Git operation. If a required remote-only ADR section is absent locally, report the dependency and stop before making an unsafe sync.
+- Do not run a migration or connect to a production/shared database. Do not touch the running Compose PostgreSQL exposed on port 5432. Use only a disposable PostgreSQL test instance with network none or loopback-only and the existing destructive-test guard.
+- Do not assume Render is an active deployment target.
+- Never claim a test passed unless it actually ran; include command, exit code, engine/version, test count, assertions, and failures. Mark skipped work NOT RUN.
+- No source activation or Capability population by default. No commits/pushes unless separately authorized.
+
+PHASE 1 — FOUNDATION, DESIGN GATE, IC CLOSURE, AND APPROVED INTEGRATION
+A. At the start, run ONE consolidated NO-CODE architectural design gate. Decide and document:
+   1. CapVer authority and the conditions for VERIFIED, PARTIAL, UNAVAILABLE, and NOT_APPLICABLE.
+   2. Capability population policy and write authority; do not invent persisted UNVERIFIED facts or bulk-populate 109 seats.
+   3. Runtime Source Registry contract and ownership.
+   4. Identity binding contract for all 109 membership seats, keeping membership distinct from activation.
+   5. Whether CGHIA T10+T8+T2 is an approved architectural path; it is not approved merely because it appears in WIP extracts.
+   6. Capability-versus-IC inventory ordering and the existing approved C+A boundary: collectors collect evidence only; evaluators recommend only; Capability Store persists only already-authorized decisions; CapVer retains the approved central authority for VERIFIED.
+   7. Adapter grouping by protocol/access/path family and preservation of the existing five-source path.
+   Produce a decision matrix, evidence, unresolved decisions, and implementation plan. Do not write implementation code until this gate is accepted and separately authorized.
+
+B. IC Persistence Integrity:
+   1. Reconcile the latest authoritative §8.20.7 instructions with the actual current code and approved D1–D6 decisions.
+   2. Resolve E2b supersede-order mismatch through explicit architectural reconciliation; do not silently choose between ADR and code.
+   3. Add and run E6 tests for uncommitted persist-vs-persist races, applicable isolation levels, unique violation, deadlock/serialization failure and recovery branches. Retry only under an approved policy; current policy says no write is retried unless explicitly superseded.
+   4. Verify E8 migration preflight, deployment/migration ordering, failure handling, and documented recovery. Do not inspect or mutate production data.
+   5. Execute the dedicated PostgreSQL suite on a disposable isolated database. SQLite cannot substitute for PostgreSQL concurrency proof. Run counter-factual tests only if the old code can be tested safely without altering the worktree/history.
+   6. Report E1–E9 individually and use READY_FOR_FORMAL_CLOSURE only when all technical criteria are evidenced and only separately authorized formal closure remains. Otherwise report BLOCKED or NOT_CLOSED with exact reasons.
+   7. Append the closure delta to ADR-023 only after evidence exists; never rewrite old sections.
+
+C. After the design gate is accepted and implementation authorization is granted:
+   1. Implement the approved Runtime Source Registry and 109 identity bindings.
+   2. Implement adapters grouped by path/protocol/access family rather than assuming 109 separate adapters.
+   3. Preserve CSQ as semantic authority, ScientificSearchQueryBuilder as query-execution authority, ScientificQueryCompiler as metadata-only, RSC and the production orchestrator/normalizer contracts, evidence provenance, answer identity, and Home/Crop isolation.
+   4. Keep the existing five-source path working.
+   5. Do not activate all sources or create capability facts without source-specific evidence and authority.
+
+PHASE 2 — ACCEPTANCE, REGRESSION, AND CONTROLLED ACTIVATION
+1. Establish a reproducible CI baseline. Diagnose frontend, mobile, backend, and security failure clusters separately; do not assume local WIP caused committed-code CI failures.
+2. For every source and adapter family, test availability/access, identity/provenance, capabilities, source-specific query projection, preserved scientific constraints, normalization, references, timeouts/errors, and failure isolation.
+3. Test the existing five-source path, CSQ identity, answer/evidence contracts, Home/Crop isolation, and all relevant regression tests.
+4. Do not reopen AnswerComposer, AccuracyGate, RelevanceGate, Units A/B/C, Results List, or Viewer without direct evidence of a defect.
+5. Activate only sources whose identity binding, access, capability evidence, adapter path, normalization, and tests all pass. Keep blocked/unavailable sources inactive and document why.
+6. Produce a 109-seat acceptance matrix with group, source identity, binding, access mode, adapter family, capability evidence/status, tests, activation status, and limitations.
+7. Append the final acceptance report to ADR-023 without deleting or replacing prior history.
+
+FINAL REPORT — ONE CONSOLIDATED REPORT
+Include:
+- Verified baseline (branch, HEAD, upstream, WIP inventory and fingerprints).
+- Design-gate decisions, evidence, and any unresolved approval.
+- IC E1–E9 matrix, exact PostgreSQL evidence, and closure disposition.
+- Changed files grouped by purpose, migrations (if any; must not run against production), exact test commands/results.
+- Registry, identity bindings, adapter-family matrix, and source-by-source status for all 109 seats.
+- Existing five-source regression results and CI failure clusters.
+- Final diff and proof that unrelated WIP was preserved.
+- ADR append-only sections added.
+- Explicitly distinguish implemented, tested, activated, blocked, unavailable, and NOT RUN.
+- Exactly one final project disposition: COMPLETE, BLOCKED, or NOT_CLOSED.
+- State one next action only.
+
+STOP CONDITIONS
+Stop without risky mutation if the branch/base cannot be reconciled, an ADR decision is ambiguous, WIP ownership overlaps, PostgreSQL cannot be isolated, a production/shared database could be reached, a test exposes an unresolved architectural choice, or the requested action requires separate user authorization. Do not fabricate closure or proceed to activation.
+```
+
+### 8.21.6 — Final status of this record
+
+- Conversation/decision summary: recorded above.
+- Latest available audit conclusions: recorded above as historical report evidence, not a fresh execution.
+- Two-phase plan: recorded as the current planning decision.
+- Consolidated master prompt: archived above for future Cursor use; not executed by this documentation update.
+- Older ADR content: retained; no historical section intentionally removed or rewritten.
+- IC Persistence Integrity: remains `BLOCKED` until the required technical and architectural evidence is produced.
+- Source expansion: not claimed complete; no claim that the 109 sources are implemented or activated.
