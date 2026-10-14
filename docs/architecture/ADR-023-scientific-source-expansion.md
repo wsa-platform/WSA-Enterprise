@@ -4779,3 +4779,96 @@ This section does not authorize any implementation, population, activation, depl
 - **Statements that describe the pre-integration state.** These statements describe this ADR and the source matrix before the integration: the "uncommitted" label of the §8.25.1 change list as it applies to these two files, the last sentence of C-1 (§8.26.1), the final-status line of §8.25.11 ("NOTHING COMMITTED OR PUSHED"), and the Git row and final-status line of §8.26.7.
 - **Tests and CI.** The test results in §8.22–§8.25 come from the runs recorded there. No PHP or database test was rerun for the integration. GitHub has not run the `backend-pgsql` job, because that job is not committed. IC-AUDIT-002 remains BLOCKED.
 - **Status.** The integration changes no decision or status. IC disposition remains BLOCKED, Phase 1 remains BLOCKED, and Phase 2 has not started. No source seat is activated. The matrix remains an accountability artifact, not a runtime registry, membership authority, or acceptance record.
+
+
+## 8.27 — Cumulative Conversation / Continuity Record — General Scientific Search Engine and 109-Source Expansion (2026-10-14)
+
+### 8.27.1 — Purpose and append-only preservation rule
+
+This section records the conversation and working direction established on 2026-10-14 so a future ChatGPT conversation or engineering session can recover the objective, constraints, findings, prompt intent, and next action without relying on transient chat context. It is appended after §8.26.8. All earlier ADR text is retained; this section does not supersede, rewrite, or delete earlier records. This is a continuity record, not authorization to implement any proposal.
+
+### 8.27.2 — Owner's governing objective
+
+The user explicitly confirmed the governing objective:
+
+> Build a general-purpose scientific search engine capable of integrating the 109 approved scientific source entries and expanding in the future, without requiring separate fixes for individual sources or individual cases.
+
+The user explicitly rejected the direction of carrying out a dedicated FAOSTAT repair for the observed “wheat production” versus “wheat yield” issue. That observation may be used only as diagnostic evidence about a possible general contract or architecture weakness. It is not a standalone repair task in the current work path. The same rule applies to other isolated cases: investigate the general mechanism, not a growing collection of exceptions.
+
+The intended general architecture is to preserve CSQ as the semantic authority for the scientific question; distinguish question understanding, retrieval specification, source capability requirements, capability-driven source selection, source-specific query translation, retrieval, normalization, provenance preservation, evidence evaluation, and answer composition; and permit heterogeneous sources to integrate through stable contracts without forcing every source to support the same operations.
+
+### 8.27.3 — Conversation decisions and clarifications
+
+1. The user asked to resume the scientific-source expansion work.
+2. The user requested one large task with high agent autonomy and strict security procedures, reducing repetitive user prompts and routine clarification.
+3. A read-only, multi-stage autonomous investigation prompt was prepared. It covers repository baseline preservation; production search-path tracing; Source Registry investigation; Source Capability Contract investigation; reconciliation of all 109 approved entries; query and capability-driven selection architecture; contract-testing inventory; general gap analysis; implementation roadmap; and final preservation verification.
+4. The user corrected the direction to make clear that the mission is not to fix individual cases. The accepted goal is general architecture and scalable integration of the 109 sources.
+5. The user clarified that this information must be saved in the existing ADR-023 conversation/continuity log so a new conversation can read it and understand what happened. The required operation is an append-only historical record, not a replacement summary and not a new ADR.
+6. The user requires that all prior material remain intact. No historical section may be deleted, replaced, shortened, or silently reconciled.
+
+### 8.27.4 — Autonomous investigation prompt: required scope
+
+The prepared autonomous mission prompt is titled:
+
+“WSA-Enterprise — Autonomous Scientific Search Architecture Mission — 109-Source Expansion | Capability Architecture | Strict Security Protocol”.
+
+Its required investigation stages are:
+
+- **Stage 0 — Baseline:** verify current branch, HEAD, tracked/staged/untracked/ignored state, stashes, worktrees, and evidence preservation.
+- **Stage 1 — Production architecture:** trace CSQ, ScientificSearchQueryBuilder, ScientificQueryCompiler, RSC, MultiSourceScientificSearchOrchestrator, Registry, capability contracts, adapters, ScientificResultNormalizer, evidence gates, AnswerComposer, Results List/Viewer, and Home/Crop isolation.
+- **Stage 2 — Source Registry:** establish canonical identity, membership, ownership, duplicate handling, verification evidence, registration/activation distinctions, and completeness validation.
+- **Stage 3 — Source Capability Contract:** inspect declaration, consumption, enforcement, query capabilities, access requirements, licensing, pagination, rate limits, provenance, error handling, and supported/unsupported/unknown distinctions.
+- **Stage 4 — All 109 entries:** reconcile every approved entry without omissions, with stable identity, specialization, registry and capability status, verified access/query mechanisms, adapter/integration status, normalization/provenance, runtime verification, restrictions, gaps, and evidence needed.
+- **Stage 5 — General query architecture:** assess separation of semantic understanding, retrieval specification, capability requirements, selection, query construction, retrieval, normalization, evidence evaluation, and answer presentation.
+- **Stage 6 — Contract testing:** inventory existing tests and design reusable conformance tests that scale with new sources rather than encoding individual incidents.
+- **Stage 7 — Gap analysis:** rank confirmed defects, missing functionality, design ambiguity, missing evidence, environmental limitations, owner decisions, and external dependencies separately.
+- **Stage 8 — Roadmap:** propose a dependency-ordered implementation plan without implementing it.
+- **Stage 9 — Preservation:** verify no unauthorized repository mutation and accurately report execution limitations.
+
+Required deliverables: one consolidated report; a verified architecture diagram/trace; complete 109-entry reconciliation with matching totals; Registry and Capability Contract findings; ranked general architectural gaps; reusable test strategy; staged roadmap; unresolved owner decisions; evidence limitations; preservation report; and one recommended next action.
+
+### 8.27.5 — Security and authorization boundaries
+
+The autonomous investigation prompt expressly forbids, unless separately authorized:
+
+- staging, committing, pushing, pulling, fetching, switching branches, resetting, cleaning, stashing, rebasing, cherry-picking, rewriting history, or modifying Git metadata;
+- deleting, renaming, overwriting, restoring, or normalizing existing files;
+- modifying user changes, untracked/ignored files, temporary evidence, or worktrees;
+- Docker/containers, network access, source API calls, database operations, migrations, dependency installation/download, deployments, or test execution;
+- modifying source code, tests, configuration, ADR-023, source registries, capability declarations, selectors, adapters, CSQ, query builders, normalizers, or answer synthesis;
+- source activation, Phase 2 start, or declaring Phase 1 closed.
+
+The mission must stop after its consolidated report and wait for explicit authorization for subsequent implementation or runtime work. Historical approvals for narrower tasks do not authorize unrelated changes.
+
+### 8.27.6 — Latest Cursor report available in the conversation
+
+The latest supplied Cursor report is identified in the conversation as `Pasted markdown(20261014-182944).md`. The report's own verdict is **PARTIALLY COMPLETE — BLOCKED**. The following are report-derived findings, not new runtime verification by this record:
+
+- No repository edits, staging, Git write commands, Docker, network, database, installation, or test execution occurred during that reported campaign.
+- The B-1 static contract checks were reported as passing; runtime tests were not run.
+- A mismatch was identified between an aligner test and later production behavior, with the test last changed at `2cfcd03` and a later rule change at `0ea1c7e`; the owner contract is unresolved.
+- The report describes a FAOSTAT measure-detection path that can conflate “production” and “yield”. Per the user's subsequent direction, this is diagnostic evidence only and is not to become a separate repair task.
+- A selector policy conflict remains unresolved: historical test expectations versus a later capability-flag behavior.
+- CSQ independent-role behavior, bare “quantity”, Arabic “إنتاجية”, year-only measure inference, and MultiAnswer missing-role expectations were reported as unresolved contract/design questions, not authorized implementation tasks.
+- Membership-register test execution was blocked by line-ending/environment differences; the report did not establish a valid current runtime result.
+- A group of committed Feature test failures was described as historical; no re-baseline or test execution was authorized.
+- Deployment workflow/script risks and required staging/operator evidence were reported; no deployment modifications or staging actions were authorized.
+- The report says the proposed §8.33.9 preservation record was not applied in that campaign. This current section is a new continuity entry and does not claim to be that proposed section.
+- The report's baseline references HEAD `f2025315d8990f52f3c658c968a3ec8252ac18b0`; treat this as a report-stated baseline, not as proof of the current GitHub branch HEAD. The actual ADR blob read immediately before this entry was `6845f732dc97d7dccfc419909387fa535ad03e8d`.
+
+### 8.27.7 — Source membership and activation boundary
+
+The approved source membership baseline is 109 entries, with the earlier architecture record reporting group distribution of Group 1 — Plants: 22; Group 2 — Animal/Livestock/Poultry/Fish: 25; the remaining groups as defined in the authoritative register. Do not infer operational status from membership. The report and prior records indicate identity/registry/capability verification and activation are incomplete; the exact status of each entry must be derived from the current authoritative register and verified evidence. No source activation is authorized by this continuity entry.
+
+### 8.27.8 — Current status and next action
+
+- **Governing objective:** general-purpose, extensible scientific search architecture for all 109 approved source entries.
+- **Current work type:** read-only forensic/architectural investigation and reconciliation; not individual bug fixing.
+- **Next action:** run the consolidated autonomous read-only investigation prompt against the verified current repository state, produce one evidence-backed report reconciling all 109 entries and the Registry/Capability Contract, then stop for review and explicit authorization.
+- **Phase 1:** remains blocked unless its actual exit criteria are independently satisfied with evidence.
+- **Phase 2:** not started.
+- **ADR-023:** this record is appended; previous content is preserved.
+
+### 8.27.9 — Continuity and evidence rules for future conversations
+
+A future conversation should read this section and the cited earlier ADR sections before proposing the next action. It must distinguish owner decisions from proposals, report-derived findings from fresh verification, and membership from runtime integration/activation. It must not reopen the rejected case-by-case repair direction. It must not claim tests passed if they were not executed, claim a source is operational without evidence, or infer that Phase 1/Phase 2 status changed without new verification. The next session should continue from §8.27.8 and preserve the append-only history.
