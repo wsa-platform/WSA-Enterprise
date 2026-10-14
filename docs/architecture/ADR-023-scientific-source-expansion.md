@@ -4872,3 +4872,37 @@ The approved source membership baseline is 109 entries, with the earlier archite
 ### 8.27.9 — Continuity and evidence rules for future conversations
 
 A future conversation should read this section and the cited earlier ADR sections before proposing the next action. It must distinguish owner decisions from proposals, report-derived findings from fresh verification, and membership from runtime integration/activation. It must not reopen the rejected case-by-case repair direction. It must not claim tests passed if they were not executed, claim a source is operational without evidence, or infer that Phase 1/Phase 2 status changed without new verification. The next session should continue from §8.27.8 and preserve the append-only history.
+
+
+## 8.28 — Automatic Conversation Artifact Archiving Policy (2026-10-14)
+
+### 8.28.1 — Owner instruction
+
+The user requests that prompts and reports related to the WSA-Enterprise scientific-search/source-expansion work be saved in ADR-023 automatically, without requiring a separate reminder each time, so future conversations can recover the work and continue from the correct stopping point.
+
+### 8.28.2 — Automatic archiving rule
+
+For each future work session in which a relevant prompt, Cursor report, audit report, implementation report, verification report, or material owner decision becomes available in the conversation or working context:
+
+1. Append it to this existing ADR-023 in a new, uniquely numbered section or subsection.
+2. Preserve the full original prompt/report text whenever the full text is available and its inclusion is practical. Do not replace full text with a summary merely for convenience.
+3. For long reports, preserve the full report as an append-only archival entry or an explicitly referenced artifact whose actual path and availability have been verified; include a concise index entry in ADR-023. Never claim a report was archived unless its content or verified artifact reference is present.
+4. Include a short chronological index stating date, artifact type, exact title/name, scope, outcome, unresolved issues, and next stopping point.
+5. Distinguish verbatim source material from summaries and analysis. Mark unavailable original text as unavailable; never reconstruct it as if verbatim.
+6. Preserve all existing ADR text, prior entries, reports, prompts, decisions, and historical statuses. No deletion, replacement, silent rewriting, or renumbering of prior entries is allowed.
+7. Preserve source terminology, status distinctions, evidence boundaries, and security constraints. Do not convert a proposal into an approved decision or a historical test result into a current result.
+8. Keep the archive in this ADR-023; do not create a replacement ADR as a substitute for the conversation record.
+9. At the end of each work session, append a current stopping-point record when meaningful progress, a new report, a prompt, or an owner decision occurred. It must state the next action and any required authorization.
+10. If a write to ADR-023 is not authorized or technically available in a future session, do not claim automatic archival succeeded. Preserve the material in the current response and explicitly report that ADR-023 still needs the append.
+
+### 8.28.3 — Security and Git boundary
+
+This archiving instruction authorizes the append-only documentation update to ADR-023 when the user has requested archiving, but it does not grant blanket permission for code changes, source activation, runtime tests, Docker, network access, database operations, deployment, or unrelated Git operations. Before each archival write, inspect the current file and branch, use an append-only change, verify the old content remains byte-for-byte as the prefix of the new content, and report the exact resulting commit and section. Do not stage or commit through a local Git workflow or push separately; if a GitHub contents update is used, disclose that it creates a documentation commit.
+
+### 8.28.4 — Scope
+
+This policy applies to the scientific search engine, Scientific Source Expansion, the 109 approved source entries, Source Registry, Source Capability Contract, CSQ, source selection and query construction, normalization/provenance, related Cursor prompts/reports, and decisions or constraints that materially affect this work. It does not require archiving unrelated personal conversations.
+
+### 8.28.5 — Acceptance check
+
+An archival action is complete only when the new entry is visible in the actual ADR-023 on the intended branch, the previous content is verified unchanged, the new section is confirmed present, and the result is reported to the user. The archival policy is prospective; it does not imply that every historical prompt or report has already been captured verbatim.
