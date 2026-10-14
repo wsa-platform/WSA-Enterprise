@@ -4906,3 +4906,123 @@ This policy applies to the scientific search engine, Scientific Source Expansion
 ### 8.28.5 — Acceptance check
 
 An archival action is complete only when the new entry is visible in the actual ADR-023 on the intended branch, the previous content is verified unchanged, the new section is confirmed present, and the result is reported to the user. The archival policy is prospective; it does not imply that every historical prompt or report has already been captured verbatim.
+
+
+## 8.29 — Archived Cursor Report: Scientific Search Architecture and 109-Source Reconciliation (2026-10-14)
+
+### 8.29.1 — Source artifact and archival status
+
+- **Original uploaded report:** `Pasted text(20261014-185122).txt`
+- **Report title:** `WSA-Enterprise: Scientific Search Architecture and 109-Source Reconciliation (Consolidated Report)`
+- **Source received:** 2026-10-14 in the conversation.
+- **Report size:** 1,725 lines; 47,700 characters in the available attachment.
+- **Archival form in this section:** a structured continuity record of the report's findings and exact reported baseline. The original attachment remains the verbatim source for the full report text; this section does not falsely claim that all 47,700 characters have been reproduced verbatim here.
+- **Instruction:** retain the original report artifact when available. Future archival work should add the full report text or a verified repository artifact path if full-text archival is requested/available. Do not treat this section as a substitute for the original report.
+
+### 8.29.2 — Executive findings as reported by Cursor
+
+The report concludes that the current codebase cannot yet integrate all 109 approved scientific source entries through a general mechanism. Its central finding is architectural, not a list of isolated source defects:
+
+1. No canonical runtime source registry exists. At least eight runtime structures independently hard-code keys for the five currently live sources, and application code does not connect those source keys to the 109 register IDs (`G1-01` through `G6-22`).
+2. Capability v2 is typed and persisted as a model, but no application path writes capability facts and its only runtime consumer is observational; retrieval is still permitted.
+3. Production selection uses a fixed list and feature flags. The capability-driven selector exists off the production route.
+4. `ScientificQueryCompiler` output is attached as metadata that no adapter consumes. Adapters receive free-text keyword variants instead of a compiled per-source query bundle.
+5. Source-specific branches remain in shared orchestration, ranking, verification, validation, and presentation logic.
+6. All 109 entries exist in the authoritative membership register, but none is reported as verified, registered, capability-backed, adapted, or runtime-tested.
+
+### 8.29.3 — Reported 109-entry reconciliation
+
+| Status | Count | Meaning in the report |
+|---|---:|---|
+| PARTIAL | 65 | Candidate identity and documented access channel; not verified |
+| UNVERIFIED | 44 | Ambiguous/unestablished identity or no documented access |
+| VERIFIED | 0 | No seat meets the report's verification definition |
+| MISSING | 0 | All seats are present in the authoritative membership register |
+| Runtime checks | 109 NOT_EXECUTED | No endpoint or integration runtime checks were run |
+
+Additional report-reported cross-checks:
+
+- Identity: 90 CAND, 16 AMB, 3 NEST.
+- Access: 36 machine/bulk, 41 web-only, 32 with no documented access.
+- Authentication: YES 5, NO 32, UNKNOWN 72.
+- Licence: documented for 31, UNKNOWN for 78.
+- Membership: 109 CURRENT seats, unique `adr_id` values, and 10 cross-group dual pairs.
+- Group counts: G1 22; G2 25; G3 14; G4 7; G5 19; G6 22; total 109. Group-specialization labels in the report are explicitly identified as inference from member names, not register facts.
+
+These are report-derived findings from the supplied static audit and evidence review. They are not new runtime verification or independent external validation by this archival entry.
+
+### 8.29.4 — Production path and architectural findings
+
+The report traces the main Home/Crop retrieval path through query planning, CSQ freezing in `QueryUnderstandingService`, `AgriculturalScientificSearchService`, `RetrievalSemanticContract`, `MultiSourceScientificSearchOrchestrator`, `ScientificSearchQueryBuilder`, `ScientificSourceSelector`, `ScientificSourceAdapterRegistry`, source adapters, normalizers, ranking/relevance, validation, `AnswerComposer`, scientific presentation, Results List, and Viewer.
+
+Reported findings include:
+
+- CSQ is frozen as the semantic authority, but downstream components re-derive meaning from legacy constraints or planner-derived labels.
+- The query builder and query compiler have duplicated/incomplete responsibilities; compiled queries are not consumed by adapters.
+- The production selector is not capability-driven.
+- The capability-driven selector is reachable only through an unrouted path.
+- Provenance is incomplete in the final presentation: no seat attribution, and reported gaps include retrieval-time timestamp handling, licence/reuse fields, raw metadata omission from payloads, and missing source identity in citations.
+- Evidence evaluation is duplicated across stages; relevance/directness rules can disagree.
+- Home and Crop have separate paths, but isolation predicates are duplicated, and the Home endpoint also accepts crop-related fields.
+- The report marks some findings as direct verification [V], some as read-only agent findings not individually re-read [A], and some as inference [INF]. Future readers must preserve those evidence labels rather than treat all claims as equally verified.
+
+### 8.29.5 — Registry and capability-contract findings
+
+The report identifies competing structures:
+
+- `ScientificSourceAdapterRegistry`: five hard-wired adapters.
+- `AgriculturalProviderRegistry` and `ScientificAdapterBridgeProvider`: a separate four-source path that reportedly omits Consensus.
+- `ScientificSourceProfileCatalog`: ten profiles, including inactive stubs.
+- Selector constants and orchestrator key lists.
+- `Stage3SourceKeyIdentityBridge`, `Stage3CghiaCoexistenceBoundary`, FAOSTAT sub-registries, and `ScientificSourceRegistry` category structures.
+- The tracked 109-seat membership register, plus an incompatible 62-entry register and untracked matrices/evidence artifacts.
+- Persisted identity/IC/capability tables are reported to lack seeders and runtime writers/readers.
+
+The documentary `SOURCE-CAPABILITY-CONTRACT.md` reportedly defines SUPPORTED, PARTIALLY_SUPPORTED, UNSUPPORTED, UNKNOWN, and dimensions A–G. Cap v2 uses VERIFIED, PARTIAL, UNVERIFIED, UNAVAILABLE, NOT_APPLICABLE and evidence freshness. The model can represent several important states, but the report says it is not enforced for production retrieval, rate limits are not represented, and the adapter interface lacks capability declaration, typed query, limit, and generic error contracts.
+
+### 8.29.6 — Ranked general architecture gaps
+
+The report's dependency-ranked gap list is:
+
+1. **GAP-REG:** no canonical runtime registry and no source-key-to-`adr_id` binding.
+2. **GAP-CAP:** no capability-fact producer or enforcing selection consumer.
+3. **GAP-ADAPT-IF:** no versioned shared adapter contract with declared capabilities, typed request, typed outcome, limits, and error taxonomy.
+4. **GAP-SEL:** competing selectors and fixed-list selection instead of one capability-driven policy.
+5. **GAP-QUERY:** compiled CSQ bundle is not used as the adapter input.
+6. **GAP-SEM:** question meaning is re-derived downstream and semantic logic is duplicated.
+7. **GAP-PROV:** incomplete provenance and licence fields through citations/presentation.
+8. **GAP-EVID:** duplicated/conflicting evidence and directness policy.
+9. **GAP-ERR:** no generic error taxonomy/retryable flag.
+10. **GAP-FAMILY:** missing family adapters for verified access types such as OAI-PMH, RSS, REST, bulk/static.
+11. **GAP-TEST:** no shared adapter-conformance suite or new-source-without-regression test.
+12. **GAP-ISO:** duplicated Home/Crop isolation logic and Home endpoint accepting crop fields.
+
+These are the report's architectural findings and proposals, not authorization to implement them.
+
+### 8.29.7 — Reported roadmap and owner decisions
+
+The report proposes a planning-only sequence:
+
+- R0: evidence integrity and authority for documentary artifacts.
+- R1: confirm canonical membership and identity.
+- R2: canonical runtime registry and capability contract.
+- R3: shared adapter conformance.
+- R4: capability-driven selection and compiled-query boundary.
+- R5: normalization and provenance invariants.
+- R6: validate the 109 entries using separately authorized probes.
+- R7: activate sources only with per-seat evidence and explicit approval.
+- R8: repeatable onboarding with zero shared-code edits for a new source.
+
+Owner decisions recorded by the report include identity verification, dual-pair binding policy, how the five currently live sources relate to the 109 seats, selection policy, P1-EXIT-01(c)/Gate A/B authorization, aggregator-mediated access, licence/display/redistribution policy, web-only/no-access handling, the incompatible 62-entry register, and authorization for container tests/network probes.
+
+### 8.29.8 — Preservation and execution limits reported
+
+The supplied report says the audit was read-only, with no repository file modifications, staging, source activation, tests, Docker, network, database, installation, or deployment. It reports a branch/HEAD of `phase-18-m18-ai-marketing-communications / f2025315d8990f52f3c658c968a3ec8252ac18b0`, 0 staged, 17 tracked modifications, 1,118 untracked entries, 92 ignored entries, 0 stashes, 8 worktrees, and 40/40 baseline hashes unchanged. It says Phase 1 was not closed and Phase 2 had not started.
+
+This is the baseline stated in the report at its recorded time, not a guarantee of the current repository state.
+
+### 8.29.9 — Owner's controlling direction and next action
+
+The user's controlling direction, confirmed after this report was produced, is to pursue a general-purpose scientific search architecture for all 109 entries and future expansion—not separate repairs for individual questions or sources. The observed FAOSTAT measure-selection chain may inform GAP-SEM/GAP-QUERY analysis only; it is not an independent repair task.
+
+**Next action:** review the report's proposed first architectural step—Gate A design for one Runtime Source Registry and a versioned Source Adapter Contract (GAP-REG and GAP-ADAPT-IF; roadmap R2/R3)—as a design-only proposal. Do not implement, activate sources, execute tests, access the network, use Docker, or modify any code unless separately authorized. Phase 1 remains unclosed and Phase 2 remains not started unless newly verified evidence and explicit decisions change that status.
