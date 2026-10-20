@@ -12,6 +12,7 @@ import {
 } from '../api/fieldCropCultivation'
 import { FieldCropCanonicalAnswerView } from './FieldCropCanonicalAnswerView'
 import { FieldCropFarmingNeedsPanel, FieldCropProfileArticle } from './FieldCropFarmingNeedsPanel'
+import { toScientificUserPresentation } from './scientificUserPresentation'
 
 function baseLegacy(): FieldCropCultivationProfile {
   return {
@@ -417,6 +418,14 @@ describe('P7-U2 FieldCropFarmingNeedsPanel modes', () => {
     }
     expect(resolveCropAnswerRenderMode(profile)).toBe('limited')
     expect(resolveCropAnswerRenderMode(profile)).not.toBe('legacy')
+  })
+
+  it('maps a crop profile with a null message to the user presentation', () => {
+    const profile = canonicalFixture({ message: null })
+    const presentation = toScientificUserPresentation(profile)
+    expect(presentation?.primary_answer).toBe('CANONICAL_STAGE5_ANSWER_BODY')
+    expect(presentation?.sources.map((source) => source.result_id)).toEqual(['cite-1'])
+    expect(presentation?.answer_language).toBe('en')
   })
 })
 

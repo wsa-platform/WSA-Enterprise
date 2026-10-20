@@ -145,9 +145,14 @@ function presentedCandidates(
   return rows
 }
 
+export type ScientificUserPresentationSource = Pick<
+  ResearchAgentQueryResponse,
+  'user_presentation' | 'language' | 'citations' | 'answer_candidates'
+>
+
 /** Map any research payload to the user-facing presentation. Never forwards raw diagnostics. */
 export function toScientificUserPresentation(
-  result: ResearchAgentQueryResponse | null | undefined,
+  result: ScientificUserPresentationSource | null | undefined,
 ): ScientificUserPresentation | null {
   if (!result) {
     return null
