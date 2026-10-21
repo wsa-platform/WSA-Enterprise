@@ -4779,3 +4779,250 @@ This section does not authorize any implementation, population, activation, depl
 - **Statements that describe the pre-integration state.** These statements describe this ADR and the source matrix before the integration: the "uncommitted" label of the §8.25.1 change list as it applies to these two files, the last sentence of C-1 (§8.26.1), the final-status line of §8.25.11 ("NOTHING COMMITTED OR PUSHED"), and the Git row and final-status line of §8.26.7.
 - **Tests and CI.** The test results in §8.22–§8.25 come from the runs recorded there. No PHP or database test was rerun for the integration. GitHub has not run the `backend-pgsql` job, because that job is not committed. IC-AUDIT-002 remains BLOCKED.
 - **Status.** The integration changes no decision or status. IC disposition remains BLOCKED, Phase 1 remains BLOCKED, and Phase 2 has not started. No source seat is activated. The matrix remains an accountability artifact, not a runtime registry, membership authority, or acceptance record.
+
+
+## 8.27 — Cumulative Conversation / Continuity Record — General Scientific Search Engine and 109-Source Expansion (2026-10-14)
+
+### 8.27.1 — Purpose and append-only preservation rule
+
+This section records the conversation and working direction established on 2026-10-14 so a future ChatGPT conversation or engineering session can recover the objective, constraints, findings, prompt intent, and next action without relying on transient chat context. It is appended after §8.26.8. All earlier ADR text is retained; this section does not supersede, rewrite, or delete earlier records. This is a continuity record, not authorization to implement any proposal.
+
+### 8.27.2 — Owner's governing objective
+
+The user explicitly confirmed the governing objective:
+
+> Build a general-purpose scientific search engine capable of integrating the 109 approved scientific source entries and expanding in the future, without requiring separate fixes for individual sources or individual cases.
+
+The user explicitly rejected the direction of carrying out a dedicated FAOSTAT repair for the observed “wheat production” versus “wheat yield” issue. That observation may be used only as diagnostic evidence about a possible general contract or architecture weakness. It is not a standalone repair task in the current work path. The same rule applies to other isolated cases: investigate the general mechanism, not a growing collection of exceptions.
+
+The intended general architecture is to preserve CSQ as the semantic authority for the scientific question; distinguish question understanding, retrieval specification, source capability requirements, capability-driven source selection, source-specific query translation, retrieval, normalization, provenance preservation, evidence evaluation, and answer composition; and permit heterogeneous sources to integrate through stable contracts without forcing every source to support the same operations.
+
+### 8.27.3 — Conversation decisions and clarifications
+
+1. The user asked to resume the scientific-source expansion work.
+2. The user requested one large task with high agent autonomy and strict security procedures, reducing repetitive user prompts and routine clarification.
+3. A read-only, multi-stage autonomous investigation prompt was prepared. It covers repository baseline preservation; production search-path tracing; Source Registry investigation; Source Capability Contract investigation; reconciliation of all 109 approved entries; query and capability-driven selection architecture; contract-testing inventory; general gap analysis; implementation roadmap; and final preservation verification.
+4. The user corrected the direction to make clear that the mission is not to fix individual cases. The accepted goal is general architecture and scalable integration of the 109 sources.
+5. The user clarified that this information must be saved in the existing ADR-023 conversation/continuity log so a new conversation can read it and understand what happened. The required operation is an append-only historical record, not a replacement summary and not a new ADR.
+6. The user requires that all prior material remain intact. No historical section may be deleted, replaced, shortened, or silently reconciled.
+
+### 8.27.4 — Autonomous investigation prompt: required scope
+
+The prepared autonomous mission prompt is titled:
+
+“WSA-Enterprise — Autonomous Scientific Search Architecture Mission — 109-Source Expansion | Capability Architecture | Strict Security Protocol”.
+
+Its required investigation stages are:
+
+- **Stage 0 — Baseline:** verify current branch, HEAD, tracked/staged/untracked/ignored state, stashes, worktrees, and evidence preservation.
+- **Stage 1 — Production architecture:** trace CSQ, ScientificSearchQueryBuilder, ScientificQueryCompiler, RSC, MultiSourceScientificSearchOrchestrator, Registry, capability contracts, adapters, ScientificResultNormalizer, evidence gates, AnswerComposer, Results List/Viewer, and Home/Crop isolation.
+- **Stage 2 — Source Registry:** establish canonical identity, membership, ownership, duplicate handling, verification evidence, registration/activation distinctions, and completeness validation.
+- **Stage 3 — Source Capability Contract:** inspect declaration, consumption, enforcement, query capabilities, access requirements, licensing, pagination, rate limits, provenance, error handling, and supported/unsupported/unknown distinctions.
+- **Stage 4 — All 109 entries:** reconcile every approved entry without omissions, with stable identity, specialization, registry and capability status, verified access/query mechanisms, adapter/integration status, normalization/provenance, runtime verification, restrictions, gaps, and evidence needed.
+- **Stage 5 — General query architecture:** assess separation of semantic understanding, retrieval specification, capability requirements, selection, query construction, retrieval, normalization, evidence evaluation, and answer presentation.
+- **Stage 6 — Contract testing:** inventory existing tests and design reusable conformance tests that scale with new sources rather than encoding individual incidents.
+- **Stage 7 — Gap analysis:** rank confirmed defects, missing functionality, design ambiguity, missing evidence, environmental limitations, owner decisions, and external dependencies separately.
+- **Stage 8 — Roadmap:** propose a dependency-ordered implementation plan without implementing it.
+- **Stage 9 — Preservation:** verify no unauthorized repository mutation and accurately report execution limitations.
+
+Required deliverables: one consolidated report; a verified architecture diagram/trace; complete 109-entry reconciliation with matching totals; Registry and Capability Contract findings; ranked general architectural gaps; reusable test strategy; staged roadmap; unresolved owner decisions; evidence limitations; preservation report; and one recommended next action.
+
+### 8.27.5 — Security and authorization boundaries
+
+The autonomous investigation prompt expressly forbids, unless separately authorized:
+
+- staging, committing, pushing, pulling, fetching, switching branches, resetting, cleaning, stashing, rebasing, cherry-picking, rewriting history, or modifying Git metadata;
+- deleting, renaming, overwriting, restoring, or normalizing existing files;
+- modifying user changes, untracked/ignored files, temporary evidence, or worktrees;
+- Docker/containers, network access, source API calls, database operations, migrations, dependency installation/download, deployments, or test execution;
+- modifying source code, tests, configuration, ADR-023, source registries, capability declarations, selectors, adapters, CSQ, query builders, normalizers, or answer synthesis;
+- source activation, Phase 2 start, or declaring Phase 1 closed.
+
+The mission must stop after its consolidated report and wait for explicit authorization for subsequent implementation or runtime work. Historical approvals for narrower tasks do not authorize unrelated changes.
+
+### 8.27.6 — Latest Cursor report available in the conversation
+
+The latest supplied Cursor report is identified in the conversation as `Pasted markdown(20261014-182944).md`. The report's own verdict is **PARTIALLY COMPLETE — BLOCKED**. The following are report-derived findings, not new runtime verification by this record:
+
+- No repository edits, staging, Git write commands, Docker, network, database, installation, or test execution occurred during that reported campaign.
+- The B-1 static contract checks were reported as passing; runtime tests were not run.
+- A mismatch was identified between an aligner test and later production behavior, with the test last changed at `2cfcd03` and a later rule change at `0ea1c7e`; the owner contract is unresolved.
+- The report describes a FAOSTAT measure-detection path that can conflate “production” and “yield”. Per the user's subsequent direction, this is diagnostic evidence only and is not to become a separate repair task.
+- A selector policy conflict remains unresolved: historical test expectations versus a later capability-flag behavior.
+- CSQ independent-role behavior, bare “quantity”, Arabic “إنتاجية”, year-only measure inference, and MultiAnswer missing-role expectations were reported as unresolved contract/design questions, not authorized implementation tasks.
+- Membership-register test execution was blocked by line-ending/environment differences; the report did not establish a valid current runtime result.
+- A group of committed Feature test failures was described as historical; no re-baseline or test execution was authorized.
+- Deployment workflow/script risks and required staging/operator evidence were reported; no deployment modifications or staging actions were authorized.
+- The report says the proposed §8.33.9 preservation record was not applied in that campaign. This current section is a new continuity entry and does not claim to be that proposed section.
+- The report's baseline references HEAD `f2025315d8990f52f3c658c968a3ec8252ac18b0`; treat this as a report-stated baseline, not as proof of the current GitHub branch HEAD. The actual ADR blob read immediately before this entry was `6845f732dc97d7dccfc419909387fa535ad03e8d`.
+
+### 8.27.7 — Source membership and activation boundary
+
+The approved source membership baseline is 109 entries, with the earlier architecture record reporting group distribution of Group 1 — Plants: 22; Group 2 — Animal/Livestock/Poultry/Fish: 25; the remaining groups as defined in the authoritative register. Do not infer operational status from membership. The report and prior records indicate identity/registry/capability verification and activation are incomplete; the exact status of each entry must be derived from the current authoritative register and verified evidence. No source activation is authorized by this continuity entry.
+
+### 8.27.8 — Current status and next action
+
+- **Governing objective:** general-purpose, extensible scientific search architecture for all 109 approved source entries.
+- **Current work type:** read-only forensic/architectural investigation and reconciliation; not individual bug fixing.
+- **Next action:** run the consolidated autonomous read-only investigation prompt against the verified current repository state, produce one evidence-backed report reconciling all 109 entries and the Registry/Capability Contract, then stop for review and explicit authorization.
+- **Phase 1:** remains blocked unless its actual exit criteria are independently satisfied with evidence.
+- **Phase 2:** not started.
+- **ADR-023:** this record is appended; previous content is preserved.
+
+### 8.27.9 — Continuity and evidence rules for future conversations
+
+A future conversation should read this section and the cited earlier ADR sections before proposing the next action. It must distinguish owner decisions from proposals, report-derived findings from fresh verification, and membership from runtime integration/activation. It must not reopen the rejected case-by-case repair direction. It must not claim tests passed if they were not executed, claim a source is operational without evidence, or infer that Phase 1/Phase 2 status changed without new verification. The next session should continue from §8.27.8 and preserve the append-only history.
+
+
+## 8.28 — Automatic Conversation Artifact Archiving Policy (2026-10-14)
+
+### 8.28.1 — Owner instruction
+
+The user requests that prompts and reports related to the WSA-Enterprise scientific-search/source-expansion work be saved in ADR-023 automatically, without requiring a separate reminder each time, so future conversations can recover the work and continue from the correct stopping point.
+
+### 8.28.2 — Automatic archiving rule
+
+For each future work session in which a relevant prompt, Cursor report, audit report, implementation report, verification report, or material owner decision becomes available in the conversation or working context:
+
+1. Append it to this existing ADR-023 in a new, uniquely numbered section or subsection.
+2. Preserve the full original prompt/report text whenever the full text is available and its inclusion is practical. Do not replace full text with a summary merely for convenience.
+3. For long reports, preserve the full report as an append-only archival entry or an explicitly referenced artifact whose actual path and availability have been verified; include a concise index entry in ADR-023. Never claim a report was archived unless its content or verified artifact reference is present.
+4. Include a short chronological index stating date, artifact type, exact title/name, scope, outcome, unresolved issues, and next stopping point.
+5. Distinguish verbatim source material from summaries and analysis. Mark unavailable original text as unavailable; never reconstruct it as if verbatim.
+6. Preserve all existing ADR text, prior entries, reports, prompts, decisions, and historical statuses. No deletion, replacement, silent rewriting, or renumbering of prior entries is allowed.
+7. Preserve source terminology, status distinctions, evidence boundaries, and security constraints. Do not convert a proposal into an approved decision or a historical test result into a current result.
+8. Keep the archive in this ADR-023; do not create a replacement ADR as a substitute for the conversation record.
+9. At the end of each work session, append a current stopping-point record when meaningful progress, a new report, a prompt, or an owner decision occurred. It must state the next action and any required authorization.
+10. If a write to ADR-023 is not authorized or technically available in a future session, do not claim automatic archival succeeded. Preserve the material in the current response and explicitly report that ADR-023 still needs the append.
+
+### 8.28.3 — Security and Git boundary
+
+This archiving instruction authorizes the append-only documentation update to ADR-023 when the user has requested archiving, but it does not grant blanket permission for code changes, source activation, runtime tests, Docker, network access, database operations, deployment, or unrelated Git operations. Before each archival write, inspect the current file and branch, use an append-only change, verify the old content remains byte-for-byte as the prefix of the new content, and report the exact resulting commit and section. Do not stage or commit through a local Git workflow or push separately; if a GitHub contents update is used, disclose that it creates a documentation commit.
+
+### 8.28.4 — Scope
+
+This policy applies to the scientific search engine, Scientific Source Expansion, the 109 approved source entries, Source Registry, Source Capability Contract, CSQ, source selection and query construction, normalization/provenance, related Cursor prompts/reports, and decisions or constraints that materially affect this work. It does not require archiving unrelated personal conversations.
+
+### 8.28.5 — Acceptance check
+
+An archival action is complete only when the new entry is visible in the actual ADR-023 on the intended branch, the previous content is verified unchanged, the new section is confirmed present, and the result is reported to the user. The archival policy is prospective; it does not imply that every historical prompt or report has already been captured verbatim.
+
+
+## 8.29 — Archived Cursor Report: Scientific Search Architecture and 109-Source Reconciliation (2026-10-14)
+
+### 8.29.1 — Source artifact and archival status
+
+- **Original uploaded report:** `Pasted text(20261014-185122).txt`
+- **Report title:** `WSA-Enterprise: Scientific Search Architecture and 109-Source Reconciliation (Consolidated Report)`
+- **Source received:** 2026-10-14 in the conversation.
+- **Report size:** 1,725 lines; 47,700 characters in the available attachment.
+- **Archival form in this section:** a structured continuity record of the report's findings and exact reported baseline. The original attachment remains the verbatim source for the full report text; this section does not falsely claim that all 47,700 characters have been reproduced verbatim here.
+- **Instruction:** retain the original report artifact when available. Future archival work should add the full report text or a verified repository artifact path if full-text archival is requested/available. Do not treat this section as a substitute for the original report.
+
+### 8.29.2 — Executive findings as reported by Cursor
+
+The report concludes that the current codebase cannot yet integrate all 109 approved scientific source entries through a general mechanism. Its central finding is architectural, not a list of isolated source defects:
+
+1. No canonical runtime source registry exists. At least eight runtime structures independently hard-code keys for the five currently live sources, and application code does not connect those source keys to the 109 register IDs (`G1-01` through `G6-22`).
+2. Capability v2 is typed and persisted as a model, but no application path writes capability facts and its only runtime consumer is observational; retrieval is still permitted.
+3. Production selection uses a fixed list and feature flags. The capability-driven selector exists off the production route.
+4. `ScientificQueryCompiler` output is attached as metadata that no adapter consumes. Adapters receive free-text keyword variants instead of a compiled per-source query bundle.
+5. Source-specific branches remain in shared orchestration, ranking, verification, validation, and presentation logic.
+6. All 109 entries exist in the authoritative membership register, but none is reported as verified, registered, capability-backed, adapted, or runtime-tested.
+
+### 8.29.3 — Reported 109-entry reconciliation
+
+| Status | Count | Meaning in the report |
+|---|---:|---|
+| PARTIAL | 65 | Candidate identity and documented access channel; not verified |
+| UNVERIFIED | 44 | Ambiguous/unestablished identity or no documented access |
+| VERIFIED | 0 | No seat meets the report's verification definition |
+| MISSING | 0 | All seats are present in the authoritative membership register |
+| Runtime checks | 109 NOT_EXECUTED | No endpoint or integration runtime checks were run |
+
+Additional report-reported cross-checks:
+
+- Identity: 90 CAND, 16 AMB, 3 NEST.
+- Access: 36 machine/bulk, 41 web-only, 32 with no documented access.
+- Authentication: YES 5, NO 32, UNKNOWN 72.
+- Licence: documented for 31, UNKNOWN for 78.
+- Membership: 109 CURRENT seats, unique `adr_id` values, and 10 cross-group dual pairs.
+- Group counts: G1 22; G2 25; G3 14; G4 7; G5 19; G6 22; total 109. Group-specialization labels in the report are explicitly identified as inference from member names, not register facts.
+
+These are report-derived findings from the supplied static audit and evidence review. They are not new runtime verification or independent external validation by this archival entry.
+
+### 8.29.4 — Production path and architectural findings
+
+The report traces the main Home/Crop retrieval path through query planning, CSQ freezing in `QueryUnderstandingService`, `AgriculturalScientificSearchService`, `RetrievalSemanticContract`, `MultiSourceScientificSearchOrchestrator`, `ScientificSearchQueryBuilder`, `ScientificSourceSelector`, `ScientificSourceAdapterRegistry`, source adapters, normalizers, ranking/relevance, validation, `AnswerComposer`, scientific presentation, Results List, and Viewer.
+
+Reported findings include:
+
+- CSQ is frozen as the semantic authority, but downstream components re-derive meaning from legacy constraints or planner-derived labels.
+- The query builder and query compiler have duplicated/incomplete responsibilities; compiled queries are not consumed by adapters.
+- The production selector is not capability-driven.
+- The capability-driven selector is reachable only through an unrouted path.
+- Provenance is incomplete in the final presentation: no seat attribution, and reported gaps include retrieval-time timestamp handling, licence/reuse fields, raw metadata omission from payloads, and missing source identity in citations.
+- Evidence evaluation is duplicated across stages; relevance/directness rules can disagree.
+- Home and Crop have separate paths, but isolation predicates are duplicated, and the Home endpoint also accepts crop-related fields.
+- The report marks some findings as direct verification [V], some as read-only agent findings not individually re-read [A], and some as inference [INF]. Future readers must preserve those evidence labels rather than treat all claims as equally verified.
+
+### 8.29.5 — Registry and capability-contract findings
+
+The report identifies competing structures:
+
+- `ScientificSourceAdapterRegistry`: five hard-wired adapters.
+- `AgriculturalProviderRegistry` and `ScientificAdapterBridgeProvider`: a separate four-source path that reportedly omits Consensus.
+- `ScientificSourceProfileCatalog`: ten profiles, including inactive stubs.
+- Selector constants and orchestrator key lists.
+- `Stage3SourceKeyIdentityBridge`, `Stage3CghiaCoexistenceBoundary`, FAOSTAT sub-registries, and `ScientificSourceRegistry` category structures.
+- The tracked 109-seat membership register, plus an incompatible 62-entry register and untracked matrices/evidence artifacts.
+- Persisted identity/IC/capability tables are reported to lack seeders and runtime writers/readers.
+
+The documentary `SOURCE-CAPABILITY-CONTRACT.md` reportedly defines SUPPORTED, PARTIALLY_SUPPORTED, UNSUPPORTED, UNKNOWN, and dimensions A–G. Cap v2 uses VERIFIED, PARTIAL, UNVERIFIED, UNAVAILABLE, NOT_APPLICABLE and evidence freshness. The model can represent several important states, but the report says it is not enforced for production retrieval, rate limits are not represented, and the adapter interface lacks capability declaration, typed query, limit, and generic error contracts.
+
+### 8.29.6 — Ranked general architecture gaps
+
+The report's dependency-ranked gap list is:
+
+1. **GAP-REG:** no canonical runtime registry and no source-key-to-`adr_id` binding.
+2. **GAP-CAP:** no capability-fact producer or enforcing selection consumer.
+3. **GAP-ADAPT-IF:** no versioned shared adapter contract with declared capabilities, typed request, typed outcome, limits, and error taxonomy.
+4. **GAP-SEL:** competing selectors and fixed-list selection instead of one capability-driven policy.
+5. **GAP-QUERY:** compiled CSQ bundle is not used as the adapter input.
+6. **GAP-SEM:** question meaning is re-derived downstream and semantic logic is duplicated.
+7. **GAP-PROV:** incomplete provenance and licence fields through citations/presentation.
+8. **GAP-EVID:** duplicated/conflicting evidence and directness policy.
+9. **GAP-ERR:** no generic error taxonomy/retryable flag.
+10. **GAP-FAMILY:** missing family adapters for verified access types such as OAI-PMH, RSS, REST, bulk/static.
+11. **GAP-TEST:** no shared adapter-conformance suite or new-source-without-regression test.
+12. **GAP-ISO:** duplicated Home/Crop isolation logic and Home endpoint accepting crop fields.
+
+These are the report's architectural findings and proposals, not authorization to implement them.
+
+### 8.29.7 — Reported roadmap and owner decisions
+
+The report proposes a planning-only sequence:
+
+- R0: evidence integrity and authority for documentary artifacts.
+- R1: confirm canonical membership and identity.
+- R2: canonical runtime registry and capability contract.
+- R3: shared adapter conformance.
+- R4: capability-driven selection and compiled-query boundary.
+- R5: normalization and provenance invariants.
+- R6: validate the 109 entries using separately authorized probes.
+- R7: activate sources only with per-seat evidence and explicit approval.
+- R8: repeatable onboarding with zero shared-code edits for a new source.
+
+Owner decisions recorded by the report include identity verification, dual-pair binding policy, how the five currently live sources relate to the 109 seats, selection policy, P1-EXIT-01(c)/Gate A/B authorization, aggregator-mediated access, licence/display/redistribution policy, web-only/no-access handling, the incompatible 62-entry register, and authorization for container tests/network probes.
+
+### 8.29.8 — Preservation and execution limits reported
+
+The supplied report says the audit was read-only, with no repository file modifications, staging, source activation, tests, Docker, network, database, installation, or deployment. It reports a branch/HEAD of `phase-18-m18-ai-marketing-communications / f2025315d8990f52f3c658c968a3ec8252ac18b0`, 0 staged, 17 tracked modifications, 1,118 untracked entries, 92 ignored entries, 0 stashes, 8 worktrees, and 40/40 baseline hashes unchanged. It says Phase 1 was not closed and Phase 2 had not started.
+
+This is the baseline stated in the report at its recorded time, not a guarantee of the current repository state.
+
+### 8.29.9 — Owner's controlling direction and next action
+
+The user's controlling direction, confirmed after this report was produced, is to pursue a general-purpose scientific search architecture for all 109 entries and future expansion—not separate repairs for individual questions or sources. The observed FAOSTAT measure-selection chain may inform GAP-SEM/GAP-QUERY analysis only; it is not an independent repair task.
+
+**Next action:** review the report's proposed first architectural step—Gate A design for one Runtime Source Registry and a versioned Source Adapter Contract (GAP-REG and GAP-ADAPT-IF; roadmap R2/R3)—as a design-only proposal. Do not implement, activate sources, execute tests, access the network, use Docker, or modify any code unless separately authorized. Phase 1 remains unclosed and Phase 2 remains not started unless newly verified evidence and explicit decisions change that status.
