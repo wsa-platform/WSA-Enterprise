@@ -20,6 +20,7 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         DatabaseSafety::assertTestingDatabaseIsIsolated();
+        DatabaseSafety::assertScientificRecordStoreIsIsolated(self::resolvedScientificDatabaseWithoutConnecting());
 
         if (app()->environment('testing')) {
             Cache::flush();
@@ -41,6 +42,20 @@ abstract class TestCase extends BaseTestCase
         }
 
         parent::tearDown();
+    }
+
+    private static function resolvedScientificDatabaseWithoutConnecting(): ?string
+    {
+        if (! app()->resolved('db')) {
+            return null;
+        }
+
+        $connections = app('db')->getConnections();
+        if (! isset($connections['scientific_records'])) {
+            return null;
+        }
+
+        return (string) $connections['scientific_records']->getDatabaseName();
     }
 
     protected function openApiSpecPath(): string
