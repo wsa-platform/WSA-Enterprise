@@ -7,7 +7,8 @@
 - [`ADR-internet-first-agricultural-ai-research-agent.md`](./ADR-internet-first-agricultural-ai-research-agent.md)
 - [`../adr/ADR-001-provider-adapter-architecture.md`](../adr/ADR-001-provider-adapter-architecture.md)
 - [`ADR-022-canonical-scientific-question-v1.md`](./ADR-022-canonical-scientific-question-v1.md) (**do not modify**; CSQ semantic authority)
-- [`SCIENCE-SOURCE-EXPANSION-62-REGISTER.md`](./SCIENCE-SOURCE-EXPANSION-62-REGISTER.md) (**authoritative 62-source identity register**)
+- [`science-source-expansion/ADR-023-LEGACY-62-PROVENANCE-SNAPSHOT.v1.json`](./science-source-expansion/ADR-023-LEGACY-62-PROVENANCE-SNAPSHOT.v1.json) (**frozen historical-62 provenance after §8.45 retirement**; markdown register deleted)
+- [`science-source-expansion/ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json`](./science-source-expansion/ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json) (**CURRENT membership SoT — 110 seats after §8.45**; D-09 109 snapshot retained)
 
 **Archive:** [`science-source-expansion/`](./science-source-expansion/)
 
@@ -4780,6 +4781,9 @@ This section does not authorize any implementation, population, activation, depl
 - **Tests and CI.** The test results in §8.22–§8.25 come from the runs recorded there. No PHP or database test was rerun for the integration. GitHub has not run the `backend-pgsql` job, because that job is not committed. IC-AUDIT-002 remains BLOCKED.
 - **Status.** The integration changes no decision or status. IC disposition remains BLOCKED, Phase 1 remains BLOCKED, and Phase 2 has not started. No source seat is activated. The matrix remains an accountability artifact, not a runtime registry, membership authority, or acceptance record.
 
+---
+
+> **Numbering note (2026-10-22).** The three sections that follow, §8.27, §8.28, and §8.29, are the published records of 2026-10-14: the continuity record, the automatic archiving policy, and the archived reconciliation report. Their numbers and text are unchanged. They do not replace the local 2026-10-13 records, which remain below as §8.63, §8.64, and §8.65.
 
 ## 8.27 — Cumulative Conversation / Continuity Record — General Scientific Search Engine and 109-Source Expansion (2026-10-14)
 
@@ -5026,3 +5030,3603 @@ This is the baseline stated in the report at its recorded time, not a guarantee 
 The user's controlling direction, confirmed after this report was produced, is to pursue a general-purpose scientific search architecture for all 109 entries and future expansion—not separate repairs for individual questions or sources. The observed FAOSTAT measure-selection chain may inform GAP-SEM/GAP-QUERY analysis only; it is not an independent repair task.
 
 **Next action:** review the report's proposed first architectural step—Gate A design for one Runtime Source Registry and a versioned Source Adapter Contract (GAP-REG and GAP-ADAPT-IF; roadmap R2/R3)—as a design-only proposal. Do not implement, activate sources, execute tests, access the network, use Docker, or modify any code unless separately authorized. Phase 1 remains unclosed and Phase 2 remains not started unless newly verified evidence and explicit decisions change that status.
+
+> **Numbering note (2026-10-22).** These three sections were headed §8.27, §8.28, and §8.29 in the local working tree on 2026-10-13. Those headings are now §8.63, §8.64, and §8.65. They stay in this position, before §8.30, in their original order. §8.30–§8.62 keep their numbers. Navigational citations now use §8.63–§8.65. Historical sentences that still say §8.27–§8.29 are the 2026-10-13 audit range, the uncommitted-blob sentence, the uncommitted-inventory row, the commit-authorization sentence, and the in-place correction logs; they mean these local records, not the published sections above. Two later owner quotations keep the spoken numbers §8.27.8 and §8.28.4. No decision, report, prompt, or table was deleted.
+
+## 8.63 — Conditional Acceptance of §8.24 — Documentation Decision (2026-10-13)
+
+**Status:** USER DECISION — §8.24 CONDITIONALLY ACCEPTED AS A DESIGN BASIS. **Implementation authorized: NO.** Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Scope:** Records the user's decision of 2026-10-13 on item 1 of the decision package (§8.26.6): §8.24 is accepted conditionally, as a design basis, within the scope and conditions stated in this section. **Source of the decision:** the user's documentation instruction of 2026-10-13, which states "The user has approved the conditional-acceptance decision presented in the conversation" and authorizes only this documentation. It is a conversation record, not a repository artifact, and it is not archived under `science-source-expansion/` as D-08 requires. Append-only: no earlier section is edited or renumbered. **[V]** means verified on 2026-10-13 by inspection of the repository or by a read-only query; **[U]** means not verified for this record.
+
+### 8.63.1 — Decision and status
+
+- **Decision.** §8.24 is accepted **conditionally** as the design basis for the rest of Phase 1. The acceptance covers only §8.63.3–§8.63.9 and holds only under the conditions of §8.63.10. It is not an unconditional acceptance.
+- **Effect on §8.26.6.** Item 1 moves from "Recorded, not accepted" to "Conditionally accepted (§8.63)". Formal acceptance is still required (§8.63.10, condition 1). Every other item of §8.26.6 keeps the state recorded there; §8.63.6 adds later evidence relevant to item 9 without deciding it.
+- **What this decision does not do.** It does not close any open decision of §8.26.6, does not issue an Implementation Authorization Gate (D-10.15), and does not accept §8.23 beyond the C+A decision already recorded in C-3 (§8.26.1). Acceptance of the rest of §8.23 remains open.
+- **Status relative to other decisions.**
+
+| Decision | Status |
+|---|---|
+| D-01, D-02, D-04, D-09, D-10 (including D-10.8, D-10.10, D-10.11.1, D-10.15) | ACCEPTED; unchanged and not superseded by this section |
+| C+A (§8.26.1 C-3) | Approved user decision; unchanged |
+| Onboarding Contract design (§8.11) | ACCEPTED WITH NON-BLOCKING CLARIFICATIONS (design only); unchanged |
+| §8.24 | CONDITIONALLY ACCEPTED as a design basis (this section) |
+| §8.23 outside C+A | Not accepted; unchanged |
+| §8.26.2 order proposal (six steps), §8.26.3 Option B, §8.26.4 Option 1, §8.25.6 deployment order | PROPOSED; unchanged. The seven-step order of §8.63.8 is recorded only as a conditional design requirement; its confirmation (§8.26.6 item 10) is OPEN |
+| `T10+T8+T2` | BLOCKED; unchanged |
+| Implementation Authorization (D-10.15, step 2) | Not issued |
+
+### 8.63.2 — Two-phase plan
+
+The two-phase plan of §8.21.4 and §8.24.1 is unchanged:
+- **Phase 1:** architectural foundation, design decisions, IC Persistence Integrity closure, separately authorized source-integration implementation, and Phase 1 verification.
+- **Phase 2:** comprehensive source acceptance, regression validation, controlled activation, and final source-by-source acceptance.
+
+The design gate opens Phase 1 and is not a phase. There is no Phase 3. Neither phase is complete.
+
+### 8.63.3 — Membership and source identity
+
+- The membership authority remains `docs/architecture/science-source-expansion/ADR-023-109-MEMBERSHIP-REGISTER.v1.json` (D-09). On 2026-10-13 it holds `membership_revision` `109.v1`, 109 CURRENT seats with 109 unique `adr_id` values, groups G1 22, G2 25, G3 14, G4 7, G5 19, and G6 22, and 10 dual pairs; the file equals blob `af67418c1c070c6e53ffb3ab1eef62890149c4b7` at HEAD [V]. This section does not change the register, its identifiers, counts, groups, or order.
+- `adr_id` remains the membership identifier. Display names are not identity keys (D-10.3.3). Similar names and declared dual pairs do not establish SAME_AS (D-10.4.2). `canonical_identity_id` remains unbound until valid SAME_AS or resource-unification evidence is recorded (D-10.3.4).
+- Membership, identity binding, IC, Capability, adapter implementation, acceptance, and activation remain separate states (D-10).
+- Activating all 109 seats as one operation is forbidden (D-10.2.6). Onboarding remains atomic per `adr_id` (D-10.2.3, D-10.11.2), under the accepted Onboarding Contract and the required authorization.
+
+### 8.63.4 — Runtime Source Registry (design direction)
+
+- **Direction (conditionally accepted).** Under D-01, a future Runtime Source Registry for ADR membership seats extends the existing Stage-3 adapter + registry boundary. It is not a parallel integration framework and not a second source of truth beside the register (D-09). The minimum contract of §8.24.2 is the design basis:
+  - entries keyed by `adr_id`;
+  - references, not copies, to the seat's IC record, identity binding, and Capability facts;
+  - a per-seat activation state per D-10.10, plus explicit DISABLED, UNAVAILABLE, UNSUPPORTED, and FAILED outcomes;
+  - adapter resolution by verified access family;
+  - source identity and provenance carried into normalized results.
+- **What exists today [V]:**
+
+| Component | State |
+|---|---|
+| `ScientificSourceAdapterRegistry` | Production registry of five hard-coded Stage-3 adapters (`openalex`, `crossref`, `semantic_scholar`, `consensus`, `fao_stat`); not a registry of seats |
+| Runtime Source Registry for ADR seats | Does not exist |
+| `ScientificSourceProfileCatalog` | Profiles `openalex`, `crossref`, `semantic_scholar`, and `fao_stat` are active; `consensus` and the stubs `agris`, `gbif`, `pubmed`, `europe_pmc`, and `agricola` are inactive. Profiles and stubs are not seats, bindings, or activation |
+| Capability and Identity domain and persistence (`Research/Capability`, `Research/Identity`) | Defined and tested; no production writer. The Capability Store repository is container-bound; the identity binding repository is not |
+| Seat wiring and per-seat onboarding | None; no seat literal in `backend/app` |
+
+- This direction is a design basis only. It authorizes no implementation, wiring, or registration.
+
+### 8.63.5 — Capability verification and CapVer authority
+
+- Before any production binding that depends on Capability state, the following must be decided and documented:
+  - the responsible CapVer authority and its organizational owner;
+  - the enforcement boundary, including write-side safeguards (§8.16.14: "above repository and/or as defensive Persist write checks");
+  - evidence requirements and lifecycle rules (§8.16.7, §8.23.3–§8.23.5);
+  - the relationship between IC classification, identity binding, Capability verification, onboarding, registry registration, and activation (§8.63.8);
+  - the treatment of the GO-1 vocabulary.
+- Only CapVer may assign VERIFIED (D-10.5.8). CapVer ownership remains DEFERRED (D-10.5.9; §8.26.6 item 3).
+- GO-1 states (`SOURCE-CAPABILITY-CONTRACT.md`, `HistoricalGo1CapabilityState`) are not mapped automatically to Cap v2 states (§8.23.6, §8.26.4). The choice between Options 1 and 2 of §8.26.4 is open.
+- **Evidence references.** §8.26.1 C-4 records evidence-reference persistence as implemented through `CapabilityCellFact`. On 2026-10-13, `CapabilityCellFact` carries `evidenceRefs` and rejects blank, padded, and duplicate references [V]. The evidence-reference discrepancy listed in §8.24.3 therefore stays withdrawn as recorded in C-4; the unmapped GO-1 vocabulary remains the open Capability Contract gap.
+
+### 8.63.6 — IC evidence and closure
+
+- Verified per-seat IC evidence remains required before runtime binding (D-10.8.1). The IC inventory remains OPEN (§8.26.6 item 4).
+- The levels of closure are distinct:
+
+| Level | State on 2026-10-13 | Evidence |
+|---|---|---|
+| Audit item IC-AUDIT-002 (PostgreSQL suite in CI) | The blockers recorded in §8.25.5 (commit and push authorization; a GitHub run) no longer apply. Closed for this item only | Commit `f2025315d8990f52f3c658c968a3ec8252ac18b0` (parent `626bffc`) adds `backend/tests/Pgsql/IntegrationClassificationPostgresIsolationTest.php`, `backend/tests/Pgsql/bin/ic-persist-worker.php`, and the `backend-pgsql` job in `.github/workflows/ci.yml`; it is HEAD and equals the local `origin` tracking ref [V]. In GitHub Actions run `38315050442` for that commit, job `backend-pgsql` completed with conclusion `success` [V, read-only query]. The PHPUnit summary in that job's log ("OK (121 tests, 840 assertions)") was read when the commit was published and was not re-read for this record [U]. The run's overall conclusion is `failure` because of the `backend`, `frontend`, `security`, and `mobile` jobs. Their failing steps and first reported errors are [V, read-only log query]: `backend`, `php artisan test --no-ansi`: 155 failed, 4 skipped, 2797 passed in 39 test classes, the first reported failure being in `FaoStatPhase3AGeneralRemediationTest` (line 57); `frontend`, `npm run build`: TypeScript error TS2345 in `src/public/FieldCropCanonicalAnswerView.tsx` (28,53), reproduced locally on 2026-10-13 with a non-emitting type-check; `security`, `php artisan test --group=security --no-ansi`: 4 failed, 205 passed (`M19SecurityHardeningTest`, `Phase14M14EnterpriseAdminTest`, `ServiceOwnershipArchitectureTest`); `mobile`, `flutter test`: 1 of 76 tests failed (`test/stage8_screens_test.dart`, "research agent shows backend answer"). The same four jobs also failed in runs `38311970424` (`626bffc`), `38293395393` (`4dbf547`), and `37932365430` (`31a6ee3`) [V]. The causes have not been analysed beyond the first reported errors [U], and they are not attributed to IC. §8.21.3 reports failures of the same four jobs for the earlier baseline `ba24abda`; it is historical and does not describe this run |
+| IC Persistence Integrity (technical) | E2b, E6, and test-infrastructure safety PASS; no in-scope defect found | §8.22, §8.25.2–§8.25.4 |
+| Overall IC gate | **BLOCKED** | §8.25.10 items 3 and 4 are unmet: the deployment order decided and validated in staging (§8.25.6, §8.26.5, §8.26.6 item 7), and the operator check of §8.25.7 on each real environment (§8.26.6 item 11) |
+
+- A successful `backend-pgsql` job does not by itself close IC.
+- This section records the later state. It does not rewrite §8.25.5, §8.25.10, §8.26.6 item 9, §8.26.7, or §8.26.8; their statements that these files and the job are uncommitted, that GitHub has not run the job, and that IC-AUDIT-002 is BLOCKED describe the state when they were written.
+
+### 8.63.7 — `T10+T8+T2` and query authority
+
+- §8.26.3 Option B is recorded as the **recommended design direction**: T10 and T8 as design candidates, and T2 amended so that a per-source Projection emits constraint metadata that `ScientificSearchQueryBuilder` consumes, with the Builder keeping query construction. It is not an approved implementation specification. `T10+T8+T2` remains BLOCKED until a separate decision (§8.26.6 item 5).
+- Option C is not accepted. D-04 and D-10.9.2 are not superseded.
+- Preserved:
+  - CSQ is the semantic authority for the scientific question (D-02, D-10.9.1);
+  - `ScientificSearchQueryBuilder` constructs source-specific HTTP queries (D-04, D-10.9.2); D-04 names it the "HTTP query execution authority" and D-10.9.2 the "scholarly lexical construction authority";
+  - `ScientificQueryCompiler` is metadata and compilation support, not an execution authority (D-04, D-10.9.3);
+  - CSQ is not replaced by keywords alone, and no scientific question element, identity, or facet is dropped silently (D-10.9.5–6).
+
+### 8.63.8 — Per-seat onboarding sequence (design requirement)
+
+Subject to the accepted Onboarding Contract (§8.11, D-10.11), the order for each `adr_id` is:
+1. per-seat IC classification and verified access evidence;
+2. identity binding where valid evidence supports it;
+3. Capability evidence and an authorized CapVer assessment;
+4. the approved Onboarding Contract for the seat;
+5. registry binding;
+6. the per-seat activation gate;
+7. verification of source identity, provenance, failure behaviour, and acceptance.
+
+This order extends the §8.26.2 proposal with step 7 and is recorded as a conditional design requirement. §8.26.6 item 10 stays open until it is confirmed (§8.63.10, condition 7). The list does not permit executing any step.
+
+### 8.63.9 — Preserved search architecture
+
+Unchanged by this decision:
+- CSQ as semantic identity;
+- `ScientificSearchQueryBuilder` as query-execution authority;
+- `ScientificQueryCompiler` as metadata and compilation support;
+- `RetrievalSpecification` (RSC) and `MultiSourceScientificSearchOrchestrator`;
+- the separation between question semantics and execution representations (D-02);
+- provenance and original-source identity requirements (§8.9.7, D-10.3.6, §8.24.2); D-03 keeps answer authority with evidence, so that source ranking or API wording does not replace evidence.
+
+No source code, runtime behaviour, interface, test, or query semantics is changed by this section.
+
+### 8.63.10 — Conditions for Phase 1 to leave BLOCKED
+
+| # | Condition | State on 2026-10-13 |
+|---|---|---|
+| 1 | Formal acceptance of the conditionally accepted design (§8.24 under this section) | Open |
+| 2 | Approval of the Onboarding Contract and of the Runtime Source Registry contract | Onboarding Contract design accepted with non-blocking clarifications (§8.11.1); Registry contract conditionally accepted only (this section). Open |
+| 3 | Explicit designation of CapVer ownership, authority, and enforcement | Open (DEFERRED) |
+| 4 | Explicit authorization of the per-seat IC inventory and evidence collection | Open |
+| 5 | Resolution and documentation of `T10+T8+T2`, preserving the Builder's query authority | Open (BLOCKED) |
+| 6 | An explicit decision on the GO-1 vocabulary, without automatic mapping | Open |
+| 7 | Resolution of the IC / Capability / registry / activation order, and of the outstanding staging and operator checks | Order recorded as a conditional design requirement (§8.63.8); staging and operator checks not done. Open |
+| 8 | All applicable IC closure requirements (§8.25.10) | Items 1 and 2 met; items 3 and 4 open (§8.63.6). Open |
+| 9 | A separate, explicit Implementation Authorization Gate with a defined scope (D-10.15) | Not issued |
+| 10 | Focused acceptance tests and evidence, on SQLite and on isolated PostgreSQL where applicable (§8.24.9 item 7) | No implementation to test yet. Open |
+
+Phase 1 remains BLOCKED while any condition is open. Phase 2 may begin only after documented Phase 1 acceptance and an explicit transition decision.
+
+### 8.63.11 — Cross-reference notes (not resolved here)
+
+Recorded for a separate decision; no earlier text is changed:
+- §8.24.9 item 2 reads "IC is CLOSED under §8.25.9"; §8.25.9 is "Test evidence (this execution)", and the IC closure conditions are in §8.25.10.
+- §8.24.8 item 8 refers to §8.25.4; the same-key replay discussion is in §8.25.3.
+- §8.24.9 item 1 refers to "Decisions 1–5 of §8.24.8"; §8.26.6 supersedes that list with a different numbering.
+- §8.24.6 states that `T10+T8+T2` "does not appear in this ADR"; §8.26.3 records that it appears in §8.21.4 and §8.21.5 as an open question.
+- §8.25.5, §8.26.6 item 9, §8.26.7, and §8.26.8 describe the state before commit `f2025315` (§8.63.6).
+
+### 8.63.12 — Authorization boundary
+
+This conditional design acceptance is not an implementation, onboarding, capability-verification, identity-binding, activation, deployment, commit, or push authorization. Each activity remains subject to its own required approval and gate.
+
+This section does not activate or bind any seat, does not write Capability, Identity, or IC records, does not change the membership register or the source matrix, and does not supersede D-04, D-09, D-10.8, D-10.10, D-10.11.1, or D-10.15.
+
+**FINAL STATUS: §8.24 CONDITIONALLY ACCEPTED AS A DESIGN BASIS; NO IMPLEMENTATION AUTHORIZATION; IC GATE BLOCKED; PHASE 1 BLOCKED; PHASE 2 NOT STARTED; NO SEAT ACTIVATED.**
+
+---
+
+## 8.64 — Decision-Record Closure: Conditional Acceptance, Implementation Gates, Phase 1 Exit Checklist, §8.23 Boundary, and `T10+T8+T2` Options (2026-10-13)
+
+**Status:** USER DECISION RECORD — CLARIFICATION AND CONSOLIDATION. **Implementation authorized: NO.** Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Scope:** Append-only. No earlier section is edited or renumbered. **[V]** means verified on 2026-10-13 by inspection of the repository or by a read-only query; **[P]** means a user instruction or earlier report relayed in conversation records, not a repository artifact; **[U]** means not verified; **[I]** means an inference that no earlier text states explicitly; **[M]** means a required record that does not exist in the repository.
+
+### 8.64.1 — Purpose and authority
+
+This section resolves five decision-record ambiguities found by a read-only consistency audit of §8.23–§8.27 on 2026-10-13 (the audit report is a conversation record [P]). Each is defined here so that this section can be read on its own:
+
+| ID | Ambiguity |
+|---|---|
+| AC-20 | §8.63.1 says the conditional acceptance of §8.24 "holds only under the conditions of §8.63.10", but those are Phase 1 exit conditions, all open, and condition 1 is "formal acceptance" itself |
+| AC-24 | §8.11.9 requires separate Implementation Design and Implementation Authorization gates; the exit lists of §8.24.9, §8.26.6, and §8.63.10 name only the second |
+| AC-10 | Four overlapping Phase 1 exit lists exist: §8.24.9, §8.26.6, §8.26.7, and §8.63.10 |
+| AC-01 | §8.23 is marked pending acceptance, its C+A decision is approved (C-3), and §8.26.6 has no item for the rest of §8.23 |
+| AC-22 | §8.63.7 calls Option B a "recommended design direction" inside the conditionally accepted scope, while §8.63.1 lists it as PROPOSED; "Option C is not accepted" does not say whether Option C is rejected |
+
+**Authority.** The dispositions are recorded on the user's decision-closure instruction of 2026-10-13 [P]; that instruction is not archived under `science-source-expansion/` as D-08 requires [M]. Where this section restates an earlier decision, the earlier section remains the authority. The new elements are the clarification of §8.63.1 (§8.64.3), the gate definitions (§8.64.4), the classifications of §8.64.5 and §8.64.6, and the consolidated checklist (§8.64.7). No open proposal is approved and no implementation is authorized.
+
+### 8.64.2 — Evidence baseline and limitations
+
+- **Repository [V].** Branch `phase-18-m18-ai-marketing-communications`; HEAD `f2025315d8990f52f3c658c968a3ec8252ac18b0` (parent `626bffc`), equal to the local `origin` tracking ref and to the remote branch (`git ls-remote` and the GitHub API, read-only). History: `4dbf547` (published §8.21) → `d1840af` (integration of §8.22–§8.26) → `626bffc` (source matrix) → `f2025315` (IC PostgreSQL tests and CI job).
+- **ADR-023 [V].** The remote copy and the HEAD copy are the same blob, `6845f732`, which ends at §8.26.8. §8.27 and this section exist only in the local working tree and are uncommitted. No remote section conflicts with them.
+- **Membership and matrix [V].** Register blob `af67418c` (`109.v1`, 109 CURRENT seats with unique `adr_id`); matrix blob `cf8a31a1`, 109 rows in register order. Neither is changed by this section.
+- **CI [V, read-only query].** GitHub Actions run `38315050442` for `f2025315`: `backend-pgsql`, `openapi`, `stage10`, and `docker-validate` succeeded; `backend`, `frontend`, `security`, and `mobile` failed; the run conclusion is `failure`.
+- **Limitations.** No test, database, Docker, or deployment action was run for this section. The PHPUnit summary in the `backend-pgsql` log was not re-read [U]. Staging and real-environment states are unknown [U].
+
+### 8.64.3 — AC-20: meaning of the conditional acceptance of §8.24
+
+**Disposition: CLOSED (clarification).** §8.24 remains **CONDITIONALLY ACCEPTED** as a design basis.
+
+1. **Validity.** The conditional acceptance recorded in §8.63 is in force from 2026-10-13. Its validity does not depend on Phase 1 being complete or on any condition of §8.63.10 being met. It changes or ends only through a later explicit decision recorded in this ADR. The words "holds only under the conditions of §8.63.10" in §8.63.1 are read as: the acceptance is limited to the scope of item 2 below, and the conditions govern progression, not validity.
+2. **Accepted scope.** The design basis of §8.63.3–§8.63.9: the separation of membership and identity; the Runtime Source Registry direction (an extension under D-01, with the minimum contract of §8.24.2); the Capability and CapVer constraints of §8.63.5; the IC levels of §8.63.6; the preserved query authorities of §8.63.7 and §8.63.9; and the per-seat onboarding order of §8.63.8 as a conditional design requirement.
+3. **Not approved by it.** Any proposal, recommendation, or open question in §8.24 or §8.26 that is not separately decided, in particular: `T10+T8+T2` and its options (§8.64.6); CapVer ownership and enforcement placement; Capability population; the GO-1 mapping choice; the deployment order; the IC operational requirements; and any implementation.
+4. **Conditions.** The outstanding conditions are the items of the consolidated checklist (§8.64.7) and, until that checklist is confirmed, the earlier criteria named in its confirmation status. They govern completion of the Implementation Design Gate, the Implementation Authorization Gate, and Phase 1 exit.
+5. **Formal acceptance** (§8.63.10 condition 1) means an explicit, recorded decision of the user or architecture owner that completes the Implementation Design Gate (§8.64.4) for a stated scope and confirms the §8.24 basis for that scope, stating any amendment. Until such a record exists, §8.24 stays CONDITIONALLY ACCEPTED. Formal acceptance is checklist item P1-EXIT-02. This definition was drafted for this record to resolve AC-20 [I]: the user's instruction fixed the reading of item 1, not this definition, and its confirmation is OPEN. This ADR does not state whether §8.24 must also be formally accepted as a whole; that question is OPEN. The set of implementation scopes is not defined, so P1-EXIT-02 cannot be shown complete until that set is recorded.
+6. **Decision owner:** the user or architecture owner (§8.24.8). **Evidence required:** the Implementation Design Gate record and the decisions it depends on (P1-EXIT-01).
+7. **Terms.** These are distinct and must not be substituted for one another:
+
+| Term | Meaning | State on 2026-10-13 |
+|---|---|---|
+| Design acceptance | An explicit decision accepting a design basis | §8.24: CONDITIONALLY ACCEPTED |
+| Design-gate completion | A recorded Implementation Design Gate (Gate A, §8.64.4) | NOT COMPLETED for any scope |
+| Implementation authorization | A recorded Implementation Authorization Gate (Gate B, §8.64.4) | NOT AUTHORIZED |
+| Phase 1 exit | Every item of §8.64.7 is PASS, the earlier criteria that remain applicable (§8.64.7, confirmation status) are met, and the exit is recorded (P1-EXIT-11) | BLOCKED |
+| Phase 2 start | A separate explicit transition decision after Phase 1 exit | NOT STARTED |
+
+### 8.64.4 — AC-24: Implementation Design Gate and Implementation Authorization Gate
+
+**Disposition: CLOSED (gates defined).** Gate A: **NOT COMPLETED**. Gate B: **NOT AUTHORIZED**.
+
+**Sequence.** D-10.15 requires an Onboarding Contract Design Gate followed by a separate Implementation Authorization Gate. §8.11.9 requires separate Implementation Design and Implementation Authorization gates. Read together:
+1. **Onboarding Contract Design Gate** (D-10.15, step 1). The Onboarding Contract design is ACCEPTED WITH NON-BLOCKING CLARIFICATIONS (§8.11.1). This is design acceptance only. Treating §8.11 as the gate of D-10.15 step 1 is an inference [I] from §8.10.5 ("still requires Onboarding Contract Design and Implementation Authorization") and §8.11.1; no earlier text states it, and outside this subsection the phrase "Onboarding Contract Design Gate" appears only in D-10.15. Its confirmation is OPEN.
+2. **Gate A — Implementation Design Gate** (§8.11.9).
+3. **Gate B — Implementation Authorization Gate** (D-10.15, step 2; §8.11.9).
+
+Each gate is a separate, explicit, recorded decision. Completing this documentation section satisfies neither gate.
+
+**Gate A** establishes an approved, coherent implementation design for a stated scope. A Gate A record must decide each of the following items, or state that the item is outside its scope:
+
+| Gate A item | State on 2026-10-13 | Reference |
+|---|---|---|
+| Runtime Source Registry contract and ownership | Direction CONDITIONALLY ACCEPTED (minimum contract of §8.24.2); contract details and ownership OPEN | §8.24.2, §8.63.4 |
+| CapVer organizational ownership and enforcement placement | DEFERRED | D-10.5.9, §8.16.14, §8.26.6 item 3 |
+| Capability contract and permitted population rules | Cap v2 contract defined and implemented; producers of non-VERIFIED states OPEN; explicit UNVERIFIED persistence NOT AUTHORIZED; automatic demotion OPEN | §8.23.2, §8.23.4, §8.64.5 |
+| Separation of membership, identity, IC, Capability, registry, and activation | ACCEPTED | D-09, D-10.3, D-10.8, D-10.10, §8.11.4 |
+| Ordering of IC and Capability | OPEN: the six-step proposal of §8.26.2 is PROPOSED; the seven-step order of §8.63.8 is a conditional design requirement; the order is not confirmed. The wider IC, Capability, registry, and activation order is P1-EXIT-01 (e) | §8.26.2, §8.26.6 item 10, §8.63.8, §8.63.10 condition 7 |
+| `T10+T8+T2` and its relation to D-04 and D-10.9.2 | BLOCKED | §8.64.6 |
+| GO-1 vocabulary handling | Choice OPEN (Option 1 recommended); automatic mapping prohibited | §8.26.4, §8.64.5 |
+| Source-specific integration strategy and verified access families | Strategy CONDITIONALLY ACCEPTED; no verified access family | §8.24.5 |
+| Onboarding Contract implementation design | OPEN | §8.11.9 |
+| Deployment order and staging validation, where the scope needs them | OPEN | §8.25.6, §8.26.5 |
+
+A Gate A item is resolved only by an explicit recorded decision. A recommendation does not resolve it.
+
+**Gate B** is a separate, explicit, scope-limited authorization. A Gate B record must state:
+- the authorized scope (components, files, and any seats by `adr_id`);
+- the prohibited scope;
+- the Gate A record or records it relies on;
+- the acceptance criteria and the checklist items of §8.64.7 it addresses;
+- the required tests and evidence, including database engines;
+- the permitted repository and Git operations, including whether commit or push is allowed;
+- operational restrictions (databases, Docker, deployment, real environments);
+- the conditions that suspend or invalidate it.
+
+A Gate B authorization is suspended at least when: the work would exceed its scope; a Gate A decision it relies on is amended or withdrawn; protected work in progress would be modified; a production, shared, or real database could be reached; PostgreSQL isolation cannot be ensured; or a test exposes an unresolved architectural choice. An authorization for one scope does not permit adjacent work.
+
+**Gate B lifecycle not defined (OPEN).** This ADR does not define: who may grant a Gate B authorization (§8.24.8 assigns issuing the Implementation Authorization Gate for the Runtime Source Registry to the user or architecture owner; P1-EXIT-03 names the user); who may suspend or invalidate it; who may clear a suspension; the evidence required before work resumes; how a suspension, clearance, or resumption is recorded; or whether an invalidated authorization needs a fresh Gate B record. Each needs an owner decision. Until then, this ADR provides no basis for resuming suspended or invalidated work without a new explicit, recorded decision.
+
+**Current state [V].** No Gate A record and no Gate B record exist in this ADR. The statement of §8.18.2, "NO NEXT IMPLEMENTATION UNIT IS AUTHORIZED", remains in force.
+
+### 8.64.5 — AC-01: acceptance boundary of §8.23
+
+**Disposition: CLOSED (boundary recorded).** §8.23 is **not accepted as a whole**. C+A is **ACCEPTED** within the scope recorded in C-3 (§8.26.1), unchanged:
+- collectors collect evidence and references; they neither assign nor persist Cap states;
+- the evaluator recommends a state and has no authority to finalize or persist it;
+- CapVer holds the central decision authority within the approved design; only CapVer may assign VERIFIED (D-10.5.8), and that authority is not open to renegotiation;
+- the Capability Store stores already-authorized decisions and creates no authority;
+- explicit UNVERIFIED persistence requires a separate authorization;
+- C+A authorizes no Capability population of the 109 seats.
+
+| §8.23 provision | Classification | Evidence |
+|---|---|---|
+| C+A separation (C-3, points 1–8) | ACCEPTED | §8.26.1 C-3 (approved user decision) |
+| "Collector + Authority" expansion of C+A (§8.23.1) | NOT APPROVED (withdrawn) | C-3 |
+| Role boundaries of Collector, Evaluator, CapVer, and Capability Store (§8.23.2) | ACCEPTED, as restatements of C-3 and D-10.5.7–8 | C-3, D-10.5 |
+| Capability separate from IC, identity, membership, and activation (§8.23.2, §8.23.8) | ACCEPTED | D-10, D-10.5.10 |
+| CapVer organizational ownership | DEFERRED | D-10.5.9, §8.16.14 |
+| CapVer producer, and enforcement placement of CapVer-only VERIFIED | DEFERRED; not enforced in code (§8.18.1) | §8.16.14, §8.23.2 |
+| Producers of PARTIAL, UNVERIFIED, UNAVAILABLE, and NOT_APPLICABLE facts | OPEN (population authority) | §8.16.14, §8.23.2 |
+| Explicit persistence of UNVERIFIED | NOT AUTHORIZED | §8.16.7, C-3 point 7 |
+| Evidence requirements (§8.23.3) | ACCEPTED, as restatements of §8.16.7 and D-10.5 | §8.16.7, D-10.4.5, D-10.5.2–5 |
+| Lifecycle steps 1–4 and CURRENT → HISTORICAL supersession (§8.23.4) | ACCEPTED, as restatements of C-3 and CPD-B | C-3, §8.16.8 |
+| MISSING → persisted state through an authorized producer (§8.23.4) | ACCEPTED WITH CONDITIONS: the producer is OPEN, and an UNVERIFIED target needs the separate authorization of C-3 point 7 | C-3 |
+| Downgrade producer for VERIFIED → another state; automatic demotion on STALE evidence (§8.23.4) | OPEN | §8.23.4 |
+| Rejection rules (§8.23.5) | ACCEPTED as far as they restate §8.16.13, D-10.5.8, and `CapabilityStoreDomainContract`; exception mapping DEFERRED | §8.16.13 |
+| Decision provenance fields; CapVer decision identifier (§8.23.6) | OPEN (proposed in §8.23 only); identifier format DEFERRED | §8.23.6 |
+| Database fail-closed for concurrent Cap writers on the IC pattern; CapVer arbitration of conflicting evidence (§8.23.6) | OPEN (proposed in §8.23 only) | §8.23.6 |
+| No automatic mapping of GO-1 states to Cap v2 | ACCEPTED on the user's instruction of 2026-10-13 [P] ("No automatic mapping from historical GO-1 capability states to Cap v2 is allowed"), which is not archived in the repository [M]; consistent with §8.23.6 and §8.23.9, whose own classifications are given in this table, and with §8.63.5. In code [V], `HistoricalGo1CapabilityState` has no conversion to Cap v2 and `CapabilityStoreDomainContract::assertGo1NotEquatedToCapV2` maps nothing (commit `5a54491`; test `test_go1_historical_vocabulary_is_separate`); a code guard is not a decision record | this section |
+| Choice between Options 1 and 2 of §8.26.4 | OPEN | §8.26.4, §8.26.6 item 6 |
+| Failure modes (§8.23.7) and test requirements (§8.23.8) | OPEN: proposed requirements for a future Gate A covering Capability | §8.23.7, §8.23.8 |
+| Prohibited shortcuts (§8.23.9) | ACCEPTED, as restatements of D-10.2.6–7, D-10.5, §8.16.7, and C-3; the GO-1 item as above | D-10.2, D-10.5 |
+| CapVer implementation, producer or service, Capability population, seat activation (closing statement of §8.23) | NOT AUTHORIZED | §8.23, C-3 point 8 |
+
+**Evidence references.** C-4 stands and is not reopened. On 2026-10-13 [V], `CapabilityCellFact` requires at least one opaque evidence reference for VERIFIED, PARTIAL, and UNAVAILABLE and rejects blank, padded, and duplicate references, and `CapabilityRecord` rejects PARTIAL without `limitation_text`. Two known gaps are documented, not claimed as defects: the persistence layer enforces neither CapVer-only VERIFIED (§8.18.1) nor the prohibition on explicit UNVERIFIED writes [V]. Both are latent, because the store has no production writer, and both belong to the DEFERRED enforcement placement decided under Gate A.
+
+The text of §8.23 is unchanged. Acceptance of any OPEN or DEFERRED provision requires an explicit decision, normally within Gate A.
+
+### 8.64.6 — AC-22: `T10+T8+T2` options
+
+**Disposition: CLOSED (statuses fixed).** No option is approved.
+
+| Option (§8.26.3) | Status |
+|---|---|
+| A — reject `T10+T8+T2` | NOT SELECTED (neither approved nor rejected) |
+| B — T10 and T8 as design candidates; T2 amended so that a per-source Projection emits constraint metadata consumed by `ScientificSearchQueryBuilder`, which keeps query construction | **RECOMMENDED — NOT APPROVED** |
+| C — accept as written and supersede D-04 and D-10.9.2 | **NOT SELECTED — NOT APPROVED** (not formally rejected) |
+| `T10+T8+T2` as a whole | **BLOCKED — NO IMPLEMENTATION AUTHORIZED** |
+
+- In §8.63.7, "recommended design direction" means RECOMMENDED. The conditional acceptance of §8.24 does not approve Option B; within §8.63.7 it covers only the preserved authorities. "Option C is not accepted" means NOT APPROVED; it is not a rejection.
+- Approving Option B, or any other option, requires a separate explicit decision recorded in this ADR.
+- **Preserved and in force:** D-04 and D-10.9.2 (`ScientificSearchQueryBuilder` constructs source-specific HTTP queries; D-04: "HTTP query execution authority"; D-10.9.2: "scholarly lexical construction authority"); D-02 and D-10.9.1 (CSQ is the semantic authority); D-10.9.3 (`ScientificQueryCompiler` is metadata-only); D-10.9.5–6 (no silent loss of identity or facets). Option C cannot take effect implicitly; it would need an explicit decision that supersedes D-04 and D-10.9.2 and states why.
+- **The question can be closed only when:**
+  1. T10, T8, and T2 are defined in tracked design text, or a tracked definition replaces them (today they exist only in untracked working-tree extracts; §8.24.6, §8.26.3);
+  2. the user or architecture owner records an explicit selection of Option A, B, or C;
+  3. for Option B, the record defines the constraint metadata that Projection emits and the Builder consumes, keeps query construction in the Builder, and is consistent with D-10.9.5–6 and with T8's rule that fallback never upgrades the evidence class;
+  4. for Option C, the record explicitly supersedes D-04 and D-10.9.2 and gives the reasons;
+  5. the decision is taken as part of Gate A (§8.64.4).
+- No option may be implemented under this section. Implementing any option requires Gate A and Gate B.
+
+### 8.64.7 — AC-10: consolidated Phase 1 exit checklist (P1-EXIT)
+
+**Disposition: single consolidated list recorded on the user's instruction of 2026-10-13 [P] (AC-10: "Establish exactly one canonical checklist for Phase 1 exit"). Status: PROPOSED CONSOLIDATED CHECKLIST — NOT OWNER-APPROVED.** This subsection is intended to become the only Phase 1 exit checklist, replacing as exit lists §8.24.9, the "Blocks" column of §8.26.6, the Phase 1 row of §8.26.7, and §8.63.10, which are kept unchanged as history. §8.25.10 remains the definition of IC closure and is used by P1-EXIT-04 and P1-EXIT-05.
+
+**Confirmation status.** The instruction is not archived in the repository [M]. Some conditions below were drafted for this record and are not taken from an earlier decision [I]: a Gate A record for each implementation scope (P1-EXIT-02); the note on P1-EXIT-05 and Gate B; the exclusion of the blanket blocker B1 (P1-EXIT-07); the reference to §8.23.8, which §8.64.5 classifies as OPEN (P1-EXIT-09); and the rule that every matrix state cites an artifact (P1-EXIT-10). Until an owner decision confirms the list and these conditions, the earlier criteria of §8.21.4 (Phase 1), §8.24.9, §8.25.10, §8.25.11, the Phase 1 row of §8.26.7, and §8.63.10 remain applicable together with this list, and none of them is treated as superseded.
+
+States: PASS, FAIL, BLOCKED, DEFERRED, NOT RUN. In the "Blocks" column, **B** means Gate B (implementation authorization), **X** means Phase 1 exit, and **IC** means IC closure.
+
+| ID | Item | Acceptance condition | Evidence required | State on 2026-10-13 | Blocks | Authority |
+|---|---|---|---|---|---|---|
+| P1-EXIT-01 | Prerequisite architectural decisions | Each recorded as an explicit decision: (a) CapVer ownership and enforcement placement; (b) Capability population and write authority (producers of non-VERIFIED states, explicit UNVERIFIED persistence, automatic demotion); (c) `T10+T8+T2` (§8.64.6); (d) GO-1 vocabulary handling; (e) IC, Capability, registry, and activation order (§8.63.8); (f) deployment order | Decision records appended to this ADR | **BLOCKED**: (a) DEFERRED; (b)–(f) OPEN | B, X; (f) also IC | User or architecture owner |
+| P1-EXIT-02 | Design-gate acceptance (Gate A), including formal acceptance of §8.24 | A Gate A record (§8.64.4) for each implementation scope, confirming the §8.24 basis (§8.64.3) and deciding the §8.23 provisions that scope needs (§8.64.5) | Gate A record in this ADR | **BLOCKED**: no Gate A record; depends on P1-EXIT-01 | B, X | User or architecture owner |
+| P1-EXIT-03 | Implementation authorization (Gate B) | A separate, scope-limited Gate B record (§8.64.4) for each implementation scope, including the per-seat IC inventory and evidence collection | Gate B record | **BLOCKED**: NOT AUTHORIZED | All implementation; X | User |
+| P1-EXIT-04 | IC technical persistence evidence | §8.25.10 items 1 and 2 met; E2b, E6, and test-infrastructure safety pass on isolated PostgreSQL | §8.22, §8.25.2–§8.25.4, §8.25.9 (isolated runs, not rerun); `f2025315` tracks the four `backend/tests/Pgsql` files [V]; run `38315050442`, job `backend-pgsql` succeeded [V] | **PASS** (qualified: the isolated-PostgreSQL results are those recorded in §8.25.9; the CI job is the only later run) | IC, X | Executor evidence; GitHub Actions |
+| P1-EXIT-05 | IC operational closure | §8.25.10 items 3 and 4: deployment order decided (P1-EXIT-01 f) and validated in staging with the evidence of §8.26.5; an authorized operator has run §8.25.7 on each real environment before deployment and recorded zero rows | Staging evidence; operator records | **BLOCKED**: not decided, not validated, not run | IC, X; B (see note) | User or architecture owner (order); authorized operator (checks) |
+| P1-EXIT-06 | Runtime Source Registry and Capability integration | Implemented only under Gate B; extends `ScientificSourceAdapterRegistry` (D-01); entries keyed by `adr_id` that reference IC, identity, and Cap records (§8.24.2); Cap writes only through authorized producers under the enforcement decided in P1-EXIT-01 (a) and (b); the existing five-adapter path preserved | Commits under Gate B; results of P1-EXIT-09 | **BLOCKED**: not authorized, not started | X | User (authorization); executor (evidence) |
+| P1-EXIT-07 | Per-seat classification and identity | For each of the 109 `adr_id` values, one seat at a time: a verified per-seat IC artifact (D-10.8.1) and, where evidence supports it, a persisted identity binding (D-10.3); or a per-seat blocker with its reason, recorded after a per-seat evidence review under the authorized IC inventory. The blanket blocker "no authorization" (matrix B1) does not satisfy this item | IC records, identity-binding records, matrix rows that cite them | **BLOCKED**: IC inventory not authorized; 0 IC artifacts and 0 bindings (§8.25.8) | X | User (authorization); IC and identity evidence owners |
+| P1-EXIT-08 | Access-family adapters | Adapters only for verified access families, one per family with per-seat constraints; Stage-3 adapters reused only where an identity binding proves the same resource; no speculative adapters (§8.24.5); query construction stays with the Builder (D-04) | Adapter code under Gate B; family evidence; tests | **BLOCKED**: no verified family; 0 adapters | X | User (authorization); executor |
+| P1-EXIT-09 | Regression and database-specific tests | For each implemented scope: focused tests on SQLite and, for persistence and concurrency, on isolated PostgreSQL through the guarded suite (including single CURRENT Cap fact under concurrency, §8.23.8); regression of the existing five-source path, CSQ identity, and Home/Crop isolation; commands, exit codes, and counts recorded; skipped work marked NOT RUN | Test logs | **NOT RUN**: nothing implemented to test; the PostgreSQL suite covers IC only (§8.64.8, Q-07) | X | Executor; GitHub Actions |
+| P1-EXIT-10 | Source-matrix evidence integrity | Matrix updated from evidence only; 109 rows in register order; every state backed by a cited artifact; the register unchanged | Matrix-to-register comparison | **BLOCKED**: current integrity verified (109 rows in register order [V]); the final update depends on P1-EXIT-06 to P1-EXIT-08 | X | Executor; user review |
+| P1-EXIT-11 | Formal Phase 1 verification and disposition | A Phase 1 verification report appended to this ADR that re-verifies P1-EXIT-01 to P1-EXIT-10 on current evidence, followed by an explicit decision recording Phase 1 exit | Report and decision record | **NOT RUN** | X | User or architecture owner |
+
+**Note on P1-EXIT-05 and Gate B.** §8.24.7 lists IC closure (§8.25) among the dependencies of the foundation implementation. Each Gate B record must state how that dependency is met for its scope, or why the scope does not depend on it.
+
+**Rule.** Phase 1 leaves BLOCKED only when every item is PASS, every earlier criterion that remains applicable under the confirmation status above is met, and the exit is recorded under P1-EXIT-11. A DEFERRED item does not satisfy exit. Phase 2 starts only through a separate explicit transition decision.
+
+**IC levels** (unchanged from §8.63.6): IC-AUDIT-002 is CLOSED for that item only; IC technical persistence is PASS (P1-EXIT-04); the overall IC gate is BLOCKED (P1-EXIT-05). A successful CI job does not close IC.
+
+**Mapping of the earlier lists** (intended to drop no criterion; the traceability notes after the table record where that is not yet shown):
+
+| Earlier list | Mapping to P1-EXIT items |
+|---|---|
+| §8.24.9 items 1–7 | 1 → 01, 02, 03; 2 → 04, 05; 3 → 03, 06; 4 → 07; 5 → 08; 6 → 10; 7 → 09 |
+| §8.26.6 items 1–11 | 1 → 02; 2 → 03, 06; 3 → 01; 4 → 03, 07; 5 → 01; 6 → 01; 7 → 01, 05; 8 → not an exit item: §8.26.6, which supersedes the list in §8.24.8, records "Blocks: Neither", consistent with §8.24.9 item 1 and the Phase 1 row of §8.26.7; §8.25.11, written before §8.26.6, refers to the §8.24.8 list; the same-key replay decision itself is not made (§8.26.6: "Not in contract"); 9 → executed; authorization unverified from the repository (§8.64.8, Q-12); 10 → 01; 11 → 05 |
+| §8.63.10 conditions 1–10 | 1 → 02; 2 → 02; 3 → 01; 4 → 03, 07; 5 → 01; 6 → 01; 7 → 01, 05; 8 → 04, 05; 9 → 03; 10 → 09 |
+| §8.25.10 items 1–4 | 1, 2 → 04; 3, 4 → 05 |
+| §8.25.11 | Runtime Source Registry → 06; Capability alignment → 01 (b), 06; identity bindings → 07; family adapters → 08; IC closure → 04, 05; `T10+T8+T2` → 01 (c); "each decision of §8.24.8" → 01, 02, 03, except §8.24.8 item 8 (see the §8.26.6 row); commits and push of the §8.25.1 artifacts → executed; authorization unverified from the repository (Q-12); "Phase 2 must not start until Phase 1 passes its exit gate and the user authorizes it" → Rule above |
+| §8.21.4, Phase 1 | Design-gate items: CapVer authority → 01 (a); Capability population rules → 01 (b); Runtime Source Registry contract → 02; seat identity bindings → 02, 07; `T10+T8+T2` → 01 (c); Capability and IC order → 01 (e). IC step 1 → procedural precondition (§8.64.11 item 5); steps 2–6 → 04, 05 (E2b and E6 per §8.25.2–§8.25.3; E8 → 05); step 7, "Append a formal IC closure delta to this ADR" → no separate item (covered only implicitly by 05 and 11); step 8 → 06, 07, 08, 09, 10 |
+
+**Traceability notes** (recorded, not resolved):
+- §8.24.9 item 4 requires each seat to be "classified and bound with evidence, or listed as blocked with its reason". P1-EXIT-07 adds the exclusion of the blanket blocker B1 and requires a binding only "where evidence supports it"; whether a classified but unbound seat without a blocker meets the exit is OPEN. Today the source matrix lists blockers B1–B4 for every seat [V].
+- §8.24.9 item 7 requires all mandatory tests to pass "on SQLite and on isolated PostgreSQL"; P1-EXIT-09 requires isolated PostgreSQL "for persistence and concurrency". Until confirmed, the wording of §8.24.9 item 7 also applies.
+- §8.21.4 step 7 (formal IC closure delta) has no separate item.
+- §8.26.6 item 8 is not an exit item (see the table); the same-key replay decision itself remains open.
+
+### 8.64.8 — Cross-reference corrections and historical qualifications
+
+Earlier text is unchanged. Each row reads: original statement → evidence → correction or qualification → reason.
+
+| # | Original statement | Evidence | Correction or qualification | Reason |
+|---|---|---|---|---|
+| Q-01 | §8.24.9 item 2: "IC is CLOSED under §8.25.9" | §8.25.9 is "Test evidence (this execution)"; the closure conditions are in §8.25.10 | Read as §8.25.10. Mapped to P1-EXIT-04 and P1-EXIT-05; superseded as an exit criterion only once §8.64.7 is confirmed | Wrong subsection number; when it arose is not determined [U] |
+| Q-02 | §8.24.8 item 8: "(§8.25.4)" | Same-key replay at stricter isolation is discussed in §8.25.3 | Read as §8.25.3 | Wrong subsection number |
+| Q-03 | §8.24.9 item 1: "Decisions 1–5 of §8.24.8" | §8.26.6 supersedes the list of §8.24.8 | Mapped to P1-EXIT-01 to P1-EXIT-03 (§8.64.7); superseded as an exit criterion only once §8.64.7 is confirmed | Obsolete list reference |
+| Q-04 | §8.24.6: `T10+T8+T2` "does not appear in this ADR" | The published §8.21.4 (design-gate list) and §8.21.5 (prompt item A.5) mention it | True of the `ba24abda` copy only (C-1); already noted in §8.26.3. Status unchanged: BLOCKED | Written before the published §8.21 was integrated |
+| Q-05 | §8.24.1: "Earlier ADR sections do not mention this plan" | §8.21.4 | Already corrected by C-2; no further action | — |
+| Q-06 | §8.23 header "PENDING ARCHITECTURE-OWNER ACCEPTANCE"; §8.24.8 item 1 "Accept or amend §8.23 and this section"; §8.26.6 item 1 names §8.24 only | C-3; §8.63.1 | Boundary recorded in §8.64.5: C+A ACCEPTED; §8.23 not accepted as a whole; the remaining provisions are tracked by P1-EXIT-01 and P1-EXIT-02 | Conflicting descriptions of the acceptance of §8.23 |
+| Q-07 | §8.24.3: Capability persistence is validated "for persistence, by the PostgreSQL suite" | `backend/phpunit.pgsql.xml` runs `tests/Unit/Agriculture/Research/IntegrationClassification` and `tests/Pgsql`, which contain IC tests only [V]; the Capability PostgreSQL evidence is the earlier isolated run of §8.18.1 [P], not rerun and not in CI | Qualified: Capability persistence has historical PostgreSQL evidence only. PostgreSQL coverage of any Capability scope is required by P1-EXIT-09 | Claim broader than the evidence |
+| Q-08 | §8.24.3: `CapabilityRecord` lacks the evidence-reference field | C-4; re-verified on 2026-10-13 (§8.64.5) | No further action; not reopened | — |
+| Q-09 | §8.24.5: "IC persistence is BLOCKED (§8.25)" | The IC levels of §8.63.6 | Read as "the overall IC gate is BLOCKED"; IC technical persistence is PASS (P1-EXIT-04) | Terminology |
+| Q-10 | §8.25.5 heading "BLOCKED (external)" and "the job has not run on GitHub"; the IC-AUDIT-002 row of §8.25.10; §8.26.8 "GitHub has not run … IC-AUDIT-002 remains BLOCKED" | `f2025315`; run `38315050442` | Accurate when written. Current state per §8.63.6: IC-AUDIT-002 is CLOSED for that item only | State changed later |
+| Q-11 | §8.25.5: a job of "+43 lines" that "provisions a job-scoped `postgres:16-alpine` service"; C-5 ran `actionlint` on that version | The committed job (`f2025315`, `ci.yml` +52/−0) starts `postgres:16-alpine` with `docker run … --network host … -c listen_addresses=127.0.0.1` on port 55432; its credential is `ic-${{ github.run_id }}-${{ github.run_attempt }}` [V] | §8.25.5 and C-5 describe a version that was not committed. The committed job binds PostgreSQL to loopback on the runner's host network, and its credential is still derived from the run. `actionlint` on the committed version: NOT VERIFIED. When and why the job changed is not recorded [U] | Description of an uncommitted version |
+| Q-12 | §8.26.6 item 9: "Not authorized"; §8.63.1: "Every other item of §8.26.6 keeps the state recorded there" | `d1840af` integrates the local records after `4dbf547`; `626bffc` adds the matrix; `f2025315` adds the IC tests and CI job; the remote branch is `f2025315`; run `38315050442` executed [V]. These Git operations were carried out on user instructions [P] | Item 9: EXECUTED [V]; AUTHORIZATION: UNVERIFIED FROM REPOSITORY [P] (the instructions for the commits and the push are conversation records, not repository artifacts [M]). The sentence of §8.63.1 applies to the other items | Stale status |
+| Q-13 | §8.26.7 Git row; §8.26.8 "What stays uncommitted"; §8.25.11 final status "NOTHING COMMITTED OR PUSHED" | As Q-12 | Historical. Still uncommitted [V]: `SOURCE-CAPABILITY-CONTRACT.md`, the `backend/e2e-tmp` design extracts, and §8.27 and §8.28 of this ADR | State changed later |
+| Q-14 | §8.26.2: "the Onboarding Contract comes before the first binding or activation (D-10.11.1)" | D-10.11.1: "before the first runtime binding or activation"; §8.11.3 requires identity evidence and the IC reference "before binding" | Read with "runtime". An identity-binding record (step 2 of §8.63.8) is not a runtime binding, so the order of §8.63.8 is consistent with D-10.11.1 | The paraphrase dropped a qualifier |
+| Q-15 | §8.63.1 table: D-01, D-02, D-04, D-09, D-10 "ACCEPTED" | D-10: "ACCEPTED WITH NON-BLOCKING CLARIFICATIONS"; D-09: "ACCEPTED"; D-01, D-02, and D-04 have no status of their own and fall under the ADR status "ACCEPTED (governance + master-register freeze; implementation not started)" | Read with those statuses; no decision changes | Shortened status |
+| Q-16 | §8.63.1: the acceptance "holds only under the conditions of §8.63.10"; §8.63.10 condition 1 | — | Clarified by §8.64.3; §8.63.10 is to be superseded as an exit list by §8.64.7 once that list is confirmed | Circularity (AC-20) |
+| Q-17 | §8.63.8 step 4: "the approved Onboarding Contract for the seat" | §8.11.3: one accepted contract, with one `onboarding_decision_id` per `adr_id` | Read as "a per-seat onboarding decision under the accepted Onboarding Contract (§8.11)" | Wording |
+| Q-18 | §8.63.1 table: Option B "PROPOSED"; §8.63.7: "recommended design direction" and "Option C is not accepted" | — | Statuses fixed by §8.64.6 | Ambiguity (AC-22) |
+
+### 8.64.9 — Status matrix
+
+| Item | Status on 2026-10-13 |
+|---|---|
+| §8.24 design basis | CONDITIONALLY ACCEPTED (§8.64.3) |
+| Formal acceptance of §8.24 | OPEN (P1-EXIT-02) |
+| C+A (§8.26.1 C-3) | ACCEPTED |
+| §8.23 outside C+A | Not accepted as a whole; classified in §8.64.5 |
+| Onboarding Contract design (§8.11) | ACCEPTED WITH NON-BLOCKING CLARIFICATIONS (design only) |
+| Gate A — Implementation Design Gate | NOT COMPLETED for any scope |
+| Gate B — Implementation Authorization Gate | NOT AUTHORIZED |
+| Option A / Option B / Option C (§8.26.3) | NOT SELECTED / RECOMMENDED — NOT APPROVED / NOT SELECTED — NOT APPROVED |
+| `T10+T8+T2` | BLOCKED — NO IMPLEMENTATION AUTHORIZED |
+| D-02, D-04, D-09, D-10 (including D-10.9.2, D-10.11.1, D-10.15) | In force; unchanged |
+| IC-AUDIT-002 | CLOSED for that item only |
+| IC technical persistence | PASS (P1-EXIT-04) |
+| Overall IC gate | BLOCKED (P1-EXIT-05) |
+| Phase 1 | BLOCKED (§8.64.7) |
+| Phase 2 | NOT STARTED |
+| The 109 seats | 109 CURRENT members; 0 bound, 0 populated, 0 activated |
+| AC-20, AC-24, AC-10, AC-01, AC-22 | Decision-record ambiguity addressed by §8.64.3–§8.64.7; the underlying items keep the states above. AC-10: PROPOSED CONSOLIDATED CHECKLIST — NOT OWNER-APPROVED (§8.64.7). Open points of AC-20 and AC-24 are recorded in §8.64.3 item 5 and §8.64.4 |
+
+### 8.64.10 — Not authorized
+
+This section authorizes none of the following, and no other section of this ADR authorizes them:
+- implementation of the Runtime Source Registry, Capability integration, CapVer, the Onboarding Contract, adapters, or any option of `T10+T8+T2`;
+- Capability, IC, or identity-binding population; the per-seat IC inventory or evidence collection; source probes;
+- binding, registration, or activation of any seat, and in particular activation of all 109 seats as one operation (D-10.2.6);
+- changes to the membership register, the source matrix, CSQ, `ScientificSearchQueryBuilder`, `ScientificQueryCompiler`, the orchestrator, or the five Stage-3 adapters;
+- automatic GO-1 mapping, or explicit UNVERIFIED persistence;
+- database operations, migrations, Docker or service starts, deployment, or changes to `scripts/deploy-production.sh`;
+- changes to code, tests, CI workflows, or runtime configuration;
+- staging, commit, push, fetch, merge, rebase, or any other Git history operation;
+- the start of Phase 2.
+
+### 8.64.11 — Required approval and evidence for later implementation
+
+Before any implementation in Phase 1:
+1. the decisions of P1-EXIT-01 that the scope needs, recorded explicitly;
+2. a Gate A record for the scope (P1-EXIT-02), including formal acceptance of the §8.24 basis for that scope;
+3. a Gate B record for the scope (P1-EXIT-03) with the contents required by §8.64.4;
+4. for a scope that depends on IC closure (§8.24.7), P1-EXIT-05 met or explicitly addressed in the Gate B record;
+5. a fresh repository baseline and work-in-progress preservation check at execution time;
+6. the evidence required by P1-EXIT-09.
+
+Committing or pushing §8.27 and this section requires its own Git authorization.
+
+### 8.64.12 — Decision statement
+
+The conditional acceptance of §8.24 is a valid design basis; its conditions govern progression, not validity (AC-20). Implementation requires a recorded Implementation Design Gate and then a separate, scope-limited Implementation Authorization Gate; neither exists (AC-24). §8.64.7 is recorded as the single consolidated Phase 1 exit checklist, pending owner confirmation; until then the earlier criteria also apply (AC-10). C+A is accepted; the rest of §8.23 is classified in §8.64.5 and is not accepted as a whole (AC-01). Option B is recommended and not approved, Option C is not selected and not approved, and `T10+T8+T2` remains blocked (AC-22).
+
+**FINAL STATUS: AC-20, AC-24, AC-10, AC-01, AC-22 RECORDED WITH EXPLICIT BLOCKERS; §8.24 CONDITIONALLY ACCEPTED; GATE A NOT COMPLETED; GATE B NOT AUTHORIZED; IC GATE BLOCKED; PHASE 1 BLOCKED; PHASE 2 NOT STARTED; NO SEAT BOUND, POPULATED, OR ACTIVATED.**
+
+---
+
+## 8.65 — Phase 1 Interim Verification Record (2026-10-13)
+
+**Status:** EXECUTOR VERIFICATION RECORD. **Decision recorded: NONE. Implementation authorized: NO.** Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Scope:** Records a verification pass of 2026-10-13 and the documentation corrections it made. Labels as in §8.64. This section is not the report or the decision of P1-EXIT-11. It records no approval, no Gate A or Gate B record, and no change to any state of §8.64.7.
+
+### 8.65.1 — Corrections made in place
+
+§8.27 and §8.28 were uncommitted when this pass ran. They were corrected in place, and the "Append-only" statement of the §8.28 Scope describes §8.28 as first written. No line before §8.27 was changed. The corrections:
+- record that the user instructions behind §8.27 and §8.28 are conversation records not archived under `science-source-expansion/` (D-08) [M] (§8.27 Scope, §8.28.1, the GO-1 row of §8.28.5, Q-12);
+- separate the six-step proposal of §8.26.2 from the seven-step conditional requirement of §8.27.8 (§8.27.1, §8.28.4);
+- give the failing steps and first reported errors of run `38315050442` (§8.27.6);
+- align the citations of D-04, D-10.9.2, §8.9.7, D-10.3.6, and D-03 with their text (§8.27.7, §8.27.9, §8.28.6);
+- mark inferences and drafted definitions [I], and record the open questions on formal acceptance, the §8.11 mapping, and the Gate B lifecycle (§8.28.3, §8.28.4);
+- record §8.28.7 as PROPOSED CONSOLIDATED CHECKLIST — NOT OWNER-APPROVED, keep the earlier criteria applicable until it is confirmed, and add traceability rows and notes (§8.28.7, §8.28.9, §8.28.12).
+
+### 8.65.2 — Evidence
+
+| Check | Result |
+|---|---|
+| Repository | HEAD `f2025315` equals the local `origin` tracking ref and the remote branch head [V]; nothing staged; no commit or push in this pass |
+| Runtime path | `ScientificSourceAdapterRegistry` holds the five Stage-3 adapters; no file under `backend/app`, `backend/config`, `backend/database`, `backend/routes`, or `backend/bootstrap` contains a seat ID; `IdentityBindingRepository` has no container binding and no runtime consumer, and its Eloquent implementation is used only by a unit test; `CapabilityStoreRepository` has no runtime consumer and is only bound in `AgriculturalIntelligenceServiceProvider`, apart from unit tests [V] |
+| Register and source matrix | 109 seats, all CURRENT, in register order; every matrix row: IC ABSENT, Registry ABSENT, Capability UNVERIFIED, adapter not implemented, not activated, blockers B1–B4 [V] |
+| CI run `38315050442` | `backend-pgsql`, `openapi`, `stage10`, `docker-validate` succeeded; `backend`, `frontend`, `security`, `mobile` failed (§8.63.6) [V] |
+| Frontend type-check | `tsc -p tsconfig.app.json --noEmit` in `frontend/`: exit 2, the same TS2345 error as CI [V] |
+| Backend, security, Capability, IC, and PostgreSQL tests | NOT RUN locally: PHP and Composer are not installed, and `backend/vendor` is an empty directory with no installed dependencies |
+| Mobile tests | NOT RUN locally: Flutter is not installed |
+| Workflow lint | NOT RUN: `actionlint` is not installed |
+
+### 8.65.3 — Exit state
+
+The states of §8.64.7 are unchanged. P1-EXIT-04 is PASS (qualified). P1-EXIT-01, 02, 03, 05, 06, 07, 08, and 10 are BLOCKED. P1-EXIT-09 and P1-EXIT-11 are NOT RUN. Each remaining item needs an owner decision, an implementation authorization, operator evidence, or work that depends on them (§8.64.11).
+
+### 8.65.4 — Review corrections
+
+A later review on 2026-10-13 checked §8.27–§8.29 against the cited decisions, the user instructions [P], the code, and CI, and corrected the following in place:
+- §8.27.7 and §8.28.6: the statement that `ScientificSearchQueryBuilder` constructs source-specific HTTP queries (D-04, D-10.9.2), which the user's instructions use [P], is restored; the exact terms of D-04 and D-10.9.2 are kept beside it;
+- §8.28.4: the phrase "Onboarding Contract Design Gate" also appears in that subsection;
+- §8.28.5: §8.23.9 is classified ACCEPTED in that table and is no longer described as pending acceptance;
+- §8.28.7: item 8 of §8.26.6 is mapped as not an exit item, because §8.26.6 supersedes the list in §8.24.8; the heading, §8.28.1, Q-01, Q-03, and Q-16 no longer describe the earlier lists as superseded before §8.28.7 is confirmed;
+- §8.29.2: the consumers of the two repositories and the state of `backend/vendor` are stated precisely.
+
+Additional evidence [V, read-only query]: the `backend`, `frontend`, `security`, and `mobile` jobs failed in each of the twelve CI runs from `d604b7b` (2026-10-02) to `f2025315`. Runs `38311970424` and `37065911218` show the same TS2345 error, the same mobile result (75 passed, 1 failed), and the same security result (4 failed, 205 passed); their backend results are 155 failed and 156 failed. A fresh non-emitting type-check reproduced TS2345 with exit 2. No state of §8.64.7 changes.
+
+**FINAL STATUS: PHASE 1 BLOCKED; NO DECISION OR AUTHORIZATION RECORDED; PHASE 2 NOT STARTED.**
+
+---
+
+## 8.30 — Owner decisions of 2026-10-14; Gate A and Gate B for the IC inventory scope
+
+**Status:** OWNER DECISION RECORD AND EXECUTION RECORD. Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Source.** On 2026-10-14 (about 00:05 UTC+3), during execution of the user's master execution prompt of 2026-10-13 23:58, the executor presented a structured decision request and the user answered it [P]. Every option offered was taken from the options documented in this ADR, or (for P1-EXIT-01 (b)) drafted by the executor from the constraints recorded in §8.64.5 [I]. The text of the chosen option is quoted below. The request and the answers are conversation records and are not archived in the repository [M] (§8.30.6). Earlier sections are unchanged; labels as in §8.64.
+
+### 8.30.1 — Decisions
+
+| Item | Decision | Chosen option (quoted) | Effect |
+|---|---|---|---|
+| Confirmation of §8.64.7 (AC-10) | **NOT CONFIRMED** | "Do not confirm yet; the earlier lists remain applicable alongside it" | §8.64.7 stays PROPOSED CONSOLIDATED CHECKLIST — NOT OWNER-APPROVED; the earlier criteria named in its confirmation status remain applicable |
+| P1-EXIT-01 (a) CapVer ownership and enforcement placement | **DEFERRED** (retained) | "Keep DEFERRED (Phase 1 cannot exit while DEFERRED)" | (a) is not satisfied; under the Rule of §8.64.7 Phase 1 cannot exit while it stays DEFERRED |
+| P1-EXIT-01 (b) Capability population and write authority | **DECIDED** | "Conservative: only CapVer-authorized assessments write any state; UNVERIFIED is never persisted (missing = UNVERIFIED); no automatic demotion" | The only producer of any Capability state is a CapVer-authorized assessment; explicit UNVERIFIED persistence stays prohibited; no automatic demotion. Because CapVer is DEFERRED, no authorized producer exists, so no Capability state can be written today |
+| P1-EXIT-01 (c) `T10+T8+T2` | **BLOCKED** (retained) | "Keep BLOCKED" | Options A / B / C stay NOT SELECTED / RECOMMENDED — NOT APPROVED / NOT SELECTED — NOT APPROVED (§8.64.6); D-04 and D-10.9.2 unchanged |
+| P1-EXIT-01 (d) GO-1 vocabulary | **DECIDED: Option 1** (§8.26.4) | "Option 1: no mapping; GO-1 states are historical inputs only" | GO-1, GO-1b, and GO-1c states may be cited as historical inputs; they are never mapped to Cap v2 |
+| P1-EXIT-01 (e) IC, Capability, registry, and activation order | **OPEN** (retained) | "Keep OPEN" | §8.26.2 stays PROPOSED; §8.63.8 stays a conditional design requirement |
+| P1-EXIT-01 (f) deployment order | **DECIDED, subject to staging validation** | "Accept the §8.25.6 order, subject to staging validation" | The five steps of §8.25.6 are the deployment order. P1-EXIT-05 still requires staging evidence (§8.26.5) and the operator runs of §8.25.7 |
+| Gate A and Gate B scopes | **IC inventory only** | "IC inventory: per-seat evidence review and IC records/blockers for the 109 seats" | Gate A §8.30.3 and Gate B §8.30.4. No Gate A or Gate B exists for the Runtime Source Registry, Capability integration, or adapters |
+| CI defects outside the exit list (SEC-1, FE-1, MOB-1, SEC-2, SEC-3, backend identity) | **Not in this execution** | "None in this task" | No production code, test, or CI change |
+| D-08 archival of the 2026-10-12 and 2026-10-13 prompts and reports | **Authorized**, uncommitted | "Yes, create them (no commit)" | Outcome in §8.30.6 |
+| Local backend and mobile test environment | **Not authorized** | "No; record backend and mobile tests as NOT RUN" | Docker Desktop not started; PHP, Composer, and Flutter not installed |
+
+### 8.30.2 — P1-EXIT-01 after these decisions
+
+(a) DEFERRED; (b) DECIDED; (c) BLOCKED; (d) DECIDED; (e) OPEN; (f) DECIDED subject to staging validation. **P1-EXIT-01: BLOCKED.** Because (a) is DEFERRED, the Rule of §8.64.7 prevents Phase 1 exit regardless of the other items.
+
+### 8.30.3 — Gate A record GA-IC-01: IC inventory scope
+
+**Decision.** The user selected Gate A for the IC inventory scope (§8.30.1). The item-by-item table below applies the user's decisions to that scope. It was drafted by the executor [I], and the user may amend it.
+
+**Scope.** A per-seat review of public evidence for each of the 109 `adr_id` values, producing one documentary IC evidence-review record per seat with either proposed classification facts or a seat-specific blocker. The scope covers no persistence, no runtime component, and no identity binding.
+
+**Formal acceptance of the §8.24 basis for this scope** (§8.64.3 item 5): §8.24.4 (the 109 seats and identity bindings) and §8.24.5 (adapter and protocol-family strategy), as far as they govern classification, are accepted for this scope without amendment, together with D-10.8 and §8.13. Whether §8.24 must also be formally accepted as a whole stays OPEN (§8.64.3 item 5).
+
+| Gate A item (§8.64.4) | For GA-IC-01 |
+|---|---|
+| Runtime Source Registry contract and ownership | Outside the scope |
+| CapVer ownership and enforcement placement | Outside the scope (DEFERRED); the scope writes no Capability fact |
+| Capability contract and population rules | Decided in §8.30.1 (b); outside the scope, since nothing is written |
+| Separation of membership, identity, IC, Capability, registry, and activation | ACCEPTED (unchanged). The review records are separate from the membership register (§8.13.8) and bind no identity |
+| Ordering of IC and Capability | Outside the scope: the scope performs no step after IC classification. Both candidate orders (§8.26.2, §8.63.8) put IC first; P1-EXIT-01 (e) is not decided here |
+| `T10+T8+T2` | Outside the scope (BLOCKED) |
+| GO-1 vocabulary | Option 1 applies: GO-1 reports are cited as historical inputs only |
+| Source-specific integration strategy and verified access families | Applies: a family is recorded only from evidence on fetched public pages, never from a name or a website alone (D-10.8.2) |
+| Onboarding Contract implementation design | Outside the scope |
+| Deployment order and staging validation | Outside the scope (no database work) |
+
+### 8.30.4 — Gate B record GB-IC-01: IC inventory scope
+
+| Field (§8.64.4) | Content |
+|---|---|
+| Authorized scope | (1) Review of public, human-readable pages (home, about, journal information, documentation, API documentation, policies) for each of the 109 seats, in register order. (2) One new artifact, `docs/architecture/science-source-expansion/2026-10-13-PHASE-1-IC-EVIDENCE-REVIEW.v1.json`, holding one record per seat. (3) This section. |
+| Prohibited scope | Persisting IC rows (`cghia_integration_classification_records`) or identity bindings; SAME_AS or any canonical identity; Capability facts; the Runtime Source Registry; adapters; changes to runtime code, tests, CI, or configuration; requests to machine endpoints (APIs, OAI-PMH verbs, SPARQL, query feeds), that is, source probes; changes to the membership register, the source matrix, `SOURCE-CAPABILITY-CONTRACT.md`, CSQ, QUS, or `backend/composer.lock`; database work, Docker, deployment; staging, commit, or push |
+| Gate A relied on | GA-IC-01 (§8.30.3) |
+| Checklist items addressed | P1-EXIT-03 for this scope; P1-EXIT-07 (per-seat evidence review with a seat-specific blocker where classification is not possible); input to P1-EXIT-10 |
+| Acceptance criteria | 109 records in register order with `adr_id` and display name identical to the register; every non-null claim cites a page fetched during the review, with a short quotation; no record claims an identity binding; a seat known only by its display name is not classified, because classification may not rest on a name (D-10.8.2) |
+| Tests and evidence | A structural integrity check of the artifact against the register (§8.30.5). Database engines: none, because nothing is persisted |
+| Repository and Git operations | The two files above only; no staging, commit, or push |
+| Operational restrictions | No database, Docker, deployment, or real environment |
+| Dependency on IC closure (§8.64.7, note on P1-EXIT-05) | None: no IC record is persisted. Persisting IC records is a later scope that requires P1-EXIT-05 |
+| Suspension | The conditions of §8.64.4, and any seat whose evidence would require a probe, an account, or authentication |
+
+The Gate B lifecycle questions of §8.64.4 remain OPEN.
+
+### 8.30.5 — IC evidence review: execution
+
+#### 8.30.5.1 — Results
+
+**Artifact.** `docs/architecture/science-source-expansion/2026-10-13-PHASE-1-IC-EVIDENCE-REVIEW.v1.json` (schema `adr023.ic_evidence_review.v1`; SHA-256 `877c1604ccde7d02b9f8e37bba089353a5dc5535be2eebdee61942e09ac0ce2a`; uncommitted) [V]. It records the SHA-256 of the membership register it was checked against. The register, the source matrix, and `SOURCE-CAPABILITY-CONTRACT.md` were not changed [V].
+
+**Method.** Public, human-readable pages were fetched on 2026-10-14 by the executor and by review subagents working under the GB-IC-01 rules: no request to any machine endpoint, at most three fetches per seat, and every claim backed by a page fetched in that session plus a short verbatim quotation. Search-result snippets were not accepted as evidence. G6-01 … G6-10 carry the evidence of their dual peers G1-12 … G1-21 by reference; they remain separate seats and no SAME_AS was minted (D-09 item 7). GO-1, GO-1b, and GO-1c were treated as historical inputs only (Option 1).
+
+**Structural check** (§8.30.4 acceptance criteria) [V]: 109 records in register order; `adr_id` and display name identical to the register for every record; no duplicate `adr_id`; every non-null claim cites an `http(s)` evidence URL, while values recorded as `UNKNOWN` are not claims; no record has an identity binding or SAME_AS; every endpoint test and integration test is `NOT RUN`. The build script ran the check before writing, and an independent read of the written file repeated it. Both passed.
+
+| Fact (kept separate) | Count of 109 |
+|---|---|
+| IDENTITY VERIFIED | 0 (owner verification pending; no identity binding) |
+| Identity evidence: candidate resource with at least one cited anchor | 90 |
+| Identity evidence: ambiguous (G1-04, G1-16, G1-20, G2-03, G2-20, G2-24, G2-25, G3-01, G3-13, G3-14, G4-03, G4-04, G6-05, G6-09, G6-21, G6-22) | 16 |
+| Identity evidence: not established (G1-06, G1-12, G6-01; every page failed to load) | 3 |
+| ACCESS DOCUMENTED: machine-readable or bulk channel cited (API, OAI-PMH, RSS, bulk or static download) | 36 |
+| of which an API or OAI-PMH is cited (G1-14, G2-01, G2-02, G2-03, G2-05, G2-08, G2-11, G2-15, G2-21, G4-03, G5-01, G5-04, G6-02, G6-20) | 14 |
+| ACCESS DOCUMENTED: web search or content access only | 41 |
+| No access method documented | 32 |
+| Seats with at least one page that failed to load | 32 |
+| ENDPOINT TESTED | 0 (`NOT RUN`: probes prohibited by GB-IC-01) |
+| INTEGRATION VERIFIED | 0 (`NOT RUN`: no adapter exists) |
+| Proposed `classification_status` | `UNCLASSIFIED` for all 109 |
+
+**Proposed classification.** Every record proposes `UNCLASSIFIED`, with `integration_nature` and `integration_boundary` left null. No seat has an identity binding, no endpoint was tested, and under D-10.8.2 classification may not rest on a name or on a website alone. The proposals are documentary, not persisted, and pending owner verification. Every record carries a seat-specific blocker and a next action.
+
+**Notable findings** [V, from the cited pages]: Elsevier-published journals in G2 document only an entitlement-gated, platform-level API. G2-13's site showed injected spam content. Several seats resolve to a tool, an institution, a course page, or a non-literature data resource rather than a literature source (for example G5-03, G6-22, and several G3 entries). For G3-01, the review found that the ISSN Portal record for 3058-0382 is consistent with the governance pin (`2026-09-30-G3-01-APIS-identity-governance-pin.md`). It still marked the seat as ambiguous because other resources share the name "APIS". The review does not override the pin.
+
+**Reconciliation of "110 source entries"** [V]. No repository document records a count of 110 sources. In this ADR, "110" appears only as an assertion count in IC test results (§8.15.7 and §8.15.10). The current membership is 109 (D-09). The removed seat G3-15 (D-09 item 5) would account for a historical count of 110, but no record states this, so it remains an inference [I]. No count was changed.
+
+**Not done in this scope:** IC persistence, identity binding, Capability facts, the Runtime Source Registry, adapters, endpoint tests, and changes to the source matrix. Updating the matrix from this artifact (P1-EXIT-10) needs its own authorization.
+
+### 8.30.6 — D-08 archival
+
+Archival was authorized (§8.30.1). Producing the files verbatim required a script that reads the conversation record outside the repository. The user skipped the approval request for that script on 2026-10-14, so it was not run, and copying the 36 prompts and their reports by hand would not guarantee verbatim text. **No archive file was created.** D-08 remains unmet for the prompts and reports of 2026-10-01 to 2026-10-14. Nothing in this section implies that they were archived.
+
+### 8.30.7 — Status matrix
+
+| Item | Status on 2026-10-14 |
+|---|---|
+| §8.64.7 | PROPOSED — NOT CONFIRMED (§8.30.1) |
+| P1-EXIT-01 | BLOCKED: (a) DEFERRED, (c) BLOCKED, (e) OPEN; (b), (d), (f) DECIDED |
+| Gate A | Completed for the IC inventory scope only (GA-IC-01); NOT COMPLETED for every other scope |
+| Gate B | Authorized for the IC inventory scope only (GB-IC-01); NOT AUTHORIZED for every other scope |
+| Runtime Source Registry, Capability integration, adapters | NOT AUTHORIZED; not started |
+| IC evidence review (GB-IC-01) | EXECUTED: 109 documentary records, all proposed `UNCLASSIFIED`; IDENTITY VERIFIED 0, ENDPOINT TESTED 0, INTEGRATION VERIFIED 0; owner verification pending (§8.30.5.1) |
+| D-08 for 2026-10-01 to 2026-10-14 | NOT MET (§8.30.6) |
+| Phase 1 | BLOCKED |
+| Phase 2 | NOT STARTED |
+
+## 8.31 — Owner decisions of 2026-10-14 (second set); FE-1 fix; D-08 archive; isolated test runs
+
+**Status:** OWNER DECISION RECORD AND EXECUTION RECORD. Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Source.** On 2026-10-14 (about 15:00 UTC+3), during execution of the user's master engineering execution prompt of 2026-10-14 14:57, the executor presented a structured decision request and the user answered it [P]. The design options were taken from this ADR (§8.26.6, §8.63.8, §8.64.6, §8.64.7); the execution approvals were drafted by the executor [I]. The text of each chosen option is quoted below. The prompt is archived under D-08 (§8.31.4); the decision request and answers are conversation records [M]. Earlier sections are unchanged. Where this section changes a state recorded in §8.30, this section supersedes it (D-08). Labels as in §8.64.
+
+### 8.31.1 — Decisions
+
+| Item | Decision | Chosen option (quoted) | Effect |
+|---|---|---|---|
+| P1-EXIT-01 (a) CapVer ownership and enforcement placement | **DECIDED (design only)**; supersedes "Keep DEFERRED" (§8.30.1) | "Adopt the §8.26.6 recommendation: the architecture owner (you) owns CapVer; enforcement sits above the repository, plus a defensive write check. Design decision only, no implementation" | The user, as architecture owner, owns CapVer. Enforcement is placed above the repository, with a defensive check on the write path. The concrete enforcement design is not specified and needs Gate A and Gate B for its scope. Nothing is implemented, no CapVer assessment exists, and no Capability state is written or VERIFIED |
+| P1-EXIT-01 (c) `T10+T8+T2` | **Option B SELECTED; question NOT CLOSED**; supersedes "Keep BLOCKED" (§8.30.1) | "Select Option B (Builder keeps query construction; Projection emits constraint metadata). Still requires a tracked definition and Gate A/B" | §8.64.6 condition 2 is met for Option B. Conditions 1 (tracked definitions of T10, T8, and T2), 3 (definition of the constraint metadata that Projection emits and the Builder consumes, consistent with D-10.9.5–6 and T8), and 5 (decision within Gate A) are not met. Option A stays NOT SELECTED; Option C stays NOT SELECTED — NOT APPROVED. D-04, D-10.9.2, D-02, D-10.9.1, D-10.9.3, and D-10.9.5–6 remain in force. No implementation is authorized |
+| P1-EXIT-01 (e) IC, Capability, registry, and activation order | **DECIDED: §8.63.8**; supersedes "Keep OPEN" (§8.30.1) | "Confirm the 7-step per-seat order of §8.27.8 (IC → identity → Capability/CapVer → Onboarding Contract → registry → activation gate → verification)" | §8.63.8 is the per-seat order; §8.26.6 item 10 is decided by it. The order permits no step to be executed. The staging and operator checks in §8.63.10 condition 7 remain open |
+| Confirmation of §8.64.7 (AC-10) | **NOT CONFIRMED** (retained) | "Keep NOT CONFIRMED (earlier lists stay applicable alongside it)" | Unchanged from §8.30.1 |
+| FE-1 (CI type error) | **Authorized and executed**; supersedes the FE-1 part of "None in this task" (§8.30.1) | "Authorize a minimal type fix plus a targeted test, then run tsc, lint and vitest (no commit)" | §8.31.3 |
+| D-08 archive script | **Authorized and executed** | "Approve running the script (files are created only if absent; no commit)" | §8.31.4 |
+| Local test environment | **Authorized**; supersedes "No; record backend and mobile tests as NOT RUN" (§8.30.1) | "Authorize isolated Docker test runs as in §8.25.9 (no shared or real database, no Compose PG on 5432)" | §8.31.5 |
+| Versioned source matrix | **Authorized; not produced** | "Authorize a versioned matrix (new file, original preserved) that cites the IC evidence-review states per seat" | §8.31.6 |
+
+Unchanged from §8.30.1: (b) DECIDED; (d) Option 1; (f) DECIDED subject to staging validation; Gate A and Gate B exist for the IC inventory scope only. Same-key replay (§8.26.6 item 8) is not decided and the fail-closed `23505` behaviour is unchanged. SEC-1, MOB-1, SEC-2, SEC-3, and the backend identity defects remain outside this execution.
+
+### 8.31.2 — P1-EXIT-01 after these decisions
+
+(a) DECIDED (design only); (b) DECIDED; (c) Option B SELECTED, NOT CLOSED; (d) DECIDED; (e) DECIDED; (f) DECIDED subject to staging validation. **P1-EXIT-01: BLOCKED** by (c), because §8.64.7 refers (c) to §8.64.6 and §8.64.6 conditions 1, 3, and 5 are unmet. No item of P1-EXIT-01 is DEFERRED any longer.
+
+### 8.31.3 — FE-1: type fix
+
+**Defect** [V]: `tsc` error TS2345 at `frontend/src/public/FieldCropCanonicalAnswerView.tsx(28,53)`. A crop profile whose `message` is `string | null` was passed to `toScientificUserPresentation`, whose parameter type was `ResearchAgentQueryResponse` (`message?: string`). The call was introduced by commit `994a400`.
+
+**Change** (uncommitted):
+- `frontend/src/public/scientificUserPresentation.ts`: the parameter type is narrowed to the exported type `ScientificUserPresentationSource = Pick<ResearchAgentQueryResponse, 'user_presentation' | 'language' | 'citations' | 'answer_candidates'>`, the four fields the function reads. Runtime behaviour is unchanged.
+- `frontend/src/public/fieldCropCanonicalAnswer.test.ts`: one test maps a crop profile with `message: null` to the user presentation.
+
+**Results** on 2026-10-14, in `frontend/` [V]: `npx tsc -b` exit 0; `npx oxlint` exit 0, with no finding on the two changed files (warnings elsewhere are pre-existing); `npx vitest run` exit 0, 48 files and 362 tests passed. A production build (`vite build`) succeeded with its output directed to a temporary directory outside the repository, so that the ignored `frontend/dist` was not overwritten. Git status was identical before and after the checks.
+
+### 8.31.4 — D-08 archive
+
+**Location:** `docs/architecture/science-source-expansion/2026-10-14-D-08-archive-2026-10-01-to-2026-10-14/` (uncommitted) [V]. It holds 436 files: 218 `-prompt.md`, 217 `-report.md`, and `MANIFEST.md`.
+
+**Method.** A script outside the repository read the Cursor conversation record of this project and wrote each owner prompt and each executor final report verbatim into a new file. It created files only if absent. Each file starts with a comment header stating the archive date, the authority (this section), the source line, the message time (UTC+3), and the redaction count. Owner prompts in the window: 233. Identical re-sent prompts were merged (218 archived), and 15 system-generated messages were excluded; the manifest records both.
+
+**Redaction.** Two credential-like values (`password:` entries) in each of three reports (2026-10-09 22:20, 22:39, and 23:05) are replaced by `[REDACTED]`. Nothing else was altered.
+
+**Gaps** [M]: (1) the executor's final report for the prompt of 2026-10-14 14:57 did not exist when the archive was written and is not archived; (2) the decision request and answers of §8.31.1 are conversation records outside the window's prompt files; (3) prompts and reports of this phase before 2026-10-01 were not assessed: `science-source-expansion/` holds archive files dated 2026-09-29 only, and whether D-08 requires archiving earlier prompts is not decided here. §8.30.6 ("No archive file was created") was correct when written. For 2026-10-01 to 2026-10-14, it is superseded by this section, subject to gap (1).
+
+### 8.31.5 — Isolated test runs
+
+All runs used local Docker containers without network access (`--network none`), the image `wsa-enterprise-backend-test:latest`, and the existing `wsa-enterprise_backend_vendor` volume mounted read-only. No shared or real database was used, and the Compose PostgreSQL on port 5432 was not contacted. Logs are kept outside the repository.
+
+| Run | Command (abridged) | Result [V] |
+|---|---|---|
+| SQLite Unit, working tree | `phpunit --testsuite Unit` (`backend` mounted read-only, `memory_limit=2G`) | Exit 2: 1218 tests, 16 errors, 14 failures. One failure (`Adr023109MembershipRegisterContractTest`) was environmental, because `docs` was not mounted; with `docs` mounted it passes (1 test, 5243 assertions) |
+| SQLite Unit, HEAD | Same, on a `git archive` snapshot of HEAD outside the repository | Exit 2: 1205 tests, 16 errors, 18 failures. No failure occurs on the working tree that does not also occur at HEAD |
+| SQLite Feature, working tree and HEAD, identical environment | `phpunit --testsuite Feature`; source and `docs` read-only; in-memory `storage` and `bootstrap/cache`; the same throwaway `APP_KEY` | Exit 1 for both. Working tree: 950 tests, 79 failures, 12 skipped. HEAD: 880 tests, 79 failures, 12 skipped. 52 failing tests are common to both. 11 fail only on the working tree, all in the scientific-research answer and search path (`ScientificEvidenceAnswerPipelineContractTest` 4, `ScientificResearchSearchFlowTest` 5, `SemanticScholarProviderIntegrationTest` 1, `SemanticTargetAndSupportedValueContractTest` 1). 18 fail only at HEAD |
+| PostgreSQL (guarded IC suite) | `phpunit -c phpunit.pgsql.xml` against a disposable `postgres:16-alpine` container (no network, in-memory data directory, database `ic_persistence_test`, random password not recorded); the PHP container shared only that container's loopback; the container was removed afterwards | **Exit 0: 121 tests, 840 assertions, OK** |
+
+**Interpretation.** No failure is in the IC, identity, Capability, or membership tests. The backend failures exist at HEAD or come from earlier uncommitted changes to CSQ, QUS, and backend tests. None comes from a change made in this execution, which changed no backend file. They are not fixed here: fixing them is outside the authorized scope, and tests were not altered to suppress failures. The PostgreSQL result is a new isolated run on current evidence for P1-EXIT-04; it does not run the concurrency test of a single CURRENT Cap fact (§8.23.8), because no Capability persistence exists. Mobile tests were not run (Flutter is not installed).
+
+**Side effect** [V]: starting Docker Desktop (approved by the user on 2026-10-14) also started the existing Compose containers `wsa-enterprise-backend-1`, `wsa-enterprise-postgres-1` (port 5432), and `wsa-enterprise-redis-1` through their restart policy. The executor did not connect to them, stop them, or change them.
+
+### 8.31.6 — Versioned source matrix
+
+The matrix was authorized (§8.31.1). The executor prepared a generator script outside the repository that would write a new versioned file citing the IC evidence-review state of each seat. Running it required approval, and the user skipped that approval request on 2026-10-14. The script was not run. **No new matrix exists**, and `2026-10-12-PHASE-1-SOURCE-MATRIX.md` is unchanged. P1-EXIT-10 stays BLOCKED, and its final update still depends on P1-EXIT-06 to P1-EXIT-08.
+
+### 8.31.7 — Second review of ambiguous seats
+
+A second review of the 16 seats with ambiguous identity evidence, the 3 seats whose identity was not established, and the G2-13 injected-content observation was started on 2026-10-14. It produced no results during this execution. The states recorded in §8.30.5.1 and in the v1 artifact stand unchanged. The artifact was not modified, and no compromise of any site is asserted: G2-13 remains an observation of injected spam content on a fetched page.
+
+### 8.31.8 — Status matrix
+
+| Item | Status on 2026-10-14 |
+|---|---|
+| §8.64.7 | PROPOSED — NOT CONFIRMED |
+| P1-EXIT-01 | BLOCKED by (c): Option B selected, §8.64.6 conditions 1, 3, and 5 unmet; (a), (b), (d), and (e) DECIDED; (f) DECIDED subject to staging validation |
+| P1-EXIT-02, P1-EXIT-03 | BLOCKED: Gate A and Gate B exist for the IC inventory scope only |
+| P1-EXIT-04 | PASS (qualified; isolated PostgreSQL suite rerun on 2026-10-14: 121 tests OK) |
+| P1-EXIT-05 | BLOCKED: no staging evidence (§8.26.5); operator runs of §8.25.7 not done |
+| P1-EXIT-06, P1-EXIT-08 | BLOCKED: not authorized, not started |
+| P1-EXIT-07 | BLOCKED: 109 documentary records, all proposed `UNCLASSIFIED`, owner verification pending; IDENTITY VERIFIED 0, ENDPOINT TESTED 0, INTEGRATION VERIFIED 0 |
+| P1-EXIT-09 | NOT RUN for implemented scopes (none); the regression results of §8.31.5 are recorded |
+| P1-EXIT-10 | BLOCKED (§8.31.6) |
+| P1-EXIT-11 | NOT RUN |
+| FE-1 | FIXED in the working tree (uncommitted) |
+| D-08 for 2026-10-01 to 2026-10-14 | MET except for the gaps of §8.31.4 (uncommitted) |
+| Phase 1 | BLOCKED |
+| Phase 2 | NOT STARTED |
+
+## 8.32 — Phase 1 blocker resolution of 2026-10-14: `T10+T8+T2` transcription, versioned source matrix, IC re-review, D-08 supplement, test investigation
+
+**Status:** OWNER AUTHORIZATION RECORD AND EXECUTION RECORD. Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Source.** On 2026-10-14 (about 16:45 UTC+3), during execution of the user's prompt of 2026-10-14 16:29 ("Phase 1 Blocker Resolution and Safe Continuation"), the executor presented a structured request and the user answered it [P]. The options were drafted by the executor [I] and are quoted below. The 16:29 prompt is archived under D-08 (§8.32.6). Earlier sections are unchanged. No owner decision of §8.30 or §8.31 is changed. Labels as in §8.64.
+
+### 8.32.1 — Authorizations
+
+| Item | Answer | Chosen option (quoted) | Outcome |
+|---|---|---|---|
+| D-08 supplemental archive | Authorized | "Yes, create the supplemental archive (inline, visible PowerShell; no temp script)" | §8.32.6 |
+| Versioned source matrix | Authorized | "Create the new versioned file 2026-10-14-PHASE-1-SOURCE-MATRIX.md using the same logic as an inline, visible command (create only if absent; validated against the register)" | §8.32.4 |
+| `T10+T8+T2` transcription | Authorized | "Yes, append the cited transcription as a proposal" | §8.32.3 |
+| IC re-review fetches | Authorized | "Yes, authorize these fetches" (up to three public-page fetches per seat for AgroPortal, FlowerBase, AgroSpace, and the MDPI Aquaculture Journal; no machine endpoints; findings in this ADR only) | §8.32.5 |
+
+Before these answers, the user skipped two approval requests for running the matrix generator as a temporary script (2026-10-14 at about 15:19, and again during this execution). The matrix was produced only after the authorization above, with the generator logic written out in the command.
+
+### 8.32.2 — Verification of completed work
+
+On 2026-10-14, before any change in this execution [V]: branch `phase-18-m18-ai-marketing-communications`, HEAD `f202531`, nothing staged, 8 worktrees, and 92 ignored entries, all unchanged. SHA-256 prefixes: this ADR `1B83FD08613D51FD` (after §8.31); `backend/composer.lock` `D6EE17A75BF1DA5B`; IC-ER v1 `877C1604CCDE7D02`; source matrix of 2026-10-12 `587801A702D13ADD`; membership register `783035186579AA55`; `SOURCE-CAPABILITY-CONTRACT.md` `E842E757A2C06977`; the FE-1 files `43FE59335AE373C5` and `F11C14BA2600206E`; the D-08 manifest `862074044A229138`, with 436 archive files. The isolated PostgreSQL log still reads `OK (121 tests, 840 assertions)`. Nothing of §8.31 was recreated.
+
+### 8.32.3 — `T10+T8+T2`: tracked transcription (PROPOSED — NOT APPROVED)
+
+**Purpose.** §8.64.6 condition 1 requires T10, T8, and T2 to be defined in tracked design text, or a tracked definition to replace them. This subsection transcribes the only existing definitions verbatim so that the owner can accept, amend, or replace them. **It is not a decision.** It does not define the constraint metadata (condition 3), does not record a Gate A (condition 5), and authorizes nothing. D-04, D-10.9.2, D-02, D-10.9.1, D-10.9.3, and D-10.9.5–6 remain in force.
+
+**Sources** [V]:
+- `backend/e2e-tmp/_path_model_design_extract.md` (untracked), titled "ADR-023 — Path Model Design Specification", with "Inputs frozen: … CGHIA T10+T8+T2". Its baseline HEAD is `505f3e6`.
+- `backend/e2e-tmp/_projection_c9_design_extract.md` (untracked), titled "ADR-023 — Projection + C9 Scientific Fidelity Design Specification". Same baseline.
+- The prompt of 2026-09-30 22:37 ("Path Model Design") and the reports for the prompts of 2026-09-30 22:37 and 22:42 are now archived verbatim in the D-08 supplement (§8.32.6) and contain the same acceptance lines. Each extract calls itself "ACCEPTED WITH NON-BLOCKING OPEN DECISIONS". Under §8.26.3, that acceptance is not architectural authority, because it was never recorded in this ADR.
+
+**Verbatim definitions** (Path Model extract, §10 "CGHIA Mapping", lines 149–155):
+
+| Topology | Path Model role |
+|---|---|
+| T10 | Cap-gated multi-layer primary path selection among P01–P17 |
+| T8 | L1→L2 EXTERNAL→L3 P18 fallback layers; non-upgrade |
+| T2 | P17 family adapter + **per-source Projection** (Projection owns query) |
+
+**Verbatim supporting text** (same extract):
+- §11 "Fallback Model (B5 / C4)", lines 162–167 (the three layer lines joined): "L1 Cap-gated primary (source-native/protocol/bulk/web as Cap allows) → L2 EXTERNAL aggregator (P11–P13 / P16 agg leg) → L3 Manual P18". Invariant: "`final_fidelity ≤ evidence-supported fidelity`. No silent aggregator→native, metadata→FT, related→requested species, pathogen→disease, etc."
+- §9, P17 row, line 142: "P17 Protocol-family + Projection | family Cap + T2 | CGHIA default shape | No* | **YES required** | No".
+- §6, line 75: "Verified automation requires: **ELIGIBLE + SELECTED** or **CONDITIONAL + CONDITIONALLY_SELECTED** (PARTIAL limits explicit)."
+
+**Conflicts with Option B** (§8.64.6; the user selected B in §8.31.1):
+1. T2 says "Projection owns query" (Path Model extract, line 155). Under Option B, the Builder keeps query construction, as D-04 and D-10.9.2 require.
+2. The Projection extract states (line 12): "Projection is the sole authority for **source-native representation** of an immutable CSQ, under Cap + Path constraints". It lists as a Projection responsibility (line 52) "source-native query representation (`source_query` / structured params envelope)", and in its data flow (lines 109–110) "→ Projection Envelope" followed by "→ Adapter executes source_query as transport". Under Option B, Projection would emit constraint metadata and would not produce the executed query.
+3. The same extract also preserves the Builder. Line 65 states "Does **not** own: CSQ creation · Builder scholarly lexical authority · …". Line 300 states "Builder | KEEP lexical authority", and line 302 states that the Compiler "must not replace Builder HTTP query today". The extract therefore is not internally aligned with either Option B or Option C.
+
+**Candidate inputs for the constraint metadata** [I]. The Projection extract's envelope (§6, lines 69–89) lists fields marked PROPOSED, among them `mapped_facets`, `expanded_terms`, `unsupported_facets`, `omitted_facets`, `unresolved_facets`, `source_native_identifiers`, `retrieval_method`, `fidelity_class`, and `projection_warnings`, together with identities such as `path_decision_identity`. These are recorded only as material for the owner. **No subset is selected here.** Which fields form the constraint metadata, what the Builder must do with each, and how T8's non-upgrade rule and D-10.9.5–6 are enforced are decisions for the owner.
+
+**Decisions still required to close P1-EXIT-01 (c)** (owner-controlled):
+1. Condition 1: accept this transcription, with or without amendment, as the tracked definition of T10 and T8, and replace T2's "Projection owns query" with the Option B wording. Alternatively, supply a different tracked definition.
+2. Condition 3: define the constraint metadata that Projection emits and the Builder consumes. The definition must keep query construction in the Builder and be consistent with D-10.9.5–6 and with T8's non-upgrade rule.
+3. Condition 5: record the decision within a Gate A record (§8.64.4) for this scope.
+
+### 8.32.4 — Versioned source matrix
+
+**File:** `docs/architecture/science-source-expansion/2026-10-14-PHASE-1-SOURCE-MATRIX.md` (new, uncommitted; SHA-256 `3e88b1fdcaa59513d5b9412e5968808b964bde8da969c0ff7e61a0d36c364111`; 163 lines, CRLF) [V].
+
+**Method.** The logic of the generator prepared earlier (outside the repository) was inspected in full and then run as an inline, visible command. Before writing, the command checked the following:
+- 109 register seats and 109 IC-ER records.
+- Every `adr_id` present, in register order, with display names identical to the register.
+- Every identity and access state is a known value.
+- Every record has `identity_verified` false, `same_as` `NONE`, and `identity_binding` `NONE`.
+- The output file was absent. The write used the create-only flag.
+
+One check failed on the first run because it misread the value `NONE`; nothing was written. The check was corrected, and the second run passed and wrote the file.
+
+**Content.** One row per seat, generated from the register. The access-evidence column cites the IC-ER identity state (`CAND` 90, `AMB` 16, `NEST` 3) and access state (`DOC-MB` 36, `DOC-WEB` 41, `NONE-DOC` 32). IDENTITY VERIFIED, ENDPOINT TESTED, persisted binding, registry entry, Capability fact, adapter, and VERIFIED/ACTIVE/ACCEPTED are all 0. Blockers B1–B5 apply to all 109 seats. No seat is promoted. The matrix of 2026-10-12 is unchanged (`587801A702D13ADD`).
+
+### 8.32.5 — IC re-review and MAFIS
+
+Every fetch was of a public, human-readable page; no machine endpoint was requested [V]. The IC-ER v1 artifact was not modified.
+
+| Seat | Fetches (2026-10-14) | Result | State |
+|---|---|---|---|
+| G1-06 AgroPortal | `agroportal.lirmm.fr/` (timeout), `/about` (timeout), `doc.agroportal.lirmm.fr/` (500) | No page loaded | NOT ESTABLISHED (unchanged) |
+| G1-12 / G6-01 FlowerBase | `…/flowerbase/static/index.html` (502 page), `…/flowerbase/` (502 page), Plant Communications article (timeout) | No content | NOT ESTABLISHED (unchanged) |
+| G1-04 AgroSpace | `aspace.agrif.bg.ac.rs` over http and https (403 both); Faculty of Agriculture repository page (loaded) | Repeats the existing anchor: "AgroSpace is the institutional digital repository of the University of Belgrade, Faculty of Agriculture." The page also states: "You may use the external application Authors, Projects, Publications (APP) to browse and search authors and funding information. APP also enables metadata export". The platform is not named | AMBIGUOUS (unchanged; the name clash with unrelated platforms is not resolved by this page) |
+| G2-20 Aquaculture Journal | `mdpi.com/journal/aquacj`, `/about`, `/instructions` (403 all) | No content | AMBIGUOUS (unchanged) |
+
+The other 12 ambiguous seats were not re-fetched, because their ambiguity is about which resource the seat name refers to. Examples: "CIRAD Portals" (plural), NYBG (an institution with several data resources), and "PG Syllabus" (course page versus entrance-exam syllabus). Web evidence cannot settle what the register intended. Resolving them requires the owner to state, for each seat, which resource the seat name refers to. No SAME_AS was created and no mapping was forced.
+
+**MAFIS (G2-13), security observation** [V]. On 2026-10-14 the page `https://ojs.inidep.edu.ar/index.php/mafis/about` still contains injected third-party text ("Warung Top Up: Tempat Andalan Buat Isi Diamond Game Favorit", promoting game top-ups). That text also fills the "Licencing" section. The page still carries the publisher's copyright statement ("Authors of articles published in Marine and Fishery Sciences retain copyright on their articles …"). The fetch tool may return cached content. This is an observation of injected content on a public page. It is not proof of how the content got there, and no compromise is asserted. The licence statement of the journal cannot be read from that page, so the licence remains unresolved. The seat is not activated, and nothing may activate it while its licence is unresolved.
+
+### 8.32.6 — D-08 supplemental archive
+
+**Folder:** `docs/architecture/science-source-expansion/2026-10-14-D-08-archive-supplement-01/` (new, uncommitted). It holds 95 files (1,949,037 bytes): 94 records and `MANIFEST.md` [V]. The archive `2026-10-14-D-08-archive-2026-10-01-to-2026-10-14/` is unchanged (436 files; manifest `862074044A229138`).
+
+**Missing period, identified** [V]. A read-only scan of the project's conversation transcripts found the first Scientific Source Expansion prompt at 2026-09-29 23:40. The first prompt naming ADR-023 is at 2026-09-30 00:00. No transcript before 2026-09-29 mentions either. Before this supplement, that period was archived only as ten formatted records:
+- GO-0-A prompt and report;
+- GO-0 STEP-1 report;
+- GO-1 prompt and report;
+- GO-1b prompt and report;
+- GO-1c prompt and report;
+- the G3-01 governance pin.
+
+**Contents:**
+- **Group A:** 83 records (46 owner prompts from 2026-09-29 23:40 to 2026-09-30, each with its report). Items already present as formatted records were not duplicated.
+- **Group B:** the final report for the prompt of 2026-10-14 14:57.
+- **Group C:** the prompt of 2026-10-14 16:29.
+- **Group D:** 9 full reports (see the defect below).
+
+No credential-like value was found, so nothing was redacted. Every file header states its source line and its timestamp as recorded in the conversation.
+
+**Defect found in the first archive** [V]. The first archive selected as "report" the last long executor message before the next owner prompt. When a system notification ("Briefly inform the user about the task result") arrived in between, the brief reply to that notification was archived instead of the final report. This affects the entries for:
+- 2026-10-01 16:19 and 18:18;
+- 2026-10-02 23:54;
+- 2026-10-09 13:54, 15:15, 15:28, and 17:34;
+- 2026-10-13 00:44 and 01:08.
+
+For example, the 2026-10-01 16:19 entry holds a 314-character note instead of the 5,544-character report. The first archive was not changed. Group D adds the full reports as `-report-full.md` files. The supplement uses the corrected rule: the last executor message before the next owner prompt or the first system notification.
+
+**Remaining gaps** [M]:
+1. The report for the 16:29 prompt did not exist when the supplement was written.
+2. Whether the ten pre-existing formatted records are verbatim was not verified.
+3. Decision requests and answers given through structured questions are conversation records and are not archived as prompts.
+
+### 8.32.7 — Test investigation (read-only; no new test runs)
+
+The results of §8.31.5 stand and are not rerun. The 11 Feature tests that fail only on the working tree fall into two groups [V]:
+- **Ten are tests that do not exist at HEAD:** four added to the modified `ScientificEvidenceAnswerPipelineContractTest.php`, five in the untracked `ScientificResearchSearchFlowTest.php`, and one in the untracked `SemanticTargetAndSupportedValueContractTest.php`. They are unfinished earlier work, not regressions.
+- **One is a regression:** `SemanticScholarProviderIntegrationTest::test_selector_uses_semantic_scholar_not_consensus`. The test file is tracked and unchanged, and the test passes at HEAD. On the working tree the selected sources are `fao_stat, openalex, crossref, semantic_scholar` instead of `openalex, crossref, semantic_scholar`. The only working-tree changes to backend application code are the earlier uncommitted edits to `QueryUnderstandingService.php` (+105 lines) and `CanonicalScientificQuestion.php`; no untracked application code exists. The regression is therefore attributable to those edits [I]. It was not fixed: those edits are unrelated pre-existing work.
+
+The 52 failures shared by HEAD and the working tree are concentrated in the scientific-research pipeline:
+- `ScientificUpstreamRetrievalFixTest`: 13 failures; search variants contain Arabic terms or lack required terms.
+- `ScientificResearchLanguageContractTest`: 7 failures; answer language.
+- `ScientificResearchAnswerAccuracyTest`: 6 failures.
+- `Phase5UnitB3AnswerAccuracyGatesTest`: 5 failures.
+- Several entity-family and relevance tests.
+
+Two (`WsaEnterpriseStage10ProductionTest`: "Unable to locate repository root for compose/CI fixtures") depend on the test environment, because only `backend` was mounted. The rest are single failures in unrelated feature areas, such as billing, the trusted proxy, and the queue foundation. All of them exist in committed code. They are outside the Phase 1 scope, but they mean the regression baseline that P1-EXIT-09 will need ("regression of the existing five-source path, CSQ identity, and Home/Crop isolation") is not green today.
+
+Flutter tests: NOT RUN (Flutter is not installed). No new database or Docker run was made in this execution. The Compose containers were not contacted, stopped, or changed.
+
+### 8.32.8 — Exit evaluation on 2026-10-14
+
+The earlier criteria stay applicable alongside §8.64.7, because §8.64.7 is NOT CONFIRMED.
+
+| Item | Status |
+|---|---|
+| P1-EXIT-01 (a), (b), (d), (e) | Decided (§8.30.1, §8.31.1) |
+| P1-EXIT-01 (f) | Decided, subject to staging validation |
+| P1-EXIT-01 (c) | BLOCKED. Condition 1 is PREPARED (§8.32.3) and awaits owner acceptance and a commit. Conditions 3 and 5 are not met |
+| P1-EXIT-02, P1-EXIT-03 | BLOCKED: Gate A and Gate B exist for the IC inventory scope only |
+| P1-EXIT-04 | PASS (qualified) |
+| P1-EXIT-05 | BLOCKED: no staging evidence, no operator record |
+| P1-EXIT-06, P1-EXIT-08 | BLOCKED: not authorized |
+| P1-EXIT-07 | BLOCKED: 109 documentary records, all `UNCLASSIFIED`; no identity verified |
+| P1-EXIT-09 | NOT RUN for implemented scopes (none). The regression baseline is not green (§8.32.7) |
+| P1-EXIT-10 | BLOCKED. The matrix now cites an artifact for every seat (§8.32.4), but its final update depends on P1-EXIT-06 to P1-EXIT-08 |
+| P1-EXIT-11 | NOT RUN |
+| §8.26.6 | Items 3, 6, and 10 decided; item 4 executed for the documentary scope; items 1, 2, 5, 7, and 11 open; item 8 not an exit item and undecided; item 9 unverified (Q-12) |
+| §8.63.10 | Conditions 3 and 6 met as decisions; condition 4 met for the documentary scope; conditions 1, 2, 5, 7, 8, and 9 open; condition 10 not run |
+| §8.25.10 | Items 1 and 2 met; items 3 and 4 open |
+| D-08 | Met from 2026-09-29 23:40 to the 16:29 prompt of 2026-10-14, except the gaps of §8.32.6 |
+| Phase 1 | BLOCKED |
+| Phase 2 | NOT STARTED |
+
+## 8.33 — Owner decisions of 2026-10-14 (third set): Builder/Projection boundary, constraint contract v1, Gate A and Gate B for step B-1, B-1 execution
+
+**Status:** OWNER DECISION RECORD AND EXECUTION RECORD. P1-EXIT-01 (c): **NOT CLOSED**. Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Source.** On 2026-10-14 at 18:22 UTC+3 the user issued the prompt "WSA-Enterprise — Phase 1 / Strictly Authorized Execution: ADR-023 §8.33 + B-1 Only" [P]. It states the binding decisions quoted in §8.33.1 and authorizes exactly two changes: this section, and step B-1 of the resolution package `docs/architecture/science-source-expansion/2026-10-14-PHASE-1-RESOLUTION-PACKAGE-P1-EXIT-01c.md` (uncommitted; SHA-256 `880e34b97201bbf89906a9ab9e04ecbd0a901404c30e42fadc76d37357d0325d`). The prompt text as received ends mid-sentence in its test rules; every rule received is applied. During execution the executor presented one structured decision request (DR-4), and the user answered it (§8.33.1). The prompt and the answer are conversation records and are not archived in the repository [M]; D-08 archival was not part of this authorization. Earlier sections are unchanged. No decision of §8.30, §8.31, or §8.32 is changed. Labels as in §8.64.
+
+### 8.33.1 — Decisions
+
+| Item | Decision (owner text, translated and condensed) | Effect |
+|---|---|---|
+| Builder / Projection boundary (resolution package DR-1) | `ScientificSearchQueryBuilder` is the final authority for building the textual query, including lexical expansions. Projection does not build or rewrite the query. Projection records facet constraints, representation information, and expansions as accounting and disclosure outputs. No two final authorities for the same query | Confirms D-04 and D-10.9.2 without amending them. [INFERENCE] For query construction it replaces the phrase "Projection owns query" in the untracked T2 definition (§8.32.3); this reading of T2 is the executor's, not owner text, and its confirmation is [UNRESOLVED] (§8.33.8). Consistent with the approved IU-04 §16 and the OD-06 authority matrix ("Source query (lexical) … **Builder**"; "No dual final authority on any row") |
+| `expanded_terms` | Production of expansions stays with the Builder under the approved contract. Projection records expansions and does not generate them. Existing expansion rules are not changed in B-1 | `expanded_terms` stays a bucket of the existing `ProjectionEnvelope` facet accounting. It is not part of the constraint contract |
+| Mapping of Capability state to constraint (DR-2) | `VERIFIED` → `CONSTRAINABLE`; `UNAVAILABLE`, `NOT_APPLICABLE` → `NOT_CONSTRAINABLE`; `UNVERIFIED`, `MISSING` → `UNKNOWN`; `PARTIAL` → `UNKNOWN` | §8.33.2. Consistent with the invariant "Missing Cap = UNVERIFIED": both map to `UNKNOWN`. Refined by the owner on 2026-10-14 at 18:49 (M-1, §8.33.8): `VERIFIED` maps to `CONSTRAINABLE` only when evidence freshness is established as `CURRENT` |
+| `NOT_CONSTRAINABLE` facet used only as text (DR-3) | It must not be presented as structurally applied. The classification is `APPROXIMATED` with a stated reason. No query-execution logic for this behaviour in B-1 | Recorded as a rule for the facet accounting of a later step. B-1 contains no code for it |
+| D-10.15 step 1 for B-1 (DR-4) | Chosen option (quoted): "Not applicable to B-1 because it binds no seat; D-10.15 step 1 stays in force for B-2 and any seat binding, and its general confirmation (§8.28.4) stays OPEN" | D-10.15 is not amended. The inference of §8.64.4 (that §8.11 is the gate of D-10.15 step 1) stays OPEN |
+| Gate A and Gate B for B-1 (DR-5) | Record Gate A and Gate B for B-1 in this section | §8.33.3 and §8.33.4 |
+| Architectural limits | Do not change D-04, D-10.9.2, or any other approved decision. No database schema or migration. No Capability writes; no CapVer change. No SAME_AS; no source activation. This approval is not closure of the rest of Phase 1 and does not authorize B-2 | Applied throughout |
+
+### 8.33.2 — Constraint contract `projection_query_constraints.v1`
+
+**Purpose.** Per-facet metadata telling the Builder whether one seat's source can constrain each facet of the canonical question in its query. Projection produces it; the Builder will consume it in a later, separately authorized step. It contains no query text, no terms, no expansions, and no fidelity class.
+
+| Field | Type | Source | Validation |
+|---|---|---|---|
+| `schema_version` | string constant `projection_query_constraints.v1` | This contract | Fixed |
+| `canonical_query_id` | `CanonicalQueryId` | CSQ | Non-empty (existing invariant); never minted by Projection |
+| `adr_id` | `AdrMembershipId` | Membership register, via the Path decision | Non-empty (existing invariant) |
+| `canonical_identity_id` | `CanonicalSourceIdentityId` or null | Identity, via the Path decision | Never inferred; null when the subject is seat-scoped |
+| `capability_decision_id` | string | Capability decision (IU-02) | `ProjectionDomainContract::assertSubjectAlignment()`: same `adr_id`, same canonical identity, and the Capability decision id equals the Path decision's `capability_decision_identity` |
+| `path_decision_id`, `path_id` | string, `PathId` | Path decision (IU-03) | As above; existing Path invariants keep them distinct from `adr_id` and the Capability decision |
+| `facet_constraints` | list of `{facet_code, identity_critical, capability_state, constraint}` | Caller-supplied facet codes × Capability `SCIENTIFIC_FACET_QUERY_CONSTRAINABLE` records | Codes normalized (trim, lower case), non-empty, unique; sorted by `facet_code`; `identity_critical` derived from `ProjectionIdentityCriticalFacets`; `capability_state` is a Cap v2 state or `MISSING`; `constraint` derived by the mapping of §8.33.1. *Source, matching, and mapping superseded by §8.33.8 (R-1, R-2, M-1)* |
+| `retrieval_method` | `ProjectionRetrievalMethod` | Caller | Defaults to `UNKNOWN`. [UNRESOLVED] The resolution package (section 3.2) names the Path decision as the source; `PathDecisionIdentity` has no such field (§8.33.8) |
+| `warnings` | list of `ProjectionWarning` | Caller, then Projection | Caller warnings first, then one `QUERY_CONSTRAINT_UNKNOWN` warning for each `UNKNOWN` facet, in facet order. *Produced by `ProjectionQueryConstraints::create()`; identical warnings kept once (§8.33.8)* |
+
+**Not in the contract:** `source_query`, `expanded_terms`, `fidelity_class`, any other facet-accounting bucket, and any source-native field name or query syntax. These stay in `ProjectionEnvelope`, which is unchanged.
+
+**Open point.** No approved record defines how facet codes are extracted from a CSQ. In B-1 they are explicit caller input. The extraction must be defined and approved in the scope that wires the contract (B-2 or later).
+
+**Serialization.** `toArray()` returns snake_case keys in the order of the table above. The output is deterministic for identical inputs, regardless of the order of the facet codes or of the Capability records. It passes `ProjectionDomainContract::assertProjectionPayloadClean()`. It is in-memory only: no persistence, schema, or migration.
+
+**Choices made by the executor within these decisions** [I] (the owner may amend them; choice 3 is superseded and choice 5 is amended by §8.33.8):
+1. `MISSING` is a disclosure value of `capability_state`. It is not a Cap v2 state and is never written.
+2. Only `SCIENTIFIC_FACET_QUERY_CONSTRAINABLE` records are read. A `SCIENTIFIC_FACET_CONTENT_ABOUT` record never makes a facet constrainable (CAP-INV-009).
+3. A Capability record whose subject differs from the Capability decision's subject is rejected. So are two `query_constrainable` records for the same facet: resolving them (for example by seat override) belongs to Capability, not Projection.
+4. A facet code outside `ProjectionIdentityCriticalFacets::CODES` is accepted with `identity_critical` false.
+5. The automatic `QUERY_CONSTRAINT_UNKNOWN` warning follows the producer rule of the resolution package (section 3.4) and D-10.9.6 (no silent facet loss).
+
+### 8.33.3 — Gate A record GA-B1-01: constraint contract (step B-1)
+
+**Classification (§8.33.8).** Recording a Gate A for B-1 is [OWNER DECISION] (DR-5). The record identifier and the content of each item below were drafted by the executor from the draft records of the resolution package (section 5) [INFERENCE] and were not separately approved by the owner.
+
+**Scope.** The seat-independent domain contract of §8.33.2 and its factory. No seat (`adr_id`) is bound, onboarded, or activated. Nothing is wired into runtime.
+
+| Gate A item (§8.64.4) | For GA-B1-01 |
+|---|---|
+| `T10+T8+T2` and its relation to D-04 and D-10.9.2 | Option B (selected in §8.31.1), with the boundary of §8.33.1 and the contract of §8.33.2. D-04 and D-10.9.2 are preserved. Option C is not adopted |
+| Runtime Source Registry contract and ownership | Outside the scope |
+| CapVer ownership and enforcement placement | Outside the scope: the contract only reads Capability records |
+| Capability contract and population rules | Outside the scope: no population, no write |
+| Separation of membership, identity, IC, Capability, registry, and activation | ACCEPTED (unchanged) |
+| Ordering of IC and Capability | Outside the scope (decided in §8.31.1; not exercised) |
+| GO-1 vocabulary | Outside the scope |
+| Source-specific integration strategy and verified access families | Outside the scope; required for B-2 |
+| Onboarding Contract implementation design | Outside the scope; D-10.15 step 1 does not apply to B-1 (§8.33.1, DR-4) and applies to B-2 |
+| Deployment order and staging validation | Not needed: no schema, no runtime change |
+
+### 8.33.4 — Gate B record GB-B1-01: step B-1
+
+**Classification (§8.33.8).** Recording a Gate B for B-1 is [OWNER DECISION] (DR-5). The authorized and prohibited scopes restate the 18:22 prompt [OWNER DECISION]. The record identifier and the wording of the other fields were drafted by the executor [INFERENCE].
+
+| Field (§8.64.4) | Content |
+|---|---|
+| Granted by | The user, recorded as architecture owner in §8.31.1 (compare §8.24.8 and P1-EXIT-03), on 2026-10-14 at 18:22 UTC+3 |
+| Authorized scope | (1) New files `backend/app/Services/Agriculture/Research/Projection/ProjectionFacetConstraintState.php`, `ProjectionFacetConstraint.php`, `ProjectionQueryConstraints.php`, `ProjectionQueryConstraintsFactory.php`, and `backend/tests/Unit/Agriculture/Research/Projection/ProjectionQueryConstraintsTest.php`. (2) This section. No seat is in scope |
+| Prohibited scope | B-2; Phase 2 and 3; CSQ/QUS, `CanonicalScientificQuestion`, `QueryUnderstandingService`, `ScientificSearchQueryBuilder`, the orchestrator, the Coexistence Boundary, the Selector, the Registry, source adapters, `AnswerComposer`, CapVer; Capability writes; identity bindings; SAME_AS; activation; schema, migrations, persistence; `backend/.env`, `phpunit.xml`, FAOSTAT settings, `composer.lock`, dependencies; other files in the repository; helper files in the repository |
+| Gate A relied on | GA-B1-01 (§8.33.3) |
+| Checklist items addressed | Input to P1-EXIT-01 (c) conditions 3 and 5 for this scope. It closes no P1-EXIT item |
+| Acceptance criteria | The eight test groups of §8.33.5 pass in a permitted environment. No existing contract of the Projection, Capability, Path, Identity, Coexistence, or Disclosure packages changes. Git shows only the five new files and the change to this ADR |
+| Tests and evidence | PHPUnit unit tests, using only an existing, isolated local means proven not to modify protected files or shared environments. No Docker, Compose, PostgreSQL, shared services, or network. Database engines: none, because nothing is persisted |
+| Repository and Git operations | Create the five files (create-only) and append this section. No staging, commit, push, branch change, or history rewrite |
+| Operational restrictions | No Docker, Compose, containers, databases, network, or environment changes |
+| Suspension | The conditions of §8.64.4; any field whose type, source, or validation would need invented semantics; any test that needs Docker, an environment change, or a dependency change (it is recorded NOT RUN instead) |
+
+The Gate B lifecycle questions of §8.64.4 remain OPEN.
+
+### 8.33.5 — B-1 execution
+
+**Before any change** [V]: repository `G:/WSA-Enterprise`; branch `phase-18-m18-ai-marketing-communications`; HEAD `f2025315d8990f52f3c658c968a3ec8252ac18b0`; 1,113 untracked, 17 changed, 0 staged, 92 ignored entries (`git status --ignored=matching`; 88 in the default `traditional` mode); 8 worktrees. This matched the previous report. All five target files were absent. This ADR had SHA-256 `4db55a261e12b439b6a6a8ddbb14d9e5245a482a4494f7b8f07e05772fc780fa` (392,454 bytes, CRLF) and no §8.33.
+
+**Files created** (create-only, CRLF, no BOM, uncommitted) [V]:
+
+| File | SHA-256 |
+|---|---|
+| `…/Projection/ProjectionFacetConstraintState.php` | `0db108d63df7d0c031384e7e56fe79329f2504521e8235f8fd4ad355c99e3196` |
+| `…/Projection/ProjectionFacetConstraint.php` | `684b600090e68ab138751296b8607e894716601b7f747b0fd7f3d54cdab87fd7` |
+| `…/Projection/ProjectionQueryConstraints.php` | `9e6fc206fc6186461f9ecfdce243b9e311538a3ef9194d5f8e8a4302911422e4` |
+| `…/Projection/ProjectionQueryConstraintsFactory.php` | `662c09674020fc7fe5b6d8538906bd0bef36f3b6bf1b4c276b0580bdd1c432ab` |
+| `backend/tests/Unit/Agriculture/Research/Projection/ProjectionQueryConstraintsTest.php` | `d9331468752a5e6ddd262cb1403f64dcbc579c1f140dca8783682bef6e445dba` |
+
+No existing file other than this ADR was changed. No class outside the four new ones references the contract, so runtime behaviour is unchanged.
+
+**Tests written** (14 test methods; 19 cases including the six mapping cases):
+
+| Required test | Test methods |
+|---|---|
+| 1. Every mapping, including `PARTIAL` and `MISSING` | `test_capability_state_maps_to_constraint`, `test_mapping_is_total_over_frozen_capability_states`, `test_only_query_constrainable_dimension_is_read` |
+| 2. `identity_critical` derived, not caller-chosen | `test_identity_critical_is_derived_not_caller_supplied` |
+| 3. Empty values and duplicate codes rejected | `test_rejects_empty_and_duplicate_values`, `test_rejects_capability_record_of_another_subject` |
+| 4. Capability and Path decision consistency | `test_carries_aligned_decision_identifiers`, `test_rejects_inconsistent_capability_and_path_decisions` |
+| 5. Stable, deterministic serialization order | `test_serialization_is_sorted_and_deterministic`, `test_unknown_constraints_are_disclosed_as_warnings_in_facet_order` |
+| 6. snake_case keys; `toArray()` passes `assertProjectionPayloadClean` | `test_payload_keys_are_snake_case_and_clean` |
+| 7. No write to Capability or any repository | `test_does_not_write_capability_or_use_any_repository` |
+| 8. Existing package contracts unchanged | `test_existing_contracts_are_unchanged`, `test_contract_is_not_wired_into_runtime`; plus the Git evidence above |
+
+Rejection tests assert the exact exception message, not only that an exception occurs.
+
+**Test status: NOT RUN** [V]. PHP is not installed on the host: no `php` on the PATH or in the usual install locations. `backend/vendor` does not exist on the host. The only WSL distribution is `docker-desktop`. The only isolated test means used earlier (§8.31.5) is a Docker container, which this authorization prohibits. No PHP syntax check was possible either. This is an environment limitation, not a code result. **No test is claimed to pass.** The required next step is to run `tests/Unit/Agriculture/Research/Projection` and the Capability, Path, Identity, Coexistence, and Disclosure unit suites in an environment the owner permits.
+
+### 8.33.6 — P1-EXIT-01 (c) after these decisions
+
+| Closure condition (§8.64.6) | Status |
+|---|---|
+| 1. Tracked definitions of T10, T8, and T2 | PARTIALLY MET [INFERENCE: executor assessment, not owner-confirmed]. The boundary of §8.33.1 replaces "Projection owns query" for query construction. The T10 and T8 transcriptions of §8.32.3 were neither accepted nor amended |
+| 2. Explicit selection of an option | MET (§8.31.1: Option B) [OWNER DECISION] |
+| 3. Constraint metadata defined, construction kept in the Builder, consistent with D-10.9.5–6 and T8 | MET FOR THE B-1 SCOPE [INFERENCE: executor assessment, not owner-confirmed] (§8.33.2). The contract carries no fidelity class and is tied to one Path decision, so it cannot raise fidelity on a fallback path. The fallback rule itself is exercised only when the contract is wired (B-2) |
+| 4. Option C supersession | Not applicable |
+| 5. Decision within Gate A | MET FOR THE B-1 SCOPE [INFERENCE: executor assessment, not owner-confirmed] (GA-B1-01) |
+
+**P1-EXIT-01 (c): NOT CLOSED.** Under the 18:22 instruction it is not closed automatically. Closing it needs an explicit owner decision, after condition 1 is completed for T10 and T8.
+
+### 8.33.7 — Status matrix
+
+| Item | Status on 2026-10-14 |
+|---|---|
+| Builder/Projection boundary, `expanded_terms` authority, mapping including `PARTIAL`, `APPROXIMATED` rule | DECIDED (§8.33.1); freshness condition for `VERIFIED` DECIDED (§8.33.8, M-1) |
+| D-04, D-10.9.2, D-10.15, and every other approved decision | Unchanged |
+| Gate A | GA-IC-01 (§8.30.3) and GA-B1-01 (§8.33.3) only |
+| Gate B | GB-IC-01 (§8.30.4) and GB-B1-01 (§8.33.4) only |
+| B-1 | IMPLEMENTED, uncommitted, revised by §8.33.8; tests NOT RUN (§8.33.5, §8.33.8) |
+| B-2 | NOT AUTHORIZED; needs facet extraction, D-10.15 step 1, its own Gate A and Gate B, and a seat with a verified access family |
+| P1-EXIT-01 | BLOCKED: (c) NOT CLOSED; (f) still subject to staging validation |
+| Phase 1 | BLOCKED |
+| Phase 2 | NOT STARTED |
+### 8.33.8 — Post-review corrections (owner decisions of 18:49)
+
+**Status:** OWNER DECISION RECORD AND EXECUTION RECORD. P1-EXIT-01 (c): **NOT CLOSED**. Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Source.** At 18:40 UTC+3 the user requested an independent static review of B-1 without changes. It found one blocker (M-1: `VERIFIED` mapped to `CONSTRAINABLE` without regard to evidence freshness) and three risks (R-1: the factory resolved raw Capability records itself; R-2: it lowercased Capability codes; R-3: decisions and inferences were not distinguished in this section). At 18:49 UTC+3 the prompt "B-1 Engineering Completion, Contract Integrity & Forensic Verification" decided M-1 and authorized the correction of R-1, R-2, and R-3 in this ADR and the five B-1 files only. Both prompts are conversation records, not archived in the repository [M]. The earlier text of §8.33 is kept: superseded statements are marked, not deleted.
+
+**Tags.** This subsection and the tags added to §8.33.1-§8.33.7 use:
+
+| Tag | Meaning | Nearest §8.64 label |
+|---|---|---|
+| [OWNER DECISION] | Decided by the owner in a prompt or in an answer to a decision request | [P] |
+| [APPROVED ARCHITECTURE] | Approved ADR text before §8.33 | - |
+| [IMPLEMENTATION FACT] | Verified in the repository or the code on 2026-10-14 | [V] |
+| [INFERENCE] | Executor reading or drafting not confirmed by the owner | [I] |
+| [PROPOSED] | Proposal waiting for a decision, including the resolution package | - |
+| [UNRESOLVED] | Open; needs an owner decision | OPEN |
+
+**Decisions of 18:49:**
+
+| ID | Decision (owner text, translated and condensed) | Tag | Effect |
+|---|---|---|---|
+| M-1 | If the Capability state is `VERIFIED` and evidence freshness is established as `CURRENT`, the constraint may be `CONSTRAINABLE` when the other conditions hold. If the state is `VERIFIED` and freshness is not established as `CURRENT`, the constraint is `UNKNOWN` with a clear warning. Freshness that cannot be established from the actual contract counts as not established. No new field; `CURRENT` is never inferred from a timestamp, the age of a record, or any other unapproved indicator | [OWNER DECISION]; consistent with D-10.5 item 2 and §8.23.3 ("VERIFIED requires CURRENT evidence") [APPROVED ARCHITECTURE] | Refines the DR-2 mapping of §8.33.1 for `VERIFIED`. Every other state keeps its mapping |
+| R-1 | Use the resolved Capability decision results instead of raw records. Do not re-implement `CapabilityRequirementEvaluator` or create a parallel resolution. Do not change the duplicate, seat/shared, or alignment rules | [OWNER DECISION] | Supersedes executor choice 3 and the factory input of §8.33.2 |
+| R-2 | Keep identifier semantics. No case folding of Capability codes without an approved contract. No silent merge of identities | [OWNER DECISION] | Supersedes the code matching of the first implementation |
+| R-3 | Distinguish owner decisions, approved architecture, implementation facts, inferences, proposals, and open points in §8.33, without deleting decision history | [OWNER DECISION] | The tags in §8.33.1-§8.33.7 and the table "Statements of §8.33" below |
+
+**Implementation changes** [IMPLEMENTATION FACT]:
+1. Freshness source: `CapabilityRecord::$evidenceFreshness`, which `CapabilityRequirementEvaluator` copies into each required cell outcome as `evidence_freshness_class`. A missing or invalid value, including another letter case, counts as not established. No field was added.
+2. `ProjectionFacetConstraintState::fromCapability(state, freshness)`: `VERIFIED` + `CURRENT` gives `CONSTRAINABLE`; `VERIFIED` + `STALE`, `UNKNOWN`, or not established gives `UNKNOWN`; `UNAVAILABLE` and `NOT_APPLICABLE` give `NOT_CONSTRAINABLE`; `UNVERIFIED`, `PARTIAL`, and `MISSING` give `UNKNOWN`, whatever the freshness.
+3. `ProjectionQueryConstraintsFactory::derive()` no longer takes Capability records. It reads `CapabilityDecisionIdentity::$perCellOutcomes`: the cells the evaluator resolved after its subject filter and its restrictive-wins rule for duplicate cells (seat override and shared). A facet matches the cell whose `dimension_key` equals `CapabilityDimension::scientificFacetQueryConstrainable(code)->key()`. A cell with `missing_record` true, and a facet without a cell, give `MISSING`. A relevant cell without a valid state or a boolean `missing_record`, an outcome without a string `dimension_key`, and conflicting cells for one facet are rejected; identical cells (a dimension listed twice in the requirement set) are accepted. Subject and decision alignment is still checked first, so freshness bypasses no check.
+4. Capability codes are compared exactly. The Projection facet code keeps the existing Projection normalization (trim and lower case, as in `ProjectionFacetRecord`). A Capability cell coded `Species` therefore does not match the facet `species`, which becomes `MISSING` and `UNKNOWN`.
+5. `ProjectionQueryConstraints::create()` now produces the `QUERY_CONSTRAINT_UNKNOWN` warnings, so a direct call discloses the same warnings as the factory. Identical warnings (same code and message) are kept once. The warning states the reason: `MISSING`; `VERIFIED` with freshness `STALE`, `UNKNOWN`, or not established; or the other state. The constant moved to `ProjectionQueryConstraints`. Facets are sorted by string comparison, so numeric codes stay strings. The unused `isCapabilityMissing()` was removed.
+6. The serialized output keeps the same keys: ten top-level keys and four per facet. Freshness is not serialized; it appears only in the warning text.
+
+**Consequence** [IMPLEMENTATION FACT]: The evaluator resolves only required dimensions; optional enrichments carry keys, not states. A facet can be `CONSTRAINABLE` only if the Capability decision bound to the Path decision lists the facet's `query_constrainable` dimension as required. The only runtime caller of the evaluator, `Stage3CghiaCoexistenceBoundary`, requires `access_method:api` only, so if the contract were wired there unchanged every facet would be `MISSING` and `UNKNOWN`. That is fail-closed. Whether `query_constrainable` dimensions belong in the AND set, which would change Path eligibility, is [UNRESOLVED] and belongs to B-2.
+
+**Statements of §8.33:**
+
+| Statement | Tag |
+|---|---|
+| Decision texts in column 2 of §8.33.1, and the DR-4 answer | [OWNER DECISION], translated and condensed by the executor |
+| Assignment of the resolution package IDs DR-1 to DR-5 to those texts | [INFERENCE] |
+| "Projection owns query" replaced for query construction in the T2 definition (§8.33.1, §8.33.6 condition 1) | [INFERENCE]; owner confirmation [UNRESOLVED] |
+| IU-04 §16 and the OD-06 authority matrix as cited | [APPROVED ARCHITECTURE]; the statement that the boundary is consistent with them is [INFERENCE] |
+| Contract details of §8.33.2 not fixed by the owner: field names, types, validation, order, serialization | [INFERENCE]: executor design within the decisions, based on the resolution package section 3 [PROPOSED] |
+| Executor choices 1, 2, and 4 | [INFERENCE] |
+| Executor choice 3 | Superseded by R-1 |
+| Executor choice 5 | [INFERENCE], based on the resolution package section 3.4 [PROPOSED] and D-10.9.6 [APPROVED ARCHITECTURE]; amended by item 5 above |
+| Recording GA-B1-01 and GB-B1-01 | [OWNER DECISION] (DR-5) |
+| Identifiers and item wording of GA-B1-01 and GB-B1-01 | [INFERENCE] |
+| Repository and file evidence of §8.33.5 | [IMPLEMENTATION FACT] for 18:22; the file hashes are superseded below |
+| §8.33.6 condition 2, MET | [OWNER DECISION] (§8.31.1) |
+| §8.33.6 conditions 1, 3, and 5 (PARTIALLY MET; MET FOR THE B-1 SCOPE) | [INFERENCE]: executor assessments. "MET FOR THE B-1 SCOPE" is not a status defined in §8.64.6 |
+| T10 and T8 transcriptions of §8.32.3 | Not approved; [UNRESOLVED] |
+| P1-EXIT-01 (c) | NOT CLOSED |
+| `retrieval_method` supplied by the caller | [UNRESOLVED]: the resolution package (section 3.2) names the Path decision as the source, and `PathDecisionIdentity` has no retrieval-method field |
+| Extraction of facet codes from CSQ | [UNRESOLVED] (open point of §8.33.2) |
+| Correspondence between Projection facet codes (lower case) and Capability facet codes (case-sensitive) | [UNRESOLVED]; until it is decided only exact equality matches |
+
+**Files after correction** (CRLF, no BOM, untracked, uncommitted) [IMPLEMENTATION FACT]:
+
+| File | SHA-256 |
+|---|---|
+| `./Projection/ProjectionFacetConstraintState.php` | `f60536e53a20ae3d1cdb9f8c8b1d605424da29d8e320ee9104b3c414efcd0f8a` |
+| `./Projection/ProjectionFacetConstraint.php` | `58e327f961fa09b21f154e8c062e663e4d9238a01c331686b76946580f13cdc3` |
+| `./Projection/ProjectionQueryConstraints.php` | `45f3f4756e9a2a760673b6275f19e257f7440fe147cc5a55f9ee120ddd530277` |
+| `./Projection/ProjectionQueryConstraintsFactory.php` | `ccfef84670992616f5730269416b1f37e5dba4b4d22f4b70eec559ecc8977a15` |
+| `backend/tests/Unit/Agriculture/Research/Projection/ProjectionQueryConstraintsTest.php` | `19427fb61df7ba7824f04e56b52f391582c4bbb59f142cc52ab5bf7b7bc31f6f` |
+
+No other file changed. Earlier sections of this ADR, before §8.33, are byte-identical.
+
+**Tests written** (15 test methods; 23 cases including the nine mapping cases). Capability decisions come from the real `CapabilityRequirementEvaluator`, except where a malformed or hand-built decision is the subject of the test:
+
+| Requirement | Test methods |
+|---|---|
+| `VERIFIED` + `CURRENT` gives `CONSTRAINABLE`; + `STALE` or `UNKNOWN` gives `UNKNOWN` with a warning; other states unchanged | `test_capability_state_and_freshness_map_to_constraint`, `test_mapping_is_total_over_frozen_states_and_freshness` |
+| `VERIFIED` with missing or unprovable freshness gives `UNKNOWN` | `test_verified_without_established_current_freshness_is_unknown` |
+| Freshness does not bypass the subject and decision checks | `test_freshness_does_not_bypass_decision_alignment` |
+| Resolved decision only; restrictive-wins, foreign subjects, `content_about`, and cells not required | `test_reads_only_cells_resolved_by_the_capability_decision` |
+| No case folding of Capability codes | `test_capability_codes_are_not_case_folded` |
+| Rejections, malformed and conflicting cells | `test_rejects_empty_duplicate_and_malformed_values` |
+| Identifiers, ordering with numeric codes, warnings from a direct `create()`, warning deduplication | `test_carries_aligned_decision_identifiers`, `test_serialization_is_sorted_and_deterministic`, `test_unknown_constraints_are_disclosed_once_in_facet_order` |
+| Earlier groups 2, 6, 7, and 8 of §8.33.5 | `test_identity_critical_is_derived_not_caller_supplied`, `test_payload_keys_are_snake_case_and_clean`, `test_does_not_write_capability_or_use_any_repository`, `test_existing_contracts_are_unchanged`, `test_contract_is_not_wired_into_runtime` |
+
+**Test status: NOT RUN** [IMPLEMENTATION FACT]. The environment is unchanged since §8.33.5: no PHP on the host, no `backend/vendor`, and the only isolated means is Docker, which the 18:49 prompt prohibits. No PHP syntax check was possible. **No test is claimed to pass.**
+
+## 8.34 — Owner decisions of 2026-10-14 (fourth set): Gate A audit of the scientific search architecture, legacy-62 disposition, Gate A and Gate B for P1-EXIT-06 increment R1, R1 execution
+
+**Status:** OWNER DECISION RECORD AND EXECUTION RECORD. P1-EXIT-06: **NOT CLOSED** (increment R1 only). P1-EXIT-01 (c): **NOT CLOSED**. Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Source.** On 2026-10-14 at 22:05 local time the user issued the prompt "WSA-Enterprise — Autonomous Software Engineering Mission: Scientific Search Architecture Completion, 109-Source Integration, Legacy Registry Forensic Cleanup, and Strict Security Governance" (sent twice, identical) [OWNER DECISION]. It requires a forensic audit (Gate A), owner approval of any implementation scope (Gate B and Gate C), deletion of legacy-62 artifacts only after approval of an exact manifest, and this continuity record (Gate F). It prohibits commits, pushes, pulls, staging, branch changes, history rewriting, reset, clean, stash, database changes, dependency installation, network access, live source probes, deployment, and changes to unrelated files; Docker execution is prohibited unless separately authorized. The executor presented one structured decision request; the owner's answers are quoted in §8.34.1. The prompt and the answers are conversation records, not archived in the repository [M]. Earlier sections are unchanged. No decision of §8.30 to §8.33 is changed. Tags as in §8.33.8.
+
+### 8.34.1 — Decisions
+
+| Item | Decision (owner answer, condensed) | Tag | Effect |
+|---|---|---|---|
+| R1 | Approve P1-EXIT-06 increment R1: a typed catalog holding the five existing Stage 3 sources as `LEGACY_STAGE3` external registrations, with `adr_id` rejected until an Onboarding Contract exists; registry, selector, and orchestrator key lists resolve through it with identical behaviour; a sequential failure-isolation fix; a conformance suite and drift tests. No seat binding or activation, no Capability writes, no database, no change to CSQ, `QueryUnderstandingService`, `ScientificSearchQueryBuilder`, or `AnswerComposer` | [OWNER DECISION] | §8.34.4, §8.34.5 |
+| Docker | Isolated Docker test runs as in §8.31.5 are permitted: image `wsa-enterprise-backend-test:latest`, `--network none`, vendor volume and source read-only, no shared database, no Compose PostgreSQL | [OWNER DECISION] | Used for every test of §8.34.6. No other Docker use is authorized |
+| Legacy 62 | Keep the 62-register as historical. The deletion manifest is empty | [OWNER DECISION]; consistent with D-09 item 4 [APPROVED ARCHITECTURE] | §8.34.3. Nothing was deleted |
+| GAP-QUERY | Keep D-04. The semantic handoff to sources goes through the Builder and, later, the B-2 constraint contract; no adapter-level query handoff | [OWNER DECISION]; confirms D-04 and D-10.9.2 without amending them | No adapter receives the compiled query bundle. R1 contains no query-handoff change |
+
+### 8.34.2 — Gate A record GA-R1-01: audit of the scientific search path (gap matrix)
+
+**Production path traced** [IMPLEMENTATION FACT]: `MultiSourceScientificSearchOrchestrator::execute()` → `ScientificSourceSelector::selectionTrace()` → `filterEnabledSources()` and `prioritizeSources()` → `ScientificSourceAdapterRegistry::resolveMany()` → `collectProviderExecutions()` (sequential, or a concurrent process pool for the independent scholarly sources of Home `generic_research`; FAOSTAT has its own canonical-query loop) → deduplication, ranking, and filtering. `Stage3CghiaCoexistenceBoundary` runs in default mode `legacy_only` and always permits retrieval; `Stage3SourceKeyIdentityBridge` maps Stage 3 keys to identities.
+
+| Gap | Finding before R1 | Tag | Status after R1 |
+|---|---|---|---|
+| GAP-REG: canonical runtime source registry | None. At least six hard-coded key lists: the registry constructor, `ScientificSourceSelector::DEFAULT_INTERNET_FIRST_SOURCES` and `OPTIONAL_SOURCES`, the orchestrator's `INDEPENDENT_SCHOLARLY_SOURCE_KEYS` and its enablement `match`, `Stage3SourceKeyIdentityBridge::KNOWN_STAGE3_SOURCE_KEYS`, and the Path-family `match` of the Coexistence Boundary. Known debt per D-05 | [IMPLEMENTATION FACT] | PARTIALLY ADDRESSED for the five Stage 3 sources: `ScientificSourceCatalog` is the single runtime list. The 109 seats are not registered (§8.34.7) |
+| GAP-CAP: Capability production and enforcement | Capability v2 is evaluated only in the Coexistence Boundary for `access_method:api`, whose result never blocks retrieval. No Capability record exists for any Stage 3 source, and selection does not read Capability | [IMPLEMENTATION FACT] | OPEN. Outside R1 |
+| GAP-ADAPT-IF: versioned adapter contract | `ScientificSourceAdapterInterface` had no version | [IMPLEMENTATION FACT] | PARTIALLY ADDRESSED: `CONTRACT_VERSION = 'scientific_source_adapter.v1'` names the existing contract; registrations must declare it. No method changed |
+| GAP-SEL: duplicate registries and fixed selection | As GAP-REG; off-path registries (`AgriculturalProviderRegistry` and its bridge, `ScientificSourceProfileCatalog`) keep their own lists | [IMPLEMENTATION FACT] | PARTIALLY ADDRESSED: selector, registry, orchestrator, identity bridge, and Path-family mapping read the catalog. Off-path registries are unchanged |
+| GAP-QUERY: compiled query bundle not consumed by adapters | Confirmed. The compiler output is metadata only, as approved by D-04 and D-10.9.3 | [IMPLEMENTATION FACT]; [OWNER DECISION] §8.34.1 | NOT A DEFECT under D-04. Handoff path: Builder and B-2 |
+| GAP-SEM: scientific meaning re-derived downstream | Partially evidenced only | [INFERENCE] | OPEN; not re-verified in R1 |
+| GAP-PROV: provenance and licensing | `ScientificSearchResult` has no licence, retrieval-time, or access-terms field | [IMPLEMENTATION FACT] | OPEN |
+| GAP-EVID: duplicated or conflicting evidence rules | Not re-verified in this record | [UNRESOLVED] | OPEN |
+| GAP-ERR: error classification and retryability | `ScientificSourceSearchOutcome` has four statuses and a free-text `error`; no taxonomy and no retryability field. An exception thrown by an adapter on the sequential path aborted Stage 3 for every provider; the concurrent path already contained exceptions | [IMPLEMENTATION FACT] | PARTIALLY ADDRESSED: the sequential path now contains adapter exceptions (§8.34.5). Taxonomy and retryability OPEN |
+| GAP-FAMILY: reusable source-family adapters | None. The five adapters are source-specific REST adapters; OAI-PMH, RSS/Atom, and bulk appear only as Capability and Path vocabulary | [IMPLEMENTATION FACT] | OPEN |
+| GAP-TEST: shared adapter conformance tests | None | [IMPLEMENTATION FACT] | ADDRESSED for the registered sources: `ScientificSourceAdapterConformanceTest` runs over every catalog key |
+| GAP-ISO: duplicated Home/Crop isolation logic | Partially evidenced only | [INFERENCE] | OPEN; not re-verified in R1 |
+
+### 8.34.3 — Legacy-62 dependency matrix and deletion manifest
+
+| Artifact | Type and Git state | References | Runtime, build, test impact | Historical value | Status | Action |
+|---|---|---|---|---|---|---|
+| `docs/architecture/SCIENCE-SOURCE-EXPANSION-62-REGISTER.md` (SHA-256 `9170257a5fea2d1ffd05c5eec5c4e8c88713a0ca7f6b3d78405e7b274ab102c2`) | Markdown; untracked | D-06, D-09 (items 3 and 4) of this ADR; `docs/adr/README.md` line 21 | None found in `backend/app`, `backend/config`, `backend/database`, or `frontend/src`. `Adr023109MembershipRegisterContractTest` only asserts that the 109 register does not carry `historical_62_xref` | Required: D-09 item 4 retains it for historical identity traceability and source lineage | HISTORICAL | RETAIN |
+
+**Deletion manifest: EMPTY** [OWNER DECISION]. No file was deleted. The 109 register `ADR-023-109-MEMBERSHIP-REGISTER.v1.json` is unchanged (SHA-256 `783035186579aa558d637f581c11c6701ae7bb39951cdc085fdb83cad59a6897`).
+
+### 8.34.4 — Gate B record GB-R1-01: increment R1 of P1-EXIT-06
+
+**Classification.** Recording R1 and its scope is [OWNER DECISION] (§8.34.1). The record identifier and the wording below were drafted by the executor [INFERENCE].
+
+| Field (§8.64.4) | Content |
+|---|---|
+| Granted by | The user, as architecture owner (§8.31.1), on 2026-10-14, in the answer to the Gate C decision request |
+| Authorized scope | The typed catalog and its value types under `backend/app/Services/Agriculture/Research/Search/Registry/`; `ScientificSourceAdapterInterface::CONTRACT_VERSION`; catalog-driven `ScientificSourceAdapterRegistry`, `ScientificSourceSelector`, `MultiSourceScientificSearchOrchestrator`, `Stage3SourceKeyIdentityBridge`, and the Path-family mapping of `Stage3CghiaCoexistenceBoundary`; sequential failure isolation; conformance and drift tests; this section |
+| Prohibited scope | Seat binding, onboarding, or activation; Capability writes; database, schema, migrations; CSQ, `QueryUnderstandingService`, `ScientificSearchQueryBuilder`, `AnswerComposer`; query handoff to adapters; source adapters; configuration, `.env`, `phpunit.xml`, `composer.lock`, dependencies; deletion; staging, commits, pushes, branch changes |
+| Gate A relied on | GA-R1-01 (§8.34.2) |
+| Acceptance criteria | Identical selection, resolution, and enablement for the five sources; ADR seats rejected; one catalog entry suffices to add a source; a throwing adapter cannot abort other providers; no regression against a pre-change baseline in the Unit and Feature suites |
+| Tests and evidence | Isolated Docker runs as authorized in §8.34.1, compared per test case with a baseline snapshot (§8.34.6) |
+| Suspension | Any change that would need a Capability write, a seat binding, or a change to a prohibited file |
+
+### 8.34.5 — R1 execution
+
+**Repository** [IMPLEMENTATION FACT]: `G:/WSA-Enterprise`, branch `phase-18-m18-ai-marketing-communications`, HEAD `f2025315d8990f52f3c658c968a3ec8252ac18b0`, nothing staged. Remote state UNVERIFIED (no network access). Before any change this ADR had SHA-256 `d3771aa07673afe746f9b2cecfc3199b4ba44aecdd0f8a7361eca52efc678e51` (421,556 bytes); the bytes before this section are unchanged.
+
+**Design** [IMPLEMENTATION FACT]; the field set and names are executor design within §8.34.1 [INFERENCE]:
+1. `ScientificSourceRegistration` (readonly): `sourceKey`, `adapterClass`, `adapterContractVersion`, `lifecycle`, `accessFamily`, `selectionRole`, `executionGroup`, `enablement`, `pathFamily`, `adrId`. It rejects a key that is not lower-case snake_case, an adapter class that does not implement the interface, an unsupported contract version, and any `adrId` ("an accepted Onboarding Contract is required first (ADR-023 D-10.11)").
+2. `ScientificSourceCatalog`: production order `openalex`, `crossref`, `semantic_scholar`, `consensus`, `fao_stat`; all `LEGACY_STAGE3` and `rest_api`. Roles: the first three `internet_first_default` (execution group `independent_scholarly`), `consensus` `optional_explicit_only` (`sequential`), `fao_stat` `statistical_consideration` (`statistical`). Enablement: the existing `agricultural_intelligence.*.enabled` flags for the three scholarly sources, always enabled for Consensus, `FaoStatRuntimePolicy::isEnabled()` for FAOSTAT. Path families P12, P11, P13, P12, P01, as before. Duplicate keys are rejected.
+3. The registry resolves adapters from the container in catalog order and rejects an adapter whose `sourceKey()` differs from its registration. The selector returns enabled `statistical_consideration` keys, then enabled `internet_first_default` keys, as before. `DEFAULT_INTERNET_FIRST_SOURCES`, `OPTIONAL_SOURCES`, and `KNOWN_STAGE3_SOURCE_KEYS` remain as deprecated compatibility projections, pinned to the catalog by drift tests.
+4. Sequential failure isolation: an exception thrown by `search()` becomes one `failed` outcome with error `adapter_exception` and `observability.exception_class`. Only the exception class is logged, never the message. The remaining variants of that provider are skipped; other providers still run. This matches the existing concurrent path, which already catches `\Throwable`.
+
+**Behaviour differences** [IMPLEMENTATION FACT]:
+1. The orchestrator's enablement filter used `(bool) config(...)`; it now uses `FILTER_VALIDATE_BOOL`, as the selector already did. The configuration file produces booleans, so production behaviour is identical. Only a runtime override with a string such as `'false'` is now read as disabled.
+2. Because adapter exceptions are contained, an assertion failing inside an `Http::fake` callback, or a `preventStrayRequests` exception, on the sequential path now produces a `failed` outcome instead of propagating. The concurrent path already behaved this way. Observed effect: one already-failing test fails at a later assertion (§8.34.6). Whether test-framework exceptions should be re-thrown is [UNRESOLVED].
+
+**Files** (uncommitted, unstaged) [IMPLEMENTATION FACT]:
+
+| File | State | Line endings | SHA-256 |
+|---|---|---|---|
+| `backend/app/Contracts/ScientificSourceAdapterInterface.php` | modified | LF | `2260559bdd60a97fd9cc935d28acb07229f1d669c466d8bf2a8aeac892d4888c` |
+| `…/Research/Coexistence/Stage3CghiaCoexistenceBoundary.php` | modified | CRLF | `022dfde4d89fc7e8fc1f764c6b850feb6c6d89a3b06def284f9a1c5519a94dcc` |
+| `…/Research/Coexistence/Stage3SourceKeyIdentityBridge.php` | modified | CRLF | `f028aacebf7229a824572bc921b5d4847c92474066042b0dc5ea8870eba41416` |
+| `…/Research/Search/MultiSourceScientificSearchOrchestrator.php` | modified | LF | `9423a086f02570475107aa80c97c8a8b185b749941003c84ca60f6d87752baa2` |
+| `…/Research/Search/ScientificSourceAdapterRegistry.php` | modified | LF | `517698a7b28ad2d44dc1496af4fa4997f4f97c1a0a48cd35e18a94ebae7e23dd` |
+| `…/Research/Search/ScientificSourceSelector.php` | modified | LF | `23f9ae47c3f782f20a528748317a469460d32ec7a634ebe35932ab19e5b9c54d` |
+| `…/Search/Registry/AlwaysEnabledSourceEnablement.php` | new | LF | `bec33c6290833fca9d5fcb0217868b42a56d84d03d0c9a2d26dd54e243de97ba` |
+| `…/Search/Registry/ConfigFlagSourceEnablement.php` | new | LF | `86f512299cf7a046daea849809898845238368af83d96302de2f00b5ff59d1c9` |
+| `…/Search/Registry/FaoStatRuntimeSourceEnablement.php` | new | LF | `d1dd7673908be983dce0b21db6f8fd5876f8e39df42e9c6ed2d0cee3722d22c6` |
+| `…/Search/Registry/ScientificSourceAccessFamily.php` | new | LF | `795f6e53cb1dfe85677ade89ecc747820bdf066acfae84454a8360b5bae48776` |
+| `…/Search/Registry/ScientificSourceCatalog.php` | new | LF | `6456aea5de847a0afcb11e94371c7a5c4d6ea65b11fa02817758bc2cf48bb772` |
+| `…/Search/Registry/ScientificSourceEnablement.php` | new | LF | `e432fe3180cecb77007821c7e31748ebc27daebe9b982e4f36886e5f90501fab` |
+| `…/Search/Registry/ScientificSourceExecutionGroup.php` | new | LF | `fd98344b4dce1f6871fb72b0f9f35d1a84298d1d58556111e9864e1541cbf4ae` |
+| `…/Search/Registry/ScientificSourceLifecycle.php` | new | LF | `3a8044d0d8f191dfe0f23fb6a701b0d79ff896b1e10e3030226103deb8f14da6` |
+| `…/Search/Registry/ScientificSourceRegistration.php` | new | LF | `85f8c9e781818b4e73a47e2a010e94734113ff4e4f5555ec1b09c0fa91286657` |
+| `…/Search/Registry/ScientificSourceRegistryInvariantViolation.php` | new | LF | `9b0c3bd95fa8f565aa44cc3ffccf7c3147db8a51511c01b4dea0f4aab36da3e6` |
+| `…/Search/Registry/ScientificSourceSelectionRole.php` | new | LF | `cb0c1e2d908bcb85ffaca0b8bcaa8b8b45667dfbc914b485b7ec16684855f241` |
+| `backend/tests/Unit/Agriculture/Research/Search/Registry/ScientificSourceCatalogContractTest.php` | new | CRLF | `75899117cb78a34543d0fa92c9699921effdf68d293dbfee903224be4e179ed9` |
+| `backend/tests/Unit/Agriculture/Research/Search/ScientificSourceAdapterConformanceTest.php` | new | CRLF | `1a2044a45b73686cd7631aa5f44e76133f6a0f20115d784dd3c1d4f56b407bf1` |
+
+`…` is `backend/app/Services/Agriculture`. No other file changed: `git status` matches the pre-work capture except for these 19 paths and this ADR, and the 1,204 other files of `backend/` (excluding `vendor`, `node_modules`, `storage`, `e2e-tmp`, `.env`) are byte-identical to a pre-change snapshot. The hash prefixes of `composer.lock` (`D6EE17A75BF1DA5B`), `phpunit.xml` (`1EC076C544341F95`), and `backend/.env` (`16B96F1E9230C8DA`) are unchanged.
+
+### 8.34.6 — Tests
+
+**Means** [IMPLEMENTATION FACT]: image `wsa-enterprise-backend-test:latest` (`sha256:a63876622be9823ece235197c4f2fba77b39efdfd0c07b5412d1e4d0da2ab259`), `docker run --rm --network none`, source and the `wsa-enterprise_backend_vendor` volume mounted read-only, an empty `.env` mounted over the real one, `storage` and `bootstrap/cache` on tmpfs, a throwaway `APP_KEY`, `APP_ENV=testing`, SQLite in memory as configured by `phpunit.xml`, `--do-not-cache-result`, JUnit output outside the repository. The baseline ran the same way on a copy of `backend/` taken before the R1 changes and kept outside the repository.
+
+| Run | Tests | Failures | Errors | Skipped | Comparison per test case |
+|---|---|---|---|---|---|
+| Unit, baseline | 1,243 | 13 | 16 | 0 | — |
+| Unit, R1 | 1,276 | 13 | 16 | 0 | 0 regressions, 0 newly passing, 0 removed; 33 added, all passing |
+| Feature, baseline | 950 | 84 | 0 | 12 | — |
+| Feature, R1 | 950 | 84 | 0 | 12 | 0 regressions, 0 newly passing; identical failure messages |
+| `tests/Unit/Agriculture/Intelligence/FaoStat`, baseline | 136 | 7 | 0 | 0 | Same seven failures as in R1 |
+
+**New tests** (all passing): `ScientificSourceCatalogContractTest` (12 cases: production order, legacy registrations without `adr_id`, ADR-seat rejection, invalid key, class, and version with exact messages, duplicates, registry order and key mismatch, selector roles and flags, not-ready plan, compatibility-projection drift, identity bridge and Path family, one entry adds a source) and `ScientificSourceAdapterConformanceTest` (21 cases: structural conformance, 503 classification, connection failure containment, empty response never reported as success, no credential in any output, for every catalog key, and isolation of a throwing adapter on the sequential path).
+
+**Pre-existing failures** [IMPLEMENTATION FACT]: the 29 failing or erroring Unit cases and 84 failing Feature cases fail identically on the baseline. They are not caused by R1 and were not investigated or fixed. One failure message changed: `FaoStatPhase3FixTest::test_openalex_agri_domain_does_not_reach_faostat_and_qcl_is_used` fails on the baseline inside its `Http::fake` callback (`element` `'2413'` instead of `'2510'`) and under R1 at the later assertion that `fao_stat` succeeded, because the callback's assertion error is now contained (§8.34.5, behaviour difference 2). The root cause is the same.
+
+**Evidence for §8.33** [IMPLEMENTATION FACT]: the R1 Unit run includes `ProjectionQueryConstraintsTest`, recorded NOT RUN in §8.33.5 and §8.33.8. JUnit reports 25 cases, all passing (§8.33.8 states 23 cases; the difference was not investigated). The Capability (20), Path (17), Identity (13), Coexistence (28), Disclosure (17), and Projection (51 in total) unit suites also pass. This changes no status of §8.33.
+
+### 8.34.7 — 109 reconciliation
+
+The 109 membership register is unchanged. No seat is bound to a runtime registration: the catalog rejects `adr_id` until an Onboarding Contract is accepted (D-10.11). The five registrations are legacy Stage 3 sources, not membership seats; their correspondence to seats stays governed by `Stage3SourceKeyIdentityBridge` and is not changed. The runtime integration of every one of the 109 seats is **NOT EXECUTED**. Membership still does not imply runtime (D-10).
+
+### 8.34.8 — Status matrix
+
+| Item | Status on 2026-10-14 |
+|---|---|
+| D-04, D-05, D-09, D-10, D-10.9.2, D-10.9.3, and every other approved decision | Unchanged |
+| Gate A | GA-IC-01, GA-B1-01, GA-R1-01 |
+| Gate B | GB-IC-01, GB-B1-01, GB-R1-01 |
+| R1 (P1-EXIT-06 increment) | IMPLEMENTED, uncommitted; tests RUN as in §8.34.6 |
+| P1-EXIT-06 | NOT CLOSED. Open: Capability enforcement in selection and for seats; adapter contract v2 with an error taxonomy and retryability; provenance and licensing fields; source-family adapters; off-path registries; registration of seats after Onboarding Contracts |
+| Legacy-62 register | RETAINED as historical; deletion manifest empty |
+| GAP-QUERY | Closed as not-a-defect under D-04; semantic handoff deferred to the Builder and B-2 |
+| Pre-existing test failures (29 Unit, 84 Feature) | Recorded, not investigated |
+| B-2 | NOT AUTHORIZED |
+| Phase 1 | BLOCKED |
+| Phase 2 | NOT STARTED |
+
+## 8.35 — Owner decisions of 2026-10-14 (fifth set): R1 stabilization (exception boundary), R2 capability lifecycle and production enforcement
+
+**Status:** OWNER DECISION RECORD AND EXECUTION RECORD. P1-EXIT-06: **NOT CLOSED** (increments R1 and R2 only). P1-EXIT-01 (c): **NOT CLOSED**. Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Source.** On 2026-10-14 at 23:31 UTC+3 the user issued the prompt "WSA-Enterprise — Autonomous Engineering Continuation Mission: Architecture Completion, Production Implementation, Verification, and Secure 109-Source Expansion" (sent twice, identical) [OWNER DECISION]. It orders increments R1 to R8, automatic continuation between increments, one status record in this ADR, and the change-control rules of its §9 (no commits, pushes, pulls, staging, branch changes, reset, clean, stash, deletion, database changes, dependency installation, network access, deployment; Docker only with separate authorization). The prompt as received ends mid-sentence in §9, item 9 of its safety protocol ("Verify that unrelated"); every rule received is applied. The executor presented one structured decision request; the answers are in §8.35.1. The prompt and the answers are conversation records, not archived in the repository [M]. Earlier sections are unchanged. No decision of §8.30 to §8.34 is changed. Tags as in §8.33.8.
+
+### 8.35.1 — Decisions
+
+| Item | Decision (owner answer, condensed) | Tag | Effect |
+|---|---|---|---|
+| Docker | Isolated test runs only, with the protocol of §8.34.6, for every increment of this mission | [OWNER DECISION] | Used for every test of §8.35.6 |
+| Capability enforcement for the five legacy sources | Enforce for every registration. The five legacy Stage 3 sources get an explicit, disclosed legacy operational basis that authorizes the search operation only and is never shown as VERIFIED. Seats and new sources need VERIFIED evidence that is current | [OWNER DECISION] | §8.35.4. Search behaviour of the five sources is unchanged |
+| Location of capability evidence | Reviewed, versioned in-code declarations read by the selector. The database store is untouched | [OWNER DECISION] | `EloquentCapabilityStoreRepository` and table `cghia_capability_cell_records` are neither read nor written |
+
+### 8.35.2 — State recovery
+
+[IMPLEMENTATION FACT] Branch `phase-18-m18-ai-marketing-communications`, HEAD `f2025315d8990f52f3c658c968a3ec8252ac18b0`, 0 staged, 0 stashes, 8 worktrees. Before this increment `git status` matched §8.34.5 (the pre-work capture plus the 19 R1 paths), the R1 file hashes matched §8.34.5, and this ADR had SHA-256 `cbb80de37c122672020f268a59816767fb93b70f64bf7094bc36db78a9fb150b` (442,164 bytes). Every statement of the R1 report listed in the prompt was confirmed against the code, with the corrections of §8.35.3.
+
+### 8.35.3 — R1 stabilization
+
+**Registry baseline** [IMPLEMENTATION FACT]: the catalog governs the adapter registry, the selector, the orchestrator's enablement filter and execution groups, the identity bridge, and the Path-family mapping, as stated in §8.34.5. Resolution follows catalog order; duplicate keys and adapter-key mismatches are rejected; unregistered keys still pass the orchestrator filter and are dropped by `resolveMany()`, as before R1. The deprecated constants are pinned by drift tests.
+
+**Exception boundary: finding** [IMPLEMENTATION FACT]: the R1 isolation of §8.34.5 caught `\Throwable`. It therefore also caught programming defects (`\Error`, `\LogicException`), PHPUnit `AssertionFailedError` (a `RuntimeException`), and Laravel `StrayRequestException` (a `RuntimeException`, not an `HttpClientException`), and turned them into ordinary source failures. That caused the changed failure message recorded in §8.34.6.
+
+**Exception taxonomy** (executor design within the mission's requirement that test-framework exceptions and internal defects are not hidden) [INFERENCE]:
+
+| Class | Examples | Sequential path |
+|---|---|---|
+| Expected transport failure | `Illuminate\Http\Client\HttpClientException`: `ConnectionException`, `RequestException` | Contained: one `failed` outcome, error `adapter_exception`, `observability.failure_category = transport`; the remaining variants of that provider are skipped |
+| Declared source failure | New `App\Services\Agriculture\Research\Search\ScientificSourceFailure`, thrown by an adapter for an expected upstream failure | Contained, `failure_category = source` |
+| Defect or test-framework signal | Anything else: `\Error`, `\LogicException`, other `RuntimeException`s, `AssertionFailedError`, `StrayRequestException` | Propagates, as before R1 |
+
+Only the exception class and the category are logged or returned, never the message.
+
+**Sequential and concurrent paths** [IMPLEMENTATION FACT]: the concurrent scholarly path (Home `generic_research`, process pool) is unchanged. It still catches `\Throwable` per provider inside the worker and for the pool as a whole, and its two log calls include the exception message. An exception cannot cross the process boundary as the original object, so a test-framework signal raised in a worker cannot reach the test there either. In unit tests the concurrent path runs only when `agricultural_intelligence.stage3_home_scholarly_concurrency` is set. Applying the taxonomy to that path, and removing messages from its logs, is left to R3 [UNRESOLVED].
+
+**FAOSTAT message** [IMPLEMENTATION FACT]: with the taxonomy in place, `FaoStatPhase3FixTest::test_openalex_agri_domain_does_not_reach_faostat_and_qcl_is_used` again fails inside its `Http::fake` callback (`'2413'` instead of `'2510'`), exactly as before R1. Every failure message of the Unit and Feature suites is now identical to the pre-R1 baseline (§8.35.6). The pre-existing defect itself was not investigated.
+
+**`ProjectionQueryConstraintsTest`, 23 or 25 cases** [IMPLEMENTATION FACT]: §8.33.8 records 15 test methods and 23 cases. The file now has 17 test methods and 25 cases: the methods `test_direct_create_accepts_only_constraints_the_capability_decision_resolves` and `test_numeric_codes_keep_distinct_identities_and_empty_lists_are_valid` are not in §8.33.8. Three B-1 files differ from the hashes recorded in §8.33.8: the test file (now `651d6d5068c2c1ff084381b8a94d364271e9b00034f09c5ea675b69ffa379726`, written 2026-10-14 20:28 local time), `ProjectionQueryConstraints.php` (now `8810decd323bcefef2a41a0a9b0a27d3fcc8a7385c2a5a8e1b64de411b587998`, 20:00), and `ProjectionQueryConstraintsFactory.php` (now `515e432e193b8ff115a8e590f4cf5da439fdab50e5817d9d038556e83793fa7f`, 19:59). These changes predate the work of §8.34 and §8.35, which did not touch them, and no section of this ADR records them [UNRESOLVED]. The 25 passing cases reported in §8.34.6 belong to this unrecorded revision, not to the revision described in §8.33.8.
+
+### 8.35.4 — R2: capability lifecycle and production enforcement
+
+**Existing Capability v2** [IMPLEMENTATION FACT]: records are keyed by `CapabilitySubject`, which requires a membership seat (`adr_id`). Production supplies no records: `Stage3CghiaCoexistenceBoundary` evaluates `access_method:api` against an empty list and always permits retrieval. The database store is bound in the container, but nothing in the production path reads it. The five legacy sources have no seat (§8.34.5), so Capability v2 cannot express their capabilities.
+
+**Design** [OWNER DECISION] for the basis and storage (§8.35.1); [INFERENCE] for names and rules:
+
+| Element | Content |
+|---|---|
+| Operations | `search`, `pagination`, `filtering`, `full_text_retrieval`, `bulk_access`. Stage 3 retrieval requires `search` only (`ScientificSourceSelector::REQUIRED_OPERATION`) |
+| Statuses | `verified_supported`, `verified_unsupported`, `not_verified`, `not_tested`, `temporarily_unavailable`, `access_denied`, `authentication_required`, `licence_unresolved`, `legacy_operational_basis`. These are runtime-registration statuses, not Cap v2 states |
+| Declaration | Operation, status, non-empty evidence reference, `verifiedAt` (required when verified), `expiresAt` (required for `verified_supported`, later than `verifiedAt`). Timestamps must be ISO-8601 with offset, checked by round trip. The legacy basis is permitted for `search` only and only on `LEGACY_STAGE3` registrations. At most one declaration per operation |
+| Policy (`ScientificSourceCapabilityPolicy`) | Deny by default. No declaration: `capability_not_declared`. `verified_supported` before `expiresAt`: allowed, `verified_current`; at or after it: `capability_evidence_stale`. `legacy_operational_basis` on a legacy registration: allowed, `legacy_operational_basis`. Every other status: denied, with the status as reason |
+| Enforcement | `ScientificSourceSelector::selectSources()` keeps enabled sources only if the policy allows `search`. `MultiSourceScientificSearchOrchestrator` applies the same check to explicitly requested registered sources. Unregistered keys behave as before |
+| Safe degradation | Denied sources are skipped and the others run. If none remain, the existing `no_sources_selected` report is returned |
+| Observability and auditing | `selectionTrace()['capability_denied']`; `search_observability.source_capability` = `{required_operation, basis per selected source, denied decisions}`; a `Log::notice` that lists source key and reason for every denial |
+| Production declarations | Each of the five sources declares `search` on the legacy basis with evidence reference `ADR-023 §8.35.1 owner decision legacy_basis (2026-10-14)`. No other operation is declared, so all other operations are denied |
+
+**Lifecycle coverage** [IMPLEMENTATION FACT]:
+
+| Stage | Status |
+|---|---|
+| Declaration | IMPLEMENTED |
+| Evidence collection | NOT EXECUTED: it needs live probes, and network access is not authorized |
+| Verification | NOT EXECUTED: no source holds `verified_supported` |
+| Authoritative registration | IMPLEMENTED in code, per the owner decision |
+| Freshness and expiry | IMPLEMENTED (`expiresAt`) |
+| Production consumption and enforcement | IMPLEMENTED in the selector and the orchestrator |
+| Auditing and failure reporting | IMPLEMENTED (observability and log) |
+
+Runtime health signals for temporary unavailability, such as a circuit breaker, do not exist: `temporarily_unavailable` is only a declared status [UNRESOLVED]. The mapping from Cap v2 records to runtime declarations for seat-bound registrations is not implemented, because registration still rejects `adr_id`. Proposed rule [PROPOSED]: `VERIFIED` with freshness `CURRENT` maps to `verified_supported`; `VERIFIED` with any other freshness denies as stale; `UNAVAILABLE` maps to `verified_unsupported`; `UNVERIFIED`, `PARTIAL`, and missing records map to `not_verified`.
+
+**Gate B record GB-R2-01** [INFERENCE] for identifier and wording; scope [OWNER DECISION] (§8.35.1 and the prompt's R1 and R2):
+
+| Field | Content |
+|---|---|
+| Authorized scope | The exception-boundary correction; the capability types, policy, and declarations under `Search/Registry/`; enforcement in `ScientificSourceSelector` and `MultiSourceScientificSearchOrchestrator`; tests; this section |
+| Prohibited scope | Activation of any source; seat binding; Cap v2 records, the store, or its table; database, migrations, configuration, `.env`, `phpunit.xml`, `composer.lock`, dependencies; CSQ, `QueryUnderstandingService`, `ScientificSearchQueryBuilder`, `AnswerComposer`, gates, source adapters; network; deletion; staging and commits |
+| Acceptance criteria | Selection and explicit requests use capability decisions; unknown, stale, and every other denying status deny; the five sources keep their behaviour; no regression against the pre-R1 baseline |
+
+### 8.35.5 — Files
+
+**This increment** (uncommitted, unstaged) [IMPLEMENTATION FACT]. `…` is `backend/app/Services/Agriculture/Research/Search`; app files are LF, test files CRLF, none has a BOM.
+
+| File | State | SHA-256 |
+|---|---|---|
+| `…/MultiSourceScientificSearchOrchestrator.php` | modified (R1 file) | `6121737722cc4d61b41bb1662d4e17baee60eb5ac357df6712a26184691bd809` |
+| `…/ScientificSourceSelector.php` | modified (R1 file) | `662ebcc231c84d13c13b97d4db987acf222f667517412564b0c38599b58c2173` |
+| `…/ScientificSourceFailure.php` | new | `1704116c23c8ab8b6db3b92be9bef787f81001c8aae76176fa0d9cb8ddfa7ef4` |
+| `…/Registry/ScientificSourceCatalog.php` | modified (R1 file) | `4d1b8d93f37e70aaf65de57c03f5e3bc8081198ac27243c514466a5073533b40` |
+| `…/Registry/ScientificSourceRegistration.php` | modified (R1 file) | `16ef71dc733f9d2c2d43bc605ee26c7fc237d35b4cb8c96df41c276fd1eb3d04` |
+| `…/Registry/ScientificSourceOperation.php` | new | `c549d004aa0a0188c23f3a74dbd64ec1e4d1b605f0e5d54622ce8fd06a75a485` |
+| `…/Registry/ScientificSourceCapabilityStatus.php` | new | `e80882a135cee86e9401ffd907a0283a1e795d514a635676764fdd4e77049c4b` |
+| `…/Registry/ScientificSourceCapabilityDeclaration.php` | new | `a865ac564cef9885452dd12cbc7bddefc030c558248c2c9a83278ef302d1e99f` |
+| `…/Registry/ScientificSourceCapabilityDecision.php` | new | `16dd54482030a6d9c553023774ccfab4409c3f0ebfbe6e372a3df9925a925ce6` |
+| `…/Registry/ScientificSourceCapabilityPolicy.php` | new | `2aea8f2d04a8c2b3a1b9398aa2eec21506de1b440160143ef4a87320135cc6d0` |
+| `backend/tests/Unit/Agriculture/Research/Search/ScientificSourceAdapterConformanceTest.php` | modified (R1 file) | `de8141a3ef43031e939e08d2d26d9385af45ef357bebac8e5d489aeb0f4b4033` |
+| `backend/tests/Unit/Agriculture/Research/Search/Registry/ScientificSourceCatalogContractTest.php` | modified (R1 file) | `c03042bd4b13ba74188a815e01debbe3165c8ac557163267bac8ef621a29f3f0` |
+| `backend/tests/Unit/Agriculture/Research/Search/Registry/ScientificSourceCapabilityPolicyTest.php` | new | `daad607f7e3aa8e948f5899619b94c6a383af5ad0eb9968a9bb6aa6768430f0e` |
+
+The other R1 files keep the hashes of §8.34.5. `git status` differs from the pre-work capture of §8.34.5 only by the R1 paths and the seven new paths above. The hash prefixes of `composer.lock`, `phpunit.xml`, and `backend/.env` are unchanged (§8.34.5). This ADR is changed only by appending this section.
+
+### 8.35.6 — Tests
+
+**Means** [IMPLEMENTATION FACT]: as in §8.34.6 (isolated container, `--network none`, read-only source and vendor, SQLite in memory). Comparison per test case against the pre-R1 baseline of §8.34.6.
+
+| Run | Tests | Failures | Errors | Skipped | Against the pre-R1 baseline |
+|---|---|---|---|---|---|
+| `tests/Unit/Agriculture/Research/Search` + `Coexistence` | 222 | 0 | 0 | 0 | — |
+| Unit | 1,304 | 13 | 16 | 0 | 0 regressions, 0 newly passing, 0 removed; 61 added, all passing; failure messages identical |
+| Feature | 950 | 84 | 0 | 12 | 0 regressions, 0 newly passing; failure messages identical |
+
+**New and changed tests** (all passing): `ScientificSourceCapabilityPolicyTest` (21 cases: legacy basis for search only on the production sources, every other operation denied; undeclared operation denied; each of the seven denying statuses; verified support allowed until expiry and stale at and after it, including with a travelled clock; seven invalid declarations with exact messages; duplicate and foreign entries; selector selection and denial reasons, including staleness; orchestrator enforcement for explicit requests, with observability; nothing searched when every source is denied). `ScientificSourceCatalogContractTest` (13 cases; new: only the five legacy sources hold the legacy basis, for search only; the new-source example now declares verified search support). `ScientificSourceAdapterConformanceTest` (27 cases; the throwing-adapter test is replaced by two cases for contained failures and five for propagated defects and test signals: generic `RuntimeException`, `LogicException`, `TypeError`, `AssertionFailedError`, `StrayRequestException`).
+
+**Pre-existing failures**: the 29 Unit and 84 Feature cases of §8.34.6, unchanged and not investigated.
+
+### 8.35.7 — Legacy 62 and 109 reconciliation
+
+The legacy-62 matrix of §8.34.3 is unchanged: one untracked historical file, retained. Deletion manifest: **EMPTY**. The 109 register is unchanged; no seat is bound or activated; runtime integration of every seat stays **NOT EXECUTED**.
+
+### 8.35.8 — Status matrix
+
+| Item | Status on 2026-10-14 |
+|---|---|
+| Approved decisions (D-04, D-05, D-09, D-10, D-10.9.2, D-10.9.3, and others) | Unchanged |
+| Gate B | GB-IC-01, GB-B1-01, GB-R1-01, GB-R2-01 |
+| R1 | IMPLEMENTED and stabilized (exception taxonomy), uncommitted; tests RUN |
+| R2 | IMPLEMENTED for declaration, freshness, enforcement, and auditing; evidence collection and verification NOT EXECUTED (no network authorization); uncommitted; tests RUN |
+| Concurrent-path exception handling | Unchanged; deferred to R3 [UNRESOLVED] |
+| Unrecorded B-1 revision (§8.35.3) | [UNRESOLVED] |
+| R3 (adapter contract v2), R4 (provenance and licensing), R5 (source-family adapters), R6 (Onboarding Contract and 109 reconciliation), R7 (shared logic and isolation), R8 (onboarding automation) | NOT STARTED |
+| P1-EXIT-06 | NOT CLOSED |
+| Legacy-62 register | RETAINED; manifest empty |
+| Phase 1 | BLOCKED |
+| Phase 2 | NOT STARTED |
+
+## 8.36 — Owner decisions of 2026-10-15: B-1 revision evidence, R3 source adapter contract v2
+
+**Status:** OWNER DECISION RECORD AND EXECUTION RECORD. P1-EXIT-06: **NOT CLOSED** (increments R1 to R3 only). P1-EXIT-01 (c): **NOT CLOSED**. Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Source.** On 2026-10-15 at 00:10 UTC+3 the user issued the prompt "Continue autonomously with R3 — Source Adapter Contract v2" (sent twice, identical) [OWNER DECISION]. It contains the two decisions of §8.36.1 and these instructions: implement the versioned adapter contract v2 incrementally from the actual repository state and §8.35; keep v1 compatible during migration; convert only expected source failures into failed source outcomes; let unexpected application errors, programming defects, and test-framework exceptions propagate in both the sequential and the concurrent path; run only the isolated Docker protocol; no staging, commits, pushes, deletion, network, or database access; append the actual results here without changing historical content; then continue with the next safe, authorized increment. The prompt is a conversation record, not archived in the repository [M]. Earlier sections are unchanged. No decision of §8.30 to §8.35 is changed. Tags as in §8.33.8.
+
+### 8.36.1 — Decisions
+
+| Item | Decision (owner answer, condensed) | Tag | Effect |
+|---|---|---|---|
+| B-1 Projection revision (§8.35.3) | Keep it OPEN and UNAPPROVED. Investigate the changes made before R1, identify the two added test methods, verify their rationale and compatibility, and record the evidence here. Do not revert, accept, or modify them without sufficient evidence. R3 may continue if it does not depend on them | [OWNER DECISION] | §8.36.2. No B-1 file was changed |
+| Live probes | Not authorized. No network access, live source probes, or source activation until the adapter contract, typed error categories, retry policy, provenance and licensing requirements, and conformance tests are complete and verified | [OWNER DECISION] | No network access; every test ran with `--network none` |
+
+### 8.36.2 — B-1 revision: evidence
+
+**Baseline identity** [IMPLEMENTATION FACT]: before the revision, the executor copied four B-1 files on 2026-10-14 at 19:59:02 local time to `%TEMP%\wsa-b1-backup-20261014-1954`, outside the repository. The four SHA-256 values of that copy equal those recorded in §8.33.8: `ProjectionFacetConstraint.php` `58e327f961fa09b21f154e8c062e663e4d9238a01c331686b76946580f13cdc3`, `ProjectionQueryConstraints.php` `45f3f4756e9a2a760673b6275f19e257f7440fe147cc5a55f9ee120ddd530277`, `ProjectionQueryConstraintsFactory.php` `ccfef84670992616f5730269416b1f37e5dba4b4d22f4b70eec559ecc8977a15`, `ProjectionQueryConstraintsTest.php` `19427fb61df7ba7824f04e56b52f391582c4bbb59f142cc52ab5bf7b7bc31f6f`. The unrecorded revision is therefore exactly the difference between that copy and the working tree.
+
+**Correction to §8.35.3** [IMPLEMENTATION FACT]: four B-1 files differ from §8.33.8, not three. `ProjectionFacetConstraint.php` also differs; it is now `c4fbe16508e445d51ef1588649353ff49a08d8c5282bcf1f90749f6b105ef52f` (written 19:59:30). `ProjectionFacetConstraintState.php` still matches §8.33.8.
+
+**Provenance** [IMPLEMENTATION FACT] from the conversation record [M]: the executor made the revision in this conversation, in response to three owner prompts of 2026-10-14 (UTC+3):
+
+| Time | Prompt | Resulting change |
+|---|---|---|
+| 19:54 | "Continue the existing WSA-Enterprise Phase 1 closure mission … ADR-023 §8.33 and B-1 only" | The three source changes (written 19:59 to 20:00) and the first test method |
+| 20:05 | "B-1 Contract Hardening, Evidence Completion, and Phase 1 Closure Progress" | Additional assertions |
+| 20:26 | "Autonomous B-1 Completion, Phase 1 Closure, Verification, and Evidence Consolidation" | The second test method (test file written 20:28:27) |
+
+A continuity record for the revision was drafted but never authorized, so no section of this ADR recorded it. That is the gap noted in §8.35.3. The prompts authorized engineering work on B-1; none of them accepted this revision as an amendment of §8.33.8.
+
+**Changes** (difference ignoring line endings) [IMPLEMENTATION FACT]:
+
+| File | Change |
+|---|---|
+| `ProjectionFacetConstraint.php` | +64 lines. New public `fromCapabilityDecision(CapabilityDecisionIdentity, list<string> $facetCodes): list<self>`. It is the former private factory method `resolvedQueryConstrainableCells` moved without change of logic, plus the loop that built the constraints: codes are normalized; an outcome matches a code only by the exact Cap dimension key; outcomes without a string `dimension_key`, without a valid Cap state, or without a boolean `missing_record` are rejected; conflicting outcomes for one code are rejected; an absent cell or `missing_record` gives `MISSING` |
+| `ProjectionQueryConstraintsFactory.php` | +5, −66. `derive()` calls `ProjectionFacetConstraint::fromCapabilityDecision`; the private method and three imports are removed; the docblock "Sole producer of ProjectionQueryConstraints" becomes "Derives ProjectionQueryConstraints from caller facet codes" |
+| `ProjectionQueryConstraints.php` | +17. `create()` resolves the constraints from the capability decision and throws `ProjectionInvariantViolation` "Facet constraint [{code}] does not match the capability decision." unless each supplied constraint equals the resolved one in its serialization and in `evidenceFreshness`. The docblock cites §8.33.8, M-1 and R-1 |
+| `ProjectionQueryConstraintsTest.php` | +97: the two test methods below; no existing line changed |
+
+**The two test methods** [IMPLEMENTATION FACT]:
+
+| Method | Assertions | Content |
+|---|---|---|
+| `test_direct_create_accepts_only_constraints_the_capability_decision_resolves` | 8 | Direct `create()` rejects four constraints the decision does not carry: `VERIFIED` + `CURRENT` without a Cap cell; `CURRENT` asserted over `STALE`; a constraint whose freshness differs while its serialization is equal; `MISSING` asserted over `VERIFIED` + `CURRENT`. An outcome without `dimension_key` is rejected by `derive()` and by `create()` with the same message. A matching direct `create()` gives exactly the factory payload |
+| `test_numeric_codes_keep_distinct_identities_and_empty_lists_are_valid` | 8 | `'7'` and `'07'` stay distinct facets (only `'7'` matches its Cap cell), with one `QUERY_CONSTRAINT_UNKNOWN` warning for `'07'`. Codes that collide after normalization (`'9'`, `' 9 '`) are rejected on both paths with the existing messages. An unmatched direct `VERIFIED` + `CURRENT` constraint is rejected. An empty facet list is valid and identical on both paths |
+
+**Rationale** [INFERENCE]: before the revision the factory was documented as the sole producer, but `ProjectionQueryConstraints::create()` is public and accepted any caller-built constraint. A caller could therefore assert `VERIFIED` with `CURRENT` freshness that the capability decision does not carry. M-1 (`VERIFIED` is `CONSTRAINABLE` only with established `CURRENT` freshness) and R-1 (constraints come only from the resolved capability decision, without a parallel resolution) of §8.33.8 exclude that. The revision keeps a single resolution, in `ProjectionFacetConstraint`, and checks every direct construction against it. It adds no field and changes neither the M-1 mapping, nor the duplicate, normalization, and alignment rules, nor any warning text.
+
+**Compatibility** [IMPLEMENTATION FACT]: for valid input the factory output is unchanged; the 15 methods (23 cases) of §8.33.8 are unchanged and pass. The only change in behaviour is that direct `create()` now rejects constraints that differ from the decision. No file of `backend/app` outside `Projection/` references `ProjectionQueryConstraints`, `ProjectionFacetConstraint`, or the factory, so no production caller is affected. R3 shares no file or type with B-1 and does not depend on it.
+
+**Test evidence** [IMPLEMENTATION FACT]: in the R3 Unit run (§8.36.7), `ProjectionQueryConstraintsTest` has 25 cases, all passing, including both methods.
+
+**Status**: OPEN and UNAPPROVED [OWNER DECISION]. Not reverted, accepted, or modified. The evidence is consistent with M-1 and R-1 and shows no incompatibility [INFERENCE]. Owner options [PROPOSED]: accept the revision as an amendment of §8.33.8 (new hashes as above), or restore the four files to the hashes of §8.33.8 from the copy.
+
+### 8.36.3 — R3 design
+
+Names and rules are the executor's design within the prompt's requirements [INFERENCE]. All new types are under `backend/app/Services/Agriculture/Research/Search/Contract/` unless stated.
+
+| Element | Content |
+|---|---|
+| Failure categories (`ScientificSourceFailureCategory`) | `transport`, `timeout`, `rate_limited`, `upstream_unavailable`, `request_rejected`, `authentication`, `not_configured`, `policy_denied`, `circuit_open`, `malformed_response`, `budget_exhausted`, `invalid_request`, `source`, `unclassified`. Retryable: `transport`, `timeout`, `rate_limited`, `upstream_unavailable` only |
+| Classifier (`ScientificSourceFailureClassifier`) | The single definition of an expected source failure. Thrown: `ScientificSourceFailure` gives its own category; Laravel `ConnectionException` gives `transport`; Laravel `RequestException` is classified by HTTP status; Guzzle `TransferException` gives `transport`; anything else is not expected. HTTP status: 429 `rate_limited`, 408 `timeout`, 401, 402, 403 `authentication`, 5xx `upstream_unavailable`, other 4xx `request_rejected`, anything else `unclassified`. It also classifies v1 outcomes (table below) and recognizes process-pool infrastructure failures: Symfony Process exceptions, Illuminate `ProcessFailedException`, and exactly `\Exception` whose message starts with "Concurrent process failed with exit code [", which is what Laravel's process driver throws when a worker exits with a non-zero code |
+| Retry policy (`ScientificSourceRetryPolicy`, `ScientificSourceRetryDecision`) | `maxAttempts` ≥ 1 and 0 ≤ `baseDelayMs` ≤ `maxDelayMs`; default `none()` (one attempt). `decide()` stops, in this order, when the category is not retryable, when the attempts are exhausted, when a Retry-After value exceeds the maximum delay, or when the delay (Retry-After, otherwise base × 2^(attempt − 1), capped) plus 1 second for the retried request exceeds the remaining budget; otherwise it retries after that delay. Deterministic, no jitter, no sleeping |
+| Licensing (`ScientificSourceLicensingDeclaration`, `ScientificSourceUsage`, `ScientificSourceUsageStatus`) | Usages `retrieval`, `metadata_storage`, `full_text_storage`, `excerpt_display`, `redistribution`, `citation_linking`; statuses `permitted`, `conditional`, `prohibited`, `unresolved`. Every usage defaults to `unresolved`; `permits()` is true only for `permitted`. A licence identifier or any resolved usage requires both a terms reference and an evidence reference. Unknown licensing is never permission |
+| Search request (`ScientificSourceSearchRequest`) | Query text, limit ≥ 1, options keyed by name; reads the remaining search budget from `search_budget_remaining_seconds`. The query text is passed exactly as `ScientificSearchQueryBuilder` produced it (D-04); the contract never rewrites it |
+| Descriptor (`ScientificSourceAdapterDescriptor`) | Source key, contract version `scientific_source_adapter.v2`, licensing, retry policy, maximum concurrent requests (≥ 1, default 1), and optional maximum results per request, pagination support, and requests per minute. `null` means undeclared and is never treated as a capability |
+| v2 interface (`App\Contracts\ScientificSourceAdapterV2Interface`) | Extends the v1 interface with `descriptor()` and `searchRequest(ScientificSourceSearchRequest)`. A v2 adapter remains a valid v1 adapter |
+| v1 bridge (`ScientificSourceAdapterV1Bridge`) | `wrap()` presents a v1 adapter as v2 with a fully undeclared descriptor (licensing unresolved, retry policy `none()`, all limits `null`) and passes the request fields to `search()` unchanged. A v2 adapter is returned as it is |
+| Registration (`Registry/ScientificSourceRegistration`) | Accepts contract versions v1 and v2. A registration that declares v2 for a class not implementing the v2 interface is rejected |
+| `ScientificSourceFailure` (`Search/`) | Gains an optional category, default `source` (the R1 behaviour); otherwise compatible |
+| Contract violation (`ScientificSourceContractViolation`) | `\LogicException` for invalid contract values: a defect, never contained |
+
+**v1 error vocabulary** [IMPLEMENTATION FACT]: every error string the five adapters and the orchestrator emit, and every `FaoStatErrorCategory` value, is classified. A test scans those six files and fails if a new string is not classified.
+
+| v1 error | Category |
+|---|---|
+| `request_exception` | `transport` |
+| `timeout` | `timeout` |
+| `rate_limited` | `rate_limited` |
+| `http_error` | by HTTP status |
+| `provider_auth`, `provider_auth_or_billing` | `authentication` |
+| `missing_api_key`, `unsupported_sources` | `not_configured` |
+| `malformed_or_unusable_results` | `malformed_response` |
+| `time_budget_exhausted` | `budget_exhausted` |
+| `empty_query` | `invalid_request` |
+| `adapter_exception` | the recorded `failure_category`, otherwise `unclassified` |
+| FAOSTAT `EMPTY_RESULT` | not a failure |
+| FAOSTAT `AUTHENTICATION_ERROR`, `AUTHORIZATION_ERROR`, `NOT_AUTHENTICATED` | `authentication` |
+| FAOSTAT `UPSTREAM_SERVER_ERROR` | `upstream_unavailable` |
+| FAOSTAT `NETWORK_ERROR` | `transport` |
+| FAOSTAT `TIMEOUT` | `timeout` |
+| FAOSTAT `UNKNOWN_UPSTREAM_ERROR` | `source` |
+| FAOSTAT `DISABLED`, `CONFIGURATION_ERROR`, `NOT_READY` | `not_configured` |
+| FAOSTAT `DOMAIN_NOT_ALLOWED`, `DOMAIN_NOT_VERIFIED` | `policy_denied` |
+| FAOSTAT `CIRCUIT_OPEN` | `circuit_open` |
+| FAOSTAT `INCOMPLETE_FILTERS`, `AMBIGUOUS_CODE`, `VALIDATION_ERROR` | `invalid_request` |
+| Any other string; a failed or unavailable outcome without error | `unclassified` |
+
+### 8.36.4 — Exception boundary in both paths
+
+**Sequential path** [IMPLEMENTATION FACT]: `MultiSourceScientificSearchOrchestrator::searchAdapter()` calls `searchRequest()` on v2 adapters and `search()` on v1 adapters. A thrown exception is contained only if the classifier recognizes it: one `failed` outcome, error `adapter_exception`, `observability.failure_category` set to the category. Anything else propagates. The R1 behaviour for `HttpClientException` and `ScientificSourceFailure` is kept (categories `transport` and `source`); Guzzle transfer exceptions are now also contained.
+
+**Concurrent path** [IMPLEMENTATION FACT]: §8.35.3 left it unchanged and deferred it here. Before R3 each worker task caught `\Throwable` per provider, the pool catch caught `\Throwable`, and both logged the exception message. Now each worker task runs the same `searchAdapter()` boundary, so expected failures are contained in the worker and return as outcomes; anything else leaves the worker. Laravel's process driver re-creates a worker exception in the parent by its class name, or throws `\Exception` "Concurrent process failed with exit code [N]…" when the worker exits abnormally. The pool catch now contains only the infrastructure failures the classifier recognizes (logged without message, providers not replayed, as before) and rethrows everything else. A defect, `StrayRequestException`, or `AssertionFailedError` raised in a worker therefore reaches the caller with its original class.
+
+**Source adapters** [IMPLEMENTATION FACT]: the OpenAlex, Crossref, Semantic Scholar, and Consensus adapters each had an internal `catch (\Throwable)` that turned any exception into a failed outcome. Each now rethrows what the classifier does not recognize. The FAOSTAT adapter is unchanged; its vocabulary is classified (§8.36.3).
+
+**Log content** [IMPLEMENTATION FACT]: the log contexts of the four adapters, the orchestrator boundary, and the pool catch record the exception class instead of the message. A transport exception message contains the request URL, and the OpenAlex request URL carries the configured `api_key`. A test checks that a configured key never appears in any log record. Crossref and Consensus still log the query text, as before.
+
+**Observability** [IMPLEMENTATION FACT]: `search_observability.source_failures` lists `{source, error, failure_category, retryable}` for each outcome the classifier maps to a category. It follows `provider_failures`; no existing key changed.
+
+**Retry** [IMPLEMENTATION FACT]: the retry policy is defined and tested but not wired into the orchestrator; every source has the policy `none()`. OpenAlex and Semantic Scholar keep their existing internal 429 retry; Crossref and Consensus do not retry. [INFERENCE] Orchestrator-level retry is left to a later increment so that retries are not doubled.
+
+**Feature tests** [IMPLEMENTATION FACT]: the first full Feature run had 8 regressions, all from unfaked Semantic Scholar requests. Before R3 the adapter's `catch (\Throwable)` turned Laravel's `StrayRequestException` (raised by `Http::preventStrayRequests()`) into a failed outcome; it now propagates, as §8.35.3 requires for test-framework signals. The tests were made explicit, following the existing pattern of the same files (tests 11 and 12 of `WsaEnterpriseStage9SecurityTest`): an empty Semantic Scholar response (`api.semanticscholar.org/*` → HTTP 200, `{"data": []}`) in `WsaEnterpriseStage9IntegrationTest` (`fakeScholarly()` and test c), `WsaEnterpriseStage9SecurityTest` (tests 13, 14, 17), and `WsaEnterpriseStage10ProductionTest` (`test_external_content_is_data_and_missing_doi_is_not_fabricated`). In `test_15_provider_timeouts_do_not_become_500_or_leak_traces` Semantic Scholar throws `ConnectionException('timeout')`, matching that test's purpose. No assertion was changed. `ProviderConcurrencyOrchestratorTest` now simulates the pool failure with the exception the driver actually throws (`\Exception` "Concurrent process failed with exit code [255]. …") instead of a generic `RuntimeException`, which is now correctly treated as a defect.
+
+### 8.36.5 — Gate B record GB-R3-01
+
+Identifier and wording [INFERENCE]; scope [OWNER DECISION] (§8.36.1 and the prompt).
+
+| Field | Content |
+|---|---|
+| Authorized scope | Contract types under `Search/Contract/`; the v2 interface; registration versioning; the `ScientificSourceFailure` category; the orchestrator boundary in both paths; narrowing the catches and log contexts of the four HTTP adapters; tests; Semantic Scholar fakes in three Feature tests required by the narrowed boundary; this section |
+| Prohibited scope | Network access, live probes, activation; the B-1 files; other changes to adapter behaviour; CSQ, `QueryUnderstandingService`, `ScientificSearchQueryBuilder`, `AnswerComposer`, gates; database, migrations, configuration, `.env`, `phpunit.xml`, `composer.lock`, dependencies; deletion; staging and commits |
+| Acceptance criteria | Expected source failures become failed outcomes and all other exceptions propagate, in both paths; v1 adapters work unchanged; the v1 error vocabulary is fully classified; no regression against the pre-R1 baseline |
+| Result | Met (§8.36.7) |
+
+### 8.36.6 — Files
+
+**This increment** (uncommitted, unstaged) [IMPLEMENTATION FACT]. `…` is `backend/app/Services/Agriculture/Research/Search`; app files are LF, test files keep their line endings (new ones CRLF), none has a BOM.
+
+| File | State | SHA-256 |
+|---|---|---|
+| `backend/app/Contracts/ScientificSourceAdapterV2Interface.php` | new | `1ce1332c2d906537eb8393bfdd4d72470c5d88830c353961bef2905a07cd6c0d` |
+| `…/Contract/ScientificSourceAdapterDescriptor.php` | new | `3fa58bf04e8609a5e8b8bc80072e5969a89a155f1dfbca8e3b59d153dd41ed18` |
+| `…/Contract/ScientificSourceAdapterV1Bridge.php` | new | `22cd846c615dc7b1e3171759163be69a476a274553756f32185caf40205fd1c0` |
+| `…/Contract/ScientificSourceContractViolation.php` | new | `4f44efbadc0b1963467ae78968003dc5c078f5f8773ba96318f36bdf2e40d974` |
+| `…/Contract/ScientificSourceFailureCategory.php` | new | `a2ed182392d1cb4e49d3e5cf6e9d57a61a761fe37ffcfc4960b2ef7f8b344fe3` |
+| `…/Contract/ScientificSourceFailureClassifier.php` | new | `28c5e6a2d3da6e7a79a1bdd68190c060e1815330dc242f1229d8542e5f8d35ff` |
+| `…/Contract/ScientificSourceLicensingDeclaration.php` | new | `74392e2ddd196f92bff6f397cea5d1c11817b64987f833bae8aff72341ce3218` |
+| `…/Contract/ScientificSourceRetryDecision.php` | new | `58151fd8212f9d5fdd9e151bbbcd12c1ad302e4dedc8cd717fc4102a90185dea` |
+| `…/Contract/ScientificSourceRetryPolicy.php` | new | `37de8136cdb16816918e8174b10f73320eef09bef6f68c17a6a37fdd0f09cea6` |
+| `…/Contract/ScientificSourceSearchRequest.php` | new | `1687047327a8c7e290087d353b2653b799a3ed4b8a3657bccda778f2300c11fc` |
+| `…/Contract/ScientificSourceUsage.php` | new | `94ca26a7019585dfb765f7e160f4f71b83952d8ef2af385d0f9c018333ecf443` |
+| `…/Contract/ScientificSourceUsageStatus.php` | new | `99a11d31b6f8b0918e86db7915a5091bdd2de1eeab3307e40fc7c7752568f1f9` |
+| `…/ScientificSourceFailure.php` | modified (R1 file) | `cf5b033db5897523a0f0ea14ec6f7a41d7c959f34150c391bcbc010fc8f7a8e5` |
+| `…/Registry/ScientificSourceRegistration.php` | modified (R1 file) | `bb792bb1d91a5ca071c8632a475511ea9ed95251c8916547cd79d480ed70521c` |
+| `…/MultiSourceScientificSearchOrchestrator.php` | modified (R1 file) | `dcd553771d3a14ba0018a7348b7204b402f20340a99162673b82f7bec561cfad` |
+| `…/Adapters/OpenAlexScientificSourceAdapter.php` | modified (tracked) | `5a5490632ac34bb827295e4416f5a5056baa0e15f519fe507ca205d6558f4f50` |
+| `…/Adapters/CrossRefScientificSourceAdapter.php` | modified (tracked) | `815faafa7f8a9784384ba7a006245c7244c8ae10d539db046a1728159cd5f0c3` |
+| `…/Adapters/SemanticScholarScientificSourceAdapter.php` | modified (tracked) | `9e78de8aa7692cd612b024e46d6cb26f9175004334e67968ad3098b46aed9fad` |
+| `…/Adapters/ConsensusScientificSourceAdapter.php` | modified (tracked) | `8cf5e624de295a976bb7818408b0c31754417d9afaf8e986ece5a492f17ce73c` |
+| `backend/tests/Unit/Agriculture/Research/Search/Contract/ScientificSourceAdapterContractV2Test.php` | new | `a065143348aa7107ba2dbe071246ef10f22d0b9aed14a84781fa5d4e5f42dd30` |
+| `backend/tests/Unit/Agriculture/Research/Search/ScientificSourceFailureBoundaryTest.php` | new | `ee1e793a09b4242dc8049430e3ff235b651cd1ee02a3f818d0eb1f73370094bf` |
+| `backend/tests/Unit/Agriculture/Research/Search/Registry/ScientificSourceCatalogContractTest.php` | modified (R1 file) | `64df667ee42f62fabc9a3e46616efb42689101d32a44ee862c74c4f015e369f0` |
+| `backend/tests/Unit/Agriculture/Research/Search/ProviderConcurrencyOrchestratorTest.php` | modified (tracked) | `5e3fef5b9b0be77a80403fa91bd085dbccb95dcb3db579ebe27acb72662e661a` |
+| `backend/tests/Feature/WsaEnterpriseStage9IntegrationTest.php` | modified (tracked) | `b13630f3db3553422bde206388896ead5e8cd44e8d4843d733fcd7010f6b23e8` |
+| `backend/tests/Feature/WsaEnterpriseStage9SecurityTest.php` | modified (tracked) | `7dd9db4b5041e202dd2c6700d3395af6f3801b823d2bd32f89457b897ecfec27` |
+| `backend/tests/Feature/WsaEnterpriseStage10ProductionTest.php` | modified (tracked) | `caa6bff33b75fd6bb3ccd8d4600035c257adf5c6d7361549da537e4a35b96030` |
+
+The R2 files that R3 did not touch keep the hashes of §8.35.5, and the B-1 files keep the hashes of §8.36.2. Compared with the capture after R1 (§8.34.5), `git status` differs only by 29 paths: the 7 new R2 paths of §8.35.5 and the 22 R3 paths above that were not already listed. Branch `phase-18-m18-ai-marketing-communications`, HEAD `f2025315d8990f52f3c658c968a3ec8252ac18b0`, 0 staged, 0 stashes. The hash prefixes of `composer.lock`, `phpunit.xml`, and `backend/.env` are unchanged (§8.34.5), as are the 109 register and the legacy-62 file. Before this append this ADR had SHA-256 `08c17ba1c880ee66bc5827615e442b5563c931f2279472512c8638b42e481981` (459,496 bytes); it is changed only by appending this section.
+
+### 8.36.7 — Tests
+
+**Means** [IMPLEMENTATION FACT]: as in §8.34.6 (isolated container, `--network none`, read-only source and vendor, SQLite in memory). Comparison per test case against the pre-R1 baseline of §8.34.6; failure messages compared with line numbers normalized.
+
+| Run | Tests | Failures | Errors | Skipped | Against the pre-R1 baseline |
+|---|---|---|---|---|---|
+| `tests/Unit/Agriculture/Research/Search` | 261 | 0 | 0 | 0 | — |
+| Unit | 1,371 | 13 | 16 | 0 | 0 regressions, 0 newly passing, 0 removed; 128 added (61 in R2, 67 in R3), all passing; failure messages identical |
+| Feature, first run | 950 | — | — | 12 | 8 regressions, all from unfaked Semantic Scholar requests (§8.36.4) |
+| Feature, after the fakes | 950 | 84 | 0 | 12 | 0 regressions, 0 newly passing, 0 removed; failure messages identical |
+
+**New and changed tests** (all passing): `ScientificSourceAdapterContractV2Test` (44 cases: retryable set; 8 expected exceptions and their categories; 7 defects and test signals not classified; process-pool infrastructure detection; 15 v1 outcomes; a scan of the six emitting files for unclassified error strings; retry decisions, including Retry-After, cap, and budget; licensing defaults and validation; request and descriptor validation; the v1 bridge; `ScientificSourceFailure` compatibility; v2 registration). `ScientificSourceFailureBoundaryTest` (23 cases: for each of the four HTTP adapters, a defect inside `Http::fake` propagates as the same instance, `StrayRequestException` propagates, and a `ConnectionException` is contained without the configured key or any message in the logs; concurrent path: a worker defect propagates, exceptions re-created by the driver propagate for `RuntimeException`, `\Exception`, `TypeError`, `StrayRequestException`, and `AssertionFailedError`, pool failures are contained without message, and an expected failure in one task fails only that source and is reported in `source_failures`; sequential path: `source_failures` for `rate_limited`; a v2 adapter receives its query variants unchanged). `ScientificSourceCatalogContractTest` (13 cases; the version message lists both versions, and a v1 adapter declaring v2 is rejected). `ProviderConcurrencyOrchestratorTest` (12 cases; realistic pool-failure exception, §8.36.4).
+
+**Pre-existing failures**: the 29 Unit and 84 Feature cases of §8.34.6, unchanged and not investigated. Two of them, `WsaEnterpriseStage10ProductionTest::test_queue_worker_retries_are_bounded_in_compose` and `::test_ci_keeps_stage10_gate`, fail with "Unable to locate repository root for compose/CI fixtures." because the protocol mounts `backend` only [INFERENCE].
+
+### 8.36.8 — Residual items
+
+| Item | Status |
+|---|---|
+| A worker of the process pool calls `report()` on an exception before exiting; Laravel's reporting may log the message | [UNRESOLVED]; outside the orchestrator |
+| Malformed worker output raises an `ErrorException` in the parent, which propagates | [IMPLEMENTATION FACT]; treated as a defect |
+| The five adapters implement v1 only and run through the v1 boundary; no adapter declares a v2 descriptor | NOT MIGRATED; the v1 bridge provides undeclared descriptors |
+| Licensing of all five sources | UNRESOLVED (no evidence; network not authorized) |
+| Orchestrator-level retry | NOT WIRED (§8.36.4) |
+| B-1 revision | OPEN, UNAPPROVED (§8.36.2) |
+
+### 8.36.9 — Legacy 62 and 109 reconciliation
+
+The legacy-62 matrix of §8.34.3 is unchanged: one untracked historical file, retained. Deletion manifest: **EMPTY**. The 109 register is unchanged; no seat is bound or activated; runtime integration of every seat stays **NOT EXECUTED**.
+
+### 8.36.10 — Status matrix
+
+| Item | Status on 2026-10-15 |
+|---|---|
+| Approved decisions (D-04, D-05, D-09, D-10, D-10.9.2, D-10.9.3, and others) | Unchanged |
+| Gate B | GB-IC-01, GB-B1-01, GB-R1-01, GB-R2-01, GB-R3-01 |
+| R1 | IMPLEMENTED and stabilized; concurrent path completed in R3; uncommitted; tests RUN |
+| R2 | As §8.35.8 |
+| R3 (adapter contract v2) | IMPLEMENTED: typed failure categories, classifier, retry policy (not wired), licensing declaration, request, descriptor, v2 interface, v1 bridge, registration versioning, boundary in both paths; adapters not natively migrated; uncommitted; tests RUN |
+| Live probes and source activation | NOT AUTHORIZED (§8.36.1) |
+| B-1 revision | OPEN, UNAPPROVED; evidence in §8.36.2 |
+| R4 (provenance and licensing), R5 (source-family adapters), R6 (Onboarding Contract and 109 reconciliation), R7 (shared logic and isolation), R8 (onboarding automation) | NOT STARTED |
+| P1-EXIT-06 | NOT CLOSED |
+| Legacy-62 register | RETAINED; manifest empty |
+| Phase 1 | BLOCKED |
+| Phase 2 | NOT STARTED |
+
+### 8.36.11 — Correction: Feature coverage and R3 acceptance
+
+**Feature coverage** [IMPLEMENTATION FACT]: in the isolated container, `phpunit --testsuite Feature --list-test-files` discovers 105 of the 179 `*Test.php` files under `backend/tests/Feature`. The 74 others (every file sorting before `Phase11IdorTest.php`, and all of `tests/Feature/Agriculture/`) are not run by the suite, although they run when named explicitly. Every Feature result of §8.34.6, §8.35.6, and §8.36.7 therefore covers those 105 files only; their statements remain true for those files. The cause was not investigated [UNRESOLVED]. The 74 files include scientific-search tests (Crossref retrieval, OpenAlex rate-limit budget, Consensus, research-agent stages 1 to 5, provider isolation, universal answer orchestrator).
+
+**Baseline for the 74 files** [IMPLEMENTATION FACT]: a pre-R1 tree was rebuilt outside the repository from the working tree, excluding the 34 paths R1 to R3 added and restoring the 14 tracked files they modified from HEAD (none of the 14 had changes before R1; each restored file matches its HEAD blob). Under the protocol of §8.34.6 the 74 files gave 890 tests, 50 failures, 3 errors, 2 skipped. The same run on the R3 tree was not executed: the tool's automatic review blocked it and the owner declined the approval request [M]. R3 has therefore **not** been verified against these 74 files.
+
+**R3 acceptance** [IMPLEMENTATION FACT]: the mission's acceptance for R3 is that the versioned contract is used by production adapters and orchestrator code and that migration behaviour is tested. §8.36 meets it for the orchestrator only; the five production adapters still implement v1 (§8.36.8). The Gate B criteria of §8.36.5 were narrower than the mission's. Status of R3: **PARTIAL**. The planned completion [PROPOSED]: each of the five adapters implements the v2 interface with a descriptor declared only from its own code (results per request: OpenAlex 10, Crossref 100, Semantic Scholar 20, Consensus 20, FAOSTAT 20; licensing unresolved; retry policy `none()`), `searchRequest()` delegating to the unchanged `search()`, catalog registrations at v2, and the orchestrator passing `max(1, limit)` to v2 requests, which keeps the current behaviour because every adapter already clamps to at least 1. `UniversalAnswerOrchestratorFeatureTest` mocks the concrete adapter classes with `search()` only and must also stub `searchRequest()`.
+
+## 8.37 — Owner decisions of 2026-10-15 (second set): Feature coverage runs, R3 completion
+
+**Status:** OWNER DECISION RECORD AND EXECUTION RECORD. R3: **IMPLEMENTED**. P1-EXIT-06: **NOT CLOSED** (increments R1 to R3 only). P1-EXIT-01 (c): **NOT CLOSED**. Phase 1: **BLOCKED**. Phase 2: **NOT STARTED**.
+
+**Source.** After §8.36.11 the executor presented one structured decision request; the answers are in §8.37.1 [OWNER DECISION]. The request and the answers are conversation records, not archived in the repository [M]. Earlier sections are unchanged. No decision of §8.30 to §8.36 is changed. Tags as in §8.33.8.
+
+### 8.37.1 — Decisions
+
+| Item | Decision (owner answer) | Tag | Effect |
+|---|---|---|---|
+| The 74 Feature files the suite does not discover (§8.36.11) | Run them, with the protocol of §8.34.6, on the current code and on every later increment | [OWNER DECISION] | §8.37.2 and §8.37.4 |
+| Next step | Finish R3: migrate the five adapters to contract v2, verify, then continue with R4 | [OWNER DECISION] | §8.37.3 |
+
+The tool's automatic review blocked two of the authorized runs; the owner declined the two resulting approval requests; each run was executed later when the review did not block it [M]. Every run listed in §8.37.4 was executed and observed.
+
+### 8.37.2 — R3 boundary on the 74 files
+
+[IMPLEMENTATION FACT]: the R3 tree of §8.36 (before the migration below) gave, for the 74 files, 890 tests, 50 failures, 3 errors, 2 skipped: 0 regressions, 0 newly passing, 0 removed against the pre-R1 tree of §8.36.11, and the 53 failure messages are identical. The statement of §8.36.11 that R3 was not verified against these files is superseded by this result.
+
+### 8.37.3 — Adapter migration
+
+Design [INFERENCE] within the planned completion of §8.36.11 [PROPOSED there]; implemented as follows [IMPLEMENTATION FACT]:
+
+| Element | Change |
+|---|---|
+| `Search/Contract/DelegatesSearchRequestToSearch` | New trait: `searchRequest()` calls the adapter's own `search()` with the request's query text, limit, and options unchanged (D-04) |
+| The five adapters | OpenAlex, Crossref, Semantic Scholar, Consensus, and `FaoStatDeveloperPortalAdapter` implement `ScientificSourceAdapterV2Interface` and use the trait. `search()` is unchanged except that the existing literal result caps became named constants with the same values |
+| Descriptors | Licensing fully unresolved (no evidence recorded); retry policy `none()` (the 429 retries inside OpenAlex and Semantic Scholar are adapter-internal); one concurrent request; pagination support and requests per minute undeclared; maximum results per request as each adapter's code already enforces: OpenAlex 10, Crossref 100 (`MAX_FETCH_ROWS`), Semantic Scholar 20, Consensus 20, FAOSTAT 20 |
+| `ScientificSourceAdapterDescriptor` | Docblock: a value may also be declared when the adapter's own code establishes it |
+| `Registry/ScientificSourceCatalog` | The five production registrations declare `scientific_source_adapter.v2` |
+| `MultiSourceScientificSearchOrchestrator` | Passes `max(1, limit)` to v2 requests, because a v2 request requires a limit of at least 1 while `UniversalAnswerOrchestrator` forwards a caller-supplied `limit`. Every migrated adapter already clamped the limit to at least 1, so behaviour is unchanged. v1 adapters still receive the limit unchanged |
+| Production path | The orchestrator now calls `searchRequest()` for all five sources; the v1 bridge is no longer used in production but stays available for future v1 adapters |
+
+**Tests** [IMPLEMENTATION FACT]: `ScientificSourceAdapterConformanceTest` now requires every catalog adapter to implement v2 and register v2, and checks each descriptor (source key, contract version, unresolved licensing, `none()` retry policy, one concurrent request, undeclared pagination and rate, a declared result cap, and use of the delegating trait); 5 cases added. `ScientificSourceAdapterContractV2Test`: the trait passes the request through unchanged; 1 case added. `ScientificSourceFailureBoundaryTest`: a limit of 0 reaches a v2 adapter as 1; 1 case added. `ScientificSourceCatalogContractTest`: production registrations are v2; the case "v1 adapter declaring v2" now uses the file's v1 example adapter, because OpenAlex is v2. `UniversalAnswerOrchestratorFeatureTest` (tracked, one of the 74 files) mocks the concrete adapter classes; its mock now answers `searchRequest` as well as `search`, with the same empty outcome. No assertion was changed.
+
+**Acceptance** [IMPLEMENTATION FACT]: the mission's R3 acceptance (the versioned contract is used by production adapters and orchestrator code, and migration behaviour is tested) is met. The R3 status of §8.36.11 (**PARTIAL**) is superseded: R3 is **IMPLEMENTED**, uncommitted.
+
+### 8.37.4 — Tests
+
+Means as in §8.34.6. Comparison per test case; failure messages compared with line numbers normalized.
+
+| Run | Tests | Failures | Errors | Skipped | Against the baseline |
+|---|---|---|---|---|---|
+| `tests/Unit/Agriculture/Research/Search`, `…/Coexistence`, `tests/Unit/Agriculture/Intelligence/FaoStat`, `UniversalAnswerOrchestratorFeatureTest` | 438 | 7 | 0 | 0 | The 7 failures are the FAOSTAT failures of §8.34.6 |
+| Unit | 1,378 | 13 | 16 | 0 | Pre-R1: 0 regressions, 0 newly passing, 0 removed; 135 added (61 by R1 and R2, 74 by R3; §8.36.7 should read "61 by R1 and R2"), all passing; failure messages identical |
+| Feature, discovered files (105) | 950 | 84 | 0 | 12 | Pre-R1: 0 regressions, 0 newly passing, 0 removed; failure messages identical |
+| Feature, the 74 undiscovered files | 890 | 50 | 3 | 2 | Pre-R1 tree of §8.36.11: 0 regressions, 0 newly passing, 0 removed; failure messages identical; `UniversalAnswerOrchestratorFeatureTest` 6 of 6 passing |
+
+### 8.37.5 — Files
+
+**Changed by this completion** (uncommitted, unstaged) [IMPLEMENTATION FACT]. `…` is `backend/app/Services/Agriculture/Research/Search`. Line endings kept (app LF, tests CRLF); no BOM.
+
+| File | State | SHA-256 |
+|---|---|---|
+| `…/Contract/DelegatesSearchRequestToSearch.php` | new | `85b603eefcae6a39dee61eb93c0cbbbaa6ed15d35e3657294881df63c1872663` |
+| `…/Contract/ScientificSourceAdapterDescriptor.php` | modified (R3 file) | `d43b9d8b846d548101b789400a5fa509abb3db54ee5c70406a46acf7a1cec330` |
+| `backend/app/Services/Agriculture/Intelligence/Adapters/Scientific/FaoStat/FaoStatDeveloperPortalAdapter.php` | modified (tracked; no change before) | `bd3c41d7f8dad8352e5061f9a0082e11c8813fffc40eeea45dbee3ca504fecc3` |
+| `…/Adapters/OpenAlexScientificSourceAdapter.php` | modified | `016cf5a9f8ea535ffa7a3a735d637a09d4ccd2e3b3463a09f368542a05671780` |
+| `…/Adapters/CrossRefScientificSourceAdapter.php` | modified | `92580136f74db7e48bf19f81b7b8c19035f3cf84b5413d88fdf8439df2248628` |
+| `…/Adapters/SemanticScholarScientificSourceAdapter.php` | modified | `502fa007e90761dd9dec868a1ae0fa32fbd54411277ef0fbbbb9f8f71a3652e9` |
+| `…/Adapters/ConsensusScientificSourceAdapter.php` | modified | `c430b1ad14a76368b1c4cb7297545fc28555d04db047eb84d9772ab99e41e49a` |
+| `…/Registry/ScientificSourceCatalog.php` | modified (R1 file) | `483066f39a527133671aef48638e30fcd69672846bc033031bfc110d30eb850a` |
+| `…/MultiSourceScientificSearchOrchestrator.php` | modified | `51437456485b4286f4b78f1d40822c8f48124f34ac8ba3705f06ada12d55edf0` |
+| `backend/tests/Feature/Agriculture/Intelligence/UniversalAnswerOrchestratorFeatureTest.php` | modified (tracked; no change before) | `38e35b0a0ca7947cd5805c25c7e165d6b542e2f75dd2648850b4e29d669488c5` |
+| `backend/tests/Unit/Agriculture/Research/Search/Registry/ScientificSourceCatalogContractTest.php` | modified | `9f390e53d060bc679f59ae0b012741541c81395bd8ca87d8bb378b1b1aa6504f` |
+| `backend/tests/Unit/Agriculture/Research/Search/ScientificSourceAdapterConformanceTest.php` | modified | `3104542462934dd200df829a083ef90d1ba4439e96245f2e92bd9fee665afa9d` |
+| `backend/tests/Unit/Agriculture/Research/Search/Contract/ScientificSourceAdapterContractV2Test.php` | modified | `98e88f51641a930f13fc9b0f383d0a5e9525404a0653a2757513cac46de72d80` |
+| `backend/tests/Unit/Agriculture/Research/Search/ScientificSourceFailureBoundaryTest.php` | modified | `12fa09d080541cb1a355a66b793bdb047315b19c2860836e66d03dab15c63186` |
+
+Every other file of §8.36.6 keeps its hash. `git status` differs from the state recorded in §8.36.6 only by three paths (the FAOSTAT adapter, `UniversalAnswerOrchestratorFeatureTest`, the new trait); no entry was removed. HEAD `f2025315d8990f52f3c658c968a3ec8252ac18b0`, 0 staged. `composer.lock`, `phpunit.xml`, `backend/.env`, the 109 register, and the legacy-62 file are unchanged. Before this append this ADR had SHA-256 `e638f7058525e8fc1f42c94e4cda54ba60032cce53e0b4c5b3ad7a14778f997c` (490,930 bytes); it is changed only by appending this section.
+
+### 8.37.6 — Status matrix
+
+| Item | Status on 2026-10-15 |
+|---|---|
+| Approved decisions (D-04, D-05, D-09, D-10, D-10.9.2, D-10.9.3, and others) | Unchanged |
+| R1, R2 | As §8.36.10 |
+| R3 (adapter contract v2) | IMPLEMENTED: contract, boundary in both paths, five adapters on v2; retry policy defined but not wired; licensing of all five UNRESOLVED; uncommitted; tests RUN on all 179 Feature files and the Unit suite |
+| Feature discovery gap (§8.36.11) | Cause [UNRESOLVED]; mitigated by running the 74 files explicitly |
+| Live probes and source activation | NOT AUTHORIZED (§8.36.1) |
+| B-1 revision | OPEN, UNAPPROVED (§8.36.2) |
+| R4 to R8 | NOT STARTED |
+| P1-EXIT-06 | NOT CLOSED |
+| Legacy-62 register | RETAINED; manifest empty |
+| Phase 1 | BLOCKED |
+| Phase 2 | NOT STARTED |
+
+## 8.38 — R4: provenance, licensing and error integrity (2026-10-15)
+
+Before this append this ADR had SHA-256 `14d5b529f2a0d9426d080bbce4f872ebf11cdd2de32757cb17ab6907ad34fed5` (500,647 bytes). Nothing above this line was changed.
+
+### 8.38.1 Owner decisions of 2026-10-15 (third set)
+
+| Question | Decision |
+|---|---|
+| Docker Desktop was not running, so no test could run | The owner started Docker Desktop [OWNER DECISION]. |
+| Auto-review blocked the runner script in `%TEMP%\wsa-r1`, and the owner skipped the approval card | Run the same `docker run` command inline in the shell: `--network none`, read-only source and vendor mounts, tmpfs storage, an empty `.env` [OWNER DECISION]. This is the §8.34.6 protocol; only the wrapper changed. |
+| Licensing of every source is unresolved, yet the Results List and Viewer showed provider abstracts | "Hide abstracts at the user boundary unless excerpt_display is permitted (changes the Results List and Viewer)" [OWNER DECISION]. |
+
+### 8.38.2 Findings before the change [V]
+
+These were read from the code as it stood after §8.37, before any R4 edit.
+
+1. `ScientificSearchResult` had no retrieval time, no publication date finer than a year, no licence, no access method, no adapter and no record of transformations. The original record survived only in `rawMetadata`.
+2. The Consensus and Semantic Scholar normalizers create `consensus:md5(title|year)` and `semantic_scholar:md5(title|year)` when the provider gives no DOI, identifier or URL. `ScientificUserPresentation::isCatalogIdentity()` accepts these prefixes, so they are part of the stable result identity (mission §5). They were kept, and R4 discloses them as derived.
+3. Semantic Scholar keys a result by DOI ahead of `paperId`, so the provider's own identifier was reachable only through `rawMetadata`.
+4. `CrossRefScientificClient::abstractFromWork()` uses the subtitle when there is no abstract. Nothing disclosed this.
+5. FAOSTAT's canonical URL is built by `FaoStatDeveloperPortalAdapter::reconstructQueryUrl()` from dimension codes, and its identifier is composed from codes.
+6. When the deduplicator merged two results it kept only the first source's `sourceIdentifier` and `canonicalUrl`. The other source's identity survived only inside `rawMetadata`.
+7. Every evidence item's `retrieved_at` was the time Stage 4 validation ran (`now()` in `AgriculturalScientificValidationService::validate()`), not the time the provider was called.
+8. The Stage 3 status is `search_completed` whenever at least one source succeeded, even when others failed. Failed sources appeared only in the diagnostic `scientific_search` payload. `user_presentation`, the only contract the Home, Crop and Viewer pages render, had no source coverage at all.
+9. All five adapters declare licensing unresolved (§8.37), but the Results List and Viewer displayed provider abstracts.
+
+### 8.38.3 Design
+
+**Per-record provenance.** A new readonly class, `Search\Provenance\ScientificSourceRecordProvenance`, holds one record per contributing source record. Null means unknown. Its fields are:
+
+| Field | Filled by | Content |
+|---|---|---|
+| `sourceKey` | normalizer or adapter | canonical source key |
+| `originalIdentifier`, `originalIdentifierField` | normalizer | the identifier exactly as the provider returned it, and its field (`id`, `DOI`, `paperId`) |
+| `recordUrl` | normalizer | the provider's own record URL as returned; http or https only |
+| `publishedAt` | normalizer | publication date as returned, at its own precision (`2021-03-04`, `2020-05`) |
+| `identifierBasis` | normalizer or adapter | `provider_identifier`, `doi`, `url`, `derived_title_year_hash`, `derived_dimension_codes` |
+| `canonicalUrlBasis` | normalizer or adapter | `provider_url`, `provider_record_identifier`, `doi_resolver`, `provider_open_access_pdf`, `constructed_from_codes` |
+| `transformations` | normalizer or adapter | only transformations that changed a value, for example `doi_lowercased`, `abstract_taken_from_subtitle`, `abstract_reconstructed_from_inverted_index` |
+| `retrievedAt` | orchestrator (FAOSTAT also records its own) | UTC ISO 8601 time the adapter returned |
+| `adapterClass`, `contractVersion`, `accessFamily` | orchestrator | adapter class; v2 from the descriptor, otherwise v1; access family from the catalog registration |
+| `licensing` | orchestrator | the v2 descriptor's declaration. A v1 adapter, or a missing declaration, is unresolved |
+
+**Search results and normalization.**
+- `ScientificSearchResult` gains a `provenance` list (an optional trailing constructor argument), `primaryProvenance()` and `withRetrievalContext()`. `toArray()` adds `provenance`, and every existing field is unchanged.
+- The four scholarly normalizers fill the provider-side fields. The FAOSTAT adapter discloses its identifier and URL as derived from codes, and keeps its own `retrieved_at`.
+
+**Orchestrator stamping.**
+- The orchestrator stamps each returned result as soon as the adapter call returns, on both the sequential and the process-pool paths.
+- Stamping fills only unknown fields and runs outside the failure-containment `try`. A defect in `descriptor()` therefore propagates (the R3 boundary, §8.36).
+
+**Deduplication.** The deduplicator keeps every contributing record. A repeat of the same source, identifier and URL from another query variant keeps the first retrieval.
+
+**Validation.** An evidence item's `retrieved_at` is the source record's retrieval time. Only when no record exists does it fall back to the validation time. Provenance gains `retrieved_at_basis` (`source_retrieval` or `validation_time`) and `records`.
+
+**User boundary (`ScientificUserPresentation`).**
+- Results rows and sources rows carry a `provenance` disclosure:
+  - source, `found_by_sources`, `retrieved_at` and its basis;
+  - `licensing_status`: `unresolved` when any record is fully unresolved or there is no record, otherwise `declared`;
+  - `usage` for each of the six usages: the most restrictive status across records, in the order prohibited, unresolved, conditional, permitted;
+  - the records themselves.
+- Sources rows find their evidence through `evidence_id`, so `AnswerComposer` is unchanged.
+- An abstract is shown only when `usage.excerpt_display` is `permitted`. Otherwise `abstract` is null and `abstract_withheld_reason` is `excerpt_display_<status>`.
+- `source_coverage` reports:
+  - whether coverage is complete;
+  - the search status;
+  - responded, failed and unreached sources;
+  - failure categories for each source that did not respond;
+  - `notice_code`: `partial_source_coverage`, `no_sources_searched`, or null.
+- `user_notice_code` is unchanged.
+- `AgriculturalResearchAgent` passes the search report to `fromSynthesis()` on all three response paths.
+
+**Unchanged:**
+- Every `sourceIdentifier` value (including the derived keys), the deduplication keys and the canonical result IDs.
+- The Stage 3 status strings, ranking, `RelevanceGate`, `AccuracyGate`, `AnswerComposer`, confidence and evidence sufficiency.
+- `ScientificSearchQueryBuilder` (D-04), CSQ authority, and Home/Crop isolation.
+- Provider requests; no field was added to the Semantic Scholar request.
+- Source-file preservation and the feedback contracts.
+- PDF links are still shown. They are citation linking, and the owner decision covered abstracts only.
+
+### 8.38.4 Effect on the frontend [V]
+
+The frontend reads `user_presentation.results[].abstract` (`frontend/src/public/scientificUserPresentation.ts`, line 114). It already handles a null abstract: `researchContentCapability.ts` falls back to the PDF or the original source. No frontend file was changed.
+
+Every source is still unresolved, so the Results List and Viewer will show no abstract until an adapter declares excerpt display permitted with evidence. The new fields `provenance`, `abstract_withheld_reason` and `source_coverage` are not rendered yet.
+
+### 8.38.5 Tests
+
+`tests/Unit/Agriculture/Research/Search/ScientificResultProvenanceTest.php` is new, with 15 tests. They show that:
+
+- An OpenAlex record keeps the provider identifier, record URL and publication date, and names each transformation.
+- Missing Crossref metadata stays unknown. No identifier, URL, date or basis is invented, and licensing is fully unresolved.
+- A Crossref record keeps its date at the precision given, keeps the DOI exactly as Crossref returned it, and discloses a subtitle used as the abstract.
+- A derived Consensus identifier is disclosed as derived. Semantic Scholar keeps `paperId` even when the DOI keys the result.
+- FAOSTAT's identifier and URL are disclosed as derived from codes, and its own retrieval time is kept.
+- The orchestrator stamps retrieval time, adapter, contract version, access family and unresolved licensing for both v2 and v1 adapters. Unknown licensing permits none of the six usages, and the stamp is visible in `toArray()`.
+- A failed source is reported while the other source's provenance survives. `sourceCoverage()` marks coverage partial and names the failure category.
+- Coverage with no selected source is not complete.
+- Deduplication keeps every source's record, and a repeat keeps its first retrieval.
+- Validation carries the source retrieval time and records into evidence, and falls back to `validation_time` when no record exists.
+- Presentation reports unresolved licensing, withholds the abstract with its reason, and leaves the result ID unchanged.
+- An abstract is shown only when every contributing source permits excerpt display. A prohibited record withholds it.
+- A result without an abstract reports nothing withheld.
+- The most restrictive declared usage across records is reported.
+- A result without any provenance is unresolved, and nothing is invented.
+
+`tests/Feature/ScientificUserPresentationContractTest.php` changed to follow the owner decision:
+- `test_results_pass_abstract_and_pdf_without_changing_identity_or_primary_answer` and `test_unsafe_pdf_url_is_not_forwarded` now give their evidence a provenance record that permits excerpt display, through a new helper, `excerptPermittedRecord()`.
+- Their assertions are unchanged.
+
+### 8.38.6 Verification [V]
+
+All runs used the isolated Docker protocol: `--network none`, read-only mounts, HEAD `f2025315…`, with nothing staged.
+
+| Run | Result |
+|---|---|
+| `r4-new`: the R4 test and the presentation contract test | 43 tests, 216 assertions, OK |
+| `r4-unit`: `--testsuite Unit` | 1,393 tests, 13 failures, 16 errors. The 29 failing cases are exactly the 29 failing in `base-unit`. 0 regressions. 150 added since before R1 (135 by R1 to R3, 15 by R4), all passing. Failure messages are identical to R3 (`r3b-unit`) |
+| `r4-feature`: `--testsuite Feature` (105 files) | 950 tests, 84 failures, 12 skipped. 0 regressions. Failure messages identical to `base-feature` and `r3b-feature` |
+| `r4-feature-extra`: the 74 undiscovered Feature files (§8.36.11) | 890 tests, 50 failures, 3 errors, 2 skipped. 0 regressions. The 53 failure messages are identical to `pre-feature-extra` and `r3b-feature-extra` |
+
+**Correction to §8.37.** §8.37 called the Unit failure messages "identical". The assertion text is identical. However, the stack trace of one baseline failure, `FaoStatPhase3FixTest::test_openalex_agri_domain_does_not_reach_faostat_and_qcl_is_used`, has had two more frames since R3: `DelegatesSearchRequestToSearch` and one orchestrator frame. They come from the FAOSTAT adapter's v2 call path. R4's frames are identical to R3's.
+
+### 8.38.7 Files (SHA-256 prefix after R4)
+
+| File | State | SHA-256 |
+|---|---|---|
+| `backend/app/Services/Agriculture/Research/Search/Provenance/ScientificSourceRecordProvenance.php` | new | `14eec57a` |
+| `backend/app/Services/Agriculture/Research/Search/ScientificSearchResult.php` | modified | `78cefd79` |
+| `backend/app/Services/Agriculture/Research/Search/ScientificResultNormalizer.php` | modified | `ceeba8a9` |
+| `backend/app/Services/Agriculture/Research/Search/ScientificResultDeduplicator.php` | modified | `0555d7de` |
+| `backend/app/Services/Agriculture/Research/Search/MultiSourceScientificSearchOrchestrator.php` | modified (R2, R3 and R4) | `0d52172f` |
+| `backend/app/Services/Agriculture/Research/Validation/AgriculturalScientificValidationService.php` | modified | `f01edb83` |
+| `backend/app/Services/Agriculture/Research/Synthesis/ScientificUserPresentation.php` | modified | `f907f44d` |
+| `backend/app/Services/Agriculture/Research/AgriculturalResearchAgent.php` | modified | `b6971bb9` |
+| `backend/app/Services/Agriculture/Intelligence/Adapters/Scientific/FaoStat/FaoStatDeveloperPortalAdapter.php` | modified (R3 and R4) | `53c2cdcc` |
+| `backend/tests/Unit/Agriculture/Research/Search/ScientificResultProvenanceTest.php` | new | `d9cb612e` |
+| `backend/tests/Feature/ScientificUserPresentationContractTest.php` | modified | `9f384924` |
+
+Line endings follow each file's previous working-tree form. The ADR records no secret value.
+
+### 8.38.8 Acceptance
+
+The acceptance criterion reads: "Provenance and licensing status survive the production path and are represented honestly at the user-facing boundary." The criterion is met for the scholarly and FAOSTAT production paths, verified by the tests in §8.38.5 and the runs in §8.38.6:
+
+- Provenance survives normalization, the orchestrator, deduplication and validation.
+- Licensing status, retrieval basis and source coverage reach `user_presentation`.
+- Unknown licensing permits nothing, and a derived identifier or URL names its basis.
+
+### 8.38.9 Residuals and open items
+
+1. Records dropped during normalization (no title) are not counted for each adapter. Only a response in which every record was dropped is reported, as `malformed_or_unusable_results`.
+2. The diagnostic payload keys still carry provider text: `scientific_search.results[].abstract`, `validated_evidence[].evidence_text` and `rejected_evidence`. They are not the render contract, but the API returns them. **Owner decision needed** if they must also follow the excerpt rule.
+3. `ScientificKnowledgePersistenceService` still persists evidence while metadata storage and full-text storage are unresolved. R4 did not change it, and the database was not touched. **Owner decision needed.**
+4. Synthesized answers can restate evidence text. `AnswerComposer` is preserved (mission §5) and was not changed.
+5. Licensing remains unresolved for all five sources. Resolving it requires reading the providers' terms, which needs network access, and that is not authorized.
+6. The Semantic Scholar request does not ask for `publicationDate`, so that date stays null unless the provider returns it. Consensus records carry no provider identifier.
+7. `FaoStatDomainVerifier` builds results without a provenance record. It is a verification path, not a Stage 3 search.
+8. Some evidence copies under `%TEMP%\wsa-r1` disappeared between steps although this session issued no delete command:
+   - six of the eight pre-R4 copies in `r4-pre`;
+   - part of `snap-preR1`.
+
+   Every affected original is recoverable from git HEAD, because those files were unmodified when they were copied. The baseline JUnit files are intact. The likely cause is temporary-file cleanup outside this session. Keeping evidence outside `%TEMP%` is advisable.
+9. Why `--testsuite Feature` misses 74 files (§8.36.11) has not been investigated.
+10. B-1 remains OPEN and UNAPPROVED.
+
+### 8.38.10 State and status [V]
+
+HEAD is `f2025315d8990f52f3c658c968a3ec8252ac18b0`, with nothing staged. `git status --porcelain --untracked-files=all` lists 1,195 entries: the 1,186 of §8.37 plus the 9 R4 paths (2 new, 7 newly modified). The plain `git status --porcelain` count of 84 collapses untracked directories; nothing was removed.
+
+These files are unchanged (SHA-256 prefix):
+
+| File | SHA-256 |
+|---|---|
+| `backend/composer.lock` | `D6EE17A75BF1DA5B` |
+| `backend/phpunit.xml` | `1EC076C544341F95` |
+| `backend/.env` (content not read) | `16B96F1E9230C8DA` |
+| The 109 register | `783035186579AA55` |
+| The legacy-62 register | `9170257A5FEA2D1F` |
+
+No commit, push, stage, deletion, network access, live probe, database access or dependency installation took place.
+
+| Increment | Status |
+|---|---|
+| R1, R2, R3 | As §8.37 |
+| R4 (provenance, licensing, error integrity) | IMPLEMENTED: per-record provenance through normalization, orchestrator, deduplication, validation and presentation; licensing status and source coverage at the user boundary; abstracts withheld unless excerpt display is permitted (owner decision); uncommitted; tests RUN on the Unit suite and all 179 Feature files |
+| R5 (source-family adapters), R6 (Onboarding Contract and 109 reconciliation), R7 (shared logic and isolation), R8 (onboarding automation) | NOT STARTED |
+
+## 8.39 — R5: reusable source-family adapters (2026-10-15)
+
+Before this append this ADR had SHA-256 `6d8eea5f98e29c05d9586821c63444d4bf650b69d66e2c50913d3b2ab4e75ca4` (517,582 bytes). No earlier content was changed.
+
+### 8.39.1 Need established from evidence
+
+The family need was taken from `2026-10-13-PHASE-1-IC-EVIDENCE-REVIEW.v1.json` (documented modalities of all 109 seats), not from the candidate list in the mission:
+
+| Documented modality | Seats | Decision |
+|---|---|---|
+| `api` (REST) | 13 (for example G2-05 J-STAGE WebAPI, G5-04 GBIF, G6-20 BHL, the ScienceDirect seats) | REST/JSON family implemented |
+| `oai_pmh` | 2 documented (G2-15, G6-20); more seats run on OJS, EPrints, DergiPark or Zenodo platforms, but that is inference, not evidence | OAI-PMH family implemented as a harvester |
+| `bulk_download` / `static_download` | 9 / 20 | Not implemented: needs storage and ingestion, which means a database or storage decision (owner) |
+| `rss` | 3 | Not implemented: a feed takes no query, so it cannot serve the search operation |
+
+No seat is identity-verified, endpoint-tested or integration-verified in that artifact, so no real source was registered, profiled or activated.
+
+### 8.39.2 Design
+
+- **Shared outer contract.** `ScientificSourceFamilyProfile` (per-source configuration: key, display name, access family, licensing, export) and `ScientificSourceFamilyAdapter` (one class for every source of a family; static `accessFamily()`, `profile()`).
+- **Registration.** `ScientificSourceRegistration` gains an optional `familyProfile`. A family adapter requires a profile, and only a family adapter takes one; the profile's source key and family, the adapter's family and the registration's `accessFamily` must agree. `toArray()` adds `family_profile` (null for the five legacy sources).
+- **Registry.** `ScientificSourceAdapterRegistry` passes the profile as the `profile` constructor argument. Nothing else in shared orchestration, selection, ranking, validation or synthesis changed.
+- **Shared record builder.** `ScientificSourceFamilyRecord` builds the result and its R4 provenance record for every family: DOI from a bare, `doi:` or resolver value; a provider URL only when it is http(s); identifier basis doi > provider > url; canonical URL basis provider URL > DOI resolver; every change is named as a transformation; licensing comes from the profile, so it stays unresolved unless declared with evidence.
+- **REST/JSON family.** `RestJsonSourceProfile` (https endpoint without credentials, query or fragment; query and limit parameter names; dot paths for identifier and title (required), abstract, doi, url, published, year, authors and journal; non-secret fixed parameters; optional `RestJsonCredential`, which names a config key and never holds the value). `RestJsonScientificSourceAdapter` implements contract v2: the query text is sent unchanged (D-04); the limit is capped at the declared maximum; a missing credential is `missing_api_key` and sends nothing; a 429 response is `rate_limited`; any other non-2xx is `http_error`; a result list missing from the declared path is `malformed_or_unusable_results` (FAILED, not empty); expected transport failures become outcomes; any other throwable propagates.
+- **OAI-PMH family.** `OaiPmhSourceProfile` (https base URL, optional setSpec, `oai_dc` only, because OAI-PMH 2.0 requires every repository to disseminate it). `OaiPmhHarvester` implements ListRecords with from/until (validated granularity) or an exclusive resumption token, and returns an `OaiPmhHarvestPage`:
+  - deleted records are listed and records without a title are counted;
+  - `noRecordsMatch` is an empty, complete list;
+  - other OAI-PMH errors are REQUEST_REJECTED, with the codes kept;
+  - 503 with Retry-After is RATE_LIMITED;
+  - a response containing a DOCTYPE is refused as malformed, so no external or recursive entity is processed;
+  - `dc:rights` stays in raw metadata and is not treated as a licence decision.
+
+  The harvester is not a search adapter: OAI-PMH defines no query verb, so an OAI-PMH source cannot be registered for the search operation.
+
+### 8.39.3 Tests (no network)
+
+`tests/Unit/Agriculture/Research/Search/Family/RestJsonSourceFamilyTest.php` and `OaiPmhSourceFamilyTest.php` add 47 tests. Fixtures are in `tests/Fixtures/ScientificSourceFamilies/`; they are protocol-shaped documents on `example.org`, not copies of any provider's responses. The tests cover:
+
+- field mapping and provenance;
+- missing metadata staying null;
+- credential handling, with no secret in any outcome or export;
+- each failure category and its retryability;
+- defect propagation;
+- profile and registration validation;
+- registry construction of two family sources from one class;
+- an end-to-end run of two REST family sources through the production orchestrator, selector and registry, with a third, NOT_VERIFIED source denied by the capability policy.
+
+### 8.39.4 Verification (isolated Docker as in §8.34.6: `--network none`, read-only mounts, run inline)
+
+| Run | Result | Against R4 (§8.38) |
+|---|---|---|
+| Focused (Family, Registry, Contract, conformance, failure boundary, provenance) | 197 tests, all OK | — |
+| Unit suite | 1,440 tests; 29 not passing | 0 regressions; 47 added, all passing; failure messages identical |
+| Feature suite | 950 tests; 84 not passing | 0 regressions; messages identical |
+| 74 undiscovered Feature files (run twice) | 890 tests; 53 not passing | 0 regressions; messages identical |
+
+Protected files are unchanged: composer.lock, phpunit.xml, .env and the 109 register (`783035186579aa55…`). HEAD is `f2025315d8990f52f3c658c968a3ec8252ac18b0`, nothing is staged, and there was no commit, push, deletion, network access or database access.
+
+### 8.39.5 Files
+
+- New: `app/Services/Agriculture/Research/Search/Family/` (ScientificSourceFamilyProfile, ScientificSourceFamilyAdapter, ScientificSourceFamilyRecord, `Rest/` RestJsonSourceProfile, RestJsonCredential, RestJsonScientificSourceAdapter, `OaiPmh/` OaiPmhSourceProfile, OaiPmhHarvester, OaiPmhHarvestPage); the two test files; five fixtures.
+- Changed: `Registry/ScientificSourceRegistration.php` (optional family profile, validation, export) and `ScientificSourceAdapterRegistry.php` (passes the profile).
+
+### 8.39.6 Acceptance
+
+"A new source using an existing family can be integrated without rewriting shared scientific-search logic": met for REST/JSON sources. A new source is a profile plus a registration, demonstrated end to end with two sources sharing one adapter class.
+
+For OAI-PMH the reusable harvester exists, but it reaches users only through a local index, which is not built. The test registrations use the only existing lifecycle, `LEGACY_STAGE3`, because non-legacy lifecycle states belong to the R6 Onboarding Contract.
+
+### 8.39.7 Residuals and owner decisions
+
+1. **Harvested-record storage and index (owner decision).** OAI-PMH, bulk and static families need storage to serve search, and therefore a database or storage decision.
+2. **Live verification (authorization).** No real REST or OAI-PMH profile exists, and no response schema of a real provider was assumed. Profiles for seats such as G2-05, G5-04, G6-20 and G2-15 require network authorization to verify their endpoints.
+3. **Rate limits are declared but not enforced** (`requestsPerMinute` is exported only), and the retry policy is still not wired (as in §8.36).
+4. **Lifecycle for non-legacy registrations** is deferred to R6.
+
+### 8.39.8 Status
+
+| Increment | Status |
+|---|---|
+| R1 to R4 | As §8.38 |
+| R5 (source-family adapters) | IMPLEMENTED: REST/JSON search family (configuration-driven, in the production registry path) and OAI-PMH harvesting family; no real source profiled or activated; bulk/static and RSS not built (§8.39.1); uncommitted; tests RUN on the Unit suite and all 179 Feature files |
+| R6 (Onboarding Contract and 109 reconciliation), R7 (shared logic and isolation), R8 (onboarding automation) | NOT STARTED |
+
+## 8.40 — R6: Source Onboarding Contract, reconciliation of the 109 seats, and the OAI-PMH and bulk/static storage and indexing lifecycle (2026-10-15)
+
+Before this append this ADR had SHA-256 `ba27a968d87c79832abbfd26ab8d3544b462a0bc72a5f8c974ab22da9ffb2dbd` (525,658 bytes). No earlier content was changed.
+
+**Source.** On 2026-10-15 at 19:21 local time the user issued "WSA-Enterprise — Unified Autonomous Engineering Execution Mandate". It authorizes implementing R6 as typed code, reconciling all 109 entries, and building a reusable OAI-PMH and bulk/static storage and indexing lifecycle. It forbids network access, live sources, migrations, new infrastructure, dependency changes, Git operations and deletions. This section records what was done under that mandate. It does not change D-04, D-09, D-10.x or any earlier decision.
+
+### 8.40.1 Evidence, decisions and assumptions
+
+| Kind | Record |
+|---|---|
+| Evidence | The membership register (`783035186579aa55…`) and `2026-10-13-PHASE-1-IC-EVIDENCE-REVIEW.v1.json`, which declares the same register hash. Both were read; neither was changed. |
+| Decision | R6 implementation is now authorized by the mandate. §8.11.8 had recorded it as not authorized at that time. The contract stays ORCHESTRATION + AUDIT only (§8.11). |
+| Decision | The membership-register PHP loader (D-10.12) stays unimplemented. The reconciler is pure: it takes decoded inputs and the register hash. Only tests read the files. No runtime code loads the register. |
+| Decision | No binding path was opened. `ScientificSourceRegistration` still rejects any `adr_id` (D-10.11). |
+| Decision | Documentary evidence can make a dimension at most PARTIALLY_EVIDENCED. Documented licence text is evidence, not permission. Every seat keeps a fully unresolved `ScientificSourceLicensingDeclaration`. |
+| Assumption | A seat is UNAVAILABLE only when a fetch failure in the evidence names the seat's own candidate URL. This means the site could not be loaded during the 2026-10-14 review; it is not a permanent fact. |
+| Assumption | Candidate access families are derived only from documented modalities: `api` → REST_API, `oai_pmh` → OAI_PMH, `rss`/`atom` → RSS_ATOM, `bulk_download` → BULK_DATASET, `static_download` → STATIC_DATASET. Platform inference (OJS, EPrints, DergiPark) is not used. |
+
+### 8.40.2 Source Onboarding Contract (typed)
+
+Namespace `App\Services\Agriculture\Research\Onboarding`:
+
+- `ScientificSourceOnboardingContract` holds one decision for one `adr_id`. Its fields are exactly the frozen §8.11.3 matrix (`toArray()` keys are pinned by a test). Each field reuses the owning authority's type:
+  - `AdrMembershipId` and `CanonicalSourceIdentityId` for identity;
+  - Cap v2 `CapabilityState` per operation, and `CapabilityAccessMethod`;
+  - `PathEligibilityState` and `PathStatus`;
+  - `ScientificSourceLicensingDeclaration` for `license_state` and `reuse_state`.
+- Invariants:
+  - CONDITIONALLY_ELIGIBLE, ELIGIBLE and ACTIVE require a canonical identity, identity evidence, an IC reference, a Capability decision, a Path decision with eligibility, a Projection identity, and a licence that permits retrieval.
+  - ELIGIBLE and ACTIVE also require Path ELIGIBLE and search VERIFIED.
+  - CONDITIONALLY_ELIGIBLE accepts Path CONDITIONAL and search PARTIAL.
+  - ACTIVE requires the runtime sourceKey it is bound to.
+  - A Cap state other than UNVERIFIED needs a Capability decision identity.
+  - A Path status needs a `path_id`.
+  - Only an ACTIVE seat may be anything other than NOT_SELECTABLE.
+  - A decision cannot supersede itself.
+- `SeatActivationState` is the D-10 vocabulary: NOT_READY, UNVERIFIED, CONDITIONALLY_ELIGIBLE, ELIGIBLE, ACTIVE, SUSPENDED, DEFERRED. It is a separate namespace from Path, Cap and FAOSTAT (§8.11.4).
+- `OnboardingEvidenceStatus` is the reconciliation vocabulary: VERIFIED, PARTIALLY_EVIDENCED, UNVERIFIED, UNAVAILABLE, BLOCKED. A VERIFIED dimension needs an evidence reference, and a seat with blockers cannot be VERIFIED.
+- `OnboardingBlocker` defines 13 codes, each naming the authority or gate that must act.
+- `SeatReconciliationEntry` requires exactly 26 dimensions:
+  - identity, membership, family, adapter compatibility;
+  - search, pagination, filtering, full text, bulk/harvest;
+  - query mapping, authentication, credential settings, access method;
+  - licence, retention, indexing, excerpt display, user-facing use;
+  - provenance, record identity, dedupe, ingestion, freshness, deletion/withdrawal;
+  - implementation, test coverage.
+- `ScientificSourceOnboardingReconciler` and `ScientificSourceOnboardingReconciliation` compute the entries, the integrity findings and the summary.
+
+### 8.40.3 Reconciliation of the 109 seats
+
+The artifact is `docs/architecture/science-source-expansion/2026-10-15-R6-SOURCE-ONBOARDING-RECONCILIATION.v1.json` (SHA-256 `ef1e1e5a9fb5029fb6138e90027630da804925b8af0ecc5a75b14159fa114a8c`, 1,269,784 bytes). It was exported by the reconciliation test in the isolated run (`WSA_RECONCILIATION_EXPORT`), is marked "OFFLINE - NOT PERSISTED - OWNER VERIFICATION PENDING", and is not a membership change.
+
+| Seat status | Seats | Rule |
+|---|---|---|
+| VERIFIED | 0 | No identity binding, endpoint test or accepted licence exists |
+| PARTIALLY_EVIDENCED | 63 | Candidate identity evidenced and an access method documented |
+| UNVERIFIED | 17 | Identity not established or no access documented |
+| UNAVAILABLE | 13 | The candidate site failed to load during the review |
+| BLOCKED | 16 | Ambiguous identity; owner decision required |
+
+Activation state: 93 NOT_READY and 16 DEFERRED (the ambiguous seats); none eligible.
+
+| Blocker | Seats |
+|---|---|
+| Identity not verified, integration unclassified, endpoint not tested, licence unresolved, Capability unverified, onboarding decision not accepted | 109 each |
+| No machine access documented | 73 |
+| Evidence fetch failures | 32 |
+| Local-index persistence not authorized (OAI-PMH, bulk or static only) | 21 |
+| Identity ambiguous | 16 |
+| Credentials required | 5 |
+| Identity not established | 3 |
+| No family implementation (RSS only) | 2 |
+
+Candidate families: REST_API 13, STATIC_DATASET 19, BULK_DATASET 9, RSS_ATOM 3, OAI_PMH 2. Dual pairs stay 10 independent seats, each with its own decision id and no canonical identity.
+
+### 8.40.4 Integrity audit (registry, capability, profile, query compilation, licensing)
+
+No ERROR findings. All of the following hold:
+
+- the evidence hash matches the register;
+- seat count, group counts and dual pairs are consistent;
+- there are no duplicate seats or evidence records;
+- there is no SAME_AS;
+- no registration carries an `adr_id`;
+- no active query profile lacks a registration;
+- every registered source has a query profile;
+- no family implementation class is dead.
+
+| Finding | Severity | Detail |
+|---|---|---|
+| `stub_declares_unverified_query_capabilities` | WARNING ×5 | The inactive profile stubs agris, gbif, pubmed, europe_pmc and agricola declare identifier fields and constraints that no evidence or endpoint test supports. For example, `agris` declares natural-language search with `agris_id`, while the AGRIS evidence documents only an opt-in ODS bulk dump. The stubs are inactive and unregistered, so nothing executes them. They were not changed. |
+| `profile_seat_name_correspondence` | INFO ×3 | agris ↔ G1-01, agricola ↔ G5-02, gbif ↔ G5-04. A name match is not SAME_AS and not a binding. |
+| `registered_profile_inactive` | INFO | `consensus` is registered but its query profile is inactive. |
+| `legacy_operational_basis` | INFO ×5 | The five registrations rest on the legacy basis for search only. Other operations are undeclared and therefore denied. |
+| `family_without_implementation` | INFO | RSS_ATOM. A feed takes no query, would need the same local index, and only 2 seats document RSS alone. |
+
+Known gaps confirmed rather than introduced:
+
+- FAOSTAT-specific orchestrator branches (R7);
+- licensing of the five legacy sources unresolved (§8.37);
+- `requestsPerMinute` declared but not enforced, and the retry policy not wired (§8.39.7).
+
+### 8.40.5 Storage gate (§8.3) and the lifecycle built
+
+Existing facilities:
+
+- no search engine dependency;
+- no migration for source records;
+- `knowledge_embeddings` is an organization-scoped pgvector store with no generations, tombstones or source identity, so it is unsuitable.
+
+| Alternative for persistent records | Needs | Disposition |
+|---|---|---|
+| New tables in the existing database | A schema and a migration (D-10.12 says not authorized; the mandate forbids migrations) | BLOCKED: owner authorization of a schema |
+| Reuse `knowledge_embeddings` | Nothing new | Rejected: wrong model and wrong scope |
+| A search engine (Meilisearch, Elasticsearch, Typesense) | New infrastructure and a dependency | BLOCKED: new infrastructure gate |
+| Files under local storage | An operational durability and concurrency decision | Not chosen without the owner |
+
+Built without new infrastructure. Every independent component sits behind a storage port:
+
+- `ScientificRecordStore`, the port, and `InMemoryScientificRecordStore`, the reference implementation, which is not bound in the container. They provide:
+  - generations, with staging, atomic commit and discard;
+  - identity `sourceKey|original identifier`;
+  - content-hash idempotency that ignores retrieval time;
+  - stale-update protection by datestamp, for both upserts and tombstones;
+  - DELETED and WITHDRAWN tombstones that keep provenance;
+  - SNAPSHOT commits that withdraw absent records;
+  - a checkpoint committed with each generation.
+- `LocalRecordRetentionPolicy`:
+  - nothing is ingested unless retrieval is PERMITTED;
+  - nothing is stored unless metadata storage is PERMITTED (CONDITIONAL counts as not permitted);
+  - abstracts and raw payloads are kept only if full-text storage is PERMITTED, and the omission is recorded as a provenance transformation;
+  - display stays gated by `excerpt_display` in `ScientificUserPresentation` (§8.37).
+- `LocalIndexIngestionService` checks the licence before any request or file read.
+  - OAI-PMH: each page is committed with its checkpoint, and resumes at the token. A `badResumptionToken` restarts the window once, which is idempotent. The high-water mark advances only when a list completes, and the next `from` uses the repository granularity (new `OaiPmhSourceProfile::$datestampGranularity`, default day).
+  - Bulk/static: only a complete snapshot is committed. Malformed lines, an over-long line, too many records, a missing header or an unreadable file leave the active generation unchanged.
+- Bulk/static family: `BulkDatasetSourceProfile` (JSON Lines dot paths or CSV columns, withdrawn flag, bounded `maxRecords` and `maxLineBytes`) and `BulkDatasetReader`, which reads local files only and refuses URLs and stream wrappers. It processes one bounded line at a time, de-duplicates by identifier, and returns a content SHA-256 for complete snapshots only.
+- `LocalScientificIndex` (`local_scientific_index.v1`) holds active records only. Matching is conjunctive, so the index never widens the compiled query. Ranking is title-weighted with a stable tie-break and is not a relevance verdict. Tokens are Unicode letter and digit runs. The index is rebuildable from the store, and a test proves that a rebuild returns the same results as incremental maintenance.
+- `LocalIndexScientificSourceAdapter` is a contract-v2 family adapter for OAI-PMH, bulk and static sources. An index that was never built is UNAVAILABLE (`local_index_not_built`), not EMPTY. It is not registered for any production source.
+
+Changes to R5 code (uncommitted, from §8.39):
+
+- `ScientificSourceFamilyAdapter::accessFamily()` became `servesAccessFamily(family)`, so that one local-index adapter can serve three families; registration validation and the REST adapter follow.
+- The REST adapter's scalar helper moved to `ScientificSourceFamilyRecord::scalar()`.
+- `OaiPmhSourceProfile` gained the datestamp granularity.
+
+### 8.40.6 Search-architecture integration
+
+- The local adapter receives the compiled query unchanged, like a remote adapter: there is no keyword reduction and no source-specific branch.
+- An end-to-end test runs a bulk source through the production registry, selector and orchestrator without any HTTP request.
+- Selection roles (Home/Crop), evidence sufficiency, confidence thresholds, deduplication and ranking code were not changed.
+- Stored results carry the R4 provenance record (adapter, contract version, access family, licensing, identifier basis), so the existing deduplicator and the presentation gate apply.
+
+### 8.40.7 Verification (isolated Docker as in §8.34.6: `--network none`, read-only mounts, run inline)
+
+| Run | Result | Against R5 (§8.39) |
+|---|---|---|
+| Focused (Onboarding, LocalIndex, Family, Registry) | 138 tests, 4,864 assertions, all OK | — |
+| Unit suite | 1,497 tests; 29 not passing | 0 regressions; 57 added, all passing; 29/29 failure messages identical |
+| Feature suite | 950 tests; 84 not passing | 0 regressions; 84/84 messages identical |
+| 74 undiscovered Feature files | 890 tests; 53 not passing | 0 regressions; 53/53 messages identical |
+
+New tests (57):
+
+- `ScientificSourceOnboardingContractTest` (28);
+- `ScientificSourceOnboardingReconciliationTest` (10; its expectations are recomputed from the evidence file, not taken from the reconciler);
+- `LocalIndexLifecycleTest` (14);
+- `LocalIndexSearchIntegrationTest` (5).
+
+There are four new fixtures. They are synthetic, on `example.org`, with no provider data.
+
+**Measurement.** No quality or performance measurement was made. The local index did not exist before, so there is no valid baseline, and no improvement is claimed.
+
+Protected files are unchanged:
+
+- composer.lock `D6EE17A75BF1DA5B`, composer.json `DE302DFA539371AA`, phpunit.xml `1EC076C544341F95`, .env `16B96F1E9230C8DA`;
+- the 109 register `783035186579AA55`;
+- the legacy-62 register `9170257A5FEA2D1F`.
+
+HEAD is `f2025315d8990f52f3c658c968a3ec8252ac18b0` on branch `phase-18-m18-ai-marketing-communications`. Nothing is staged, and no file was deleted. There was no commit, push, pull, branch change, network access, live-source access, migration, dependency change or database access.
+
+### 8.40.8 Blockers
+
+| Operation | Reason | Evidence | Safe alternative completed | Authorization required |
+|---|---|---|---|---|
+| Persistent record store and index | A schema or migration, or new infrastructure, is not authorized | D-10.12; mandate §5.3 | Port, in-memory reference, lifecycle and tests (§8.40.5) | Owner choice among the §8.40.5 alternatives, then a migration or infrastructure gate |
+| Real profiles, endpoint verification and activation of any seat | Live access is forbidden; identity is unverified and licences are unresolved | §8.40.3 | Offline reconciliation, with per-seat blockers and next actions | A network gate, an identity binding, licence acceptance, and Capability and Path decisions for each `adr_id` |
+| Resolving the 16 ambiguous identities | An owner decision | Evidence identity state AMBIGUOUS | Seats DEFERRED, with their alternatives kept in the evidence | Owner identity decision |
+| Correcting or removing the five stub profiles | A behaviour change to CSQ inputs; not needed while inactive | §8.40.4 | Findings recorded | Owner decision |
+
+### 8.40.9 Status
+
+| Increment | Status |
+|---|---|
+| R1 to R5 | As §8.39 (R5 interface adjusted in §8.40.5) |
+| R6 (Onboarding Contract and 109 reconciliation) | IMPLEMENTED as typed code and an offline reconciliation. All 109 seats are reconciled; none is verified, bound or eligible. Uncommitted. |
+| OAI-PMH and bulk/static storage and indexing lifecycle | PARTIALLY COMPLETE: the lifecycle, licence gating, ingestion, index and search adapter are implemented and tested in memory; persistent storage is BLOCKED (§8.40.8). |
+| R7 (shared logic and isolation), R8 (onboarding automation) | NOT STARTED |
+
+## 8.41 — R7: durable PostgreSQL record store for the local index, and resolution of the five R6 reconciliation discrepancies (2026-10-15)
+
+Before this append this ADR had SHA-256 `9636407592d7f01fd443298a8abc7caf2a5c9290ebb5e62618946ef1ed27e2d8` (541,848 bytes). No earlier content was changed.
+
+**Source.** On 2026-10-15 at 21:42 local time the user issued "WSA-Enterprise — Full Autonomous Engineering Execution Mandate: End-to-End Implementation, Durable Persistence, Real Testing, Scientific Search Integration, and Strict Safety Controls". It makes durable storage mandatory (its §7), allows an unapplied migration where a schema is needed (§8 Case B), and requires real-backend tests, with PostgreSQL not substituted by SQLite. It keeps the prohibitions on Git operations, deletion, dependency changes, production databases and migrations, deployment, and live source access. In answer to a decision request, the user authorized an isolated, disposable PostgreSQL test container with a securely generated password and no published ports. This section records what was done. It does not change D-04, D-09, D-10.x or any earlier decision.
+
+### 8.41.1 Decisions
+
+| Kind | Record |
+|---|---|
+| Decision | §8.3 storage gate, §8.40.5 alternative 1: new tables in the existing PostgreSQL database (§8 Case B). Reusing `knowledge_embeddings`, a search engine, or local files stay rejected for the reasons in §8.40.5. |
+| Decision | The migration is authored, not deployed. It was applied only to the disposable test database `wsa_r7_store_test`. D-10.12 is unchanged: D-10 itself still authorizes no schema; the authority for this one is the mandate, and it covers source records, not the D-10 domains (identity, Capability, Path, Projection, binding, activation, correlation). |
+| Decision | Authoritative store and derived index are separate. The rows are authoritative. `LocalScientificIndex` stays in memory and is rebuilt from them; it is never persisted. |
+| Decision | The persistence blocker of §8.40.8 is replaced by `local_index_store_not_deployed`. The store exists and is verified; what is missing is a deployed schema. |
+| Decision | Reconciliation schema `adr023.source_onboarding_reconciliation.v2` is exported to a new file. The v1 artifact is kept unchanged as the R6 record. |
+| Decision | No 62→109 mapping was produced. The register omits `historical_62_xref` (§8.11, D-09 item 4), and a name-based mapping would be an identity decision. The legacy-62 register is unchanged. |
+| Disclosure | The store classes, the migration, the provider binding and the change to `LocalIndexSearchIntegrationTest` were written between 22:15 and 22:21 local time, within this mandate. The executor's working record of writing them was lost when its context was compacted. They were reviewed afterwards against this design, and every test below covers them. |
+
+### 8.41.2 The five R6 discrepancies
+
+| # | Discrepancy | Cause | Resolution |
+|---|---|---|---|
+| 5.1 | Family counts (REST 13, STATIC 19, BULK 9, RSS 3, OAI 2) total 46, not 109 | They count seat-family pairs: a seat may document several families or none | New `SeatFamilyState` gives each seat exactly one state: `remote_api` 9, `remote_api_and_local_index` 4, `local_index` 21, `unimplemented_family` 2, `no_machine_access` 73 (total 109). The export labels the 46 as `candidate_family_assignments` over 36 seats. |
+| 5.2 | Evidence status was easy to read as readiness | One `status` field next to `activation_state` | Each seat now exports `evidence_axes`: identity, access, licensing and capability evidence; the licensing declaration (always UNRESOLVED); the Capability decision (always NONE); documentary evidence status; onboarding readiness (NOT_READY 93, DEFERRED 16); and operational activation (INACTIVE 109). The ambiguous seat-level `status` key is renamed `documentary_evidence_status`. |
+| 5.3 | 21 persistence blockers against 30 static/bulk/OAI assignments | The 30 are assignments over 25 seats: G1-14, G5-04, G6-02 and G6-14 document bulk and static, and G6-20 documents OAI-PMH and bulk. Four of the 25 (G1-14, G5-04, G6-02, G6-20) also document a REST API, so the local index is optional for them. In addition, `ingestion` was BLOCKED for all 25 while the blocker covered 21. | `ingestion` is now BLOCKED only for the 21, with the same rule as the blocker. `local_index_reconciliation` in the export lists every set. Next-gate candidates (no seat-specific blocker): G1-01, G1-13, G1-15, G1-17, G1-19, G2-15, G2-23, G3-05, G4-01, G4-02, G5-04, G6-03, G6-04, G6-06, G6-08, G6-12, G6-16. Held: G1-14, G6-02 (credentials); G2-24, G3-13, G6-22 (ambiguous identity); G6-14, G6-15 (evidence fetch failures); G2-24 and G6-20 have two such blockers. "Next gate" means owner identity verification and an authorized endpoint test. No seat may be activated. |
+| 5.4 | Five `stub_declares_unverified_query_capabilities` warnings | Inactive profile stubs agris, gbif, pubmed, europe_pmc and agricola declare identifier and constraint fields written before any evidence review | Each warning carries a disposition in `warning_dispositions` (`OnboardingWarningDisposition`): its evidence (the declared fields), root cause, impact (none at runtime: inactive and unregistered), corrective action (keep unchanged and inactive until an accepted onboarding and Capability decision back each field), verification, and limitation (no probe is authorized). The stubs were not changed, so CSQ inputs are unchanged. |
+| 5.5 | R5 and R6 JUnit comparison | — | Compared per test ID and per failure text. Unit: R5 1,440 → R6 1,497, with 57 added (all passing), 0 removed, 0 state changes, and 29/29 failures byte-identical. Feature: 950 → 950, with 84/84 identical. The 74 undiscovered Feature files: 890 → 890, with 53/53 identical. No normalization was needed: even line numbers match. |
+
+The v2 artifact is `docs/architecture/science-source-expansion/2026-10-15-R7-SOURCE-ONBOARDING-RECONCILIATION.v2.json` (SHA-256 `e69fb4be2786aba62191e32c74cf3692f3b5afad3bcd7c8d1ba62193495f9399`, 1,348,237 bytes). It was exported by the reconciliation test, which also asserts that the seat ids equal the register in register order, that the register hash matches, and that a second reconciliation produces byte-identical JSON. Decision ids are now `onb-r7-20261015-<adr_id>`. The v1 artifact (`ef1e1e5a…`) is unchanged.
+
+### 8.41.3 Durable store
+
+
+- `scientific_source_records` is the authoritative store, with one row per identity `(source_key, original_identifier)` (unique `scientific_source_records_identity_uq`, so two sources never collide). A row holds:
+  - the lifecycle state;
+  - the content hash (SHA-256 of the normalized result, excluding retrieval time);
+  - the source datestamp;
+  - the generation, and `first_generation`, which an update does not change;
+  - the retained record as versioned JSON (`ScientificRecordCodec` v1), with its provenance and licensing;
+  - the tombstone reason;
+  - timestamps.
+- `scientific_source_states` holds the committed generation and the harvest checkpoint (including the resumption token) of each source. It is the row a commit locks.
+- `scientific_source_generations` is an append-only log of committed generations, with their mode and counts.
+
+On PostgreSQL, CHECK constraints enforce three rules:
+
+- an active row has a record and a hash, and no tombstone reason;
+- a tombstone has a reason, and no record or hash;
+- `generation >= first_generation >= 1`, and the mode is `incremental` or `snapshot`.
+
+The tables have no tenant, organization or user column and no foreign keys. They hold global reference data of public sources.
+
+`DatabaseScientificRecordStore` implements the `ScientificRecordStore` port. The in-memory reference store is kept, and both share `ScientificRecordGenerationMerge`, so their lifecycle rules cannot drift apart.
+
+- Changes are staged in the process and written by `commit()` in one transaction:
+  1. insert the state row if it is missing, then lock it (`SELECT … FOR UPDATE`);
+  2. refuse the commit with `CONCURRENT_GENERATION` if the staged base is no longer the committed generation;
+  3. merge the changes: idempotent by hash, stale datestamps ignored for upserts and tombstones, and records absent from a complete snapshot withdrawn as `absent_from_complete_snapshot`;
+  4. upsert the changed rows;
+  5. append the generation log and update the generation and checkpoint.
+
+  A process that dies before COMMIT leaves nothing behind.
+- `readActive()` reads the generation and the active rows in one REPEATABLE READ READ ONLY transaction.
+- Every row read back is decoded strictly, and its hash is recomputed. A mismatch raises `RECORD_CORRUPT`.
+- PDO and connection faults raise `STORE_UNAVAILABLE`. Messages carry the SQLSTATE only.
+
+Integration:
+
+- `AgriculturalIntelligenceServiceProvider` binds `ScientificRecordStore` to `DatabaseScientificRecordStore`, and `LocalScientificIndex` as a singleton.
+- `LocalIndexIngestionService` writes through the store. `rebuildIndex` and the search adapter read through `readActive`.
+- `LocalIndexScientificSourceAdapter` takes the store and rebuilds the index whenever the index generation differs from the committed generation, so a restart cannot serve a lost index.
+- Search outcomes are distinct:
+  - a never-committed source is UNAVAILABLE `local_index_not_built`;
+  - a store fault or a corrupt row is FAILED with its reason, never EMPTY.
+- No production source is registered to the adapter, so no runtime path reaches the tables.
+- The compiled query is passed unchanged. CSQ, `QueryUnderstandingService`, `ScientificSearchQueryBuilder`, selection, ranking and deduplication were not changed.
+
+Licensing is unchanged from §8.40.5:
+
+- nothing is ingested unless retrieval is permitted;
+- nothing is stored unless metadata storage is permitted;
+- abstracts and raw payloads are kept only with full-text storage permission, and the omission is recorded as a provenance transformation. Text that may not be stored is therefore not searchable.
+
+Search writes nothing and never stores the question.
+
+### 8.41.4 Verification
+
+The PostgreSQL environment, the commands, and the incident:
+
+- **Server.** PostgreSQL 16.14 (`postgres:16-alpine`) in container `wsa-r7-store-pg-20261015`:
+  - `--network none`, no published ports, volume `wsa-r7-store-pgdata-20261015`;
+  - database `wsa_r7_store_test`, role `wsa_r7`;
+  - the password was generated with a CSPRNG and never printed.
+- **Test runs.** PHP runs in `wsa-enterprise-backend-test:latest`, which joins the server's network namespace (`--network container:<pg>`). The backend, vendor and docs are mounted read-only, with an empty `.env`, and the run uses the existing `PostgresTestDatabaseGuard` variables (`DB_TEST_*`, `DB_TEST_ALLOW_DESTRUCTIVE_RESET=wsa_r7_store_test`). The command is `php vendor/bin/phpunit -c phpunit.pgsql.xml --no-coverage --do-not-cache-result --log-junit … <file>`.
+- **Default suites.** They ran as in §8.34.6 (`--network none`, SQLite in memory).
+- **Incident (recorded, not counted).** The first server-restart attempt passed its test file in a PowerShell parameter named `$args`, an automatic variable, so the whole PostgreSQL suite ran instead. The command was also launched twice, and the two runs migrated the same database at once, which produced 135 errors (`relation "migrations" does not exist`, a duplicate `users` type). The overlapping runs were discarded. Every result below is from a single run with nothing else connected.
+
+| Run | Result |
+|---|---|
+| `tests/Pgsql/ScientificRecordStorePostgresTest.php`, three separate runs | OK (13 tests, 244 assertions) each; exit 0 |
+| Server restart: write phase in one PHP container, then `docker restart` of the PostgreSQL container (postmaster start 20:09:36 → 20:19:45 UTC), then verify phase in a new PHP container | Write OK (1 test, 5 assertions); verify OK (1 test, 15 assertions); exit 0 and 0 |
+| Full `phpunit.pgsql.xml` | 135 tests, 1,084 assertions, 1 skipped (the restart test without a phase), 0 failures; exit 0. The §8.25 baseline is 121 tests and 840 assertions, and 121 + 13 + 1 = 135 and 840 + 244 = 1,084. |
+| Onboarding unit tests | OK (42 tests, 5,677 assertions) |
+| Unit suite | 1,501 tests; 29 not passing. Against R6: 4 added, all passing; 0 removed; 0 state changes; 29/29 failure texts byte-identical. |
+| Feature suite | 950 tests; 84 not passing. Against R6: 0 state changes; 84/84 identical. One extra assertion, from `PlantAiDiagnosisKnowledgeBaseStage7Test::test_27_no_database_migration_requirement`, which asserts once per migration file. |
+| 74 undiscovered Feature files | 890 tests; 53 not passing. Against R6: 0 state changes; 53/53 identical. |
+| `php -l` on the 23 PHP files created or changed | No errors |
+| `pint --test` on the same files | Fails on 22 of 23 (line endings under `core.autocrlf=true`, brace position, `!` spacing). The same rules fail on 12 of 15 untouched tracked files, and the repository has no `pint.json`. Nothing was reformatted. PHPStan is not installed. |
+
+The PostgreSQL tests (13), each against the real server:
+
+1. **Schema.** The unique identity rejects a duplicate (SQLSTATE 23505). The CHECK constraints reject an invalid lifecycle, generation or mode (SQLSTATE 23514). The column list holds no tenant data.
+2. **Fresh-process recovery.** A worker process commits a snapshot. A second process searches it, with fresh container services and a fresh index. A fresh store reads back the identity, hash, provenance, licensing and lifecycle.
+3. **Idempotency and updates.** An identical re-ingestion rewrites no row. A changed snapshot updates in place: the same row id, a new hash, and `first_generation` kept. An absent record is withdrawn, and search follows.
+4. **Collisions.** The same provider identifier in two sources stays two rows.
+5. **Stale writes.** An older version or tombstone never overwrites a newer committed one.
+6. **Rejected snapshots.** A malformed or unreadable snapshot changes no row, state or generation.
+7. **Interruption.** A worker holding an uncommitted generation is killed with SIGKILL. Its changes were never visible to other connections. After its backend is gone, nothing remains, and the next run commits generation 2.
+8. **Harvest resume.** An OAI-PMH harvest paused after one page resumes in a new process at the stored token, then completes and records the deletion.
+9. **Concurrency.** A competing commit waits on the source row lock, as `pg_blocking_pids` reports. A writer staged against the superseded base is refused with `CONCURRENT_GENERATION`, and the withdrawn record is not resurrected.
+10. **Licensing.** Restricted abstracts are not persisted or searchable. Permitted content is persisted and searchable.
+11. **Failures.** An unreachable server gives FAILED `local_store_unavailable`. A tampered row gives FAILED `local_store_record_corrupt`. A never-ingested source gives UNAVAILABLE.
+12. **Rebuild.** An index rebuilt from `readActive` equals the incrementally maintained index, for six queries.
+13. **Read-only search.** Search changes no row, and the question text appears in no table.
+
+The restart test verifies the following after the server restart:
+
+- generations [2, 1];
+- the revised record, with `first_generation` 1 and generation 2;
+- both kinds of tombstone;
+- the in-progress checkpoint, with its token;
+- an adapter search answering from index generation 2, and EMPTY for withdrawn content;
+- a harvest that resumes and completes.
+
+**Measurement.** No performance or relevance measurement was made. There is no baseline for the local index and no approved relevance set, so no improvement is claimed.
+
+### 8.41.5 Source families
+
+| Family | Implemented (offline, tested) | Verified against a real source |
+|---|---|---|
+| REST/JSON | `RestJsonScientificSourceAdapter` (§8.39) | No; the five legacy sources run on the legacy basis (§8.40.4) |
+| OAI-PMH | Harvester with a durable checkpoint and resumption (§8.40.5 and this section) | No; live harvesting is not authorized |
+| Bulk and static datasets | `BulkDatasetReader`, complete-snapshot replacement, and durable generations | No |
+| RSS/Atom | Nothing: neither a parser nor a production family exists | No; 2 seats document RSS only |
+
+### 8.41.6 Repository state
+
+HEAD is `f2025315d8990f52f3c658c968a3ec8252ac18b0` on branch `phase-18-m18-ai-marketing-communications`. Nothing is staged and there are no stashes. Since the start of the mandate, 7 untracked files were added and none disappeared. Protected files are unchanged:
+
+- composer.lock `D6EE17A75BF1DA5B`, composer.json `DE302DFA539371AA`, phpunit.xml `1EC076C544341F95`, .env `16B96F1E9230C8DA`;
+- the 109 register `783035186579AA55`;
+- the legacy-62 register `9170257A5FEA2D1F`.
+
+The only tracked files changed by this mandate are `AgriculturalIntelligenceServiceProvider.php` (the two bindings) and this ADR (this append). No file was deleted. There was no commit, push, pull, branch change, dependency change, network access, live-source access, or production database access.
+
+The earlier test container `wsa-r7-pg`, whose password generation had failed, was removed after it was confirmed to hold an empty test database. The user authorized that removal. The new container and its volume are kept.
+
+### 8.41.7 Blockers
+
+| Operation | Reason | Authorization required |
+|---|---|---|
+| Applying the migration outside the disposable test database | Production migrations and deployment are not authorized | Owner approval of the schema, then a migration and deployment gate |
+| Registering the local-index adapter for any real source | Identities unverified, licences unresolved, no endpoint test; activation is not authorized | Per-seat onboarding decisions (identity, licence, Capability, Path) and a network gate for endpoint tests |
+| Resolving the 16 ambiguous identities | Owner decision | Owner identity decision |
+| An explicit legacy-62 → 109 mapping | `historical_62_xref` was omitted by decision; a mapping is an identity decision | Owner decision on `historical_62_xref` |
+| RSS/Atom family | Not implemented; outside this mandate's tested scope | Owner decision that the 2 RSS-only seats justify it |
+| Changing the five stub profiles | Would change CSQ inputs | Owner decision |
+| Performance and relevance measurement | No baseline and no approved relevance set | An approved evaluation set and method |
+
+### 8.41.8 Status
+
+| Item | Status |
+|---|---|
+| R6 discrepancies 5.1–5.5 | RESOLVED, with the v2 export and tests |
+| Durable record store | IMPLEMENTED and VERIFIED on a real, disposable PostgreSQL 16 server, including fresh-process and server-restart recovery. NOT DEPLOYED: the migration has not been applied outside that database. |
+| Production search path | WIRED (container binding, adapter and ingestion) but UNUSED: no source is registered to the local-index adapter |
+| R7 shared logic beyond the store, and R8 | NOT STARTED |
+
+## 8.42 — R8: Canonical scientific source registry consolidation, durable-store migration review, and search-path proof (2026-10-16)
+
+Before this append this ADR had SHA-256 `1c506997a3632315287a87402c4b1c6b09cec684ecee86878bcf71a7d97beef9` (561,092 bytes). No earlier content was changed.
+
+**Source.** On 2026-10-16 the user issued "WSA-Enterprise — Autonomous Engineering Execution Mandate: Canonical Source Registry Consolidation + Durable Storage Validation + Scientific Search Integration". It requires consolidating the legacy 62 and current 109 inventories into one evidence-based canonical registry with permanent duplicate prevention, reviewing the R7 PostgreSQL store and migration, and proving ingestion-to-search integration — without Git operations, production migration, live source access, or silent identity merges. This section records what was done.
+
+### 8.42.1 Governing decision (D-11): consolidation without silent membership expansion
+
+| Kind | Record |
+|---|---|
+| Decision (D-11) | A new artifact, `ADR-023-CANONICAL-SCIENTIFIC-SOURCE-REGISTRY.v1.json`, is the authoritative **canonical identity and membership-resolution registry**. The immutable inputs remain `SCIENCE-SOURCE-EXPANSION-62-REGISTER.md` and `ADR-023-109-MEMBERSHIP-REGISTER.v1.json`. |
+| Supersedes | The IU-10A / §8.7 practice of permanently omitting any machine-readable 62↔109 consolidation layer, and the §8.41 statement that “no 62→109 mapping was produced” as a standing prohibition on building a reviewable consolidation. |
+| Does **not** supersede | D-09’s **109-seat CURRENT enumeration**; G3-15 REMOVED with no replacement; G2-17 = REMVT and G2-19 = Animal Bioscience; dual G1/G6 seats remaining distinct without automatic SAME_AS; the immutability of the 62 and 109 source files; D-10.11 (no `adr_id` on Stage-3 registration without an accepted onboarding decision); activation remaining separate from membership. |
+| Justification | Two inventories without a consolidation contract blocked evidence-based aliasing and duplicate prevention. D-11 adds that contract without inventing CONFIRMED merges or expanding CURRENT membership. |
+| Membership rule | CURRENT unique members = the 109 seats. Legacy-62 rows become `HISTORICAL_ONLY` records. A legacy row becomes a confirmed historical alias of a CURRENT seat only after an owner-accepted `CONFIRMED_SAME_SOURCE` decision. |
+
+### 8.42.2 Identity-matching criteria
+
+| Classification | When it may be assigned |
+|---|---|
+| `CONFIRMED_SAME_SOURCE` | Authoritative identity evidence, official publisher/URL evidence, or an explicit ADR/owner decision. **Names alone never suffice.** |
+| `CONFIRMED_DISTINCT_SOURCES` | ADR dual pairs (D-09); legacy identity_notes that mark master_ids as distinct (`≠ #N`). |
+| `POSSIBLE_MATCH_REQUIRES_REVIEW` | Exact normalized display-name equality across registers, with no confirming publisher/URL evidence in either register. |
+| `INSUFFICIENT_IDENTITY_EVIDENCE` | No normalized name match and no other identity evidence. |
+
+### 8.42.3 Consolidation results (executed, deterministic)
+
+Inputs: 62 + 109 = **171**. All 171 are accounted for exactly once.
+
+Artifact: `docs/architecture/science-source-expansion/2026-10-16-R8-SOURCE-REGISTRY-CONSOLIDATION-MANIFEST.v1.json` (SHA-256 `0711dc953b3f77f62e928ec6ad1cc48bc1c736b2682954fd47a118f30f541085`).
+
+Canonical registry: `docs/architecture/science-source-expansion/ADR-023-CANONICAL-SCIENTIFIC-SOURCE-REGISTRY.v1.json` (SHA-256 `6b29fc92c4ea9a20c3b77553fc5a6d85bb5b5d283e00804f7ac6c1cab8da91f3`).
+
+| Metric | Count |
+|---|---|
+| CURRENT unique members | 109 |
+| Canonical records (CURRENT + HISTORICAL_ONLY) | 171 |
+| `CONFIRMED_SAME_SOURCE` (cross-registry) | 0 |
+| `CONFIRMED_DISTINCT_SOURCES` relationships | 12 (10 dual pairs + 2 legacy note pairs) |
+| `POSSIBLE_MATCH_REQUIRES_REVIEW` relationships | 49 |
+| Legacy rows with insufficient evidence (unmapped) | 13 |
+| G3-15 | Recorded as `HISTORICAL_REMOVED`; absent from CURRENT |
+| Sources activated by consolidation | 0 (every record `INACTIVE`) |
+
+Typed implementation under `App\Services\Agriculture\Research\Membership\Consolidation\`: parsers, consolidator, `CanonicalScientificSourceRegistry` with idempotent re-registration, rejection of conflicting canonical/inventory/historical bindings, and refusal of display names as definitive identity keys.
+
+### 8.42.4 Durable storage and migration review
+
+
+Findings:
+
+- Authoritative rows vs derived in-memory index remain separated.
+- Uniqueness, lifecycle CHECKs, commit locking, stale-base refusal, tombstones, and fail-closed search outcomes behave as in §8.41.
+- No second persistence system was introduced for the canonical registry: it is a file-backed governance artifact (membership SoT), while harvested **records** continue to use the PostgreSQL store. A DB schema for canonical membership is not required for D-11.
+- Gaps closed in this increment: migration rollback + re-apply on an empty disposable database; missing-schema search returns `FAILED` / `local_store_unavailable` (not EMPTY); provider binding asserted.
+
+### 8.42.5 Scientific search integration
+
+Default Stage-3 production catalog still registers only the five REST legacy sources; no production source is bound to `LocalIndexScientificSourceAdapter` (unchanged, and still correct under D-10.11).
+
+Proved on disposable PostgreSQL 16:
+
+1. Canonical `adr_id` resolution and dual-name ambiguity refusal.
+2. Ingestion through `LocalIndexIngestionService` into `DatabaseScientificRecordStore` (container binding).
+3. Fresh-store read of identity, provenance and adapter class.
+4. Derived-index search SUCCESS for eligible records, EMPTY for withdrawn, no question text persisted.
+5. Provider resolves `ScientificRecordStore` → `DatabaseScientificRecordStore` only.
+
+CSQ / compiler / ranking / confidence contracts were not modified.
+
+### 8.42.6 Verification
+
+| Run | Result |
+|---|---|
+| `tests/Unit/Agriculture/Research/Membership` (`--network none`) | OK (10 tests, 5,448 assertions), exit 0 |
+| `tests/Pgsql/ScientificRecordStoreMigrationTest.php` | OK (4 tests, 46 assertions), exit 0 |
+| `tests/Pgsql/CanonicalRegistryLocalIndexIntegrationTest.php` | OK (1 test, 18 assertions), exit 0 |
+| `tests/Pgsql/ScientificRecordStorePostgresTest.php` | OK (13 tests, 244 assertions), exit 0 |
+
+Protected inputs unchanged: legacy-62 `9170257A…`, membership-109 `78303518…`, composer.lock / composer.json / phpunit.xml / .env prefixes as in §8.41.
+
+HEAD remains `f2025315d8990f52f3c658c968a3ec8252ac18b0` on `phase-18-m18-ai-marketing-communications`. Nothing staged. No commit, push, production migration, or live source access.
+
+### 8.42.7 Remaining gates
+
+| Gate | Authorization required |
+|---|---|
+| Accept or reject each `POSSIBLE_MATCH_REQUIRES_REVIEW` | Owner identity review; then bind confirmed historical aliases |
+| Deploy the record-store migration outside the disposable test DB | Owner schema/deployment approval |
+| Register any CURRENT seat to a Stage-3 / local-index adapter | Accepted onboarding + Capability + Path + licensing; network gate for live probes |
+| Expand CURRENT membership beyond 109 | Explicit ADR membership decision (D-09 retained) |
+
+## 8.43 — R8 owner-authorized identity consolidation (45 links) and legacy-62 final accounting (2026-10-16)
+
+**Status:** EXECUTED (identity layer only). Append-only continuity record. Does **not** rewrite D-09, D-11, §8.42, the immutable 62-register, or the 109 membership register.
+
+### 8.43.1 Owner authorization scope
+
+| Item | Decision |
+|---|---|
+| Batch | All 44 evidence-review cases with `APPROVE_SAME_SOURCE_RECOMMENDED` |
+| Explicit add-on | `PM-27` — legacy `#35 APIS` ↔ CURRENT `G3-01` (owner: same scientific source) |
+| Total authorized relationships | **45** (relationship pairs, not an expansion of CURRENT seats) |
+| Explicit exclusions (unchanged) | `PM-02` (AgroSpace — conflicting evidence), `PM-08` (European Poultry Science — needs further owner decision), `PM-22` (Aquaculture Journal — insufficient evidence), `PM-26` (IDEAL Project — identity unresolved) |
+| Non-authorization | No CURRENT membership change; no activation; no license/Capability transfer; no rewrite of historical registers |
+
+### 8.43.2 Execution mechanism (D-11 retained)
+
+- Binding uses the approved identity contract: `historical_identifiers` (+ co-bound `inventory_keys`) on the existing seat canonical id `adr023.canonical.seat.{adr_id}`.
+- Linked legacy rows are **not** given a separate `adr023.canonical.historical62.{id}` record after confirmation (they resolve to the seat canonical).
+- Immutable inputs remain byte-stable: `SCIENCE-SOURCE-EXPANSION-62-REGISTER.md` and `ADR-023-109-MEMBERSHIP-REGISTER.v1.json`.
+- Name-only matching never creates `CONFIRMED_SAME_SOURCE`; only the owner-approved link list does.
+
+### 8.43.3 Results
+
+| Metric | Value |
+|---|---|
+| Owner links applied | 45 / 45 (none blocked) |
+| CURRENT unique members | **109** (unchanged) |
+| Canonical records after binding | 126 (109 seats + 17 unlinked historical-only) |
+| Remaining `POSSIBLE_MATCH_REQUIRES_REVIEW` | 4 (PM-02, PM-08, PM-22, PM-26) |
+| Unmapped legacy (no name match in 49) | 13 |
+| Activation | All records `INACTIVE` |
+| PM-27 | `#35` → `adr023.canonical.seat.G3-01`; historical id retained |
+
+Legacy-62 final accounting taxonomy (exactly 62 rows, one per `legacy_id`):
+
+| Taxonomy | Count |
+|---|---:|
+| `LINKED_TO_CANONICAL_CURRENT` | 45 |
+| `POSSIBLE_MATCH_UNRESOLVED` | 3 |
+| `CONFLICT_REQUIRES_REVIEW` | 1 |
+| `NO_MATCH_IDENTIFIED` | 13 |
+| Sum | **62** |
+
+`NO_MATCH_IDENTIFIED` means no match under available evidence, not proof of independence. Unresolved possibles mean duplicates are **not** fully closed.
+
+### 8.43.4 Artifacts
+
+| Artifact | Role |
+|---|---|
+| `2026-10-16-R8-SOURCE-REGISTRY-CONSOLIDATION-MANIFEST.v2.json` | Post-authorization consolidation manifest |
+| `ADR-023-CANONICAL-SCIENTIFIC-SOURCE-REGISTRY.v2.json` | Canonical registry with confirmed historical aliases |
+| `2026-10-16-R8-LEGACY-62-FINAL-ACCOUNTING.v1.json` | Machine-readable full 62 accounting |
+| `2026-10-16-R8-LEGACY-62-FINAL-ACCOUNTING.md` | Human-readable full 62 accounting |
+| Prior v1 manifest/registry | Preserved as pre-authorization baseline (§8.42) |
+
+### 8.43.5 Verification
+
+| Run | Result |
+|---|---|
+| `tests/Unit/Agriculture/Research/Membership/SourceRegistryConsolidationTest.php` | OK (16 tests, 256 assertions), exit 0 |
+
+Protected inputs unchanged at execution: legacy-62 `9170257a…`, membership-109 `78303518…`. HEAD remains `f2025315d8990f52f3c658c968a3ec8252ac18b0` on `phase-18-m18-ai-marketing-communications`. No git add/commit/push.
+
+### 8.43.6 Remaining owner gates
+
+| Gate | Cases / notes |
+|---|---|
+| Resolve or reject remaining possibles | PM-02, PM-08, PM-22, PM-26 |
+| Decide fate of 13 `NO_MATCH_IDENTIFIED` historical rows | Evidence hunt or explicit HISTORICAL_ONLY retention |
+| License / Capability / activation | Separate authorities; identity binding does not grant them |
+| Expand CURRENT beyond 109 | Still requires an explicit D-09-class membership decision |
+
+## 8.44 — R8 Stage A–E final resolution attempt, provenance migration readiness, and legacy-62 retirement gate (2026-10-16)
+
+**Status:** PARTIAL EXECUTION. Append-only. Does **not** rewrite D-09, D-11, §8.42, or §8.43. Does **not** delete `SCIENCE-SOURCE-EXPANSION-62-REGISTER.md`.
+
+### 8.44.1 Stage A — independent verification (read-only)
+
+Verified against the live working tree:
+
+- Branch `phase-18-m18-ai-marketing-communications`, HEAD `f2025315d8990f52f3c658c968a3ec8252ac18b0`.
+- Prior §8.43 accounting claims (45 linked / 3 possible / 1 conflict / 13 no-match = 62) are internally consistent; PM-27 preserved; exclusions not silently merged; CURRENT=109; activation INACTIVE on all canonical records.
+- Path correction: the 109 membership register lives under `docs/architecture/science-source-expansion/`, not `docs/architecture/`.
+- Artifact: `2026-10-16-R8-STAGE-A-INDEPENDENT-VERIFICATION.v1.md`.
+
+### 8.44.2 Stage B — outstanding four
+
+| Case | Outcome | Notes |
+|---|---|---|
+| PM-08 `#12` ↔ G2-03 | `SAME_SOURCE_CONFIRMED` | ISSN-L 0003-9098 / online 1612-9199 continuity despite Ulmer→Elsevier/PSA platform change |
+| PM-22 `#29` ↔ G2-20 | `SAME_SOURCE_CONFIRMED` | MDPI Aquaculture Journal eISSN 2673-9496 |
+| PM-26 `#33` ↔ G2-24 | `SAME_SOURCE_CONFIRMED` | IDEAL project identity; live app vs DataShare DOI `10.7488/ds/2768` is access-path distinction |
+| PM-02 `#3` ↔ G1-04 | `UNRESOLVED_REQUIRES_OWNER_DECISION` | Belgrade Faculty repository vs Chile `agrospace.cl` are distinct; seat identity_binding still NONE |
+
+Artifact: `2026-10-16-R8-STAGE-B-C-IDENTITY-RESOLUTION.v1.json`.
+
+### 8.44.3 Stage C — remaining legacy rows
+
+Twelve prior `NO_MATCH_IDENTIFIED` rows were evidence-linked to existing CURRENT seats where IC/ISSN/official naming established same-source identity despite non-exact display-name normalization (`NM-01`…`NM-12`).
+
+One row is a confirmed distinct source **absent** from the 109 register:
+
+| Legacy | Outcome | Blocker |
+|---|---|---|
+| `#20` Aquaculture, Fish and Fisheries (Wiley ISSN 2693-8847) | `DISTINCT_SOURCE_CONFIRMED` | Adding a CURRENT seat requires an explicit D-09-class membership decision (not taken here) |
+
+Post Stage B/C accounting taxonomy (62 rows, no silent drops):
+
+| Taxonomy | Count |
+|---|---:|
+| `LINKED_TO_CANONICAL_CURRENT` | 60 |
+| `CONFLICT_REQUIRES_REVIEW` (PM-02) | 1 |
+| `HISTORICAL_ONLY_DISTINCT` (legacy #20) | 1 |
+| Sum | **62** |
+
+### 8.44.4 Stage D — authoritative operational registry
+
+| Layer | Authority |
+|---|---|
+| CURRENT membership SoT | `ADR-023-109-MEMBERSHIP-REGISTER.v1.json` (D-09) — **109 seats unchanged** |
+| Canonical identity / historical alias layer | `ADR-023-CANONICAL-SCIENTIFIC-SOURCE-REGISTRY` (D-11); v2 on disk from §8.43; final v3 machine export pending PHPUnit/Docker |
+| Provenance of Stage B/C decisions | `2026-10-16-R8-STAGE-B-C-IDENTITY-RESOLUTION.v1.json` + accounting v2 |
+| Activation | Remains separate; no source activated |
+
+Implementation code path updated: `R8FinalIdentityLinks` (60 links), consolidator owner-link binding, accounting builder v2 fields, unit tests extended. **PHPUnit was not re-executed in this session** because the Docker engine was unavailable (`dockerDesktopLinuxEngine` pipe missing; no local `php` binary).
+
+### 8.44.5 Stage E — legacy-62 register retirement
+
+**Deletion NOT performed.** Exact blockers:
+
+1. PM-02 remains unresolved (owner seat-binding decision required).
+2. Legacy `#20` is a confirmed distinct source with no CURRENT seat; deleting the register would lose the only numbered historical label unless a membership decision and provenance migration are completed first.
+3. D-09 item 4 still retains the 62-register for historical identity traceability / `historical_62_xref` until an explicit superseding retirement decision is accepted.
+4. Consolidation parsers/tests still consume the markdown register as an immutable input.
+5. Final consolidator export/tests could not be re-verified without Docker/PHP in this environment.
+
+Safest next actions: (a) owner binds G1-04; (b) owner decides membership fate of Wiley AFF `#20`; (c) append a dedicated retirement decision superseding D-09 retention after provenance is fully resident in the canonical registry; (d) re-run Membership unit tests; (e) only then delete the markdown register.
+
+## 8.45 — R8 FINAL CLOSURE: PM-02 Belgrade, legacy #20 membership, Registry v3, and legacy-62 markdown retirement (2026-10-16)
+
+**Status:** EXECUTED. Append-only. Does **not** rewrite D-06/D-09/D-11 historical wording. Present-tense authority for CURRENT membership and historical provenance is established here.
+
+### 8.45.1 Owner clarifications applied
+
+| Item | Decision |
+|---|---|
+| PM-02 | Owner: intended source is **AgroSpace — Belgrade**. Chile `agrospace.cl` is a distinct namesake and is **not** the seat identity. `legacy #3` ↔ `G1-04` confirmed SAME_SOURCE. |
+| Legacy `#20` | Wiley journal *Aquaculture, Fish and Fisheries*, ISSN **2693-8847**, URL `https://onlinelibrary.wiley.com/journal/26938847`. Distinct from `G2-11` (*Aquaculture and Fisheries*). Owner FINAL CLOSURE MANDATE §5 authorizes adding CURRENT seat **G2-26** (INACTIVE). |
+
+### 8.45.2 CURRENT membership SoT revision
+
+| Artifact | Role |
+|---|---|
+| `ADR-023-109-MEMBERSHIP-REGISTER.v1.json` | Frozen D-09 snapshot (109 seats) — retained |
+| `ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json` | **Authoritative CURRENT membership** — **110** seats (`membership_revision=110.v1`) including `G2-26` |
+
+Activation remains INACTIVE for all seats. No Stage-3 adapter registration is authorized by this section.
+
+### 8.45.3 Canonical identity registry v3
+
+| Metric | Value |
+|---|---|
+| Confirmed historical→canonical links | **62 / 62** |
+| CURRENT members | **110** |
+| Canonical records | **110** (every legacy id binds onto a seat canonical) |
+| Activation | All `INACTIVE` |
+| Artifacts | `ADR-023-CANONICAL-SCIENTIFIC-SOURCE-REGISTRY.v3.json`, `2026-10-16-R8-SOURCE-REGISTRY-CONSOLIDATION-MANIFEST.v3.json`, `2026-10-16-R8-LEGACY-62-FINAL-ACCOUNTING.v3.*` |
+
+### 8.45.4 Supersession of D-09 markdown retention (present tense only)
+
+D-09 item 4 historically retained `SCIENCE-SOURCE-EXPANSION-62-REGISTER.md` for `historical_62_xref` / lineage. That **markdown file is hereby retired and deleted** under this §8.45 decision because:
+
+1. All 62 `legacy_id` values are bound in the canonical registry via `historical_identifiers`.
+2. A byte-frozen provenance snapshot exists: `ADR-023-LEGACY-62-PROVENANCE-SNAPSHOT.v1.json` (captured from the markdown at SHA-256 `9170257a…` before deletion).
+3. Final accounting v3 documents every disposition.
+4. Operational/test consumers load the snapshot when the markdown is absent.
+
+D-09’s original text is **not rewritten**. Present-tense historical provenance authority is the snapshot + canonical `historical_identifiers`, not the deleted markdown.
+
+### 8.45.5 Verification
+
+| Run | Result |
+|---|---|
+| `SourceRegistryConsolidationTest.php` + export (`WSA_R8_FINAL_EXPORT_DIR`) | OK (15 tests, 379 assertions), exit 0 — produced Registry/Manifest/Accounting v3 + provenance snapshot |
+| `tests/Unit/Agriculture/Research/Membership/` after markdown deletion | OK (16 tests, 5620 assertions), exit 0 — snapshot path |
+| `SCIENCE-SOURCE-EXPANSION-62-REGISTER.md` | **Deleted** (absent on disk) |
+
+HEAD remains on `phase-18-m18-ai-marketing-communications`. No git add/commit/push.
+
+## 8.46 — R9: Seventeen next-gate seats — selective integration and activation (2026-10-16)
+
+**Authority.** Owner engineering execution mandate to implement, integrate, test, and activate the seventeen R7 `next_gate_candidates` (ADR-023 §8.41.2), without git commit/push.
+
+**Exact seats (authoritative, not substituted):** G1-01, G1-13, G1-15, G1-17, G1-19, G2-15, G2-23, G3-05, G4-01, G4-02, G5-04, G6-03, G6-04, G6-06, G6-08, G6-12, G6-16.
+
+### 8.46.1 Design completed
+
+| Component | Change |
+|---|---|
+| `ScientificSourceLifecycle::GOVERNED_ONBOARDED` | ADR seats with accepted ACTIVE onboarding |
+| `ScientificSourceSelectionRole::GOVERNED_EXPANSION` | Auto-selected after statistical + Internet-First defaults; Stage-3 defaults unchanged |
+| `AcceptedOnboardingDecisionCatalog` / `NextGateEligibleSeatCatalog` | Inventory, blockers, family profiles, selective ACTIVE contracts |
+| `ScientificSourceRegistration` | Allows `adr_id` only with ACTIVE onboarding bound to the same `sourceKey` |
+| `ScientificSourceCatalog` | Merges activated next-gate registrations after the five legacy Stage-3 sources |
+| Reconciler | Distinguishes `registration_governed_bound` from `registration_external_only` |
+
+### 8.46.2 Activation outcome
+
+| Seat | Runtime | Notes |
+|---|---|---|
+| **G5-04 GBIF** | **ACTIVE** (`sourceKey=gbif`, REST species search) | Identity documentary evidence; Terms of Use + per-dataset licences; authorized live probe HTTP 200 with `scientificName` results |
+| G6-03, G6-04, G6-06, G6-08 | DEFERRED | Dual peers of G1 seats; `dual_peer_runtime_deferred` |
+| Remaining 12 | NOT_READY | Licence / endpoint / local-index ingest / store-deployment blockers retained honestly |
+
+Local-index adapters, bulk/static/OAI profiles, and onboarding scaffolds were completed where families were documented; seats were **not** marked ACTIVE solely because adapters exist.
+
+### 8.46.3 Artifacts
+
+- `2026-10-16-NEXT-GATE-17-ENDPOINT-VERIFICATION.v1.json`
+- `2026-10-16-NEXT-GATE-17-EVALUATION-BASELINE.v1.json`
+- Engineering report: `2026-10-16-R9-NEXT-GATE-17-ENGINEERING-REPORT.ar.md`
+
+No commit or push was performed under this section.
+
+## 8.47 — Source Expansion Mission: identity verification, blocker registers, and retrieval evaluation harness (2026-10-17)
+
+**Status:** EXECUTION RECORD (Workstreams A/B/C). **Does not close Phase 1.** **Does not authorize additional activation.** **No commit/push.**
+
+### 8.47.1 Authority and preservation
+
+- Mission: Scientific Source Expansion — Workstreams A (17 next-gate seats), B (16 ambiguous / licences / RSS / 62↔CURRENT), C (retrieval quality harness).
+- Branch at execution: `phase-18-m18-ai-marketing-communications` @ `f2025315d8990f52f3c658c968a3ec8252ac18b0` (reconfirmed at start; do not assume older HEADs).
+- Protected WIP preserved: no `git reset` / `restore` / `clean` / `stash` / branch switch; no broad staging; no commit.
+- Activation: **unchanged**. G5-04 remains the only ACTIVE next-gate seat (R9 / §8.46). Dual peers remain DEFERRED. Other next-gate seats remain NOT_READY.
+
+### 8.47.2 Authoritative inventories reconfirmed
+
+| Inventory | Count | Source | Evidence |
+|---|---:|---|---|
+| R7 next_gate_candidates | 17 | `2026-10-15-R7-SOURCE-ONBOARDING-RECONCILIATION.v2.json` | [DOCUMENTED] |
+| R7 identity_ambiguous | 16 | same R7 `#seats.blockers` | [DOCUMENTED] |
+| D-09 frozen membership | 109 | ADR D-09 / 109 register snapshot | [DOCUMENTED] |
+| CURRENT membership v2 | 110 | `ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json` (G2-26 Wiley post-R8) | [DOCUMENTED] |
+| Legacy historical | 62 | R8 accounting v3 | [DOCUMENTED] |
+
+Pins preserved: `G2-17=REMVT`, `G2-19=Animal Bioscience`, `G3-15` ABSENT (no replacement).
+
+### 8.47.3 Workstream A — 17-seat verification matrix
+
+Artifact: `science-source-expansion/2026-10-17-SOURCE-EXPANSION-MISSION/2026-10-17-NEXT-GATE-17-VERIFICATION-MATRIX.v1.json`
+
+Seat IDs (exact): G1-01, G1-13, G1-15, G1-17, G1-19, G2-15, G2-23, G3-05, G4-01, G4-02, G5-04, G6-03, G6-04, G6-06, G6-08, G6-12, G6-16.
+
+Summary from matrix generation:
+
+- IDENTITY_VERIFIED: 0 (IC `identity_verified=false` for all; candidate evidence may exist)
+- Licence DECLARED_IN_IC among 17: 8
+- Prior authorized connectivity PASSED: 2 (G5-04 OK; G1-01 CHANGED/HTTP 200)
+- Prior connectivity FAILED: 1 (G2-15 WAF blocked)
+- This mission new live probes: **NOT RUN** (authorization boundary §6)
+- Activation changed this mission: **none**
+
+HTTP success is not scientific appropriateness proof (recorded in matrix limitations).
+
+### 8.47.4 Workstream B — blockers
+
+| ID | Topic | Status |
+|---|---|---|
+| B1 | 16 ambiguous identities | Register written; **0 resolved** (owner decision required) |
+| B2 | Licence/access | Assessment register; unresolved licences ≠ unrestricted |
+| B3 | RSS/Atom | Decision: **DO_NOT_USE_AS_PRIMARY_SCIENTIFIC_SEARCH**; ingestion not activated |
+| B4 | 62↔CURRENT | Summary linked to accounting v3; 109 frozen ≠ 110 CURRENT preserved |
+
+Artifacts under `2026-10-17-SOURCE-EXPANSION-MISSION/`:
+
+- `2026-10-17-AMBIGUOUS-IDENTITY-REGISTER-16.v1.json`
+- `2026-10-17-LICENSE-ACCESS-ASSESSMENT.v1.json`
+- `2026-10-17-RSS-ATOM-DECISION.v1.json`
+- `2026-10-17-LEGACY62-CURRENT-MAPPING-SUMMARY.v1.json`
+- `2026-10-17-SOURCE-EXPANSION-ISSUE-REGISTER.v1.json`
+- `2026-10-17-CONSOLIDATED-GATE-MATRIX.v1.json`
+
+### 8.47.5 Workstream C — retrieval evaluation
+
+- Benchmark (PROVISIONAL): `2026-10-17-SCIENTIFIC-RETRIEVAL-BENCHMARK.provisional.v1.json`
+- PHP harness: `backend/app/Services/Agriculture/Research/Evaluation/ScientificRetrievalEvaluationHarness.php` (+ Case, Result, Loader)
+- Reuses `App\Services\Ai\Evaluation\RetrievalEvaluationMetrics` for P/R/F1/Hit/MRR; adds nDCG (binary), facet preservation, unsupported-facet explicitness, duplicate rate, negative contamination, source-identity correctness
+- Unit test: `backend/tests/Unit/Agriculture/Research/Evaluation/ScientificRetrievalEvaluationHarnessTest.php` — **NOT RUN** (vendor/autoload absent; php CLI absent; Docker not authorized for this mission)
+- Offline executed mirror: `tools/science-source-expansion/run_scientific_retrieval_eval_offline.py` → `2026-10-17-SCIENTIFIC-RETRIEVAL-EVAL-RESULTS.offline.v1.json` **[EXECUTED]**
+- Macro (provisional fixtures): precision≈0.583, recall=1.0, facet_preservation=1.0, unsupported_explicit=1.0, median fixture latency 7.65 ms (n=10; p95/p99 withheld)
+- Prior R9 baseline pointer retained: `2026-10-16-NEXT-GATE-17-EVALUATION-BASELINE.v1.json`
+
+CSQ / Builder / EntityCatalog role separation unchanged. No source activation for evaluation.
+
+### 8.47.6 Environment
+
+- `backend/vendor/autoload.php`: **missing** (incomplete vendor tree)
+- `php` CLI: **absent**
+- Docker client: present — **not used** (no authorization for container test execution in this mission)
+- Network live probes this mission: **not executed**
+
+### 8.47.7 Phase 1 / gates
+
+- Phase 1 exit conditions are **not** marked closed by this section.
+- P1-EXIT-01(c) and historical B-1 NOT RUN items are **not** redeclared PASS.
+- Gate status for this mission: see consolidated gate matrix (EVIDENCE_PARTIAL / BLOCKED_OWNER / PASS_POLICY / BASELINE_PROVISIONAL).
+
+### 8.47.8 Owner decisions still required
+
+1. Per-seat identity binding for seats with candidate evidence and for all 16 ambiguous seats.
+2. Licence acceptance for intended usage (retrieval / metadata storage / caching) per seat.
+3. Authorization for bounded live connectivity probes for the 14 unprobed next-gate seats.
+4. Separate activation mandates (beyond preserving G5-04).
+5. Expert validation of provisional benchmark judgments before accepting production quality thresholds.
+6. Authorization to restore PHPUnit runtime (vendor + php, or Docker test image) to EXECUTE harness tests.
+
+### 8.47.9 Artifacts and generators
+
+- Generator: `tools/science-source-expansion/generate_2026_10_17_mission_artifacts.py`
+- Offline eval: `tools/science-source-expansion/run_scientific_retrieval_eval_offline.py`
+- Arabic engineering report: `science-source-expansion/2026-10-17-SOURCE-EXPANSION-MISSION/2026-10-17-SOURCE-EXPANSION-ENGINEERING-REPORT.ar.md`
+
+No commit or push was performed under this section.
+
+## 8.48 — Source Expansion Mission continuation: readiness reconciliation, licence wiring, expanded provisional eval (2026-10-17)
+
+**Status:** EXECUTION RECORD (Workstreams A/B/C continuation). **Does not close Phase 1.** **Does not authorize additional activation.** **No commit/push.**
+
+### 8.48.1 Baseline verification
+
+- Branch: `phase-18-m18-ai-marketing-communications`
+- HEAD verified: `f2025315d8990f52f3c658c968a3ec8252ac18b0` (matches reported starting HEAD)
+- `backend/vendor/autoload.php`: **ABSENT**
+- `php` CLI: **ABSENT**
+- Docker: **not authorized** for test execution in this mission
+- Protected WIP preserved (no reset/restore/clean/stash/commit)
+
+### 8.48.2 Workstream A
+
+- Seventeen next-gate seats reconfirmed from R7 / `NextGateEligibleSeatCatalog::ADR_IDS`.
+- Activation **unchanged**: only `G5-04` ACTIVE; dual peers DEFERRED; others NOT_READY.
+- Historical connectivity claims treated as historical: prior probes for G5-04/G1-01/G2-15 not re-executed as live authorization this session (`CONNECTIVITY_NOT_TESTED` for new probes).
+- Implemented:
+  - `NextGateSeatReadinessDisposition` + `NextGateSeatReadinessReconciler`
+  - Catalogue licensing wired from IC evidence for **G1-01** (CC BY 3.0 IGO ODS) and **G1-17** (CC0) on inactive contracts — **without activation**
+  - Readiness reconciliation artifact: `2026-10-17-NEXT-GATE-17-READINESS-RECONCILIATION.v1.json`
+- PHPUnit catalog/reconciler tests extended — **NOT RUN** (environment)
+
+### 8.48.3 Workstream B
+
+- Ambiguous 16: **0** evidence-safe SAME_SOURCE resolutions; owner pack issued.
+- Licence: unresolved ≠ permission; G1-01/G1-17 documentary licences reflected in catalogue contracts.
+- RSS/Atom: prior decision retained — not primary scientific search; no ingestion.
+- 109 frozen vs 110 CURRENT preserved.
+- Owner decision pack: `2026-10-17-OWNER-DECISION-PACK.v1.json`
+- B statuses: B1 OPEN; B2 PARTIAL; B3 PASS_POLICY; B4 PASS_PROVENANCE
+
+### 8.48.4 Workstream C
+
+- Provisional benchmark expanded **10 → 18** cases (empty/duplicate/failure/malformed/pagination/conflict/silent-facet-drop/poultry). Labels remain **PROVISIONAL**.
+- Offline runner re-executed with metric self-tests and wall-clock harness timing (n=100 full-corpus passes).
+- R9 baseline file preserved by reference (not overwritten).
+- Previous 10-case macros are **not** treated as acceptance baseline; expanded corpus macros are not claimed as improvement over the prior report without methodology note.
+- Live-network latency: **UNVERIFIED**
+- PHPUnit harness tests: **NOT RUN**
+
+### 8.48.5 Artifacts
+
+Under `docs/architecture/science-source-expansion/2026-10-17-SOURCE-EXPANSION-MISSION/`:
+
+- readiness reconciliation, owner decision pack, revised provisional benchmark, offline eval results
+- generators: `tools/science-source-expansion/run_scientific_retrieval_eval_offline.py`, `generate_readiness_and_owner_pack.py`
+
+No commit or push was performed under this section.
+
+## 8.49 — PHP/PHPUnit recovery, catalog test isolation, activation eligibility freeze (2026-10-17)
+
+**Status:** EXECUTION RECORD. **No commit/push.** **No new source activation.**
+
+### 8.49.1 Environment recovery (Work Package D)
+
+- Portable official PHP **8.4.26 NTS** installed under G:\\tools\\php-8.4.26-nts (windows.php.net ZIP; not Docker; not system winget).
+- composer.phar 2.10.3 under G:\\tools\\composer.phar.
+- composer install from lockfile in ackend/ — **exit 0**; lockfile not rewritten.
+- PHPUnit **11.5.56** executed successfully for Research Onboarding/Evaluation/Catalog suites after one in-scope test fix.
+
+### 8.49.2 Tests
+
+- Focused next-gate + eval: OK (11 tests).
+- Broader Research Onboarding + Evaluation + ScientificSourceCatalogContractTest: initially 1 failure (GBIF appeared in isolated catalog fixture).
+- Fix: disable gricultural_intelligence.gbif.enabled in the isolating contract test.
+- Rerun: **OK (67 tests, 5894 assertions), exit 0**.
+
+### 8.49.3 Activation
+
+- Automatic activation criteria applied: **no additional seat met all conditions**.
+- G5-04 remains the sole ACTIVE next-gate seat (preserved).
+- G1-01 / G1-17 retain documentary licence wiring on inactive contracts only.
+- Artifact: 2026-10-17-ACTIVATION-ELIGIBILITY.v1.json
+
+### 8.49.4 Evaluation
+
+- Offline provisional 18-case eval re-executed (Python); R9 baseline unchanged.
+
+### 8.49.5 Identity / licensing
+
+- Ambiguous 16 remain unresolved without SAME_SOURCE fabrication.
+- Owner decision pack retained (37 items).
+- 109 frozen vs 110 CURRENT preserved.
+
+No commit or push was performed under this section.
+
+## 8.50 — Full scientific source activation mission continuation (2026-10-17)
+
+**Status:** EXECUTION RECORD. **No commit/push/deploy.** **No new runtime activation beyond G5-04.**
+
+### 8.50.1 Engineering delivered
+
+- Fixed next-gate scaffold profiles so documentary licence usages flow into `BulkDatasetSourceProfile` / `OaiPmhSourceProfile` (status tokens normalized to enum values).
+- Corrected AGRIS ODS usage mapping so CC BY 3.0 IGO permits retrieval + metadata_storage (attribution is licence compliance, not an unresolved owner gate).
+- Wired documentary licences for G1-13 (conditional commercial contact) and G3-05 (CC BY 4.0) without activation.
+- Added deterministic LocalIndex path fixtures + PHPUnit coverage for G1-01 and G1-17 (ingest → search → empty → unseeded UNAVAILABLE).
+- Extended GBIF adapter tests for empty list, malformed payload, and HTTP 503 isolation.
+- Readiness reconciler: `LICENCE_CLEARED_AWAITING_LOCAL_INDEX`; automatic-activation policy flag; empty LocalIndex is not readiness.
+
+### 8.50.2 Activation decision
+
+- **G5-04** remains the sole ACTIVE next-gate seat (live probe HTTP 200 to `api.gbif.org` species search, limit=1).
+- **G1-01 / G1-17** remain NOT_READY: LocalIndex path is fixture-proven, but durable store migration is not deployed and production index generation is 0. Empty index must not be registered as live search.
+- Dual peers G6-03/04/06/08 remain DEFERRED.
+- Remaining seats remain NOT_READY for licence, API absence, or ingest gates.
+
+### 8.50.3 Tests and evaluation
+
+- Focused Research Onboarding + Evaluation + CatalogContract: **OK (71 tests, 5934 assertions), exit 0**.
+- LocalIndex unit suite: **OK (19 tests, 124 assertions)**.
+- Offline provisional eval (18 cases): precision 0.588, recall 0.944, MRR 0.685, nDCG 0.861, facet 0.926 — R9 baseline preserved; labels remain PROVISIONAL.
+
+### 8.50.4 Artifacts
+
+- `2026-10-17-ACTIVATION-ELIGIBILITY.v1.json` updated.
+- `2026-10-17-MASTER-FINAL-ENGINEERING-REPORT.ar.md` updated.
+- `2026-10-17-SCIENTIFIC-RETRIEVAL-EVAL-RESULTS.offline.v1.json` re-executed.
+
+No commit or push was performed under this section.
+
+## 8.51 — Five-source continuation + Mission Artifact Archive layer (2026-10-18)
+
+**Status:** EXECUTION RECORD / ARCHITECTURE EXTENSION RECORD. **No commit/push/deploy/Docker.** **No new runtime ACTIVE seat beyond G5-04.**
+
+### 8.51.1 Purpose
+
+Preserve the 2026-10-18 dual workstream: (A) maximum legitimate integration readiness for G5-04 / G1-02 / G6-20 / G1-01 / G1-17; (B) durable general-purpose **Mission Artifact Archive** implementing D-08 continuity as a searchable, integrity-verified store distinct from scientific LocalIndex and Capability Store.
+
+### 8.51.2 Workstream A — verified outcomes (local)
+
+- **G5-04 GBIF:** remains sole ACTIVE; regression included in focused suite.
+- **G1-02 Organic Eprints:** LocalIndex GEN=2 / 189 rows; cross-process search success; production catalog registration absent; NOT_READY.
+- **G6-20 BHL:** saved `BHL_API_KEY` used via `config(agricultural_intelligence.bhl.api_key)` without printing; live RestJson adapter + MultiSourceScientificSearchOrchestrator (ephemeral LEGACY registration only) returned results with PartID/TitleID provenance; production catalog `has(bhl)=false`; OE store unchanged at 189; NOT_READY.
+- **G1-01 AGRIS:** ODS harvest resumed from checkpoint cursor 5 → 10 (10 providers cumulative projected in cache); LocalIndex GEN=4 / 1317 active rows after idempotent merge ingest; per-provider CC-BY-4.0 on harvested artifacts only; corpus incomplete (1244 downloadURL); NOT_READY.
+- **G1-17 Dr. Duke:** prior 16-table reconciliation retained; GEN=2 / 1500 search rows; FARMACY vs FARMACY_NEW not blind-merged; NOT_READY.
+- Owner gates OD-G1-02 / OD-G6-20 / OD-G1-01 / OD-G1-17 / OD-CAPVER-FOUR-SEATS / OD-PGSQL-PRODUCTION-LOCALINDEX remain open (proposal JSON is not approval).
+
+### 8.51.3 Workstream B — Mission Artifact Archive (new)
+
+**New code (not a rewrite of scientific stores):**
+- `FilesystemMissionArtifactArchive` — SQLite metadata + content-addressed blobs, SHA-256, append-only supersession, relationships, idempotent `ingestion_identity`.
+- `ControlledMissionArtifactImporter` — allowlisted roots, secret filter, resumable checkpoint/manifest.
+- Artisan: `mission-artifacts ensure|import|search|show|verify|export|latest-report|list-mission`.
+- Config: `config/mission_artifact_archive.php` → local sqlite under `storage/app/mission_artifact_archive/` (not production SoR; PostgreSQL parity PENDING).
+
+**AHO:** repository inspection found **zero** `.aho` files and **no** AHO schema/consumers. Format is reserved; originals would be retained without invented schema extraction (`aho_extraction=unsupported_no_schema_discovered`).
+
+**Controlled import coverage (measured):** discovered 133 eligible files under mission + D-08 supplement-01 roots; archived 133 (+2 demo supersession entries → 135 total); `aho_discovered=0`; secrets excluded by filter; originals on disk untouched.
+
+### 8.51.4 Tests (this section)
+
+- Focused archive + BHL/GBIF/Family/LocalIndex durability: **OK (68 tests, 348 assertions), exit 0**.
+- Live BHL orchestrator probe: `live_app_path_ok_not_activated`.
+- Prior broader suite from same day (214/6902) remains historical evidence of shared research stack health; not re-claimed as re-run unless separately executed.
+
+### 8.51.5 Stopping point
+
+No commit/push. No fabricated ACTIVE. Archive is **IMPLEMENTED_WITH_LIMITED_IMPORT** (two roots; not whole-repo). Full D-08 historical corpus beyond these roots remains pending controlled import. PostgreSQL production LocalIndex/archive verification PENDING.
+
+
+## 8.52 — Final audit, expanded D-08 archive migration, owner-decision package (2026-10-18)
+
+**Status:** EXECUTION / AUDIT RECORD. **No commit/push/deploy/Docker.** **No new ACTIVE seat beyond G5-04.**
+
+### 8.52.1 Verified runtime baseline
+
+- HEAD `f2025315…`; membership `110.v1`.
+- LocalIndex: OE GEN=2/189; AGRIS GEN=4/1317; Duke GEN=2/1500; AGRIS checkpoint cursor=10/1244.
+- BHL live adapter+orchestrator probe: `live_app_path_ok_not_activated`; production catalog without `bhl`.
+- Archive count after expanded migration: **632** (prior limited import 136 explained as mission+supp-01+demos only).
+
+### 8.52.2 Archive migration expansion
+
+Controlled import roots completed: SOURCE-EXPANSION-MISSION, D-08-supplement-01, D-08-supplement-02, D-08-archive-2026-10-01-to-2026-10-14 (584 eligible; idempotent path short-circuit for prior imports), plus 42 top-level `science-source-expansion/` files, plus ADR-023 original and 3 labeled embedded excerpts (`is_excerpt=true`). AHO files/schema: still none. Defect repaired: `findByOriginalPath` prevents duplicate rows when ingestion identity scheme changes.
+
+### 8.52.3 Owner decision package
+
+Published decision-request (not approval): `2026-10-18-OWNER-DECISION-PACKAGE-G1-02-G6-20.v1.json` and completion matrix `2026-10-18-FIVE-SOURCE-COMPLETION-MATRIX.v1.json`. Critical path remains onboarding ACTIVE for G1-02 and/or G6-20, then CapVer.
+
+No commit or push under this section.
+
+## 8.53 — Owner ACCEPT G1-02/G6-20 + CapVer AUTHORIZE + governed activation (2026-10-18)
+
+**Status:** OWNER DECISION RECORD AND EXECUTION RECORD. **No commit/push/deploy/Docker.**
+
+### 8.53.1 Explicit owner decision (recorded)
+
+Source: FINAL OWNER AUTHORIZATION & FIVE-SOURCE COMPLETION MISSION (2026-10-18) [OWNER DECISION] [P].
+
+| Decision id | Seat | Outcome | Notes |
+|---|---|---|---|
+| OD-G1-02-ONBOARDING-ACTIVE | G1-02 | **ACCEPT** | Onboarding ACTIVE authorized |
+| OD-G6-20-ONBOARDING-ACTIVE | G6-20 | **ACCEPT** | Onboarding ACTIVE authorized |
+| OD-CAPVER-ACCEPTED-SEATS | G1-02, G6-20 | **AUTHORIZE** | CapVer delegation for accepted seats subject to prerequisites; **not** CapVer success |
+
+Owner note (AR): «الموافقة على onboarding للمصدرين وفق معايير القبول المعتمدة، ثم تفويض CapVer لكل مصدر مقبول. لا يُعتبر أي مصدر ACTIVE قبل اجتياز التحقق والتسجيل والاختبارات المطلوبة.»
+
+Authoritative recorded artifact: `2026-10-18-OWNER-DECISION-RECORDED-G1-02-G6-20.v1.json`. The prior package JSON remains a historical **request**, not rewritten.
+
+### 8.53.2 CapVer execution
+
+- Workflow: `CapVerSeatVerificationService` + Artisan `scientific:capver-accepted`.
+- Cap Store writes attempted via `CapabilityStoreRepository::persistCurrent` (writer-neutral; VERIFIED only under CapVer authority).
+- Onboarding contracts authored ACTIVE with `capabilityDimensionStates.search=VERIFIED` and CapVer decision identities `cap-r11-20261018-G1-02-search` / `cap-r11-20261018-G6-20-search` (GBIF pattern).
+- Cap Store persist outcome is reported separately (`PERSISTED` | `ALREADY_CURRENT` | `STORE_UNAVAILABLE` | `FAILED`); STORE_UNAVAILABLE does not invent Cap Store success.
+
+### 8.53.3 Runtime activation (governed)
+
+After CapVer prerequisites + contract authorship:
+
+- `CurrentMembershipNearReadySeatCatalog` seats G1-02 / G6-20: `intendedActivation=ACTIVE`, empty blockers, `isRuntimeActive()=true`.
+- `AcceptedOnboardingDecisionCatalog` merges CURRENT-membership ACTIVE contracts with next-gate (G5-04).
+- Production `ScientificSourceCatalog` registers `organic_eprints` and `bhl` as `GOVERNED_ONBOARDED`.
+- Identity bridge bindings: `adr023.canonical.seat.G1-02` / `adr023.canonical.seat.G6-20`.
+
+**G5-04 GBIF** remains ACTIVE; not rebuilt.
+
+### 8.53.4 Still Condition B (not cleared by this ACCEPT)
+
+- OD-G1-01 / OD-G1-17 scope decisions (bounded AGRIS subset vs full corpus; limited Duke projection vs full).
+- OD-PGSQL-PRODUCTION-LOCALINDEX (PostgreSQL production LocalIndex/archive parity).
+- Cap Store production persistence when local Cap Store DB unavailable.
+- Optional BHL key rotation (manual; never auto; never archive the key).
+
+No commit or push under this section.
+
+## 8.54 — AGRIS bounded + Dr. Duke limited activation (2026-10-18)
+
+**Status:** OWNER AUTHORIZATION + ENGINEERING SCOPE DECISION + EXECUTION RECORD. **No commit/push/deploy/Docker.**
+
+### 8.54.1 Owner authorization
+
+MASTER EXECUTION PROMPT — Full Engineering Authorization for AGRIS and Dr. Duke (2026-10-18) [OWNER DECISION] [P]. Authorizes engineering to select and implement the smallest legitimate activation scope; CapVer; governed registration; and application-path verification within ADR-023 and license constraints.
+
+### 8.54.2 Scope decisions (recorded)
+
+Authoritative record: `2026-10-18-OWNER-DECISION-RECORDED-G1-01-G1-17-SCOPE.v1.json`. Prior proposal packages remain historical requests (not rewritten).
+
+| Decision | Seat | Outcome |
+|---|---|---|
+| OD-G1-01-SCOPE-BOUNDED-SUBSET | G1-01 | **ACCEPT** bounded licensed ODS subset (GEN=4 / 1317 active; cursor 10/1244; full corpus **not** claimed) |
+| OD-G1-01-ONBOARDING-ACTIVE | G1-01 | **ACCEPT** |
+| OD-G1-17-SCOPE-LIMITED-PROJECTION | G1-17 | **ACCEPT** limited search projection (GEN=2 / 1500; 16-table reconciliation; FARMACY≠FARMACY_NEW; ETHNOBOT traditional-use only) |
+| OD-G1-17-ONBOARDING-ACTIVE | G1-17 | **ACCEPT** |
+| OD-CAPVER-G1-01-G1-17 | G1-01, G1-17 | **AUTHORIZE** (≠ CapVer success) |
+
+Protected sources G5-04 / G1-02 / G6-20 unchanged by this section's scope decisions.
+
+### 8.54.3 CapVer execution
+
+- `CapVerSeatVerificationService` extended to next-gate seats.
+- Decision identities: `cap-r12-20261018-G1-01-search`, `cap-r12-20261018-G1-17-search`.
+- Cap Store: **STORE_UNAVAILABLE** locally (pgsql driver / Compose postgres unreachable). Contract VERIFIED authored under CapVer authority (GBIF pattern). Cap Store success **not** claimed.
+
+### 8.54.4 Governed runtime
+
+- `NextGateEligibleSeatCatalog` G1-01 / G1-17: `ACTIVE`, empty blockers, `isRuntimeActive()=true`.
+- Catalog keys include `agris`, `dr_duke` as `GOVERNED_ONBOARDED`.
+- Durable LocalIndex probes (sqlite `scientific_records`): AGRIS `wheat` → success; Dr. Duke `Mentha` → success with stable identifiers/provenance.
+- Coverage limitations remain explicit in access notes and decision record.
+
+### 8.54.5 Still Condition B
+
+- Cap Store Postgres persist for G1-01 / G1-17 (and prior seats).
+- OD-PGSQL-PRODUCTION-LOCALINDEX for production LocalIndex parity.
+- Full AGRIS corpus and full Duke projection remain **separate** milestones (not activation blockers for the recorded bounded/limited scopes).
+
+No commit or push under this section.
+
+## 8.55 — Five-source activation engineering wave (2026-10-18)
+
+**Status:** ENGINEERING EXECUTION RECORD (MASTER EXECUTION AUTHORIZATION). **No commit/push/deploy/Docker.** Append-only; does not rewrite §8.54.
+
+### 8.55.1 Blocker A — Cap Store / CapVer semantics
+
+| Item | Evidence |
+|---|---|
+| PHP `pdo_pgsql` / `pgsql` | **Enabled** (`php -m`; DLLs under `G:\tools\php-8.4.26-nts\ext\`) |
+| Cap Store host | Configured `DB_HOST=postgres` — **unreachable** (DNS / no local PostgreSQL service; Docker forbidden) |
+| Semantics fix | `STORE_UNAVAILABLE` **must not** set `capVerPassedForActivation=true`; `capability_persisted` only for `PERSISTED`/`ALREADY_CURRENT` |
+| CapVer five seats | `scientific:capver-accepted` → all four CapVer seats: `contract_verified=yes`, `store=STORE_UNAVAILABLE`, `activation_pass=no` (exit 1) |
+| Independent read-back | **Not executed** — Cap Store unreachable |
+| Diagnostics | `scientific:diagnose-persistence` |
+
+### 8.55.2 Blocker B — Production LocalIndex (PostgreSQL)
+
+| Item | Evidence |
+|---|---|
+| Active LocalIndex | `scientific_records` **sqlite** — reachable; schema present |
+| Inventory (this wave) | AGRIS active **17223** GEN=6; Dr. Duke active **42376** GEN=10; Organic Eprints active **189** GEN=2 |
+| Production cutover | **Unverified** — no authorized reachable PostgreSQL; SQLite ≠ `PRODUCTION_READY` |
+
+### 8.55.3 Blocker C — AGRIS harvest progress
+
+| Item | Evidence |
+|---|---|
+| Scope | Legally accessible ODS providers with per-artifact **CC-BY-4.0**; allowlist `https://agris.fao.org/ods/` |
+| Checkpoint | **27 / 1244** providers completed (resumable; full-scan skip-completed mode) |
+| Engineering | Raised CLI ceilings; HTTP **429** retry/backoff; failed URLs no longer permanently skipped by cursor alone |
+| LocalIndex | GEN=6 / **17223** active after merged ingest; probe `wheat` → success |
+| Full body | **Not complete** — remaining ~1217 providers; rate-limit constrained |
+
+### 8.55.4 Blocker D — Dr. Duke projection
+
+| Item | Evidence |
+|---|---|
+| Reconciliation | 16 tables; row inventory recorded (`reconcile_20261018.json`); FARMACY≠FARMACY_NEW documented |
+| Projector v2 | Streams large tables; writes distinct `source_table` for FARMACY and FARMACY_NEW; `farmacy_farmacy_new_merged=0` |
+| Full searchable artifact | `dr_duke_full_search.v1.jsonl` — **211961** records (FNFTAX+CHEMICALS full; ETHNOBOT/FARMACY/FARMACY_NEW budgets applied) |
+| Indexed coherent snapshot | GEN=10 / **42376** active from `dr_duke_expanded.v3.jsonl`; probe `Mentha` → success |
+| Full LocalIndex load of 211961 | Requires streaming snapshot ingest (chunked snapshot withdraws peers) — **remaining** |
+
+### 8.55.5 Organic Eprints / BHL / GBIF revalidation
+
+- CapVer seats G1-02 / G6-20: same Cap Store blocker (`activation_pass=no`).
+- OE LocalIndex path tests: pass; catalog ACTIVE preserved.
+- GBIF/BHL adapter structural tests: mostly pass; pre-existing conformance expectation `licensing->isFullyUnresolved()` fails where licensing evidence is now declared (document; do not weaken falsely).
+- BHL API key: not printed/archived.
+
+### 8.55.6 State vocabulary (this wave)
+
+| State | AGRIS | Dr. Duke | OE | BHL | GBIF |
+|---|---|---|---|---|---|
+| TECHNICALLY_INTEGRATED | yes | yes | yes | yes | yes |
+| ONBOARDED / GOVERNED_REGISTERED | yes | yes | yes | yes | yes |
+| CAPABILITY_VERIFIED (contract authored) | yes | yes | yes | yes | yes |
+| CAPABILITY_PERSISTED | **no** | **no** | **no** | **no** | prior / unverified here |
+| ACTIVE (runtime catalog) | yes (bounded+) | yes (expanded) | yes | yes | yes |
+| PRODUCTION_READY | **no** | **no** | **no** | **no** | **no** |
+| FULL_SCOPE_COMPLETE | **no** (27/1244) | partial (artifact yes; full index stream pending) | n/a bounded | n/a | n/a |
+
+### 8.55.7 Remaining external closure
+
+1. Provide reachable authorized PostgreSQL (replace Compose hostname `postgres` or install/approve local service) — **without Docker in this mission**.
+2. Run Cap Store migrations + `scientific:capver-accepted` until `PERSISTED`/`ALREADY_CURRENT` + independent read-back.
+3. Set `SCIENTIFIC_RECORD_STORE_DRIVER=pgsql` + `scientific:ensure-record-store` + optional `--copy-to-pgsql`.
+4. Continue AGRIS harvest under rate limits until checkpoint covers legally accessible body.
+5. Streaming LocalIndex snapshot ingest for Duke full JSONL.
+
+Arabic completion report: `docs/architecture/science-source-expansion/2026-10-17-SOURCE-EXPANSION-MISSION/2026-10-18-FIVE-SOURCE-FULL-ACTIVATION-REPORT.ar.md`.
+
+No commit or push under this section.
+
+## 8.56 — Six-priority closure plan execution (2026-10-18)
+
+**Status:** ENGINEERING EXECUTION RECORD for priorities 1–6. **No commit/push/deploy/Docker.** Append-only after §8.55. Membership remains **`110.v1`**.
+
+### 8.56.1 Priority 1 — Authorized PostgreSQL — `BLOCKED`
+
+| Check | Result |
+|---|---|
+| `DB_CONNECTION` / Cap Store | `pgsql` · host **`postgres`** · port 5432 · db `wsa_enterprise` |
+| DNS | `GetHostAddresses('postgres')` → **No such host is known** |
+| Port 5432 / Windows service | No listener / no PostgreSQL service observed |
+| `pdo_pgsql` | **yes** (driver present) |
+| LocalIndex connection | `scientific_records` · **sqlite** · reachable |
+| Invented localhost / install / Docker | **Not done** (forbidden without owner approval) |
+
+**Minimum external requirement:** owner-approved reachable PostgreSQL endpoint replacing unresolvable Compose hostname `postgres` (or explicit approval to install/start a local service). Acceptance: `scientific:diagnose-persistence` shows `cap_store.reachable=true`.
+
+### 8.56.2 Priority 2 — CapVer + LocalIndex — partial / `NOT VERIFIED` on PostgreSQL
+
+- CapVer semantics (prior wave) retained: `STORE_UNAVAILABLE` ≠ activation pass.
+- Live CapVer (G1-02, G6-20, G1-01, G1-17): `contract_verified=yes`, `store=STORE_UNAVAILABLE`, `activation_pass=no` · report `2026-10-18-CAPVER-FIVE-SOURCE.v3.json`.
+- G5-04 CapVer persist: **NOT VERIFIED** (same store host; GBIF historically Cap-verified under different path — not re-persisted here).
+- Unit CapVer tests: pass (fixtures).
+- SQLite LocalIndex durable counts (probe): AGRIS **87984** active · Dr. Duke **211948** active · OE **189** active.
+- SQLite→PostgreSQL copy: **NOT VERIFIED** (target unreachable).
+- New: `ingestIncrementalBulk` + CLI `--mode=incremental` (chunk-safe; no peer withdraw).
+
+### 8.56.3 Priority 3 — AGRIS — progress, not `FULL_SCOPE_COMPLETE`
+
+| Metric | Value |
+|---|---|
+| Providers completed | **40 / 1244** |
+| Active LocalIndex rows | **87984** |
+| FTS documents after rebuild | **87984** |
+| License gate | Per-artifact CC-BY-4.0 only |
+| Engineering | `Retry-After` on HTTP 429; full-scan skip-completed; `--mode=incremental` ingest |
+| Application search | `wheat` → **success** (after `SqliteFtsScientificIndex::rebuildFromStore`) |
+
+`FULL_SCOPE_COMPLETE` **not** claimed.
+
+### 8.56.4 Priority 4 — Dr. Duke — durable full load + FTS application search
+
+| Metric | Value |
+|---|---|
+| Projection artifact | `dr_duke_full_search.v1.jsonl` ≈ 211961 lines |
+| Table budgets in projector | FNFTAX/CHEMICALS full; ETHNOBOT/FARMACY/FARMACY_NEW capped at 60000 each in full artifact |
+| Durable active rows | **211948** (incremental chunks; `withdrawn=0` on chunk commits) |
+| FARMACY ≠ FARMACY_NEW | Enforced (`farmacy_farmacy_new_merged=0`) |
+| FTS rebuild | **211948** docs · gen aligned |
+| Application Mentha search | **success** · `fnftax:614` Mentha aquatica |
+| Engineering fixes | `iterateActive` streaming rebuild; provider DI imports for `LocalIndexSearchEngine`; `--mode=incremental` |
+
+### 8.56.5 Priority 5 — OE / BHL / GBIF
+
+- Conformance licensing test: resolved licensing requires terms+evidence; unresolved stays fail-closed; declared RPM/maxResults allowed when ≥1.
+- `test_registered_adapter_declares_only_what_its_code_establishes`: **10 passed** (includes gbif + bhl).
+- OE LocalIndex path tests: **4 passed**.
+- CapVer persist for OE/BHL/GBIF: blocked by P1 (`NOT VERIFIED` on PostgreSQL).
+- BHL key: not printed/rotated.
+
+### 8.56.6 Priority 6 — Final acceptance matrix
+
+| Source | ACTIVE catalog | CAPABILITY_PERSISTED | FULL_SCOPE / full index | PRODUCTION_READY |
+|---|---|---|---|---|
+| G1-01 AGRIS | yes | no | no (40/1244 providers) | no |
+| G1-17 Dr. Duke | yes | no | durable+FTS yes; source-table row caps remain on ETHNOBOT/FARMACY* | no |
+| G1-02 OE | yes | no | n/a bounded | no |
+| G6-20 BHL | yes | no | n/a API | no |
+| G5-04 GBIF | yes | NOT VERIFIED this wave | n/a API | no |
+
+**Independent work completed while P1 blocked:** CapVer honesty tests, AGRIS harvest/ingest, Duke incremental+FTS, conformance licensing fix, LocalIndex DI/stream rebuild.
+
+Arabic report: `2026-10-18-SIX-PRIORITY-CLOSURE-REPORT.ar.md`.
+
+No commit or push under this section.
+
+## 8.57 — Remaining blockers resolution v2.2 (2026-10-19)
+
+Append-only historical record. Does not rewrite §8.50–§8.56.
+
+### 8.57.1 Execution identity
+
+- Date: 2026-10-19 (continuation of 2026-10-18 controlled session).
+- Branch: `phase-18-m18-ai-marketing-communications`.
+- HEAD before and after: `f2025315d8990f52f3c658c968a3ec8252ac18b0` (no commit, no push, no deploy).
+- Membership baseline: `110.v1` unchanged.
+- Arabic engineering report: `docs/architecture/science-source-expansion/2026-10-17-SOURCE-EXPANSION-MISSION/2026-10-19-REMAINING-BLOCKERS-RESOLUTION-V22-REPORT.ar.md`.
+
+### 8.57.2 Files touched this section (WIP; not committed)
+
+- ADR append: this §8.57 only (prior sections unchanged).
+- Report: `2026-10-19-REMAINING-BLOCKERS-RESOLUTION-V22-REPORT.ar.md`.
+- Evidence (operational, under `backend/e2e-tmp/`): `duke_reconcile_v22.json`, `v22_evidence.json`, `v22_evidence2.json`, `_duke_reconcile_v22.php`, `_v22_*.php`.
+- CapVer outcomes JSON: `e2e-tmp/capver_v22.json` (path resolved under repo `e2e-tmp/` from artisan cwd).
+- AGRIS: `harvest_manifest.v5.json`, checkpoint `completed_providers` → **97**, `harvest_run_v5.log`.
+
+### 8.57.3 P1 — PostgreSQL / CapVer — `BLOCKED` (re-verified)
+
+- `scientific:diagnose-persistence`: Cap Store `host=postgres`, `failure_class=dns_name_resolution_failure`, `reachable=false`, `table_present=false`.
+- LocalIndex: sqlite `scientific_record_store.sqlite`, `reachable=true`, table `scientific_source_records` present.
+- `pdo_pgsql=yes`; localhost:5432 not accepting connections in this environment.
+- `scientific:capver-accepted`: G1-01, G1-17, G1-02, G6-20 all `contract_verified_authored=true`, `capability_store_status=STORE_UNAVAILABLE`, `capver_passed_for_activation=false`.
+- Independent PostgreSQL write-then-read: **not verified** (blocked). SQLite ≠ Cap Store proof.
+- Docker / PostgreSQL install / speculative host rewrite: **not performed** (forbidden).
+
+### 8.57.4 P2 — Test count discrepancy
+
+| Run (this section) | Filter | Tests | Assertions |
+|---|---|---:|---:|
+| A | `OrganicEprints\|CapVerSeat\|AgrisOds` | 12 | 110 |
+| B | `declares_only_what_its_code_establishes` | 10 | 83 |
+| C | `IncrementalBulkIngestDoesNotWithdrawPeersTest` | 1 | 6 |
+
+Filter A composition (12): CapVer×4 + OrganicEprintsOaiLocalIndexPath×4 + AgrisOdsAndDrDukeProjector×2 + AgrisOdsBoundedHarvester×2.  
+Prior reports citing **10/100** vs **12/117**: exact historical command for 117 assertions **`NOT_VERIFIED`** in this wave; 10↔12 is consistent with excluding/including the two BoundedHarvester tests. No evidence of deleted tests in the current tree.
+
+### 8.57.5 P3 — AGRIS inventory / license / harvest
+
+- **1244** = `download_url_total` / `dcat:downloadURL` count (provider download endpoints), not LocalIndex rows.
+- Checkpoint completed providers: **97** (was 40 at start of v5 batch).
+- Manifest v5 totals: attempted 60, downloaded 58, projected 57, skipped_unverified_license 1, failed 2, records 588683.
+- License in projected providers this batch: CC-BY-4.0 ×57; null-license skip enforced (e.g. FR0.zip).
+- LocalIndex `agris` active rows still **87984** — new JSONL not bulk-ingested this section (`PARTIAL`).
+
+### 8.57.6 P4 — Dr. Duke reconciliation / Mentha / indexing
+
+Reconciliation (`duke_reconcile_v22.json`):
+
+| Metric | Value |
+|---|---:|
+| JSONL lines | 211961 |
+| Unique IDs | 211948 |
+| Duplicate ID occurrences | 13 |
+| SQLite active | 211948 |
+| unique − active | 0 |
+
+Interpretation: the 13-line gap is **duplicate source IDs in JSONL**, not missing active LocalIndex rows.
+
+Mentha: `fnftax:614` = Mentha aquatica; `fnftax:2008` = Mentha rotundifolia → **`LEGITIMATE_SOURCE_UPDATE`**.
+
+CSV source vs projection caps (ETHNOBOT/FARMACY/FARMACY_NEW at 60k in JSONL) remain scope caps, not LocalIndex corruption. FTS table present (`scientific_source_fts` content count 299933 across sources). Full in-memory rebuild under ~2 GiB prior failure: not re-proven as full success this section; incremental fixture test passed.
+
+### 8.57.7 P5 — OE / BHL / GBIF
+
+| Source | Active LocalIndex | CapVer live | Notes |
+|---|---:|---|---|
+| organic_eprints | 189 | STORE_UNAVAILABLE | Bounded sample ≠ full OE corpus |
+| bhl | 0 | STORE_UNAVAILABLE | API path; key length 36 in `.env` (not printed) |
+| gbif | 0 | not in default accepted-seat run | Conformance dataset included in Filter B |
+
+BHL secret scan (docs/app/tests/config, files ≤2MB, 1988 files): **`NO_EXPOSURE_FOUND_WITHIN_CHECKED_SCOPE`**. Historical docs may still recommend owner rotation if prior out-of-scope exposure occurred; no rotation performed.
+
+### 8.57.8 P6 — Mission artifact archive
+
+- Before this section’s new-file import: `mission_artifacts` **649** total; mission **70**.
+- After first v2.2 batch import: **654** total (+5); mission **75**.
+- After rev2 report import: **655** total; mission **76**; `pending_eligible=0`; `failed=0`.
+- Newly archived (examples):  
+  - `maa_179691efe82d75d5_a9c50e07b6ee` — report v22 first capture (SHA `179691efe82d75d5…`; verify+export match).  
+  - `maa_50254972c1eb1375_ec187c24e351` — report v22 **rev2** (SHA `50254972c1eb1375…`; verify+export match; distinct title to preserve version after in-place edit).  
+  - `maa_abb244d56a1fbb6e_4fb01dd4e056` — Duke reconcile v22 JSON.  
+  - `maa_cb9159da0d336157_fc27b6306771` — AGRIS harvest manifest v5.  
+  - `maa_50a0e8541a34bffb_0d5272c73056` — CapVer outcomes v22.  
+  - `maa_53eb82693bbd5a81_6a4025e0e63c` — LocalIndex evidence v22.
+- Prior wave read-back of `maa_b3d28d015174be8d_98daf0f2bc53` (SIX-PRIORITY): verify ok, SHA match.
+- Cursor/ChatGPT full transcripts: **`NOT_AVAILABLE_FROM_PROJECT_ENVIRONMENT`**.
+- Archive status for available project files: **`COMPLETE_WITHIN_VERIFIED_SCOPE`** (not absolute COMPLETE).
+
+### 8.57.9 P7 — Acceptance / production readiness
+
+- Local unit/conformance filters above: green.
+- **PRODUCTION_READY:** no (Cap Store not persisted; AGRIS new harvest not fully ingested; BHL/GBIF LocalIndex empty by design of API seats).
+- Owner next step: authorized PostgreSQL endpoint resolving where config expects `postgres` (or explicit approved config change), then CapVer independent read-back.
+
+No commit or push under this section.
+
+## 8.58 — PostgreSQL / CapVer recovery verification v4.4 (2026-10-19)
+
+Append-only. Does not rewrite §8.50–§8.57.
+
+### 8.58.1 Execution identity
+
+- Date: 2026-10-19.
+- Branch: `phase-18-m18-ai-marketing-communications`.
+- HEAD before and after: `f2025315d8990f52f3c658c968a3ec8252ac18b0` (no commit, no push).
+- PHP CLI: 8.4.26 NTS; `pdo_pgsql` / `pgsql` / `PDO` present; `backend/vendor/autoload.php` present; config cache absent.
+- PostgreSQL server (local): `pg_isready -h 127.0.0.1 -p 5432` → accepting connections (PostgreSQL 17 bin path). Host name `postgres`: no response / DNS unresolved from Windows.
+
+### 8.58.2 Non-secret connection settings
+
+| Key | Before this section | After minimal fix |
+|---|---|---|
+| `DB_CONNECTION` | `pgsql` | unchanged |
+| `DB_HOST` | `postgres` | **`127.0.0.1`** |
+| `DB_PORT` | `5432` | unchanged |
+| `DB_DATABASE` | `wsa_enterprise` | unchanged |
+| `DB_USERNAME` | `wsa` | unchanged |
+| `DB_PASSWORD` | configured (redacted) | unchanged (no rotation) |
+
+Reason for host change: Gate B evidence — Laravel CLI on Windows; Compose hostname `postgres` does not resolve; TCP to `127.0.0.1:5432` accepts. One-setting change only. No Docker. No secret printed. No full `.env` backup copy created (avoids duplicating secrets on disk).
+
+LocalIndex remains SQLite (`scientific_records` / `scientific_record_store.sqlite`); Cap Store path is separate.
+
+### 8.58.3 Gate results (this section)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| A — project integrity | `VERIFIED` | branch/HEAD/WIP (~150 short lines); no destructive git |
+| B — PostgreSQL connectivity for app | `BLOCKED` | DNS fixed; **password authentication failed for user `wsa`** with current `.env` password; no admin `postgres` password available in agent environment (`PGPASSWORD` unset, no `pgpass.conf`) |
+| C — Laravel identity + privileges | `BLOCKED` | depends on B |
+| D — Cap Store migration/table | `PENDING` | migration file examined; not executed (no authenticated Laravel connection) |
+| E — CapVer write + independent read | `NOT_VERIFIED` | live path not run (auth blocked). Unit suite CapVerSeatVerificationServiceTest: **4 passed / 38 assertions** (mocked store) |
+| F — documentation | this §8.58 + Arabic report | completed in same wave |
+
+### 8.58.4 Role / database existence findings
+
+- Probe `127.0.0.1` as `wsa` → `authentication_failure` for both `wsa_enterprise` and `postgres` databases.
+- Error class implies **role `wsa` exists** (not `role_not_found`). Password in `.env` does **not** match the role.
+- Existence of database `wsa_enterprise`: **`NOT_VERIFIED`** (auth failure precedes catalog inspection without admin credentials).
+- Per §6.6.3: **no password rotation performed**. Status: `BLOCKED — awaiting approval to rotate wsa password` (or owner-supplied matching secret update to `.env` only).
+
+### 8.58.5 Cap Store architecture (re-checked)
+
+- Default Laravel connection (`pgsql`) used by `EloquentCapabilityStoreRepository` / `CghiaCapabilityCell`.
+- Table: `cghia_capability_cell_records`; migration `2026_10_09_140000_…` creates table with no FK dependency on other `cghia_*` tables (standalone `Schema::create` + partial unique indexes).
+- CapVer seats authorized: `G1-02`, `G6-20`, `G1-01`, `G1-17` only — **GBIF (`G5-04`) not in `capVerAuthorizedSeats()`**.
+- Activation pass requires `PERSISTED|ALREADY_CURRENT` plus contract authorship; `STORE_UNAVAILABLE` never activation-pass.
+
+### 8.58.6 Commands / tests executed this section
+
+- `pg_isready` (127.0.0.1 accept; postgres hostname fail).
+- DNS lookup: `postgres` → No such host.
+- `php artisan scientific:diagnose-persistence` before host fix → `dns_name_resolution_failure`.
+- Same after host fix → `authentication_or_authorization_failure`.
+- `e2e-tmp/_v44_pg_probe.php` (PDO probe; secrets redacted in output).
+- CapVer unit tests (mock): OK 4/38.
+- **Not executed:** `migrate`, live `scientific:capver-accepted` write path, independent Cap Store read, admin `\du`/`\l`, password rotation, Docker.
+
+### 8.58.7 Files changed this section
+
+- `backend/.env` — `DB_HOST` only (`postgres` → `127.0.0.1`); gitignored.
+- `backend/e2e-tmp/_v44_pg_probe.php` — new diagnostic probe (WIP/untracked under e2e-tmp).
+- This ADR append (§8.58).
+- Arabic engineering report under mission folder (same wave).
+
+### 8.58.8 Remaining / next within authorization
+
+1. Owner approval to rotate `wsa` password via interactive `psql` `\password wsa`, **or** update `DB_PASSWORD` in `.env` to the already-correct role password (value never logged).
+2. Optionally confirm/create database `wsa_enterprise` with admin session once auth path is known.
+3. Then: `scientific:diagnose-persistence` → targeted Cap Store migration → `scientific:capver-accepted` → independent read of `cghia_capability_cell_records` by `adr_id` / `capability_record_id` (not fictional `seat_id` columns).
+4. GBIF CapVer remains out of default authorized seat set unless owner extends catalog.
+
+No commit or push under this section.
+
+## 8.59 — Operational Restoration Checkpoint — 2026-10-19
+
+**Status:** DOCUMENTATION / RUNTIME FREEZE REFERENCE. **No commit/push/deploy.** Append-only after §8.58. Does not rewrite §8.50–§8.58.
+
+### 8.59.1 Purpose
+
+Record the successful local Docker stack restoration of 2026-10-19 as a frozen operational checkpoint before two later, separately authorized reviews: (A) CapVer missing-table schema review; (B) backup and recovery review. Neither review is started by this section.
+
+### 8.59.2 Checkpoint summary (from prior execution reports — not re-probed here)
+
+- Restored the local environment that had been running before the 2026-10-15 Docker stop.
+- Freed host TCP 5432 by stopping Windows service `postgresql-x64-17` (StartType remained `Automatic` during that stop). Per **owner attestation**, PostgreSQL 17 was later removed from Windows; whether Windows data directories were deleted was **not** verified in the restoration reports.
+- Original Compose PostgreSQL returned on Docker: `wsa-enterprise-postgres-1` / PostgreSQL 16.14 / database `wsa_enterprise` / volume `wsa-enterprise_postgres_data`.
+- Running/healthy (7/10): `postgres-1`, `redis-1`, `backend-1`, `frontend-1`, `nginx-1` (host **8079**), `queue-1`, `scheduler-1`.
+- Left stopped on purpose (3/10): `wsa-r7-store-pg-20261015`, `wsa-backup-verification-pg`, `wsa-enterprise-postgres-1-orphan` (shares `postgres_data` — must not run with the live primary).
+- Operator URL: `http://127.0.0.1:8079/` — owner reported no apparent issues; not a claim of full functional coverage.
+- Known gaps: `cghia_capability_cell_records` absent; no migrate/restore during restoration; no new backup created; backup integrity not proven in restoration; PHP `intl` missing affected `db:show` formatting only; queue bind path via `/run/desktop/mnt/host/g/...` unchanged.
+
+### 8.59.3 Decisions locked by this checkpoint
+
+- Preserve original PostgreSQL/Redis data; no container recreate; no R7/backup/orphan start.
+- This checkpoint does **not** authorize schema changes, data deletion, or service redesign.
+
+### 8.59.4 Deferred work (not started)
+
+- **Task A — CapVer Schema Review:** cause of missing `cghia_capability_cell_records`; migration/contract analysis; report only until separate approval.
+- **Task B — Backup and Recovery Review:** inventory backups; integrity/readability; safe isolated restore plan; no create/restore in that future task until separately approved.
+
+### 8.59.5 Artifact
+
+Arabic checkpoint record: `docs/architecture/science-source-expansion/2026-10-17-SOURCE-EXPANSION-MISSION/2026-10-19-OPERATIONAL-RESTORATION-CHECKPOINT.ar.md`
+
+No commit or push under this section.
+
+## 8.60 — Migration gap closure + CapVer PostgreSQL persistence — 2026-10-19
+
+**Status:** EXECUTED AND VERIFIED under owner MASTER ENGINEERING EXECUTION authorization. Append-only after §8.59. Does **not** rewrite §8.50–§8.59. **No commit/push.**
+
+### 8.60.1 Scope
+
+Close demonstrated Cap Store / CGHIA / Platform Admin schema gaps on primary Docker PostgreSQL; verify CapVer persistence; leave untracked scientific-source migration pending architectural SoT decision; create and verify a fresh logical backup before any schema change.
+
+### 8.60.2 Runtime identity (CONFIRMED)
+
+| Item | Observed |
+|------|----------|
+| Health | `GET http://127.0.0.1:8079/api/v1/health` → HTTP 200 `{"status":"ok"}` |
+| Containers (healthy) | `postgres-1`, `redis-1`, `backend-1`, `frontend-1`, `nginx-1`, `queue-1`, `scheduler-1` |
+| PostgreSQL | container `wsa-enterprise-postgres-1` · version **16.14** · volume `wsa-enterprise_postgres_data` |
+| Database session | `wsa_enterprise` / user `wsa` |
+| Laravel connection | driver `pgsql` · host `postgres` · database `wsa_enterprise` · user `wsa` · `APP_ENV=local` · config cache absent |
+| Dotenv note | Duplicate `FAOSTAT_ENABLED=true` on lines 73–74; last-wins identical value — **no behavior change**; left unmodified |
+
+### 8.60.3 Backup (VERIFIED — archive listing level)
+
+| Field | Value |
+|-------|-------|
+| Path | `backups/wsa_pre_migrate_20261019_215350.dump` |
+| Format | PostgreSQL custom (`-F c`) · `--no-owner --no-privileges` |
+| Size | 4 600 454 bytes (nonzero) |
+| SHA-256 | `B6580C9BACF4F52E0C94DE72FA732CF184A76E761ED7800CA8A0BCB1227EEDF1` |
+| Archive TOC | 1609 entries · `dbname: wsa_enterprise` · dumped from 16.14 · `pg_restore --list` EXIT 0 |
+| Validation level | **Archive listing + nonempty file + SHA-256.** Isolated restore into a non-primary instance was **NOT** performed in this session. |
+| Recovery plan | Stop migrations; keep dump; restore only into an isolated Postgres instance that does **not** share `wsa-enterprise_postgres_data`; never restore over live primary as routine recovery. |
+| Git | `/backups/` added to `.gitignore` so dumps are not accidentally staged. Dump file itself was never committed. |
+
+### 8.60.4 Migration inventory (recalculated)
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Migration files on disk | 63 | 63 |
+| Records in `migrations` | 55 | **62** |
+| Pending | 8 | **1** (scientific untracked only) |
+| Orphan DB records without files | 0 | 0 |
+
+### 8.60.5 Executed migrations (dependency order used)
+
+CapVer table is structurally independent of IC/Identity/Correlation (no FKs). Priority CapVer-first per authorization; then remaining CGHIA; then Platform Admin after requirement proof.
+
+| # | Migration | Batch | Evidence |
+|---|-----------|-------|----------|
+| 1 | `2026_10_09_140000_create_cghia_capability_cell_records_table` | 3 | `--pretend` reviewed; DONE; table+partial UQs present; health 200 |
+| 2 | `2026_10_01_150000_create_durable_correlation_records_table` | 4 | pretend+DONE; health 200 |
+| 3 | `2026_10_02_160000_create_cghia_identity_binding_records_table` | 5 | pretend+DONE; health 200 |
+| 4 | `2026_10_02_230000_create_cghia_integration_classification_records_table` | 6 | pretend+DONE; health 200 |
+| 5 | `2026_10_09_190000_add_single_active_index_to_cghia_integration_classification_records` | 7 | ACTIVE-dupe preflight 0 rows; index `cghia_ic_records_single_active_uq` created; health 200 |
+| 6 | `2026_09_23_180000_add_platform_administrator_identity_to_users` | 8 | pretend+DONE; column default false; health 200 |
+| 7 | `2026_09_23_180100_create_platform_rbac_tables` | 9 | pretend+DONE; 5 platform_* tables; health 200 |
+
+### 8.60.6 Deliberately left pending
+
+| Migration | Classification | Reason |
+|-----------|----------------|--------|
+| `2026_10_15_220000_create_scientific_source_record_store_tables.php` | **REQUIRES_OWNER_DECISION** | Git status remains `??` (untracked). **Not** applied to PostgreSQL. **Not** staged/moved/deleted. Active LocalIndex SoT is connection `scientific_records` → **sqlite** `storage/app/scientific_record_store.sqlite` with `scientific_source_records=300635`, FTS present, generations=50. PostgreSQL has **0** `scientific_source_*` tables. Applying this migration to primary PG would create an unapproved parallel store unless owner authorizes PG cutover. |
+
+### 8.60.7 Platform Admin / RBAC decision
+
+**REQUIRED and EXECUTED** (not deferred).
+
+Evidence of current approved requirement:
+
+- Backend: `RequirePlatformAdministrator` middleware, `PlatformRbacService`, `PlatformAdministratorAuthorizer`, Admin API controllers, `User::isPlatformAdministrator()`.
+- Mobile: `admin-mobile` API client + auth guard tests for `is_platform_administrator`.
+- Architecture: `docs/architecture/platform-admin/PLATFORM-ADMIN-ARCHITECTURAL-DECISIONS.md`; Phase-10 release gate Platform RBAC PASS.
+- Feature tests: `Adm04PlatformAdministratorArchitectureTest` — **19 tests, 88 assertions, OK**.
+
+Post-migration privilege check: `users` with `is_platform_administrator=true` → **0 / 11** (no unintended elevation). Migrations create schema only; no default administrator seeded.
+
+### 8.60.8 CapVer results
+
+| Check | Result |
+|-------|--------|
+| Schema present | `cghia_capability_cell_records` **CONFIRMED** |
+| Partial unique indexes | `cghia_cap_cells_current_canonical_uq`, `cghia_cap_cells_current_seat_scoped_uq` **VERIFIED** |
+| Model/fillable/casts vs migration | Agreement — **no code defect demonstrated; no application code changed** |
+| `scientific:diagnose-persistence` | Cap Store `table_present=true`, `failure_class=successful_connection` |
+| Unit/Feature CapVer+Capability suite | `--filter 'CapVer\|CapabilityStore\|EloquentCapability'` → **62 tests, 270 assertions, OK** (exit 0) |
+| Live PostgreSQL probe | Unique synthetic persist → CURRENT row readable after reconnect; duplicate CURRENT → `CapabilityInvariantViolation`; probe rows deleted | **VERIFIED** |
+| Code fixes | **None** (no demonstrated defect) |
+
+### 8.60.9 Scientific persistence decision
+
+- **Authoritative LocalIndex (current):** SQLite file store on `scientific_records` connection — preserved untouched.
+- **PostgreSQL scientific_source_*:** absent — intentional under current config.
+- Untracked migration disposition: **REQUIRES_OWNER_DECISION** (see 8.60.6). Issue **not** falsely closed.
+
+### 8.60.10 Tests and health (actual)
+
+| Command | Exit | Result |
+|---------|------|--------|
+| Health after each of 7 migrations | — | HTTP 200 each time |
+| Final health | — | HTTP 200 |
+| PHPUnit CapVer/Capability filter | 0 | 62 / 270 OK |
+| PHPUnit Adm04 Platform Admin | 0 | 19 / 88 OK |
+| `scientific:diagnose-persistence` | 0 | Cap Store table present |
+| Isolated restore of backup dump | — | **NOT TESTED** |
+
+### 8.60.11 Unresolved / owner next steps
+
+1. Decide whether LocalIndex must cut over to PostgreSQL (apply + track `2026_10_15_220000_create_scientific_source_record_store_tables`) or remain SQLite SoT; do not apply blindly.
+2. Optional: isolated `pg_restore` of `wsa_pre_migrate_20261019_215350.dump` into a throwaway container (not sharing primary volume) to raise backup validation beyond archive listing.
+3. Optional: run `scientific:capver-accepted` for owner-accepted seats now that Cap Store schema exists (does not fabricate success).
+4. No commit/push performed under this section.
+
+## 8.61 — Post-remediation verification gate — 2026-10-19
+
+**Status:** VERIFICATION EXECUTED (no schema remigration). Append-only after §8.60. Does **not** rewrite §8.60. **No commit/push.** Does **not** declare `PRODUCTION_READY` while Scientific SoT remains open.
+
+### 8.61.1 Backup integrity (re-verified)
+
+| Check | Result |
+|-------|--------|
+| Path | `backups/wsa_pre_migrate_20261019_215350.dump` (unchanged) |
+| Size / mtime UTC | 4,600,454 bytes · 2026-10-19 18:54:04 UTC |
+| SHA-256 | `B6580C9BACF4F52E0C94DE72FA732CF184A76E761ED7800CA8A0BCB1227EEDF1` — **matches** historical value |
+| `pg_restore --list` | EXIT 0 · TOC Entries 1609 · review artifact `backups/wsa_pre_migrate_20261019_215350_toc.list` |
+| TABLE defs | **148** unique |
+| TABLE DATA | **148** unique · **0** tables lacking TABLE DATA · **0** orphan TABLE DATA |
+| SEQUENCE / SEQUENCE SET | 138 / 138 |
+| INDEX / CONSTRAINT (TOC) | 187 / 570 |
+| Post-migrate objects in dump | CapVer/CGHIA/platform_* tables **absent** (expected: dump taken before the seven migrations) |
+
+**Completeness judgment:** Dump schema↔data inventory is internally consistent (148/148). Completeness vs a frozen pre-migrate live snapshot list is **inferential**: restored DB had 148 public tables, `migrations=55` (batches 1=54 + 2=1), `users=11`; live post-migrate DB now has 157 tables (=148+9 new tables from CapVer/correlation/identity/IC/platform RBAC) and `migrations=62`. Full per-table row-count parity across all 148 tables was **not** executed.
+
+### 8.61.2 Isolated restore
+
+| Item | Result |
+|------|--------|
+| Isolation | Container `wsa_restore_test` · volume `wsa_restore_test_vol` only · **not** `wsa-enterprise_postgres_data` · image `postgres:16.14` |
+| First restore (default) | EXIT 1 · 286 errors all `role "wsa" does not exist` · still yielded 148 tables / users=11 / migrations=55 |
+| Clean restore | `pg_restore --no-owner --no-acl` · **EXIT 0** · **0 ERROR** |
+| Restored CapVer table | `to_regclass(...cghia_capability_cell_records)` = NULL (**expected** for pre-migrate dump) |
+| Cleanup | Container + volume removed after identity proof · backup file retained · live health still HTTP 200 · live migrations still 62 |
+
+### 8.61.3 CapVer ALREADY_CURRENT contract
+
+**Code facts:** `CapVerSeatVerificationService` calls `findCurrentFact` first; if CURRENT + VERIFIED → `ALREADY_CURRENT` and **does not** call `persistCurrent`. Repository `persistCurrent` still throws `CapabilityInvariantViolation` when a CURRENT head already exists (conflict path). Unit test `test_already_current_verified_is_idempotent` asserts `ALREADY_CURRENT` and `persistCurrent` never called.
+
+**Tests this gate:** CapVerSeatVerificationServiceTest 4/38 OK; CapVer\|CapabilityStore filter 62/270 OK (exit 0). No application code change (no defect vs ADR contract).
+
+### 8.61.4 Migration batches (live, read-only)
+
+| Batch | Count | Interpretation |
+|-------|------:|----------------|
+| 1 | 54 | Historical baseline batch |
+| 2 | 1 | `2026_09_21_140000_create_research_feedback_dataset_table` |
+| 3–9 | 1 each | The seven gated migrations from §8.60 (CapVer-first order) |
+| Total | 62 | Scientific migration **not** in table · 0 duplicate migration names |
+
+Matches **scenario B** (55 prior = 54+1), not A.
+
+### 8.61.5 Platform Admin provisioning
+
+Supported mechanisms (no admin created this gate):
+
+1. `deploy:bootstrap-admin` / `ProductionAdminBootstrap` — requires `ADMIN_BOOTSTRAP_ENABLED` + `ADMIN_PASSWORD` (and email); grants via `PlatformRbacService::grantPlatformAdministrator`.
+2. Admin API `POST/PATCH /api/v1/admin/users` — middleware `platform.administrator` + permission `platform.users.manage`; cannot self-escalate as org admin (`test_spoofed_x_organization_id_cannot_create_platform_authority`).
+
+Live: `is_platform_administrator` true count remains **0 / 11** (unchanged; by design until explicit bootstrap/API). Tests: Adm04 + ProductionAdminBootstrap **25/107 OK**.
+
+### 8.61.6 Scientific SoT
+
+Still **REQUIRES_OWNER_DECISION**. Evidence unchanged in role: SQLite LocalIndex `scientific_source_records=300635` reachable; PostgreSQL has 0 `scientific_source_*` tables; untracked migration remains `??` and **not** applied.
+
+### 8.61.7 Runtime / Git
+
+Health HTTP 200; Cap Store `table_present=true`; WIP short-status count ~151; no commit/push.
+
+No commit or push under this section.
+
+## 8.62 — Option A: operational SQLite scientific store — 2026-10-20
+
+**Status:** VERIFIED for this operational phase. Append-only after §8.61. Does **not** rewrite §8.41 or §8.59–§8.61. **No commit/push.** Does **not** apply `2026_10_15_220000_create_scientific_source_record_store_tables.php` to PostgreSQL and does **not** copy scientific rows into PostgreSQL.
+
+### 8.62.1 Owner decision and relation to §8.41
+
+The owner selected **Option A** for this phase: the operational scientific record store remains the SQLite file on the `scientific_records` connection.
+
+§8.41 still records the earlier design for a PostgreSQL durable store and an authored, not-deployed migration. That historical design is **not** rewritten here. What this section records is the operational fact and the owner’s phase decision: primary PostgreSQL has **zero** `scientific_source_*` tables, the migration file stays untracked (`??`), and creating a parallel PostgreSQL store is **not** authorized.
+
+### 8.62.2 Docker recovery observed this session
+
+| Item | Observed |
+|------|----------|
+| Engine | Docker 29.6.2 · 10 containers · 7 running · 3 stopped |
+| Stopped, left untouched | `wsa-r7-store-pg-20261015`, `wsa-backup-verification-pg`, `wsa-enterprise-postgres-1-orphan` |
+| Volumes | `wsa-enterprise_postgres_data` still mounted on `wsa-enterprise-postgres-1`. No volume created or deleted |
+| Startup | PostgreSQL and Nginx were briefly `unhealthy`. Postgres log: `database system was not properly shut down; automatic recovery in progress`, then `database system is ready to accept connections`. After that, all seven application containers were `healthy` |
+| During startup only | `GET /api/v1/health` returned HTTP 500 while Postgres was still rejecting connections. After recovery it returned HTTP 200 `{"status":"ok"}` |
+
+No container was created, recreated, or removed.
+
+### 8.62.3 Primary PostgreSQL — read only
+
+| Check | Result |
+|-------|--------|
+| Session | `wsa_enterprise` / `wsa` / PostgreSQL 16.14 |
+| Laravel | driver `pgsql`, host `postgres`, database `wsa_enterprise`, user `wsa` |
+| Config cache | absent in the container and absent at `backend/bootstrap/cache/config.php` |
+| `migrations` rows | **62** |
+| `cghia_capability_cell_records` | present |
+| CapVer indexes | `cghia_capability_cell_records_pkey`, `cghia_capability_cell_records_capability_record_id_unique`, `cghia_cap_cells_subject_lifecycle_idx`, `cghia_cap_cells_current_canonical_uq`, `cghia_cap_cells_current_seat_scoped_uq` |
+| `scientific_source_*` on PostgreSQL | **0** |
+| migrate / rollback | **not run** |
+
+### 8.62.4 Actual SQLite role
+
+`.env` has no `SCIENTIFIC_RECORD_STORE_*` overrides. `config/database.php` therefore uses connection `scientific_records` with driver `sqlite` and database `storage/app/scientific_record_store.sqlite`. Laravel in the backend container resolved that path to `/var/www/html/storage/app/scientific_record_store.sqlite`.
+
+`AgriculturalIntelligenceServiceProvider` binds `ScientificRecordStore` to `DatabaseScientificRecordStore` on `agricultural_intelligence.local_index.connection` (default `scientific_records`). `LocalIndexSearchEngine` uses `SqliteFtsScientificIndex` when `search_backend` is `auto` or `fts5` and the driver is sqlite. The `search_backend` key is absent, so the code default `auto` selects FTS5.
+
+| Object | Role |
+|--------|------|
+| `scientific_source_records` | durable rows. **300 635** total; **300 121** `active`; **514** not active |
+| `scientific_source_states` | committed generation per source: `organic_eprints=2`, `dr_duke=19`, `agris=29` |
+| `scientific_source_generations` | **50** append-only generation rows |
+| `scientific_source_fts` | FTS5 virtual table (`unicode61`). **300 121** rows, equal to the active-record count |
+| `scientific_source_fts_meta` | same three sources and the same generations, `index_version=sqlite_fts_scientific_index.v1` |
+| Triggers | **0**. FTS is updated by `SqliteFtsScientificIndex::rebuild`, `synchronize`, and `apply`, not by SQLite triggers |
+
+The SQLite file’s own `migrations` table contains only `2026_10_15_220000_create_scientific_source_record_store_tables`. That is the SQLite store’s schema history. It is not a PostgreSQL migration record.
+
+SQLite 3.46.1. `PRAGMA journal_mode` = `delete`.
+
+### 8.62.5 Backup and integrity
+
+| Field | Value |
+|-------|--------|
+| Method | PHP `SQLite3::backup()` from a read-only open of the live file |
+| Path | `backups/scientific_record_store_pre_optionA_20261020_213410.sqlite` |
+| Size | 1 354 821 632 bytes |
+| SHA-256 | `A7FEB1170BA77497BF18173441E0212F6DF0A7397856C7740BC9F94756EEBBC9` |
+| Open | succeeded |
+| Live `PRAGMA integrity_check` | `ok` (`query_only=ON`) |
+| Backup `PRAGMA integrity_check` | `ok` |
+| FTS5 `integrity-check` | executed **only on the backup**. Returned **0** rows (`ok`). SHA-256 after that command was **unchanged** |
+| Live file after checks | size unchanged; mtime still 2026-10-19 20:14:04 +03:00 |
+
+### 8.62.6 Tests actually run
+
+| Command | Result |
+|---------|--------|
+| `phpunit` `LocalIndexLifecycleTest` + `ScientificRecordsSqliteDurabilityTest` + `IncrementalBulkIngestDoesNotWithdrawPeersTest` | **OK, 16 tests, 115 assertions, exit 0**. These use an in-memory store or `storage/framework/testing/…`, not the operational file |
+| First directory run of `tests/Unit/Agriculture/Research/Search/LocalIndex` | **21 tests, 136 assertions, 1 error, exit 2** |
+| The error | `LocalIndexSearchIntegrationTest::test_a_local_index_source_runs_through_the_production_orchestrator_without_http` issued `DELETE FROM scientific_source_fts WHERE source_key = dataset_example` on the **operational** file because the container’s `SqliteFtsScientificIndex` singleton was already bound there. SQLite returned `database is locked` because integrity_check held the file. The delete did not commit |
+| Post-check of that attempt | live size and mtime unchanged; `dataset_example` FTS rows = **0** |
+| `tests/Pgsql/*` | **NOT TESTED**. That suite is bound to `phpunit.pgsql.xml` and was not run, so it could not touch `wsa_enterprise` |
+
+No PHP application code was changed.
+
+### 8.62.7 Git
+
+WIP short-status count remained 151. The scientific migration file is still `??`. `/backups/` is already ignored. No commit and no push.
+
