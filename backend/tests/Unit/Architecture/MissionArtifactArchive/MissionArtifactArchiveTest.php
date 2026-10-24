@@ -295,8 +295,8 @@ class MissionArtifactArchiveTest extends TestCase
         $outside = $this->base.DIRECTORY_SEPARATOR.'symlink-target.bin';
         file_put_contents($outside, 'SECRET');
         $link = $dest.DIRECTORY_SEPARATOR.'linked.txt';
-        if (! @symlink($outside, $link)) {
-            $this->markTestSkipped('The environment did not create a symlink, so the export symlink branch was not executed.');
+        if (! $this->createFileSymlink($outside, $link)) {
+            $this->fail('The environment did not create a file symlink, so the export symlink branch was not executed.');
         }
 
         $result = $archive->exportOriginal((string) $stored['archive_id'], $dest, 'linked.txt');
@@ -305,6 +305,82 @@ class MissionArtifactArchiveTest extends TestCase
         $this->assertSame('unsafe_name', $result['reason']);
         $this->assertSame('SECRET', file_get_contents($outside));
         $this->assertFalse(is_file($dest.DIRECTORY_SEPARATOR.'linked.txt') && ! is_link($dest.DIRECTORY_SEPARATOR.'linked.txt'));
+    }
+
+    public function test_blob_symlink_outside_the_root_is_not_read(): void
+    {
+        $archive = MissionArtifactArchiveFactory::forTesting($this->base);
+        $outside = $this->base.DIRECTORY_SEPARATOR.'blob-outside.bin';
+        file_put_contents($outside, 'SECRET');
+        $stored = $archive->ingestBytes('hello', 'blob-link:outside', 'hello.txt', 'text_artifact', 'text', 'unit');
+        $this->assertSame('archived', $stored['status']);
+        $id = (string) $stored['archive_id'];
+        $blob = $this->blobAbsolutePath($archive, $id);
+        $this->assertTrue(unlink($blob));
+        $this->assertTrue($this->createFileSymlink($outside, $blob));
+
+        $this->assertNull($archive->readOriginalBytes($id));
+        $integrity = $archive->verifyIntegrity($id);
+        $this->assertFalse($integrity['ok']);
+        $this->assertNull($integrity['actual']);
+        $this->assertSame('SECRET', file_get_contents($outside));
+    }
+
+    public function test_blob_symlink_inside_the_root_is_not_followed(): void
+    {
+        $archive = MissionArtifactArchiveFactory::forTesting($this->base);
+        $stored = $archive->ingestBytes('hello', 'blob-link:inside', 'hello.txt', 'text_artifact', 'text', 'unit');
+        $this->assertSame('archived', $stored['status']);
+        $id = (string) $stored['archive_id'];
+        $blob = $this->blobAbsolutePath($archive, $id);
+        $inside = $archive->blobRoot().DIRECTORY_SEPARATOR.'inside-regular.bin';
+        file_put_contents($inside, 'INSIDE');
+        $this->assertTrue(unlink($blob));
+        $this->assertTrue($this->createFileSymlink($inside, $blob));
+
+        $this->assertNull($archive->readOriginalBytes($id));
+        $this->assertSame('INSIDE', file_get_contents($inside));
+    }
+
+    public function test_broken_blob_symlink_is_not_read(): void
+    {
+        $archive = MissionArtifactArchiveFactory::forTesting($this->base);
+        $stored = $archive->ingestBytes('hello', 'blob-link:broken', 'hello.txt', 'text_artifact', 'text', 'unit');
+        $this->assertSame('archived', $stored['status']);
+        $id = (string) $stored['archive_id'];
+        $blob = $this->blobAbsolutePath($archive, $id);
+        $missing = $this->base.DIRECTORY_SEPARATOR.'missing-blob-target.bin';
+        $this->assertTrue(unlink($blob));
+        $this->assertTrue($this->createFileSymlink($missing, $blob));
+
+        $this->assertNull($archive->readOriginalBytes($id));
+        $this->assertFalse($archive->verifyIntegrity($id)['ok']);
+    }
+
+    private function blobAbsolutePath(FilesystemMissionArtifactArchive $archive, string $archiveId): string
+    {
+        $record = $archive->get($archiveId);
+        $this->assertNotNull($record);
+
+        return $archive->blobRoot().DIRECTORY_SEPARATOR.str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $record->blobRelativePath);
+    }
+
+    private function createFileSymlink(string $target, string $link): bool
+    {
+        if (@symlink($target, $link) && is_link($link)) {
+            return true;
+        }
+        if (is_link($link)) {
+            return true;
+        }
+        if (PHP_OS_FAMILY !== 'Windows') {
+            return false;
+        }
+
+        $command = 'cmd /c mklink '.escapeshellarg($link).' '.escapeshellarg($target);
+        exec($command, $output, $code);
+
+        return $code === 0 && is_link($link);
     }
 
     private function rrmdir(string $dir): void
@@ -317,7 +393,9 @@ class MissionArtifactArchiveTest extends TestCase
                 continue;
             }
             $path = $dir.DIRECTORY_SEPARATOR.$item;
-            if (is_dir($path)) {
+            if (is_link($path)) {
+                @unlink($path);
+            } elseif (is_dir($path)) {
                 $this->rrmdir($path);
             } else {
                 @unlink($path);

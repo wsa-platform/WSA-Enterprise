@@ -260,8 +260,8 @@ SQL);
         if ($record === null) {
             return ['ok' => false, 'expected' => '', 'actual' => null, 'tampered' => false];
         }
-        $path = $this->containedBlobPath($record->blobRelativePath);
-        if ($path === null || ! is_file($path)) {
+        $path = $this->readableBlobPath($record->blobRelativePath);
+        if ($path === null) {
             return ['ok' => false, 'expected' => $record->contentSha256, 'actual' => null, 'tampered' => true];
         }
         $actual = hash_file('sha256', $path) ?: null;
@@ -280,8 +280,8 @@ SQL);
         if ($record === null) {
             return null;
         }
-        $path = $this->containedBlobPath($record->blobRelativePath);
-        if ($path === null || ! is_file($path)) {
+        $path = $this->readableBlobPath($record->blobRelativePath);
+        if ($path === null) {
             return null;
         }
         $bytes = file_get_contents($path);
@@ -431,6 +431,37 @@ SQL);
         }
 
         return $absolute;
+    }
+
+    /**
+     * A readable blob is a regular file whose resolved path stays inside the blob root.
+     * Symlinks are not followed, including links that stay inside the root.
+     */
+    private function readableBlobPath(string $relative): ?string
+    {
+        $path = $this->containedBlobPath($relative);
+        if ($path === null || is_link($path)) {
+            return null;
+        }
+
+        $root = realpath($this->blobRoot);
+        $resolved = realpath($path);
+        if ($root === false || $resolved === false || ! is_file($resolved) || is_link($resolved)) {
+            return null;
+        }
+        if (! $this->pathIsInside($resolved, $root)) {
+            return null;
+        }
+
+        return $resolved;
+    }
+
+    private function pathIsInside(string $path, string $root): bool
+    {
+        $pathNorm = strtolower(rtrim(str_replace('\\', '/', $path), '/'));
+        $rootNorm = strtolower(rtrim(str_replace('\\', '/', $root), '/'));
+
+        return $pathNorm === $rootNorm || str_starts_with($pathNorm, $rootNorm.'/');
     }
 
     public function sqlitePath(): string
