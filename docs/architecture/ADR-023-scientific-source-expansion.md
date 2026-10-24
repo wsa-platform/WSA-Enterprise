@@ -8891,3 +8891,31 @@ No staging, commit, or push was performed.
 ### 8.72.5 Still open
 
 Original D-08 bytes are not verified. Endpoint verification for integration classification was not performed. §§8.66–8.71 remain unapproved local text. Round 3 is not authorized by this section.
+
+## 8.73 — Round 3.5 measurement — 2026-10-24
+
+Append-only. This section does not rewrite §8.60 through §8.72. It does not close Phase 1, activate a seat, authorize CapVer ship, or adopt a new architectural decision. The sentence in §8.72.5 that §§8.66–8.71 were unapproved local text remains the record of 2026-10-23. Those sections, and §8.72, are present in commit `a0dbaa35e47e80039b389aecf323b31c8d83939a`. Publication is not a new approval beyond that commit.
+
+### 8.73.1 Recovery directory
+
+`backend/storage/framework/recovery/` was untracked. `backend/storage/framework/.gitignore` gained one line, `recovery/`. `git check-ignore -v` attributes `backend/storage/framework/recovery/capver-historical-recovery.json` to that line. The same command does not ignore `backend/storage/framework/cache/data/.gitignore`. No tracked path was removed from the index, and the recovery files were not edited or deleted.
+
+### 8.73.2 Archive symlink behavior
+
+`readableBlobPath` refuses a symlink and refuses a resolved path outside the blob root. An internal symlink is not followed. `exportOriginal` already refused a destination name that is an existing symlink. `MissionArtifactArchiveTest` was executed on 2026-10-24 with PHP `8.4.26` and PHPUnit `11.5.56`: `OK (17 tests, 116 assertions)`, exit 0, no skipped tests. PHP `symlink()` returned permission denied. The test created the links with `cmd /c mklink`. The archives used `storage/framework/testing/mission_artifact_archive_*`. `backend/tests/bootstrap.php` forced `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` before Laravel booted.
+
+### 8.73.3 D-08
+
+The original decision D-08 says every Cursor prompt and report for this phase must be archived under `science-source-expansion/` with date and phase labels, and that later decisions supersede earlier ones without deleting them. That text does not require a SHA-256 comparison. The base manifest says its source is the Cursor conversation transcript. That transcript was not available here as an independent byte source. Byte equality with the transcript stays unverified. No archive file was modified in this round. The 2026-10-23 counts, 436, 95, and 12, were not recomputed.
+
+لا يمكن حاليًا إثبات المطابقة البايتية للمصدر الأصلي باستخدام الأدلة المتاحة.
+
+### 8.73.4 Integration classification and CapVer
+
+`EloquentIntegrationClassificationRepository` still does not send HTTP requests. §8.30.5 records `ENDPOINT TESTED 0` for the 109-seat documentary review, and §8.63.6 keeps verified per-seat IC evidence required before runtime binding. No live verification was run, and no new verifier was added.
+
+`CapVerAuthorizedCellCountTest` names seats `G1-02`, `G6-20`, `G1-01`, `G1-17`, and `G5-04` and opens `storage/framework/testing/capver_authorized_cell_count_*.sqlite`. It was not re-executed in this round. Round 3 recorded that test as passing inside a process that also skipped the archive symlink test. This ADR has no section that defines a layer named Layer H. The five-cell test is not treated here as closure of an undefined layer.
+
+### 8.73.5 Protected files
+
+After the archive test, file hashes were measured again without opening either database. `scientific_record_store.sqlite` remained length `1393659904`, LastWriteTimeUtc `2026-10-22T09:53:58.9832998Z`, SHA-256 `8827901A30DC8F93888F82E10B096190DB440766733D8B860269D9ABEEE11211`. `capver.sqlite` remained length `32768`, LastWriteTimeUtc `2026-10-23T12:20:07.1352738Z`, SHA-256 `66CA7C1497BA84E3FF9ECCBF01D6A5E2BC193571469EEAED1A5D10B19C00B875`. Both matched the measurement taken before the test.
