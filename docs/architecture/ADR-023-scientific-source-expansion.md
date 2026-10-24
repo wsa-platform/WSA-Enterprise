@@ -8941,3 +8941,54 @@ D-08 requires every prompt and report of this phase to be archived. After line 1
 Layer F stays open. §8.30.5 records `ENDPOINT TESTED` 0 because GB-IC-01 prohibits requests to machine endpoints. §8.63.6 still requires verified per-seat IC evidence before runtime binding, and the IC inventory remains OPEN. No live probe was added, and a mocked HTTP client is not that evidence. Layer H stays undefined: this ADR still has no adopted section that defines a layer by that name, and no other architecture document or PHP test defines one. The five-cell CapVer test was not re-run; its code and isolated database path were not changed. §8.64.7 still prevents Phase 1 exit until every checklist item is PASS and P1-EXIT-11 is recorded. Neither condition is met here.
 
 Before this section was added, and before supplement 03 was written, both protected databases were hashed without being opened. `scientific_record_store.sqlite` was length `1393659904`, LastWriteTimeUtc `2026-10-22T09:53:58.9832998Z`, SHA-256 `8827901A30DC8F93888F82E10B096190DB440766733D8B860269D9ABEEE11211`. `capver.sqlite` was length `32768`, LastWriteTimeUtc `2026-10-23T12:20:07.1352738Z`, SHA-256 `66CA7C1497BA84E3FF9ECCBF01D6A5E2BC193571469EEAED1A5D10B19C00B875`. Both matched the values in §8.73.5.
+
+## 8.75 — Layer F evidence dimensions — clarification of 2026-10-24
+
+Append-only. This section does not rewrite §8.30, §8.40, §8.63, §8.64, §8.65, or §§8.66–8.74. It is not an owner approval, not P1-EXIT-11, and not Phase 1 exit. Approval status of this section: **CLARIFICATION of decisions already recorded. Not a new authorization.**
+
+### 8.75.1 The apparent conflict
+
+`GB-IC-01` (§8.30.4) authorizes a documentary inventory and prohibits requests to machine endpoints inside that scope. §8.30.5 records the result: 109 proposed `UNCLASSIFIED` records, `IDENTITY VERIFIED` 0, `ENDPOINT TESTED` 0, `INTEGRATION VERIFIED` 0, owner verification pending. §8.63.6 requires verified per-seat IC evidence before runtime binding (D-10.8.1) and leaves the IC inventory OPEN.
+
+These statements concern different dimensions. D-10.8.1 requires an IC artifact before runtime binding. It does not define an endpoint test. `ENDPOINT TESTED` 0 means no qualifying endpoint test was recorded. It does not mean the documentary review was absent. A classification record does not prove that an endpoint responded, and an endpoint response would not by itself prove operational eligibility.
+
+### 8.75.2 Resolution from existing decisions
+
+Case D of the 2026-10-24 execution mandate applies. No new exception to `GB-IC-01` is created.
+
+- §8.11.4 and §8.40.2 already keep classification, capability, path eligibility, and activation in separate vocabularies. `CLASSIFIED` is not `ELIGIBLE` and is not `ACTIVE`.
+- §8.40.1 already limits documentary evidence to at most `PARTIALLY_EVIDENCED`. Documented text is not permission.
+- §8.40.2 already requires, before `ELIGIBLE` or `ACTIVE`, a canonical identity, identity evidence, an IC reference, a capability decision, a path decision, a projection identity, a licence that permits retrieval, path `ELIGIBLE`, and search `VERIFIED`. `ACTIVE` also requires the bound runtime source key.
+- `GB-IC-01` remains in force for machine-endpoint probes. This section does not authorize a probe.
+
+`OperationalEligibilityGate` implements that separation and nothing more. `DOCUMENTED` does not satisfy a dimension that requires `VERIFIED`. A classification record supplied as endpoint evidence is `BLOCKED`, not `VERIFIED`. The gate sends no HTTP request. Applying §8.30.5 through `fromDocumentaryInventory` leaves `G1-02`, `G6-20`, `G1-01`, `G1-17`, and `G5-04` not operationally eligible. Membership of those seats in `ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json` is not activation.
+
+### 8.75.3 What remains open
+
+Layer F stays `PARTIAL`. The verified per-seat IC artifact required by D-10.8.1 is still absent: the §8.30.5 proposals are `UNCLASSIFIED` and owner verification is pending. Endpoint tests remain `NOT RUN`. P1-EXIT-07 stays `BLOCKED`. P1-EXIT-11 stays `NOT RUN`. §8.64.7 still prevents Phase 1 exit. Untracked onboarding catalogs in the working tree are not adopted by this section and are not evidence that these five seats are operationally eligible.
+
+### 8.75.4 Limit of the gate
+
+`OperationalEligibilityGate` evaluates statuses and facet names supplied by its caller. It does not load the membership register, a capability cell, or either protected SQLite store, and it does not establish the licence, path, projection, or search-verified prerequisites of §8.40.2. A supplied facet that is absent from the supplied resolved-cell list blocks eligibility. `NOT_RUN` means the evidence is missing. `BLOCKED` means the supplied claim was rejected. Membership in the current register does not make a seat eligible. This subsection is explanatory. It does not approve the gate as a substitute for D-10.8.1 or for P1-EXIT-11.
+
+## 8.76 — Commit trailer authorization — 2026-10-24
+
+Append-only. This section does not rewrite published commits and does not approve Phase 1 exit.
+
+The owner execution prompt of 2026-10-24 titled `WSA-Enterprise — MASTER EXECUTION PROMPT v16.1 FINAL` explicitly authorizes this trailer on eligible new commits:
+
+`Co-authored-by: Cursor <cursoragent@cursor.com>`
+
+That authorization is limited to the trailer text. It does not approve scientific evidence, source classification, endpoint tests, or Phase 1 exit. Inspection of the repository on 2026-10-24 found no `commit.template`, no `core.hooksPath`, and no active hook under `.git/hooks`. The trailer is therefore not produced by a repository hook or template. Published history is not rewritten to add or remove it.
+
+## 8.77 — P1-EXIT-07 root cause — record of 2026-10-24
+
+Append-only. This section does not change the state cell in §8.64.7.
+
+P1-EXIT-07, defined at §8.64.7, requires for each of the 109 `adr_id` values either a verified per-seat IC artifact (D-10.8.1) and, where evidence supports it, a persisted identity binding (D-10.3), or a per-seat blocker with its reason recorded after a per-seat evidence review under the authorized IC inventory. The blanket blocker "no authorization" does not satisfy the item. The state recorded on 2026-10-13 is **BLOCKED**: the inventory was not authorized, with 0 IC artifacts and 0 bindings (§8.25.8). It blocks Phase 1 exit.
+
+The later documentary review under GB-IC-01 (§8.30.5) produced 109 proposed `UNCLASSIFIED` records and explicitly did not persist IC rows or identity bindings. Owner verification remains pending. Those proposals are not the verified artifacts P1-EXIT-07 requires. The root cause is governance and evidence, not a missing local predicate in `OperationalEligibilityGate`: persistence of a verified artifact needs an owner decision and a later Gate B, and GB-IC-01 still prohibits treating the proposal as an endpoint test. P1-EXIT-11 re-verifies P1-EXIT-01 through P1-EXIT-10, so it stays `NOT RUN` while P1-EXIT-07 is `BLOCKED`.
+
+## 8.78 — Layer H — proposed decision, not approved
+
+No section of this ADR defines a layer named Layer H. §8.73.4 and §8.74.4 record that absence. The five-cell CapVer test is not that definition. This section proposes, and does not approve, that a future owner decision either adopt a normative definition with scope, inputs, outputs, failure semantics, and exit tests, or record an explicit `NOT_APPLICABLE` decision. Until one of those decisions is adopted, Layer H stays undefined and Phase 1 exit is not satisfied by the CapVer test alone. `capver.sqlite` is not evidence for this proposal.
