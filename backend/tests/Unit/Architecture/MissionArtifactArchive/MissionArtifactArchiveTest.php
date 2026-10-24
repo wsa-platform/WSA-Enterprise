@@ -96,10 +96,12 @@ class MissionArtifactArchiveTest extends TestCase
         mkdir($dest);
         $ok = $archive->exportOriginal((string) $r['archive_id'], $dest, 'out.json');
         $this->assertSame('exported', $ok['status']);
+        $this->assertSame($bad, file_get_contents($dest.DIRECTORY_SEPARATOR.'out.json'));
         $badName = $archive->exportOriginal((string) $r['archive_id'], $dest, '..\\evil.json');
-        // basename strips traversal → still safe under dest
-        $this->assertSame('exported', $badName['status']);
-        $this->assertStringContainsString(realpath($dest), (string) realpath($badName['path']));
+        $this->assertSame('failed', $badName['status']);
+        $this->assertSame('unsafe_name', $badName['reason']);
+        $this->assertFileDoesNotExist($dest.DIRECTORY_SEPARATOR.'evil.json');
+        $this->assertFileDoesNotExist(dirname($dest).DIRECTORY_SEPARATOR.'evil.json');
     }
 
     public function test_durability_across_new_archive_instance_and_search(): void
@@ -198,6 +200,111 @@ class MissionArtifactArchiveTest extends TestCase
         );
         $this->assertSame(1, $second['totals']['archived'], json_encode($second));
         $this->assertGreaterThanOrEqual(2, $archive->countAll());
+    }
+
+    public function test_empty_and_missing_paths_do_not_ingest(): void
+    {
+        $archive = MissionArtifactArchiveFactory::forTesting($this->base);
+        $empty = $archive->ingestFile('', 'test:empty', 'unit', 'mission-test');
+        $this->assertSame('failed', $empty['status']);
+        $this->assertNull($empty['archive_id']);
+        $this->assertSame('unreadable', $empty['reason']);
+
+        $missing = $archive->ingestFile($this->base.DIRECTORY_SEPARATOR.'no-such-file.txt', 'test:missing', 'unit', 'mission-test');
+        $this->assertSame('failed', $missing['status']);
+        $this->assertSame('unreadable', $missing['reason']);
+        $this->assertSame(0, $archive->countAll());
+
+        $destMissing = $archive->exportOriginal('missing-id', $this->base.DIRECTORY_SEPARATOR.'absent-dest', 'ok.txt');
+        $this->assertSame('not_found', $destMissing['status']);
+    }
+
+    public function test_export_accepts_plain_names_and_rejects_path_segments(): void
+    {
+        $archive = MissionArtifactArchiveFactory::forTesting($this->base);
+        $bytes = "export-name-contract\n";
+        $stored = $archive->ingestBytes($bytes, 'export:names', 'note.txt', 'text_artifact', 'text', 'unit');
+        $this->assertSame('archived', $stored['status']);
+        $id = (string) $stored['archive_id'];
+        $dest = $this->base.DIRECTORY_SEPARATOR.'export-names';
+        mkdir($dest);
+
+        foreach (['file.txt', 'valid-name.txt'] as $name) {
+            $exported = $archive->exportOriginal($id, $dest, $name);
+            $this->assertSame('exported', $exported['status'], $name);
+            $this->assertSame($bytes, file_get_contents($dest.DIRECTORY_SEPARATOR.$name));
+            $this->assertSame(realpath($dest), realpath(dirname((string) $exported['path'])));
+        }
+
+        foreach (['', '.', '..', 'sub/file.txt', 'sub\\file.txt', '../etc/passwd', '..\\..\\outside.txt', 'nul', 'aux.txt', 'file.txt:', "space.txt "] as $name) {
+            $rejected = $archive->exportOriginal($id, $dest, $name);
+            $this->assertSame('failed', $rejected['status'], $name);
+            $this->assertSame('unsafe_name', $rejected['reason'], $name);
+        }
+
+        $this->assertFileDoesNotExist($this->base.DIRECTORY_SEPARATOR.'outside.txt');
+        $this->assertFileDoesNotExist($this->base.DIRECTORY_SEPARATOR.'passwd');
+    }
+
+    public function test_blob_directory_failure_leaves_no_archive_row(): void
+    {
+        $archive = MissionArtifactArchiveFactory::forTesting($this->base);
+        $bytes = 'write-fail-body';
+        $sha = hash('sha256', $bytes);
+        if (! mkdir($archive->blobRoot(), 0775, true) && ! is_dir($archive->blobRoot())) {
+            $this->fail('Could not create the isolated blob root.');
+        }
+        $blocker = $archive->blobRoot().DIRECTORY_SEPARATOR.substr($sha, 0, 2);
+        file_put_contents($blocker, 'not-a-directory');
+
+        $failed = $archive->ingestBytes($bytes, 'write:fail', 'blocked.txt', 'text_artifact', 'text', 'unit');
+        $this->assertSame('failed', $failed['status']);
+        $this->assertNull($failed['archive_id']);
+        $this->assertSame('blob_dir', $failed['reason']);
+        $this->assertSame(0, $archive->countAll());
+        $this->assertFileDoesNotExist($blocker.'.partial');
+    }
+
+    public function test_poisoned_blob_path_is_not_read(): void
+    {
+        $archive = MissionArtifactArchiveFactory::forTesting($this->base);
+        $outside = $this->base.DIRECTORY_SEPARATOR.'outside-secret.bin';
+        file_put_contents($outside, 'SECRET');
+        $stored = $archive->ingestBytes('hello', 'poison:1', 'hello.txt', 'text_artifact', 'text', 'unit');
+        $this->assertSame('archived', $stored['status']);
+        $id = (string) $stored['archive_id'];
+        $this->assertSame('hello', $archive->readOriginalBytes($id));
+
+        $pdo = new \PDO('sqlite:'.$archive->sqlitePath());
+        $updated = $pdo->prepare('UPDATE mission_artifacts SET blob_relative_path = ? WHERE archive_id = ?');
+        $updated->execute(['../outside-secret.bin', $id]);
+
+        $this->assertNull($archive->readOriginalBytes($id));
+        $integrity = $archive->verifyIntegrity($id);
+        $this->assertFalse($integrity['ok']);
+        $this->assertSame('SECRET', file_get_contents($outside));
+    }
+
+    public function test_export_refuses_a_symlink_that_points_outside_the_destination(): void
+    {
+        $archive = MissionArtifactArchiveFactory::forTesting($this->base);
+        $stored = $archive->ingestBytes("symlink-guard\n", 'export:symlink', 'note.txt', 'text_artifact', 'text', 'unit');
+        $this->assertSame('archived', $stored['status']);
+        $dest = $this->base.DIRECTORY_SEPARATOR.'export-link';
+        mkdir($dest);
+        $outside = $this->base.DIRECTORY_SEPARATOR.'symlink-target.bin';
+        file_put_contents($outside, 'SECRET');
+        $link = $dest.DIRECTORY_SEPARATOR.'linked.txt';
+        if (! @symlink($outside, $link)) {
+            $this->markTestSkipped('The environment did not create a symlink, so the export symlink branch was not executed.');
+        }
+
+        $result = $archive->exportOriginal((string) $stored['archive_id'], $dest, 'linked.txt');
+
+        $this->assertSame('failed', $result['status']);
+        $this->assertSame('unsafe_name', $result['reason']);
+        $this->assertSame('SECRET', file_get_contents($outside));
+        $this->assertFalse(is_file($dest.DIRECTORY_SEPARATOR.'linked.txt') && ! is_link($dest.DIRECTORY_SEPARATOR.'linked.txt'));
     }
 
     private function rrmdir(string $dir): void

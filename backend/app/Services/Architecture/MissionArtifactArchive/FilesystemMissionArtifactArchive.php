@@ -260,8 +260,8 @@ SQL);
         if ($record === null) {
             return ['ok' => false, 'expected' => '', 'actual' => null, 'tampered' => false];
         }
-        $path = $this->blobRoot.DIRECTORY_SEPARATOR.str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $record->blobRelativePath);
-        if (! is_file($path)) {
+        $path = $this->containedBlobPath($record->blobRelativePath);
+        if ($path === null || ! is_file($path)) {
             return ['ok' => false, 'expected' => $record->contentSha256, 'actual' => null, 'tampered' => true];
         }
         $actual = hash_file('sha256', $path) ?: null;
@@ -280,8 +280,8 @@ SQL);
         if ($record === null) {
             return null;
         }
-        $path = $this->blobRoot.DIRECTORY_SEPARATOR.str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $record->blobRelativePath);
-        if (! is_file($path)) {
+        $path = $this->containedBlobPath($record->blobRelativePath);
+        if ($path === null || ! is_file($path)) {
             return null;
         }
         $bytes = file_get_contents($path);
@@ -304,11 +304,17 @@ SQL);
         if ($realBase === false || ! is_dir($realBase)) {
             return ['status' => 'failed', 'reason' => 'dest_missing'];
         }
-        $safeName = basename($fileName);
-        if ($safeName === '' || $safeName === '.' || $safeName === '..' || str_contains($safeName, "\0")) {
+        if (! $this->isSingleExportFileName($fileName)) {
             return ['status' => 'failed', 'reason' => 'unsafe_name'];
         }
-        $target = $realBase.DIRECTORY_SEPARATOR.$safeName;
+        $target = $realBase.DIRECTORY_SEPARATOR.$fileName;
+        if (is_link($target)) {
+            return ['status' => 'failed', 'reason' => 'unsafe_name'];
+        }
+        $parent = realpath(dirname($target));
+        if ($parent === false || $parent !== $realBase) {
+            return ['status' => 'failed', 'reason' => 'unsafe_name'];
+        }
         $bytes = $this->readOriginalBytes($archiveId);
         if ($bytes === null) {
             return ['status' => 'failed', 'reason' => 'blob_missing'];
@@ -362,6 +368,71 @@ SQL);
         return (int) $this->pdo()->query('SELECT COUNT(*) FROM mission_artifacts')->fetchColumn();
     }
 
+    /**
+     * Export accepts one file name. Directory separators and parent segments are rejected,
+     * not stripped, so a caller cannot overwrite a different name inside the destination.
+     */
+    private function isSingleExportFileName(string $fileName): bool
+    {
+        if ($fileName === '' || $fileName === '.' || $fileName === '..') {
+            return false;
+        }
+        if (str_contains($fileName, '/') || str_contains($fileName, '\\') || str_contains($fileName, "\0") || str_contains($fileName, ':')) {
+            return false;
+        }
+        if (basename($fileName) !== $fileName) {
+            return false;
+        }
+        if (str_ends_with($fileName, '.') || str_ends_with($fileName, ' ')) {
+            return false;
+        }
+
+        $stem = strtolower((string) pathinfo($fileName, PATHINFO_FILENAME));
+        $reserved = [
+            'con', 'prn', 'aux', 'nul',
+            'com1', 'com2', 'com3', 'com4', 'com5', 'com6', 'com7', 'com8', 'com9',
+            'lpt1', 'lpt2', 'lpt3', 'lpt4', 'lpt5', 'lpt6', 'lpt7', 'lpt8', 'lpt9',
+        ];
+
+        return ! in_array($stem, $reserved, true);
+    }
+
+    /**
+     * Blob paths stored by this archive are hash segments. A row that points outside
+     * the blob root is not readable.
+     */
+    private function containedBlobPath(string $relative): ?string
+    {
+        $normalized = str_replace('\\', '/', $relative);
+        if ($normalized === '' || str_contains($normalized, "\0") || str_starts_with($normalized, '/')) {
+            return null;
+        }
+        if (preg_match('/^[A-Za-z]:/', $normalized) === 1) {
+            return null;
+        }
+
+        $segments = explode('/', $normalized);
+        foreach ($segments as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..') {
+                return null;
+            }
+        }
+
+        $root = realpath($this->blobRoot);
+        if ($root === false) {
+            return null;
+        }
+
+        $absolute = $root.DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $segments);
+        $rootNorm = strtolower(rtrim(str_replace('\\', '/', $root), '/'));
+        $absoluteNorm = strtolower(str_replace('\\', '/', $absolute));
+        if ($absoluteNorm !== $rootNorm && ! str_starts_with($absoluteNorm, $rootNorm.'/')) {
+            return null;
+        }
+
+        return $absolute;
+    }
+
     public function sqlitePath(): string
     {
         return $this->sqlitePath;
@@ -400,7 +471,7 @@ SQL);
         $blobRel = substr($sha, 0, 2).DIRECTORY_SEPARATOR.substr($sha, 2, 2).DIRECTORY_SEPARATOR.$sha.'.bin';
         $blobAbs = $this->blobRoot.DIRECTORY_SEPARATOR.$blobRel;
         $blobDir = dirname($blobAbs);
-        if (! is_dir($blobDir) && ! mkdir($blobDir, 0775, true) && ! is_dir($blobDir)) {
+        if (! is_dir($blobDir) && ! @mkdir($blobDir, 0775, true) && ! is_dir($blobDir)) {
             return ['status' => 'failed', 'archive_id' => null, 'reason' => 'blob_dir'];
         }
 
