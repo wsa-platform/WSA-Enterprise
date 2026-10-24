@@ -8630,3 +8630,264 @@ No PHP application code was changed.
 
 WIP short-status count remained 151. The scientific migration file is still `??`. `/backups/` is already ignored. No commit and no push.
 
+## 8.66 — Scoped GBIF (`G5-04`) CapVer authorization — 2026-10-22
+
+Append-only. Does not rewrite §8.58.5 or any earlier section. Does not close Phase 1. Does not authorize a PostgreSQL migration, a new CapVer table, or seat `G6-06`.
+
+### 8.66.1 Status and scope
+
+- Date: 2026-10-22.
+- Status: authorization recorded. Persistence completion evidence is **not** established by this section.
+- Scope: one seat, `G5-04` (source key `gbif`, REST species search).
+- This section does not authorize CapVer for any other seat and does not change onboarding outcomes for seats other than the already-recorded `onb-r9-20261016-G5-04` contract.
+
+### 8.66.2 Authority
+
+The 2026-10-22 owner execution assignment “Five-Source Completion, Existing SQLite CapVer Verification, Governed AGRIS Expansion, and Pre-Commit Review” explicitly includes GBIF (`G5-04`) in the CapVer scope. That assignment is the authority for this limited supersession.
+
+### 8.66.3 Supersession
+
+§8.58.5 remains historically true for the state it recorded: `capVerAuthorizedSeats()` then contained only `G1-02`, `G6-20`, `G1-01`, and `G1-17`, and GBIF was excluded from that list.
+
+This section supersedes **only** that exclusion, and only for seat `G5-04`. The original §8.58.5 sentences are unchanged. No other restriction in §8.58.5 is superseded. `G6-06` / `dr_duke_g6` stays deferred.
+
+### 8.66.4 Code consequence
+
+`AcceptedOwnerDecisionCatalog::capVerAuthorizedSeats()` includes `G5-04`. The existing NextGate decision id `onb-r9-20261016-G5-04` is visible to the CapVer onboarding gate. `CapVerSeatVerificationService` carries one ACCESS_METHOD cell spec:
+
+- capability decision identity: `cap-r9-20261016-G5-04-search` (already on the G5-04 contract)
+- capability record id: `cap-rec-r9-20261016-G5-04-api`
+- access method: `api`
+- snapshot: `gbif.rest_api.species_search.v1`
+
+### 8.66.5 Evidence required for completion
+
+Completion of this authorization requires all of the following, and this section does not claim them:
+
+1. A write through the existing SQLite capability-persistence table and its established repository.
+2. An independent read-back of one CURRENT `VERIFIED` cell for `G5-04` / `cap-rec-r9-20261016-G5-04-api`.
+3. A repeated authorized run that returns `ALREADY_CURRENT` and does not insert a second current cell.
+
+### 8.66.6 What this section does not authorize
+
+- No new SQLite table, schema, or migration for CapVer.
+- No PostgreSQL connection and no CapVer write to PostgreSQL. Rows written to `cghia_capability_cell_records` on PostgreSQL before this section, if any, are historical evidence only.
+- No move of the scientific record store off SQLite Option A (§8.62).
+- No activation of `G6-06`.
+- No increase of the Dr. Duke 60 000-record projection caps.
+- No claim that a passing contract test or a live GBIF HTTP response is itself capability persistence.
+
+### 8.66.7 Execution result on 2026-10-22
+
+Host PHP 8.4.26 has `pdo_sqlite`. The scientific SQLite file `storage/app/scientific_record_store.sqlite` was not opened. Its filesystem identity was unchanged: length `1354821632`, LastWriteTimeUtc `2026-10-19T17:14:04Z`, SHA-256 `3F0114A665682000637C318E07649F62B1A3B4482635A25A19726317EDD19E8C`. Its schema history (§8.62.4) contains only `2026_10_15_220000_create_scientific_source_record_store_tables`. The isolated test file `scientific_records_108.sqlite` contains scientific-record tables only, not `cghia_capability_cell_records`.
+
+The implemented Cap Store repository remains `EloquentCapabilityStoreRepository` on the default Laravel connection. No separate SQLite capability file or connection exists in the repository. Creating a table or pointing the repository at PostgreSQL was not done. `scientific:capver-accepted` was not executed. CapVer persistence for all five seats is therefore **not verified** on SQLite in this section.
+
+No commit and no push.
+
+## 8.67 — Owner authorization to use PostgreSQL `wsa_enterprise` for CapVer cells — 2026-10-23
+
+Append-only. Does not rewrite §8.58.5, §8.60, §8.62, or §8.66. Does not move the scientific record store. Does not claim that a CapVer cell was written on this date.
+
+### 8.67.1 Status and scope
+
+- Date: 2026-10-23.
+- Status: authorization recorded. Persistence and idempotency evidence are **not** established by this section.
+- Scope: CapVer capability-cell persistence for seats already present in `AcceptedOwnerDecisionCatalog::capVerAuthorizedSeats()` (`G1-02`, `G6-20`, `G1-01`, `G1-17`, `G5-04`).
+- `G6-06` / `dr_duke_g6` stays outside that list.
+
+### 8.67.2 Authority
+
+The 2026-10-23 owner execution assignment “CapVer Persistence Recovery, PostgreSQL Integration, Backup Safety, Read-Back & Idempotency Closure” explicitly authorizes PostgreSQL database `wsa_enterprise` for CapVer. That authorization supersedes, for CapVer cell persistence only, the 2026-10-22 execution ban on opening PostgreSQL.
+
+### 8.67.3 What this does and does not change
+
+- The Cap Store contract remains table `cghia_capability_cell_records` and migration `2026_10_09_140000_create_cghia_capability_cell_records_table.php`. No new table and no new migration.
+- `EloquentCapabilityStoreRepository` and `CghiaCapabilityCell` keep using the default Laravel connection. With `DB_CONNECTION=pgsql`, `DB_HOST=127.0.0.1`, `DB_PORT=5432`, and `DB_DATABASE=wsa_enterprise`, that default is the authorized CapVer target. The global default was not changed.
+- §8.66.5 still describes the evidence shape (one CURRENT `VERIFIED` cell, then `ALREADY_CURRENT` on repeat). The store that must supply that evidence is PostgreSQL `wsa_enterprise`, not a new SQLite file. §8.66.6’s “no PostgreSQL write” sentence remains the historical limit of the 2026-10-22 mission. This section supersedes that sentence only for CapVer cells on `wsa_enterprise`.
+- ADR-023 §8.62 Option A remains the scientific record store. `scientific_records` stays SQLite. Scientific rows are not moved.
+
+### 8.67.4 Execution result on 2026-10-23
+
+Host PHP 8.4.26 has `pdo_pgsql`. `backend/bootstrap/cache/config.php` is absent. A TCP connect to `127.0.0.1:5432` returned connection refused (Windows error 10061). `Test-NetConnection` reported `TcpTestSucceeded=False`. The same probe at `2026-10-23T10:07:23Z` again returned `TCP=closed errno=10061` with `DB_CONNECTION=pgsql`, `DB_HOST=127.0.0.1`, `DB_PORT=5432`, `DB_DATABASE=wsa_enterprise`, and `DB_USERNAME=wsa`. No PostgreSQL server accepted a connection, so the connection-identity gate failed before any write.
+
+Consequences:
+
+- `scientific:capver-accepted` was not executed.
+- No migration was applied. The backup gate was not reached because there was no reachable target database to back up.
+- No row was read back. Idempotency was not exercised.
+- The scientific SQLite file was not opened. Its length stayed `1393659904` and its `LastWriteTimeUtc` stayed `2026-10-22T09:53:58Z`.
+
+No commit and no push.
+
+## 8.68 — CapVer SQLite return stopped at the historical-data gate — 2026-10-23
+
+Append-only. Does not rewrite §8.60, §8.62, §8.66, or §8.67. Does not create a CapVer SQLite file. Does not claim that the 2026-10-22 PostgreSQL cells were reread.
+
+### 8.68.1 Authority and status
+
+The 2026-10-23 mandate “CapVer SQLite Persistence Recovery” directs CapVer persistence back to a dedicated SQLite store and requires a historical-data gate before any empty store is created. Status of this section: **gate not passed**. No persistent CapVer write was performed.
+
+### 8.68.2 What was inspected
+
+| Artifact | Result |
+|---|---|
+| `backups/wsa_pre_migrate_20261019_215350.dump` | Present. 4 600 454 bytes. LastWriteTimeUtc 2026-10-19 18:54:04. TOC list has **no** `cghia_capability_cell_records`. §8.61.2 already recorded the restored table as NULL because the dump predates the CapVer migration |
+| Other files in `backups/` | No later PostgreSQL dump. The scientific SQLite backup is not a CapVer store |
+| TCP `127.0.0.1:5432` | Earlier the same day: Windows 10061 connection refused. Recheck during this section: Windows 10060 timed out. No PostgreSQL session |
+| `docs/2026-10-22-FIVE-SOURCE-COMPLETION-REPORT.ar.md` | Historical report of four `CURRENT` `VERIFIED` cells (`G1-02`, `G6-20`, `G1-01`, `G1-17`) written through a PostgreSQL session. `G5-04` was absent. This section did not reread those rows |
+
+### 8.68.3 Decision
+
+Those four cells may still exist in the PostgreSQL data directory that accepted the 2026-10-22 write. No approved export of them was found, and the server did not accept a connection. Creating `backend/storage/app/capver.sqlite` empty would ignore that evidence. The return to SQLite is not authorization to discard it.
+
+No dedicated CapVer database was created. The existing migration was not applied to a persistent file. `storage/app/.gitignore` already ignores `*`, so a future `capver.sqlite` under that directory would be untracked; that rule was not changed.
+
+Isolated evidence only: PHPUnit `RefreshDatabase` on the testing SQLite connection ran the existing migration. SQLite library 3.53.4. Laravel framework v12.69.2. Filter of schema plus partial-unique tests: **3 tests, 35 assertions, exit 0**. That does not populate a durable CapVer store.
+
+The scientific file `storage/app/scientific_record_store.sqlite` stayed at length `1393659904` and LastWriteTimeUtc `2026-10-22T09:53:58Z`.
+
+No commit and no push.
+
+## 8.69 — One-pass CapVer recovery stopped: historical rows were not recoverable — 2026-10-23
+
+Append-only. Does not rewrite §8.60 through §8.68. Does not create `backend/storage/app/capver.sqlite`. Does not claim that the 2026-10-22 PostgreSQL cells were reread or regenerated.
+
+### 8.69.1 Report classification
+
+`docs/2026-10-22-FIVE-SOURCE-COMPLETION-REPORT.ar.md` is a summary, not a recovery source. For `G1-02`, `G6-20`, `G1-01`, and `G1-17` it records `capability_record_id`, dimension family `ACCESS_METHOD`, dimension code, command statuses `PERSISTED` then `ALREADY_CURRENT`, and an independent read of `VERIFIED` / `CURRENT`. It does not record `canonical_identity_id`, `seat_override_applied`, `evidence_freshness_class`, `snapshot_version`, `update_method`, `limitation_text`, `verified_at`, `observed_at`, `capability_evidence_refs`, `created_at`, or `updated_at`. Those columns are required or nullable by `2026_10_09_140000_create_cghia_capability_cell_records_table.php`. The table has no `seat_id`, `decision`, `persisted_at`, or `provenance` column, and no foreign keys.
+
+Saved execution JSON files that contain evidence lists, including `e2e-tmp/capver_v22.json`, record `capability_persisted: false` and `STORE_UNAVAILABLE`. They are not copies of the persisted rows. No JSON in the repository contains `"capability_store_status": "PERSISTED"`.
+
+### 8.69.2 Regeneration
+
+`capability_record_id` values for the four seats are string literals in `CapVerSeatVerificationService::seatSpec()`. They are not hashes and do not include the write timestamp. `verified_at` is the execution clock. The current authorized batch also includes `G5-04`, which the 2026-10-22 report excluded. The service file is untracked, so Git history cannot prove the four specifications were unchanged at the successful write. Verdict: **regeneration possible but not equivalent**. `scientific:capver-accepted` was not run.
+
+### 8.69.3 PostgreSQL and backups
+
+No Windows service name matched PostgreSQL. Nothing was listening on local port 5432, and no `postgres` process was running. `pg_ctl` was not on `PATH`. `C:\Program Files\PostgreSQL\17\bin\postgres.exe` is absent. The data directory there is PostgreSQL 17, has no `postmaster.pid`, and its only log is `postgresql-2026-10-19_015820.log`. That log says role `wsa` does not exist. It was not started. It is not the PostgreSQL 16 session named in the 2026-10-22 report.
+
+Named backup locations contained one PostgreSQL dump: `backups/wsa_pre_migrate_20261019_215350.dump`, 4 600 454 bytes, LastWriteTimeUtc 2026-10-19 18:54:04. Its TOC has no `cghia_capability_cell_records`. `backend/storage/app` has `scientific_record_store.sqlite` only. The other named backup directories were absent or had no CapVer dump. No recovery JSON was written, because the missing persisted fields were not invented.
+
+### 8.69.4 Isolated migration evidence
+
+On `backend/storage/framework/testing/migration_test.sqlite` only, the existing migration went up and rolled back with exit 0. SQLite 3.53.4. The partial unique indexes and the unique `capability_record_id` index were present. A synthetic fixture read back as `CURRENT`. A second current fact and a duplicate `capability_record_id` were rejected. `PRAGMA integrity_check` returned `ok`. After rollback the CapVer table was absent. This file is covered by `backend/storage/framework/testing/.gitignore`. It is not an operational store and contains no historical cells.
+
+The scientific file stayed at length `1393659904` and LastWriteTimeUtc `2026-10-22T09:53:58.9832998Z`.
+
+No commit and no push.
+
+## 8.70 — Historical CapVer rows recovered into dedicated SQLite — 2026-10-23
+
+Append-only. Does not rewrite §8.60 through §8.69. Does not move the scientific record store. Does not treat a regenerated `verified_at` as the historical row.
+
+### 8.70.1 Source
+
+Docker engine 29.6.2 was available. Inspection exit codes were 0. Container `wsa-enterprise-postgres-1` was already running (`postgres:16-alpine`, server 16.14, healthy), started `2026-10-23T11:42:54Z`. Its only data mount is volume `wsa-enterprise_postgres_data` at `/var/lib/postgresql/data`. Database name `wsa_enterprise`, role `wsa`. `wsa-enterprise-backend-1` and `wsa-enterprise-redis-1` were also running, so this container was not stopped after the read.
+
+The read used `BEGIN READ ONLY` with `transaction_read_only=on`. No SQL write, DDL, or migration was issued against that database. The table `public.cghia_capability_cell_records` held exactly four rows.
+
+### 8.70.2 Recovered rows
+
+| Seat | capability_record_id | storage id | verified_at | lifecycle |
+|---|---|---|---|---|
+| `G1-02` | `cap-rec-r11-20261018-G1-02-oai_pmh` | 2 | `2026-10-22T06:48:42+00:00` | `CURRENT` / `VERIFIED` |
+| `G6-20` | `cap-rec-r11-20261018-G6-20-api` | 3 | `2026-10-22T06:48:44+00:00` | `CURRENT` / `VERIFIED` |
+| `G1-01` | `cap-rec-r12-20261018-G1-01-bulk` | 4 | `2026-10-22T06:48:44+00:00` | `CURRENT` / `VERIFIED` |
+| `G1-17` | `cap-rec-r12-20261018-G1-17-static` | 5 | `2026-10-22T06:48:44+00:00` | `CURRENT` / `VERIFIED` |
+
+Storage id 1 is absent. `canonical_identity_id` and `limitation_text` are null. `seat_override_applied` is false. Evidence refs, snapshot, `observed_at`, and `created_at`/`updated_at` are in the recovery artifact. `G5-04` is not among these rows.
+
+Artifact: `backend/storage/framework/recovery/capver-historical-recovery.json`. SHA-256 `e69ea920ced083f72aa1741aa78e162c0f0590dc1760553d65b98e765c3b78c8`. That hash covers the file bytes. Per-record hashes inside the file cover the canonical persisted columns. Neither hash, by itself, replaces the read-only source check.
+
+### 8.70.3 Regeneration
+
+`capability_record_id` remains a literal in `CapVerSeatVerificationService::seatSpec()`. `verified_at` is the execution clock. `executeAcceptedSeats()` also includes `G5-04`, which was not in the historical table. Verdict: **regeneration possible but not equivalent**. The historical rows were imported. They were not regenerated.
+
+### 8.70.4 Dedicated store
+
+Connection name `capver`, driver sqlite, file `backend/storage/app/capver.sqlite`. `CghiaCapabilityCell` and `EloquentCapabilityStoreRepository` transactions use `capability_store.connection`, which defaults to `capver`. PHPUnit forces that setting to `sqlite` and `CAPVER_DATABASE` to `:memory:` so the existing RefreshDatabase tests stay on one connection and do not open the operational file. The migration refuses the scientific record store path and PostgreSQL database `wsa_enterprise`. The schema contract is unchanged.
+
+Import is idempotent. A different payload for the same `capability_record_id` throws and does not overwrite. SQLite backup uses `SQLite3::backup` into `backend/storage/app/capver.sqlite.backup`, and restore was checked by writing a new file under `storage/framework/testing`, not by replacing the source.
+
+After import, `scientific:capver-accepted` was run separately for `G1-02`, `G6-20`, `G1-01`, and `G1-17`. Each returned `ALREADY_CURRENT` with exit 0. The full authorized batch was not run, so `G5-04` was not inserted. An independent PDO read-back after those commands still matched the four artifact hashes. `PRAGMA integrity_check` was `ok`.
+
+The scientific file stayed at length `1393659904` and LastWriteTimeUtc `2026-10-22T09:53:58.9832998Z`.
+
+No commit and no push.
+
+## 8.71 — G5-04 GBIF capability record completion and persistence verification — 2026-10-23
+
+Append-only. Does not rewrite §8.60 through §8.70. Does not claim that this row was recovered from the 2026-10-22 PostgreSQL table. That table had four rows and no `G5-04`.
+
+### 8.71.1 Authority and bounds
+
+§8.66 authorizes seat `G5-04` only, source key `gbif`, and one `ACCESS_METHOD` / `api` cell. §8.66.4 names `cap-rec-r9-20261016-G5-04-api`, decision `cap-r9-20261016-G5-04-search`, and snapshot `gbif.rest_api.species_search.v1`. §8.66.5 requires a repository write, an independent read-back of one `CURRENT` `VERIFIED` cell, and a repeat that returns `ALREADY_CURRENT` without a second current cell. §8.66.6 still forbids a new table, a PostgreSQL write, moving the scientific store, and treating a live HTTP response as persistence by itself. §8.70 left this seat unpersisted on purpose. This section records that completion on the dedicated `capver` SQLite file.
+
+The command signature has no `--seat` option. The seat selector is the positional `adr_id`. Omitting it runs every authorized seat. The invocation used was `scientific:capver-accepted G5-04`.
+
+### 8.71.2 State before the write
+
+`capver.sqlite` had four rows, ids 2–5, and no row whose natural key or `capability_record_id` was `G5-04` / `cap-rec-r9-20261016-G5-04-api`. `PRAGMA integrity_check` was `ok`. File SHA-256 before the insert was `412dee7813730c6de5d4511c2e90f089ef83d21bce5f5d2d998d961efba36124`. A read-only SQLite backup was written to `backend/storage/app/capver.sqlite.pre-g504.backup` and was not an overwrite of `capver.sqlite.backup`.
+
+### 8.71.3 Persisted row
+
+The first command exited 0 with `store=PERSISTED` and `store_detail=cap-rec-r9-20261016-G5-04-api`. An independent read-only PDO query then found one natural-key match:
+
+- storage `id`: `6` (SQLite autoincrement; not chosen in advance)
+- `capability_record_id`: `cap-rec-r9-20261016-G5-04-api`
+- `adr_id`: `G5-04`
+- `canonical_identity_id`: null
+- `dimension_family` / `dimension_code`: `ACCESS_METHOD` / `api`
+- `seat_override_applied`: false
+- `capability_state`: `VERIFIED`
+- `evidence_freshness_class`: `CURRENT`
+- `cell_lifecycle`: `CURRENT`
+- `snapshot_version`: `gbif.rest_api.species_search.v1`
+- `observed_at`: `2026-10-22T06:33:36+00:00`
+- `verified_at`: `2026-10-23T12:20:05+00:00` (execution clock of this write, not a historical PostgreSQL timestamp)
+- `created_at` / `updated_at`: `2026-10-23 12:20:06`
+- `update_method`: `capver_authorized_evidence_review`
+- `limitation_text`: null
+- evidence refs, in stored order: the §8.66 authorization line, `IC-ER 2026-10-13 G5-04`, the recorded species-search observation `Live GET /v1/species/search q=Triticum HTTP 200 2026-10-22T06:33:36Z usageKey=315051481`, `docs/architecture/science-source-expansion/2026-10-16-NEXT-GATE-17-ENDPOINT-VERIFICATION.v1.json#G5-04`, and `onb-r9-20261016-G5-04 ACTIVE species-search contract`
+
+Total rows became 5. No other new record id appeared. The four historical rows were byte-identical to the pre-write export.
+
+### 8.71.4 Repeat, tests, and untouched stores
+
+The same command was run again and exited 0 with `store=ALREADY_CURRENT`. A second read-only PDO comparison matched the post-insert rows, including `verified_at` and the four historical rows. `PRAGMA integrity_check` remained `ok`.
+
+Isolated regression file `tests/Unit/Agriculture/Research/Capability/CapVer/CapVerG504IsolationTest.php`: `OK (3 tests, 47 assertions)`, exit 0, `00:17.101`. It used `storage/framework/testing/capver_g504_isolation.sqlite`, not the operational file. It covered one insert, a no-change repeat, rejection of the same `capability_record_id` on another natural key, and rejection of a second `CURRENT` cell for this natural key. When a different current id already occupies the natural key, `execute('G5-04')` returns `ALREADY_CURRENT` and does not replace that id.
+
+The scientific file stayed at length `1393659904`, LastWriteTimeUtc `2026-10-22T09:53:58.9832998Z`, and SHA-256 `8827901A30DC8F93888F82E10B096190DB440766733D8B860269D9ABEEE11211`. The application default connection remained `pgsql`. No Docker command was run. No commit and no push.
+
+
+## 8.72 — Round 2.5 evidence limits — 2026-10-23
+
+Append-only record of measurement limits. This section does not rewrite §8.60 through §8.71. It does not adopt a new architectural decision, activate a seat, authorize CapVer ship, or publish §§8.66–8.71.
+
+### 8.72.1 D-08 archive
+
+On 2026-10-23 the three D-08 directories were counted again: 436, 95, and 12 files. Each directory has its own `MANIFEST.md`. None of those manifests contains a SHA-256 value. Manifest verification stays `INVENTORY_ONLY`. A SHA-256 computed from a file in the archive does not prove that the file still matches its original source. The original transcript was not available, so original-source verification stays `NOT VERIFIED`. The five previously identified exception files are still present and were not rewritten. No archive byte was changed in this round.
+
+لا يمكن حاليًا إثبات المطابقة البايتية للمصدر الأصلي باستخدام الأدلة المتاحة.
+
+### 8.72.2 Integration classification
+
+`EloquentIntegrationClassificationRepository` stores classification records, enforces idempotency, and rejects a second active row. It does not send HTTP requests and it does not verify endpoints. No live verification of the 109 sources was run. The persistence tests from the previous round were not repeated in this round. The state remains partial: structure was tested earlier, and live verification is still pending. This section does not close that gap.
+
+### 8.72.3 Isolated tests in this round
+
+Knowledge persistence, covering the early-reject cases and the storage cases, exited 0: `OK (11 tests, 79 assertions)`. The default connection and the capver connection were sqlite `:memory:`. Source bytes were written through `Storage::fake('local')`. Downloads used `Http::fake()`. The semantic index was a mock.
+
+Mission artifact export now rejects a name that is not one safe file name, including an empty name, `.`, `..`, `/`, `\`, and Windows device names. A blob directory that cannot be created returns `blob_dir` and does not insert a row. A blob path that leaves the blob root is not read. That suite exited 0: `OK (13 tests, 91 assertions)`. Temporary archives were under `storage/framework/testing`, and none remained after the run.
+
+### 8.72.4 Protected files
+
+After those tests, `scientific_record_store.sqlite` was still length 1393659904, LastWriteTimeUtc `2026-10-22T09:53:58.9832998Z`, SHA-256 `8827901A30DC8F93888F82E10B096190DB440766733D8B860269D9ABEEE11211`. `capver.sqlite` was still length 32768, LastWriteTimeUtc `2026-10-23T12:20:07.1352738Z`, SHA-256 `66CA7C1497BA84E3FF9ECCBF01D6A5E2BC193571469EEAED1A5D10B19C00B875`. The comparison is a file-byte hash. The databases were not opened.
+
+No staging, commit, or push was performed.
+
+### 8.72.5 Still open
+
+Original D-08 bytes are not verified. Endpoint verification for integration classification was not performed. §§8.66–8.71 remain unapproved local text. Round 3 is not authorized by this section.
