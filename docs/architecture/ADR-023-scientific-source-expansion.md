@@ -8919,3 +8919,25 @@ The original decision D-08 says every Cursor prompt and report for this phase mu
 ### 8.73.5 Protected files
 
 After the archive test, file hashes were measured again without opening either database. `scientific_record_store.sqlite` remained length `1393659904`, LastWriteTimeUtc `2026-10-22T09:53:58.9832998Z`, SHA-256 `8827901A30DC8F93888F82E10B096190DB440766733D8B860269D9ABEEE11211`. `capver.sqlite` remained length `32768`, LastWriteTimeUtc `2026-10-23T12:20:07.1352738Z`, SHA-256 `66CA7C1497BA84E3FF9ECCBF01D6A5E2BC193571469EEAED1A5D10B19C00B875`. Both matched the measurement taken before the test.
+
+## 8.74 — D-08 transcript comparison — 2026-10-24
+
+Append-only. This section does not rewrite §8.60 through §8.73. It is not the report required by P1-EXIT-11, and it does not record Phase 1 exit. It does not authorize endpoint probes, CapVer ship, or a definition of a layer named Layer H.
+
+### 8.74.1 Independent source
+
+The archives name one Cursor conversation transcript. On 2026-10-24 that file was `agent-transcripts/b258b225-a306-467c-9ffa-e460a3b095af.jsonl`, 18,413 lines, length 62,157,108 bytes. Other chat transcripts in the same projects directory were not used: the existing manifests cite line numbers that belong to this file. The comparison read those lines and did not modify the transcript or the earlier archives.
+
+### 8.74.2 Records archived on or before 2026-10-14
+
+540 record files were compared, excluding the three `MANIFEST.md` files. 531 are byte-identical to the owner query or executor text at the cited line. Three reports remain redacted: their non-redacted segments occur in order in the cited line, with a non-empty gap for each `[REDACTED]`. They are `2026-10-09-2220-do-not-stage-or-commit-anything-yet-provide-the-complete-pro-report.md` (line 13840), `2026-10-09-2239-continue-the-ic-integrity-review-the-temporary-file-wsa-ic-c-report.md` (line 13845), and `2026-10-09-2305-continue-report.md` (line 13853). Six cited lines no longer hold the archived text. The same text is byte-identical at a current line: the 14:05 report cites 14759 and is at 14757; the 14:57 prompt cites 14761 and is at 14758 and 14759; the supplement-01 14:57 report cites 14855 and is at 14854; the supplement-01 16:29 prompt cites 14867 and is at 14860 and 14861; the supplement-02 16:29 report cites 14914 and is at 14907; the supplement-02 17:04 prompt cites 14916 and is at 14908 and 14909. Those six files were not edited.
+
+### 8.74.3 Supplement 03
+
+D-08 requires every prompt and report of this phase to be archived. After line 14909, the same transcript held owner prompts that were not in the 2026-10-14 archives. A new directory, `2026-10-24-D-08-archive-supplement-03/`, records 128 unique prompts and 117 reports. Identical consecutive prompts are stored once. A report is the last executor message of at least 300 characters after the prompt and before the next distinct owner prompt or system notification. Eleven prompts had no such report. All 245 new record files are byte-identical to the cited line. The credential scan of that directory found no private-key block, no `AKIA` key, no GitHub personal-access token, and no Bearer token. The one assignment-shaped string is the already published test sentinel `BHL_API_KEY=should-never-archive`. The executor report for the prompt that requested this comparison did not exist when the files were written.
+
+### 8.74.4 What this does not close
+
+Layer F stays open. §8.30.5 records `ENDPOINT TESTED` 0 because GB-IC-01 prohibits requests to machine endpoints. §8.63.6 still requires verified per-seat IC evidence before runtime binding, and the IC inventory remains OPEN. No live probe was added, and a mocked HTTP client is not that evidence. Layer H stays undefined: this ADR still has no adopted section that defines a layer by that name, and no other architecture document or PHP test defines one. The five-cell CapVer test was not re-run; its code and isolated database path were not changed. §8.64.7 still prevents Phase 1 exit until every checklist item is PASS and P1-EXIT-11 is recorded. Neither condition is met here.
+
+Before this section was added, and before supplement 03 was written, both protected databases were hashed without being opened. `scientific_record_store.sqlite` was length `1393659904`, LastWriteTimeUtc `2026-10-22T09:53:58.9832998Z`, SHA-256 `8827901A30DC8F93888F82E10B096190DB440766733D8B860269D9ABEEE11211`. `capver.sqlite` was length `32768`, LastWriteTimeUtc `2026-10-23T12:20:07.1352738Z`, SHA-256 `66CA7C1497BA84E3FF9ECCBF01D6A5E2BC193571469EEAED1A5D10B19C00B875`. Both matched the values in §8.73.5.
