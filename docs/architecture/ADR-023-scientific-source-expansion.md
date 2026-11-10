@@ -8992,3 +8992,27 @@ The later documentary review under GB-IC-01 (§8.30.5) produced 109 proposed `UN
 ## 8.78 — Layer H — proposed decision, not approved
 
 No section of this ADR defines a layer named Layer H. §8.73.4 and §8.74.4 record that absence. The five-cell CapVer test is not that definition. This section proposes, and does not approve, that a future owner decision either adopt a normative definition with scope, inputs, outputs, failure semantics, and exit tests, or record an explicit `NOT_APPLICABLE` decision. Until one of those decisions is adopted, Layer H stays undefined and Phase 1 exit is not satisfied by the CapVer test alone. `capver.sqlite` is not evidence for this proposal.
+
+## 8.79 — Inspection of 2026-10-25 — packet items remain pending
+
+Append-only. This section does not rewrite §8.60 through §8.78. It is not an owner approval, not Gate A, not Gate B, not P1-EXIT-11, and not Phase 1 exit. It does not select H-1 or H-2, does not close P1-EXIT-01(c), does not adopt a CapVer decision-identifier format, does not amend P1-EXIT-07 or P1-EXIT-10, does not confirm §8.64.7, and does not close D-08.
+
+HEAD at inspection was `83bf22a2f1ce1c2ca9de07ebe3f3dd1600848cde`, equal to `origin/phase-18-m18-ai-marketing-communications`. The latest heading before this section was §8.78. No later approved decision was found.
+
+| Item | Verified state | Not done by this section |
+|---|---|---|
+| OD-C | Option B is selected (§8.31.1). P1-EXIT-01(c) remains NOT CLOSED (§8.33.6, §8.33.7). The §8.32.3 transcription of T2 still says Projection owns query. D-04 keeps HTTP query construction in `ScientificSearchQueryBuilder`. | The names `unsupported_facets`, `omitted_facets`, `unresolved_facets`, and `projection_warnings` are not adopted as the approved constraint contract. `source_query` is not introduced. Untracked Projection files are not committed. |
+| OD-A-ID | §8.31.1: the architecture owner owns CapVer; enforcement is above the repository plus a defensive write check; design only. §8.30.1(b): only a CapVer-authorized assessment writes a capability state; UNVERIFIED is not persisted; no automatic demotion. | No approved identifier format exists. No enforcement code was added. A formatted identifier is not authorization. |
+| OD-H | §8.78 proposes, and does not approve, a future definition or an explicit `NOT_APPLICABLE` decision. | Neither H-1 nor H-2 is selected. |
+| OD-07 | P1-EXIT-07 remains the 109-seat criterion and BLOCKED (§8.64.7, §8.77). Current membership is `110.v1` including `G2-26` (§8.45.2). | `G2-26` is not inserted into the 109 snapshot. No classification, identity verification, endpoint test, or eligibility is fabricated. An additive exit obligation is not approved. |
+| OD-10 | Historical 109-row matrices stay historical. | No 110-row current matrix is created. The exit sentence is not amended. |
+| OD-CL | §8.64.7 remains PROPOSED — NOT CONFIRMED (§8.31.1). | It is not treated as the sole exit list. |
+| OD-D08 | D-08 remains the archive rule. No supplement 04 existed before this inspection. | D-08 is not closed. This inspection does not hand-copy the 2026-10-25 prompt into an archive: §8.30.6 rejects a hand copy that cannot guarantee verbatim text, and no transcript line was available. |
+
+`G2-26` has no row in the 109-seat documentary review of §8.30.5. Its seat-specific evidence gap is `no_documentary_review_in_gb_ic_01_scope`. That label is not a classification, not identity verification, not an endpoint result, and not operational eligibility.
+
+AUD-01 through AUD-15 do not occur in this ADR or in any other tracked architecture register found by search on 2026-10-25. They are labels from a prior audit report, not exit gates. Treating "12 governance", "3 evidence", "1 closed", and "1 restricted" as disjoint categories double-counts overlapping labels. This section does not create an AUD register.
+
+`OperationalEligibilityGateTest` was run on 2026-10-25 from `backend` with PHP `8.4.26` and PHPUnit `11.5.56`: `OK (9 tests, 41 assertions)`, exit 0, time 00:05.421, memory 10.00 MB. The test class does not boot Laravel. Bootstrap forced `DB_DATABASE=:memory:` and `CAPVER_DATABASE=:memory:`. This run does not close P1-EXIT-07, P1-EXIT-09, or Phase 1.
+
+Flutter projects exist at `mobile/` and `admin-mobile/`. This inspection does not change them. Pre-existing working-tree modifications, and the untracked Projection and CapVer trees, were not staged.
