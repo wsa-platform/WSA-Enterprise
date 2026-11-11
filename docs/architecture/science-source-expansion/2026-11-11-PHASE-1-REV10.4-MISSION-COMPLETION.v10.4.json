@@ -1,0 +1,127 @@
+{
+  "schema_id": "adr023.mission_completion_record.v1",
+  "created_at_utc": "2026-11-11T18:45:00Z",
+  "baseline_head": "c7b2f771fe7b35bee85acbec032ba37390e6693e",
+  "missions": [
+    {
+      "mission_id": "M1",
+      "scope": "Primary DB identification",
+      "permission_class": "READ_ONLY",
+      "files_inspected": ["backend/config/database.php", "backend/.env (keys only)", "docker-compose.yml"],
+      "files_modified": "NONE",
+      "tests_executed": "NOT_APPLICABLE",
+      "evidence": "2026-11-11-PHASE-1-PRIMARY-DATABASE-IDENTIFICATION.v10.4.json",
+      "result": "PARTIAL — configured PostgreSQL wsa_enterprise; runtime NOT_VERIFIED",
+      "remaining_gaps": ["Live PDO connectivity"],
+      "definition_of_done_status": "COMPLETE_WITH_LIMITATION"
+    },
+    {
+      "mission_id": "M2",
+      "scope": "Database inventory",
+      "permission_class": "READ_ONLY",
+      "files_modified": "NONE",
+      "tests_executed": "NOT_APPLICABLE",
+      "evidence": "DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md",
+      "result": "Primary + LocalIndex + CapVer + Archive SQLite + test PG classified",
+      "remaining_gaps": ["Operational primary connectivity"],
+      "definition_of_done_status": "COMPLETE"
+    },
+    {
+      "mission_id": "M3",
+      "scope": "Archive discovery",
+      "permission_class": "READ_ONLY",
+      "files_modified": "NONE",
+      "tests_executed": "artisan mission-artifacts show (read)",
+      "evidence": "2026-11-11-PHASE-1-ARCHIVE-STORAGE-IDENTITY.v10.4.json",
+      "result": "Hybrid VERIFIED",
+      "remaining_gaps": ["Backup ops runbook NOT_VERIFIED"],
+      "definition_of_done_status": "COMPLETE"
+    },
+    {
+      "mission_id": "M4",
+      "scope": "Database documentation",
+      "permission_class": "DOCUMENTATION",
+      "files_modified": ["docs/architecture/DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md"],
+      "tests_executed": "NOT_APPLICABLE",
+      "result": "Canonical inventory created",
+      "definition_of_done_status": "COMPLETE"
+    },
+    {
+      "mission_id": "M5",
+      "scope": "Architecture diagram",
+      "permission_class": "DOCUMENTATION",
+      "files_modified": ["docs/architecture/DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md §7 Mermaid"],
+      "result": "Verified relationships only; PRIMARY connectivity marked uncertain",
+      "definition_of_done_status": "COMPLETE"
+    },
+    {
+      "mission_id": "M6",
+      "scope": "CR-R101-02",
+      "permission_class": "DOCUMENTATION + SAFE FIX",
+      "files_modified": ["2026-11-11-PHASE-1-CONFLICT-RESOLUTION-CR-R101-02.v10.4.json"],
+      "tests_executed": "CapVerWriteBoundary included in 83/424",
+      "result": "IMPLEMENTATION_CONFORMS",
+      "remaining_gaps": ["ADR §8.81.2 historical text lag — append note recommended later"],
+      "definition_of_done_status": "COMPLETE"
+    },
+    {
+      "mission_id": "M7",
+      "scope": "Workstream H",
+      "permission_class": "IMPLEMENTATION + TESTING",
+      "files_modified": ["2026-11-11-PHASE-1-REV10.4-INTEGRATION-PATHS-VERIFICATION.v10.4.json"],
+      "tests_executed": "83/424 EXIT 0",
+      "result": "H_DOCUMENTATION DONE; H_INTEGRATION PARTIAL; H_OVERALL PARTIAL",
+      "definition_of_done_status": "COMPLETE_WITH_PARTIAL_STATUS"
+    },
+    {
+      "mission_id": "M8",
+      "scope": "Workstream I",
+      "permission_class": "IMPLEMENTATION + VERIFICATION",
+      "files_modified": ["2026-11-11-PHASE-1-REV10.4-ARCHIVE-VERIFICATION.v10.4.json"],
+      "result": "PARTIAL — sample ARCHIVED_AND_VERIFIED; Rev10.4 docs CREATED_NOT_ARCHIVED",
+      "definition_of_done_status": "COMPLETE_WITH_PARTIAL_STATUS"
+    },
+    {
+      "mission_id": "M9",
+      "scope": "EXIT-06 gap matrix",
+      "permission_class": "INVESTIGATION + SAFE FIX",
+      "files_modified": ["2026-11-11-PHASE-1-EXIT-06-RECORD-GAP-MATRIX.v10.4.json"],
+      "safe_fixes": "NONE",
+      "result": "Matrix complete; criterion remains PARTIAL",
+      "definition_of_done_status": "COMPLETE"
+    },
+    {
+      "mission_id": "M10",
+      "scope": "EXIT-08 family matrix",
+      "permission_class": "INVESTIGATION + SAFE FIX",
+      "files_modified": ["2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.4.json"],
+      "result": "Three families PARTIAL; packages MISSING",
+      "definition_of_done_status": "COMPLETE"
+    },
+    {
+      "mission_id": "M11",
+      "scope": "EXIT-09 requirement",
+      "permission_class": "INVESTIGATION + TESTING",
+      "files_modified": ["2026-11-11-PHASE-1-EXIT-09-REQUIREMENT-ASSESSMENT.v10.4.json"],
+      "tests_executed": "SQLite portion 83/424 EXIT 0; PG Cap suite NOT_RUN",
+      "result": "PG testing mandatory for Cap persist/concurrency; NOT_RUN",
+      "definition_of_done_status": "COMPLETE"
+    },
+    {
+      "mission_id": "M12",
+      "scope": "EXIT-11 authority",
+      "permission_class": "INVESTIGATION + DOCUMENTATION",
+      "files_modified": ["2026-11-11-PHASE-1-EXIT-11-AUTHORITY-AND-DEPENDENCY.v10.4.json"],
+      "result": "AGGREGATE gate; NOT_RUN",
+      "definition_of_done_status": "COMPLETE"
+    },
+    {
+      "mission_id": "EXIT-05/07/D-08",
+      "scope": "External blockers",
+      "permission_class": "INVESTIGATION + DOCUMENTATION",
+      "files_modified": ["2026-11-11-PHASE-1-REV10.4-EXTERNAL-BLOCKERS.v10.4.json"],
+      "result": "BLOCKED preserved; no fabrication",
+      "definition_of_done_status": "COMPLETE"
+    }
+  ]
+}

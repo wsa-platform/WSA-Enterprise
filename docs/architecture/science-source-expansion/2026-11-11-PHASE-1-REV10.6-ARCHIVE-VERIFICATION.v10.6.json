@@ -1,0 +1,29 @@
+{
+  "schema_id": "adr023.archive_verification_report.v1",
+  "created_at_utc": "2026-11-11T19:20:00Z",
+  "mission_id": "2026-11-11-PHASE-1-REV10.6",
+  "workstream_i_status": "DONE",
+  "method": "FilesystemMissionArtifactArchive::ingestFile + verifyIntegrity",
+  "artifacts": [
+    {"file": "DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md", "archive_id": "maa_3c1c859b22b94765_0b305c7e28ef", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-PRIMARY-DATABASE-IDENTIFICATION.v10.4.json", "archive_id": "maa_c9786a2c7039757f_977c5a101fd0", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-ARCHIVE-STORAGE-IDENTITY.v10.4.json", "archive_id": "maa_192c8b2330b4fd45_a6f49810dccb", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-REV10.4-ARCHIVE-VERIFICATION.v10.4.json", "archive_id": "maa_d69ea8a2cec83dde_49ced65a36f8", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-CONFLICT-RESOLUTION-CR-R101-02.v10.4.json", "archive_id": "maa_757839224e1e52ff_ac0f1af3fc88", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-EXIT-06-RECORD-GAP-MATRIX.v10.4.json", "archive_id": "maa_54295d9c9ad9e142_92da424cd04a", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-EXIT-06-RECORD-GAP-MATRIX.v10.6.json", "archive_id": "maa_f0b766e8aa0b29b5_71a88f4f950d", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.4.json", "archive_id": "maa_36efe97c18b75029_69f6cc5e3190", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.RestJson.v10.6.json", "archive_id": "maa_c718b98bb49f5c5e_8cf80ec25c57", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.OaiPmh.v10.6.json", "archive_id": "maa_7272cc187c7c3d76_38f0dbda7385", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.Bulk.v10.6.json", "archive_id": "maa_066d19286d39e495_376474a35fa0", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-EXIT-09-REQUIREMENT-ASSESSMENT.v10.4.json", "archive_id": "maa_96d90687adbb0754_23c9066a497e", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-EXIT-11-AUTHORITY-AND-DEPENDENCY.v10.4.json", "archive_id": "maa_35e595876f992b5f_de468dc950bd", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-REV10.4-INTEGRATION-PATHS-VERIFICATION.v10.4.json", "archive_id": "maa_f4dda6f6bc66067d_1ee3f9b25e5a", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-REV10.4-EXTERNAL-BLOCKERS.v10.4.json", "archive_id": "maa_fe4346dcc99e0135_0bd171e25151", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-REV10.4-MISSION-COMPLETION.v10.4.json", "archive_id": "maa_7fef698de342e54a_3cfe957e40e9", "status": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-11-PHASE-1-REV10.4-SESSION-REPORT.ar.md", "archive_id": "maa_fd2f156ee7fdea1b_ea3697c06788", "status": "ARCHIVED_AND_VERIFIED"}
+  ],
+  "remaining_gaps": [
+    "Session report and progress updates created after this ingest will be archived in a follow-up ingest before final push if eligible"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema_id": "adr023.exit11_authority_dependency.v1",
+  "created_at_utc": "2026-11-11T18:25:00Z",
+  "criterion": "P1-EXIT-11",
+  "authoritative_definition": {
+    "source": "ADR-023 §8.64.7",
+    "text": "A Phase 1 verification report appended to this ADR that re-verifies P1-EXIT-01 to P1-EXIT-10 on current evidence, followed by an explicit decision recording Phase 1 exit"
+  },
+  "nature": "AGGREGATE_FORMAL_VERIFICATION_GATE",
+  "independent": false,
+  "depends_on": ["P1-EXIT-01", "P1-EXIT-02", "P1-EXIT-03", "P1-EXIT-04", "P1-EXIT-05", "P1-EXIT-06", "P1-EXIT-07", "P1-EXIT-08", "P1-EXIT-09", "P1-EXIT-10"],
+  "dependency_rule": "§8.64.7 Rule: Phase 1 leaves BLOCKED only when every item is PASS (and earlier applicable criteria met) and exit recorded under P1-EXIT-11",
+  "every_dependency_must_be_pass": true,
+  "alternative_evidence_permitted": false,
+  "additional_tests_required": "As needed to re-verify 01–10 on current evidence",
+  "owner_approval_required": true,
+  "closure_conditions": [
+    "Verification report appended to ADR-023",
+    "Explicit Phase 1 exit decision recorded",
+    "All P1-EXIT-01..10 PASS under locked acceptance baseline"
+  ],
+  "current_status": "NOT_RUN",
+  "why_not_run": "Prerequisites not all PASS (05/07 BLOCKED; 06/08/09/10 PARTIAL; D-08 BLOCKED remains archival)"
+}

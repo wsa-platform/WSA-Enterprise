@@ -1,0 +1,82 @@
+{
+  "schema_id": "adr023.integration_paths_verification.v1",
+  "created_at_utc": "2026-11-11T18:30:00Z",
+  "baseline_head": "c7b2f771fe7b35bee85acbec032ba37390e6693e",
+  "H_DOCUMENTATION_STATUS": "DONE",
+  "H_INTEGRATION_VERIFICATION_STATUS": "PARTIAL",
+  "H_OVERALL_STATUS": "PARTIAL",
+  "paths": [
+    {
+      "id": "H1",
+      "name": "CSQ Builder → Compiler",
+      "source": "CanonicalScientificQueryBuilder",
+      "target": "CanonicalScientificQueryCompiler",
+      "contract": "CanonicalScientificQuery",
+      "status": "VERIFIED",
+      "test_evidence": "Family/CSQ unit tests in prior + this session Family suite",
+      "limitations": "Unit identity ≠ end-to-end pipeline identity alone"
+    },
+    {
+      "id": "H2",
+      "name": "Compiler → Source-specific query",
+      "source": "CanonicalScientificQueryCompiler",
+      "target": "SourceFamily adapters (Rest/OAI/Bulk)",
+      "contract": "Compiled query DTOs / family request objects",
+      "status": "PARTIAL",
+      "test_evidence": "Family suite EXIT 0",
+      "limitations": "Per-source provenance of CSQ fields not exhaustively asserted across all adapters"
+    },
+    {
+      "id": "H3",
+      "name": "Orchestration → Adapter execution",
+      "source": "ScientificSearchOrchestrator / ProjectionOrchestrator",
+      "target": "ScientificSourceAdapterRegistry::get",
+      "contract": "sourceKey lookup (primary); adr_id via Catalog separately",
+      "status": "PARTIAL",
+      "test_evidence": "ProjectionOrchestratorRuntimeIntegrationTest prior; CapVerWriteBoundary this session",
+      "limitations": "Adapter registry remains sourceKey-primary"
+    },
+    {
+      "id": "H4",
+      "name": "Adapter → Normalization",
+      "source": "Family adapters",
+      "target": "Normalization / evidence records",
+      "contract": "Normalized scientific evidence shapes",
+      "status": "PARTIAL",
+      "test_evidence": "Family contract tests",
+      "limitations": "CSQ semantic authority across normalize step not fully matrixed"
+    },
+    {
+      "id": "H5",
+      "name": "Evidence → CapVer / Projection",
+      "source": "Evidence processors",
+      "target": "CapVerWriteGuard / CapVerSeat / Projection",
+      "contract": "OD-A-ID 3-arg persist; CapVer-only VERIFIED",
+      "status": "VERIFIED",
+      "test_evidence": "CapVerWriteBoundaryTest + CapVerSeat DI resolve (Rev10.1)"
+    },
+    {
+      "id": "H6",
+      "name": "LocalIndex / ScientificRecordStore",
+      "source": "Bulk projectors / index writers",
+      "target": "scientific_record_store.sqlite (independent)",
+      "contract": "Local scientific index store",
+      "status": "PARTIAL",
+      "test_evidence": "Bulk family tests; file exists",
+      "limitations": "Operational read/write against protected store not exercised destructively"
+    },
+    {
+      "id": "H7",
+      "name": "Mission Artifact Archive",
+      "source": "FilesystemMissionArtifactArchive",
+      "target": "archive.sqlite + blobs",
+      "contract": "MissionArtifactArchive interface",
+      "status": "VERIFIED",
+      "test_evidence": "artisan show + SHA-256 match sample maa_aef9b37e364e2517_a5442d11c9c5"
+    }
+  ],
+  "csq_identity": {
+    "status": "PARTIAL",
+    "note": "Builder/orchestrator success ≠ end-to-end CSQ identity preservation across all seven hops; H1/H5/H7 strongest; H2–H4/H6 need deeper provenance assertions"
+  }
+}

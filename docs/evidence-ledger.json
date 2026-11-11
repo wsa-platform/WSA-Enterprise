@@ -207,5 +207,111 @@
         "Absence of local DB_TEST_* does not invalidate historical EXIT-04 evidence."
       ]
     }
+  ],
+  "session_addenda": [
+    {
+      "id": "REV-10.6-ADDENDUM",
+      "created_at_utc": "2026-11-11T19:25:00Z",
+      "baseline_head": "96d30c2fe4a592e902cfc65ba1c36b794f39a8ad",
+      "note": "Evidence references only; Progress Register is canonical for PASS updates",
+      "items": [
+        {
+          "topic": "exit06_pass",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-06-RECORD-GAP-MATRIX.v10.6.json",
+          "commit": "96d30c2",
+          "tests": "ScientificSourceCatalogContractTest 15/216 EXIT 0",
+          "result": "Governed seats expose authentic IC/Cap/identity refs"
+        },
+        {
+          "topic": "exit08_pass",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.6.json",
+          "tests": "Family 52/251 + Projection 2/10 EXIT 0",
+          "result": "Contract-level family packages Rest/OAI/Bulk"
+        },
+        {
+          "topic": "workstream_h_done",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV10.6-INTEGRATION-PATHS-VERIFICATION.v10.6.json",
+          "result": "H_OVERALL DONE; CSQ identity VERIFIED via compilation suite"
+        },
+        {
+          "topic": "workstream_i_done",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV10.6-ARCHIVE-VERIFICATION.v10.6.json",
+          "result": "17 artifacts ARCHIVED_AND_VERIFIED"
+        },
+        {
+          "topic": "exit09_pg_not_run",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-TEST-REPORT.v10.6.json",
+          "result": "DB_TEST_* absent; NOT_RUN"
+        },
+        {
+          "topic": "cr_r101_02_adr_correction",
+          "file": "docs/architecture/ADR-023-scientific-source-expansion.md §8.81.2-CORRECTION",
+          "result": "Append-only CapVerSeat HEAD status note"
+        }
+      ]
+    },
+    {
+      "id": "REV-10.4-ADDENDUM",
+      "created_at_utc": "2026-11-11T18:40:00Z",
+      "baseline_head": "c7b2f771fe7b35bee85acbec032ba37390e6693e",
+      "note": "Evidence references only; does not independently change canonical criterion status",
+      "items": [
+        {
+          "topic": "primary_database",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-PRIMARY-DATABASE-IDENTIFICATION.v10.4.json",
+          "result": "CONFIGURED PostgreSQL wsa_enterprise; runtime connectivity NOT_VERIFIED"
+        },
+        {
+          "topic": "archive_storage",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ARCHIVE-STORAGE-IDENTITY.v10.4.json",
+          "result": "Hybrid SQLite archive.sqlite + blobs VERIFIED; sample hash match"
+        },
+        {
+          "topic": "archive_verification",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV10.4-ARCHIVE-VERIFICATION.v10.4.json",
+          "result": "Workstream I PARTIAL; Rev10.4 docs CREATED_NOT_ARCHIVED"
+        },
+        {
+          "topic": "cr_r101_02",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-CONFLICT-RESOLUTION-CR-R101-02.v10.4.json",
+          "result": "IMPLEMENTATION_CONFORMS"
+        },
+        {
+          "topic": "integration_h",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV10.4-INTEGRATION-PATHS-VERIFICATION.v10.4.json",
+          "result": "H_DOCUMENTATION DONE; H_INTEGRATION PARTIAL; H_OVERALL PARTIAL"
+        },
+        {
+          "topic": "exit06_gap_matrix",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-06-RECORD-GAP-MATRIX.v10.4.json",
+          "result": "Governed entries MISSING_REFERENCE for IC/Cap store IDs"
+        },
+        {
+          "topic": "exit08_family_matrix",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.4.json",
+          "result": "Families PARTIAL — verification packages MISSING"
+        },
+        {
+          "topic": "exit09",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-09-REQUIREMENT-ASSESSMENT.v10.4.json",
+          "result": "PG Cap suite REQUIRED and NOT_RUN (DB_TEST_* absent)"
+        },
+        {
+          "topic": "exit11",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-11-AUTHORITY-AND-DEPENDENCY.v10.4.json",
+          "result": "AGGREGATE gate NOT_RUN"
+        },
+        {
+          "topic": "external_blockers",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV10.4-EXTERNAL-BLOCKERS.v10.4.json",
+          "result": "EXIT-05/07/D-08 remain BLOCKED"
+        },
+        {
+          "topic": "tests_rev104",
+          "file": "docs/architecture/science-source-expansion/_tmp-r104-tests.txt",
+          "result": "83 tests / 424 assertions / exit 0"
+        }
+      ]
+    }
   ]
 }

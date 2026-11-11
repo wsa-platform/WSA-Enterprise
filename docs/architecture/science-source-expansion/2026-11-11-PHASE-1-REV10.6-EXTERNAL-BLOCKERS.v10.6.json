@@ -1,0 +1,36 @@
+{
+  "schema_id": "adr023.external_blockers_investigation.v1",
+  "created_at_utc": "2026-11-11T19:25:00Z",
+  "items": [
+    {
+      "criterion": "P1-EXIT-05",
+      "blocker_id": "P1-BLK-2026-11-11-EXIT05-STAGING-01",
+      "status": "BLOCKED",
+      "internal_prep_complete": true,
+      "investigation": "No staging operator attestation available in repository; Gate A/B FOUND contracts exist but do not substitute for staging validation.",
+      "required_owner_action": "Provide staging/operator evidence for §8.25.6 deployment validation"
+    },
+    {
+      "criterion": "P1-EXIT-07",
+      "blocker_id": "P1-BLK-2026-11-11-G2-26-01",
+      "status": "BLOCKED",
+      "investigation": "G2-26 remains without authentic original IC evidence; no fabrication performed.",
+      "required_owner_action": "Supply original G2-26 IC evidence or authorize seat-specific disposition"
+    },
+    {
+      "criterion": "D-08",
+      "blocker_id": "P1-BLK-2026-11-11-D08-01",
+      "status": "BLOCKED",
+      "investigation": "Supplement 04 not recovered in docs/archives/history this revision; classification remains SUPPLEMENT_04_NOT_FOUND / HISTORY_INDETERMINATE.",
+      "required_owner_action": "Locate Supplement 04 original or formally accept indeterminacy under OD-D08"
+    },
+    {
+      "criterion": "P1-EXIT-09",
+      "blocker_id": "P1-BLK-2026-11-11-EXIT09-PG-01",
+      "status": "BLOCKED",
+      "classification": "INFRASTRUCTURE",
+      "investigation": "DB_TEST_* absent; isolated *_test PostgreSQL not proven; operational DB must not be targeted.",
+      "required_action": "Provision disposable loopback *_test DB and DB_TEST_* env; run phpunit -c phpunit.pgsql.xml"
+    }
+  ]
+}

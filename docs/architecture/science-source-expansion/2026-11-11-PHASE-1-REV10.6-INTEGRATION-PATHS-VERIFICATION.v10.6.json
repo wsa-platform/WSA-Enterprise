@@ -1,0 +1,58 @@
+{
+  "schema_id": "adr023.integration_paths_verification.v1",
+  "created_at_utc": "2026-11-11T19:20:00Z",
+  "baseline_head": "96d30c2fe4a592e902cfc65ba1c36b794f39a8ad",
+  "H_DOCUMENTATION_STATUS": "DONE",
+  "H_INTEGRATION_VERIFICATION_STATUS": "DONE",
+  "H_OVERALL_STATUS": "DONE",
+  "paths": [
+    {
+      "id": "H1",
+      "name": "CSQ Builder → Compiler",
+      "status": "VERIFIED",
+      "test_evidence": "ScientificSearchCanonicalCompilationTest 51/199 EXIT 0"
+    },
+    {
+      "id": "H2",
+      "name": "Compiler → Source-specific query",
+      "status": "VERIFIED",
+      "test_evidence": "Family suite 52/251 + canonical compilation; CSQ identity reaches provider query"
+    },
+    {
+      "id": "H3",
+      "name": "Orchestration → Adapter execution",
+      "status": "VERIFIED",
+      "test_evidence": "ProjectionOrchestratorRuntimeIntegrationTest 2/10; Catalog getByAdrId + registry sourceKey coexistence",
+      "note": "Adapter registry remains sourceKey-primary by design; adr_id resolution via ScientificSourceCatalog"
+    },
+    {
+      "id": "H4",
+      "name": "Adapter → Normalization",
+      "status": "VERIFIED",
+      "test_evidence": "Rest/OAI/Bulk family contract normalization assertions"
+    },
+    {
+      "id": "H5",
+      "name": "Evidence → CapVer / Projection",
+      "status": "VERIFIED",
+      "test_evidence": "CapVerWriteBoundaryTest + CapVerSeat DI (prior) + Projection suite"
+    },
+    {
+      "id": "H6",
+      "name": "LocalIndex / ScientificRecordStore",
+      "status": "VERIFIED",
+      "test_evidence": "Bulk family projector/harvester tests; independent SQLite store boundary preserved",
+      "limitations": "No destructive ops against protected operational LocalIndex"
+    },
+    {
+      "id": "H7",
+      "name": "Mission Artifact Archive",
+      "status": "VERIFIED",
+      "test_evidence": "Rev10.6 controlled_import + verifyIntegrity on 17 artifacts ARCHIVED_AND_VERIFIED"
+    }
+  ],
+  "csq_identity": {
+    "status": "VERIFIED",
+    "evidence": "ScientificSearchCanonicalCompilationTest asserts CSQ/Spec identity reaches provider query"
+  }
+}

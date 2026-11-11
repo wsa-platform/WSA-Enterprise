@@ -1,0 +1,40 @@
+{
+  "schema_id": "adr023.exit08_family_verification_matrix.v1",
+  "created_at_utc": "2026-11-11T19:20:00Z",
+  "criterion": "P1-EXIT-08",
+  "authoritative": "ADR-023 §8.64.7 / §8.24.5; Acceptance Baseline v10.1 mandatory_conditions",
+  "gate_b": "GB-FOUNDATION-01",
+  "proposed_canonical_status": "PASS",
+  "rationale": "Family evidence packages present for Rest/OAI-PMH/Bulk; Family contract suite 52/251 EXIT 0; Builder ownership confirmed via ProjectionOrchestratorRuntimeIntegrationTest 2/10 EXIT 0; live external connectivity not claimed and not required as separate PASS fabrication",
+  "families": [
+    {
+      "family_name": "REST_API / RestJson",
+      "package": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.RestJson.v10.6.json",
+      "archive_id": "maa_c718b98bb49f5c5e_8cf80ec25c57",
+      "tests": "RestJsonSourceFamilyTest (within Family suite)",
+      "closure_status": "PASS_CONTRACT_LEVEL"
+    },
+    {
+      "family_name": "OAI-PMH",
+      "package": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.OaiPmh.v10.6.json",
+      "archive_id": "maa_7272cc187c7c3d76_38f0dbda7385",
+      "tests": "OaiPmhSourceFamilyTest",
+      "closure_status": "PASS_CONTRACT_LEVEL"
+    },
+    {
+      "family_name": "Bulk / Dataset",
+      "package": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.Bulk.v10.6.json",
+      "archive_id": "maa_066d19286d39e495_376474a35fa0",
+      "tests": "AgrisOds* + DrDukeDatasetReconcilerTest",
+      "closure_status": "PASS_CONTRACT_LEVEL"
+    }
+  ],
+  "tests_executed": {
+    "family_suite": {"tests": 52, "assertions": 251, "exit_code": 0},
+    "projection_orchestrator": {"tests": 2, "assertions": 10, "exit_code": 0},
+    "csq_compilation": {"tests": 51, "assertions": 199, "exit_code": 0, "notes": "PHPUnit deprecations=4; not failures"}
+  },
+  "limitations": [
+    "Live authenticated external family connectivity remains NOT_CLAIMED (operational/staging; not fabricated)"
+  ]
+}

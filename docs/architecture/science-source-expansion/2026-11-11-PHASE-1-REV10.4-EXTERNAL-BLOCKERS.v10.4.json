@@ -1,0 +1,31 @@
+{
+  "schema_id": "adr023.external_blockers_investigation.v1",
+  "created_at_utc": "2026-11-11T18:30:00Z",
+  "items": [
+    {
+      "criterion": "P1-EXIT-05",
+      "blocker_id": "P1-BLK-2026-11-11-EXIT05-STAGING-01",
+      "status": "BLOCKED",
+      "investigation": "No new staging/operator evidence produced this revision. Repository contains Gate A/B FOUND contracts (§8.64.4) but staging environment operator attestation is external.",
+      "fabricated": false,
+      "required_owner_action": "Provide staging operator evidence or authorize alternative approved verification path"
+    },
+    {
+      "criterion": "P1-EXIT-07",
+      "blocker_id": "P1-BLK-2026-11-11-G2-26-01",
+      "status": "BLOCKED",
+      "investigation": "G2-26 original IC evidence not located as authentic original this session; technical approximations do not satisfy original-evidence requirement.",
+      "fabricated": false,
+      "required_owner_action": "Supply original G2-26 IC evidence"
+    },
+    {
+      "criterion": "D-08",
+      "blocker_id": "P1-BLK-2026-11-11-D08-01",
+      "status": "BLOCKED",
+      "investigation": "SUPPLEMENT_04_NOT_FOUND / HISTORY_INDETERMINATE preserved. Searched science-source-expansion docs and archive sample titles; Supplement 04 original not recovered.",
+      "fabricated": false,
+      "reconstruction_presented_as_original": false,
+      "required_owner_action": "Locate Supplement 04 or formally accept indeterminacy under OD-D08"
+    }
+  ]
+}

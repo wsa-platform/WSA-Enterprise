@@ -1,0 +1,35 @@
+{
+  "schema_id": "adr023.exit09_requirement_assessment.v1",
+  "created_at_utc": "2026-11-11T18:25:00Z",
+  "supersedes_assessment": "2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-ASSESSMENT.v9.2.json",
+  "authoritative_sources": [
+    "ADR-023 §8.64.7 P1-EXIT-09",
+    "ADR-023 §8.24.9 item 7 (remains applicable until §8.64.7 confirmed — CR-R101-01)",
+    "backend/phpunit.pgsql.xml"
+  ],
+  "postgresql_testing_mandatory": true,
+  "mandatory_scope": "Isolated persistence/concurrency tests for implemented scopes (incl. Cap CURRENT concurrency §8.23.8); NOT a mandate to use PostgreSQL as CapVer/LocalIndex/Archive engines",
+  "applies_to_primary_operational_database": false,
+  "authoritative_mechanism": "backend/phpunit.pgsql.xml + DB_TEST_* + destructive-reset safety gate on *_test DB",
+  "sqlite_portion": {
+    "required": true,
+    "this_session": {"tests": 83, "assertions": 424, "exit_code": 0}
+  },
+  "postgresql_portion": {
+    "required": true,
+    "status": "NOT_RUN",
+    "reason": "DB_TEST_* not present in backend/.env; cannot safely claim dedicated test DB",
+    "blocker": "P1-BLK-2026-11-11-EXIT09-PG-01"
+  },
+  "primary_db_runtime_note": "Configured primary is PostgreSQL wsa_enterprise but local PDO connect failed auth — unrelated to authorizing EXIT-09 Cap suite against operational DB (forbidden)",
+  "overall_criterion_status": "PARTIAL",
+  "tests_executed": [
+    {
+      "command": "phpunit Family + ScientificSourceCatalogContractTest + CapVerWriteBoundaryTest",
+      "cwd": "backend",
+      "exit_code": 0,
+      "tests": 83,
+      "assertions": 424
+    }
+  ]
+}

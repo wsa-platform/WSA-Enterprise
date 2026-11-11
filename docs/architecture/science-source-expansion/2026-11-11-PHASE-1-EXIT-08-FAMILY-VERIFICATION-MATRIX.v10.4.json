@@ -1,0 +1,48 @@
+{
+  "schema_id": "adr023.exit08_family_verification_matrix.v1",
+  "created_at_utc": "2026-11-11T18:25:00Z",
+  "criterion": "P1-EXIT-08",
+  "canonical_status": "PARTIAL",
+  "aggregate_suite_note": "97/433 (Rev10.1 Family+Contract) and 83/424 (Rev10.4 Family+Catalog+CapVer) do NOT prove verified-family evidence packages",
+  "families": [
+    {
+      "family_name": "REST_API / RestJson",
+      "implementation": "backend/app/Services/Agriculture/Research/Search/Family/Rest/",
+      "contract_tests": ["tests/Unit/Agriculture/Research/Search/Family/RestJsonSourceFamilyTest.php"],
+      "related_sources": ["openalex", "crossref", "semantic_scholar", "consensus", "fao_stat", "governed REST seats"],
+      "tests_executed_this_session": "included in Family directory suite EXIT 0",
+      "verification_package": "MISSING — no authenticated family-verification evidence artifact package per §8.24.5",
+      "closure_status": "PARTIAL",
+      "limitations": "Unit/contract green ≠ verified access-family evidence"
+    },
+    {
+      "family_name": "OAI-PMH",
+      "implementation": "backend/app/Services/Agriculture/Research/Search/Family/OaiPmh/",
+      "contract_tests": ["tests/Unit/Agriculture/Research/Search/Family/OaiPmhSourceFamilyTest.php"],
+      "related_sources": ["organic_eprints / OAI seats"],
+      "tests_executed_this_session": "included in Family directory suite EXIT 0",
+      "verification_package": "MISSING",
+      "closure_status": "PARTIAL",
+      "limitations": "External harvest not claimed"
+    },
+    {
+      "family_name": "Bulk / Dataset",
+      "implementation": "backend/app/Services/Agriculture/Research/Search/Family/Bulk/",
+      "contract_tests": [
+        "AgrisOdsBoundedHarvesterTest.php",
+        "AgrisOdsAndDrDukeProjectorTest.php",
+        "DrDukeDatasetReconcilerTest.php"
+      ],
+      "related_sources": ["agris", "dr_duke"],
+      "tests_executed_this_session": "included in Family directory suite EXIT 0",
+      "verification_package": "MISSING",
+      "closure_status": "PARTIAL",
+      "limitations": "Projector/harvester unit tests ≠ verified-family package"
+    }
+  ],
+  "d04_builder_ownership": {
+    "status": "VERIFIED_PRIOR",
+    "evidence": "OD-C / ProjectionOrchestratorRuntimeIntegrationTest (prior sessions + CapVer suite this session)"
+  },
+  "safe_fix_this_revision": "NONE — evidence packages require authentic family verification materials"
+}

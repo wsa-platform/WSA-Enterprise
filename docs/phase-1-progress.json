@@ -1,12 +1,14 @@
 {
     "schema_version": "1.0",
-    "last_updated": "2026-11-11T18:10:00Z",
+    "last_updated": "2026-11-11T19:25:00Z",
     "repository": "wsa-platform/WSA-Enterprise",
     "branch": "phase-18-m18-ai-marketing-communications",
-    "head": "7bc7e02e5841d3684c7e0403c5fc71b172a5a947",
+    "head": "96d30c2fe4a592e902cfc65ba1c36b794f39a8ad",
     "remote_sync": "0/0",
     "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
     "progress_descriptor": "NEAR_COMPLETE",
+    "revision_note_10_4": "Rev 10.4: DB/archive discovery READ_ONLY; CR-R101-02 IMPLEMENTATION_CONFORMS; H/I PARTIAL; EXIT statuses unchanged without new closure evidence; no Commit/Push",
+    "revision_note_10_6": "Rev 10.6: EXIT-06/08 PASS; H/I DONE; EXIT-09 PG NOT_RUN; EXIT-05/07/D-08 BLOCKED; EXIT-11 NOT_RUN; commits+push authorized",
     "criteria": {
         "P1-EXIT-01": {
             "status": "PASS",
@@ -135,29 +137,34 @@
             "verified_at": "2026-11-11T15:55:00Z"
         },
         "P1-EXIT-06": {
-            "status": "PARTIAL",
+            "status": "PASS",
             "original_definition_ref": "ADR-023 §8.64.7 / §8.24.2",
             "requirements": [
-                "Runtime Source Registry + Cap integration under Gate B"
+                "Runtime Source Registry + Cap integration under Gate B",
+                "entries keyed by adr_id referencing IC, identity, and Cap records"
             ],
             "evidence_files": [
-                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-06-CLOSURE-MATRIX.v9.2.json",
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-06-RECORD-GAP-MATRIX.v10.6.json",
+                "backend/app/Services/Agriculture/Research/Search/Registry/ScientificSourceRegistration.php",
                 "backend/app/Services/Agriculture/Research/Search/Registry/ScientificSourceCatalog.php"
             ],
-            "test_commands": [],
+            "test_commands": [
+                "phpunit ScientificSourceCatalogContractTest"
+            ],
             "test_results": {
-                "tests": 211,
-                "assertions": 6768,
+                "tests": 15,
+                "assertions": 216,
                 "exit_code": 0,
-                "summary": "Cluster suite; catalog adr_id index 15/149"
+                "summary": "Governed seats expose authentic IC/Cap/identity refs from Onboarding Contracts"
             },
             "evidence_commits": [
                 "cfc9d1b",
-                "efd1e7d"
+                "efd1e7d",
+                "96d30c2"
             ],
             "blockers": [],
-            "next_action": "Attach IC/identity/Cap references on governed adr_id entries per §8.24.2",
-            "verified_at": "2026-11-11T17:45:00Z"
+            "next_action": "Preserve; EXIT-09 PG Cap concurrency remains separate",
+            "verified_at": "2026-11-11T19:20:00Z"
         },
         "P1-EXIT-07": {
             "status": "BLOCKED",
@@ -185,28 +192,35 @@
             "verified_at": "2026-11-11T12:25:00Z"
         },
         "P1-EXIT-08": {
-            "status": "PARTIAL",
+            "status": "PASS",
             "original_definition_ref": "ADR-023 §8.64.7 / §8.24.5",
             "requirements": [
                 "Verified access-family adapters under Gate B; Builder keeps query construction"
             ],
             "evidence_files": [
-                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-CLOSURE-MATRIX.v9.2.json"
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.6.json",
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.RestJson.v10.6.json",
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.OaiPmh.v10.6.json",
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.Bulk.v10.6.json"
             ],
-            "test_commands": [],
+            "test_commands": [
+                "phpunit Family",
+                "phpunit ProjectionOrchestratorRuntimeIntegrationTest"
+            ],
             "test_results": {
-                "tests": 211,
-                "assertions": 6768,
+                "tests": 54,
+                "assertions": 261,
                 "exit_code": 0,
-                "summary": "Family/Contract cluster green; verified-family evidence packages incomplete"
+                "summary": "Family 52/251 + Projection 2/10; contract-level family packages archived"
             },
             "evidence_commits": [
                 "cfc9d1b",
-                "efd1e7d"
+                "efd1e7d",
+                "96d30c2"
             ],
             "blockers": [],
-            "next_action": "Continue verified-family evidence packages; adapters landed under GB-FOUNDATION-01",
-            "verified_at": "2026-11-11T17:45:00Z"
+            "next_action": "Preserve; live external connectivity remains NOT_CLAIMED (not fabricated)",
+            "verified_at": "2026-11-11T19:20:00Z"
         },
         "P1-EXIT-09": {
             "status": "PARTIAL",
@@ -493,16 +507,24 @@
         "capverseat_di": {
             "exit_code": 0,
             "note": "container resolve CapVerSeatVerificationService"
+        },
+        "rev104_focused": {
+            "tests": 83,
+            "assertions": 424,
+            "exit_code": 0,
+            "command": "phpunit Family + ScientificSourceCatalogContractTest + CapVerWriteBoundaryTest",
+            "log": "docs/architecture/science-source-expansion/_tmp-r104-tests.txt"
         }
     },
     "next_session_focus": [
-        "EXIT-06 IC/Cap/identity refs on adr_id entries",
+        "Authorize Commit/Push of Rev 10.4 docs + archive ingest",
+        "EXIT-06 IC/Cap/identity refs on adr_id entries (no invention)",
         "EXIT-08 verified-family evidence packages",
-        "EXIT-09 DB_TEST_* PG Cap suite",
+        "EXIT-09 DB_TEST_* PG Cap suite (isolated)",
         "EXIT-05/07/D-08 authentic external evidence",
-        "EXIT-11 after prerequisites"
+        "EXIT-11 after prerequisites PASS"
     ],
-    "last_checkpoint": "Rev10.1: governance extraction+CR; CapVerSeat DI; integration paths; tests 34/638 + 97/433; EXIT still PARTIAL/BLOCKED externally",
+    "last_checkpoint": "Rev10.6: EXIT-06/08 PASS; H/I DONE; archive 17 artifacts verified; EXIT-09 PG NOT_RUN; EXIT-05/07/D-08 BLOCKED; EXIT-11 NOT_RUN; commit 96d30c2 pushed; docs commit pending",
     "gap_report": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV8.4-GAP-01-08-REPORT.md",
     "acceptance_baseline": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ACCEPTANCE-BASELINE.v10.1.json",
     "assumption_register": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ASSUMPTION-REGISTER.v1.json",
@@ -512,7 +534,11 @@
     "dependency_matrix": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-DEPENDENCY-MATRIX.v9.2.json",
     "earlier_requirements": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EARLIER-REQUIREMENTS-EXTRACTION.v10.1.json",
     "conflict_resolution": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-CONFLICT-RESOLUTION-RECORD.v10.1.json",
+    "conflict_resolution_cr_r101_02": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-CONFLICT-RESOLUTION-CR-R101-02.v10.4.json",
     "workstream_dod": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WORKSTREAM-DOD.v10.1.json",
     "integration_paths": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-INTEGRATION-PATHS.v10.1.json",
+    "integration_paths_verification_rev104": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV10.4-INTEGRATION-PATHS-VERIFICATION.v10.4.json",
+    "database_archive_inventory": "docs/architecture/DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md",
+    "session_report_rev104": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV10.4-SESSION-REPORT.ar.md",
     "classification_note_rev101": "Rev 10.1 prompt labels PHASE_1_PARTIAL map to schema-legal PHASE_1_GAP_CLOSURE_PARTIAL"
 }

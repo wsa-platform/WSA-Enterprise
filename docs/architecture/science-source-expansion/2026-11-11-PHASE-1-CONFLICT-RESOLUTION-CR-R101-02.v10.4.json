@@ -1,0 +1,31 @@
+{
+  "schema_id": "adr023.conflict_resolution_record.v1",
+  "conflict_id": "CR-R101-02",
+  "updated_at_utc": "2026-11-11T18:25:00Z",
+  "baseline_head": "c7b2f771fe7b35bee85acbec032ba37390e6693e",
+  "reference_a": {
+    "text": "ADR-023 §8.81.2: CapVerSeatVerificationService / CapVerSeatOutcome remain untracked WIP; depend on untracked Onboarding; still call persistCurrent with two arguments; not required for OD-A-ID write-boundary; not committed in that amendment.",
+    "approval_status": "Historical append-only ADR amendment (Rev 4) — descriptive state at time of writing"
+  },
+  "reference_b": {
+    "code": [
+      "backend/app/Services/Agriculture/Research/Capability/CapVer/CapVerSeatVerificationService.php",
+      "backend/app/Services/Agriculture/Research/Capability/CapVer/CapVerSeatOutcome.php",
+      "backend/app/Providers/AgriculturalIntelligenceServiceProvider.php (singleton binding)"
+    ],
+    "commit": "cfc9d1b (land) + c7b2f77 (DI binding)",
+    "behavior": "Tracked in HEAD; Onboarding tracked; persistCurrent($record, $evidence_refs, $assessment) three-arg; container resolve EXIT 0"
+  },
+  "contract_comparison": {
+    "od_a_id_write_boundary": "CapVerSeat now issues CapVerAuthorizedAssessment and uses 3-arg persist — conforms to OD-A-ID write model for seat workflow",
+    "adr_881_literal": "Stale relative to HEAD — documentation lag, not an approved architectural reversal of CapVerSeat purpose"
+  },
+  "test_evidence": {
+    "capverseat_di_resolve": "EXIT 0 (Rev 10.1)",
+    "capver_write_boundary_suite": "included in Rev 10.4 focused suite 83/424 EXIT 0"
+  },
+  "conclusion": "IMPLEMENTATION_CONFORMS",
+  "residual": "ADR §8.81.2 text remains historically true for that amendment date; an append-only ADR correction note is recommended but not applied in Rev 10.4 (no Commit).",
+  "required_owner_decision": false,
+  "safe_fixes_applied_this_revision": "NONE (implementation already conforming; docs-only conflict classification updated)"
+}

@@ -1,0 +1,92 @@
+{
+  "schema_id": "adr023.exit06_record_gap_matrix.v1",
+  "created_at_utc": "2026-11-11T19:05:00Z",
+  "criterion": "P1-EXIT-06",
+  "authoritative": "ADR-023 §8.64.7 / §8.24.2",
+  "implementation": {
+    "method": "ScientificSourceRegistration::authoritativeRecordReferences()",
+    "source_of_truth": "AcceptedOnboardingDecisionCatalog / ScientificSourceOnboardingContract",
+    "invented_ids": false
+  },
+  "tests": {
+    "command": "phpunit ScientificSourceCatalogContractTest",
+    "tests": 15,
+    "assertions": 216,
+    "exit_code": 0
+  },
+  "records": [
+    {
+      "source_key": "gbif",
+      "adr_id": "G5-04",
+      "ic_reference": "ic-r9-20261016-G5-04-rest",
+      "capability_store_reference": "cap-r9-20261016-G5-04-search",
+      "identity_binding": "adr023.canonical.seat.G5-04",
+      "classification": "COMPLETE",
+      "note": "Refs resolved from Onboarding Contract; Cap decision identity is Cap record reference (not a fabricated CapVer cell UUID)"
+    },
+    {
+      "source_key": "agris",
+      "adr_id": "G1-01",
+      "ic_reference": "ic-r12-20261018-G1-01-bulk-bounded",
+      "capability_store_reference": "cap-r12-20261018-G1-01-search",
+      "identity_binding": "adr023.canonical.seat.G1-01",
+      "classification": "COMPLETE"
+    },
+    {
+      "source_key": "dr_duke",
+      "adr_id": "G1-17",
+      "ic_reference": "ic-r12-20261018-G1-17-static-limited",
+      "capability_store_reference": "cap-r12-20261018-G1-17-search",
+      "identity_binding": "adr023.canonical.seat.G1-17",
+      "classification": "COMPLETE"
+    },
+    {
+      "source_key": "organic_eprints",
+      "adr_id": "G1-02",
+      "ic_reference": "ic-r11-20261018-G1-02-oai_pmh",
+      "capability_store_reference": "cap-r11-20261018-G1-02-search",
+      "identity_binding": "adr023.canonical.seat.G1-02",
+      "classification": "COMPLETE"
+    },
+    {
+      "source_key": "bhl",
+      "adr_id": "G6-20",
+      "ic_reference": "ic-r11-20261018-G6-20-rest",
+      "capability_store_reference": "cap-r11-20261018-G6-20-search",
+      "identity_binding": "adr023.canonical.seat.G6-20",
+      "classification": "COMPLETE"
+    },
+    {
+      "source_key": "openalex",
+      "adr_id": null,
+      "classification": "COMPLETE",
+      "note": "LEGACY_STAGE3 — no adr_id / IC-Cap binding required"
+    },
+    {
+      "source_key": "crossref",
+      "adr_id": null,
+      "classification": "COMPLETE"
+    },
+    {
+      "source_key": "semantic_scholar",
+      "adr_id": null,
+      "classification": "COMPLETE"
+    },
+    {
+      "source_key": "consensus",
+      "adr_id": null,
+      "classification": "COMPLETE"
+    },
+    {
+      "source_key": "fao_stat",
+      "adr_id": null,
+      "classification": "COMPLETE"
+    }
+  ],
+  "residual": [
+    "EXIT-09 isolated PostgreSQL Cap concurrency remains a separate criterion; does not invent IC/Cap refs",
+    "Primary adapter registry lookup remains sourceKey-primary; adr_id resolution is available via Catalog::getByAdrId"
+  ],
+  "proposed_canonical_status": "PASS",
+  "proposed_status_rationale": "All governed runtime catalog seats now expose authentic IC, Cap decision, and identity references through the registration contract; legacy seats correctly omit them"
+}

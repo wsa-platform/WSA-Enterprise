@@ -1,0 +1,36 @@
+{
+  "schema_id": "adr023.archive_verification_report.v1",
+  "created_at_utc": "2026-11-11T18:25:00Z",
+  "baseline_head": "c7b2f771fe7b35bee85acbec032ba37390e6693e",
+  "mission": "Workstream I / Mission 8",
+  "archive_root_meta": "backend/storage/app/mission_artifact_archive/archive.sqlite",
+  "archive_root_blobs": "backend/storage/app/mission_artifact_archive/blobs",
+  "artifact_count_observed": 705,
+  "samples": [
+    {
+      "archive_id": "maa_aef9b37e364e2517_a5442d11c9c5",
+      "title": "2026-11-11-PHASE-1-EARLIER-REQUIREMENTS-EXTRACTION.v10.1.json",
+      "mission_id": "2026-11-11-PHASE-1-REV10.1",
+      "persisted": true,
+      "readable": true,
+      "content_sha256": "aef9b37e364e2517db3aff53571683b68cff359a8bd3f506d72151211bdb43ad",
+      "blob_hash_match": true,
+      "status": "ARCHIVED_AND_VERIFIED",
+      "verification_method": "artisan mission-artifacts show + hash_file on blob"
+    },
+    {
+      "archive_id": "maa_27e05a5631e49381_83f1aa37c9bf",
+      "title": "2026-11-11-PHASE-1-REV10.1-SESSION-REPORT.ar.md",
+      "mission_id": "2026-11-11-PHASE-1-REV10.1",
+      "status": "PERSISTED_NOT_VERIFIED",
+      "note": "Referenced in Rev10.1 archive log; full hash re-read not repeated for every ID this session"
+    }
+  ],
+  "rev104_new_docs_status": "CREATED_NOT_ARCHIVED",
+  "rev104_new_docs_note": "Rev 10.4 forbids Commit/Push; new documentation files exist in working tree and are listed for pre-commit review. Archive ingest of Rev10.4 docs deferred until authorized commit session.",
+  "workstream_i_status": "PARTIAL",
+  "remaining_gaps": [
+    "Ingest/verify all Rev 10.4 deliverables after authorized commit session",
+    "Optional bulk verify of all 705 artifacts not performed"
+  ]
+}

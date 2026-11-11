@@ -1,0 +1,27 @@
+{
+  "schema_id": "adr023.exit09_postgresql_test_report.v1",
+  "created_at_utc": "2026-11-11T19:20:00Z",
+  "criterion": "P1-EXIT-09",
+  "authoritative": "ADR-023 §8.64.7; §8.24.9 item 7 dual-applicable; backend/phpunit.pgsql.xml",
+  "sqlite_portion": {
+    "status": "PASS",
+    "executions": [
+      {"suite": "ScientificSourceCatalogContractTest", "tests": 15, "assertions": 216, "exit_code": 0},
+      {"suite": "Family", "tests": 52, "assertions": 251, "exit_code": 0},
+      {"suite": "ScientificSearchCanonicalCompilationTest", "tests": 51, "assertions": 199, "exit_code": 0},
+      {"suite": "ProjectionOrchestratorRuntimeIntegrationTest", "tests": 2, "assertions": 10, "exit_code": 0}
+    ]
+  },
+  "postgresql_portion": {
+    "mandatory": true,
+    "status": "NOT_RUN",
+    "config": "backend/phpunit.pgsql.xml",
+    "required_env_keys": ["DB_TEST_HOST", "DB_TEST_PORT", "DB_TEST_DATABASE", "DB_TEST_USERNAME", "DB_TEST_PASSWORD", "DB_TEST_ALLOW_DESTRUCTIVE_RESET"],
+    "isolation_gate": "PostgresTestDatabaseGuard — loopback host; DB name must end with _test; ALLOW_DESTRUCTIVE_RESET must repeat DB name",
+    "reason": "DB_TEST_* keys absent from backend/.env; cannot prove isolated disposable *_test database; operational wsa_enterprise must not be targeted",
+    "blocker": "P1-BLK-2026-11-11-EXIT09-PG-01",
+    "required_corrective_action": "Provision loopback PostgreSQL *_test database and set DB_TEST_* + DB_TEST_ALLOW_DESTRUCTIVE_RESET matching name; then run phpunit -c phpunit.pgsql.xml"
+  },
+  "overall_criterion_status": "PARTIAL",
+  "impact": "Blocks EXIT-11 aggregate PASS and formal PHASE_1_COMPLETE"
+}

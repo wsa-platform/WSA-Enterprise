@@ -1,0 +1,33 @@
+{
+  "schema_id": "adr023.phase1_final_acceptance_matrix.v1",
+  "created_at_utc": "2026-11-11T19:25:00Z",
+  "baseline_head_at_start": "c7b2f771fe7b35bee85acbec032ba37390e6693e",
+  "implementation_commit": "96d30c2fe4a592e902cfc65ba1c36b794f39a8ad",
+  "classification": "PHASE_1_PARTIAL",
+  "progress_schema_classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "criteria": [
+    {"id": "P1-EXIT-01", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-02", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-03", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-04", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-05", "previous": "BLOCKED", "current": "BLOCKED", "blocker": "P1-BLK-2026-11-11-EXIT05-STAGING-01"},
+    {"id": "P1-EXIT-06", "previous": "PARTIAL", "current": "PASS", "evidence": "96d30c2 + EXIT-06 matrix v10.6"},
+    {"id": "P1-EXIT-07", "previous": "BLOCKED", "current": "BLOCKED", "blocker": "P1-BLK-2026-11-11-G2-26-01"},
+    {"id": "P1-EXIT-08", "previous": "PARTIAL", "current": "PASS", "evidence": "family packages v10.6 + Family/Projection tests"},
+    {"id": "P1-EXIT-09", "previous": "PARTIAL", "current": "PARTIAL", "blocker": "P1-BLK-2026-11-11-EXIT09-PG-01", "note": "SQLite PASS; PG Cap suite NOT_RUN"},
+    {"id": "P1-EXIT-10", "previous": "PARTIAL", "current": "PARTIAL", "note": "Matrix integrity historically advanced; final update dependency reduced but not re-run as full 110 inventory this revision"},
+    {"id": "P1-EXIT-11", "previous": "NOT_RUN", "current": "NOT_RUN", "reason": "Requires all P1-EXIT-01..10 PASS"},
+    {"id": "D-08", "previous": "BLOCKED", "current": "BLOCKED", "blocker": "P1-BLK-2026-11-11-D08-01", "note": "SUPPLEMENT_04_NOT_FOUND / HISTORY_INDETERMINATE"}
+  ],
+  "workstreams": {
+    "H": "DONE",
+    "I": "DONE"
+  },
+  "formal_phase1_closed": false,
+  "blocking_external_or_infra": [
+    "EXIT-05 staging/operator evidence",
+    "EXIT-07 G2-26 original IC evidence",
+    "D-08 Supplement 04 original",
+    "EXIT-09 isolated PostgreSQL DB_TEST_* infrastructure"
+  ]
+}

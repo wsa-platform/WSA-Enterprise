@@ -1,0 +1,33 @@
+{
+  "schema_id": "adr023.family_verification_package.v1",
+  "family_name": "REST_API / RestJson",
+  "created_at_utc": "2026-11-11T19:00:00Z",
+  "baseline_head": "c7b2f771fe7b35bee85acbec032ba37390e6693e",
+  "authoritative": "ADR-023 §8.24.5 / §8.80 GB-FOUNDATION-01 — adapters only for verified access families; Builder owns HTTP (D-04)",
+  "verification_levels": {
+    "contract": "COMPLETE",
+    "adapter_implementation": "COMPLETE",
+    "fixture_normalization": "COMPLETE",
+    "live_external_connectivity": "NOT_CLAIMED"
+  },
+  "adapter_implementation": "backend/app/Services/Agriculture/Research/Search/Family/Rest/",
+  "contract_tests": [
+    "backend/tests/Unit/Agriculture/Research/Search/Family/RestJsonSourceFamilyTest.php"
+  ],
+  "related_sources": {
+    "governed_verified_family_seats": ["gbif (G5-04)", "bhl (G6-20)"],
+    "legacy_stage3_rest": ["openalex", "crossref", "semantic_scholar", "consensus", "fao_stat"]
+  },
+  "capability_status": "Governed seats use VERIFIED_SUPPORTED SEARCH declarations backed by Cap decision identities on Onboarding Contracts; legacy seats use LEGACY_OPERATIONAL_BASIS only",
+  "query_implementation": "Source-specific Rest family profile + ScientificSearchQueryBuilder ownership preserved (D-04)",
+  "normalization": "RestJson family normalizer covered by RestJsonSourceFamilyTest",
+  "error_handling": "Family contract asserts taxonomy / fail-closed paths in unit suite",
+  "provenance": "sourceKey + adr_id bindings via Stage3SourceKeyIdentityBridge for governed seats",
+  "csq_identity": "Compiler/family path must preserve CSQ; keyword-only collapse not authorized",
+  "evidence_package_status": "CONTRACT_VERIFIED_PACKAGE",
+  "limitations": [
+    "Does not claim live authenticated REST calls against external providers in this package",
+    "Live connectivity remains a separate verification level"
+  ],
+  "closure_status": "PARTIAL_CONTRACT_COMPLETE"
+}

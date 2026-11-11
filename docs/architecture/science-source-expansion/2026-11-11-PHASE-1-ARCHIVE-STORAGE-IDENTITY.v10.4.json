@@ -1,0 +1,37 @@
+{
+  "schema_id": "adr023.archive_storage_identity.v1",
+  "created_at_utc": "2026-11-11T18:20:00Z",
+  "baseline_head": "c7b2f771fe7b35bee85acbec032ba37390e6693e",
+  "permission_class": "READ_ONLY",
+  "matrix": {
+    "archive_component": "App\\Services\\Architecture\\MissionArtifactArchive\\FilesystemMissionArtifactArchive",
+    "metadata_database": "archive.sqlite",
+    "database_engine": "SQLite",
+    "database_path": "G:\\WSA-Enterprise\\backend\\storage\\app\\mission_artifact_archive\\archive.sqlite",
+    "artifact_storage": "Hybrid — SQLite metadata + content-addressed filesystem blobs",
+    "artifact_root": "G:\\WSA-Enterprise\\backend\\storage\\app\\mission_artifact_archive\\blobs",
+    "artifact_disk": "local filesystem (config mission_artifact_archive.blob_root)",
+    "artifact_path_pattern": "blobs/{sha[0:2]}/{sha[2:4]}/{sha}.bin",
+    "manifest_location": "SQLite table mission_artifacts (+ relationships table)",
+    "index_location": "SQLite indexes idx_ma_mission/type/sha/search",
+    "read_operation": "get(archive_id); artisan mission-artifacts show --id=...",
+    "write_operation": "ingestFile / controlled_import (not exercised for discovery writes in Rev10.4 read-only missions)",
+    "integrity_verification": "content_sha256 vs blob hash_file; verify API on archive class",
+    "backup_strategy": "NOT_VERIFIED as automated ops runbook this session; store is file-based under storage/app",
+    "evidence": [
+      "backend/config/mission_artifact_archive.php",
+      "MissionArtifactArchiveFactory::default()",
+      "artisan show maa_aef9b37e364e2517_a5442d11c9c5 EXIT 0",
+      "MAA_HASH_MATCH=yes; MAA_ARTIFACT_COUNT=705"
+    ],
+    "status": "VERIFIED"
+  },
+  "lifecycle": [
+    {"step": "Artifact Creation", "status": "VERIFIED_CODE"},
+    {"step": "Metadata Persistence", "target": "archive.sqlite mission_artifacts", "status": "VERIFIED_READBACK"},
+    {"step": "Content Persistence", "target": "blobs/*.bin", "status": "VERIFIED_READBACK"},
+    {"step": "Index/Manifest Update", "target": "SQLite indexes + relationships", "status": "VERIFIED_SCHEMA"},
+    {"step": "Retrieval", "status": "VERIFIED"},
+    {"step": "Integrity Verification", "status": "VERIFIED_HASH_MATCH"}
+  ]
+}

@@ -9077,6 +9077,19 @@ When Cap or Path decision is absent (e.g. coexistence `LEGACY_ONLY`), status is 
 
 `CapVerSeatVerificationService` / `CapVerSeatOutcome` remain **untracked WIP**. They depend on untracked Onboarding catalogs and still call `persistCurrent` with two arguments while the CapVer write boundary requires an authorized assessment. They are **not** required for OD-A-ID write-boundary enforcement (already covered by `CapVerWriteBoundary` + `EloquentCapabilityStoreRepository`). They are **not** committed in this amendment.
 
+#### 8.81.2-CORRECTION — CapVerSeat HEAD status (Rev 10.6 append-only)
+
+**Append-only correction.** §8.81.2 above records the historical state at the time of that amendment and is **not** rewritten.
+
+As of HEAD `96d30c2` (and earlier commits `cfc9d1b` land + `c7b2f77` DI binding):
+
+- `CapVerSeatVerificationService` / `CapVerSeatOutcome` are **tracked** in the repository.
+- Onboarding catalogs required by CapVerSeat are **tracked**.
+- CapVerSeat issues `CapVerAuthorizedAssessment` and calls `persistCurrent` with **three** arguments.
+- Conflict record `CR-R101-02` classification: `IMPLEMENTATION_CONFORMS` (docs/architecture/science-source-expansion/2026-11-11-PHASE-1-CONFLICT-RESOLUTION-CR-R101-02.v10.4.json).
+
+This correction does **not** change OD-A-ID write-boundary ownership and does **not** authorize Cap writes outside CapVer.
+
 ### 8.81.3 — Supplement 04 re-check
 
 Read-only re-search on 2026-11-11 (Rev 4): no git deletion history for Supplement 04 paths; supplements 01–03 remain present. Outcome unchanged: `SUPPLEMENT_04_NOT_FOUND` → scenario best supported by evidence: `REFERENCED_OR_PLANNED_BUT_NEVER_CREATED` (not proven deleted). D-08 remains open.
