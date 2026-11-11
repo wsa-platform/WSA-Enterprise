@@ -1,0 +1,36 @@
+{
+  "schema_id": "adr023.commit_push_execution_record.v1",
+  "created_at_utc": "2026-11-11T19:35:00Z",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "remote": "origin",
+  "commits": [
+    {
+      "hash": "96d30c2fe4a592e902cfc65ba1c36b794f39a8ad",
+      "subject": "fix(phase-1): expose authoritative IC/Cap/identity refs on governed catalog seats",
+      "files": [
+        "backend/app/Services/Agriculture/Research/Search/Registry/ScientificSourceRegistration.php",
+        "backend/app/Services/Agriculture/Research/Search/Registry/ScientificSourceCatalog.php",
+        "backend/tests/Unit/Agriculture/Research/Search/Registry/ScientificSourceCatalogContractTest.php"
+      ],
+      "tests": "ScientificSourceCatalogContractTest 15/216 EXIT 0",
+      "push": {
+        "result": "success",
+        "range": "c7b2f77..96d30c2",
+        "sync_after": "0/0"
+      }
+    },
+    {
+      "hash": "6f5c08acbcdd99eacd752ad49aca416bc3cfb4e7",
+      "subject": "docs(phase-1): Rev 10.6 EXIT-06/08 closure, H/I verification, and evidence reconcile",
+      "files_count": 27,
+      "tests": "Phase1ProgressSchemaTest 3/111 EXIT 0; Family/Projection/Catalog suites recorded in evidence",
+      "push": {
+        "result": "success",
+        "range": "96d30c2..6f5c08a",
+        "sync_after": "0/0"
+      }
+    }
+  ],
+  "force_push_used": false,
+  "unrelated_wip_included": false
+}
