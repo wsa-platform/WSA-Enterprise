@@ -2,19 +2,20 @@
     "schema_id": "adr023.phase1_blocker_register.v1",
     "governance_reference": "ADR-023/section-8.80;ADR-023/section-8.81;ADR-023/section-8.82",
     "created_at": "2026-11-11T00:00:00Z",
-    "updated_at": "2026-11-11T14:50:00Z",
+    "updated_at": "2026-11-11T16:15:00Z",
     "notes": [
         "AUD-01 through AUD-15 are not an authoritative architecture register in this repository.",
         "Unsupported AUD labels are recorded as UNVERIFIED_REFERENCE aliases only.",
         "This register does not rewrite historical reports.",
         "Rev 8.2: GA-FOUNDATION-01 / GB-FOUNDATION-01 recorded under owner pre-approval; Gate A/B blockers resolved for foundation+IC-inventory scopes.",
-        "Explore follow-up: tracked Registry/ServiceProvider depend on untracked Onboarding/Family/Contract \u2014 see WIP-COUPLING-HAZARD.v1.json"
+        "Rev 8.3/8.4: GB-FOUNDATION-01 coupled Registry/Family/Contract/Onboarding/CapVerSeat cluster committed (cfc9d1b) and remote-synced; WIP-COUPLING-01 and CAPVERSEAT-WIP-01 resolved.",
+        "Late explore snapshot at historical HEAD 6ada6fe is SUPERSEDED by HEAD >= cfc9d1b / 1e85419; do not re-open Gate A/B foundation or reclassify committed cluster as untracked."
     ],
     "entries": [
         {
             "blocker_id": "P1-BLK-2026-11-11-G2-26-01",
             "historical_aud_alias": null,
-            "original_reference": "ADR-023 \u00a78.79; OD-07",
+            "original_reference": "ADR-023 §8.79; OD-07",
             "supporting_evidence": "docs/architecture/science-source-expansion/2026-11-11-G2-26-SEAT-SPECIFIC-BLOCKER.v1.json",
             "affected_exit_criterion": "P1-EXIT-07",
             "current_status": "BLOCKED",
@@ -25,7 +26,7 @@
             "blocker_id": "P1-BLK-2026-11-11-D08-01",
             "historical_aud_alias": null,
             "original_reference": "D-08; OD-D08; Supplement 04",
-            "supporting_evidence": "ADR-023 \u00a78.80.4 / \u00a78.81.3; GAP-05 Rev 8.2",
+            "supporting_evidence": "ADR-023 §8.80.4 / §8.81.3; GAP-05; docs/archive-reconciliation.json supplement_04",
             "affected_exit_criterion": "D-08 archival completeness",
             "current_status": "BLOCKED",
             "resolution_condition": "Authentic archival coverage or owner-approved archival rule change",
@@ -34,7 +35,7 @@
         {
             "blocker_id": "P1-BLK-2026-11-11-AUD-REF-01",
             "historical_aud_alias": "AUD-01..AUD-15",
-            "original_reference": "Prior audit report labels; ADR-023 \u00a78.79",
+            "original_reference": "Prior audit report labels; ADR-023 §8.79",
             "supporting_evidence": "No authoritative AUD register found",
             "affected_exit_criterion": "none as gate IDs",
             "current_status": "UNVERIFIED_REFERENCE",
@@ -44,8 +45,8 @@
         {
             "blocker_id": "P1-BLK-2026-11-11-GATE-A-01",
             "historical_aud_alias": null,
-            "original_reference": "P1-EXIT-02; \u00a78.64.4; \u00a78.82.1",
-            "supporting_evidence": "GA-IC-01 + GA-FOUNDATION-01 (ADR-023 \u00a78.82.1); Rev 8.2 \u00a72 pre-approval",
+            "original_reference": "P1-EXIT-02; §8.64.4; §8.82.1",
+            "supporting_evidence": "GA-IC-01 + GA-FOUNDATION-01 (ADR-023 §8.82.1); Rev 8.2 §2 pre-approval",
             "affected_exit_criterion": "P1-EXIT-02",
             "current_status": "RESOLVED",
             "resolution_condition": "Satisfied for IC-inventory and foundation scopes",
@@ -54,8 +55,8 @@
         {
             "blocker_id": "P1-BLK-2026-11-11-GATE-B-01",
             "historical_aud_alias": null,
-            "original_reference": "P1-EXIT-03; \u00a78.64.4; \u00a78.82.2",
-            "supporting_evidence": "GB-IC-01 + GB-FOUNDATION-01 (ADR-023 \u00a78.82.2); Rev 8.2 \u00a72 pre-approval",
+            "original_reference": "P1-EXIT-03; §8.64.4; §8.82.2",
+            "supporting_evidence": "GB-IC-01 + GB-FOUNDATION-01 (ADR-023 §8.82.2); Rev 8.2 §2 pre-approval",
             "affected_exit_criterion": "P1-EXIT-03",
             "current_status": "RESOLVED",
             "resolution_condition": "Satisfied for IC-inventory and foundation scopes; does not close P1-EXIT-05/07/D-08",
@@ -64,32 +65,36 @@
         {
             "blocker_id": "P1-BLK-2026-11-11-CAPVERSEAT-WIP-01",
             "historical_aud_alias": null,
-            "original_reference": "\u00a78.81.2 CapVerSeat disposition",
-            "supporting_evidence": "Untracked CapVerSeat*/Onboarding; not required for OD-A-ID",
+            "original_reference": "§8.81.2 CapVerSeat disposition",
+            "supporting_evidence": "backend/app/Services/Agriculture/Research/Capability/CapVer/CapVerSeatVerificationService.php in HEAD; persistCurrent($record,$refs,$assessment); commit cfc9d1b",
             "affected_exit_criterion": "none (WIP hygiene)",
-            "current_status": "DEFERRED_UNTRACKED_WIP",
-            "resolution_condition": "Align to CapVerAuthorizedAssessment before commit, or discard",
-            "dependency": "engineering review"
+            "current_status": "RESOLVED",
+            "resolution_condition": "Aligned to CapVerAuthorizedAssessment 3-arg persist and committed under GB-FOUNDATION-01",
+            "dependency": "none",
+            "resolved_at": "2026-11-11T14:45:00Z",
+            "resolved_in_commit": "cfc9d1b"
         },
         {
             "blocker_id": "P1-BLK-2026-11-11-EXIT05-STAGING-01",
             "historical_aud_alias": null,
-            "original_reference": "P1-EXIT-05; \u00a78.25.10 items 3\u20134; ASM-R82-05",
-            "supporting_evidence": "No authorized operator/staging environment evidence in this session",
+            "original_reference": "P1-EXIT-05; §8.25.10 items 3–4; ASM-R82-05",
+            "supporting_evidence": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT05-STAGING-OPERATOR-CHECKLIST.v1.json (prep only)",
             "affected_exit_criterion": "P1-EXIT-05",
             "current_status": "BLOCKED",
-            "resolution_condition": "Staging validation + operator \u00a78.25.7 zero-row records",
+            "resolution_condition": "Staging validation + operator §8.25.7 zero-row records",
             "dependency": "external operator/staging"
         },
         {
             "blocker_id": "P1-BLK-2026-11-11-WIP-COUPLING-01",
             "historical_aud_alias": null,
-            "original_reference": "P1-EXIT-06/08 commit ordering; ScientificSourceCatalog\u2192Onboarding",
-            "supporting_evidence": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WIP-COUPLING-HAZARD.v1.json",
+            "original_reference": "P1-EXIT-06/08 commit ordering; ScientificSourceCatalog→Onboarding",
+            "supporting_evidence": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WIP-COUPLING-HAZARD.v1.json; commit cfc9d1b; remote sync at efd1e7d+",
             "affected_exit_criterion": "P1-EXIT-06;P1-EXIT-08",
-            "current_status": "BLOCKED",
-            "resolution_condition": "Atomic authorized commit of coupled clusters under GB-FOUNDATION-01, or restore tracked dependents to HEAD",
-            "dependency": "Onboarding+Registry+Family+Contract review"
+            "current_status": "RESOLVED",
+            "resolution_condition": "Atomic GB-FOUNDATION-01 commit of Registry/Family/Contract/Onboarding/CapVerSeat cluster landed and remote-synced",
+            "dependency": "none",
+            "resolved_at": "2026-11-11T15:45:00Z",
+            "resolved_in_commit": "cfc9d1b"
         }
     ]
 }
