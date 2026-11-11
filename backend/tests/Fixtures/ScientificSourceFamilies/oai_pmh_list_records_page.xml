@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2026-10-15T08:00:00Z</responseDate>
+  <request verb="ListRecords" metadataPrefix="oai_dc" set="agri" from="2026-01-01">https://repository.example.org/oai</request>
+  <ListRecords>
+    <record>
+      <header>
+        <identifier>oai:repository.example.org:101</identifier>
+        <datestamp>2026-03-02</datestamp>
+        <setSpec>agri</setSpec>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/"
+                   xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+          <dc:title>Barley   yield under &lt;i&gt;deficit&lt;/i&gt; irrigation</dc:title>
+          <dc:creator>Researcher, Ada</dc:creator>
+          <dc:creator>Scientist, Ben</dc:creator>
+          <dc:subject>barley</dc:subject>
+          <dc:description>Field trials of barley under deficit irrigation in three seasons.</dc:description>
+          <dc:publisher>Example Agricultural University</dc:publisher>
+          <dc:date>2025-11-20</dc:date>
+          <dc:type>Article</dc:type>
+          <dc:identifier>https://repository.example.org/article/view/101</dc:identifier>
+          <dc:identifier>https://doi.org/10.12345/EXAMPLE.101</dc:identifier>
+          <dc:source>Example Journal of Agronomy; Vol 4 No 2</dc:source>
+          <dc:language>en</dc:language>
+          <dc:rights>Copyright (c) 2025 The authors</dc:rights>
+        </oai_dc:dc>
+      </metadata>
+    </record>
+    <record>
+      <header status="deleted">
+        <identifier>oai:repository.example.org:102</identifier>
+        <datestamp>2026-03-05</datestamp>
+      </header>
+    </record>
+    <record>
+      <header>
+        <identifier>oai:repository.example.org:103</identifier>
+        <datestamp>2026-03-06</datestamp>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/">
+          <dc:title>Soil moisture sensing in orchards</dc:title>
+        </oai_dc:dc>
+      </metadata>
+    </record>
+    <record>
+      <header>
+        <identifier>oai:repository.example.org:104</identifier>
+        <datestamp>2026-03-07</datestamp>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/">
+          <dc:creator>Untitled, Record</dc:creator>
+        </oai_dc:dc>
+      </metadata>
+    </record>
+    <resumptionToken completeListSize="7" cursor="0">agri-2026-page-2</resumptionToken>
+  </ListRecords>
+</OAI-PMH>

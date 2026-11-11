@@ -17,6 +17,7 @@ class ScientificRecordStoreIsolationGuardTest extends TestCase
         $path = (string) config('database.connections.scientific_records.database');
         fwrite(STDERR, 'RESOLVED_SCIENTIFIC_DATABASE='.$path."\n");
         DatabaseSafety::assertScientificRecordStoreIsIsolated();
+        $this->assertFileExists($path);
         $this->assertStringContainsString('scientific_records_', $path);
         $this->assertStringContainsString(
             str_replace(['/', '\\'], DIRECTORY_SEPARATOR, 'framework'.DIRECTORY_SEPARATOR.'testing'),

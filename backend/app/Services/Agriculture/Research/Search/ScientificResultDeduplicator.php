@@ -2,6 +2,8 @@
 
 namespace App\Services\Agriculture\Research\Search;
 
+use App\Services\Agriculture\Research\Search\Provenance\ScientificSourceRecordProvenance;
+
 /**
  * Deterministic deduplication across multi-source scientific results.
  */
@@ -93,7 +95,26 @@ class ScientificResultDeduplicator
                 $mergedSources,
             ),
             relevanceScore: max($left->relevanceScore ?? 0.0, $right->relevanceScore ?? 0.0) ?: null,
+            provenance: $this->mergeProvenance($left->provenance, $right->provenance),
         );
+    }
+
+    /**
+     * Every contributing source record keeps its own provenance; a record seen again (same
+     * source, identifier and URL from another query variant) keeps its first retrieval.
+     *
+     * @param  list<ScientificSourceRecordProvenance>  $left
+     * @param  list<ScientificSourceRecordProvenance>  $right
+     * @return list<ScientificSourceRecordProvenance>
+     */
+    private function mergeProvenance(array $left, array $right): array
+    {
+        $merged = [];
+        foreach ([...$left, ...$right] as $record) {
+            $merged[$record->identityKey()] ??= $record;
+        }
+
+        return array_values($merged);
     }
 
     /**

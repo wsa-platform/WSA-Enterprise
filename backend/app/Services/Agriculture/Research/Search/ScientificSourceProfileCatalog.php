@@ -102,7 +102,7 @@ final class ScientificSourceProfileCatalog
                 active: false,
                 maxQueriesPerRequest: 1,
             ),
-            // Expansion-ready stubs — inactive; no adapter wiring required.
+            // G1-01 bounded ODS subset ACTIVE (2026-10-18): LocalIndex search; full corpus not claimed.
             'agris' => new ScientificSourceProfile(
                 sourceKey: 'agris',
                 modality: ScientificSourceQueryModality::LITERATURE,
@@ -110,16 +110,53 @@ final class ScientificSourceProfileCatalog
                 supportedConstraintFields: $literatureConstraints,
                 queryStyle: 'natural_language',
                 identifierFields: ['doi', 'agris_id'],
-                active: false,
+                active: true,
+                maxQueriesPerRequest: 1,
             ),
+            // G1-17 limited projection ACTIVE (2026-10-18): FARMACY≠FARMACY_NEW; ETHNOBOT traditional-use.
+            'dr_duke' => new ScientificSourceProfile(
+                sourceKey: 'dr_duke',
+                modality: ScientificSourceQueryModality::SCIENTIFIC_DATA,
+                supportedIdentityFields: ['entity'],
+                supportedConstraintFields: [],
+                queryStyle: 'natural_language',
+                identifierFields: ['fnfnum', 'chem', 'chemid'],
+                active: true,
+                maxQueriesPerRequest: 1,
+            ),
+            // G5-04 activated: species search accepts free-text q; geography/time and
+            // taxon_key filters are not claimed until a Capability decision backs them.
             'gbif' => new ScientificSourceProfile(
                 sourceKey: 'gbif',
                 modality: ScientificSourceQueryModality::SCIENTIFIC_DATA,
                 supportedIdentityFields: ['entity'],
-                supportedConstraintFields: ['geography', 'time'],
-                queryStyle: 'structured_filters',
-                identifierFields: ['taxon_key', 'occurrence_key'],
-                active: false,
+                supportedConstraintFields: [],
+                queryStyle: 'natural_language',
+                identifierFields: [],
+                active: true,
+                maxQueriesPerRequest: 1,
+            ),
+            // G1-02 owner ACCEPT + CapVer AUTHORIZE (2026-10-18): OAI-PMH LocalIndex search.
+            'organic_eprints' => new ScientificSourceProfile(
+                sourceKey: 'organic_eprints',
+                modality: ScientificSourceQueryModality::LITERATURE,
+                supportedIdentityFields: $literatureIdentity,
+                supportedConstraintFields: $literatureConstraints,
+                queryStyle: 'natural_language',
+                identifierFields: ['oai_identifier'],
+                active: true,
+                maxQueriesPerRequest: 1,
+            ),
+            // G6-20 owner ACCEPT + CapVer AUTHORIZE (2026-10-18): BHL PublicationSearch.
+            'bhl' => new ScientificSourceProfile(
+                sourceKey: 'bhl',
+                modality: ScientificSourceQueryModality::LITERATURE,
+                supportedIdentityFields: $literatureIdentity,
+                supportedConstraintFields: $literatureConstraints,
+                queryStyle: 'natural_language',
+                identifierFields: ['bhl_part_id', 'bhl_title_id'],
+                active: true,
+                maxQueriesPerRequest: 1,
             ),
             'pubmed' => new ScientificSourceProfile(
                 sourceKey: 'pubmed',

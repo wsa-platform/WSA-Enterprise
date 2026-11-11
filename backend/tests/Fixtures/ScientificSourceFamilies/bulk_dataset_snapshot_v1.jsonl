@@ -1,0 +1,6 @@
+{"record_id": "R-1", "title": "Barley yield under deficit irrigation", "summary": "Three seasons of barley field trials under deficit irrigation.", "doi": "https://doi.org/10.12345/BULK.1", "landing": "https://dataset.example.org/records/R-1", "issued": "2025-11-20", "creators": [{"name": "Researcher, Ada"}, {"name": "Scientist, Ben"}], "venue": "Example Journal of Agronomy"}
+{"record_id": "R-2", "title": "Soil moisture sensing in orchards", "issued": "2024"}
+
+{"record_id": "R-3", "title": "Retracted nitrogen trial", "withdrawn": true}
+{"record_id": "R-1", "title": "Duplicate line of the first record"}
+{"title": "A record without an identifier"}

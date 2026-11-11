@@ -3,33 +3,60 @@
 namespace App\Services\Agriculture\Research\Search;
 
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatConsiderationPolicy;
-use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatRuntimePolicy;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
+use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCapabilityPolicy;
+use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
+use App\Services\Agriculture\Research\Search\Registry\ScientificSourceOperation;
+use App\Services\Agriculture\Research\Search\Registry\ScientificSourceSelectionRole;
 
 /**
  * Deterministic source selection from KnowledgeQueryPlan.
  *
- * Policy (Phase 3-B / ADR-021 §3):
+ * Policy (Phase 3-B / ADR-021 §3), driven by ScientificSourceCatalog selection roles:
  * - Internet-First scholarly defaults: OpenAlex, Crossref, Semantic Scholar.
  * - Consensus remains optional/legacy and is never auto-selected.
  * - FAOSTAT Developer Portal is universally considered when enabled (Phase 3-A);
  *   consideration ≠ evidence acceptance (gate/pipeline outcomes still apply).
+ * - Governed ADR expansion seats (GOVERNED_EXPANSION) join after statistical
+ *   consideration when enabled and capability-authorized; Stage-3 defaults remain.
  * - Inactive providers are excluded; unknown keys are never invented here.
  */
 class ScientificSourceSelector
 {
-    /** @var list<string> */
+    /**
+     * @deprecated Compatibility projection of the catalog's INTERNET_FIRST_DEFAULT role; not read by selection.
+     *
+     * @var list<string>
+     */
     public const DEFAULT_INTERNET_FIRST_SOURCES = [
         'openalex',
         'crossref',
         'semantic_scholar',
     ];
 
-    /** Registered but never auto-selected. */
-    /** @var list<string> */
+    /**
+     * @deprecated Compatibility projection of the catalog's OPTIONAL_EXPLICIT_ONLY role; not read by selection.
+     *
+     * @var list<string>
+     */
     public const OPTIONAL_SOURCES = [
         'consensus',
     ];
+
+    /** Stage 3 retrieval needs only the search operation. */
+    public const REQUIRED_OPERATION = ScientificSourceOperation::SEARCH;
+
+    private readonly ScientificSourceCatalog $catalog;
+
+    private readonly ScientificSourceCapabilityPolicy $capabilityPolicy;
+
+    public function __construct(
+        ?ScientificSourceCatalog $catalog = null,
+        ?ScientificSourceCapabilityPolicy $capabilityPolicy = null,
+    ) {
+        $this->catalog = $catalog ?? ScientificSourceCatalog::default();
+        $this->capabilityPolicy = $capabilityPolicy ?? new ScientificSourceCapabilityPolicy();
+    }
 
     /** @return list<string> */
     public function selectSources(KnowledgeQueryPlan $plan): array
@@ -42,24 +69,21 @@ class ScientificSourceSelector
             return [];
         }
 
-        $sources = self::DEFAULT_INTERNET_FIRST_SOURCES;
+        return [
+            ...$this->authorizedKeysWithRole(ScientificSourceSelectionRole::STATISTICAL_CONSIDERATION),
+            ...$this->authorizedKeysWithRole(ScientificSourceSelectionRole::INTERNET_FIRST_DEFAULT),
+            ...$this->authorizedKeysWithRole(ScientificSourceSelectionRole::GOVERNED_EXPANSION),
+        ];
+    }
 
-        // Canonical FAOSTAT flag only. Retired Fenix FAO_ENABLED must not select fao_stat.
-        if (FaoStatConsiderationPolicy::isEnabled()) {
-            array_unshift($sources, FaoStatRuntimePolicy::canonicalSourceKey());
-        }
-
-        if (! filter_var(config('agricultural_intelligence.openalex.enabled', true), FILTER_VALIDATE_BOOL)) {
-            $sources = array_values(array_filter($sources, static fn (string $s): bool => $s !== 'openalex'));
-        }
-        if (! filter_var(config('agricultural_intelligence.crossref.enabled', true), FILTER_VALIDATE_BOOL)) {
-            $sources = array_values(array_filter($sources, static fn (string $s): bool => $s !== 'crossref'));
-        }
-        if (! filter_var(config('agricultural_intelligence.semantic_scholar.enabled', true), FILTER_VALIDATE_BOOL)) {
-            $sources = array_values(array_filter($sources, static fn (string $s): bool => $s !== 'semantic_scholar'));
-        }
-
-        return $sources;
+    /** @return list<string> */
+    private function authorizedKeysWithRole(ScientificSourceSelectionRole $role): array
+    {
+        return array_values(array_filter(
+            $this->catalog->enabledKeysWithRole($role),
+            fn (string $key): bool => $this->capabilityPolicy
+                ->decide($this->catalog->get($key), self::REQUIRED_OPERATION)->allowed,
+        ));
     }
 
     /**
@@ -70,42 +94,48 @@ class ScientificSourceSelector
      *     skipped_inactive: list<string>,
      *     optional_not_selected: list<string>,
      *     faostat_consideration: string,
-     *     policy: string
+     *     policy: string,
+     *     capability_denied: list<array<string, string|bool|null>>
      * }
      */
     public function selectionTrace(KnowledgeQueryPlan $plan): array
     {
         $selected = $this->selectSources($plan);
         $skippedInactive = [];
+        $capabilityDenied = [];
+        $planSelects = ! $plan->needsClarification() && $plan->readyForStage3 && $plan->isInternetFirst();
 
-        foreach (self::DEFAULT_INTERNET_FIRST_SOURCES as $key) {
-            if (in_array($key, $selected, true)) {
-                continue;
-            }
-            $enabled = match ($key) {
-                'openalex' => filter_var(config('agricultural_intelligence.openalex.enabled', true), FILTER_VALIDATE_BOOL),
-                'crossref' => filter_var(config('agricultural_intelligence.crossref.enabled', true), FILTER_VALIDATE_BOOL),
-                'semantic_scholar' => filter_var(config('agricultural_intelligence.semantic_scholar.enabled', true), FILTER_VALIDATE_BOOL),
-                default => true,
-            };
-            if (! $enabled) {
-                $skippedInactive[] = $key;
-            }
-        }
+        foreach ([
+            ScientificSourceSelectionRole::INTERNET_FIRST_DEFAULT,
+            ScientificSourceSelectionRole::STATISTICAL_CONSIDERATION,
+            ScientificSourceSelectionRole::GOVERNED_EXPANSION,
+        ] as $role) {
+            foreach ($this->catalog->keysWithRole($role) as $key) {
+                if (in_array($key, $selected, true)) {
+                    continue;
+                }
+                $registration = $this->catalog->get($key);
+                if (! $registration?->isEnabled()) {
+                    $skippedInactive[] = $key;
 
-        if (FaoStatConsiderationPolicy::decision() === FaoStatConsiderationPolicy::DISABLED
-            || ! FaoStatRuntimePolicy::isEnabled()) {
-            if (! in_array(FaoStatRuntimePolicy::canonicalSourceKey(), $selected, true)) {
-                $skippedInactive[] = FaoStatRuntimePolicy::canonicalSourceKey();
+                    continue;
+                }
+                if ($planSelects) {
+                    $decision = $this->capabilityPolicy->decide($registration, self::REQUIRED_OPERATION);
+                    if (! $decision->allowed) {
+                        $capabilityDenied[] = $decision->toArray();
+                    }
+                }
             }
         }
 
         return [
             'selected' => $selected,
             'skipped_inactive' => array_values(array_unique($skippedInactive)),
-            'optional_not_selected' => self::OPTIONAL_SOURCES,
+            'optional_not_selected' => $this->catalog->keysWithRole(ScientificSourceSelectionRole::OPTIONAL_EXPLICIT_ONLY),
             'faostat_consideration' => FaoStatConsiderationPolicy::decision(),
             'policy' => 'internet_first_defaults_plus_universal_faostat_when_enabled',
+            'capability_denied' => $capabilityDenied,
         ];
     }
 }

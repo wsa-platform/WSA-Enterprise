@@ -10,6 +10,9 @@ use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
  */
 interface ScientificSourceAdapterInterface
 {
+    /** Version of this contract; runtime registrations must declare it. */
+    public const CONTRACT_VERSION = 'scientific_source_adapter.v1';
+
     public function sourceKey(): string;
 
     public function displayName(): string;

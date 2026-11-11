@@ -2,8 +2,13 @@
 
 namespace App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat;
 
-use App\Contracts\ScientificSourceAdapterInterface;
+use App\Contracts\ScientificSourceAdapterV2Interface;
 use App\Services\Agriculture\Intelligence\DTO\ProviderHealthStatus;
+use App\Services\Agriculture\Research\Search\Contract\DelegatesSearchRequestToSearch;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceAdapterDescriptor;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceLicensingDeclaration;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceRetryPolicy;
+use App\Services\Agriculture\Research\Search\Provenance\ScientificSourceRecordProvenance;
 use App\Services\Agriculture\Research\Search\ScientificSearchResult;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
 use Illuminate\Support\Facades\Log;
@@ -12,9 +17,13 @@ use Illuminate\Support\Facades\Log;
  * FAOSTAT Developer Portal Stage 3 adapter. Isolated from the FENIX adapter.
  * Does not invent codes. Does not query /codes/areas/. Does not send page_size.
  */
-final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInterface
+final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterV2Interface
 {
+    use DelegatesSearchRequestToSearch;
+
     public const SOURCE_KEY = 'fao_stat';
+
+    private const MAX_RESULTS_PER_REQUEST = 20;
 
     public function __construct(
         private FaoStatDeveloperPortalClient $client,
@@ -33,6 +42,17 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
     public function displayName(): string
     {
         return 'FAO / FAOSTAT';
+    }
+
+    /** Licensing has no recorded evidence yet; one request returns at most MAX_RESULTS_PER_REQUEST observations. */
+    public function descriptor(): ScientificSourceAdapterDescriptor
+    {
+        return new ScientificSourceAdapterDescriptor(
+            sourceKey: $this->sourceKey(),
+            licensing: ScientificSourceLicensingDeclaration::unresolved(),
+            retryPolicy: ScientificSourceRetryPolicy::none(),
+            maxResultsPerRequest: self::MAX_RESULTS_PER_REQUEST,
+        );
     }
 
     public function health(): ProviderHealthStatus
@@ -183,7 +203,7 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
             );
         }
 
-        $cap = max(1, min($limit, 20));
+        $cap = max(1, min($limit, self::MAX_RESULTS_PER_REQUEST));
         $results = [];
         foreach (array_slice($rows, 0, $cap) as $row) {
             if (! is_array($row)) {
@@ -387,6 +407,22 @@ final class FaoStatDeveloperPortalAdapter implements ScientificSourceAdapterInte
                 'faostat' => $observation->toArray(),
                 'raw_observation' => $observation->raw,
                 'provenance' => $observation->provenance,
+            ],
+            provenance: [
+                new ScientificSourceRecordProvenance(
+                    sourceKey: self::SOURCE_KEY,
+                    identifierBasis: $identifier !== '' ? ScientificSourceRecordProvenance::IDENTIFIER_DERIVED_CODES : null,
+                    canonicalUrlBasis: isset($observation->provenance['query_url'])
+                        ? ScientificSourceRecordProvenance::URL_CONSTRUCTED
+                        : null,
+                    transformations: array_values(array_filter([
+                        'title_composed_from_dimension_labels',
+                        $abstract !== '' ? 'abstract_composed_from_value_and_unit' : null,
+                    ])),
+                    retrievedAt: is_string($observation->provenance['retrieved_at'] ?? null)
+                        ? $observation->provenance['retrieved_at']
+                        : null,
+                ),
             ],
         );
     }

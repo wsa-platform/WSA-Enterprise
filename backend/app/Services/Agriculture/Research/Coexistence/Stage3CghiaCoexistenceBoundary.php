@@ -9,6 +9,7 @@ use App\Services\Agriculture\Research\Capability\CapabilityRecord;
 use App\Services\Agriculture\Research\Capability\CapabilityRequirementEvaluator;
 use App\Services\Agriculture\Research\Capability\CapabilityRequirementSet;
 use App\Services\Agriculture\Research\Capability\CapabilitySubject;
+use App\Services\Agriculture\Research\Capability\Persistence\CapabilityStoreRepository;
 use App\Services\Agriculture\Research\Correlation\CorrelationChain;
 use App\Services\Agriculture\Research\Correlation\Persistence\DurableCorrelationRepository;
 use App\Services\Agriculture\Research\Correlation\QuestionIdentityReference;
@@ -29,6 +30,7 @@ use App\Services\Agriculture\Research\Projection\ProjectionFidelityAggregator;
 use App\Services\Agriculture\Research\Projection\ProjectionFidelityClass;
 use App\Services\Agriculture\Research\Projection\ProjectionIdentity;
 use App\Services\Agriculture\Research\Projection\ProjectionWarning;
+use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
 
 /**
  * IU-09 Stage-3 ↔ CGHIA coexistence arbitration facade.
@@ -46,6 +48,7 @@ final class Stage3CghiaCoexistenceBoundary
         private readonly C9ComposerFidelityDisclosureMapper $disclosureMapper = new C9ComposerFidelityDisclosureMapper(),
         private readonly ?DurableCorrelationRepository $durableCorrelationRepository = null,
         ?CoexistenceDisclosureContext $disclosureContext = null,
+        private readonly ?CapabilityStoreRepository $capabilityStore = null,
     ) {
         $this->disclosureContext = $disclosureContext ?? CoexistenceDisclosureContext::instance();
     }
@@ -234,6 +237,12 @@ final class Stage3CghiaCoexistenceBoundary
             CapabilityDimension::accessMethod(CapabilityAccessMethod::API),
         ]);
 
+        // Read CURRENT Cap Store facts when the caller did not supply an explicit set.
+        // Does not invent VERIFIED — CapVer remains the only writer of that state.
+        if ($capabilityRecords === [] && $this->capabilityStore !== null) {
+            $capabilityRecords = $this->capabilityStore->loadCurrentForSubject($subject);
+        }
+
         $decidedAt = gmdate('c');
         // Deterministic Cap/Path/Projection identities for IU-07 idempotency (no wall-clock in id hash).
         $capDecisionId = 'cap-dec-'.sha1($sourceKey.'|'.$adrId->value.'|'.$csqIdentity);
@@ -265,6 +274,9 @@ final class Stage3CghiaCoexistenceBoundary
         } elseif ($capDecision->andResultClass === CapabilityAndResultClass::HAS_PARTIAL) {
             $limitations[] = 'Capability PARTIAL; Path CONDITIONAL only.';
         }
+        if ($capDecision->hasStaleFlags) {
+            $limitations[] = 'Capability evidence freshness STALE; verified automation not claimed without CapVer refresh.';
+        }
 
         if ($eligibility === PathEligibilityState::INELIGIBLE) {
             $events[] = CoexistenceEventCode::PATH_INELIGIBLE;
@@ -287,9 +299,11 @@ final class Stage3CghiaCoexistenceBoundary
             fallbackLayer: PathFallbackLayer::L2,
         );
 
+        // STALE Cap evidence must not claim verified automation (B4 / CapVer freshness).
         $verifiedClaim = $eligibility === PathEligibilityState::ELIGIBLE
             && $status === PathStatus::SELECTED
-            && $capDecision->andResultClass === CapabilityAndResultClass::ALL_VERIFIED;
+            && $capDecision->andResultClass === CapabilityAndResultClass::ALL_VERIFIED
+            && ! $capDecision->hasStaleFlags;
 
         $legacyCompatible = true;
         $retrievalPermitted = true; // Selector selected; Stage-3 legacy may continue
@@ -418,14 +432,7 @@ final class Stage3CghiaCoexistenceBoundary
 
     private function pathFamilyForSourceKey(string $sourceKey): PathFamily
     {
-        return match ($sourceKey) {
-            'openalex' => PathFamily::P12,
-            'crossref' => PathFamily::P11,
-            'semantic_scholar' => PathFamily::P13,
-            'consensus' => PathFamily::P12,
-            'fao_stat' => PathFamily::P01,
-            default => PathFamily::P12,
-        };
+        return ScientificSourceCatalog::default()->pathFamilyFor($sourceKey) ?? PathFamily::P12;
     }
 
     /**

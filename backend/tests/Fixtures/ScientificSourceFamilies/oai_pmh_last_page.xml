@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/">
+  <responseDate>2026-10-15T08:01:00Z</responseDate>
+  <request verb="ListRecords" resumptionToken="agri-2026-page-2">https://repository.example.org/oai</request>
+  <ListRecords>
+    <record>
+      <header>
+        <identifier>oai:repository.example.org:105</identifier>
+        <datestamp>2026-04-01</datestamp>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/">
+          <dc:title>Wheat rust surveillance</dc:title>
+          <dc:identifier>doi:10.12345/example.105</dc:identifier>
+        </oai_dc:dc>
+      </metadata>
+    </record>
+    <resumptionToken completeListSize="7" cursor="4"/>
+  </ListRecords>
+</OAI-PMH>

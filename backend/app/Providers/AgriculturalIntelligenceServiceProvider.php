@@ -49,11 +49,19 @@ use App\Services\Agriculture\Intelligence\Orchestration\UniversalAnswerOrchestra
 use App\Services\Agriculture\Intelligence\Registry\AgriculturalProviderRegistry;
 use App\Services\Agriculture\Research\Capability\Persistence\CapabilityStoreRepository;
 use App\Services\Agriculture\Research\Capability\Persistence\EloquentCapabilityStoreRepository;
+use App\Services\Agriculture\Research\Coexistence\Stage3CghiaCoexistenceBoundary;
+use App\Services\Agriculture\Research\Coexistence\Stage3SourceKeyIdentityBridge;
 use App\Services\Agriculture\Research\IntegrationClassification\Persistence\EloquentIntegrationClassificationRepository;
 use App\Services\Agriculture\Research\IntegrationClassification\Persistence\IntegrationClassificationRepository;
 use App\Services\Agriculture\Research\Search\Adapters\CrossRefScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\OpenAlexScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Adapters\SemanticScholarScientificSourceAdapter;
+use App\Services\Agriculture\Research\Search\LocalIndex\DatabaseScientificRecordStore;
+use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexIngestionService;
+use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexSearchEngine;
+use App\Services\Agriculture\Research\Search\LocalIndex\LocalScientificIndex;
+use App\Services\Agriculture\Research\Search\LocalIndex\ScientificRecordStore;
+use App\Services\Agriculture\Research\Search\LocalIndex\SqliteFtsScientificIndex;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -95,6 +103,59 @@ class AgriculturalIntelligenceServiceProvider extends ServiceProvider
         $this->app->singleton(
             CapabilityStoreRepository::class,
             EloquentCapabilityStoreRepository::class
+        );
+
+        $this->app->singleton(Stage3SourceKeyIdentityBridge::class, static function (): Stage3SourceKeyIdentityBridge {
+            return new Stage3SourceKeyIdentityBridge(Stage3SourceKeyIdentityBridge::governedAdrBindings());
+        });
+
+        $this->app->singleton(Stage3CghiaCoexistenceBoundary::class, function ($app): Stage3CghiaCoexistenceBoundary {
+            return new Stage3CghiaCoexistenceBoundary(
+                identityBridge: $app->make(Stage3SourceKeyIdentityBridge::class),
+                capabilityStore: $app->make(CapabilityStoreRepository::class),
+            );
+        });
+
+        $this->app->singleton(ScientificRecordStore::class, static function ($app): DatabaseScientificRecordStore {
+            $connection = config('agricultural_intelligence.local_index.connection');
+            $name = is_string($connection) && $connection !== '' ? $connection : 'scientific_records';
+
+            return new DatabaseScientificRecordStore($app['db'], $name);
+        });
+        $this->app->singleton(LocalScientificIndex::class);
+        $this->app->singleton(SqliteFtsScientificIndex::class, static function ($app): SqliteFtsScientificIndex {
+            $connection = config('agricultural_intelligence.local_index.connection');
+            $name = is_string($connection) && $connection !== '' ? $connection : 'scientific_records';
+
+            return new SqliteFtsScientificIndex(
+                $app['db'],
+                $app->make(ScientificRecordStore::class),
+                $name,
+            );
+        });
+        $this->app->singleton(LocalIndexSearchEngine::class, static function ($app): LocalIndexSearchEngine {
+            $backend = (string) config('agricultural_intelligence.local_index.search_backend', 'auto');
+            $connection = (string) config('agricultural_intelligence.local_index.connection', 'scientific_records');
+            $driver = (string) config('database.connections.'.$connection.'.driver', 'sqlite');
+            if ($backend === 'fts5' || ($backend === 'auto' && $driver === 'sqlite')) {
+                return $app->make(SqliteFtsScientificIndex::class);
+            }
+
+            return $app->make(LocalScientificIndex::class);
+        });
+        // Keep legacy LocalScientificIndex injection sites working when FTS is active.
+        $this->app->afterResolving(LocalIndexIngestionService::class, static function (): void {});
+        $this->app->singleton(
+            \App\Services\Agriculture\Research\Search\Family\OaiPmh\OaiPmhHarvester::class
+        );
+        $this->app->singleton(
+            \App\Services\Agriculture\Research\Search\Family\Bulk\BulkDatasetReader::class
+        );
+        $this->app->singleton(
+            \App\Services\Agriculture\Research\Search\LocalIndex\LocalRecordRetentionPolicy::class
+        );
+        $this->app->singleton(
+            \App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexIngestionService::class
         );
 
         $this->app->singleton(LaravelStdioMcpToolClient::class);

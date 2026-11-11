@@ -1,0 +1,3 @@
+{"id": "drduke-fixture-1", "title": "Mentha piperita chemotype ethnobotanical notes", "abstract": "Engineering fixture for Dr. Duke LocalIndex path; not a USDA dump harvest.", "url": "https://example.invalid/drduke-fixture-1", "published": "2020-01-01", "year": "2020", "authors": ["Fixture, C."]}
+{"id": "drduke-fixture-2", "title": "Allium sativum phytochemical activity summary", "abstract": "Engineering fixture for provenance and identifier stability.", "url": "https://example.invalid/drduke-fixture-2", "year": "2019", "authors": ["Fixture, D."]}
+{"id": "drduke-fixture-3", "title": "Unrelated soil salinity laboratory protocol", "abstract": "Should not match Mentha queries.", "year": "2018"}

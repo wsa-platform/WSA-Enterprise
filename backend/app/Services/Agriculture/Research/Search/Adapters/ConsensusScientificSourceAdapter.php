@@ -2,7 +2,12 @@
 
 namespace App\Services\Agriculture\Research\Search\Adapters;
 
-use App\Contracts\ScientificSourceAdapterInterface;
+use App\Contracts\ScientificSourceAdapterV2Interface;
+use App\Services\Agriculture\Research\Search\Contract\DelegatesSearchRequestToSearch;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceAdapterDescriptor;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceFailureClassifier;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceLicensingDeclaration;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceRetryPolicy;
 use App\Services\Agriculture\Research\Search\ScientificResultNormalizer;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
 use App\Support\ScientificHttp;
@@ -16,9 +21,13 @@ use Illuminate\Support\Facades\Log;
  * Missing CONSENSUS_API_KEY → unavailable (OpenAlex/Crossref continue).
  * Never logs or returns the API key.
  */
-class ConsensusScientificSourceAdapter implements ScientificSourceAdapterInterface
+class ConsensusScientificSourceAdapter implements ScientificSourceAdapterV2Interface
 {
+    use DelegatesSearchRequestToSearch;
+
     public const SOURCE_KEY = 'consensus';
+
+    private const MAX_RESULTS_PER_REQUEST = 20;
 
     public function __construct(
         private ScientificResultNormalizer $normalizer,
@@ -32,6 +41,17 @@ class ConsensusScientificSourceAdapter implements ScientificSourceAdapterInterfa
     public function displayName(): string
     {
         return 'Consensus';
+    }
+
+    /** Licensing has no recorded evidence yet. */
+    public function descriptor(): ScientificSourceAdapterDescriptor
+    {
+        return new ScientificSourceAdapterDescriptor(
+            sourceKey: $this->sourceKey(),
+            licensing: ScientificSourceLicensingDeclaration::unresolved(),
+            retryPolicy: ScientificSourceRetryPolicy::none(),
+            maxResultsPerRequest: self::MAX_RESULTS_PER_REQUEST,
+        );
     }
 
     /**
@@ -59,7 +79,7 @@ class ConsensusScientificSourceAdapter implements ScientificSourceAdapterInterfa
         $baseUrl = rtrim((string) config('wsa.consensus_base_url', 'https://api.consensus.app'), '/');
         $params = [
             'query' => $query,
-            'page_size' => max(1, min($limit, 20)),
+            'page_size' => max(1, min($limit, self::MAX_RESULTS_PER_REQUEST)),
             'include_semantic_score' => (bool) ($options['include_semantic_score'] ?? true),
         ];
 
@@ -85,7 +105,7 @@ class ConsensusScientificSourceAdapter implements ScientificSourceAdapterInterfa
         } catch (ConnectionException $exception) {
             Log::warning('Consensus Stage 3 search timed out or connection failed', [
                 'query' => $query,
-                'message' => $exception->getMessage(),
+                'exception' => $exception::class,
             ]);
 
             return new ScientificSourceSearchOutcome(
@@ -94,9 +114,12 @@ class ConsensusScientificSourceAdapter implements ScientificSourceAdapterInterfa
                 error: 'timeout',
             );
         } catch (\Throwable $exception) {
+            if (ScientificSourceFailureClassifier::classifyThrowable($exception) === null) {
+                throw $exception;
+            }
             Log::warning('Consensus Stage 3 search request failed', [
                 'query' => $query,
-                'message' => $exception->getMessage(),
+                'exception' => $exception::class,
             ]);
 
             return new ScientificSourceSearchOutcome(

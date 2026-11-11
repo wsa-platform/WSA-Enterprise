@@ -1,0 +1,33 @@
+{
+  "Status": "ok",
+  "ErrorMessage": null,
+  "Result": [
+    {
+      "BHLType": "Part",
+      "FoundIn": "Metadata",
+      "Volume": "1",
+      "PartUrl": "https://www.biodiversitylibrary.org/part/bhl-fixture-part-1",
+      "PartID": "bhl-fixture-part-1",
+      "Genre": "Article",
+      "Title": "Wheat rust observations in temperate climates",
+      "ContainerTitle": "Agricultural Bulletin",
+      "Date": "1892",
+      "PageRange": "1-12",
+      "Authors": [
+        {"Name": "Researcher, Ada"},
+        {"Name": "Scientist, Ben"}
+      ]
+    },
+    {
+      "BHLType": "Item",
+      "FoundIn": "Metadata",
+      "TitleID": "bhl-fixture-title-2",
+      "ItemID": "bhl-fixture-item-2",
+      "Title": "Untitled fragment without usable title should still map when Title present",
+      "TitleUrl": "https://www.biodiversitylibrary.org/bibliography/bhl-fixture-title-2",
+      "ItemUrl": "https://www.biodiversitylibrary.org/item/bhl-fixture-item-2",
+      "Date": "1901",
+      "Authors": []
+    }
+  ]
+}

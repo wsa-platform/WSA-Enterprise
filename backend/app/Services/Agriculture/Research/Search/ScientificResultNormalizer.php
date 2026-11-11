@@ -4,6 +4,7 @@ namespace App\Services\Agriculture\Research\Search;
 
 use App\Services\Agriculture\CrossRefScientificClient;
 use App\Services\Agriculture\OpenAlexScientificClient;
+use App\Services\Agriculture\Research\Search\Provenance\ScientificSourceRecordProvenance;
 
 /**
  * Normalizes external scholarly works into the Stage 3 result contract.
@@ -36,6 +37,26 @@ class ScientificResultNormalizer
         $journal = trim((string) ($work['primary_location']['source']['display_name'] ?? ''));
         $year = is_numeric($work['publication_year'] ?? null) ? (int) $work['publication_year'] : null;
 
+        $provenance = new ScientificSourceRecordProvenance(
+            sourceKey: 'openalex',
+            originalIdentifier: $openAlexId !== '' ? $openAlexId : null,
+            originalIdentifierField: $openAlexId !== '' ? 'id' : null,
+            recordUrl: $this->httpUrlOrNull($openAlexId),
+            publishedAt: $this->stringOrNull($work['publication_date'] ?? null),
+            identifierBasis: $openAlexId !== '' ? ScientificSourceRecordProvenance::IDENTIFIER_PROVIDER : null,
+            canonicalUrlBasis: match (true) {
+                $landingPage !== '', $doiUrl !== '' => ScientificSourceRecordProvenance::URL_PROVIDER,
+                $openAlexId !== '' => ScientificSourceRecordProvenance::URL_PROVIDER_RECORD,
+                default => null,
+            },
+            transformations: $this->transformations([
+                'title_tags_and_whitespace_stripped' => $title !== (string) ($work['display_name'] ?? $work['title'] ?? ''),
+                'doi_resolver_prefix_removed' => $doiUrl !== '' && str_starts_with($doiUrl, 'https://doi.org/'),
+                'doi_lowercased' => $doi !== null && $doi !== str_replace('https://doi.org/', '', $doiUrl),
+                'abstract_reconstructed_from_inverted_index' => $abstract !== '',
+            ]),
+        );
+
         return new ScientificSearchResult(
             sourceKey: 'openalex',
             sourceIdentifier: $openAlexId !== '' ? $openAlexId : null,
@@ -48,6 +69,7 @@ class ScientificResultNormalizer
             journal: $journal !== '' ? $journal : null,
             foundBySources: ['openalex'],
             rawMetadata: ['openalex' => $work],
+            provenance: [$provenance],
         );
     }
 
@@ -75,6 +97,34 @@ class ScientificResultNormalizer
 
         $crossrefId = $doi ?? $url;
 
+        $rawDoi = trim((string) ($work['DOI'] ?? ''));
+        $rawTitle = $work['title'] ?? null;
+        $rawTitle = (string) (is_array($rawTitle) ? ($rawTitle[0] ?? '') : $rawTitle);
+        $rawAbstract = trim(strip_tags((string) ($work['abstract'] ?? '')));
+        $provenance = new ScientificSourceRecordProvenance(
+            sourceKey: 'crossref',
+            originalIdentifier: $rawDoi !== '' ? $rawDoi : null,
+            originalIdentifierField: $rawDoi !== '' ? 'DOI' : null,
+            recordUrl: $this->httpUrlOrNull($work['URL'] ?? null),
+            publishedAt: $this->crossRefIssuedDate($work),
+            identifierBasis: match (true) {
+                $doi !== null => ScientificSourceRecordProvenance::IDENTIFIER_DOI,
+                $url !== null => ScientificSourceRecordProvenance::IDENTIFIER_URL,
+                default => null,
+            },
+            canonicalUrlBasis: match (true) {
+                $doiUrl !== '' => ScientificSourceRecordProvenance::URL_DOI_RESOLVER,
+                $url !== null => ScientificSourceRecordProvenance::URL_PROVIDER,
+                default => null,
+            },
+            transformations: $this->transformations([
+                'title_tags_and_whitespace_stripped' => $title !== $rawTitle,
+                'doi_lowercased' => $doi !== null && $doi !== $rawDoi,
+                'abstract_tags_stripped' => $rawAbstract !== '' && $rawAbstract !== (string) $work['abstract'],
+                'abstract_taken_from_subtitle' => $rawAbstract === '' && $abstract !== '',
+            ]),
+        );
+
         return new ScientificSearchResult(
             sourceKey: 'crossref',
             sourceIdentifier: $crossrefId !== null && $crossrefId !== '' ? $crossrefId : null,
@@ -87,6 +137,7 @@ class ScientificResultNormalizer
             journal: $journal !== '' ? $journal : null,
             foundBySources: ['crossref'],
             rawMetadata: ['crossref' => $work],
+            provenance: [$provenance],
         );
     }
 
@@ -140,6 +191,27 @@ class ScientificResultNormalizer
             $relevanceMetadata['publisher_name'] = trim($work['publisher_name']);
         }
 
+        $rawDoi = trim((string) ($work['doi'] ?? ''));
+        $provenance = new ScientificSourceRecordProvenance(
+            sourceKey: 'consensus',
+            recordUrl: $this->httpUrlOrNull($url),
+            identifierBasis: match (true) {
+                $doi !== null => ScientificSourceRecordProvenance::IDENTIFIER_DOI,
+                $url !== '' => ScientificSourceRecordProvenance::IDENTIFIER_URL,
+                default => ScientificSourceRecordProvenance::IDENTIFIER_DERIVED_HASH,
+            },
+            canonicalUrlBasis: match (true) {
+                $url !== '' => ScientificSourceRecordProvenance::URL_PROVIDER,
+                $doi !== null => ScientificSourceRecordProvenance::URL_DOI_RESOLVER,
+                default => null,
+            },
+            transformations: $this->transformations([
+                'title_tags_and_whitespace_stripped' => $title !== (string) ($work['title'] ?? ''),
+                'doi_lowercased' => $doi !== null && $doi !== $rawDoi,
+                'abstract_tags_and_whitespace_stripped' => $abstract !== '' && $abstract !== (string) ($work['abstract'] ?? ''),
+            ]),
+        );
+
         return new ScientificSearchResult(
             sourceKey: 'consensus',
             sourceIdentifier: $sourceIdentifier,
@@ -156,6 +228,7 @@ class ScientificResultNormalizer
             relevanceScore: isset($relevanceMetadata['semantic_score'])
                 ? (float) $relevanceMetadata['semantic_score']
                 : null,
+            provenance: [$provenance],
         );
     }
 
@@ -217,6 +290,32 @@ class ScientificResultNormalizer
             $relevanceMetadata['external_ids'] = $externalIds;
         }
 
+        $rawDoi = trim((string) ($externalIds['DOI'] ?? $externalIds['doi'] ?? ''));
+        $provenance = new ScientificSourceRecordProvenance(
+            sourceKey: 'semantic_scholar',
+            originalIdentifier: $paperId !== '' ? $paperId : null,
+            originalIdentifierField: $paperId !== '' ? 'paperId' : null,
+            recordUrl: $this->httpUrlOrNull($url),
+            publishedAt: $this->stringOrNull($work['publicationDate'] ?? null),
+            identifierBasis: match (true) {
+                $doi !== null => ScientificSourceRecordProvenance::IDENTIFIER_DOI,
+                $paperId !== '' => ScientificSourceRecordProvenance::IDENTIFIER_PROVIDER,
+                $url !== '' => ScientificSourceRecordProvenance::IDENTIFIER_URL,
+                default => ScientificSourceRecordProvenance::IDENTIFIER_DERIVED_HASH,
+            },
+            canonicalUrlBasis: match (true) {
+                $url !== '' => ScientificSourceRecordProvenance::URL_PROVIDER,
+                $doi !== null => ScientificSourceRecordProvenance::URL_DOI_RESOLVER,
+                $pdfUrl !== '' => ScientificSourceRecordProvenance::URL_OPEN_ACCESS_PDF,
+                default => null,
+            },
+            transformations: $this->transformations([
+                'title_tags_and_whitespace_stripped' => $title !== (string) ($work['title'] ?? ''),
+                'doi_lowercased' => $doi !== null && $doi !== $rawDoi,
+                'abstract_tags_and_whitespace_stripped' => $abstract !== '' && $abstract !== (string) ($work['abstract'] ?? ''),
+            ]),
+        );
+
         return new ScientificSearchResult(
             sourceKey: 'semantic_scholar',
             sourceIdentifier: $sourceIdentifier,
@@ -230,6 +329,7 @@ class ScientificResultNormalizer
             foundBySources: ['semantic_scholar'],
             relevanceMetadata: $relevanceMetadata !== [] ? $relevanceMetadata : null,
             rawMetadata: ['semantic_scholar' => $work],
+            provenance: [$provenance],
         );
     }
 
@@ -280,6 +380,54 @@ class ScientificResultNormalizer
         }
 
         return array_values(array_unique($authors));
+    }
+
+    /**
+     * @param  array<string, bool>  $applied
+     * @return list<string>
+     */
+    private function transformations(array $applied): array
+    {
+        return array_keys(array_filter($applied));
+    }
+
+    private function stringOrNull(mixed $value): ?string
+    {
+        if (! is_string($value) && ! is_int($value)) {
+            return null;
+        }
+        $value = trim((string) $value);
+
+        return $value !== '' ? $value : null;
+    }
+
+    private function httpUrlOrNull(mixed $value): ?string
+    {
+        $value = $this->stringOrNull($value);
+
+        return $value !== null && preg_match('#^https?://#i', $value) === 1 ? $value : null;
+    }
+
+    /**
+     * The issued date exactly as Crossref's date-parts give it, at the precision given.
+     *
+     * @param  array<string, mixed>  $work
+     */
+    private function crossRefIssuedDate(array $work): ?string
+    {
+        $parts = $work['issued']['date-parts'][0] ?? null;
+        if (! is_array($parts) || ! is_numeric($parts[0] ?? null)) {
+            return null;
+        }
+        $date = sprintf('%04d', (int) $parts[0]);
+        foreach ([1, 2] as $index) {
+            if (! is_numeric($parts[$index] ?? null)) {
+                break;
+            }
+            $date .= sprintf('-%02d', (int) $parts[$index]);
+        }
+
+        return $date;
     }
 
     private function normalizeDoi(?string $doi): ?string

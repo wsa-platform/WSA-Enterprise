@@ -3,6 +3,7 @@
 namespace App\Services\Agriculture\Research\Search;
 
 use App\Contracts\ScientificSourceAdapterInterface;
+use App\Contracts\ScientificSourceAdapterV2Interface;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatProviderQueryIdentity;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatQclDimensionResolver;
 use App\Services\Agriculture\Intelligence\Adapters\Scientific\FaoStat\FaoStatRuntimePolicy;
@@ -13,6 +14,13 @@ use App\Services\Agriculture\Research\Coexistence\CoexistenceRetrievalPlan;
 use App\Services\Agriculture\Research\Coexistence\Stage3CghiaCoexistenceBoundary;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\Projection\ProjectionSearchOptionsBinder;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceFailureClassifier;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceLicensingDeclaration;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceSearchRequest;
+use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCapabilityPolicy;
+use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
+use App\Services\Agriculture\Research\Search\Registry\ScientificSourceExecutionGroup;
+use App\Services\Agriculture\Research\Search\Registry\ScientificSourceSelectionRole;
 use Illuminate\Support\Facades\Concurrency;
 use Illuminate\Support\Facades\Log;
 
@@ -28,12 +36,11 @@ class MultiSourceScientificSearchOrchestrator
 
     private const MAX_VARIANTS_PER_PROVIDER = 2;
 
-    /** @var list<string> */
-    private const INDEPENDENT_SCHOLARLY_SOURCE_KEYS = [
-        'openalex',
-        'crossref',
-        'semantic_scholar',
-    ];
+    private const ADAPTER_EXCEPTION_ERROR = 'adapter_exception';
+
+    private ScientificSourceCatalog $catalog;
+
+    private ScientificSourceCapabilityPolicy $capabilityPolicy;
 
     private ProjectionSearchOptionsBinder $projectionBinder;
 
@@ -47,8 +54,12 @@ class MultiSourceScientificSearchOrchestrator
         private ScientificResultRanker $ranker,
         private ScientificQueryCompiler $queryCompiler = new ScientificQueryCompiler(),
         private Stage3CghiaCoexistenceBoundary $coexistenceBoundary = new Stage3CghiaCoexistenceBoundary(),
+        ?ScientificSourceCatalog $catalog = null,
+        ?ScientificSourceCapabilityPolicy $capabilityPolicy = null,
         ?ProjectionSearchOptionsBinder $projectionBinder = null,
     ) {
+        $this->catalog = $catalog ?? ScientificSourceCatalog::default();
+        $this->capabilityPolicy = $capabilityPolicy ?? new ScientificSourceCapabilityPolicy();
         $this->projectionBinder = $projectionBinder ?? new ProjectionSearchOptionsBinder();
     }
 
@@ -60,9 +71,20 @@ class MultiSourceScientificSearchOrchestrator
         $searchQuery = $variants[0] ?? $this->queryBuilder->buildFromPlan($plan);
         $selectionTrace = $this->sourceSelector->selectionTrace($plan);
 
-        $selectedSources = $sourceKeys !== null
-            ? $this->filterEnabledSources($sourceKeys, $plan)
-            : $selectionTrace['selected'];
+        if ($sourceKeys !== null) {
+            [$selectedSources, $selectionTrace['capability_denied']] = $this->filterEnabledSources($sourceKeys, $plan);
+        } else {
+            $selectedSources = $selectionTrace['selected'];
+        }
+        $selectionTrace['capability_basis'] = $this->capabilityBasis($selectedSources);
+        if (($selectionTrace['capability_denied'] ?? []) !== []) {
+            Log::notice('Stage 3 sources denied by the capability policy', [
+                'denied' => array_map(
+                    static fn (array $d): array => ['source_key' => $d['source_key'], 'reason' => $d['reason']],
+                    $selectionTrace['capability_denied'],
+                ),
+            ]);
+        }
 
         $coexistencePlan = $this->buildCoexistencePlan($plan, $selectedSources, $searchQuery);
         $this->activeCoexistencePlan = $coexistencePlan;
@@ -319,6 +341,92 @@ class MultiSourceScientificSearchOrchestrator
         return $options;
     }
 
+    /**
+     * An expected source failure (ScientificSourceFailureClassifier) becomes one FAILED outcome
+     * so it cannot abort Stage 3 for other providers. Anything else is a defect or a
+     * test-framework signal and propagates. Only the exception class is logged: messages can
+     * carry request URLs or credentials.
+     *
+     * A v2 request requires limit >= 1; callers may pass any int, and v1 adapters clamp it themselves.
+     *
+     * @param  array<string, mixed>  $options
+     */
+    private static function searchAdapter(
+        ScientificSourceAdapterInterface $adapter,
+        string $query,
+        int $limit,
+        array $options,
+        ?string $accessFamily = null,
+    ): ScientificSourceSearchOutcome {
+        try {
+            $outcome = $adapter instanceof ScientificSourceAdapterV2Interface
+                ? $adapter->searchRequest(new ScientificSourceSearchRequest($query, max(1, $limit), $options))
+                : $adapter->search($query, $limit, $options);
+        } catch (\Throwable $exception) {
+            $category = ScientificSourceFailureClassifier::classifyThrowable($exception);
+            if ($category === null) {
+                throw $exception;
+            }
+            Log::warning('Stage 3 provider search threw; recorded as a failed outcome', [
+                'provider' => $adapter->sourceKey(),
+                'exception' => $exception::class,
+                'failure_category' => $category->value,
+            ]);
+
+            return new ScientificSourceSearchOutcome(
+                sourceKey: $adapter->sourceKey(),
+                status: ScientificSourceSearchOutcome::STATUS_FAILED,
+                error: self::ADAPTER_EXCEPTION_ERROR,
+                observability: ['exception_class' => $exception::class, 'failure_category' => $category->value],
+            );
+        }
+
+        return self::withRetrievalProvenance($adapter, $outcome, $accessFamily);
+    }
+
+    /**
+     * Stamps when and through which adapter each returned record was retrieved, and the
+     * licensing the adapter declares; a v1 adapter declares none, so its licensing is unresolved.
+     */
+    private static function withRetrievalProvenance(
+        ScientificSourceAdapterInterface $adapter,
+        ScientificSourceSearchOutcome $outcome,
+        ?string $accessFamily,
+    ): ScientificSourceSearchOutcome {
+        if ($outcome->results === []) {
+            return $outcome;
+        }
+
+        $retrievedAt = now()->utc()->toIso8601String();
+        if ($adapter instanceof ScientificSourceAdapterV2Interface) {
+            $descriptor = $adapter->descriptor();
+            $contractVersion = $descriptor->contractVersion;
+            $licensing = $descriptor->licensing;
+        } else {
+            $contractVersion = ScientificSourceAdapterInterface::CONTRACT_VERSION;
+            $licensing = ScientificSourceLicensingDeclaration::unresolved();
+        }
+
+        return new ScientificSourceSearchOutcome(
+            sourceKey: $outcome->sourceKey,
+            status: $outcome->status,
+            results: array_map(
+                static fn (ScientificSearchResult $result): ScientificSearchResult => $result->withRetrievalContext(
+                    $outcome->sourceKey,
+                    $retrievedAt,
+                    $adapter::class,
+                    $contractVersion,
+                    $accessFamily,
+                    $licensing,
+                ),
+                $outcome->results,
+            ),
+            error: $outcome->error,
+            httpStatus: $outcome->httpStatus,
+            observability: $outcome->observability,
+        );
+    }
+
     private static function isRateLimitedOutcome(ScientificSourceSearchOutcome $outcome): bool
     {
         return $outcome->status === ScientificSourceSearchOutcome::STATUS_UNAVAILABLE
@@ -342,30 +450,63 @@ class MultiSourceScientificSearchOrchestrator
     }
 
     /**
+     * Explicitly requested sources pass the same enablement and capability checks as selected ones.
+     *
      * @param  list<string>  $sourceKeys
-     * @return list<string>
+     * @return array{0: list<string>, 1: list<array<string, string|bool|null>>}
      */
     private function filterEnabledSources(array $sourceKeys, KnowledgeQueryPlan $plan): array
     {
         $enabled = [];
+        $denied = [];
         foreach ($sourceKeys as $key) {
             $key = strtolower(trim((string) $key));
             if ($key === '') {
                 continue;
             }
-            $flag = match ($key) {
-                'openalex' => (bool) config('agricultural_intelligence.openalex.enabled', true),
-                'crossref' => (bool) config('agricultural_intelligence.crossref.enabled', true),
-                'semantic_scholar' => (bool) config('agricultural_intelligence.semantic_scholar.enabled', true),
-                'fao_stat' => FaoStatRuntimePolicy::isEnabled(),
-                default => true,
-            };
-            if ($flag) {
+            $registration = $this->catalog->get($key);
+            if ($registration === null) {
+                // Unregistered keys pass through; resolveMany() drops them as unsupported.
                 $enabled[] = $key;
+
+                continue;
+            }
+            if (! $registration->isEnabled()) {
+                continue;
+            }
+            $decision = $this->capabilityPolicy->decide($registration, ScientificSourceSelector::REQUIRED_OPERATION);
+            if (! $decision->allowed) {
+                $denied[$key] = $decision->toArray();
+
+                continue;
+            }
+            $enabled[] = $key;
+        }
+
+        return [array_values(array_unique($this->prioritizeSources($enabled, $plan))), array_values($denied)];
+    }
+
+    /**
+     * @param  list<string>  $sourceKeys
+     * @return array<string, string>
+     */
+    private function capabilityBasis(array $sourceKeys): array
+    {
+        $basis = [];
+        foreach ($sourceKeys as $key) {
+            $registration = $this->catalog->get($key);
+            if ($registration !== null) {
+                $basis[$key] = $this->capabilityPolicy
+                    ->decide($registration, ScientificSourceSelector::REQUIRED_OPERATION)->reason;
             }
         }
 
-        return array_values(array_unique($this->prioritizeSources($enabled, $plan)));
+        return $basis;
+    }
+
+    private function accessFamilyOf(string $sourceKey): ?string
+    {
+        return $this->catalog->get($sourceKey)?->accessFamily->value;
     }
 
     /**
@@ -567,7 +708,7 @@ class MultiSourceScientificSearchOrchestrator
 
     private function isIndependentScholarlySource(string $sourceKey): bool
     {
-        return in_array($sourceKey, self::INDEPENDENT_SCHOLARLY_SOURCE_KEYS, true);
+        return $this->catalog->isInExecutionGroup($sourceKey, ScientificSourceExecutionGroup::INDEPENDENT_SCHOLARLY);
     }
 
     /**
@@ -608,6 +749,7 @@ class MultiSourceScientificSearchOrchestrator
                 $this->optionsForSource($key, $plan),
                 $budget,
                 $priorResultCount,
+                $this->accessFamilyOf($key),
             );
             $priorResultCount += count($collections[$key]['results']);
         }
@@ -639,6 +781,7 @@ class MultiSourceScientificSearchOrchestrator
         foreach ($adapters as $adapter) {
             $sourceKey = $adapter->sourceKey();
             $baseOptions = $this->optionsForSource($sourceKey, $plan);
+            $accessFamily = $this->accessFamilyOf($sourceKey);
             $capturedAdapter = $adapter;
 
             if (app()->runningUnitTests()) {
@@ -651,19 +794,21 @@ class MultiSourceScientificSearchOrchestrator
                     $baseOptions,
                     $budget,
                     $priorResultCount,
+                    $accessFamily,
                 ) {
                     if (is_string($adapterFile) && $adapterFile !== '' && is_file($adapterFile)) {
                         require_once $adapterFile;
                     }
                     $budget->bind();
 
-                    return self::collectAdapterSearchOrUnavailable(
+                    return self::collectAdapterSearch(
                         $capturedAdapter,
                         $variants,
                         $limit,
                         $baseOptions,
                         $budget,
                         $priorResultCount,
+                        $accessFamily,
                     );
                 };
 
@@ -677,6 +822,7 @@ class MultiSourceScientificSearchOrchestrator
                 $baseOptions,
                 $budget,
                 $priorResultCount,
+                $accessFamily,
             ) {
                 $budget->bind();
                 $resolved = app(ScientificSourceAdapterRegistry::class)->get($sourceKey);
@@ -698,13 +844,14 @@ class MultiSourceScientificSearchOrchestrator
                     ];
                 }
 
-                return self::collectAdapterSearchOrUnavailable(
+                return self::collectAdapterSearch(
                     $resolved,
                     $variants,
                     $limit,
                     $baseOptions,
                     $budget,
                     $priorResultCount,
+                    $accessFamily,
                 );
             };
         }
@@ -713,9 +860,13 @@ class MultiSourceScientificSearchOrchestrator
             /** @var array<string, array{attempted: bool, adapterStatus: string, outcomes: list<ScientificSourceSearchOutcome>, results: list<ScientificSearchResult>, skippedBudget: bool}> $wave */
             $wave = Concurrency::driver('process')->run($tasks);
         } catch (\Throwable $exception) {
+            // Expected source failures never leave a task (searchAdapter contains them), so a
+            // child exception re-created here by the driver is a defect and must propagate.
+            if (! ScientificSourceFailureClassifier::isConcurrencyInfrastructureFailure($exception)) {
+                throw $exception;
+            }
             Log::warning('Stage 3 scholarly concurrency process pool failed; not replaying provider searches', [
                 'exception' => $exception::class,
-                'message' => $exception->getMessage(),
                 'providers' => array_map(
                     static fn (ScientificSourceAdapterInterface $adapter): string => $adapter->sourceKey(),
                     $adapters,
@@ -745,39 +896,6 @@ class MultiSourceScientificSearchOrchestrator
         }
 
         return $collections;
-    }
-
-    /**
-     * @param  list<string>  $variants
-     * @param  array<string, mixed>  $baseOptions
-     * @return array{attempted: bool, adapterStatus: string, outcomes: list<ScientificSourceSearchOutcome>, results: list<ScientificSearchResult>, skippedBudget: bool}
-     */
-    private static function collectAdapterSearchOrUnavailable(
-        ScientificSourceAdapterInterface $adapter,
-        array $variants,
-        int $limit,
-        array $baseOptions,
-        ScientificSearchTimeBudget $budget,
-        int $priorResultCount,
-    ): array {
-        try {
-            return self::collectAdapterSearch(
-                $adapter,
-                $variants,
-                $limit,
-                $baseOptions,
-                $budget,
-                $priorResultCount,
-            );
-        } catch (\Throwable $exception) {
-            Log::warning('Stage 3 scholarly concurrent search failed', [
-                'provider' => $adapter->sourceKey(),
-                'exception' => $exception::class,
-                'message' => $exception->getMessage(),
-            ]);
-
-            return self::unavailableWaveCollection($adapter->sourceKey());
-        }
     }
 
     /**
@@ -814,6 +932,7 @@ class MultiSourceScientificSearchOrchestrator
         array $baseOptions,
         ScientificSearchTimeBudget $budget,
         int $priorResultCount,
+        ?string $accessFamily = null,
     ): array {
         $key = $adapter->sourceKey();
         if ($budget->remainingSeconds() < 1.0) {
@@ -882,12 +1001,14 @@ class MultiSourceScientificSearchOrchestrator
                     $seenIdentities[$identity] = true;
                 }
 
-                $outcome = $adapter->search(
+                $outcome = self::searchAdapter(
+                    $adapter,
                     $queryText,
                     $limit,
                     array_merge($opts, [
                         'search_budget_remaining_seconds' => $budget->remainingSeconds(),
                     ]),
+                    $accessFamily,
                 );
                 $variantsAttempted++;
                 $obs = is_array($outcome->observability) ? $outcome->observability : [];
@@ -919,6 +1040,9 @@ class MultiSourceScientificSearchOrchestrator
                 } else {
                     if ($adapterStatus !== 'success') {
                         $adapterStatus = 'failed';
+                    }
+                    if ($outcome->error === self::ADAPTER_EXCEPTION_ERROR) {
+                        break;
                     }
                 }
             }
@@ -953,12 +1077,14 @@ class MultiSourceScientificSearchOrchestrator
             }
             $seenScholarlyIdentities[$variantIdentity] = true;
 
-            $outcome = $adapter->search(
+            $outcome = self::searchAdapter(
+                $adapter,
                 $variant,
                 $limit,
                 array_merge($baseOptions, [
                     'search_budget_remaining_seconds' => $budget->remainingSeconds(),
                 ]),
+                $accessFamily,
             );
             $variantsAttempted++;
             $outcomes[] = $outcome;
@@ -988,7 +1114,7 @@ class MultiSourceScientificSearchOrchestrator
 
                 // After first OpenAlex (or any provider) 429, skip remaining variants for
                 // that provider in this request; other providers still run all variants.
-                if (self::isRateLimitedOutcome($outcome)) {
+                if (self::isRateLimitedOutcome($outcome) || $outcome->error === self::ADAPTER_EXCEPTION_ERROR) {
                     $skipRemainingVariants = true;
                 }
             }
@@ -1048,6 +1174,7 @@ class MultiSourceScientificSearchOrchestrator
             + (int) ($variantBudget['truncated'] ?? 0);
         $timeouts = 0;
         $retryCounts = 0;
+        $sourceFailures = [];
 
         foreach ($collections as $key => $collection) {
             $attempted = (int) ($collection['variantsAttempted'] ?? 0);
@@ -1072,6 +1199,15 @@ class MultiSourceScientificSearchOrchestrator
             } elseif (isset($obs['retries']) && is_numeric($obs['retries'])) {
                 $retryCounts += (int) $obs['retries'];
             }
+            $category = ScientificSourceFailureClassifier::classifyOutcome($outcome);
+            if ($category !== null) {
+                $sourceFailures[] = [
+                    'source' => $outcome->sourceKey,
+                    'error' => $outcome->error,
+                    'failure_category' => $category->value,
+                    'retryable' => $category->isRetryable(),
+                ];
+            }
         }
 
         $successful = [];
@@ -1093,9 +1229,15 @@ class MultiSourceScientificSearchOrchestrator
                 $selectionTrace['skipped_inactive'] ?? [],
                 $skipped,
             ))),
-            'optional_not_selected' => $selectionTrace['optional_not_selected'] ?? ScientificSourceSelector::OPTIONAL_SOURCES,
+            'optional_not_selected' => $selectionTrace['optional_not_selected']
+                ?? $this->catalog->keysWithRole(ScientificSourceSelectionRole::OPTIONAL_EXPLICIT_ONLY),
             'faostat_consideration' => $selectionTrace['faostat_consideration'] ?? null,
             'selection_policy' => $selectionTrace['policy'] ?? null,
+            'source_capability' => [
+                'required_operation' => ScientificSourceSelector::REQUIRED_OPERATION->value,
+                'basis' => $selectionTrace['capability_basis'] ?? [],
+                'denied' => $selectionTrace['capability_denied'] ?? [],
+            ],
             'variant_count' => (int) ($variantBudget['output_count'] ?? count($variantBudget['variants'] ?? [])),
             'variant_input_count' => (int) ($variantBudget['input_count'] ?? 0),
             'variant_equivalent_suppressed' => (int) ($variantBudget['equivalent_suppressed'] ?? 0),
@@ -1108,6 +1250,7 @@ class MultiSourceScientificSearchOrchestrator
             'successful_provider_calls' => $successful,
             'empty_provider_responses' => $empty,
             'provider_failures' => $failed,
+            'source_failures' => $sourceFailures,
             'timeouts' => $timeouts,
             'retry_counts' => $retryCounts,
             'normalized_result_count' => $rawCount,

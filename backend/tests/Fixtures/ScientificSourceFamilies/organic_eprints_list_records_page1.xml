@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2026-10-17T20:45:00Z</responseDate>
+  <request verb="ListRecords" metadataPrefix="oai_dc" from="2024-01-01">https://orgprints.org/cgi/oai2</request>
+  <ListRecords>
+    <record>
+      <header>
+        <identifier>oai:orgprints.org:116</identifier>
+        <datestamp>2024-03-15T10:00:00Z</datestamp>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/">
+          <dc:title>Organic agriculture: Does it enhance or reduce the nutritional value of plant foods?</dc:title>
+          <dc:creator>Brandt, Kirsten</dc:creator>
+          <dc:creator>Mølgaard, Jens Peter</dc:creator>
+          <dc:description>Review of nutritional value of plant foods from organic agriculture.</dc:description>
+          <dc:date>2001</dc:date>
+          <dc:type>Article</dc:type>
+          <dc:identifier>/id/eprint/116/1/organic_food.pdf</dc:identifier>
+        </oai_dc:dc>
+      </metadata>
+    </record>
+    <record>
+      <header>
+        <identifier>oai:orgprints.org:544</identifier>
+        <datestamp>2024-04-01T12:00:00Z</datestamp>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/">
+          <dc:title>The World of Organic Agriculture: Statistics and Future Prospects 2003</dc:title>
+          <dc:creator>Yussefi, Minou</dc:creator>
+          <dc:creator>Willer, Helga</dc:creator>
+          <dc:date>2003</dc:date>
+          <dc:identifier>/id/eprint/544/1/world_of_organic.pdf</dc:identifier>
+        </oai_dc:dc>
+      </metadata>
+    </record>
+    <record>
+      <header status="deleted">
+        <identifier>oai:orgprints.org:999001</identifier>
+        <datestamp>2024-05-01T00:00:00Z</datestamp>
+      </header>
+    </record>
+    <resumptionToken expirationDate="2026-10-18T20:45:06Z">from%3D2024-01-01%26metadataPrefix%3Doai_dc%26offset%3D10368</resumptionToken>
+  </ListRecords>
+</OAI-PMH>

@@ -2,7 +2,12 @@
 
 namespace App\Services\Agriculture\Research\Search\Adapters;
 
-use App\Contracts\ScientificSourceAdapterInterface;
+use App\Contracts\ScientificSourceAdapterV2Interface;
+use App\Services\Agriculture\Research\Search\Contract\DelegatesSearchRequestToSearch;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceAdapterDescriptor;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceFailureClassifier;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceLicensingDeclaration;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceRetryPolicy;
 use App\Services\Agriculture\Research\Search\ScientificResultNormalizer;
 use App\Services\Agriculture\Research\Search\ScientificSearchTimeBudget;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
@@ -19,8 +24,10 @@ use Illuminate\Support\Facades\Log;
  * Missing key: still attempt unauthenticated search (provider rate limits apply).
  * HTTP 429: Retry-After or bounded exponential backoff, max 3 attempts, then graceful failure.
  */
-class SemanticScholarScientificSourceAdapter implements ScientificSourceAdapterInterface
+class SemanticScholarScientificSourceAdapter implements ScientificSourceAdapterV2Interface
 {
+    use DelegatesSearchRequestToSearch;
+
     public const SOURCE_KEY = 'semantic_scholar';
 
     private const SEARCH_URL = 'https://api.semanticscholar.org/graph/v1/paper/search';
@@ -28,6 +35,8 @@ class SemanticScholarScientificSourceAdapter implements ScientificSourceAdapterI
     private const FIELDS = 'title,abstract,authors,year,url,venue,publicationTypes,citationCount,externalIds,openAccessPdf';
 
     private const MAX_ATTEMPTS = 3;
+
+    private const MAX_RESULTS_PER_REQUEST = 20;
 
     public function __construct(
         private ScientificResultNormalizer $normalizer,
@@ -41,6 +50,20 @@ class SemanticScholarScientificSourceAdapter implements ScientificSourceAdapterI
     public function displayName(): string
     {
         return 'Semantic Scholar';
+    }
+
+    /**
+     * Licensing has no recorded evidence yet. The 429 retries inside search() are not an
+     * orchestrator retry policy.
+     */
+    public function descriptor(): ScientificSourceAdapterDescriptor
+    {
+        return new ScientificSourceAdapterDescriptor(
+            sourceKey: $this->sourceKey(),
+            licensing: ScientificSourceLicensingDeclaration::unresolved(),
+            retryPolicy: ScientificSourceRetryPolicy::none(),
+            maxResultsPerRequest: self::MAX_RESULTS_PER_REQUEST,
+        );
     }
 
     /**
@@ -60,7 +83,7 @@ class SemanticScholarScientificSourceAdapter implements ScientificSourceAdapterI
         $apiKey = trim((string) config('wsa.semantic_scholar_api_key', ''));
         $params = [
             'query' => $query,
-            'limit' => max(1, min($limit, 20)),
+            'limit' => max(1, min($limit, self::MAX_RESULTS_PER_REQUEST)),
             'fields' => self::FIELDS,
         ];
 
@@ -85,7 +108,7 @@ class SemanticScholarScientificSourceAdapter implements ScientificSourceAdapterI
             } catch (ConnectionException $exception) {
                 Log::warning('Semantic Scholar Stage 3 search timed out or connection failed', [
                     'provider' => self::SOURCE_KEY,
-                    'message' => $exception->getMessage(),
+                    'exception' => $exception::class,
                 ]);
 
                 return new ScientificSourceSearchOutcome(
@@ -102,9 +125,12 @@ class SemanticScholarScientificSourceAdapter implements ScientificSourceAdapterI
                     ),
                 );
             } catch (\Throwable $exception) {
+                if (ScientificSourceFailureClassifier::classifyThrowable($exception) === null) {
+                    throw $exception;
+                }
                 Log::warning('Semantic Scholar Stage 3 search request failed', [
                     'provider' => self::SOURCE_KEY,
-                    'message' => $exception->getMessage(),
+                    'exception' => $exception::class,
                 ]);
 
                 return new ScientificSourceSearchOutcome(

@@ -7,6 +7,7 @@ use App\Services\Agriculture\Research\Identity\CanonicalSourceIdentityId;
 use App\Services\Agriculture\Research\Identity\ExternalIdentityKind;
 use App\Services\Agriculture\Research\Identity\ExternalIdentityRef;
 use App\Services\Agriculture\Research\Identity\SourceIdentityDomainContract;
+use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
 
 /**
  * IU-09 Stage-3 sourceKey → IU-01 identity namespace bridge.
@@ -19,14 +20,54 @@ use App\Services\Agriculture\Research\Identity\SourceIdentityDomainContract;
  */
 final class Stage3SourceKeyIdentityBridge
 {
-    /** @var list<string> */
+    /**
+     * @deprecated Compatibility projection; known keys are the ScientificSourceCatalog registrations.
+     *
+     * @var list<string>
+     */
     public const KNOWN_STAGE3_SOURCE_KEYS = [
         'openalex',
         'crossref',
         'semantic_scholar',
         'consensus',
         'fao_stat',
+        'agris',
+        'dr_duke',
+        'gbif',
+        'organic_eprints',
+        'bhl',
     ];
+
+    /**
+     * ADR bindings for runtime-active governed seats (explicit; never invents SAME_AS).
+     *
+     * @return array<string, array{adr_id: string, canonical_identity_id?: ?string}>
+     */
+    public static function governedAdrBindings(): array
+    {
+        return [
+            'gbif' => [
+                'adr_id' => 'G5-04',
+                'canonical_identity_id' => 'adr023.canonical.seat.G5-04',
+            ],
+            'agris' => [
+                'adr_id' => 'G1-01',
+                'canonical_identity_id' => 'adr023.canonical.seat.G1-01',
+            ],
+            'dr_duke' => [
+                'adr_id' => 'G1-17',
+                'canonical_identity_id' => 'adr023.canonical.seat.G1-17',
+            ],
+            'organic_eprints' => [
+                'adr_id' => 'G1-02',
+                'canonical_identity_id' => 'adr023.canonical.seat.G1-02',
+            ],
+            'bhl' => [
+                'adr_id' => 'G6-20',
+                'canonical_identity_id' => 'adr023.canonical.seat.G6-20',
+            ],
+        ];
+    }
 
     /**
      * @param  array<string, array{adr_id: string, canonical_identity_id?: ?string}>  $adrBindingsBySourceKey
@@ -42,7 +83,7 @@ final class Stage3SourceKeyIdentityBridge
             return Stage3SourceKeyResolution::unresolved($sourceKey);
         }
 
-        if (! in_array($key, self::KNOWN_STAGE3_SOURCE_KEYS, true)) {
+        if (! ScientificSourceCatalog::default()->has($key)) {
             return Stage3SourceKeyResolution::unresolved($key);
         }
 

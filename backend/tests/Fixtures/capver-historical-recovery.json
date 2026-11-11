@@ -1,0 +1,146 @@
+{
+    "exported_at": "2026-10-23T12:00:46Z",
+    "source_type": "postgresql",
+    "source_identity": {
+        "container": "wsa-enterprise-postgres-1",
+        "image": "postgres:16-alpine",
+        "server_version": "16.14",
+        "database": "wsa_enterprise",
+        "volume": "wsa-enterprise_postgres_data",
+        "mount": "/var/lib/postgresql/data",
+        "table": "public.cghia_capability_cell_records"
+    },
+    "verification": {
+        "method": "BEGIN READ ONLY; information_schema columns; json_agg of all table rows",
+        "verified_at": "2026-10-23T12:00:46Z",
+        "session": "transaction_read_only=on",
+        "container_started_before_inspection": "2026-10-23T11:42:54Z",
+        "writes_issued": false
+    },
+    "expected_record_count": 4,
+    "recovered_record_count": 4,
+    "unresolved_fields": [],
+    "notes": [
+        "The table contained exactly four rows. Storage id 1 is absent. Recovered ids are 2, 3, 4, and 5.",
+        "The hash is SHA-256 of the canonical JSON for the persisted columns. It binds this artifact to the exported payload; it does not by itself prove the PostgreSQL source."
+    ],
+    "records": [
+        {
+            "capability_record_id": "cap-rec-r11-20261018-G1-02-oai_pmh",
+            "integrity_sha256": "df6170b3fa6fa6403cbca7215dd933062ca0c1dbcbd7da53f5dc4cf52487c68d",
+            "row": {
+                "adr_id": "G1-02",
+                "canonical_identity_id": null,
+                "capability_evidence_refs": [
+                    "IC-ER 2026-10-13 G1-02",
+                    "LocalIndex GEN=2 ACTIVE_ROWS=189 cross-process probe 2026-10-18",
+                    "OD-G1-02-ONBOARDING-ACTIVE ACCEPT + OD-CAPVER-ACCEPTED-SEATS AUTHORIZE",
+                    "https:\\/\\/www.orgprints.org\\/about_policy.html#oai"
+                ],
+                "capability_record_id": "cap-rec-r11-20261018-G1-02-oai_pmh",
+                "capability_state": "VERIFIED",
+                "cell_lifecycle": "CURRENT",
+                "created_at": "2026-10-22T06:48:44",
+                "dimension_code": "oai_pmh",
+                "dimension_family": "ACCESS_METHOD",
+                "evidence_freshness_class": "CURRENT",
+                "id": 2,
+                "limitation_text": null,
+                "observed_at": "2026-10-18T12:00:00+00:00",
+                "seat_override_applied": false,
+                "snapshot_version": "organic_eprints.oai_pmh.search.v1",
+                "update_method": "capver_authorized_evidence_review",
+                "updated_at": "2026-10-22T06:48:44",
+                "verified_at": "2026-10-22T06:48:42+00:00"
+            }
+        },
+        {
+            "capability_record_id": "cap-rec-r11-20261018-G6-20-api",
+            "integrity_sha256": "a03116217e43290dda7bd248d07c41718ae228b80841553d2077d49e26a3a818",
+            "row": {
+                "adr_id": "G6-20",
+                "canonical_identity_id": null,
+                "capability_evidence_refs": [
+                    "IC-ER 2026-10-13 G6-20",
+                    "Live PublicationSearch Status=ok 2026-10-18 (key via config; value never archived)",
+                    "OD-G6-20-ONBOARDING-ACTIVE ACCEPT + OD-CAPVER-ACCEPTED-SEATS AUTHORIZE",
+                    "https:\\/\\/www.biodiversitylibrary.org\\/docs\\/api3.html"
+                ],
+                "capability_record_id": "cap-rec-r11-20261018-G6-20-api",
+                "capability_state": "VERIFIED",
+                "cell_lifecycle": "CURRENT",
+                "created_at": "2026-10-22T06:48:44",
+                "dimension_code": "api",
+                "dimension_family": "ACCESS_METHOD",
+                "evidence_freshness_class": "CURRENT",
+                "id": 3,
+                "limitation_text": null,
+                "observed_at": "2026-10-18T12:00:00+00:00",
+                "seat_override_applied": false,
+                "snapshot_version": "bhl.rest_api.publication_search.v1",
+                "update_method": "capver_authorized_evidence_review",
+                "updated_at": "2026-10-22T06:48:44",
+                "verified_at": "2026-10-22T06:48:44+00:00"
+            }
+        },
+        {
+            "capability_record_id": "cap-rec-r12-20261018-G1-01-bulk",
+            "integrity_sha256": "4f46d6f9615de7f519bc4abd74e5b3feaec146082825b3a4ccfd606886b7a366",
+            "row": {
+                "adr_id": "G1-01",
+                "canonical_identity_id": null,
+                "capability_evidence_refs": [
+                    "IC-ER 2026-10-13 G1-01",
+                    "LocalIndex GEN=4 ACTIVE_ROWS=1317 bounded ODS subset 2026-10-18",
+                    "OD-G1-01-SCOPE-BOUNDED-SUBSET + OD-G1-01-ONBOARDING-ACTIVE + OD-CAPVER-G1-01-G1-17 AUTHORIZE",
+                    "docs\\/architecture\\/science-source-expansion\\/2026-10-16-NEXT-GATE-17-ENDPOINT-VERIFICATION.v1.json#G1-01"
+                ],
+                "capability_record_id": "cap-rec-r12-20261018-G1-01-bulk",
+                "capability_state": "VERIFIED",
+                "cell_lifecycle": "CURRENT",
+                "created_at": "2026-10-22T06:48:44",
+                "dimension_code": "bulk_download",
+                "dimension_family": "ACCESS_METHOD",
+                "evidence_freshness_class": "CURRENT",
+                "id": 4,
+                "limitation_text": null,
+                "observed_at": "2026-10-18T12:37:57+00:00",
+                "seat_override_applied": false,
+                "snapshot_version": "agris.bulk_dataset.bounded_ods.search.v1",
+                "update_method": "capver_authorized_evidence_review",
+                "updated_at": "2026-10-22T06:48:44",
+                "verified_at": "2026-10-22T06:48:44+00:00"
+            }
+        },
+        {
+            "capability_record_id": "cap-rec-r12-20261018-G1-17-static",
+            "integrity_sha256": "014809bafc057d635ddb670dd85f2b3b42fe00beb87bbe0a2ab3625f433fee9f",
+            "row": {
+                "adr_id": "G1-17",
+                "canonical_identity_id": null,
+                "capability_evidence_refs": [
+                    "FARMACY\\u2260FARMACY_NEW; ETHNOBOT traditional-use only",
+                    "IC-ER 2026-10-13 G1-17",
+                    "LocalIndex GEN=2 ACTIVE_ROWS=1500 limited projection 2026-10-18",
+                    "OD-G1-17-SCOPE-LIMITED-PROJECTION + OD-G1-17-ONBOARDING-ACTIVE + OD-CAPVER-G1-01-G1-17 AUTHORIZE",
+                    "https:\\/\\/phytochem.nal.usda.gov\\/about"
+                ],
+                "capability_record_id": "cap-rec-r12-20261018-G1-17-static",
+                "capability_state": "VERIFIED",
+                "cell_lifecycle": "CURRENT",
+                "created_at": "2026-10-22T06:48:44",
+                "dimension_code": "static_download",
+                "dimension_family": "ACCESS_METHOD",
+                "evidence_freshness_class": "CURRENT",
+                "id": 5,
+                "limitation_text": null,
+                "observed_at": "2026-10-18T11:23:54+00:00",
+                "seat_override_applied": false,
+                "snapshot_version": "dr_duke.static_dataset.limited_projection.search.v1",
+                "update_method": "capver_authorized_evidence_review",
+                "updated_at": "2026-10-22T06:48:44",
+                "verified_at": "2026-10-22T06:48:44+00:00"
+            }
+        }
+    ]
+}

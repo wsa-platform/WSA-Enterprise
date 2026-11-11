@@ -1,0 +1,3 @@
+{"id": "agris-fixture-1", "title": "Deficit irrigation effects on wheat yield in arid systems", "abstract": "Engineering fixture derived for LocalIndex path tests; not an AGRIS ODS harvest.", "doi": "10.0000/agris.fixture.1", "url": "https://example.invalid/agris-fixture-1", "published": "2024-01-15", "year": "2024", "authors": ["Fixture, A."]}
+{"id": "agris-fixture-2", "title": "Soil organic carbon under conservation tillage", "abstract": "Engineering fixture for empty-result and ranking checks.", "url": "https://example.invalid/agris-fixture-2", "published": "2023-06-01", "year": "2023", "authors": ["Fixture, B."]}
+{"id": "agris-fixture-3", "title": "Unrelated aquaculture feed formulation note", "abstract": "Should not match wheat irrigation queries.", "year": "2022"}

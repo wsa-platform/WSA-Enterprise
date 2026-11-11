@@ -2,8 +2,13 @@
 
 namespace App\Services\Agriculture\Research\Search\Adapters;
 
-use App\Contracts\ScientificSourceAdapterInterface;
+use App\Contracts\ScientificSourceAdapterV2Interface;
 use App\Services\Agriculture\OpenAlexScientificClient;
+use App\Services\Agriculture\Research\Search\Contract\DelegatesSearchRequestToSearch;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceAdapterDescriptor;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceFailureClassifier;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceLicensingDeclaration;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceRetryPolicy;
 use App\Services\Agriculture\Research\Search\ScientificResultNormalizer;
 use App\Services\Agriculture\Research\Search\ScientificSearchTimeBudget;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
@@ -12,9 +17,13 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class OpenAlexScientificSourceAdapter implements ScientificSourceAdapterInterface
+class OpenAlexScientificSourceAdapter implements ScientificSourceAdapterV2Interface
 {
+    use DelegatesSearchRequestToSearch;
+
     private const MAX_ATTEMPTS = 3;
+
+    private const MAX_RESULTS_PER_REQUEST = 10;
 
     public function __construct(
         private ScientificResultNormalizer $normalizer,
@@ -28,6 +37,20 @@ class OpenAlexScientificSourceAdapter implements ScientificSourceAdapterInterfac
     public function displayName(): string
     {
         return 'OpenAlex';
+    }
+
+    /**
+     * Licensing has no recorded evidence yet. The 429 retries inside search() are not an
+     * orchestrator retry policy.
+     */
+    public function descriptor(): ScientificSourceAdapterDescriptor
+    {
+        return new ScientificSourceAdapterDescriptor(
+            sourceKey: $this->sourceKey(),
+            licensing: ScientificSourceLicensingDeclaration::unresolved(),
+            retryPolicy: ScientificSourceRetryPolicy::none(),
+            maxResultsPerRequest: self::MAX_RESULTS_PER_REQUEST,
+        );
     }
 
     /**
@@ -46,7 +69,7 @@ class OpenAlexScientificSourceAdapter implements ScientificSourceAdapterInterfac
 
         $params = [
             'search' => $query,
-            'per_page' => max(1, min($limit, 10)),
+            'per_page' => max(1, min($limit, self::MAX_RESULTS_PER_REQUEST)),
             'mailto' => (string) config('wsa.openalex_mailto', 'wsa-platform@example.com'),
         ];
         $apiKey = trim((string) config('wsa.openalex_api_key', ''));
@@ -89,9 +112,12 @@ class OpenAlexScientificSourceAdapter implements ScientificSourceAdapterInterfac
                     ->acceptJson()
                     ->get('https://api.openalex.org/works', $params);
             } catch (\Throwable $exception) {
+                if (ScientificSourceFailureClassifier::classifyThrowable($exception) === null) {
+                    throw $exception;
+                }
                 Log::warning('OpenAlex Stage 3 search request failed', [
                     'provider' => 'openalex',
-                    'message' => $exception->getMessage(),
+                    'exception' => $exception::class,
                 ]);
 
                 return new ScientificSourceSearchOutcome(

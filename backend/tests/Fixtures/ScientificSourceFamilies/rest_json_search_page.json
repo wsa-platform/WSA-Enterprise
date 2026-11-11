@@ -1,0 +1,25 @@
+{
+  "data": {
+    "total": 3,
+    "items": [
+      {
+        "key": "REC-1",
+        "title": ["<b>Barley</b> production   quantity Brazil 2019"],
+        "summary": "National barley production statistics for Brazil in 2019.",
+        "identifiers": {"doi": "https://doi.org/10.54321/REST.1"},
+        "links": {"record": "https://catalogue.example.org/records/REC-1"},
+        "issued": "2020-02-14",
+        "people": [{"name": "Researcher, Ada"}, {"name": "Scientist, Ben"}, {"name": ""}],
+        "container": "Example Statistical Bulletin"
+      },
+      {
+        "key": 202,
+        "title": "Barley production Brazil time series"
+      },
+      {
+        "key": "REC-3",
+        "summary": "A record without a title cannot become a result."
+      }
+    ]
+  }
+}

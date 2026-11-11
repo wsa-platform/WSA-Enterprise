@@ -2,7 +2,12 @@
 
 namespace App\Services\Agriculture\Research\Search\Adapters;
 
-use App\Contracts\ScientificSourceAdapterInterface;
+use App\Contracts\ScientificSourceAdapterV2Interface;
+use App\Services\Agriculture\Research\Search\Contract\DelegatesSearchRequestToSearch;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceAdapterDescriptor;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceFailureClassifier;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceLicensingDeclaration;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceRetryPolicy;
 use App\Services\Agriculture\Research\Search\ScientificResultNormalizer;
 use App\Services\Agriculture\Research\Search\ScientificSearchTimeBudget;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
@@ -10,8 +15,10 @@ use App\Support\ScientificHttp;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterface
+class CrossRefScientificSourceAdapter implements ScientificSourceAdapterV2Interface
 {
+    use DelegatesSearchRequestToSearch;
+
     /**
      * Crossref relevance often places on-topic national inventory works past the first page.
      * Fetch a deeper page than the Stage-3 caller limit so normalization can keep those hits.
@@ -32,6 +39,17 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
     public function displayName(): string
     {
         return 'Crossref';
+    }
+
+    /** Licensing has no recorded evidence yet; one request returns at most MAX_FETCH_ROWS works. */
+    public function descriptor(): ScientificSourceAdapterDescriptor
+    {
+        return new ScientificSourceAdapterDescriptor(
+            sourceKey: $this->sourceKey(),
+            licensing: ScientificSourceLicensingDeclaration::unresolved(),
+            retryPolicy: ScientificSourceRetryPolicy::none(),
+            maxResultsPerRequest: self::MAX_FETCH_ROWS,
+        );
     }
 
     /**
@@ -72,9 +90,12 @@ class CrossRefScientificSourceAdapter implements ScientificSourceAdapterInterfac
                     'rows' => $this->fetchRows($limit),
                 ]);
         } catch (\Throwable $exception) {
+            if (ScientificSourceFailureClassifier::classifyThrowable($exception) === null) {
+                throw $exception;
+            }
             Log::warning('Crossref Stage 3 search request failed', [
                 'query' => $query,
-                'message' => $exception->getMessage(),
+                'exception' => $exception::class,
             ]);
 
             return new ScientificSourceSearchOutcome(
