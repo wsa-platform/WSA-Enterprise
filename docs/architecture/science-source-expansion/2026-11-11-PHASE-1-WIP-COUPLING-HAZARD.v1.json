@@ -1,0 +1,45 @@
+{
+  "schema_id": "adr023.phase1_wip_coupling_hazard.v1",
+  "created_at_utc": "2026-11-11T14:50:00Z",
+  "head_at_record": "f731ec98639219bbb9d3d6075696a2189d73ed2f",
+  "source": "Phase 1 explore pass (read-only) + local verification",
+  "hazard_class": "COMMIT_ORDERING_HAZARD",
+  "summary": "Modified tracked runtime files depend on untracked Onboarding/Registry/Family/Contract trees. Committing the tracked diffs alone would break autoload; committing Registry without Onboarding is incomplete.",
+  "tracked_modified_dependents": [
+    "backend/app/Services/Agriculture/Research/Search/ScientificSourceAdapterRegistry.php",
+    "backend/app/Providers/AgriculturalIntelligenceServiceProvider.php",
+    "backend/app/Contracts/ScientificSourceAdapterInterface.php"
+  ],
+  "untracked_required_clusters": [
+    "backend/app/Services/Agriculture/Research/Search/Registry/",
+    "backend/app/Services/Agriculture/Research/Search/Family/",
+    "backend/app/Services/Agriculture/Research/Search/Contract/",
+    "backend/app/Services/Agriculture/Research/Onboarding/",
+    "backend/app/Contracts/ScientificSourceAdapterV2Interface.php",
+    "backend/app/Services/Agriculture/Research/Search/Provenance/"
+  ],
+  "adr_gap": {
+    "p1_exit_06": "Catalog remains sourceKey-keyed; adr_id is optional binding via Onboarding ACTIVE contract — not full §8.24.2 IC/identity/Cap references",
+    "p1_exit_08": "Family Rest/OaiPmh/Bulk exist with green unit tests but are uncommitted"
+  },
+  "historical_gates_also_present": [
+    "GA-IC-01 / GB-IC-01 (§8.30)",
+    "GA/GB-B1-01 (§8.33)",
+    "GA/GB-R1-01 (§8.34) and later R2/R3 records",
+    "GA-FOUNDATION-01 / GB-FOUNDATION-01 (§8.82 Rev 8.2)"
+  ],
+  "ic_staging_runner": "NOT_FOUND — no §8.25.6/§8.25.7 runner implementation; P1-EXIT-05 remains externally blocked",
+  "capverseat": "Untracked; not ServiceProvider-wired; retain P1-BLK-2026-11-11-CAPVERSEAT-WIP-01",
+  "safe_next_actions": [
+    "Do not commit ScientificSourceAdapterRegistry or ServiceProvider without the untracked clusters they require",
+    "Either (A) atomic scoped commit of Registry+Family+Contract+Onboarding+V2 interface+tests under GB-FOUNDATION-01 after review, or (B) restore tracked dependents to HEAD until clusters are ready",
+    "Prefer (A) only after CapVerAuthorizedAssessment alignment check excludes CapVerSeat*",
+    "Keep protected SQLite DBs untouched"
+  ],
+  "classification": {
+    "Registry_Family_Contract": "REQUIRED_FOR_PHASE_1",
+    "Onboarding": "REQUIRED_FOR_PHASE_1 (coupled) until Registry decoupled",
+    "CapVerSeat": "INCOMPLETE_WIP",
+    "IC_staging_runner": "MISSING"
+  }
+}

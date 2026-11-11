@@ -1,9 +1,9 @@
 {
     "schema_version": "1.0",
-    "last_updated": "2026-11-11T14:45:00Z",
+    "last_updated": "2026-11-11T14:50:00Z",
     "repository": "wsa-platform/WSA-Enterprise",
     "branch": "phase-18-m18-ai-marketing-communications",
-    "head": "6ada6fe3290681010699553f0f1d54e8ec04e93f",
+    "head": "f731ec98639219bbb9d3d6075696a2189d73ed2f",
     "remote_sync": "0/0",
     "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
     "progress_descriptor": "NEAR_COMPLETE",
@@ -460,14 +460,15 @@
         "verified_at": "2026-11-11T12:35:07Z"
     },
     "next_session_focus": [
-        "Stage Family/Registry/Contract under GB-FOUNDATION-01 after ServiceProvider review",
+        "Resolve P1-BLK-2026-11-11-WIP-COUPLING-01 (atomic Family/Registry/Onboarding commit OR restore tracked dependents)",
+        "Do not commit ScientificSourceAdapterRegistry without untracked clusters",
         "P1-EXIT-05 staging/operator external evidence",
-        "G2-26 authentic evidence only",
-        "D-08 / Supplement 04 \u2014 no fabrication",
-        "Isolated PostgreSQL Cap persistence/concurrency (GAP-07 REQUIRED)"
+        "PostgreSQL Cap suite (GAP-07)",
+        "No invented G2-26 / Supplement 04"
     ],
-    "last_checkpoint": "Rev8.2 Gate A/B foundation recorded; GAP-01..08 report; HEAD 6ada6fe baseline",
+    "last_checkpoint": "Rev8.2 delivered at f731ec9; WIP coupling hazard recorded",
     "gap_report": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV8.2-GAP-01-08-REPORT.md",
     "acceptance_baseline": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ACCEPTANCE-BASELINE.v1.json",
-    "assumption_register": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ASSUMPTION-REGISTER.v1.json"
+    "assumption_register": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ASSUMPTION-REGISTER.v1.json",
+    "wip_coupling_hazard": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WIP-COUPLING-HAZARD.v1.json"
 }
