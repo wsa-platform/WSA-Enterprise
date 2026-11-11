@@ -99,10 +99,28 @@
             ],
             "verification_method": "ScientificSourceCatalogContractTest::test_governed_seats_are_resolvable_by_adr_id_without_claiming_ic_or_cap_refs",
             "owner_decision_required": false,
+            "status": "SUPERSEDED",
+            "date": "2026-11-11",
+            "resolution_verification_evidence": "Catalog contract test EXIT 0 (15/149)",
+            "superseded_by": "ASM-R106-02",
+            "supersession_note": "Rev 10.6/10.6.1: governed seats now export authentic IC/Cap-decision/CapVer-store/identity refs; see ASM-R106-02"
+        },
+        {
+            "assumption_id": "ASM-R106-02",
+            "description": "Governed catalog entries expose authentic onboarding IC refs (ic-r*), Cap decision ids (cap-r*), CapVer store fact ids (cap-rec*), and canonical identity bindings; IC DB ACTIVE rows remain out of EXIT-06 catalog scope (EXIT-07)",
+            "source_or_reason": "ADR §8.24.2; CapVerAuthorizedSeatSpecCatalog; AcceptedOnboardingDecisionCatalog",
+            "confidence": "HIGH",
+            "impact": "EXIT-06 catalog attachment CLOSED for runtime governed seats; EXIT-07 IC DB evidence remains separate",
+            "affected_criteria": [
+                "P1-EXIT-06",
+                "P1-EXIT-07"
+            ],
+            "verification_method": "ScientificSourceCatalogContractTest::test_governed_seats_are_resolvable_by_adr_id_with_authoritative_ic_cap_identity_refs",
+            "owner_decision_required": false,
             "status": "VERIFIED",
             "date": "2026-11-11",
-            "resolution_verification_evidence": "Catalog contract test EXIT 0 (15/149)"
+            "resolution_verification_evidence": "2026-11-11-PHASE-1-EXIT-06-RECORD-GAP-MATRIX.v10.6.1.json"
         }
     ],
-    "updated_at_utc": "2026-11-11T17:45:00Z"
+    "updated_at_utc": "2026-11-11T20:05:00Z"
 }

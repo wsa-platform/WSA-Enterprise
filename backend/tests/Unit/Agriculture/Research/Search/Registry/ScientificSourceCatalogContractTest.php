@@ -90,30 +90,35 @@ class ScientificSourceCatalogContractTest extends TestCase
                 'adr_id' => 'G5-04',
                 'ic_record' => 'ic-r9-20261016-G5-04-rest',
                 'cap_record' => 'cap-r9-20261016-G5-04-search',
+                'capability_store_record' => 'cap-rec-r9-20261016-G5-04-api',
                 'identity_binding' => 'adr023.canonical.seat.G5-04',
             ],
             'agris' => [
                 'adr_id' => 'G1-01',
                 'ic_record' => 'ic-r12-20261018-G1-01-bulk-bounded',
                 'cap_record' => 'cap-r12-20261018-G1-01-search',
+                'capability_store_record' => 'cap-rec-r12-20261018-G1-01-bulk',
                 'identity_binding' => 'adr023.canonical.seat.G1-01',
             ],
             'dr_duke' => [
                 'adr_id' => 'G1-17',
                 'ic_record' => 'ic-r12-20261018-G1-17-static-limited',
                 'cap_record' => 'cap-r12-20261018-G1-17-search',
+                'capability_store_record' => 'cap-rec-r12-20261018-G1-17-static',
                 'identity_binding' => 'adr023.canonical.seat.G1-17',
             ],
             'organic_eprints' => [
                 'adr_id' => 'G1-02',
                 'ic_record' => 'ic-r11-20261018-G1-02-oai_pmh',
                 'cap_record' => 'cap-r11-20261018-G1-02-search',
+                'capability_store_record' => 'cap-rec-r11-20261018-G1-02-oai_pmh',
                 'identity_binding' => 'adr023.canonical.seat.G1-02',
             ],
             'bhl' => [
                 'adr_id' => 'G6-20',
                 'ic_record' => 'ic-r11-20261018-G6-20-rest',
                 'cap_record' => 'cap-r11-20261018-G6-20-search',
+                'capability_store_record' => 'cap-rec-r11-20261018-G6-20-api',
                 'identity_binding' => 'adr023.canonical.seat.G6-20',
             ],
         ];
@@ -126,6 +131,7 @@ class ScientificSourceCatalogContractTest extends TestCase
             $this->assertNotNull($bundle, $sourceKey);
             $this->assertSame($refs['ic_record'], $bundle['ic_record'], $sourceKey);
             $this->assertSame($refs['cap_record'], $bundle['cap_record'], $sourceKey);
+            $this->assertSame($refs['capability_store_record'], $bundle['capability_store_record'], $sourceKey);
             $this->assertSame($refs['identity_binding'], $bundle['identity_binding'], $sourceKey);
             $this->assertNotNull($bundle['onboarding_decision_id'], $sourceKey);
             $this->assertNotSame([], $bundle['identity_evidence_refs'], $sourceKey);
@@ -133,6 +139,7 @@ class ScientificSourceCatalogContractTest extends TestCase
             $payload = $registration->toArray();
             $this->assertSame($refs['ic_record'], $payload['ic_record'], $sourceKey);
             $this->assertSame($refs['cap_record'], $payload['cap_record'], $sourceKey);
+            $this->assertSame($refs['capability_store_record'], $payload['capability_store_record'], $sourceKey);
             $this->assertSame($refs['identity_binding'], $payload['identity_binding'], $sourceKey);
         }
 

@@ -1,0 +1,65 @@
+{
+  "schema_id": "adr023.exit06_record_gap_matrix.v1",
+  "created_at_utc": "2026-11-11T20:05:00Z",
+  "supersedes": "2026-11-11-PHASE-1-EXIT-06-RECORD-GAP-MATRIX.v10.6.json",
+  "criterion": "P1-EXIT-06",
+  "canonical_status": "PASS",
+  "explore_followup": "42a138a0-4e15-4d80-a4be-7701344d0833",
+  "namespaces": {
+    "ic_record": "Onboarding integrationClassificationRef (ic-r*) — not IC DB PK",
+    "cap_record": "Onboarding capabilityDecisionIdentity (cap-r*)",
+    "capability_store_record": "CapVerAuthorizedSeatSpecCatalog capability_record_id (cap-rec*)",
+    "identity_binding": "canonical_identity_id from Onboarding Contract"
+  },
+  "out_of_scope_for_exit06_catalog": [
+    "IC DB ACTIVE row inventory (EXIT-07)",
+    "IdentityBindingRepository persistence / SAME_AS minting"
+  ],
+  "records": [
+    {
+      "source_key": "gbif",
+      "adr_id": "G5-04",
+      "ic_record": "ic-r9-20261016-G5-04-rest",
+      "cap_record": "cap-r9-20261016-G5-04-search",
+      "capability_store_record": "cap-rec-r9-20261016-G5-04-api",
+      "identity_binding": "adr023.canonical.seat.G5-04",
+      "classification": "COMPLETE"
+    },
+    {
+      "source_key": "agris",
+      "adr_id": "G1-01",
+      "ic_record": "ic-r12-20261018-G1-01-bulk-bounded",
+      "cap_record": "cap-r12-20261018-G1-01-search",
+      "capability_store_record": "cap-rec-r12-20261018-G1-01-bulk",
+      "identity_binding": "adr023.canonical.seat.G1-01",
+      "classification": "COMPLETE"
+    },
+    {
+      "source_key": "dr_duke",
+      "adr_id": "G1-17",
+      "ic_record": "ic-r12-20261018-G1-17-static-limited",
+      "cap_record": "cap-r12-20261018-G1-17-search",
+      "capability_store_record": "cap-rec-r12-20261018-G1-17-static",
+      "identity_binding": "adr023.canonical.seat.G1-17",
+      "classification": "COMPLETE"
+    },
+    {
+      "source_key": "organic_eprints",
+      "adr_id": "G1-02",
+      "ic_record": "ic-r11-20261018-G1-02-oai_pmh",
+      "cap_record": "cap-r11-20261018-G1-02-search",
+      "capability_store_record": "cap-rec-r11-20261018-G1-02-oai_pmh",
+      "identity_binding": "adr023.canonical.seat.G1-02",
+      "classification": "COMPLETE"
+    },
+    {
+      "source_key": "bhl",
+      "adr_id": "G6-20",
+      "ic_record": "ic-r11-20261018-G6-20-rest",
+      "cap_record": "cap-r11-20261018-G6-20-search",
+      "capability_store_record": "cap-rec-r11-20261018-G6-20-api",
+      "identity_binding": "adr023.canonical.seat.G6-20",
+      "classification": "COMPLETE"
+    }
+  ]
+}

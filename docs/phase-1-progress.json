@@ -144,9 +144,9 @@
                 "entries keyed by adr_id referencing IC, identity, and Cap records"
             ],
             "evidence_files": [
-                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-06-RECORD-GAP-MATRIX.v10.6.json",
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-06-RECORD-GAP-MATRIX.v10.6.1.json",
                 "backend/app/Services/Agriculture/Research/Search/Registry/ScientificSourceRegistration.php",
-                "backend/app/Services/Agriculture/Research/Search/Registry/ScientificSourceCatalog.php"
+                "backend/app/Services/Agriculture/Research/Capability/CapVer/CapVerAuthorizedSeatSpecCatalog.php"
             ],
             "test_commands": [
                 "phpunit ScientificSourceCatalogContractTest"
@@ -155,7 +155,7 @@
                 "tests": 15,
                 "assertions": 216,
                 "exit_code": 0,
-                "summary": "Governed seats expose authentic IC/Cap/identity refs from Onboarding Contracts"
+                "summary": "Governed seats expose ic-r*/cap-r*/cap-rec*/identity bindings; namespaces separated"
             },
             "evidence_commits": [
                 "cfc9d1b",
@@ -163,8 +163,8 @@
                 "96d30c2"
             ],
             "blockers": [],
-            "next_action": "Preserve; EXIT-09 PG Cap concurrency remains separate",
-            "verified_at": "2026-11-11T19:20:00Z"
+            "next_action": "Preserve; IC DB ACTIVE rows remain EXIT-07; EXIT-09 PG Cap concurrency separate",
+            "verified_at": "2026-11-11T20:05:00Z"
         },
         "P1-EXIT-07": {
             "status": "BLOCKED",

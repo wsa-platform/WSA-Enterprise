@@ -4,6 +4,7 @@ namespace App\Services\Agriculture\Research\Search\Registry;
 
 use App\Contracts\ScientificSourceAdapterInterface;
 use App\Contracts\ScientificSourceAdapterV2Interface;
+use App\Services\Agriculture\Research\Capability\CapVer\CapVerAuthorizedSeatSpecCatalog;
 use App\Services\Agriculture\Research\Identity\AdrMembershipId;
 use App\Services\Agriculture\Research\Onboarding\AcceptedOnboardingDecisionCatalog;
 use App\Services\Agriculture\Research\Onboarding\SeatActivationState;
@@ -152,6 +153,7 @@ final readonly class ScientificSourceRegistration
      * @return array{
      *     ic_record: ?string,
      *     cap_record: ?string,
+     *     capability_store_record: ?string,
      *     identity_binding: ?string,
      *     onboarding_decision_id: ?string,
      *     identity_evidence_refs: list<string>
@@ -163,11 +165,13 @@ final readonly class ScientificSourceRegistration
             return null;
         }
 
-        $contract = AcceptedOnboardingDecisionCatalog::forAdrId($this->adrId->value);
+        $adr = $this->adrId->value;
+        $contract = AcceptedOnboardingDecisionCatalog::forAdrId($adr);
         if ($contract === null) {
             return [
                 'ic_record' => null,
                 'cap_record' => null,
+                'capability_store_record' => CapVerAuthorizedSeatSpecCatalog::capabilityStoreRecordId($adr),
                 'identity_binding' => null,
                 'onboarding_decision_id' => null,
                 'identity_evidence_refs' => [],
@@ -176,7 +180,9 @@ final readonly class ScientificSourceRegistration
 
         return [
             'ic_record' => $contract->integrationClassificationRef,
+            // Cap decision identity namespace (cap-r*) — distinct from CapVer store facts (cap-rec*)
             'cap_record' => $contract->capabilityDecisionIdentity,
+            'capability_store_record' => CapVerAuthorizedSeatSpecCatalog::capabilityStoreRecordId($adr),
             'identity_binding' => $contract->canonicalIdentityId?->value,
             'onboarding_decision_id' => $contract->onboardingDecisionId,
             'identity_evidence_refs' => $contract->identityEvidenceRefs,
@@ -207,6 +213,7 @@ final readonly class ScientificSourceRegistration
         if ($refs !== null) {
             $payload['ic_record'] = $refs['ic_record'];
             $payload['cap_record'] = $refs['cap_record'];
+            $payload['capability_store_record'] = $refs['capability_store_record'];
             $payload['identity_binding'] = $refs['identity_binding'];
             $payload['onboarding_decision_id'] = $refs['onboarding_decision_id'];
             $payload['identity_evidence_refs'] = $refs['identity_evidence_refs'];
