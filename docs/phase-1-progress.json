@@ -1,9 +1,9 @@
 {
     "schema_version": "1.0",
-    "last_updated": "2026-11-11T17:45:00Z",
+    "last_updated": "2026-11-11T18:10:00Z",
     "repository": "wsa-platform/WSA-Enterprise",
     "branch": "phase-18-m18-ai-marketing-communications",
-    "head": "88a13d2a00f189780c347df8cc55df1b1948ce71",
+    "head": "7bc7e02e5841d3684c7e0403c5fc71b172a5a947",
     "remote_sync": "0/0",
     "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
     "progress_descriptor": "NEAR_COMPLETE",
@@ -478,28 +478,41 @@
         "r84_prompt_archive_id": "maa_9a44b2d4ed9df080_91303b345059"
     },
     "session_tests": {
-        "tests": 22,
-        "assertions": 598,
-        "exit_code": 0,
-        "verified_at": "2026-11-11T15:55:00Z",
-        "coupled_suite_historical": {
-            "tests": 232,
-            "assertions": 6911,
-            "exit_code": 0
+        "core": {
+            "tests": 34,
+            "assertions": 638,
+            "exit_code": 0,
+            "command": "phpunit CapVerWriteBoundary+Projection+Matrix+Catalog"
+        },
+        "family_contract": {
+            "tests": 97,
+            "assertions": 433,
+            "exit_code": 0,
+            "command": "phpunit Family+Contract"
+        },
+        "capverseat_di": {
+            "exit_code": 0,
+            "note": "container resolve CapVerSeatVerificationService"
         }
     },
     "next_session_focus": [
-        "P1-EXIT-06 IC/identity/Cap refs on adr_id entries",
-        "P1-EXIT-08 verified-family evidence packages",
-        "P1-EXIT-09 isolated PostgreSQL Cap suite (DB_TEST_*)",
-        "P1-EXIT-05/07/D-08 authentic external evidence"
+        "EXIT-06 IC/Cap/identity refs on adr_id entries",
+        "EXIT-08 verified-family evidence packages",
+        "EXIT-09 DB_TEST_* PG Cap suite",
+        "EXIT-05/07/D-08 authentic external evidence",
+        "EXIT-11 after prerequisites"
     ],
-    "last_checkpoint": "Rev9.2: baseline locked; 88a13d2 verified as HEAD; EXIT-01..04 evidence verified; EXIT-06 adr_id index; EXIT-09 PG assessed REQUIRED+NOT_RUN",
+    "last_checkpoint": "Rev10.1: governance extraction+CR; CapVerSeat DI; integration paths; tests 34/638 + 97/433; EXIT still PARTIAL/BLOCKED externally",
     "gap_report": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV8.4-GAP-01-08-REPORT.md",
-    "acceptance_baseline": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ACCEPTANCE-BASELINE.v9.2.json",
+    "acceptance_baseline": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ACCEPTANCE-BASELINE.v10.1.json",
     "assumption_register": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ASSUMPTION-REGISTER.v1.json",
     "wip_coupling_hazard": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WIP-COUPLING-HAZARD-R83.v1.json",
     "push_safety_gate": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-PUSH-SAFETY-GATE.v1.json",
     "evidence_ledger": "docs/evidence-ledger.json",
-    "dependency_matrix": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-DEPENDENCY-MATRIX.v9.2.json"
+    "dependency_matrix": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-DEPENDENCY-MATRIX.v9.2.json",
+    "earlier_requirements": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EARLIER-REQUIREMENTS-EXTRACTION.v10.1.json",
+    "conflict_resolution": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-CONFLICT-RESOLUTION-RECORD.v10.1.json",
+    "workstream_dod": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WORKSTREAM-DOD.v10.1.json",
+    "integration_paths": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-INTEGRATION-PATHS.v10.1.json",
+    "classification_note_rev101": "Rev 10.1 prompt labels PHASE_1_PARTIAL map to schema-legal PHASE_1_GAP_CLOSURE_PARTIAL"
 }

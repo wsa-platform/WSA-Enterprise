@@ -1,0 +1,116 @@
+{
+  "schema_id": "adr023.workstream_definition_of_done.v1",
+  "created_at_utc": "2026-11-11T18:00:00Z",
+  "baseline_head": "7bc7e02e5841d3684c7e0403c5fc71b172a5a947",
+  "rule": "Workstream DONE ≠ EXIT closed",
+  "workstreams": [
+    {
+      "id": "A",
+      "scope": "Governance and baseline",
+      "definition_of_done": [
+        "Git baseline verified",
+        "Earlier requirements extraction matrix complete",
+        "Conflict records for §8.64.7 dual-applicability",
+        "Acceptance baseline locked/referenced",
+        "Traceability to progress/evidence/blockers"
+      ],
+      "status": "DONE",
+      "exit_impact": "Does not close any EXIT by itself"
+    },
+    {
+      "id": "B",
+      "scope": "Registry and Capability",
+      "definition_of_done": [
+        "Authorized registry/capability implementation reviewed",
+        "adr_id index present",
+        "CapVer write boundary tested",
+        "CapVerSeat DI binding present",
+        "Required suite re-run this session"
+      ],
+      "status": "PARTIAL",
+      "remaining": ["IC/identity/Cap record refs on governed adr_id entries"],
+      "related_exit": "P1-EXIT-06 PARTIAL"
+    },
+    {
+      "id": "C",
+      "scope": "Family Adapters",
+      "definition_of_done": [
+        "Family/Contract code present under Gate B",
+        "Family+Contract tests executed this session",
+        "Verified-family evidence packages documented"
+      ],
+      "status": "PARTIAL",
+      "remaining": ["Complete verified-family evidence packages"],
+      "related_exit": "P1-EXIT-08 PARTIAL"
+    },
+    {
+      "id": "D",
+      "scope": "Database and integration testing",
+      "definition_of_done": [
+        "SQLite focused suites executed",
+        "PG requirement assessed",
+        "Mandatory PG Cap suite PASS or accurately NOT_RUN/BLOCKED"
+      ],
+      "status": "PARTIAL",
+      "remaining": ["DB_TEST_* Cap/persistence-concurrency suite"],
+      "related_exit": "P1-EXIT-09 PARTIAL"
+    },
+    {
+      "id": "E",
+      "scope": "Matrix and membership integrity",
+      "definition_of_done": [
+        "Current110SourceMatrixContractTest re-run",
+        "109.v1 immutability preserved",
+        "Membership ≠ capability documented"
+      ],
+      "status": "PARTIAL",
+      "remaining": ["Final matrix capability-state updates depend on 06–08"],
+      "related_exit": "P1-EXIT-10 PARTIAL"
+    },
+    {
+      "id": "F",
+      "scope": "Staging and G2-26",
+      "definition_of_done": [
+        "Engineering prep documented",
+        "External blockers preserved accurately"
+      ],
+      "status": "PARTIAL",
+      "remaining": ["Authentic staging/operator + G2-26 IC evidence"],
+      "related_exit": "P1-EXIT-05 BLOCKED; P1-EXIT-07 BLOCKED"
+    },
+    {
+      "id": "G",
+      "scope": "D-08 archive investigation",
+      "definition_of_done": [
+        "Supplement 04 search documented",
+        "No fabricated original",
+        "HISTORY_INDETERMINATE recorded"
+      ],
+      "status": "PARTIAL",
+      "remaining": ["Authentic Supplement 04 or owner archival rule"],
+      "related_exit": "D-08 BLOCKED"
+    },
+    {
+      "id": "H",
+      "scope": "Cross-layer integration documentation",
+      "definition_of_done": [
+        "Seven paths with 10-field template",
+        "CSQ identity preservation documented",
+        "Statuses VERIFIED/PARTIAL/NOT_VERIFIED only with code evidence"
+      ],
+      "status": "DONE",
+      "exit_impact": "Supports EXIT-01/06/08/09 verification; does not close EXIT-11"
+    },
+    {
+      "id": "I",
+      "scope": "Archiving and evidence",
+      "definition_of_done": [
+        "Evidence ledger / matrices / session report archived",
+        "Progress register head/status consistent",
+        "Commit+push verified"
+      ],
+      "status": "PARTIAL",
+      "remaining": ["Complete after this session push"]
+    }
+  ]
+}

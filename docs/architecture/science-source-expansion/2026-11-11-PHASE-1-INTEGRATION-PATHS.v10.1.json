@@ -1,0 +1,127 @@
+{
+  "schema_id": "adr023.integration_paths.v1",
+  "created_at_utc": "2026-11-11T18:05:00Z",
+  "baseline_head": "7bc7e02e5841d3684c7e0403c5fc71b172a5a947",
+  "csq_integrity_requirement": "CSQ identity and semantic authority must be preserved; keyword-only reduction is prohibited",
+  "paths": [
+    {
+      "id": "PATH-01",
+      "title": "Scientific source ingestion and registry",
+      "source_component": "ScientificSourceCatalog / Onboarding catalogs — backend/app/Services/Agriculture/Research/Search/Registry/ScientificSourceCatalog.php",
+      "target_component": "ScientificSourceAdapterRegistry — backend/app/Services/Agriculture/Research/Search/ScientificSourceAdapterRegistry.php",
+      "contract_interface": "ScientificSourceRegistration (+ optional adr_id); ScientificSourceAdapterInterface / V2",
+      "data_transferred": "sourceKey, lifecycle, accessFamily, capabilities declarations, familyProfile, optional adr_id",
+      "identifier_provenance": "Stage-3 sourceKey distinct from adr_id; governed seats require AcceptedOnboardingDecisionCatalog",
+      "validation_authorization": "ScientificSourceRegistryInvariantViolation on duplicates; GOVERNED_ONBOARDED requires adr_id + ACTIVE onboarding",
+      "error_behavior": "Invariant exceptions on invalid registrations; get/getByAdrId return null when missing",
+      "test_evidence": {
+        "suite": "ScientificSourceCatalogContractTest",
+        "this_session": "included in CORE 34/638 EXIT 0"
+      },
+      "current_status": "PARTIAL",
+      "known_limitations": "Governed entries lack mandatory IC/identity/Cap record references per §8.24.2"
+    },
+    {
+      "id": "PATH-02",
+      "title": "Scientific search and query construction",
+      "source_component": "KnowledgeQueryPlan / CanonicalScientificQuestion — backend/app/Services/Agriculture/Research/",
+      "target_component": "ScientificSearchQueryBuilder — backend/app/Services/Agriculture/Research/Search/ScientificSearchQueryBuilder.php",
+      "contract_interface": "buildFromPlan(KnowledgeQueryPlan): string; buildVariantsFromPlan(...): array",
+      "data_transferred": "Plan roles/relations/process/entity surfaces derived from CSQ; HTTP query strings/variants",
+      "identifier_provenance": "Builder consumes CSQ role surfaces; OD-C: Projection metadata may constrain geography etc. without owning HTTP",
+      "validation_authorization": "Capability/projection approved metadata gates (e.g. geographyConstraintPermitted)",
+      "error_behavior": "NOT_VERIFIED for all failure modes in this path (large class; not fully enumerated this session)",
+      "test_evidence": {
+        "suite": "ScientificSearchCanonicalCompilationTest / ProjectionOrchestratorRuntimeIntegrationTest",
+        "this_session": "Projection included in CORE EXIT 0"
+      },
+      "current_status": "PARTIAL",
+      "known_limitations": "Full CSQ→Builder regression suite not re-run as a single named command this session beyond Projection path"
+    },
+    {
+      "id": "PATH-03",
+      "title": "Source orchestration and adapter execution",
+      "source_component": "MultiSourceScientificSearchOrchestrator — .../Search/MultiSourceScientificSearchOrchestrator.php",
+      "target_component": "ScientificSourceAdapterInterface implementations / Family adapters",
+      "contract_interface": "execute(KnowledgeQueryPlan $plan, int $limit = 10, ?array $sourceKeys = null): ScientificSearchExecutionReport",
+      "data_transferred": "Plan, sourceKeys, compiled/built queries, adapter outcomes",
+      "identifier_provenance": "sourceKeys map through registry; coexistence bridge Stage3SourceKeyIdentityBridge for governed ADR bindings",
+      "validation_authorization": "CapabilityDrivenSourceSelector / coexistence boundary with CapabilityStoreRepository",
+      "error_behavior": "Per-adapter search failures isolated into outcomes (exact exception taxonomy PARTIAL)",
+      "test_evidence": {
+        "suite": "ProjectionOrchestratorRuntimeIntegrationTest + Family/Contract",
+        "this_session": "CORE EXIT 0; FAMILY 97/433 EXIT 0"
+      },
+      "current_status": "PARTIAL",
+      "known_limitations": "Uncommitted Orchestrator WIP may exist in working tree; HEAD path verified via tests"
+    },
+    {
+      "id": "PATH-04",
+      "title": "Response normalization and evidence handling",
+      "source_component": "Adapter search outcomes",
+      "target_component": "ScientificResultNormalizer / ranking/dedup services (verify names in Search namespace)",
+      "contract_interface": "NOT_VERIFIED full interface surface this session — presence of ScientificResultDeduplicator/Ranker referenced by catalog tests",
+      "data_transferred": "Normalized scientific results + provenance fields where adapters supply them",
+      "identifier_provenance": "Must retain source identity; membership ≠ verification",
+      "validation_authorization": "NOT_VERIFIED end-to-end evidence sufficiency gate in this path document",
+      "error_behavior": "NOT_VERIFIED",
+      "test_evidence": {
+        "suite": "Feature ScientificEvidenceAnswerPipelineContractTest exists as WIP/modified — not claimed executed this session",
+        "this_session": "NOT_RUN for that feature file"
+      },
+      "current_status": "PARTIAL",
+      "known_limitations": "Avoid claiming full evidence pipeline VERIFIED without dedicated suite execution"
+    },
+    {
+      "id": "PATH-05",
+      "title": "Synthesis and answer composition",
+      "source_component": "Evidence/result set",
+      "target_component": "ScientificUserPresentation / UniversalAnswerOrchestrator",
+      "contract_interface": "UniversalAnswerOrchestrator bound in AgriculturalIntelligenceServiceProvider",
+      "data_transferred": "Answer presentation structures",
+      "identifier_provenance": "Must not invent VERIFIED scientific claims without CapVer",
+      "validation_authorization": "AgriculturalScientificValidationService (modified WIP present — not staged)",
+      "error_behavior": "NOT_VERIFIED this session",
+      "test_evidence": {
+        "suite": "UniversalAnswerOrchestratorFeatureTest modified unstaged — NOT_RUN this session",
+        "this_session": "NOT_RUN"
+      },
+      "current_status": "NOT_VERIFIED",
+      "known_limitations": "User-facing synthesis path not re-verified in Rev 10.1 session"
+    },
+    {
+      "id": "PATH-06",
+      "title": "Persistence, indexing, and retrieval",
+      "source_component": "LocalIndexIngestionService / DatabaseScientificRecordStore",
+      "target_component": "LocalIndexSearchEngine / SqliteFtsScientificIndex / LocalScientificIndex",
+      "contract_interface": "ScientificRecordStore; LocalIndexSearchEngine selection by config",
+      "data_transferred": "Scientific records into dedicated SQLite scientific_record_store (protected)",
+      "identifier_provenance": "Separate from CapVer sqlite and Mission Artifact Archive sqlite",
+      "validation_authorization": "Connection name agricultural_intelligence.local_index.connection",
+      "error_behavior": "LocalIndexInvariantViolation / LocalStoreFailure classes exist",
+      "test_evidence": {
+        "suite": "LocalIndex-related unit tests within Family/cluster historically; this session FAMILY EXIT 0",
+        "this_session": "PARTIAL coverage via Family suite"
+      },
+      "current_status": "PARTIAL",
+      "known_limitations": "Operational Laravel DB may be pgsql via .env; LocalIndex remains SQLite by design — not merged"
+    },
+    {
+      "id": "PATH-07",
+      "title": "User-facing research flow and final answer delivery",
+      "source_component": "AgriculturalResearchAgent / API controllers (verify routes separately)",
+      "target_component": "ScientificUserPresentation / HTTP responses",
+      "contract_interface": "NOT_VERIFIED route/controller contract this session",
+      "data_transferred": "User query → research answer",
+      "identifier_provenance": "CSQ must remain authoritative through agent path",
+      "validation_authorization": "NOT_VERIFIED",
+      "error_behavior": "NOT_VERIFIED",
+      "test_evidence": {
+        "suite": "AgriculturalResearchAgentStage3Test modified unstaged — NOT_RUN this session",
+        "this_session": "NOT_RUN"
+      },
+      "current_status": "NOT_VERIFIED",
+      "known_limitations": "Uncommitted Agent WIP preserved; not included in Rev 10.1 commits"
+    }
+  ]
+}

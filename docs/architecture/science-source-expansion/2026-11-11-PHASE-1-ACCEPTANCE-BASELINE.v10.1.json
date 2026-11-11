@@ -1,0 +1,418 @@
+{
+    "schema_id": "adr023.phase1_acceptance_baseline.v1",
+    "baseline_version": "10.1",
+    "created_at_utc": "2026-11-11T18:10:00Z",
+    "supersedes_baseline_file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ACCEPTANCE-BASELINE.v9.2.json",
+    "lock_status": "LOCKED",
+    "lock_rule": "Do not weaken mandatory conditions to match incomplete implementation. Preserve original ADR wording; do not convert mandatory to optional.",
+    "authority": [
+        "ADR-023 §8.64.7 (PROPOSED — NOT CONFIRMED; earlier lists remain applicable per OD-CL)",
+        "ADR-023 §8.64.4 Gate A/B definitions",
+        "ADR-023 §8.24.9 / §8.25.10 / §8.25.11 / §8.26.6 / §8.63.10 (remain applicable with §8.64.7)",
+        "ADR-023 §8.80 OD-C … OD-D08",
+        "ADR-023 §8.81 / §8.82",
+        "Owner pre-approval Rev 8.2 §2; Rev 8.4; Rev 9.2 autonomous engineering authorization",
+        "Rev 10.1 earlier-requirements extraction + CR-R101-01 dual-applicability"
+    ],
+    "baseline_git_head_at_lock": "7bc7e02e5841d3684c7e0403c5fc71b172a5a947",
+    "criteria": {
+        "P1-EXIT-01": {
+            "title": "Prerequisite architectural decisions",
+            "source": "ADR-023 §8.64.7",
+            "original": "Each recorded as an explicit decision: (a) CapVer ownership and enforcement placement; (b) Capability population and write authority (producers of non-VERIFIED states, explicit UNVERIFIED persistence, automatic demotion); (c) T10+T8+T2 (§8.64.6); (d) GO-1 vocabulary handling; (e) IC, Capability, registry, and activation order (§8.63.8); (f) deployment order",
+            "mandatory_conditions": [
+                {
+                    "id": "P1-EXIT-01-a",
+                    "requirement": "CapVer ownership and enforcement placement decided",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "ADR decision record"
+                    ],
+                    "required_tests": [
+                        "CapVer write-boundary where implementation authorized"
+                    ]
+                },
+                {
+                    "id": "P1-EXIT-01-b",
+                    "requirement": "Capability population and write authority decided",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "ADR decision record"
+                    ],
+                    "required_tests": [
+                        "Unauthorized VERIFIED write fails"
+                    ]
+                },
+                {
+                    "id": "P1-EXIT-01-c",
+                    "requirement": "T10+T8+T2 / Projection Option B (OD-C)",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "OD-C / ADR"
+                    ],
+                    "required_tests": [
+                        "Projection runtime / binder / constraints"
+                    ]
+                },
+                {
+                    "id": "P1-EXIT-01-d",
+                    "requirement": "GO-1 vocabulary handling decided",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "ADR decision"
+                    ],
+                    "required_tests": []
+                },
+                {
+                    "id": "P1-EXIT-01-e",
+                    "requirement": "IC, Capability, registry, activation order decided",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "ADR decision"
+                    ],
+                    "required_tests": []
+                },
+                {
+                    "id": "P1-EXIT-01-f",
+                    "requirement": "Deployment order decided (staging validation remains under EXIT-05)",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "ADR decision §8.25.6"
+                    ],
+                    "required_tests": []
+                }
+            ],
+            "dependencies": [],
+            "initial_status_at_lock": "PASS_REPORTED"
+        },
+        "P1-EXIT-02": {
+            "title": "Design-gate acceptance (Gate A)",
+            "source": "ADR-023 §8.64.7 / §8.64.4",
+            "original": "A Gate A record (§8.64.4) for each implementation scope, confirming the §8.24 basis (§8.64.3) and deciding the §8.23 provisions that scope needs (§8.64.5)",
+            "mandatory_conditions": [
+                {
+                    "id": "P1-EXIT-02-1",
+                    "requirement": "Explicit Gate A record per implementation scope",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "ADR Gate A record"
+                    ],
+                    "required_tests": []
+                },
+                {
+                    "id": "P1-EXIT-02-2",
+                    "requirement": "Items decided or marked outside scope",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "Gate A table fields"
+                    ],
+                    "required_tests": []
+                }
+            ],
+            "dependencies": [
+                "P1-EXIT-01 overlapping decisions"
+            ],
+            "initial_status_at_lock": "PASS_REPORTED"
+        },
+        "P1-EXIT-03": {
+            "title": "Implementation authorization (Gate B)",
+            "source": "ADR-023 §8.64.7 / §8.64.4",
+            "original": "A separate, scope-limited Gate B record (§8.64.4) for each implementation scope, including the per-seat IC inventory and evidence collection",
+            "mandatory_conditions": [
+                {
+                    "id": "P1-EXIT-03-1",
+                    "requirement": "Scope-limited Gate B with §8.64.4 fields",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "ADR Gate B record"
+                    ],
+                    "required_tests": [
+                        "As stated in Gate B"
+                    ]
+                }
+            ],
+            "dependencies": [
+                "P1-EXIT-02 for same scope"
+            ],
+            "initial_status_at_lock": "PASS_REPORTED"
+        },
+        "P1-EXIT-04": {
+            "title": "IC technical persistence evidence",
+            "source": "ADR-023 §8.64.7 / §8.25.10 items 1–2",
+            "original": "§8.25.10 items 1 and 2 met; E2b, E6, and test-infrastructure safety pass on isolated PostgreSQL",
+            "mandatory_conditions": [
+                {
+                    "id": "P1-EXIT-04-1",
+                    "requirement": "IC technical persistence evidence on isolated PostgreSQL",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "§8.25.9 isolated runs; CI backend-pgsql historical"
+                    ],
+                    "required_tests": [
+                        "IC PostgreSQL suite (historical PASS qualified)"
+                    ]
+                }
+            ],
+            "dependencies": [],
+            "initial_status_at_lock": "PASS_REPORTED",
+            "note": "Qualified historical PASS; not a claim that CapVer PostgreSQL Cap concurrency is closed under EXIT-09"
+        },
+        "P1-EXIT-05": {
+            "title": "IC operational closure",
+            "source": "ADR-023 §8.64.7 / §8.25.10 items 3–4",
+            "original": "Deployment order decided and validated in staging with §8.26.5 evidence; authorized operator §8.25.7 zero-row records on each real environment",
+            "mandatory_conditions": [
+                {
+                    "id": "P1-EXIT-05-1",
+                    "requirement": "Staging validation evidence",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "Staging logs"
+                    ],
+                    "required_tests": []
+                },
+                {
+                    "id": "P1-EXIT-05-2",
+                    "requirement": "Operator §8.25.7 zero-row records",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "Operator records"
+                    ],
+                    "required_tests": []
+                }
+            ],
+            "dependencies": [
+                "P1-EXIT-01(f)"
+            ],
+            "initial_status_at_lock": "BLOCKED"
+        },
+        "P1-EXIT-06": {
+            "title": "Runtime Source Registry and Capability integration",
+            "source": "ADR-023 §8.64.7 / §8.24.2",
+            "original": "Implemented only under Gate B; extends ScientificSourceAdapterRegistry (D-01); entries keyed by adr_id that reference IC, identity, and Cap records (§8.24.2); Cap writes only through authorized producers; existing five-adapter path preserved",
+            "mandatory_conditions": [
+                {
+                    "id": "P1-EXIT-06-1",
+                    "requirement": "Gate B authorization for registry/cap integration",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "GB-FOUNDATION-01"
+                    ],
+                    "required_tests": []
+                },
+                {
+                    "id": "P1-EXIT-06-2",
+                    "requirement": "Registry extends ScientificSourceAdapterRegistry; entries keyed by adr_id referencing IC/identity/Cap",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "implementation"
+                    ],
+                    "required_tests": [
+                        "Registry contract tests"
+                    ]
+                },
+                {
+                    "id": "P1-EXIT-06-3",
+                    "requirement": "Cap writes only through authorized producers (OD-A-ID)",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "CapVerWriteBoundary"
+                    ],
+                    "required_tests": [
+                        "CapVerWriteBoundaryTest"
+                    ]
+                },
+                {
+                    "id": "P1-EXIT-06-4",
+                    "requirement": "Existing five-adapter path preserved",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "adapters in registry"
+                    ],
+                    "required_tests": [
+                        "regression / catalog"
+                    ]
+                }
+            ],
+            "dependencies": [
+                "P1-EXIT-03",
+                "P1-EXIT-09 results as evidence for implemented scopes"
+            ],
+            "initial_status_at_lock": "PARTIAL"
+        },
+        "P1-EXIT-07": {
+            "title": "Per-seat classification and identity",
+            "source": "ADR-023 §8.64.7; OD-07",
+            "original": "For each seat: verified IC artifact or per-seat blocker after evidence review; blanket B1 does not satisfy",
+            "mandatory_conditions": [
+                {
+                    "id": "P1-EXIT-07-1",
+                    "requirement": "Per-seat IC artifact or seat-specific blocker after review",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "IC artifacts or blocker JSON"
+                    ],
+                    "required_tests": []
+                }
+            ],
+            "dependencies": [
+                "Gate B IC scopes"
+            ],
+            "initial_status_at_lock": "BLOCKED"
+        },
+        "P1-EXIT-08": {
+            "title": "Access-family adapters",
+            "source": "ADR-023 §8.64.7 / §8.24.5",
+            "original": "Adapters only for verified access families, one per family with per-seat constraints; Stage-3 reused only with identity binding; no speculative adapters; Builder owns query (D-04)",
+            "mandatory_conditions": [
+                {
+                    "id": "P1-EXIT-08-1",
+                    "requirement": "Verified family evidence for adapters",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "family evidence"
+                    ],
+                    "required_tests": [
+                        "Family contract tests"
+                    ]
+                },
+                {
+                    "id": "P1-EXIT-08-2",
+                    "requirement": "Gate B authorization",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "GB-FOUNDATION-01"
+                    ],
+                    "required_tests": []
+                },
+                {
+                    "id": "P1-EXIT-08-3",
+                    "requirement": "Builder retains HTTP query construction (D-04)",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "OD-C / Projection tests"
+                    ],
+                    "required_tests": [
+                        "ProjectionOrchestratorRuntimeIntegrationTest"
+                    ]
+                }
+            ],
+            "dependencies": [
+                "P1-EXIT-03"
+            ],
+            "initial_status_at_lock": "PARTIAL"
+        },
+        "P1-EXIT-09": {
+            "title": "Regression and database-specific tests",
+            "source": "ADR-023 §8.64.7; also §8.24.9 item 7 until §8.64.7 confirmed",
+            "original": "For each implemented scope: focused tests on SQLite and, for persistence and concurrency, on isolated PostgreSQL through the guarded suite (including single CURRENT Cap fact under concurrency, §8.23.8); regression of five-source path, CSQ identity, Home/Crop isolation; commands/exit codes recorded; skipped work marked NOT RUN",
+            "mandatory_conditions": [
+                {
+                    "id": "P1-EXIT-09-sqlite",
+                    "requirement": "Focused SQLite tests for implemented scopes",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "test logs"
+                    ],
+                    "required_tests": [
+                        "focused unit/feature"
+                    ]
+                },
+                {
+                    "id": "P1-EXIT-09-pg-persist",
+                    "requirement": "Isolated PostgreSQL for persistence/concurrency of implemented scopes (not primary app DB migration)",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "phpunit.pgsql.xml results or historical qualified evidence"
+                    ],
+                    "required_tests": [
+                        "guarded PostgreSQL suite"
+                    ]
+                },
+                {
+                    "id": "P1-EXIT-09-regression",
+                    "requirement": "Regression five-source / CSQ / Home-Crop isolation",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "test logs"
+                    ],
+                    "required_tests": [
+                        "regression suite"
+                    ]
+                }
+            ],
+            "dependencies": [
+                "Implemented scopes under Gate B"
+            ],
+            "initial_status_at_lock": "PARTIAL",
+            "postgresql_role": "REQUIRED_FOR_PERSISTENCE_AND_CONCURRENCY_SCOPES_ONLY — not a requirement to make PostgreSQL the operational primary database"
+        },
+        "P1-EXIT-10": {
+            "title": "Source-matrix evidence integrity",
+            "source": "ADR-023 §8.64.7; OD-10",
+            "original": "Matrix from evidence; every state cites artifact; register order; membership ≠ capability/verification; 110.v1 current; 109.v1 immutable",
+            "mandatory_conditions": [
+                {
+                    "id": "P1-EXIT-10-1",
+                    "requirement": "Canonical membership integrity for current register",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "matrix JSON + register SHA"
+                    ],
+                    "required_tests": [
+                        "Current110SourceMatrixContractTest"
+                    ]
+                }
+            ],
+            "dependencies": [
+                "Final capability-state updates depend on 06–08; membership integrity independently verifiable"
+            ],
+            "initial_status_at_lock": "PARTIAL"
+        },
+        "P1-EXIT-11": {
+            "title": "Formal Phase 1 verification and disposition",
+            "source": "ADR-023 §8.64.7",
+            "original": "Verification report re-verifying P1-EXIT-01..10 + explicit Phase 1 exit decision",
+            "mandatory_conditions": [
+                {
+                    "id": "P1-EXIT-11-1",
+                    "requirement": "ADR verification report + explicit exit decision",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "ADR append"
+                    ],
+                    "required_tests": []
+                }
+            ],
+            "dependencies": [
+                "All checklist items PASS for exit"
+            ],
+            "initial_status_at_lock": "NOT_RUN"
+        },
+        "D-08": {
+            "title": "Archive completeness Supplement 04",
+            "source": "OD-D08; ADR §8.80.4 / §8.81.3",
+            "original": "Authentic archive completeness; no fabricated Supplement 04",
+            "mandatory_conditions": [
+                {
+                    "id": "D-08-1",
+                    "requirement": "Authentic Supplement 04 or owner archival rule",
+                    "mandatory": true,
+                    "required_evidence": [
+                        "authentic artifact or owner decision"
+                    ],
+                    "required_tests": []
+                }
+            ],
+            "dependencies": [],
+            "initial_status_at_lock": "BLOCKED"
+        }
+    },
+    "amendments": [],
+    "related_documents": [
+        "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EARLIER-REQUIREMENTS-EXTRACTION.v10.1.json",
+        "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-CONFLICT-RESOLUTION-RECORD.v10.1.json",
+        "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WORKSTREAM-DOD.v10.1.json",
+        "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-INTEGRATION-PATHS.v10.1.json"
+    ]
+}

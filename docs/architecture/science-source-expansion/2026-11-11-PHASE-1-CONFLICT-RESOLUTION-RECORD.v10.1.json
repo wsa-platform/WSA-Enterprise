@@ -1,0 +1,58 @@
+{
+  "schema_id": "adr023.conflict_resolution_record.v1",
+  "created_at_utc": "2026-11-11T17:55:00Z",
+  "baseline_head": "7bc7e02e5841d3684c7e0403c5fc71b172a5a947",
+  "records": [
+    {
+      "conflict_id": "CR-R101-01",
+      "reference_a": "ADR-023 §8.64.7 PROPOSED CONSOLIDATED CHECKLIST — NOT OWNER-APPROVED",
+      "reference_b": "ADR-023 §8.24.9 / §8.25.10 / §8.25.11 / §8.26.6 / §8.26.7 / §8.63.10",
+      "exact_relevant_text_a": "Until an owner decision confirms the list and these conditions, the earlier criteria … remain applicable together with this list, and none of them is treated as superseded.",
+      "exact_relevant_text_b": "Earlier mandatory acceptance/closure conditions for Phase 1 and IC.",
+      "approval_status_a": "PROPOSED — NOT OWNER-APPROVED (also OD-CL: retain unconfirmed)",
+      "approval_status_b": "Recorded earlier ADR requirements; remain applicable",
+      "scope_a": "Consolidated P1-EXIT-01..11 checklist proposal",
+      "scope_b": "Earlier Phase 1 acceptance, IC closure, decision package, leave-BLOCKED conditions",
+      "nature_of_conflict": "Potential silent replacement of earlier mandatory wording (especially §8.24.9 item 7 full SQLite+PG vs EXIT-09 persistence/concurrency narrowing)",
+      "affected_components_and_exits": ["P1-EXIT-01..11", "Acceptance Baseline", "EXIT-09 PG scope"],
+      "technical_impact": "If §8.64.7 were treated as sole authority, earlier mandatory tests/IC conditions could be weakened incorrectly",
+      "available_interpretations": [
+        "Treat §8.64.7 as sole checklist (REJECTED — contradicts its own confirmation status and OD-CL)",
+        "Treat earlier lists alone and ignore §8.64.7 (INCOMPLETE — loses useful EXIT IDs)",
+        "Apply both: earlier lists remain mandatory; §8.64.7 used as organizing EXIT IDs without supersession (SELECTED)"
+      ],
+      "evidence_supporting_selected": [
+        "§8.64.7 Confirmation status paragraph",
+        "OD-CL retain §8.64.7 as unconfirmed",
+        "Acceptance Baseline v9.2 / v10.1 lock_rule"
+      ],
+      "required_owner_decision": false,
+      "final_resolution": "SELECTED: dual-applicability model. §8.64.7 organizes EXIT IDs; earlier mandatory requirements remain ACTIVE. Where EXIT-09 wording is narrower than §8.24.9 item 7, both apply until owner confirms §8.64.7.",
+      "resolution_date": "2026-11-11",
+      "resolution_reference": "Rev 10.1 Workstream A; CR-R101-01"
+    },
+    {
+      "conflict_id": "CR-R101-02",
+      "reference_a": "ADR-023 §8.81.1 CapVerSeat remains untracked WIP",
+      "reference_b": "Git commit cfc9d1b CapVerSeatVerificationService tracked in HEAD",
+      "exact_relevant_text_a": "CapVerSeatVerificationService / CapVerSeatOutcome remain untracked WIP.",
+      "exact_relevant_text_b": "Files present in HEAD after GB-FOUNDATION-01 land",
+      "approval_status_a": "Historical ADR amendment state",
+      "approval_status_b": "Implemented under GB-FOUNDATION-01",
+      "scope_a": "Documentation snapshot",
+      "scope_b": "Runtime CapVerSeat service",
+      "nature_of_conflict": "ADR text lag vs code reality",
+      "affected_components_and_exits": ["CapVerSeat", "P1-EXIT-06"],
+      "technical_impact": "Readers may wrongly treat CapVerSeat as untracked",
+      "available_interpretations": [
+        "Revert code to match ADR (REJECTED — loses authorized implementation)",
+        "Append ADR correction noting committed CapVerSeat under GB-FOUNDATION-01 (SELECTED for documentation; code preserved)"
+      ],
+      "evidence_supporting_selected": ["git ls-tree HEAD CapVerSeatVerificationService.php", "blocker CAPVERSEAT-WIP-01 RESOLVED"],
+      "required_owner_decision": false,
+      "final_resolution": "Code in HEAD is authoritative for implementation state; ADR §8.81 historical sentence retained; correction noted in Rev 10.1 session report / this CR. Optional ADR append deferred to avoid large ADR churn in this session.",
+      "resolution_date": "2026-11-11",
+      "resolution_reference": "CR-R101-02"
+    }
+  ]
+}

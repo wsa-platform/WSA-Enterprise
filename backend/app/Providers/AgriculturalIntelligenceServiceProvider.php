@@ -104,6 +104,9 @@ class AgriculturalIntelligenceServiceProvider extends ServiceProvider
             CapabilityStoreRepository::class,
             EloquentCapabilityStoreRepository::class
         );
+        $this->app->singleton(
+            \App\Services\Agriculture\Research\Capability\CapVer\CapVerSeatVerificationService::class
+        );
 
         $this->app->singleton(Stage3SourceKeyIdentityBridge::class, static function (): Stage3SourceKeyIdentityBridge {
             return new Stage3SourceKeyIdentityBridge(Stage3SourceKeyIdentityBridge::governedAdrBindings());
