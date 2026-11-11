@@ -19,6 +19,20 @@ try {
     exit(1);
 }
 
+// Pin LocalIndex / CapVer away from operational SQLite paths (same contract as tests/bootstrap.php).
+// Primary app connection remains the Guard-certified disposable PostgreSQL target below.
+$testingRoot = dirname(__DIR__).DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'framework'.DIRECTORY_SEPARATOR.'testing';
+if (! is_dir($testingRoot) && ! mkdir($testingRoot, 0775, true) && ! is_dir($testingRoot)) {
+    fwrite(STDERR, "PostgreSQL test bootstrap refused: cannot create the isolated scientific store directory.\n");
+    exit(1);
+}
+
+$scientificDatabase = $testingRoot.DIRECTORY_SEPARATOR.'scientific_records_pgsql_'.getmypid().'.sqlite';
+if (! is_file($scientificDatabase) && file_put_contents($scientificDatabase, '') === false) {
+    fwrite(STDERR, "PostgreSQL test bootstrap refused: cannot create the isolated scientific store file.\n");
+    exit(1);
+}
+
 $forced = [
     'APP_ENV' => 'testing',
     'DB_CONNECTION' => 'pgsql_testing',
@@ -32,6 +46,11 @@ $forced = [
     'CACHE_STORE' => 'array',
     'QUEUE_CONNECTION' => 'sync',
     'FORBIDDEN_TEST_DATABASES' => implode(',', \Tests\Support\PostgresTestDatabaseGuard::FORBIDDEN_DATABASES),
+    'CAPABILITY_STORE_CONNECTION' => 'sqlite',
+    'CAPVER_DATABASE' => ':memory:',
+    'SCIENTIFIC_RECORD_STORE_DRIVER' => 'sqlite',
+    'SCIENTIFIC_RECORD_STORE_URL' => '',
+    'SCIENTIFIC_RECORD_STORE_DATABASE' => $scientificDatabase,
 ];
 
 foreach ($forced as $name => $value) {

@@ -79,6 +79,44 @@ final class DatabaseSafety
         }
 
         self::assertScientificConnectionConfigurationIsIsolated($connection, $resolvedDatabase);
+        self::assertCapVerStoreIsIsolated();
+    }
+
+    public static function assertCapVerStoreIsIsolated(): void
+    {
+        $connection = config('database.connections.capver');
+        if (! is_array($connection)) {
+            throw new AssertionFailedError('Refusing to run tests because capver is not configured.');
+        }
+
+        if (($connection['driver'] ?? '') !== 'sqlite') {
+            throw new AssertionFailedError('Refusing to run tests because capver is not sqlite.');
+        }
+
+        $database = (string) ($connection['database'] ?? '');
+        if (self::pathsIdentifySameFile($database, self::operationalScientificDatabasePath())
+            || str_ends_with(str_replace('\\', '/', $database), 'scientific_record_store.sqlite')) {
+            throw new AssertionFailedError('Refusing to run tests because capver points at the scientific record store.');
+        }
+
+        if (self::pathsIdentifySameFile($database, storage_path('app'.DIRECTORY_SEPARATOR.'capver.sqlite'))) {
+            throw new AssertionFailedError('Refusing to run tests against the operational CapVer store.');
+        }
+
+        if ($database === ':memory:') {
+            return;
+        }
+
+        $resolved = realpath($database);
+        $candidate = self::normalizePath($resolved !== false ? $resolved : $database);
+        $root = self::normalizePath(self::permittedScientificTestingRoot());
+        $resolvedRoot = realpath(self::permittedScientificTestingRoot());
+        if ($resolvedRoot !== false) {
+            $root = self::normalizePath($resolvedRoot);
+        }
+        if ($candidate !== $root && ! str_starts_with($candidate, $root.DIRECTORY_SEPARATOR)) {
+            throw new AssertionFailedError("Refusing capver database [{$database}] because it is outside the testing root.");
+        }
     }
 
     /**

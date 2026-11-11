@@ -1,0 +1,18 @@
+{
+  "schema_id": "adr023.project_state_snapshot.v1",
+  "created_at_utc": "2026-11-11T20:55:00Z",
+  "revision": "10.7.1",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "head_at_start": "54e3e333968e6264648a6d5bc933bfce0cd05330",
+  "remote_sync_at_start": "0/0",
+  "phase1_status": "PHASE_1_PARTIAL",
+  "progress_schema_classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "exit09": {
+    "guard_compliant_shared_netns": true,
+    "committed_ic_suite": {"tests": 130, "assertions": 881, "exit_code": 0},
+    "overall": "PARTIAL"
+  },
+  "external_blockers": ["EXIT-05", "EXIT-07", "D-08 Supplement 04", "Tier1 prompts 10.5/10.6"],
+  "wip_preserved": true,
+  "force_push": false
+}

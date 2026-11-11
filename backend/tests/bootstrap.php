@@ -13,6 +13,12 @@ if (! is_dir($testingRoot) && ! mkdir($testingRoot, 0775, true) && ! is_dir($tes
     exit(1);
 }
 
+$scientificDatabase = $testingRoot.DIRECTORY_SEPARATOR.'scientific_records_'.getmypid().'.sqlite';
+if (! is_file($scientificDatabase) && file_put_contents($scientificDatabase, '') === false) {
+    fwrite(STDERR, "Refusing to boot tests: cannot create the isolated scientific store file.\n");
+    exit(1);
+}
+
 $forced = [
     'APP_ENV' => 'testing',
     'DB_CONNECTION' => 'sqlite',
@@ -22,11 +28,13 @@ $forced = [
     'CACHE_STORE' => 'array',
     'QUEUE_CONNECTION' => 'sync',
     'FORBIDDEN_TEST_DATABASES' => 'wsa_enterprise',
+    'CAPABILITY_STORE_CONNECTION' => 'sqlite',
+    'CAPVER_DATABASE' => ':memory:',
     // Read by config/database.php before the first scientific_records connection.
     // An empty URL is required: Illuminate treats a non-empty url as authoritative.
     'SCIENTIFIC_RECORD_STORE_DRIVER' => 'sqlite',
     'SCIENTIFIC_RECORD_STORE_URL' => '',
-    'SCIENTIFIC_RECORD_STORE_DATABASE' => $testingRoot.DIRECTORY_SEPARATOR.'scientific_records_'.getmypid().'.sqlite',
+    'SCIENTIFIC_RECORD_STORE_DATABASE' => $scientificDatabase,
 ];
 
 foreach ($forced as $name => $value) {

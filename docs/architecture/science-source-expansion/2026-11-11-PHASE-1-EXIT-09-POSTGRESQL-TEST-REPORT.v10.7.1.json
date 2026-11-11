@@ -1,0 +1,88 @@
+{
+  "schema_id": "adr023.exit09_postgresql_test_report.v1",
+  "created_at_utc": "2026-11-11T20:45:00Z",
+  "revision": "10.7.1",
+  "supersedes": "2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-TEST-REPORT.v10.7.json",
+  "criterion": "P1-EXIT-09",
+  "authoritative": "ADR-023 §8.64.7 P1-EXIT-09; §8.24.9 item 7 dual-applicable; backend/phpunit.pgsql.xml; PostgresTestDatabaseGuard; ADR-023 §8.41.4 shared-netns pattern",
+  "lifecycle": {
+    "postgresql_installed": true,
+    "postgresql_configured": true,
+    "postgresql_reachable": true,
+    "isolated_test_database_identified": true,
+    "test_credentials_ready": true,
+    "test_suite_executed": true,
+    "test_suite_passed": true
+  },
+  "network_change": {
+    "type": "temporary_disposable_test_only",
+    "pattern": "postgres:16-alpine --network none + PHP via --network container:wsa-pg-exit09-ns",
+    "shared_compose_networks_modified": false,
+    "guard_configuration_modified": false,
+    "operational_services_affected": false,
+    "justification": "ADR-023 §8.41.4 historical Guard-compliant pattern; makes inet_server_addr loopback/null from runner namespace without weakening Guard"
+  },
+  "attempts": [
+    {
+      "id": "A1-compose-shared",
+      "result": "REJECTED_BEFORE_RUN",
+      "reason": "server also hosts operational wsa_enterprise"
+    },
+    {
+      "id": "A2-disposable-docker-host-publish",
+      "result": "NOT_RUN",
+      "reason": "inet_server_addr=172.17.0.2 rejected by Guard"
+    },
+    {
+      "id": "A3-disposable-shared-netns",
+      "target": "wsa-pg-exit09-ns (--network none, tmpfs, DB wsa_ic_persistence_test only)",
+      "runner": "wsa-enterprise-backend-test:latest --network container:wsa-pg-exit09-ns",
+      "guard": "PASSED (bootstrap accepted; dedicated server; loopback/null server address in shared namespace)",
+      "code_fix": "backend/tests/bootstrap-pgsql.php pins SCIENTIFIC_RECORD_STORE_* and CAPVER_DATABASE away from operational SQLite",
+      "committed_ic_suite": {
+        "command": "php vendor/bin/phpunit -c phpunit.pgsql.xml --no-coverage --do-not-cache-result tests/Unit/Agriculture/Research/IntegrationClassification tests/Pgsql/IntegrationClassificationPostgresConcurrencyTest.php tests/Pgsql/IntegrationClassificationPostgresIsolationTest.php",
+        "tests": 130,
+        "assertions": 881,
+        "skipped": 0,
+        "failed": 0,
+        "exit_code": 0,
+        "log": "docs/architecture/science-source-expansion/_tmp-r107c-pgsql-committed.txt",
+        "result": "PASSED"
+      },
+      "full_directory_with_untracked_wip": {
+        "note": "Working-tree untracked ScientificRecordStore*/CanonicalRegistry* under tests/Pgsql were also discovered by <directory>tests/Pgsql</directory>",
+        "tests": 149,
+        "assertions": 1046,
+        "failures": 10,
+        "skipped": 1,
+        "exit_code": 1,
+        "log": "docs/architecture/science-source-expansion/_tmp-r107c-pgsql-rerun.txt",
+        "failure_class": "WIP LocalIndex worker local_store_unavailable (SQLSTATE HY000); not part of committed suite; left uncommitted",
+        "result": "FAILED_WIP_ONLY"
+      }
+    }
+  ],
+  "guard_unit_tests": {
+    "command": "phpunit tests/Unit/Support/PostgresTestDatabaseGuardTest.php",
+    "tests": 27,
+    "assertions": 52,
+    "exit_code": 0
+  },
+  "postgresql_portion_status": "PASSED",
+  "overall_criterion_status": "PARTIAL",
+  "overall_rationale": "Guarded isolated PostgreSQL IC persistence/concurrency suite PASSED. EXIT-09 text also cites regression of five-source/CSQ/Home-Crop and §8.23.8 Cap CURRENT concurrency (OPEN / CapVer SQLite-by-design). Those residual scopes keep the criterion PARTIAL; PG-inet blocker cleared for the authoritative IC suite.",
+  "cleared_blockers": ["P1-BLK-2026-11-11-EXIT09-PG-02-DOCKER-INET"],
+  "remaining_notes": [
+    "Do not weaken PostgresTestDatabaseGuard",
+    "Untracked WIP ScientificRecordStore PostgreSQL tests remain FAIL and must not be staged until fixed",
+    "Disposable container must be removed after evidence capture"
+  ],
+  "safety": {
+    "operational_env_modified": false,
+    "operational_db_touched": false,
+    "guard_weakened": false,
+    "shared_docker_networks_changed": false,
+    "secrets_printed": false,
+    "disposable_container_to_remove": "wsa-pg-exit09-ns"
+  }
+}

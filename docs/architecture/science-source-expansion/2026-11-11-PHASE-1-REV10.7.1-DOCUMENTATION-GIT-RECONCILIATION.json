@@ -1,0 +1,28 @@
+{
+  "schema_id": "adr023.documentation_git_reconciliation.v1",
+  "created_at_utc": "2026-11-11T20:55:00Z",
+  "revision": "10.7.1",
+  "prior_rev107_at_54e3e33": {
+    "status": "VALIDATED_AND_PUSHED",
+    "note": "All Rev 10.7 session docs were committed and synced 0/0 before this continuation"
+  },
+  "artifacts_this_continuation": [
+    {"path": "2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-TEST-REPORT.v10.7.1.json", "validation": "JSON parse + evidence cross-check", "intended_git_state": "TO_COMMIT"},
+    {"path": "2026-11-11-PHASE-1-FINAL-ACCEPTANCE-MATRIX.v10.7.1.json", "validation": "JSON parse + EXIT status consistency", "intended_git_state": "TO_COMMIT"},
+    {"path": "2026-11-11-PHASE-1-DISCREPANCY-REGISTER.v10.7.1.json", "validation": "JSON parse + D-01..D-14 present", "intended_git_state": "TO_COMMIT"},
+    {"path": "2026-11-11-PHASE-1-REV10.7-EXTERNAL-BLOCKERS.v10.7.1.json", "validation": "JSON parse", "intended_git_state": "TO_COMMIT"},
+    {"path": "2026-11-11-PHASE-1-TIER1-ARCHIVAL-INVENTORY.v10.7.1.json", "validation": "JSON parse", "intended_git_state": "TO_COMMIT"},
+    {"path": "2026-11-11-PHASE-1-PROJECT-STATE-SNAPSHOT.v10.7.1.json", "validation": "JSON parse", "intended_git_state": "TO_COMMIT"},
+    {"path": "2026-11-11-PHASE-1-REV10.7.1-SESSION-REPORT.ar.md", "validation": "markdown structure review", "intended_git_state": "TO_COMMIT"},
+    {"path": "backend/tests/bootstrap-pgsql.php", "validation": "phpunit committed IC suite PASS", "intended_git_state": "TO_COMMIT"},
+    {"path": "backend/config/database.php", "validation": "adds scientific_records + capver connections only", "intended_git_state": "TO_COMMIT"},
+    {"path": "backend/tests/bootstrap.php", "validation": "CapVer/scientific isolation pins", "intended_git_state": "TO_COMMIT"},
+    {"path": "backend/tests/Support/DatabaseSafety.php", "validation": "CapVer isolation assert", "intended_git_state": "TO_COMMIT"}
+  ],
+  "excluded_from_commit": [
+    {"pattern": "unrelated WIP under backend/app, tests Feature/*, e2e-tmp, tools", "reason": "Not Phase 1 EXIT-09 completion scope / untested"},
+    {"pattern": "untracked tests/Pgsql/ScientificRecordStore*", "reason": "FAIL under current wiring; keep WIP"},
+    {"pattern": "_tmp-r107c-pg.env", "reason": "secrets; deleted"},
+    {"pattern": "_tmp-r107c-*.txt/php", "reason": "ephemeral logs/helpers; optional evidence only"}
+  ]
+}

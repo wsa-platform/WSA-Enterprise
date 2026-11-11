@@ -50,6 +50,50 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
+        /*
+         | Durable LocalIndex / scientific record store (ADR-023 §8.41).
+         | Isolated from the primary app DB so Windows/local hosts without the
+         | Compose hostname `postgres` can still persist harvests/snapshots.
+         | Override with SCIENTIFIC_RECORD_STORE_* when PostgreSQL is available.
+         */
+        'scientific_records' => [
+            'driver' => env('SCIENTIFIC_RECORD_STORE_DRIVER', 'sqlite'),
+            'url' => env('SCIENTIFIC_RECORD_STORE_URL'),
+            'database' => env(
+                'SCIENTIFIC_RECORD_STORE_DATABASE',
+                storage_path('app/scientific_record_store.sqlite'),
+            ),
+            'host' => env('SCIENTIFIC_RECORD_STORE_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('SCIENTIFIC_RECORD_STORE_PORT', env('DB_PORT', '5432')),
+            'username' => env('SCIENTIFIC_RECORD_STORE_USERNAME', env('DB_USERNAME', '')),
+            'password' => env('SCIENTIFIC_RECORD_STORE_PASSWORD', env('DB_PASSWORD', '')),
+            'charset' => env('SCIENTIFIC_RECORD_STORE_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('SCIENTIFIC_RECORD_STORE_SSLMODE', 'prefer'),
+            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+            'busy_timeout' => null,
+            'journal_mode' => null,
+            'synchronous' => null,
+            'transaction_mode' => 'DEFERRED',
+        ],
+
+        /*
+         | Dedicated CapVer cell store (ADR-023 §8.70).
+         | Not the default application connection and not scientific_records.
+         */
+        'capver' => [
+            'driver' => 'sqlite',
+            'database' => env('CAPVER_DATABASE', storage_path('app/capver.sqlite')),
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+            'busy_timeout' => 5000,
+            'journal_mode' => null,
+            'synchronous' => null,
+            'transaction_mode' => 'DEFERRED',
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),

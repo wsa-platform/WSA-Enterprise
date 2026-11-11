@@ -1,0 +1,58 @@
+{
+  "schema_id": "adr023.external_blockers_investigation.v1",
+  "created_at_utc": "2026-11-11T20:50:00Z",
+  "revision": "10.7.1",
+  "supersedes": "2026-11-11-PHASE-1-REV10.7-EXTERNAL-BLOCKERS.v10.7.json",
+  "items": [
+    {
+      "dependency_id": "EXT-EXIT05-STAGING",
+      "criterion": "P1-EXIT-05",
+      "blocker_id": "P1-BLK-2026-11-11-EXIT05-STAGING-01",
+      "original_requirement": "§8.25.10 items 3–4: staging validation §8.26.5 + authorized operator §8.25.7 zero-row runs",
+      "repo_search_result": "Reconfirmed: Gate A/B FOUND; no staging/operator attestation artifact in repo or Mission Artifact Archive",
+      "can_produce_in_repo": false,
+      "status": "BLOCKED",
+      "exact_owner_action": "Provide staging validation evidence and operator §8.25.7 run records (or authorize alternate approved evidence path)"
+    },
+    {
+      "dependency_id": "EXT-EXIT07-G226",
+      "criterion": "P1-EXIT-07",
+      "blocker_id": "P1-BLK-2026-11-11-G2-26-01",
+      "original_requirement": "Per-seat IC artifact or seat-specific blocker with original IC evidence path for G2-26",
+      "repo_search_result": "Reconfirmed: G2-26 seat-specific blocker docs exist; original IC evidence not located",
+      "can_produce_in_repo": false,
+      "status": "BLOCKED",
+      "exact_owner_action": "Supply original G2-26 IC evidence or authorize final seat disposition"
+    },
+    {
+      "dependency_id": "EXT-D08-SUPP04",
+      "criterion": "D-08",
+      "blocker_id": "P1-BLK-2026-11-11-D08-01",
+      "original_requirement": "Authentic Supplement 04 archive artifact",
+      "repo_search_result": "Mission Artifact Archive searched (734 artifacts); Supplement 04 still NOT_FOUND; HISTORY_INDETERMINATE; no fabricated substitute",
+      "can_produce_in_repo": false,
+      "fabricated": false,
+      "status": "BLOCKED",
+      "exact_owner_action": "Locate Supplement 04 original or formally accept indeterminacy under OD-D08"
+    },
+    {
+      "dependency_id": "EXT-EXIT09-PG",
+      "criterion": "P1-EXIT-09",
+      "blocker_id": "P1-BLK-2026-11-11-EXIT09-PG-02-DOCKER-INET",
+      "status": "CLEARED_FOR_IC_SUITE",
+      "clearance_evidence": "2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-TEST-REPORT.v10.7.1.json — shared-netns disposable PG + committed IC suite 130/881 EXIT 0",
+      "remaining_internal": "WIP untracked ScientificRecordStore PG tests still FAIL; keep uncommitted until fixed; EXIT-09 overall remains PARTIAL due to residual regression/§8.23.8 Cap CURRENT wording",
+      "exact_owner_action": "None required for IC guarded suite; optional owner decision if Cap CURRENT concurrency on PostgreSQL is still mandated despite CapVer SQLite architecture"
+    },
+    {
+      "dependency_id": "EXT-T1-PROMPTS-1056",
+      "criterion": "Tier1 archival T1-01/T1-02",
+      "blocker_id": "P1-BLK-2026-11-11-T1-PROMPT-1056",
+      "original_requirement": "Master Prompt Revision 10.5 and 10.6 full content archived and verified",
+      "repo_search_result": "Not in git; not in Mission Artifact Archive titles/search_text; only 10.7 META + older Rev7/8.x prompts found",
+      "can_produce_in_repo": false,
+      "status": "BLOCKED",
+      "exact_owner_action": "Provide original Master Prompt files for Revisions 10.5 and 10.6 if they exist outside the repository, or formally accept NOT_FOUND for those Tier1 items"
+    }
+  ]
+}

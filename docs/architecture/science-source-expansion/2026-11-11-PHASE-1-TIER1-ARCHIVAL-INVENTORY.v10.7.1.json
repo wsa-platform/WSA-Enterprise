@@ -1,0 +1,35 @@
+{
+  "schema_id": "adr023.tier1_archival_inventory.v1",
+  "created_at_utc": "2026-11-11T20:55:00Z",
+  "revision": "10.7.1",
+  "supersedes": "2026-11-11-PHASE-1-TIER1-ARCHIVAL-INVENTORY.v10.7.json",
+  "minimum_viable_archival": "PARTIAL",
+  "note": "Full Historical Archival not claimed. Archive search of mission_artifacts (734 rows) found no Master Prompt 10.5/10.6 full content.",
+  "items": [
+    {"item_id": "T1-01", "name": "Master Prompt Revision 10.5", "status": "NOT_FOUND", "reason": "Absent from git and Mission Artifact Archive (title/search_text). Not fabricated."},
+    {"item_id": "T1-02", "name": "Master Prompt Revision 10.6", "status": "NOT_FOUND", "reason": "Absent from git and Mission Artifact Archive. Related Rev10.6 session/matrix artifacts exist but are not the Master Prompt."},
+    {"item_id": "T1-03", "name": "Master Prompt Revision 10.7", "status": "ALREADY_ARCHIVED_AND_VERIFIED", "archive_id": "maa_12ea71350009f5ee_83ffd5a336e8", "note": "META digest only; full chat prompt retained in session transcript outside archive claim of full content"},
+    {"item_id": "T1-04", "name": "Latest three Final Reports R1–R8", "status": "PARTIAL", "note": "Historical reports under D-08 supplements; selective"},
+    {"item_id": "T1-05", "name": "Older unique-decision final reports", "status": "PARTIAL", "note": "Supplements 01–03 present; Supplement 04 NOT_FOUND"},
+    {"item_id": "T1-06", "name": "ADR-023 current", "status": "READY_FOR_ARCHIVE", "path": "docs/architecture/ADR-023-scientific-source-expansion.md"},
+    {"item_id": "T1-07", "name": "Original Phase 1 Acceptance Baseline", "status": "ALREADY_ARCHIVED_AND_VERIFIED", "archive_id": "maa_1cfe2efbaf768d3b_56a7095c7893"},
+    {"item_id": "T1-08", "name": "Current Approved Acceptance Matrix", "status": "READY_FOR_ARCHIVE", "path": "2026-11-11-PHASE-1-FINAL-ACCEPTANCE-MATRIX.v10.7.1.json"},
+    {"item_id": "T1-09", "name": "Evidence Ledger", "status": "READY_FOR_ARCHIVE", "path": "docs/evidence-ledger.json"},
+    {"item_id": "T1-10", "name": "Project State Snapshot current", "status": "READY_FOR_ARCHIVE", "path": "2026-11-11-PHASE-1-PROJECT-STATE-SNAPSHOT.v10.7.1.json"},
+    {"item_id": "T1-11", "name": "Revision 10.6 Final Report", "status": "ALREADY_ARCHIVED_AND_VERIFIED", "archive_id": "maa_4c60314de96e7b48_5b25bc79845b"},
+    {"item_id": "T1-12", "name": "Revision 10.6 Archive Verification Report", "status": "ALREADY_ARCHIVED_AND_VERIFIED"},
+    {"item_id": "T1-13", "name": "Evidence/Implementation Record c7110ae", "status": "ALREADY_ARCHIVED_AND_VERIFIED", "note": "git commit + EXIT-06 matrix"},
+    {"item_id": "T1-14", "name": "Rev 10.6 docs batch", "status": "ALREADY_ARCHIVED_AND_VERIFIED"},
+    {"item_id": "T1-15", "name": "Initial Git/Project Baseline", "status": "READY_FOR_ARCHIVE"},
+    {"item_id": "T1-16", "name": "Discrepancy Register", "status": "READY_FOR_ARCHIVE", "path": "2026-11-11-PHASE-1-DISCREPANCY-REGISTER.v10.7.1.json"},
+    {"item_id": "T1-17", "name": "Initial Archival Coverage Inventory", "status": "READY_FOR_ARCHIVE", "path": "this file"},
+    {"item_id": "T1-18", "name": "Final Revision 10.7 Report", "status": "ALREADY_ARCHIVED_AND_VERIFIED", "archive_id": "maa_958bc0d2bbdc0e03_37463533432f", "note": "v10.7 session report; v10.7.1 continuation report READY_FOR_ARCHIVE"},
+    {"item_id": "T1-19", "name": "Final Revision 10.7 State Snapshot", "status": "ALREADY_ARCHIVED_AND_VERIFIED", "archive_id": "maa_933f6e667dd38421_e0ec52106a81", "note": "v10.7.1 snapshot READY_FOR_ARCHIVE"},
+    {"item_id": "T1-20", "name": "EXIT-09 PostgreSQL Report v10.7.1", "status": "READY_FOR_ARCHIVE", "path": "2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-TEST-REPORT.v10.7.1.json"}
+  ],
+  "historical_17_reverify": {
+    "verified_ok": 17,
+    "status": "ALREADY_ARCHIVED_AND_VERIFIED",
+    "note": "Not re-run this continuation; prior Rev10.7 evidence retained"
+  }
+}
