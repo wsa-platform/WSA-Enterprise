@@ -1,0 +1,44 @@
+{
+  "schema_id": "adr023.exit08_family_verification_matrix.v1",
+  "created_at_utc": "2026-11-11T19:50:00Z",
+  "supersedes": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.6.json",
+  "criterion": "P1-EXIT-08",
+  "canonical_status": "PARTIAL",
+  "correction_ref": "2026-11-11-PHASE-1-EXIT-08-PASS-CORRECTION.v10.6.1.json",
+  "authoritative": "ADR-023 §8.24.5 / D-10.8; IC evidence review 2026-10-13",
+  "gate_b": "GB-FOUNDATION-01",
+  "ic_review_summary": {
+    "identity_verified": 0,
+    "endpoint_tested": 0,
+    "integration_verified": 0,
+    "proposed_classification_status": "UNCLASSIFIED (109)"
+  },
+  "families": [
+    {
+      "family_name": "REST_API / RestJson",
+      "package": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.RestJson.v10.6.json",
+      "package_status": "PRESENT",
+      "endpoint_tested": "NOT_RUN",
+      "integration_verified": "NOT_RUN",
+      "closure_status": "PARTIAL"
+    },
+    {
+      "family_name": "OAI-PMH",
+      "package": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.OaiPmh.v10.6.json",
+      "package_status": "PRESENT",
+      "endpoint_tested": "NOT_RUN",
+      "integration_verified": "NOT_RUN",
+      "closure_status": "PARTIAL"
+    },
+    {
+      "family_name": "Bulk / Dataset",
+      "package": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.Bulk.v10.6.json",
+      "package_status": "PRESENT",
+      "endpoint_tested": "NOT_RUN",
+      "integration_verified": "NOT_RUN",
+      "closure_status": "PARTIAL"
+    }
+  ],
+  "what_packages_prove": "Adapters + fixture contract tests + Gate B citation + explicit non-claims",
+  "what_packages_do_not_prove": "Verified access-family closure under D-10.8; live endpoint/integration verification"
+}

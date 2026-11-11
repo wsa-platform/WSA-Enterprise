@@ -192,35 +192,40 @@
             "verified_at": "2026-11-11T12:25:00Z"
         },
         "P1-EXIT-08": {
-            "status": "PASS",
-            "original_definition_ref": "ADR-023 §8.64.7 / §8.24.5",
+            "status": "PARTIAL",
+            "original_definition_ref": "ADR-023 §8.64.7 / §8.24.5 / D-10.8",
             "requirements": [
-                "Verified access-family adapters under Gate B; Builder keeps query construction"
+                "Verified access-family adapters under Gate B; Builder keeps query construction",
+                "Authentic family verification requires more than ACCESS DOCUMENTED + contract fixtures"
             ],
             "evidence_files": [
-                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.6.json",
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-PASS-CORRECTION.v10.6.1.json",
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.6.1.json",
                 "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.RestJson.v10.6.json",
                 "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.OaiPmh.v10.6.json",
                 "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-PACKAGE.Bulk.v10.6.json"
             ],
             "test_commands": [
                 "phpunit Family",
+                "phpunit VerifiedFamilyEvidencePackageContractTest",
                 "phpunit ProjectionOrchestratorRuntimeIntegrationTest"
             ],
             "test_results": {
                 "tests": 54,
                 "assertions": 261,
                 "exit_code": 0,
-                "summary": "Family 52/251 + Projection 2/10; contract-level family packages archived"
+                "summary": "Contract packages present; PASS revoked — endpoint/integration NOT_RUN under D-10.8"
             },
             "evidence_commits": [
                 "cfc9d1b",
                 "efd1e7d",
-                "96d30c2"
+                "96d30c2",
+                "6f5c08a"
             ],
             "blockers": [],
-            "next_action": "Preserve; live external connectivity remains NOT_CLAIMED (not fabricated)",
-            "verified_at": "2026-11-11T19:20:00Z"
+            "next_action": "Obtain authentic ENDPOINT TESTED / INTEGRATION VERIFIED evidence per seat/family; keep packages as CONTRACT_PACKAGE_PRESENT only",
+            "verified_at": "2026-11-11T19:50:00Z",
+            "correction_note": "Rev 10.6.1: PASS incorrectly granted for contract packages alone; corrected to PARTIAL"
         },
         "P1-EXIT-09": {
             "status": "PARTIAL",

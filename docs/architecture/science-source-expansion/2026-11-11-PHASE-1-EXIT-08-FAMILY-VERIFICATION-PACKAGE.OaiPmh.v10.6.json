@@ -2,27 +2,32 @@
   "schema_id": "adr023.family_verification_package.v1",
   "family_name": "OAI-PMH",
   "created_at_utc": "2026-11-11T19:00:00Z",
-  "baseline_head": "c7b2f771fe7b35bee85acbec032ba37390e6693e",
-  "authoritative": "ADR-023 §8.24.5",
+  "amended_at_utc": "2026-11-11T19:50:00Z",
+  "baseline_head": "da27077f981563792269b6fad6d543c7fc5e2f50",
+  "authoritative": "ADR-023 §8.24.5 / D-10.8 / GB-FOUNDATION-01",
+  "gate_b": "GB-FOUNDATION-01",
   "verification_levels": {
     "contract": "COMPLETE",
     "adapter_implementation": "COMPLETE",
     "fixture_normalization": "COMPLETE",
     "live_external_connectivity": "NOT_CLAIMED"
   },
+  "verification_facts": {
+    "identity_verified": false,
+    "endpoint_tested": "NOT_RUN",
+    "integration_verified": "NOT_RUN",
+    "live_connectivity_claimed": false,
+    "ic_evidence_review_ref": "docs/architecture/science-source-expansion/2026-10-13-PHASE-1-IC-EVIDENCE-REVIEW.v1.json"
+  },
   "adapter_implementation": "backend/app/Services/Agriculture/Research/Search/Family/OaiPmh/",
   "contract_tests": [
-    "backend/tests/Unit/Agriculture/Research/Search/Family/OaiPmhSourceFamilyTest.php"
+    "backend/tests/Unit/Agriculture/Research/Search/Family/OaiPmhSourceFamilyTest.php",
+    "backend/tests/Unit/Agriculture/Research/Search/Family/VerifiedFamilyEvidencePackageContractTest.php"
   ],
   "related_sources": {
-    "governed_verified_family_seats": ["organic_eprints (G1-02)"]
+    "governed_seats_with_oai_family_adapters": ["organic_eprints (G1-02)"]
   },
-  "capability_status": "G1-02 Cap decision cap-r11-20261018-G1-02-search; OAI-PMH access method on Onboarding Contract",
-  "query_implementation": "OAI-PMH family profile; Builder ownership preserved",
-  "normalization": "Covered by OaiPmhSourceFamilyTest fixtures",
-  "error_handling": "Contract suite",
-  "provenance": "adr_id G1-02 identity binding adr023.canonical.seat.G1-02",
-  "evidence_package_status": "CONTRACT_VERIFIED_PACKAGE",
-  "limitations": ["Live OAI harvest not claimed in this package"],
-  "closure_status": "PARTIAL_CONTRACT_COMPLETE"
+  "evidence_package_status": "CONTRACT_PACKAGE_PRESENT",
+  "limitations": ["Live OAI harvest not claimed; endpoint/integration NOT_RUN"],
+  "closure_status": "PARTIAL_CONTRACT_PACKAGE_ONLY"
 }

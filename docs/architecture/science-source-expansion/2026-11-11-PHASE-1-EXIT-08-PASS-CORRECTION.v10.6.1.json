@@ -1,0 +1,28 @@
+{
+  "schema_id": "adr023.exit08_pass_correction.v1",
+  "created_at_utc": "2026-11-11T19:50:00Z",
+  "baseline_head": "da27077f981563792269b6fad6d543c7fc5e2f50",
+  "trigger": "Explore subagent 83be0bb2-e440-4bb9-9701-9edb0c311164 — authentic family verification bar under §8.24.5 / D-10.8",
+  "error": "Rev 10.6 marked P1-EXIT-08 PASS based on contract-level family packages + Family/Projection suites",
+  "authoritative_bar": {
+    "sources": [
+      "ADR-023 §8.24.5 — adapters only for verified access families",
+      "D-10.8 — family requires verified per-seat IC dimensions",
+      "2026-10-13-PHASE-1-IC-EVIDENCE-REVIEW.v1.json — identity_verified=0, endpoint_tested=0, integration_verified=0"
+    ],
+    "ruling": "Documentary/contract packages close the MISSING-package gap but do NOT authorize PASS while endpoint/integration remain NOT RUN and IC review remains UNCLASSIFIED at the verified-family bar"
+  },
+  "correction": {
+    "previous_canonical_status": "PASS",
+    "corrected_canonical_status": "PARTIAL",
+    "packages_remain": true,
+    "package_claim_ceiling": "CONTRACT_AND_ACCESS_DOCUMENTED_ONLY",
+    "must_not_claim": ["identity_verified", "endpoint_tested", "integration_verified", "live_family_verification"]
+  },
+  "actions": [
+    "Update phase-1-progress.json P1-EXIT-08 to PARTIAL",
+    "Amend family packages with explicit NOT_RUN verification facts",
+    "Add VerifiedFamilyEvidencePackageContractTest",
+    "Amend EXIT-08 matrix v10.6.1 and Final Acceptance Matrix"
+  ]
+}

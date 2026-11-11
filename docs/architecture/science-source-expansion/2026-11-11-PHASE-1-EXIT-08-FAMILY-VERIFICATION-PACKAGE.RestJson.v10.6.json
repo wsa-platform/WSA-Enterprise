@@ -2,32 +2,38 @@
   "schema_id": "adr023.family_verification_package.v1",
   "family_name": "REST_API / RestJson",
   "created_at_utc": "2026-11-11T19:00:00Z",
-  "baseline_head": "c7b2f771fe7b35bee85acbec032ba37390e6693e",
-  "authoritative": "ADR-023 §8.24.5 / §8.80 GB-FOUNDATION-01 — adapters only for verified access families; Builder owns HTTP (D-04)",
+  "amended_at_utc": "2026-11-11T19:50:00Z",
+  "baseline_head": "da27077f981563792269b6fad6d543c7fc5e2f50",
+  "authoritative": "ADR-023 §8.24.5 / D-10.8 / §8.80 GB-FOUNDATION-01",
+  "gate_b": "GB-FOUNDATION-01",
   "verification_levels": {
     "contract": "COMPLETE",
     "adapter_implementation": "COMPLETE",
     "fixture_normalization": "COMPLETE",
+    "access_documented_citation": "PARTIAL",
     "live_external_connectivity": "NOT_CLAIMED"
+  },
+  "verification_facts": {
+    "identity_verified": false,
+    "endpoint_tested": "NOT_RUN",
+    "integration_verified": "NOT_RUN",
+    "live_connectivity_claimed": false,
+    "ic_evidence_review_ref": "docs/architecture/science-source-expansion/2026-10-13-PHASE-1-IC-EVIDENCE-REVIEW.v1.json"
   },
   "adapter_implementation": "backend/app/Services/Agriculture/Research/Search/Family/Rest/",
   "contract_tests": [
-    "backend/tests/Unit/Agriculture/Research/Search/Family/RestJsonSourceFamilyTest.php"
+    "backend/tests/Unit/Agriculture/Research/Search/Family/RestJsonSourceFamilyTest.php",
+    "backend/tests/Unit/Agriculture/Research/Search/Family/VerifiedFamilyEvidencePackageContractTest.php"
   ],
   "related_sources": {
-    "governed_verified_family_seats": ["gbif (G5-04)", "bhl (G6-20)"],
+    "governed_seats_with_rest_family_adapters": ["gbif (G5-04)", "bhl (G6-20)"],
     "legacy_stage3_rest": ["openalex", "crossref", "semantic_scholar", "consensus", "fao_stat"]
   },
-  "capability_status": "Governed seats use VERIFIED_SUPPORTED SEARCH declarations backed by Cap decision identities on Onboarding Contracts; legacy seats use LEGACY_OPERATIONAL_BASIS only",
-  "query_implementation": "Source-specific Rest family profile + ScientificSearchQueryBuilder ownership preserved (D-04)",
-  "normalization": "RestJson family normalizer covered by RestJsonSourceFamilyTest",
-  "error_handling": "Family contract asserts taxonomy / fail-closed paths in unit suite",
-  "provenance": "sourceKey + adr_id bindings via Stage3SourceKeyIdentityBridge for governed seats",
-  "csq_identity": "Compiler/family path must preserve CSQ; keyword-only collapse not authorized",
-  "evidence_package_status": "CONTRACT_VERIFIED_PACKAGE",
+  "query_implementation": "RestJson family profile; ScientificSearchQueryBuilder ownership preserved (D-04)",
+  "evidence_package_status": "CONTRACT_PACKAGE_PRESENT",
   "limitations": [
-    "Does not claim live authenticated REST calls against external providers in this package",
-    "Live connectivity remains a separate verification level"
+    "Does not claim ENDPOINT TESTED or INTEGRATION VERIFIED",
+    "IC evidence review remains UNCLASSIFIED at verified-family bar for 109 seats"
   ],
-  "closure_status": "PARTIAL_CONTRACT_COMPLETE"
+  "closure_status": "PARTIAL_CONTRACT_PACKAGE_ONLY"
 }

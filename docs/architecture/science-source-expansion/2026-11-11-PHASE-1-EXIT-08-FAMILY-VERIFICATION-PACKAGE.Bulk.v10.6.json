@@ -2,32 +2,37 @@
   "schema_id": "adr023.family_verification_package.v1",
   "family_name": "Bulk / Dataset",
   "created_at_utc": "2026-11-11T19:00:00Z",
-  "baseline_head": "c7b2f771fe7b35bee85acbec032ba37390e6693e",
-  "authoritative": "ADR-023 §8.24.5",
+  "amended_at_utc": "2026-11-11T19:50:00Z",
+  "baseline_head": "da27077f981563792269b6fad6d543c7fc5e2f50",
+  "authoritative": "ADR-023 §8.24.5 / D-10.8 / GB-FOUNDATION-01",
+  "gate_b": "GB-FOUNDATION-01",
   "verification_levels": {
     "contract": "COMPLETE",
     "adapter_implementation": "COMPLETE",
     "fixture_normalization": "COMPLETE",
     "live_external_connectivity": "NOT_CLAIMED"
   },
+  "verification_facts": {
+    "identity_verified": false,
+    "endpoint_tested": "NOT_RUN",
+    "integration_verified": "NOT_RUN",
+    "live_connectivity_claimed": false,
+    "ic_evidence_review_ref": "docs/architecture/science-source-expansion/2026-10-13-PHASE-1-IC-EVIDENCE-REVIEW.v1.json"
+  },
   "adapter_implementation": "backend/app/Services/Agriculture/Research/Search/Family/Bulk/",
   "contract_tests": [
     "backend/tests/Unit/Agriculture/Research/Search/Family/AgrisOdsBoundedHarvesterTest.php",
     "backend/tests/Unit/Agriculture/Research/Search/Family/AgrisOdsAndDrDukeProjectorTest.php",
-    "backend/tests/Unit/Agriculture/Research/Search/Family/DrDukeDatasetReconcilerTest.php"
+    "backend/tests/Unit/Agriculture/Research/Search/Family/DrDukeDatasetReconcilerTest.php",
+    "backend/tests/Unit/Agriculture/Research/Search/Family/VerifiedFamilyEvidencePackageContractTest.php"
   ],
   "related_sources": {
-    "governed_verified_family_seats": ["agris (G1-01)", "dr_duke (G1-17)"]
+    "governed_seats_with_bulk_family_adapters": ["agris (G1-01)", "dr_duke (G1-17)"]
   },
-  "capability_status": "Bounded/limited VERIFIED SEARCH caps on Onboarding Contracts; full corpus remains separate milestone",
-  "query_implementation": "Bulk family + LocalIndex projection paths; Builder ownership preserved for search CSQ",
-  "normalization": "Projector/reconciler unit coverage",
-  "error_handling": "Harvester/reconciler contract assertions",
-  "provenance": "G1-01 / G1-17 canonical identity bindings",
-  "evidence_package_status": "CONTRACT_VERIFIED_PACKAGE",
+  "evidence_package_status": "CONTRACT_PACKAGE_PRESENT",
   "limitations": [
-    "Bounded AGRIS subset and limited Dr Duke projection only",
-    "Does not claim full-corpus bulk verification"
+    "Bounded/limited projections only",
+    "Does not claim full-corpus bulk verification or ENDPOINT/INTEGRATION VERIFIED"
   ],
-  "closure_status": "PARTIAL_CONTRACT_COMPLETE"
+  "closure_status": "PARTIAL_CONTRACT_PACKAGE_ONLY"
 }

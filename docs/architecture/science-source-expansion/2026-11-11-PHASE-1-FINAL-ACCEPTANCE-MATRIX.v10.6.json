@@ -13,7 +13,7 @@
     {"id": "P1-EXIT-05", "previous": "BLOCKED", "current": "BLOCKED", "blocker": "P1-BLK-2026-11-11-EXIT05-STAGING-01"},
     {"id": "P1-EXIT-06", "previous": "PARTIAL", "current": "PASS", "evidence": "96d30c2 + EXIT-06 matrix v10.6"},
     {"id": "P1-EXIT-07", "previous": "BLOCKED", "current": "BLOCKED", "blocker": "P1-BLK-2026-11-11-G2-26-01"},
-    {"id": "P1-EXIT-08", "previous": "PARTIAL", "current": "PASS", "evidence": "family packages v10.6 + Family/Projection tests"},
+    {"id": "P1-EXIT-08", "previous": "PARTIAL", "current": "PARTIAL", "evidence": "contract packages present; PASS revoked in v10.6.1 — endpoint/integration NOT_RUN (D-10.8)", "correction": "2026-11-11-PHASE-1-EXIT-08-PASS-CORRECTION.v10.6.1.json"},
     {"id": "P1-EXIT-09", "previous": "PARTIAL", "current": "PARTIAL", "blocker": "P1-BLK-2026-11-11-EXIT09-PG-01", "note": "SQLite PASS; PG Cap suite NOT_RUN"},
     {"id": "P1-EXIT-10", "previous": "PARTIAL", "current": "PARTIAL", "note": "Matrix integrity historically advanced; final update dependency reduced but not re-run as full 110 inventory this revision"},
     {"id": "P1-EXIT-11", "previous": "NOT_RUN", "current": "NOT_RUN", "reason": "Requires all P1-EXIT-01..10 PASS"},

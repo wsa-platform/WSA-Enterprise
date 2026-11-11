@@ -210,10 +210,29 @@
   ],
   "session_addenda": [
     {
+      "id": "REV-10.6.1-EXIT08-CORRECTION",
+      "created_at_utc": "2026-11-11T19:50:00Z",
+      "baseline_head": "da27077f981563792269b6fad6d543c7fc5e2f50",
+      "note": "Corrects premature EXIT-08 PASS; packages remain evidence of CONTRACT presence only",
+      "items": [
+        {
+          "topic": "exit08_pass_revoked",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-PASS-CORRECTION.v10.6.1.json",
+          "result": "Canonical status corrected PASS → PARTIAL under §8.24.5 / D-10.8"
+        },
+        {
+          "topic": "exit08_package_contract_test",
+          "file": "backend/tests/Unit/Agriculture/Research/Search/Family/VerifiedFamilyEvidencePackageContractTest.php",
+          "tests": "VerifiedFamilyEvidencePackageContractTest + Phase1ProgressSchemaTest 4/176 EXIT 0",
+          "result": "Packages must declare endpoint/integration NOT_RUN"
+        }
+      ]
+    },
+    {
       "id": "REV-10.6-ADDENDUM",
       "created_at_utc": "2026-11-11T19:25:00Z",
       "baseline_head": "96d30c2fe4a592e902cfc65ba1c36b794f39a8ad",
-      "note": "Evidence references only; Progress Register is canonical for PASS updates",
+      "note": "Evidence references only; Progress Register is canonical for PASS updates. EXIT-08 PASS in this addendum superseded by REV-10.6.1 correction.",
       "items": [
         {
           "topic": "exit06_pass",
@@ -223,10 +242,10 @@
           "result": "Governed seats expose authentic IC/Cap/identity refs"
         },
         {
-          "topic": "exit08_pass",
-          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.6.json",
+          "topic": "exit08_contract_packages_only",
+          "file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.6.1.json",
           "tests": "Family 52/251 + Projection 2/10 EXIT 0",
-          "result": "Contract-level family packages Rest/OAI/Bulk"
+          "result": "Contract packages present; NOT authentic verified-family PASS"
         },
         {
           "topic": "workstream_h_done",
