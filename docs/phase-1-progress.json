@@ -1,9 +1,9 @@
 {
     "schema_version": "1.0",
-    "last_updated": "2026-11-11T15:55:00Z",
+    "last_updated": "2026-11-11T16:05:00Z",
     "repository": "wsa-platform/WSA-Enterprise",
     "branch": "phase-18-m18-ai-marketing-communications",
-    "head": "efd1e7daef0678b0e95d74ead9d79697b0177ccd",
+    "head": "7b1ad03261a2c64138ac32525c523aca904ecb96",
     "remote_sync": "0/0",
     "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
     "progress_descriptor": "NEAR_COMPLETE",
@@ -246,16 +246,16 @@
             ],
             "test_results": {
                 "tests": 1,
-                "assertions": null,
+                "assertions": 455,
                 "exit_code": 0,
-                "summary": "110.v1 membership integrity contract green; capability columns remain non-verified by design"
+                "summary": "Current110SourceMatrixContractTest green; membership ≠ verification; G2-26 retained in 110.v1"
             },
             "evidence_commits": [
                 "1e0e3010f0dc4f542c3031bdb32b7752e699d3ee"
             ],
             "blockers": [],
             "next_action": "Keep 109.v1 immutable; advance capability columns only with CapVer evidence",
-            "verified_at": "2026-11-11T12:25:00Z"
+            "verified_at": "2026-11-11T16:05:00Z"
         },
         "P1-EXIT-11": {
             "status": "NOT_RUN",
@@ -322,14 +322,14 @@
             "tests": null,
             "assertions": null,
             "exit_code": null,
-            "summary": "SUPPLEMENT_04_NOT_FOUND"
+            "summary": "SUPPLEMENT_04_NOT_FOUND; HISTORY_INDETERMINATE; candidate REFERENCED_OR_PLANNED_BUT_NEVER_CREATED; supplements 01–03 present"
         },
         "evidence_commits": [],
         "blockers": [
             "P1-BLK-2026-11-11-D08-01"
         ],
         "next_action": "Authentic material or owner archival rule",
-        "verified_at": "2026-11-11T12:25:00Z"
+        "verified_at": "2026-11-11T16:05:00Z"
     },
     "wip_files": [
         {
@@ -460,7 +460,8 @@
             "maa_7609402c06984640_ff0d813d17b3",
             "maa_6bed4c170b86ad8c_0a39b4d19c8c",
             "maa_5fd033bbfd2962c2_be50cbc03879",
-            "maa_9a44b2d4ed9df080_91303b345059"
+            "maa_9a44b2d4ed9df080_91303b345059",
+            "maa_2ab703d8e87f4b69_67eb6a4db1fa"
         ],
         "archive_count_observed": 659,
         "mission_id": "2026-11-11-PHASE-1-REV8.4",
@@ -489,7 +490,7 @@
         "G2-26 authentic evidence (no fabrication)",
         "D-08 Supplement 04 authentic material or owner archival rule"
     ],
-    "last_checkpoint": "R8.4: push sync verified; R8.3/R8.4 archived; EXIT-05/07/D-08 remain external blockers",
+    "last_checkpoint": "R8.4 delivered+synced at 7b1ad03; EXIT-05/07/D-08 external; EXIT-09 PG env missing; EXIT-10 membership contract 455 assertions",
     "gap_report": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV8.4-GAP-01-08-REPORT.md",
     "acceptance_baseline": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ACCEPTANCE-BASELINE.v1.json",
     "assumption_register": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ASSUMPTION-REGISTER.v1.json",
