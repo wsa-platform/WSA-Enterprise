@@ -15,7 +15,9 @@
 | الحقل | القيمة |
 |---|---|
 | HEAD الأولي | `b09cd18ddcd8522954cc7f3a580f53d5a36c91b6` |
-| HEAD النهائي | يُحدَّد بعد Push لهذه المراجعة |
+| HEAD النهائي | `3329bbfe98eab18e6a7c41f74fbcfc03a76fa06b` (+commits لاحقة للاختبار/سجل التقدم إن وُجدت) |
+| تحقيق الحجم الكبير | واجهة UI قد تعرض أرقامًا مضللة؛ القياس الفعلي للتغييرات المتتبعة ≈ +2221/−172؛ الملفات الضخمة على القرص هي قواعد محمية/سجلات/كاش/بناء — **ليست** ضمن الالتزام |
+| Orchestrator WIP | نسخة WIP = مجموعة شاملة تحتوي Projection + Catalog/Capability/V2؛ أُعيدت إلى شجرة العمل بعد نسخ احتياطي مُتحقق بالتجزئة؛ بقيت **غير مُدرجة** لارتباطها بـ WIP محولات/سجل |
 | الفرع | `phase-18-m18-ai-marketing-communications` (متزامن عند البدء) |
 | WIP | محفوظ خارج الالتزامات (بما فيها CapVerSeat*/Onboarding) |
 | قواعد محمية | `capver.sqlite` / `scientific_record_store.sqlite` — لم تُمسا |
@@ -86,8 +88,9 @@
 
 | Suite | Result |
 |---|---|
-| ProjectionSearchOptionsBinderTest + ProjectionQueryConstraintsTest | OK (29 tests, 278 assertions), EXIT 0 |
-| CapVerWriteBoundary + Persistence + Matrix + CanonicalCompilation + ProviderConcurrency | OK (91 tests, 852 assertions), EXIT 0 (4 PHPUnit deprecations) |
+| ProjectionOrchestratorRuntimeIntegrationTest + Binder + Constraints | OK (31 tests, 288 assertions), EXIT 0 |
+| CapVerWriteBoundary + Matrix + CanonicalCompilation (مع WIP Orchestrator) | OK (52 tests, 654 assertions), EXIT 0 (4 deprecations) |
+| إثبات تشغيلي | `optionsForSource` يُرجع `STATUS_ATTACHED` مع `unsupported_facets` ويحذف `country` عند geography غير مدعوم؛ بدون قرار Cap → `skipped_missing_capability_or_path_decision` |
 
 ## ل. الأمن وحماية البيانات
 

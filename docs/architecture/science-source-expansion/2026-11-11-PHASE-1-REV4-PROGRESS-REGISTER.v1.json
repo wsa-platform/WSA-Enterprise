@@ -1,0 +1,160 @@
+{
+  "schema_id": "adr023.phase1_rev4_progress_register.v1",
+  "updated_at": "2026-11-11T14:40:00Z",
+  "baseline_head_at_start": "b09cd18ddcd8522954cc7f3a580f53d5a36c91b6",
+  "delivery_commits": [
+    {
+      "sha": "3329bbfe98eab18e6a7c41f74fbcfc03a76fa06b",
+      "subject": "feat(research): wire OD-C Projection metadata into Stage-3 search"
+    }
+  ],
+  "large_diff_investigation": {
+    "reported_ui_hint": "+545757 -172",
+    "tracked_unstaged_measured": "+2221 / -172 across 49 files",
+    "largest_tracked_hunk": "backend/tests/Feature/ScientificEvidenceAnswerPipelineContractTest.php (+628/-2)",
+    "huge_on_disk_not_for_commit": [
+      "backend/storage/app/scientific_record_store.sqlite (~1.3GB protected)",
+      "backups/scientific_record_store_*.sqlite",
+      "backend/storage/logs/laravel.log",
+      "AGRIS harvest_cache XML/JSONL",
+      "admin-mobile/build artifacts"
+    ],
+    "protected_dbs_touched": false
+  },
+  "orchestrator_wip": {
+    "current_committed_projection_sha256": "F7787C5A7E6030216691FF5FC2947AA3CED03BCB3925A65A111064071BDEA565",
+    "wip_sha256": "FD7484EAD7F2FFC71B7854A197B83CE2432CBD367F962836DDF3EC207E1C690A",
+    "comparison": "WIP is Projection-complete superset (+catalog/capability/v2 adapter path). Projection attach markers identical in both.",
+    "worktree_state": "WIP restored after hash-verified backup of committed Projection file; WIP remains unstaged pending dependency review",
+    "backup_path": "C:/Users/ahmed/AppData/Local/Temp/MultiSourceScientificSearchOrchestrator.head-proj.php"
+  },
+  "workstreams": [
+    {
+      "id": "OD-C-Projection-runtime",
+      "prior_status": "PARTIAL (contract only)",
+      "current_status": "IMPLEMENTED_AND_TESTED",
+      "done": [
+        "ProjectionSearchOptionsBinder",
+        "CsqPresentFacetCodes",
+        "Orchestrator optionsForSource attach",
+        "Builder geography gating",
+        "ADR §8.81",
+        "Runtime integration tests"
+      ],
+      "files": [
+        "backend/app/Services/Agriculture/Research/Projection/ProjectionSearchOptionsBinder.php",
+        "backend/app/Services/Agriculture/Research/Projection/CsqPresentFacetCodes.php",
+        "backend/app/Services/Agriculture/Research/Search/MultiSourceScientificSearchOrchestrator.php",
+        "backend/app/Services/Agriculture/Research/Search/ScientificSearchQueryBuilder.php",
+        "backend/tests/Unit/Agriculture/Research/Search/ProjectionOrchestratorRuntimeIntegrationTest.php"
+      ],
+      "tests": "ProjectionOrchestratorRuntimeIntegrationTest + ProjectionSearchOptionsBinderTest + ProjectionQueryConstraintsTest — OK (31/288)",
+      "commit": "3329bbf (+ pending integration-test commit)",
+      "remaining": "Optional: commit reviewed Stage-3 WIP orchestrator extras with their adapter/registry dependencies",
+      "next": "Keep OD-C; do not invent Cap cells when Cap/Path absent"
+    },
+    {
+      "id": "OD-A-ID-CapVer",
+      "prior_status": "IMPLEMENTED",
+      "current_status": "IMPLEMENTED",
+      "done": ["WriteBoundary", "Issuer/Registry", "Persistence tests"],
+      "remaining": "CapVerSeat* untracked WIP out of sync — not required for write boundary",
+      "next": "Leave CapVerSeat untracked until Onboarding reviewed"
+    },
+    {
+      "id": "P1-EXIT-01",
+      "prior_status": "PARTIAL",
+      "current_status": "PARTIAL",
+      "done": ["(a)(b) CapVer", "(c) OD-C runtime"],
+      "remaining": "(d) GO-1 vocab, (e) IC/Cap/registry/activation order, (f) deployment order",
+      "dependency": "Owner decisions / evidence",
+      "next": "Cannot invent (d–f)"
+    },
+    {
+      "id": "P1-EXIT-02",
+      "prior_status": "BLOCKED",
+      "current_status": "BLOCKED",
+      "blocker": "P1-BLK-2026-11-11-GATE-A-01",
+      "remaining": "Owner Gate A record",
+      "next": "AWAITING_OWNER_DECISION"
+    },
+    {
+      "id": "P1-EXIT-03",
+      "prior_status": "BLOCKED",
+      "current_status": "BLOCKED",
+      "blocker": "P1-BLK-2026-11-11-GATE-B-01",
+      "remaining": "Owner Gate B record",
+      "next": "AWAITING_OWNER_DECISION"
+    },
+    {
+      "id": "P1-EXIT-04",
+      "prior_status": "PASS (qualified historical)",
+      "current_status": "PASS (qualified historical)",
+      "remaining": "none for this session"
+    },
+    {
+      "id": "P1-EXIT-05",
+      "prior_status": "BLOCKED",
+      "current_status": "BLOCKED",
+      "remaining": "Deployment order + staging + operator §8.25.7",
+      "next": "BLOCKED_BY_EXTERNAL_DEPENDENCY"
+    },
+    {
+      "id": "P1-EXIT-06",
+      "prior_status": "BLOCKED",
+      "current_status": "BLOCKED",
+      "dependency": "Gate B",
+      "remaining": "Runtime registry under authorization"
+    },
+    {
+      "id": "P1-EXIT-07",
+      "prior_status": "BLOCKED",
+      "current_status": "BLOCKED",
+      "blocker": "P1-BLK-2026-11-11-G2-26-01",
+      "remaining": "Authorized per-seat IC evidence"
+    },
+    {
+      "id": "P1-EXIT-08",
+      "prior_status": "BLOCKED",
+      "current_status": "BLOCKED",
+      "remaining": "Verified access families + Gate B adapters"
+    },
+    {
+      "id": "P1-EXIT-09",
+      "prior_status": "PARTIAL",
+      "current_status": "PARTIAL",
+      "done": ["CapVer/Projection/matrix/runtime suites"],
+      "remaining": "Full scope PostgreSQL where required for new scopes"
+    },
+    {
+      "id": "P1-EXIT-10",
+      "prior_status": "PARTIAL",
+      "current_status": "PARTIAL",
+      "done": ["110.v1 structural validation"],
+      "remaining": "Exit integrity waits on 06–08"
+    },
+    {
+      "id": "P1-EXIT-11",
+      "prior_status": "NOT RUN",
+      "current_status": "NOT RUN",
+      "remaining": "Prerequisites not PASS"
+    },
+    {
+      "id": "Layer-H",
+      "prior_status": "NOT_APPLICABLE",
+      "current_status": "NOT_APPLICABLE"
+    },
+    {
+      "id": "D-08",
+      "prior_status": "BLOCKED",
+      "current_status": "BLOCKED",
+      "outcome": "SUPPLEMENT_04_NOT_FOUND / REFERENCED_OR_PLANNED_BUT_NEVER_CREATED"
+    },
+    {
+      "id": "AUD-01-15",
+      "prior_status": "UNVERIFIED_REFERENCE",
+      "current_status": "UNVERIFIED_REFERENCE"
+    }
+  ],
+  "final_classification_expected": "PHASE_1_GAP_CLOSURE_PARTIAL"
+}
