@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wsa.local/schemas/phase-1-progress.schema.json",
+  "title": "WSA Phase 1 Progress Register",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "last_updated",
+    "repository",
+    "branch",
+    "head",
+    "remote_sync",
+    "classification",
+    "criteria",
+    "wip_files",
+    "dependencies",
+    "next_session_focus",
+    "last_checkpoint"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "last_updated": { "type": "string", "format": "date-time" },
+    "repository": { "type": "string", "minLength": 1 },
+    "branch": { "type": "string", "minLength": 1 },
+    "head": { "type": ["string", "null"], "pattern": "^[0-9a-f]{7,40}$" },
+    "remote_sync": { "type": "string" },
+    "classification": {
+      "type": "string",
+      "enum": ["PHASE_1_COMPLETE", "PHASE_1_GAP_CLOSURE_PARTIAL"]
+    },
+    "progress_descriptor": {
+      "type": "string",
+      "enum": ["NEAR_COMPLETE", "SUBSTANTIAL", "MODERATE", "LIMITED", "MINIMAL"]
+    },
+    "criteria": {
+      "type": "object",
+      "required": [
+        "P1-EXIT-01", "P1-EXIT-02", "P1-EXIT-03", "P1-EXIT-04", "P1-EXIT-05",
+        "P1-EXIT-06", "P1-EXIT-07", "P1-EXIT-08", "P1-EXIT-09", "P1-EXIT-10", "P1-EXIT-11"
+      ],
+      "additionalProperties": false,
+      "patternProperties": {
+        "^P1-EXIT-(0[1-9]|1[01])$": { "$ref": "#/$defs/criterion" }
+      }
+    },
+    "layer_h": { "$ref": "#/$defs/criterion" },
+    "d08": { "$ref": "#/$defs/criterion" },
+    "wip_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "classification", "decision"],
+        "properties": {
+          "path": { "type": "string" },
+          "sha256": { "type": ["string", "null"] },
+          "classification": {
+            "type": "string",
+            "enum": ["REQUIRED_FOR_PHASE_1", "INCOMPLETE_WIP", "OUT_OF_SCOPE", "DUPLICATE", "OBSOLETE", "UNKNOWN"]
+          },
+          "decision": { "type": "string" },
+          "reason": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["criterion", "depends_on", "dependency_type", "can_start_independently", "can_complete_independently"],
+        "properties": {
+          "criterion": { "type": "string" },
+          "depends_on": { "type": "array", "items": { "type": "string" } },
+          "dependency_type": { "type": "string" },
+          "evidence": { "type": "string" },
+          "can_start_independently": { "type": "boolean" },
+          "can_complete_independently": { "type": "boolean" },
+          "blocking_reason": { "type": ["string", "null"] },
+          "execution_order": { "type": "integer" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "archive": {
+      "type": "object",
+      "properties": {
+        "layer": { "type": "string" },
+        "rev7_prompt_status": { "type": "string" },
+        "snapshot_status": { "type": "string" },
+        "artifact_ids": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "next_session_focus": { "type": "array", "items": { "type": "string" } },
+    "last_checkpoint": { "type": "string" }
+  },
+  "$defs": {
+    "criterion": {
+      "type": "object",
+      "required": ["status", "original_definition_ref", "requirements", "evidence_files", "test_commands", "test_results", "evidence_commits", "blockers", "next_action"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["PASS", "PARTIAL", "BLOCKED", "NOT_RUN", "NOT_APPLICABLE", "IN_PROGRESS", "VERIFIED_PENDING_FINAL_REVIEW"]
+        },
+        "original_definition_ref": { "type": "string" },
+        "requirements": { "type": "array", "items": { "type": "string" } },
+        "evidence_files": { "type": "array", "items": { "type": "string" } },
+        "test_commands": { "type": "array", "items": { "type": "string" } },
+        "test_results": {
+          "type": "object",
+          "properties": {
+            "tests": { "type": ["integer", "null"] },
+            "assertions": { "type": ["integer", "null"] },
+            "exit_code": { "type": ["integer", "null"] },
+            "summary": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "evidence_commits": { "type": "array", "items": { "type": "string" } },
+        "blockers": { "type": "array", "items": { "type": "string" } },
+        "next_action": { "type": "string" },
+        "verified_at": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

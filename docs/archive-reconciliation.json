@@ -1,0 +1,92 @@
+{
+  "schema_id": "adr023.archive_reconciliation.v1",
+  "created_at_utc": "2026-11-11T12:20:00Z",
+  "updated_at_utc": "2026-11-11T12:40:00Z",
+  "layer": "FilesystemMissionArtifactArchive",
+  "adr_ref": "ADR-023 §8.51",
+  "historical_import_counts": [
+    {
+      "source": "prior reports citing 133 files / 136 total",
+      "status": "HISTORICAL_REPORT",
+      "note": "Not re-validated as current archive inventory in this session"
+    },
+    {
+      "source": "prior reports citing 632 entries / 584 candidates",
+      "status": "HISTORICAL_REPORT",
+      "note": "Distinct metric (entries/candidates) — do not merge with file counts"
+    },
+    {
+      "source": "Rev7 default archive.sqlite mission inventory",
+      "status": "VERIFIED_FACT",
+      "count_after_ingest": 659,
+      "note": "Observed after Rev7 controlled_import; count alone is COUNT_ONLY_DISCREPANCY vs prior reports"
+    }
+  ],
+  "discrepancy_class": "COUNT_ONLY_DISCREPANCY",
+  "discrepancy_impact": "Does not by itself prove missing Phase 1 scientific evidence; inventory reconciliation remains open",
+  "actions_this_session": [
+    "Verified CLI mission-artifacts and FilesystemMissionArtifactArchive interfaces",
+    "Archived MASTER ENGINEERING PROMPT — REVISION 7 (full text)",
+    "Archived PROJECT-STATE-SNAPSHOT.v7",
+    "Archived phase-1-progress.json (v1.0 then v1.1 after archive field update)",
+    "Archived Rev4 Arabic gap-closure report",
+    "SHA-256 read-back verification for each ingest",
+    "Recorded COUNT_ONLY_DISCREPANCY vs historical import figures"
+  ],
+  "rev7_ingest": [
+    {
+      "label": "master_prompt_revision_7",
+      "archive_id": "maa_1388202ca81949be_cf28a07849fb",
+      "sha256": "1388202ca81949be0e3b6a9d4e77765ba75c1d5ee3050b95622556daae801e55",
+      "verification": "ARCHIVED_AND_VERIFIED"
+    },
+    {
+      "label": "project_state_snapshot_v7",
+      "archive_id": "maa_738a8a8f21fec4c7_9009a8433d86",
+      "sha256": "738a8a8f21fec4c7cf668565965da5a6babaac4797e70aa0c8c97be2b4cc4dcf",
+      "verification": "ARCHIVED_AND_VERIFIED"
+    },
+    {
+      "label": "phase_1_progress_json_v1_0",
+      "archive_id": "maa_1e47665b0ab9f684_1d67f4274770",
+      "sha256": "1e47665b0ab9f684f2693d013b7341f0842002632bd6b395be0210a4a1843cfe",
+      "verification": "ARCHIVED_AND_VERIFIED",
+      "note": "Pre-archive-field-update identity"
+    },
+    {
+      "label": "phase_1_progress_json_v1_1",
+      "archive_id": "maa_92b85b3668cf5445_6bfd3fec056a",
+      "sha256": "92b85b3668cf5445eebb43fd75a6a5e3fa041e0bae8cd474d5765f75b87bbb15",
+      "verification": "ARCHIVED_AND_VERIFIED",
+      "note": "Includes archive.artifact_ids"
+    },
+    {
+      "label": "gap_closure_report_ar_rev4",
+      "archive_id": "maa_41c086da81797372_050eec91662e",
+      "sha256": "41c086da8179737244f176b66a808ce62fd345804390dcdc3bd7c2a8c7dce4ee",
+      "verification": "ARCHIVED_AND_VERIFIED"
+    }
+  ],
+  "summary_table": {
+    "master_prompts_discovered": 1,
+    "master_prompts_archived": 1,
+    "reports_discovered_this_session": 2,
+    "reports_already_archived": 0,
+    "reports_newly_archived": 2,
+    "reports_not_found": 0,
+    "reports_unknown_status": "historical import set not fully enumerated",
+    "project_state_snapshots": 1,
+    "hash_verified": 5,
+    "hash_failed": 0,
+    "import_discrepancies": "COUNT_ONLY_DISCREPANCY",
+    "duplicate_content_handled": "idempotent unchanged on re-ingest of identical blobs",
+    "append_only_verification": "new content identities create new archive_ids; prior blobs retained"
+  },
+  "supplement_04": {
+    "outcome": "SUPPLEMENT_04_NOT_FOUND",
+    "scenario": "REFERENCED_OR_PLANNED_BUT_NEVER_CREATED",
+    "class": "PROVENANCE_GAP"
+  },
+  "status": "RECONCILIATION_PARTIAL",
+  "archive_verification_status": "ARCHIVED_AND_VERIFIED_FOR_REV7_TARGETS"
+}

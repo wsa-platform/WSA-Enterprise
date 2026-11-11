@@ -1,0 +1,90 @@
+{
+  "artifact_type": "project_state_snapshot",
+  "schema_id": "adr023.project_state_snapshot.v1",
+  "created_at_utc": "2026-11-11T12:20:00Z",
+  "project": "WSA-Enterprise",
+  "repository": "wsa-platform/WSA-Enterprise",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "head": "6e13c856dd65592ac05e9671bb8c257f06963034",
+  "remote_sync": "0/0",
+  "last_verified_push": "b09cd18..6e13c85",
+  "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "progress_descriptor": "SUBSTANTIAL",
+  "fact_classes": {
+    "head": "VERIFIED_FACT",
+    "projection_runtime": "VERIFIED_FACT",
+    "gate_a": "BLOCKED",
+    "gate_b": "BLOCKED",
+    "g2_26": "BLOCKED",
+    "d08": "BLOCKED",
+    "p1_exit_11": "NOT_RUN"
+  },
+  "owner_decisions_880": {
+    "OD-C": "Option B — Projection metadata; Builder owns HTTP — runtime wired",
+    "OD-A-ID": "CapVer write-boundary enforced",
+    "OD-H": "NOT_APPLICABLE",
+    "OD-07": "G2-26 blocker retained",
+    "OD-10": "110.v1 matrix present; 109.v1 immutable",
+    "OD-CL": "§8.64.7 unconfirmed",
+    "OD-D08": "open; SUPPLEMENT_04_NOT_FOUND"
+  },
+  "criteria": {
+    "P1-EXIT-01": "PARTIAL",
+    "P1-EXIT-02": "BLOCKED",
+    "P1-EXIT-03": "BLOCKED",
+    "P1-EXIT-04": "PASS",
+    "P1-EXIT-05": "BLOCKED",
+    "P1-EXIT-06": "BLOCKED",
+    "P1-EXIT-07": "BLOCKED",
+    "P1-EXIT-08": "BLOCKED",
+    "P1-EXIT-09": "PARTIAL",
+    "P1-EXIT-10": "PARTIAL",
+    "P1-EXIT-11": "NOT_RUN",
+    "Layer-H": "NOT_APPLICABLE",
+    "D-08": "BLOCKED"
+  },
+  "projection_orchestrator": {
+    "status": "IMPLEMENTED_AND_TESTED",
+    "binder": "ProjectionSearchOptionsBinder",
+    "runtime_proof": "ProjectionOrchestratorRuntimeIntegrationTest",
+    "od_c": "no source_query; Builder owns HTTP"
+  },
+  "capver": {
+    "write_boundary": "implemented",
+    "seat_wip": "untracked; not required for OD-A-ID"
+  },
+  "source_matrix": {
+    "current": "110.v1",
+    "historical": "109.v1 immutable",
+    "g2_26_blocker": "P1-BLK-2026-11-11-G2-26-01"
+  },
+  "d08": {
+    "supplement_04": "SUPPLEMENT_04_NOT_FOUND",
+    "scenario": "REFERENCED_OR_PLANNED_BUT_NEVER_CREATED"
+  },
+  "aud": "UNVERIFIED_REFERENCE",
+  "last_tests": {
+    "command": "phpunit ProjectionOrchestratorRuntimeIntegrationTest + Binder + Constraints + CapVerWriteBoundary + Matrix + CanonicalCompilation",
+    "tests": 83,
+    "assertions": 942,
+    "exit_code": 0,
+    "note": "4 PHPUnit deprecations"
+  },
+  "wip": {
+    "preserved": true,
+    "backup": "C:\\Users\\ahmed\\AppData\\Local\\Temp\\wsa-checkpoints\\phase1-untracked-backup-20261111",
+    "orchestrator_wip_unstaged": true
+  },
+  "protected_databases": {
+    "capver.sqlite": "untouched",
+    "scientific_record_store.sqlite": "untouched"
+  },
+  "next_session_focus": [
+    "Owner Gate A/B decisions (P1-EXIT-02/03)",
+    "IC operational evidence / staging (P1-EXIT-05)",
+    "G2-26 authorized IC review (P1-EXIT-07)",
+    "D-08 authentic Supplement 04 material or archival rule",
+    "Do not re-wire Projection without defect"
+  ],
+  "last_checkpoint": "Rev7 archive + phase-1-progress.json creation"
+}
