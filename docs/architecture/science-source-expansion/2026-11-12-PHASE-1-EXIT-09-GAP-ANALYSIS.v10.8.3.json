@@ -1,0 +1,61 @@
+{
+  "schema_id": "adr023.exit09_gap_analysis.v1",
+  "created_at_utc": "2026-11-12T00:20:00Z",
+  "updated_at_utc": "2026-11-12T22:35:00Z",
+  "revision": "10.8.3",
+  "criterion": "P1-EXIT-09",
+  "baseline_head": "e6d80e8ef43acdcaf92c6fe6ac2a069fc7de674d",
+  "authoritative": [
+    "ADR-023 §8.64.7 P1-EXIT-09",
+    "ADR-023 §8.24.9 item 7",
+    "ADR-023 §8.23.8 (OPEN / future Gate A wording; CapVer SQLite-by-design)",
+    "ADR-023 §8.41 LocalIndex PG historical verification",
+    "docs/architecture/DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md",
+    "2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-TEST-REPORT.v10.7.1.json"
+  ],
+  "already_verified_rev1071": {
+    "guard_compliant_shared_netns": true,
+    "committed_ic_suite": {"tests": 130, "assertions": 881, "exit_code": 0},
+    "postgresql_portion_ic": "PASSED"
+  },
+  "original_acceptance_gaps_at_start": [
+    {
+      "gap_id": "G-SRS-10",
+      "description": "Ten failures in broader tests/Pgsql including untracked ScientificRecordStore*",
+      "status_at_start": "OPEN",
+      "status_after_1083": "CLOSED — all ten individually classified and VERIFIED_PASS under Guard-compliant shared-netns runner; full SRS suite 19/308 EXIT 0 (1 skip ServerRestart)"
+    },
+    {
+      "gap_id": "G-8238",
+      "description": "§8.23.8 single CURRENT Cap fact under concurrency on PostgreSQL",
+      "status_at_start": "OPEN_CLASSIFICATION_NEEDED",
+      "status_after_1083": "CLASSIFIED_N_A_UNDER_CAPVER_SQLITE — wording preserved; Cap CURRENT concurrency evidenced on SQLite CapVer store (27/101); Cap-on-PG CURRENT not implemented by design"
+    },
+    {
+      "gap_id": "G-REGRESSION",
+      "description": "EXIT-09 also cites five-source/CSQ/Home-Crop regression baseline",
+      "status_at_start": "HISTORICALLY_NOT_FULLY_GREEN",
+      "status_after_1083": "UNCHANGED — residual regression scope keeps EXIT-09 PARTIAL"
+    }
+  ],
+  "section_8_23_8_assessment": {
+    "title": "Test requirements for a future implementation",
+    "adr_status": "OPEN — proposed for future Gate A covering Capability (§8.64.5)",
+    "text_requires_pg_single_current": true,
+    "current_architecture": "CapVer uses SQLite intentionally (inventory + Phase 1 decisions); not Cap-on-PG store",
+    "authorization_note": "§8.23.8 explicitly does not authorize CapVer implementation/population",
+    "satisfiability_on_pg_cap_store": "NOT_APPLICABLE without reversing CapVer-SQLite architecture",
+    "sqlite_cap_evidence": "CapabilityStorePersistenceTest includes partial-unique single CURRENT and supersession tests on default testing SQLite — 27 tests / 101 assertions / EXIT 0",
+    "exit09_treatment": "Do not weaken §8.23.8; record Cap PG CURRENT as N/A under CapVer-SQLite; keep EXIT-09 PARTIAL unless owner confirms CapVer-SQLite concurrency evidence closes the dual-applicable wording"
+  },
+  "scientific_record_store_remediation": {
+    "defect": "Guarded PG suite bound LocalIndex to scientific_records SQLite while schema/tables lived on pgsql_testing",
+    "fix": "Tests\\Support\\BindsPgsqlLocalIndexForGuardedSuite + worker config pin to pgsql_testing; CapVer/scientific_records SQLite isolation in DatabaseSafety unchanged",
+    "finishWorker": "Removed feof()-wait that hung Docker/Windows pipes; break on JSON newline / process exit",
+    "guard": "UNCHANGED — no rule weakened",
+    "verification": "_tmp-r1083-srs-full3.txt OK 19/308 EXIT 0"
+  },
+  "ten_failure_investigation": "2026-11-12-PHASE-1-EXIT-09-TEN-FAILURE-INVESTIGATION.v10.8.3.json",
+  "exit09_current_status": "PARTIAL",
+  "exit09_rationale": "IC PG PASSED; SRS LocalIndex-on-PG WIP suite now PASS under Guard; §8.23.8 Cap-on-PG CURRENT remains N/A/OPEN under CapVer-SQLite; residual five-source/CSQ regression wording unresolved → PARTIAL not PASS"
+}

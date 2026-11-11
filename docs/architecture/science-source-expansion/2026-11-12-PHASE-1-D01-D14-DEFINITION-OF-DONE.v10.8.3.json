@@ -1,0 +1,183 @@
+{
+  "schema_id": "adr023.discrepancy_definition_of_done.v1",
+  "created_at_utc": "2026-11-12T22:40:00Z",
+  "revision": "10.8.3",
+  "source_register": "2026-11-11-PHASE-1-DISCREPANCY-REGISTER.v10.7.1.json",
+  "authoritative_sources": [
+    "ADR-023",
+    "2026-11-11-PHASE-1-DISCREPANCY-REGISTER.v10.7.1.json",
+    "2026-11-11-PHASE-1-FINAL-ACCEPTANCE-MATRIX.v10.7.1.json",
+    "2026-11-11-PHASE-1-REV10.7-EXTERNAL-BLOCKERS.v10.7.1.json",
+    "docs/architecture/DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md"
+  ],
+  "items": [
+    {
+      "id": "D-01",
+      "original_requirement": "Establish actual Git branch/HEAD/upstream/sync/WIP/stash baseline before Phase 1 gap work",
+      "source_reference": "Rev10.7/10.8.3 Level 1; discrepancy register D-01",
+      "required_evidence": "git status -sb; rev-parse HEAD; upstream ahead/behind; stash list",
+      "required_tests": "N/A — process evidence",
+      "dependencies": [],
+      "closure_condition": "Baseline recorded; WIP preserved unstaged unless independently eligible",
+      "current_status": "RESOLVED",
+      "missing_evidence": null,
+      "closure_authority": "Executed Rev 10.8.3 start; HEAD e6d80e8; branch phase-18-m18-ai-marketing-communications; sync 0/0"
+    },
+    {
+      "id": "D-02",
+      "original_requirement": "Reconcile Revision 10.6+ reported artifacts with committed Git state",
+      "source_reference": "discrepancy register D-02; Rev10.6/10.7.1 docs",
+      "required_evidence": "git log vs reported artifact inventory; classification of uncommitted WIP",
+      "required_tests": "N/A",
+      "dependencies": ["D-01"],
+      "closure_condition": "All reported Phase 1 artifacts either committed or explicitly classified as WIP/out-of-scope",
+      "current_status": "PARTIALLY_RESOLVED",
+      "missing_evidence": "Extensive unrelated WIP under backend/app Feature tests and tools remains uncommitted by design",
+      "closure_authority": "Partial — Rev10.6/10.7.1 on origin; WIP preservation policy continues"
+    },
+    {
+      "id": "D-03",
+      "original_requirement": "cap-r* capability facts must not mix with cap-rec* storage/record identifiers",
+      "source_reference": "EXIT-06; CapVerAuthorizedSeatSpecCatalog; ADR-023 capability/storage separation",
+      "required_evidence": "Implementation + regression tests for seat catalog / ScientificSourceRegistration",
+      "required_tests": "EXIT-06 related CapVer/catalog contracts",
+      "dependencies": [],
+      "closure_condition": "Separation implemented and not regressed",
+      "current_status": "RESOLVED",
+      "missing_evidence": null,
+      "closure_authority": "c7110ae; EXIT-06 PASS retained"
+    },
+    {
+      "id": "D-04",
+      "original_requirement": "EXIT-09 PostgreSQL verification under PostgresTestDatabaseGuard with isolated test DB",
+      "source_reference": "ADR-023 §8.64.7 P1-EXIT-09; §8.24.9 item 7; phpunit.pgsql.xml",
+      "required_evidence": "Guard-compliant connection identity; IC suite results; SRS remediation evidence; §8.23.8 status",
+      "required_tests": "phpunit.pgsql.xml IC suite; Guard unit; SRS PG suite when in acceptance set",
+      "dependencies": ["temporary disposable PG under §2.2.1 A"],
+      "closure_condition": "All original EXIT-09 acceptance criteria satisfied including residual regression/§8.23.8 scopes OR explicit owner decision on CapVer-SQLite N/A",
+      "current_status": "PARTIALLY_RESOLVED",
+      "missing_evidence": "§8.23.8 Cap-on-PG CURRENT concurrency; five-source/CSQ/Home-Crop full regression green",
+      "closure_authority": "IC 130/881 PASS; SRS full 19/308 PASS after bind fix; EXIT-09 remains PARTIAL — see EXIT-09 report v10.8.3"
+    },
+    {
+      "id": "D-05",
+      "original_requirement": "DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md is closed authority; no rediscovery of primary DB",
+      "source_reference": "inventory MD; Rev10.4 primary DB identification",
+      "required_evidence": "Inventory adopted; no contradictory rediscovery",
+      "required_tests": "N/A",
+      "dependencies": [],
+      "closure_condition": "Inventory remains sole authority unless concrete contradiction",
+      "current_status": "RESOLVED",
+      "missing_evidence": null,
+      "closure_authority": "No rediscovery in Rev 10.8.3; PG remains isolated test-only"
+    },
+    {
+      "id": "D-06",
+      "original_requirement": "Evidence must map to original criteria without fabrication",
+      "source_reference": "Phase 1 acceptance policy; discrepancy register D-06",
+      "required_evidence": "Acceptance matrix + EXIT reports with actual commands/exit codes",
+      "required_tests": "As cited per EXIT",
+      "dependencies": ["D-04", "EXIT-05", "EXIT-07", "EXIT-08", "D-08"],
+      "closure_condition": "Every PASS/PARTIAL/BLOCKED claim cites real evidence",
+      "current_status": "PARTIALLY_RESOLVED",
+      "missing_evidence": "External EXIT-05/07/D-08/Tier1 prompts evidence still unavailable",
+      "closure_authority": "Append-only evidence updates; no fabricated closures"
+    },
+    {
+      "id": "D-07",
+      "original_requirement": "Separate historical test evidence from current verification; do not conflate WIP failures with committed suite",
+      "source_reference": "EXIT-09 evidence separation policy",
+      "required_evidence": "Distinct logs for committed IC vs WIP SRS vs Cap persist",
+      "required_tests": "N/A — evidence hygiene",
+      "dependencies": [],
+      "closure_condition": "Logs and reports distinguish suites",
+      "current_status": "RESOLVED",
+      "missing_evidence": null,
+      "closure_authority": "_tmp-r1083-* logs + EXIT-09 report v10.8.3"
+    },
+    {
+      "id": "D-08",
+      "original_requirement": "Authentic Supplement 04 archive artifact OR formal owner acceptance of HISTORY_INDETERMINATE",
+      "source_reference": "ADR §8.81.3; P1-BLK-2026-11-11-D08-01; supplements 01–03 present",
+      "required_evidence": "Original Supplement 04 content with provenance OR OD-D08 indeterminacy acceptance",
+      "required_tests": "N/A",
+      "dependencies": ["owner/external"],
+      "closure_condition": "Supplement 04 FOUND and verified OR owner formally accepts indeterminacy",
+      "current_status": "BLOCKED",
+      "missing_evidence": "SUPPLEMENT_04_NOT_FOUND; HISTORY_INDETERMINATE retained; no fabricated substitute",
+      "closure_authority": "Requires owner locate original or OD-D08"
+    },
+    {
+      "id": "D-09",
+      "original_requirement": "EXIT-11 aggregate gate runs only when EXIT-01..10 all PASS",
+      "source_reference": "ADR-023 §8.64.7 P1-EXIT-11; EXIT-11 gate evaluation v10.7",
+      "required_evidence": "Prerequisite matrix all PASS then EXIT-11 verification report",
+      "required_tests": "As defined by EXIT-11 procedure",
+      "dependencies": ["P1-EXIT-01..10 all PASS"],
+      "closure_condition": "Gate executed with all prerequisites PASS and exit decision recorded",
+      "current_status": "BLOCKED",
+      "missing_evidence": "05/07 BLOCKED; 08/09/10 PARTIAL → EXIT-11 NOT_RUN",
+      "closure_authority": "Gate rule unchanged; do not run as ready"
+    },
+    {
+      "id": "D-10",
+      "original_requirement": "110.v1 membership ≠ verification ≠ live connectivity ≠ operational readiness",
+      "source_reference": "EXIT-08/10; VerifiedFamilyEvidencePackageContractTest; family packages",
+      "required_evidence": "Distinct columns/statuses for membership, contract, adapter, live, readiness",
+      "required_tests": "Family contract packages; adapter mocks; no live claimed as mock",
+      "dependencies": ["live endpoints for LIVE_CONNECTIVITY"],
+      "closure_condition": "Distinction preserved in matrix and packages; live verified when required",
+      "current_status": "RESOLVED_FOR_DISTINCTION",
+      "missing_evidence": "Live connectivity / endpoint_tested / integration_verified remain NOT_VERIFIED (keeps EXIT-08/10 PARTIAL)",
+      "closure_authority": "Contract packages PRESENT; distinction intact — EXIT-08/10 stay PARTIAL on live/integration"
+    },
+    {
+      "id": "D-11",
+      "original_requirement": "Historical 17 Mission Artifact Archive items remain ALREADY_ARCHIVED_AND_VERIFIED",
+      "source_reference": "2026-11-11-PHASE-1-REV10.7-VERIFY17-ARTIFACTS.json",
+      "required_evidence": "Prior verify17 integrity results; no overwrite",
+      "required_tests": "Archive verifyIntegrity when re-checking",
+      "dependencies": [],
+      "closure_condition": "17/17 intact unless new contradiction",
+      "current_status": "RESOLVED",
+      "missing_evidence": null,
+      "closure_authority": "Prior Rev10.7 verify17 retained"
+    },
+    {
+      "id": "D-12",
+      "original_requirement": "Capability contract regression (cap-r*/cap-rec*) must remain green",
+      "source_reference": "EXIT-06; D-03",
+      "required_evidence": "Catalog/contract tests; no regression from EXIT-09 bootstrap/bind",
+      "required_tests": "CapVer/catalog related; Cap persist 27/101",
+      "dependencies": ["D-03"],
+      "closure_condition": "No regression of capability/storage separation",
+      "current_status": "RESOLVED",
+      "missing_evidence": null,
+      "closure_authority": "Cap persist PASS; LocalIndex bind does not touch CapVer SQLite isolation"
+    },
+    {
+      "id": "D-13",
+      "original_requirement": "Tier 1 archival minimum viable set including Master Prompts 10.5 and 10.6",
+      "source_reference": "TIER1 inventory; P1-BLK-2026-11-11-T1-PROMPT-1056",
+      "required_evidence": "ARCHIVED_AND_VERIFIED for each Tier1 item or exact NOT_FOUND with search scope",
+      "required_tests": "ingestFile + readback + verifyIntegrity",
+      "dependencies": ["owner supply of 10.5/10.6 if external"],
+      "closure_condition": "All mandatory Tier1 items archived/verified OR owner accepts NOT_FOUND for missing originals",
+      "current_status": "PARTIALLY_RESOLVED",
+      "missing_evidence": "Master Prompt 10.5/10.6 NOT_FOUND in git and Mission Artifact Archive",
+      "closure_authority": "Search reaffirmed; other Tier1 items present/ready/archived"
+    },
+    {
+      "id": "D-14",
+      "original_requirement": "Archival checkpoints A–F have real evidence (not invented)",
+      "source_reference": "Phase 1 archival checkpoint policy",
+      "required_evidence": "Checkpoint records + archive IDs where claimed",
+      "required_tests": "Archive integrity where applicable",
+      "dependencies": ["D-13"],
+      "closure_condition": "A–F evidence complete for executed checkpoints",
+      "current_status": "PARTIALLY_RESOLVED",
+      "missing_evidence": "v10.8.3 Tier1 ingest of new EXIT-09/DoD artifacts pending this revision",
+      "closure_authority": "Rev10.7.1 ingest completed (734→742); 10.8.3 ingest follows eligible delivery"
+    }
+  ]
+}

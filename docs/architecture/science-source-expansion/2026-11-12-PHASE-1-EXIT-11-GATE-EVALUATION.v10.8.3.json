@@ -1,0 +1,26 @@
+{
+  "schema_id": "adr023.exit11_gate_evaluation.v1",
+  "created_at_utc": "2026-11-12T22:40:00Z",
+  "revision": "10.8.3",
+  "supersedes": "2026-11-11-PHASE-1-EXIT-11-GATE-EVALUATION.v10.7.json",
+  "authoritative_definition": "ADR-023 §8.64.7 P1-EXIT-11 — Phase 1 verification report appended to ADR re-verifying P1-EXIT-01..10, then explicit Phase 1 exit decision",
+  "rule": "Phase 1 leaves BLOCKED only when every item is PASS and exit recorded under P1-EXIT-11",
+  "every_dependency_must_be_pass": true,
+  "partial_permitted_for_gate_run": false,
+  "current_prerequisite_status": {
+    "P1-EXIT-01": "PASS",
+    "P1-EXIT-02": "PASS",
+    "P1-EXIT-03": "PASS",
+    "P1-EXIT-04": "PASS",
+    "P1-EXIT-05": "BLOCKED",
+    "P1-EXIT-06": "PASS",
+    "P1-EXIT-07": "BLOCKED",
+    "P1-EXIT-08": "PARTIAL",
+    "P1-EXIT-09": "PARTIAL",
+    "P1-EXIT-10": "PARTIAL"
+  },
+  "gate_run_status": "NOT_RUN",
+  "blocking_prerequisites": ["P1-EXIT-05", "P1-EXIT-07", "P1-EXIT-08", "P1-EXIT-09", "P1-EXIT-10"],
+  "owner_decision_required": true,
+  "note": "Rev 10.8.3 advanced EXIT-09 evidence (SRS suite PASS) but criterion remains PARTIAL; EXIT-11 still ineligible"
+}

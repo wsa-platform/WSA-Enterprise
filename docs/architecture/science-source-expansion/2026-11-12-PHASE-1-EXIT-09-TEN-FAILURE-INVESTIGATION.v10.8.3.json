@@ -1,0 +1,140 @@
+{
+  "schema_id": "adr023.exit09_ten_failure_investigation.v1",
+  "created_at_utc": "2026-11-12T00:40:00Z",
+  "updated_at_utc": "2026-11-12T22:35:00Z",
+  "revision": "10.8.3",
+  "source_log": "docs/architecture/science-source-expansion/_tmp-r107c-pgsql-rerun.txt",
+  "verification_logs": [
+    "_tmp-r1083-srs-batch.txt",
+    "_tmp-r1083-srs-remain.txt",
+    "_tmp-r1083-srs-full3.txt",
+    "_tmp-r1083-cap-persist.txt"
+  ],
+  "baseline_head": "e6d80e8ef43acdcaf92c6fe6ac2a069fc7de674d",
+  "failures": [
+    {
+      "n": 1,
+      "test": "Tests\\Pgsql\\CanonicalRegistryLocalIndexIntegrationTest::test_canonical_resolution_ingestion_persistence_index_and_search",
+      "file": "backend/tests/Pgsql/CanonicalRegistryLocalIndexIntegrationTest.php",
+      "committed_at_investigation": false,
+      "message": "Missing docs file: SCIENCE-SOURCE-EXPANSION-62-REGISTER.md (and fallback ADR-023-LEGACY-62-PROVENANCE-SNAPSHOT.v1.json)",
+      "reproducible": true,
+      "root_cause": "ENVIRONMENT — docs not mounted at searched paths during prior run; fallback file is untracked WIP present on host",
+      "classification": "ENVIRONMENT",
+      "exit09_acceptance_required": "OPTIONAL_HISTORICAL_§8.42 — LocalIndex intentionally SQLite in inventory; PG integration is historical §8.41/§8.42 evidence",
+      "corrective_action": "Expanded architectureDocCandidates paths; mount docs in Guard-compliant runner",
+      "status_after_fix": "VERIFIED_PASS_FULL_SUITE",
+      "evidence": "_tmp-r1083-srs-full3.txt — 19 tests / 308 assertions / EXIT 0 (1 skip ServerRestart)"
+    },
+    {
+      "n": 2,
+      "test": "ScientificRecordStorePostgresTest::test_records_committed_by_one_process_are_recovered_by_a_fresh_process_and_a_fresh_store",
+      "file": "backend/tests/Pgsql/ScientificRecordStorePostgresTest.php",
+      "committed_at_investigation": false,
+      "message": "worker threw LocalStoreFailure local_store_unavailable SQLSTATE HY000",
+      "root_cause": "ISOLATION/CONFIG — LocalIndex bound to scientific_records SQLite while migrate:fresh + tables were on pgsql_testing",
+      "classification": "ISOLATION",
+      "exit09_acceptance_required": "SECTION_8_41_HISTORICAL — required if EXIT-09 still includes LocalIndex-on-PG; inventory marks LocalIndex SQLite-by-design",
+      "corrective_action": "BindsPgsqlLocalIndexForGuardedSuite + worker rebind to pgsql_testing; finishWorker no longer waits on feof()",
+      "status_after_fix": "VERIFIED_PASS_FULL_SUITE",
+      "affected_component": "ScientificRecordStore / LocalIndex connection binding"
+    },
+    {
+      "n": 3,
+      "test": "test_re_ingestion_is_idempotent_and_a_changed_snapshot_updates_and_withdraws_in_place",
+      "file": "backend/tests/Pgsql/ScientificRecordStorePostgresTest.php",
+      "committed_at_investigation": false,
+      "message": "worker threw local_store_unavailable SQLSTATE HY000",
+      "classification": "ISOLATION",
+      "corrective_action": "same LocalIndex pgsql_testing bind",
+      "status_after_fix": "VERIFIED_PASS_FULL_SUITE"
+    },
+    {
+      "n": 4,
+      "test": "test_a_rejected_snapshot_changes_no_row_and_no_generation",
+      "file": "backend/tests/Pgsql/ScientificRecordStorePostgresTest.php",
+      "committed_at_investigation": false,
+      "classification": "ISOLATION",
+      "corrective_action": "same LocalIndex pgsql_testing bind",
+      "status_after_fix": "VERIFIED_PASS_FULL_SUITE"
+    },
+    {
+      "n": 5,
+      "test": "test_a_process_killed_inside_its_commit_leaves_no_trace_and_the_next_run_commits",
+      "file": "backend/tests/Pgsql/ScientificRecordStorePostgresTest.php",
+      "committed_at_investigation": false,
+      "classification": "ISOLATION",
+      "corrective_action": "same LocalIndex pgsql_testing bind",
+      "status_after_fix": "VERIFIED_PASS_FULL_SUITE"
+    },
+    {
+      "n": 6,
+      "test": "test_an_interrupted_harvest_resumes_in_a_new_process_from_the_durable_checkpoint",
+      "file": "backend/tests/Pgsql/ScientificRecordStorePostgresTest.php",
+      "committed_at_investigation": false,
+      "classification": "ISOLATION",
+      "corrective_action": "same LocalIndex pgsql_testing bind",
+      "status_after_fix": "VERIFIED_PASS_FULL_SUITE"
+    },
+    {
+      "n": 7,
+      "test": "test_a_competing_commit_waits_for_the_source_lock_and_a_stale_base_is_refused",
+      "file": "backend/tests/Pgsql/ScientificRecordStorePostgresTest.php",
+      "committed_at_investigation": false,
+      "classification": "ISOLATION",
+      "corrective_action": "same LocalIndex pgsql_testing bind + finishWorker JSON-line break (Docker/Windows feof hang)",
+      "status_after_fix": "VERIFIED_PASS_FULL_SUITE",
+      "focused_evidence": "_tmp-r1083-srs-remain.txt OK (3 tests, 55 assertions) EXIT 0"
+    },
+    {
+      "n": 8,
+      "test": "test_restricted_content_is_not_persisted_and_permitted_content_is",
+      "file": "backend/tests/Pgsql/ScientificRecordStorePostgresTest.php",
+      "committed_at_investigation": false,
+      "classification": "ISOLATION",
+      "corrective_action": "same LocalIndex pgsql_testing bind",
+      "status_after_fix": "VERIFIED_PASS_FULL_SUITE"
+    },
+    {
+      "n": 9,
+      "test": "test_store_faults_and_corrupt_rows_fail_the_search_instead_of_returning_empty",
+      "file": "backend/tests/Pgsql/ScientificRecordStorePostgresTest.php",
+      "committed_at_investigation": false,
+      "classification": "ISOLATION",
+      "corrective_action": "same LocalIndex pgsql_testing bind",
+      "status_after_fix": "VERIFIED_PASS_FULL_SUITE"
+    },
+    {
+      "n": 10,
+      "test": "test_search_never_writes_and_never_stores_the_question",
+      "file": "backend/tests/Pgsql/ScientificRecordStorePostgresTest.php",
+      "committed_at_investigation": false,
+      "classification": "ISOLATION",
+      "corrective_action": "same LocalIndex pgsql_testing bind",
+      "status_after_fix": "VERIFIED_PASS_FULL_SUITE"
+    }
+  ],
+  "summary": {
+    "wip_only_untracked_at_start": 10,
+    "isolation_misbind": 9,
+    "environment_docs_path": 1,
+    "committed_defects_in_ic_suite": 0,
+    "all_ten_resolved_in_guarded_runner": true,
+    "full_srs_suite": {
+      "command": "phpunit -c phpunit.pgsql.xml ScientificRecordStorePostgresTest Migration CanonicalRegistry ServerRestart",
+      "tests": 19,
+      "assertions": 308,
+      "skipped": 1,
+      "skipped_reason": "ScientificRecordStoreServerRestartTest requires explicit WSA_STORE_RESTART_PHASE write/verify around real PG restart",
+      "exit_code": 0,
+      "log": "_tmp-r1083-srs-full3.txt"
+    },
+    "note": "None of the ten failures were in the committed IC suite (130/881 PASS at e6d80e8). All ten were untracked WIP under tests/Pgsql; root causes corrected without weakening PostgresTestDatabaseGuard."
+  },
+  "section_8_23_8": {
+    "classification": "SECTION_8_23_8_REQUIRED wording remains; CapVer SQLite-by-design makes Cap-on-PG CURRENT N/A without architecture reversal",
+    "sqlite_cap_evidence": "CapabilityStorePersistenceTest 27/101 EXIT 0 includes partial-unique single CURRENT",
+    "cap_persist_log": "_tmp-r1083-cap-persist.txt",
+    "exit09_treatment": "Do not weaken §8.23.8; record Cap PG CURRENT as N/A under CapVer-SQLite; EXIT-09 remains PARTIAL on residual regression/§8.23.8 dual wording unless owner confirms CapVer-SQLite concurrency evidence closes it"
+  }
+}

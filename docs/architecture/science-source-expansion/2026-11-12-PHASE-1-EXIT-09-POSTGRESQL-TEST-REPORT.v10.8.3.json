@@ -1,0 +1,80 @@
+{
+  "schema_id": "adr023.exit09_postgresql_test_report.v1",
+  "created_at_utc": "2026-11-12T22:35:00Z",
+  "revision": "10.8.3",
+  "supersedes": "2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-TEST-REPORT.v10.7.1.json",
+  "criterion": "P1-EXIT-09",
+  "authoritative": "ADR-023 §8.64.7 P1-EXIT-09; §8.24.9 item 7 dual-applicable; backend/phpunit.pgsql.xml; PostgresTestDatabaseGuard; ADR-023 §8.41.4 shared-netns pattern",
+  "baseline_head": "e6d80e8ef43acdcaf92c6fe6ac2a069fc7de674d",
+  "isolation": {
+    "pattern": "postgres --network none + PHP --network container:<pg>",
+    "disposable_container": "wsa-pg-exit09-ns",
+    "guard": "PostgresTestDatabaseGuard UNCHANGED and compliant",
+    "primary_app_db": "NOT modified; inventory remains authority",
+    "capver": "SQLite isolation preserved via bootstrap-pgsql / DatabaseSafety",
+    "scientific_records_sqlite": "isolation preserved; LocalIndex rebound only to pgsql_testing for §8.41 suite",
+    "mission_artifact_archive": "separate; untouched by PG suite"
+  },
+  "suites": [
+    {
+      "name": "committed_ic_persistence_isolation_concurrency_prior",
+      "at_head": "e6d80e8",
+      "tests": 130,
+      "assertions": 881,
+      "exit_code": 0,
+      "status": "PASSED",
+      "evidence": "2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-TEST-REPORT.v10.7.1.json"
+    },
+    {
+      "name": "committed_ic_plus_guard_regression_rev1083",
+      "files": [
+        "tests/Unit/Agriculture/Research/IntegrationClassification",
+        "tests/Pgsql/IntegrationClassificationPostgresIsolationTest.php",
+        "tests/Pgsql/IntegrationClassificationPostgresConcurrencyTest.php",
+        "tests/Unit/Support/PostgresTestDatabaseGuardTest.php"
+      ],
+      "tests": 157,
+      "assertions": 933,
+      "exit_code": 0,
+      "status": "PASSED",
+      "log": "_tmp-r1083-ic-committed.txt",
+      "note": "130 IC + 27 Guard unit = 157; confirms no regression from LocalIndex bind WIP (bind not yet in this suite path)"
+    },
+    {
+      "name": "scientific_record_store_pgsql_wip_full",
+      "files": [
+        "tests/Pgsql/ScientificRecordStorePostgresTest.php",
+        "tests/Pgsql/ScientificRecordStoreMigrationTest.php",
+        "tests/Pgsql/CanonicalRegistryLocalIndexIntegrationTest.php",
+        "tests/Pgsql/ScientificRecordStoreServerRestartTest.php"
+      ],
+      "tests": 19,
+      "assertions": 308,
+      "skipped": 1,
+      "exit_code": 0,
+      "status": "PASSED_WITH_SKIP",
+      "log": "_tmp-r1083-srs-full3.txt",
+      "environment": "Guard-compliant shared-netns; docs volume mounted"
+    },
+    {
+      "name": "capability_store_persistence_sqlite_capver",
+      "file": "tests/Unit/Agriculture/Research/Capability/Persistence/CapabilityStorePersistenceTest.php",
+      "tests": 27,
+      "assertions": 101,
+      "exit_code": 0,
+      "status": "PASSED",
+      "log": "_tmp-r1083-cap-persist.txt",
+      "note": "§8.23.8 Cap CURRENT concurrency evidenced on CapVer SQLite; not Cap-on-PG"
+    }
+  ],
+  "ten_failure_closure": "2026-11-12-PHASE-1-EXIT-09-TEN-FAILURE-INVESTIGATION.v10.8.3.json — all ten VERIFIED_PASS_FULL_SUITE",
+  "section_8_23_8": {
+    "status": "PRESERVED_UNSATISFIED_ON_PG_CAP_STORE",
+    "reason": "CapVer SQLite-by-design; Cap-on-PG CURRENT store not authorized/implemented",
+    "sqlite_evidence_pass": true
+  },
+  "overall_status": "PARTIAL",
+  "postgresql_portion_ic": "PASSED",
+  "postgresql_portion_srs_localindex": "PASSED_UNDER_GUARD_BIND",
+  "overall_rationale": "Guarded isolated PostgreSQL IC suite remains PASS. ScientificRecordStore LocalIndex-on-PG WIP suite now PASS after bind+finishWorker remediation without Guard weakening. EXIT-09 text also cites regression of five-source/CSQ/Home-Crop and §8.23.8 Cap CURRENT concurrency on PostgreSQL (OPEN / CapVer SQLite-by-design). Those residual scopes keep the criterion PARTIAL."
+}
