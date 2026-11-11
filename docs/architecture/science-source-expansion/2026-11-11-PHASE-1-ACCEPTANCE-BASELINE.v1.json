@@ -1,0 +1,115 @@
+{
+  "schema_id": "adr023.phase1_acceptance_baseline.v1",
+  "created_at_utc": "2026-11-11T14:30:00Z",
+  "authority": [
+    "ADR-023 §8.64.7 (PROPOSED — NOT CONFIRMED; earlier lists remain applicable)",
+    "ADR-023 §8.64.4 Gate A/B definitions",
+    "ADR-023 §8.80 OD-C … OD-D08",
+    "ADR-023 §8.81",
+    "Owner pre-approval Rev 8.2 §2"
+  ],
+  "lock_rule": "Do not weaken mandatory conditions to match incomplete implementation",
+  "criteria": {
+    "P1-EXIT-01": {
+      "source": "ADR-023 §8.64.7",
+      "original": "Prerequisite architectural decisions (a–f) each recorded as explicit decisions",
+      "mandatory_conditions": [
+        "(a) CapVer ownership and enforcement placement",
+        "(b) Capability population and write authority",
+        "(c) T10+T8+T2 / Projection Option B per OD-C",
+        "(d) GO-1 vocabulary handling",
+        "(e) IC, Capability, registry, and activation order",
+        "(f) deployment order"
+      ],
+      "required_evidence": ["Decision records in ADR", "Enforcement/tests where implementation authorized"],
+      "required_tests": ["CapVer write-boundary tests", "OD-C Projection runtime tests"],
+      "dependencies": []
+    },
+    "P1-EXIT-02": {
+      "source": "ADR-023 §8.64.7 / §8.64.4",
+      "original": "Gate A record for each implementation scope, confirming §8.24 basis and deciding §8.23 provisions needed",
+      "mandatory_conditions": ["Explicit Gate A record per scope", "Items decided or marked outside scope"],
+      "required_evidence": ["Gate A record in ADR"],
+      "required_tests": ["None inherent; scope may require design-contract tests"],
+      "dependencies": ["P1-EXIT-01 decisions for overlapping items"]
+    },
+    "P1-EXIT-03": {
+      "source": "ADR-023 §8.64.7 / §8.64.4",
+      "original": "Separate scope-limited Gate B record including required fields of §8.64.4",
+      "mandatory_conditions": ["Authorized/prohibited scope", "Gate A relied on", "acceptance criteria", "tests/evidence", "operational restrictions"],
+      "required_evidence": ["Gate B record in ADR"],
+      "required_tests": ["As stated in Gate B record"],
+      "dependencies": ["P1-EXIT-02 for same scope"]
+    },
+    "P1-EXIT-04": {
+      "source": "ADR-023 §8.64.7 / §8.25.10 items 1–2",
+      "original": "IC technical persistence evidence",
+      "mandatory_conditions": ["Isolated PostgreSQL IC persistence evidence"],
+      "required_evidence": ["Historical CI/ADR §8.25.9"],
+      "required_tests": ["IC PostgreSQL suite (historical PASS qualified)"],
+      "dependencies": []
+    },
+    "P1-EXIT-05": {
+      "source": "ADR-023 §8.64.7 / §8.25.10 items 3–4",
+      "original": "IC operational closure: deployment order decided and validated in staging; operator §8.25.7 zero-row records",
+      "mandatory_conditions": ["Staging validation evidence", "Authorized operator runs"],
+      "required_evidence": ["Staging logs", "Operator records"],
+      "required_tests": ["Staging workflow evidence; not unit-only"],
+      "dependencies": ["P1-EXIT-01(f)", "Gate B note on IC dependency"]
+    },
+    "P1-EXIT-06": {
+      "source": "ADR-023 §8.64.7 / §8.24.2",
+      "original": "Runtime Source Registry and Capability integration under Gate B; adr_id keys; Cap writes via authorized producers; five-adapter path preserved",
+      "mandatory_conditions": ["Gate B authorization", "Registry extension", "CapVer enforcement"],
+      "required_evidence": ["Commits under Gate B", "P1-EXIT-09 results"],
+      "required_tests": ["Registry/integration/regression"],
+      "dependencies": ["P1-EXIT-03"]
+    },
+    "P1-EXIT-07": {
+      "source": "ADR-023 §8.64.7; OD-07",
+      "original": "Per-seat IC evidence; G2-26 needs authentic evidence or seat-specific blocker (blocker ≠ PASS)",
+      "mandatory_conditions": ["Seat evidence or explicit blocker", "No VERIFIED without CapVer"],
+      "required_evidence": ["IC artifacts or blocker JSON"],
+      "required_tests": ["Structural checks where applicable"],
+      "dependencies": ["Gate B for IC scopes beyond GB-IC-01"]
+    },
+    "P1-EXIT-08": {
+      "source": "ADR-023 §8.64.7 / §8.24.5",
+      "original": "Adapters only for verified access families; one per family with per-seat constraints; Builder owns query (D-04)",
+      "mandatory_conditions": ["Verified family evidence", "Gate B", "No speculative adapters"],
+      "required_evidence": ["Adapter code", "family evidence", "tests"],
+      "required_tests": ["Contract + integration + regression"],
+      "dependencies": ["P1-EXIT-03"]
+    },
+    "P1-EXIT-09": {
+      "source": "ADR-023 §8.64.7",
+      "original": "Focused tests on SQLite; persistence/concurrency on isolated PostgreSQL; regression of five-source path, CSQ identity, Home/Crop isolation",
+      "mandatory_conditions": ["PostgreSQL REQUIRED for persistence/concurrency", "Recorded commands/exit codes"],
+      "required_evidence": ["Test logs"],
+      "required_tests": ["SQLite focused + isolated PostgreSQL where required"],
+      "dependencies": ["Implemented scopes under Gate B"]
+    },
+    "P1-EXIT-10": {
+      "source": "ADR-023 §8.64.7; OD-10",
+      "original": "Matrix from evidence; current 110.v1; every state cites artifact; historical 109.v1 immutable; membership ≠ capability/verification",
+      "mandatory_conditions": ["Exactly 110 canonical IDs", "No duplicates/missing/unexpected", "Provenance"],
+      "required_evidence": ["Matrix JSON", "membership register SHA"],
+      "required_tests": ["Matrix integrity contract tests"],
+      "dependencies": ["P1-EXIT-06..08 for final state updates; membership integrity may be verified independently"]
+    },
+    "P1-EXIT-11": {
+      "source": "ADR-023 §8.64.7",
+      "original": "Verification report re-verifying P1-EXIT-01..10 on current evidence + explicit Phase 1 exit decision",
+      "mandatory_conditions": ["Report appended to ADR", "Explicit exit decision"],
+      "required_evidence": ["ADR report + decision record"],
+      "required_tests": ["As needed to re-verify"],
+      "dependencies": ["Per Rule: every checklist item PASS for exit"]
+    }
+  },
+  "gate_text_status": {
+    "Gate_A": "FOUND — ADR-023 §8.64.4",
+    "Gate_B": "FOUND — ADR-023 §8.64.4",
+    "existing_records": ["GA-IC-01 §8.30.3", "GB-IC-01 §8.30.4"],
+    "foundation_records": ["GA-FOUNDATION-01 §8.82", "GB-FOUNDATION-01 §8.82"]
+  }
+}

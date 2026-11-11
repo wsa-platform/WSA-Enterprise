@@ -1,74 +1,84 @@
 {
   "schema_id": "adr023.phase1_blocker_register.v1",
-  "governance_reference": "ADR-023/section-8.80;ADR-023/section-8.81",
+  "governance_reference": "ADR-023/section-8.80;ADR-023/section-8.81;ADR-023/section-8.82",
   "created_at": "2026-11-11T00:00:00Z",
-  "updated_at": "2026-11-11T12:00:00Z",
+  "updated_at": "2026-11-11T14:40:00Z",
   "notes": [
     "AUD-01 through AUD-15 are not an authoritative architecture register in this repository.",
     "Unsupported AUD labels are recorded as UNVERIFIED_REFERENCE aliases only.",
     "This register does not rewrite historical reports.",
-    "Rev 4: Projection runtime wiring advanced OD-C; Gate A/B/IC/D-08 remain external or evidence blockers."
+    "Rev 8.2: GA-FOUNDATION-01 / GB-FOUNDATION-01 recorded under owner pre-approval; Gate A/B blockers resolved for foundation+IC-inventory scopes."
   ],
   "entries": [
     {
       "blocker_id": "P1-BLK-2026-11-11-G2-26-01",
       "historical_aud_alias": null,
-      "original_reference": "ADR-023 §8.79 no_documentary_review_in_gb_ic_01_scope; OD-07",
+      "original_reference": "ADR-023 §8.79; OD-07",
       "supporting_evidence": "docs/architecture/science-source-expansion/2026-11-11-G2-26-SEAT-SPECIFIC-BLOCKER.v1.json",
       "affected_exit_criterion": "P1-EXIT-07",
       "current_status": "BLOCKED",
       "resolution_condition": "Authorized G2-26 IC review with verified artifact or replacement blocker after that review",
-      "dependency": "Gate B for IC persistence beyond GB-IC-01"
+      "dependency": "Authentic seat evidence (not inventable)"
     },
     {
       "blocker_id": "P1-BLK-2026-11-11-D08-01",
       "historical_aud_alias": null,
-      "original_reference": "D-08; OD-D08; Supplement 04 investigation; §8.81.3",
-      "supporting_evidence": "ADR-023 §8.80.4 and §8.81.3 SUPPLEMENT_04_NOT_FOUND; scenario REFERENCED_OR_PLANNED_BUT_NEVER_CREATED; supplements 01–03 present",
+      "original_reference": "D-08; OD-D08; Supplement 04",
+      "supporting_evidence": "ADR-023 §8.80.4 / §8.81.3; GAP-05 Rev 8.2",
       "affected_exit_criterion": "D-08 archival completeness",
       "current_status": "BLOCKED",
-      "resolution_condition": "Authentic archival coverage for every required prompt/report, or owner-approved archival rule change",
-      "dependency": "Authentic transcript/source material for missing reports"
+      "resolution_condition": "Authentic archival coverage or owner-approved archival rule change",
+      "dependency": "Authentic transcript/source material"
     },
     {
       "blocker_id": "P1-BLK-2026-11-11-AUD-REF-01",
       "historical_aud_alias": "AUD-01..AUD-15",
       "original_reference": "Prior audit report labels; ADR-023 §8.79",
-      "supporting_evidence": "Repository search 2026-11-11 (and Rev 4 re-check) found no authoritative AUD register",
+      "supporting_evidence": "No authoritative AUD register found",
       "affected_exit_criterion": "none as gate IDs",
       "current_status": "UNVERIFIED_REFERENCE",
-      "resolution_condition": "Do not invent historical AUD entries; track real blockers under P1-BLK identifiers",
+      "resolution_condition": "Do not invent historical AUD entries",
       "dependency": "none"
     },
     {
       "blocker_id": "P1-BLK-2026-11-11-GATE-A-01",
       "historical_aud_alias": null,
-      "original_reference": "P1-EXIT-02; §8.64.4 Gate A",
-      "supporting_evidence": "No Gate A record appended for implementation scopes; §8.80/§8.81 are owner OD records, not Gate A",
+      "original_reference": "P1-EXIT-02; §8.64.4; §8.82.1",
+      "supporting_evidence": "GA-IC-01 + GA-FOUNDATION-01 (ADR-023 §8.82.1); Rev 8.2 §2 pre-approval",
       "affected_exit_criterion": "P1-EXIT-02",
-      "current_status": "BLOCKED",
-      "resolution_condition": "Explicit owner Gate A record per implementation scope",
-      "dependency": "project owner"
+      "current_status": "RESOLVED",
+      "resolution_condition": "Satisfied for IC-inventory and foundation scopes",
+      "dependency": "none"
     },
     {
       "blocker_id": "P1-BLK-2026-11-11-GATE-B-01",
       "historical_aud_alias": null,
-      "original_reference": "P1-EXIT-03; §8.64.4 Gate B",
-      "supporting_evidence": "No Gate B authorization record for Runtime Registry / adapters / IC inventory persistence",
+      "original_reference": "P1-EXIT-03; §8.64.4; §8.82.2",
+      "supporting_evidence": "GB-IC-01 + GB-FOUNDATION-01 (ADR-023 §8.82.2); Rev 8.2 §2 pre-approval",
       "affected_exit_criterion": "P1-EXIT-03",
-      "current_status": "BLOCKED",
-      "resolution_condition": "Explicit owner Gate B record per scope",
-      "dependency": "Gate A + project owner"
+      "current_status": "RESOLVED",
+      "resolution_condition": "Satisfied for IC-inventory and foundation scopes; does not close P1-EXIT-05/07/D-08",
+      "dependency": "none"
     },
     {
       "blocker_id": "P1-BLK-2026-11-11-CAPVERSEAT-WIP-01",
       "historical_aud_alias": null,
       "original_reference": "§8.81.2 CapVerSeat disposition",
-      "supporting_evidence": "Untracked CapVerSeatVerificationService still calls persistCurrent with two args; depends on untracked Onboarding; not required for OD-A-ID write boundary",
+      "supporting_evidence": "Untracked CapVerSeat*/Onboarding; not required for OD-A-ID",
       "affected_exit_criterion": "none (WIP hygiene)",
       "current_status": "DEFERRED_UNTRACKED_WIP",
-      "resolution_condition": "Align to CapVerAuthorizedAssessment and review Onboarding before any commit, or discard",
-      "dependency": "engineering review of Onboarding catalogs"
+      "resolution_condition": "Align to CapVerAuthorizedAssessment before commit, or discard",
+      "dependency": "engineering review"
+    },
+    {
+      "blocker_id": "P1-BLK-2026-11-11-EXIT05-STAGING-01",
+      "historical_aud_alias": null,
+      "original_reference": "P1-EXIT-05; §8.25.10 items 3–4; ASM-R82-05",
+      "supporting_evidence": "No authorized operator/staging environment evidence in this session",
+      "affected_exit_criterion": "P1-EXIT-05",
+      "current_status": "BLOCKED",
+      "resolution_condition": "Staging validation + operator §8.25.7 zero-row records",
+      "dependency": "external operator/staging"
     }
   ]
 }

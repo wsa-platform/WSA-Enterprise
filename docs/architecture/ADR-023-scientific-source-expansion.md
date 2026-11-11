@@ -9084,3 +9084,60 @@ Read-only re-search on 2026-11-11 (Rev 4): no git deletion history for Supplemen
 ### 8.81.4 — Phase 1 status after this amendment
 
 Executable OD-C runtime wiring and focused/regression tests advanced P1-EXIT-01(c) and P1-EXIT-09 evidence. Owner-gated items (Gate A/B, IC operational closure, per-seat IC evidence, access-family adapters, D-08 archive completeness, P1-EXIT-11) remain unresolved. **Classification remains `PHASE_1_GAP_CLOSURE_PARTIAL`.**
+
+
+## 8.82 — Gate A / Gate B foundation scope (Rev 8.2 owner pre-approval)
+
+Append-only. Does **not** rewrite GA-IC-01 / GB-IC-01. Does **not** fabricate historical Gate text. Original Gate definitions remain ADR-023 §8.64.4 (**FOUND**). Authority: Master Engineering Prompt Revision 8.2 §2 (owner pre-approval for Gate A/B and Phase 1 engineering decisions). Classification of these records: OWNER_PREAPPROVED_ENGINEERING_RECORD (not a recovered historical Gate packet).
+
+### 8.82.1 — Gate A record GA-FOUNDATION-01
+
+**Scope.** Foundation runtime design for: CapVer ownership/enforcement (OD-A-ID / §8.31.1), Capability write authority (§8.30.1(b)), OD-C Projection Option B, Runtime Source Registry contract (§8.24.2), access-family adapter strategy (§8.24.5) for verified families, GO-1 Option 1, IC→Capability→registry→activation order, and deployment order §8.25.6 (subject to staging validation for P1-EXIT-05).
+
+**Formal acceptance of the §8.24 basis for this scope:** §8.24.2 (Runtime Source Registry minimum contract) and §8.24.5 (adapter/access-family strategy) are accepted for this scope without amendment, together with D-01, D-04, D-09, D-10.5.8. Whether §8.24 must be formally accepted as a whole remains OPEN (§8.64.3 item 5 / OD-CL).
+
+| Gate A item (§8.64.4) | GA-FOUNDATION-01 decision |
+|---|---|
+| Runtime Source Registry contract and ownership | **DECIDED**: minimum contract of §8.24.2; entries keyed by dr_id; ownership with architecture owner; Cap writes only through CapVer-authorized producers |
+| CapVer ownership and enforcement placement | **DECIDED**: §8.31.1 + OD-A-ID (architecture owner; enforcement above repository + defensive write boundary) |
+| Capability contract and permitted population rules | **DECIDED**: §8.30.1(b) + OD-A-ID; UNVERIFIED never persisted; no automatic demotion |
+| Separation of membership, identity, IC, Capability, registry, and activation | **ACCEPTED** (unchanged) |
+| Ordering of IC and Capability | **DECIDED**: adopt §8.63.8 IC-first seven-step order as the Phase 1 design order (NEW_ENGINEERING_DECISION under Rev 8.2 pre-approval; closes P1-EXIT-01(e) as design) |
+| T10+T8+T2 | **DECIDED**: OD-C Option B (Projection metadata only; Builder owns HTTP; no source_query) |
+| GO-1 vocabulary handling | **DECIDED**: Option 1 (historical inputs only; no Cap v2 mapping) |
+| Source-specific integration strategy and verified access families | **DECIDED**: §8.24.5; adapters only for verified access families; Stage-3 adapters retained for current five live sources; Family Rest/OAI-PMH/Bulk contracts authorized for evidence-backed seats only |
+| Onboarding Contract implementation design | **OUTSIDE**: CapVerSeat/Onboarding WIP remains uncommitted until CapVerAuthorizedAssessment alignment |
+| Deployment order and staging validation | **DECIDED**: §8.25.6 order; staging validation remains required for P1-EXIT-05 (not claimed complete here) |
+
+Acceptance contracts: docs/architecture/science-source-expansion/2026-11-11-GATE-A-FOUNDATION-01-ACCEPTANCE-CONTRACT.json.
+
+### 8.82.2 — Gate B record GB-FOUNDATION-01
+
+| Field (§8.64.4) | Content |
+|---|---|
+| Authorized scope | CapVer write-boundary + tests; OD-C Projection runtime + tests; Runtime Source Registry dr_id extensions without activating unverified seats; access-family contracts Rest/OAI-PMH/Bulk where family evidence exists; preserve five Stage-3 adapters; 110.v1 matrix integrity tests; isolated SQLite/PostgreSQL tests for persistence/concurrency; ADR/docs/progress/archive updates; scoped commit/push of authorized files |
+| Prohibited scope | Protected SQLite DBs; force push/history rewrite; inventing G2-26 VERIFIED; fabricating Supplement 04 or AUD-01..15; modifying 109.v1; committing CapVerSeat/Onboarding WIP until reviewed; Phase 2/3; production deployment / shared DB |
+| Gate A relied on | GA-FOUNDATION-01 (§8.82.1); GA-IC-01 unchanged for documentary IC inventory |
+| Checklist items addressed | P1-EXIT-03 for foundation scope; enables P1-EXIT-06/08/09/10 work; does **not** close P1-EXIT-05 |
+| Acceptance criteria | Gate B fields complete; linked tests green for staged code; membership≠capability; CapVer-only VERIFIED; OD-C constraints without HTTP in Projection |
+| Tests and evidence | CapVerWriteBoundary; ProjectionOrchestratorRuntimeIntegration + binder/constraints; Current110SourceMatrixContractTest; Family Rest/OaiPmh tests when staged; isolated PostgreSQL when available |
+| Repository and Git operations | Scoped staging; commit and push allowed when §25 quality gates met |
+| Operational restrictions | No protected DB mutation; no Docker/production deployment required by this Gate B |
+| IC closure dependency | Scopes needing IC operational closure stay suspended until P1-EXIT-05 evidence; Cap/Projection/registry/adapters that do not persist IC rows may proceed |
+| Suspension | §8.64.4 default suspension conditions |
+
+Acceptance contracts: docs/architecture/science-source-expansion/2026-11-11-GATE-B-FOUNDATION-01-ACCEPTANCE-CONTRACT.json.
+
+### 8.82.3 — Effect on exit criteria (design/authorization only)
+
+| Criterion | Effect of §8.82 |
+|---|---|
+| P1-EXIT-02 | Gate A now recorded for foundation scope in addition to GA-IC-01 |
+| P1-EXIT-03 | Gate B now recorded for foundation scope in addition to GB-IC-01 |
+| P1-EXIT-01 (e) | Design order decided (§8.63.8) |
+| P1-EXIT-05 / 07 / D-08 | **Not** closed by authorization alone |
+| Phase 1 | Remains PHASE_1_GAP_CLOSURE_PARTIAL until all mandatory exit evidence exists |
+
+### 8.82.4 — Blocker register updates
+
+P1-BLK-2026-11-11-GATE-A-01 and P1-BLK-2026-11-11-GATE-B-01 are **resolved for foundation+IC-inventory scopes** by GA-IC-01/GB-IC-01 + GA-FOUNDATION-01/GB-FOUNDATION-01. Seat-specific and archival blockers remain.

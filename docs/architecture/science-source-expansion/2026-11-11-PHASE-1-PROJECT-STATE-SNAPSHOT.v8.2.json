@@ -1,0 +1,70 @@
+{
+  "artifact_type": "project_state_snapshot",
+  "schema_id": "adr023.project_state_snapshot.v1",
+  "version": "8.2",
+  "created_at_utc": "2026-11-11T14:45:00Z",
+  "project": "WSA-Enterprise",
+  "repository": "wsa-platform/WSA-Enterprise",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "head": "6ada6fe3290681010699553f0f1d54e8ec04e93f",
+  "head_note": "Baseline before Rev8.2 docs commit",
+  "remote_sync": "0/0",
+  "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "progress_descriptor": "NEAR_COMPLETE",
+  "fact_classes": {
+    "head": "VERIFIED_FACT",
+    "gate_a_text": "VERIFIED_FACT",
+    "gate_b_text": "VERIFIED_FACT",
+    "ga_foundation_01": "VERIFIED_FACT",
+    "gb_foundation_01": "VERIFIED_FACT",
+    "g2_26": "BLOCKED",
+    "d08": "BLOCKED",
+    "p1_exit_05": "BLOCKED",
+    "p1_exit_11": "NOT_RUN"
+  },
+  "criteria": {
+    "P1-EXIT-01": "PASS",
+    "P1-EXIT-02": "PASS",
+    "P1-EXIT-03": "PASS",
+    "P1-EXIT-04": "PASS",
+    "P1-EXIT-05": "BLOCKED",
+    "P1-EXIT-06": "IN_PROGRESS",
+    "P1-EXIT-07": "BLOCKED",
+    "P1-EXIT-08": "IN_PROGRESS",
+    "P1-EXIT-09": "PARTIAL",
+    "P1-EXIT-10": "PARTIAL",
+    "P1-EXIT-11": "NOT_RUN",
+    "Layer-H": "NOT_APPLICABLE",
+    "D-08": "BLOCKED"
+  },
+  "gates": {
+    "Gate_A_text": "FOUND §8.64.4",
+    "Gate_B_text": "FOUND §8.64.4",
+    "GA-IC-01": "historical",
+    "GB-IC-01": "historical",
+    "GA-FOUNDATION-01": "§8.82.1",
+    "GB-FOUNDATION-01": "§8.82.2"
+  },
+  "gap_01_08": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV8.2-GAP-01-08-REPORT.md",
+  "family_tests_session": {
+    "tests": 48,
+    "assertions": 673,
+    "exit_code": 0,
+    "fact_class": "VERIFIED_FACT"
+  },
+  "protected_databases": {
+    "capver.sqlite": "untouched",
+    "scientific_record_store.sqlite": "untouched"
+  },
+  "open_blockers": [
+    "P1-BLK-2026-11-11-G2-26-01",
+    "P1-BLK-2026-11-11-D08-01",
+    "P1-BLK-2026-11-11-EXIT05-STAGING-01"
+  ],
+  "next_resume": [
+    "Family/Registry scoped commit under GB-FOUNDATION-01",
+    "PostgreSQL Cap tests (GAP-07)",
+    "External EXIT-05 evidence",
+    "No invented G2-26/Supplement 04"
+  ]
+}

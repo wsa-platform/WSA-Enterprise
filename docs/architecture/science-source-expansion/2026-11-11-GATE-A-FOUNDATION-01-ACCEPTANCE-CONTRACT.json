@@ -1,0 +1,35 @@
+{
+  "schema_id": "adr023.gate_acceptance_contract.v1",
+  "gate": "A",
+  "record_id": "GA-FOUNDATION-01",
+  "created_at_utc": "2026-11-11T14:35:00Z",
+  "original_text_status": "FOUND",
+  "original_text_ref": "ADR-023 §8.64.4 Gate A — Implementation Design Gate",
+  "decision_classification": "OWNER_PREAPPROVED_ENGINEERING_RECORD",
+  "authority": "Rev 8.2 §2 owner pre-approval + prior OD-C/OD-A-ID/§8.31 decisions",
+  "architectural_problem": "P1-EXIT-02 blocked: no Gate A for Runtime Source Registry / CapVer enforcement / Projection / access-family design beyond GA-IC-01 (IC inventory only)",
+  "decision": "Record GA-FOUNDATION-01 deciding all §8.64.4 Gate A items for foundation runtime scope; formal acceptance of §8.24.2/§8.24.5 for this scope",
+  "decision_operational_status": "DECISION_DOCUMENTED",
+  "mandatory_acceptance_conditions": [
+    "Each Gate A item decided or marked outside scope",
+    "Formal §8.24 basis stated for scope",
+    "Does not invent historical Gate text",
+    "Does not reverse OD-C / OD-A-ID / OD-H / OD-07 / OD-10 / OD-CL / OD-D08"
+  ],
+  "implementation_linked": [
+    "CapVerWriteBoundary + OD-A-ID identifier",
+    "ProjectionSearchOptionsBinder OD-C metadata",
+    "ScientificSourceAdapterRegistry five-adapter path",
+    "Family adapter contracts (Rest/OaiPmh/Bulk) under review"
+  ],
+  "required_evidence": ["ADR-023 §8.82.1", "this contract"],
+  "required_tests": ["None for Gate record itself; linked implementation tests under GB-FOUNDATION-01"],
+  "test_results": { "tests": null, "assertions": null, "exit_code": null, "summary": "Decision record — verification via ADR presence" },
+  "remaining_blockers": [],
+  "effect_on_criteria": {
+    "P1-EXIT-02": "Eligible for PASS when §8.82 recorded and scopes covered (GA-IC-01 + GA-FOUNDATION-01)",
+    "P1-EXIT-01": "Locks (a)(c)(d)(e)(f) design positions for foundation scope",
+    "P1-EXIT-06": "Design prerequisite for registry integration",
+    "P1-EXIT-08": "Design prerequisite for access-family adapters"
+  }
+}
