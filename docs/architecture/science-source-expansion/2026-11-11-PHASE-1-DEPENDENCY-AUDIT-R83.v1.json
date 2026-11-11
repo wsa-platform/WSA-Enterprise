@@ -1,0 +1,89 @@
+{
+  "schema_id": "adr023.dependency_audit.v1",
+  "created_at_utc": "2026-11-11T14:55:00Z",
+  "revision": "8.3",
+  "head": "3194924e70bdbf23130289a33f32e20721e9796b",
+  "stash_count": 0,
+  "backup_root": "C:\\Users\\ahmed\\AppData\\Local\\Temp\\wsa-checkpoints\\phase1-r83-wip-backup-20261111",
+  "backup_file_count": 87,
+  "edges": [
+    {
+      "consumer": "ScientificSourceAdapterRegistry (modified tracked)",
+      "depends_on": "Search/Registry/ScientificSourceCatalog",
+      "direct": true,
+      "in_git": false,
+      "untracked": true,
+      "in_stash": false,
+      "required_runtime": true,
+      "required_test": true,
+      "required_production_if_wip_landed": true,
+      "absence_causes_runtime_failure": true,
+      "classification": "REQUIRED_RUNTIME_DEPENDENCY"
+    },
+    {
+      "consumer": "ScientificSourceCatalog",
+      "depends_on": "Onboarding/{NextGateEligibleSeatCatalog,CurrentMembershipNearReadySeatCatalog}",
+      "direct": true,
+      "in_git": false,
+      "untracked": true,
+      "required_runtime": true,
+      "classification": "REQUIRED_RUNTIME_DEPENDENCY"
+    },
+    {
+      "consumer": "ScientificSourceRegistration",
+      "depends_on": "Onboarding/{AcceptedOnboardingDecisionCatalog,SeatActivationState}",
+      "direct": true,
+      "in_git": false,
+      "untracked": true,
+      "required_runtime": true,
+      "classification": "REQUIRED_RUNTIME_DEPENDENCY"
+    },
+    {
+      "consumer": "AgriculturalIntelligenceServiceProvider (modified tracked)",
+      "depends_on": "Family/{OaiPmhHarvester,BulkDatasetReader}",
+      "direct": true,
+      "in_git": false,
+      "untracked": true,
+      "required_runtime": true,
+      "absence_causes_runtime_failure": true,
+      "classification": "REQUIRED_RUNTIME_DEPENDENCY"
+    },
+    {
+      "consumer": "Family adapters",
+      "depends_on": "Contract/* + Provenance + AdapterV2Interface",
+      "direct": true,
+      "in_git": false,
+      "untracked": true,
+      "required_test": true,
+      "classification": "REQUIRED_FOR_PHASE_1"
+    },
+    {
+      "consumer": "CapVerSeatVerificationService",
+      "depends_on": "CapabilityStoreRepository::persistCurrent(3 args)",
+      "direct": true,
+      "in_git": false,
+      "untracked": true,
+      "required_runtime": false,
+      "note": "Still calls persistCurrent with 2 args; fails AgrisAndDrDukeGovernedActivationTest",
+      "classification": "INCOMPLETE_WIP"
+    }
+  ],
+  "coupled_suite_result": {
+    "tests": 224,
+    "assertions": 6714,
+    "failures": 3,
+    "risky": 1,
+    "exit_code": 1,
+    "failure_summary": [
+      "CapVerSeat 2-arg persistCurrent → STORE_UNAVAILABLE",
+      "Onboarding warning disposition subjects missing agris (now catalogued)",
+      "registration_governed_bound subjects expanded beyond gbif"
+    ]
+  },
+  "decision": {
+    "docs_commit_3194924": "PUSH_ALLOWED",
+    "runtime_cluster_commit": "PUSH_SAFETY_BLOCKED — incomplete Onboarding/CapVerSeat WIP",
+    "isolation": "Keep coupled WIP local + backed up; do not restore/destroy; do not land incomplete cluster",
+    "next_engineering": "Align CapVerSeat to CapVerAuthorizedAssessment OR remove CapVerSeat from activation path; update Onboarding integrity expectations; re-run coupled suite"
+  }
+}
