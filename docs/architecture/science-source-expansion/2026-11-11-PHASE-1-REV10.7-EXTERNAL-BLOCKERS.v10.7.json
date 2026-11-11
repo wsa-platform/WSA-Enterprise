@@ -1,0 +1,47 @@
+{
+  "schema_id": "adr023.external_blockers_investigation.v1",
+  "created_at_utc": "2026-11-11T19:50:00Z",
+  "items": [
+    {
+      "dependency_id": "EXT-EXIT05-STAGING",
+      "criterion": "P1-EXIT-05",
+      "blocker_id": "P1-BLK-2026-11-11-EXIT05-STAGING-01",
+      "original_requirement": "§8.25.10 items 3–4: staging validation §8.26.5 + authorized operator §8.25.7 zero-row runs on each real environment",
+      "repo_search_result": "Gate A/B FOUND contracts present; no staging operator attestation artifact found",
+      "can_produce_in_repo": false,
+      "status": "BLOCKED",
+      "exact_owner_action": "Provide staging validation evidence and operator §8.25.7 run records (or authorize alternate approved evidence path)"
+    },
+    {
+      "dependency_id": "EXT-EXIT07-G226",
+      "criterion": "P1-EXIT-07",
+      "blocker_id": "P1-BLK-2026-11-11-G2-26-01",
+      "original_requirement": "Per-seat IC artifact or seat-specific blocker with original IC evidence path",
+      "repo_search_result": "G2-26-SEAT-SPECIFIC-BLOCKER.v1.json documents gap; original IC evidence not located",
+      "can_produce_in_repo": false,
+      "status": "BLOCKED",
+      "exact_owner_action": "Supply original G2-26 IC evidence or authorize final seat disposition"
+    },
+    {
+      "dependency_id": "EXT-D08-SUPP04",
+      "criterion": "D-08",
+      "blocker_id": "P1-BLK-2026-11-11-D08-01",
+      "original_requirement": "Authentic Supplement 04 archive artifact",
+      "repo_search_result": "SUPPLEMENT_04_NOT_FOUND; supplements 01–03 present; HISTORY_INDETERMINATE per ADR §8.81.3",
+      "can_produce_in_repo": false,
+      "fabricated": false,
+      "status": "BLOCKED",
+      "exact_owner_action": "Locate Supplement 04 original or formally accept indeterminacy under OD-D08"
+    },
+    {
+      "dependency_id": "EXT-EXIT09-PG",
+      "criterion": "P1-EXIT-09",
+      "blocker_id": "P1-BLK-2026-11-11-EXIT09-PG-02-DOCKER-INET",
+      "original_requirement": "Isolated PostgreSQL persistence/concurrency suite via phpunit.pgsql.xml + Guard",
+      "repo_search_result": "Shared compose PG not dedicated; disposable Docker fails inet_server_addr loopback check; native PG not available",
+      "can_produce_in_repo": false,
+      "status": "BLOCKED",
+      "exact_owner_action": "Provide disposable PostgreSQL where inet_server_addr() is loopback (or CI service matching Guard)"
+    }
+  ]
+}

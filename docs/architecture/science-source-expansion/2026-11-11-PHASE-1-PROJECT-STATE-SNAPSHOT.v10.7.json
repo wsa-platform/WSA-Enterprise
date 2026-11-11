@@ -1,0 +1,21 @@
+{
+  "schema_id": "adr023.project_state_snapshot.v1",
+  "created_at_utc": "2026-11-11T19:55:00Z",
+  "revision": "10.7",
+  "git": {
+    "branch": "phase-18-m18-ai-marketing-communications",
+    "head_at_start": "c7110aeeded4a3a1152c9e3fb6f221676503760d",
+    "remote_sync_at_start": "0/0",
+    "stash": "empty",
+    "wip": "preserved (unstaged unrelated Feature/config WIP)"
+  },
+  "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "phase1_status": "PHASE_1_PARTIAL",
+  "exit06": "PASS",
+  "exit08": "PARTIAL",
+  "exit09": "PARTIAL / PG NOT_RUN",
+  "exit11": "NOT_RUN",
+  "external_blockers": ["EXIT-05", "EXIT-07", "D-08", "EXIT-09-PG-INET"],
+  "historical_17_reverify": "17/17 ALREADY_ARCHIVED_AND_VERIFIED",
+  "database_inventory": "CLOSED — DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md"
+}

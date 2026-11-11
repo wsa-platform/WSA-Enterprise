@@ -1,14 +1,15 @@
 {
     "schema_version": "1.0",
-    "last_updated": "2026-11-11T19:25:00Z",
+    "last_updated": "2026-11-11T19:55:00Z",
     "repository": "wsa-platform/WSA-Enterprise",
     "branch": "phase-18-m18-ai-marketing-communications",
-    "head": "6f5c08acbcdd99eacd752ad49aca416bc3cfb4e7",
+    "head": "c7110aeeded4a3a1152c9e3fb6f221676503760d",
     "remote_sync": "0/0",
     "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
     "progress_descriptor": "NEAR_COMPLETE",
     "revision_note_10_4": "Rev 10.4: DB/archive discovery READ_ONLY; CR-R101-02 IMPLEMENTATION_CONFORMS; H/I PARTIAL; EXIT statuses unchanged without new closure evidence; no Commit/Push",
-    "revision_note_10_6": "Rev 10.6: EXIT-06/08 PASS; H/I DONE; EXIT-09 PG NOT_RUN; EXIT-05/07/D-08 BLOCKED; EXIT-11 NOT_RUN; commits+push authorized",
+    "revision_note_10_6": "Rev 10.6: EXIT-06 PASS; EXIT-08 corrected PARTIAL; H/I DONE; EXIT-09 PG NOT_RUN; EXIT-05/07/D-08 BLOCKED; EXIT-11 NOT_RUN",
+    "revision_note_10_7": "Rev 10.7: inventory closed; EXIT-09 Docker inet Guard block; 17/17 archive re-verify; EXIT-10/11 reconciled; external blockers preserved",
     "criteria": {
         "P1-EXIT-01": {
             "status": "PASS",
@@ -229,30 +230,31 @@
         },
         "P1-EXIT-09": {
             "status": "PARTIAL",
-            "original_definition_ref": "ADR-023 §8.64.7",
+            "original_definition_ref": "ADR-023 §8.64.7; §8.24.9 item 7 dual-applicable",
             "requirements": [
                 "Focused + regression tests for implemented scopes; PostgreSQL where required"
             ],
             "evidence_files": [
-                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-ASSESSMENT.v9.2.json"
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-TEST-REPORT.v10.7.json"
             ],
             "test_commands": [
-                "phpunit ProjectionOrchestratorRuntimeIntegrationTest + Binder + Constraints + CapVerWriteBoundary + Matrix + CanonicalCompilation"
+                "phpunit -c phpunit.pgsql.xml (attempted Rev10.7; bootstrap refused)"
             ],
             "test_results": {
-                "tests": 22,
-                "assertions": 598,
-                "exit_code": 0,
-                "summary": "R8.4 focused regression green; PostgreSQL Cap suite NOT_RUN (DB_TEST_HOST empty); GAP-07 REQUIRED"
+                "tests": null,
+                "assertions": null,
+                "exit_code": 1,
+                "summary": "PG suite NOT_RUN: compose server not dedicated; disposable Docker fails inet_server_addr loopback Guard"
             },
             "evidence_commits": [
                 "6e13c856dd65592ac05e9671bb8c257f06963034"
             ],
             "blockers": [
-                "P1-BLK-2026-11-11-EXIT09-PG-01"
+                "P1-BLK-2026-11-11-EXIT09-PG-01",
+                "P1-BLK-2026-11-11-EXIT09-PG-02-DOCKER-INET"
             ],
-            "next_action": "Run phpunit.pgsql.xml Cap/persistence-concurrency when DB_TEST_* available",
-            "verified_at": "2026-11-11T17:45:00Z"
+            "next_action": "Provide Guard-compliant disposable PG (inet_server_addr loopback); do not weaken Guard",
+            "verified_at": "2026-11-11T19:50:00Z"
         },
         "P1-EXIT-10": {
             "status": "PARTIAL",
@@ -286,7 +288,9 @@
             "requirements": [
                 "Formal Phase 1 verification report + exit decision after 01–10 PASS"
             ],
-            "evidence_files": [],
+            "evidence_files": [
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-11-GATE-EVALUATION.v10.7.json"
+            ],
             "test_commands": [],
             "test_results": {
                 "tests": null,
@@ -297,14 +301,13 @@
             "evidence_commits": [],
             "blockers": [
                 "P1-EXIT-05",
-                "P1-EXIT-06",
                 "P1-EXIT-07",
                 "P1-EXIT-08",
                 "P1-EXIT-09",
                 "P1-EXIT-10",
                 "D-08"
             ],
-            "next_action": "Execute only when prerequisites PASS",
+            "next_action": "Execute only when prerequisites PASS (EXIT-06 no longer blocking)",
             "verified_at": null
         }
     },

@@ -1,0 +1,14 @@
+{
+  "schema_id": "adr023.exit10_reconciliation.v1",
+  "created_at_utc": "2026-11-11T19:50:00Z",
+  "authoritative": "ADR-023 §8.64.7 P1-EXIT-10 — Matrix updated from evidence only; 109/110 rows in register order; every state cites artifact; register unchanged",
+  "membership": "110.v1 current; 109.v1 immutable",
+  "implementation_evidence": {
+    "matrix_file": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-SOURCE-MATRIX.v110.json",
+    "contract_test": "Current110SourceMatrixContractTest",
+    "this_session": {"included_in": "_tmp-r107-exit06-10.txt", "combined_with_catalog": "16 tests / 681 assertions / EXIT 0"}
+  },
+  "status": "PARTIAL",
+  "rationale": "Matrix integrity contract PASS for membership/structure; final evidence-column update historically depended on EXIT-06..08. EXIT-06 PASS and EXIT-08 PARTIAL (contract packages without endpoint/integration VERIFIED) keep capability/verification columns from claiming full verified-family closure. G2-26 retained without fabricated IC.",
+  "remaining_gap": "Authentic per-seat verified-family / IC evidence for matrix state citations beyond membership contract"
+}

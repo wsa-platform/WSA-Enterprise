@@ -1,0 +1,20 @@
+{
+  "schema_id": "adr023.master_prompt_meta.v1",
+  "revision": "10.7",
+  "title": "Phase 1 Completion, Gap Closure, PostgreSQL Test Verification, Acceptance Reconciliation & Evidence-Based Archival",
+  "received_at_utc": "2026-11-11T19:35:00Z",
+  "source": "Owner Cursor session message (full text retained in agent transcript; not rewritten)",
+  "non_negotiables": [
+    "Phase 1 only",
+    "No DB rediscovery — DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md authoritative",
+    "PostgreSQL only for EXIT-09 isolated Guard-compliant suite",
+    "No force push; scoped staging; preserve WIP",
+    "No fabricate evidence; no weaken acceptance",
+    "cap-r* vs cap-rec* separation",
+    "CSQ identity preserved",
+    "Mission Artifact Archive mandatory Tier1",
+    "Arabic final report"
+  ],
+  "full_prompt_in_repo_file": false,
+  "reason_full_text_not_duplicated": "Avoid silent rewrite of owner prompt; meta + requirements digest archived; transcript is provenance source"
+}

@@ -1,0 +1,48 @@
+{
+  "schema_id": "adr023.exit09_postgresql_test_report.v1",
+  "created_at_utc": "2026-11-11T19:40:00Z",
+  "revision": "10.7",
+  "criterion": "P1-EXIT-09",
+  "authoritative": "ADR-023 §8.64.7 P1-EXIT-09; §8.24.9 item 7 dual-applicable; backend/phpunit.pgsql.xml; PostgresTestDatabaseGuard",
+  "lifecycle": {
+    "postgresql_installed": true,
+    "postgresql_configured": true,
+    "postgresql_reachable": true,
+    "isolated_test_database_identified": true,
+    "test_credentials_ready": true,
+    "test_suite_executed": false,
+    "test_suite_passed": false
+  },
+  "attempts": [
+    {
+      "id": "A1-compose-shared",
+      "target": "wsa-enterprise-postgres-1 hosts wsa_enterprise + wsa_enterprise_test",
+      "result": "REJECTED_BEFORE_RUN",
+      "reason": "PostgresTestDatabaseGuard::assertDedicatedServer — server also hosts operational wsa_enterprise; destructive suite forbidden"
+    },
+    {
+      "id": "A2-disposable-docker",
+      "target": "wsa-pg-exit09-test on 127.0.0.1:55432 / DB wsa_ic_persistence_test only",
+      "connect": "PDO connect succeeded through loopback publish",
+      "result": "NOT_RUN",
+      "exit_code": 1,
+      "bootstrap_message": "PostgreSQL test bootstrap refused: the server answered on [172.17.0.2], not on a loopback address.",
+      "reason": "inet_server_addr() inside Docker returns bridge IP; Guard requires 127.0.0.1/::1. Guard not weakened.",
+      "log": "docs/architecture/science-source-expansion/_tmp-r107-pgsql.txt"
+    }
+  ],
+  "sqlite_portion_rev107": {
+    "note": "Separate SQLite/unit suites executed in Rev 10.6/10.6.1; not re-attributed as PG results"
+  },
+  "overall_criterion_status": "PARTIAL",
+  "classification": "NOT_RUN",
+  "blocker": "P1-BLK-2026-11-11-EXIT09-PG-01",
+  "blocker_refinement": "P1-BLK-2026-11-11-EXIT09-PG-02-DOCKER-INET",
+  "required_corrective_action": "Provide a disposable PostgreSQL whose inet_server_addr() is loopback (native local PG or CI service matching Guard), with DB_TEST_* set and sole non-system database = *_test; then run phpunit -c phpunit.pgsql.xml",
+  "safety": {
+    "operational_env_modified": false,
+    "operational_db_touched": false,
+    "guard_weakened": false,
+    "disposable_container_removed_after_attempt": true
+  }
+}
