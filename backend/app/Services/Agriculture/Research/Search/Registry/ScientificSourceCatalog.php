@@ -106,10 +106,11 @@ final class ScientificSourceCatalog
     }
 
     /**
-     * Resolve a governed registration by ADR membership id (P1-EXIT-06 / §8.24.2 adr_id keying increment).
+     * Resolve a governed registration by ADR membership id (P1-EXIT-06 / §8.24.2 adr_id keying).
      *
      * Legacy EXTERNAL_ONLY sources have no adr_id and are not present in this index.
-     * This method does not claim IC / Cap record references are attached — those remain a separate gap.
+     * Governed registrations expose IC / Cap / identity references via
+     * ScientificSourceRegistration::authoritativeRecordReferences() (from Onboarding Contract).
      */
     public function getByAdrId(string $adrId): ?ScientificSourceRegistration
     {

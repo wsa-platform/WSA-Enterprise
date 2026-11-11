@@ -75,7 +75,7 @@ class ScientificSourceCatalogContractTest extends TestCase
         $this->assertNotNull($registration->familyProfile);
     }
 
-    public function test_governed_seats_are_resolvable_by_adr_id_without_claiming_ic_or_cap_refs(): void
+    public function test_governed_seats_are_resolvable_by_adr_id_with_authoritative_ic_cap_identity_refs(): void
     {
         $catalog = ScientificSourceCatalog::default();
         $byKey = $catalog->get('gbif');
@@ -84,10 +84,64 @@ class ScientificSourceCatalogContractTest extends TestCase
         $this->assertSame($byKey, $byAdr);
         $this->assertContains('G5-04', $catalog->adrIds());
         $this->assertNull($catalog->getByAdrId('G2-26'), 'Membership alone does not invent a runtime registration');
-        $payload = $byAdr->toArray();
-        $this->assertArrayNotHasKey('ic_record', $payload);
-        $this->assertArrayNotHasKey('cap_record', $payload);
-        $this->assertArrayNotHasKey('identity_binding', $payload);
+
+        $expected = [
+            'gbif' => [
+                'adr_id' => 'G5-04',
+                'ic_record' => 'ic-r9-20261016-G5-04-rest',
+                'cap_record' => 'cap-r9-20261016-G5-04-search',
+                'identity_binding' => 'adr023.canonical.seat.G5-04',
+            ],
+            'agris' => [
+                'adr_id' => 'G1-01',
+                'ic_record' => 'ic-r12-20261018-G1-01-bulk-bounded',
+                'cap_record' => 'cap-r12-20261018-G1-01-search',
+                'identity_binding' => 'adr023.canonical.seat.G1-01',
+            ],
+            'dr_duke' => [
+                'adr_id' => 'G1-17',
+                'ic_record' => 'ic-r12-20261018-G1-17-static-limited',
+                'cap_record' => 'cap-r12-20261018-G1-17-search',
+                'identity_binding' => 'adr023.canonical.seat.G1-17',
+            ],
+            'organic_eprints' => [
+                'adr_id' => 'G1-02',
+                'ic_record' => 'ic-r11-20261018-G1-02-oai_pmh',
+                'cap_record' => 'cap-r11-20261018-G1-02-search',
+                'identity_binding' => 'adr023.canonical.seat.G1-02',
+            ],
+            'bhl' => [
+                'adr_id' => 'G6-20',
+                'ic_record' => 'ic-r11-20261018-G6-20-rest',
+                'cap_record' => 'cap-r11-20261018-G6-20-search',
+                'identity_binding' => 'adr023.canonical.seat.G6-20',
+            ],
+        ];
+
+        foreach ($expected as $sourceKey => $refs) {
+            $registration = $catalog->get($sourceKey);
+            $this->assertNotNull($registration, $sourceKey);
+            $this->assertSame($registration, $catalog->getByAdrId($refs['adr_id']), $sourceKey);
+            $bundle = $registration->authoritativeRecordReferences();
+            $this->assertNotNull($bundle, $sourceKey);
+            $this->assertSame($refs['ic_record'], $bundle['ic_record'], $sourceKey);
+            $this->assertSame($refs['cap_record'], $bundle['cap_record'], $sourceKey);
+            $this->assertSame($refs['identity_binding'], $bundle['identity_binding'], $sourceKey);
+            $this->assertNotNull($bundle['onboarding_decision_id'], $sourceKey);
+            $this->assertNotSame([], $bundle['identity_evidence_refs'], $sourceKey);
+
+            $payload = $registration->toArray();
+            $this->assertSame($refs['ic_record'], $payload['ic_record'], $sourceKey);
+            $this->assertSame($refs['cap_record'], $payload['cap_record'], $sourceKey);
+            $this->assertSame($refs['identity_binding'], $payload['identity_binding'], $sourceKey);
+        }
+
+        foreach (self::LEGACY_KEYS as $legacyKey) {
+            $legacy = $catalog->get($legacyKey);
+            $this->assertNotNull($legacy, $legacyKey);
+            $this->assertNull($legacy->authoritativeRecordReferences(), $legacyKey);
+            $this->assertArrayNotHasKey('ic_record', $legacy->toArray(), $legacyKey);
+        }
     }
 
     public function test_only_the_five_legacy_sources_hold_the_legacy_basis_and_only_for_search(): void

@@ -142,10 +142,51 @@ final readonly class ScientificSourceRegistration
         return null;
     }
 
+    /**
+     * Authoritative IC / Cap decision / identity references for governed seats (ADR-023 §8.24.2).
+     *
+     * Resolved from the accepted Onboarding Contract already required at registration time.
+     * Does not invent identifiers; returns null fields when the contract lacks them.
+     * Legacy EXTERNAL_ONLY registrations have no adr_id and return null.
+     *
+     * @return array{
+     *     ic_record: ?string,
+     *     cap_record: ?string,
+     *     identity_binding: ?string,
+     *     onboarding_decision_id: ?string,
+     *     identity_evidence_refs: list<string>
+     * }|null
+     */
+    public function authoritativeRecordReferences(): ?array
+    {
+        if ($this->adrId === null) {
+            return null;
+        }
+
+        $contract = AcceptedOnboardingDecisionCatalog::forAdrId($this->adrId->value);
+        if ($contract === null) {
+            return [
+                'ic_record' => null,
+                'cap_record' => null,
+                'identity_binding' => null,
+                'onboarding_decision_id' => null,
+                'identity_evidence_refs' => [],
+            ];
+        }
+
+        return [
+            'ic_record' => $contract->integrationClassificationRef,
+            'cap_record' => $contract->capabilityDecisionIdentity,
+            'identity_binding' => $contract->canonicalIdentityId?->value,
+            'onboarding_decision_id' => $contract->onboardingDecisionId,
+            'identity_evidence_refs' => $contract->identityEvidenceRefs,
+        ];
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {
-        return [
+        $payload = [
             'source_key' => $this->sourceKey,
             'adapter_class' => $this->adapterClass,
             'adapter_contract_version' => $this->adapterContractVersion,
@@ -161,5 +202,16 @@ final readonly class ScientificSourceRegistration
             ),
             'family_profile' => $this->familyProfile?->toArray(),
         ];
+
+        $refs = $this->authoritativeRecordReferences();
+        if ($refs !== null) {
+            $payload['ic_record'] = $refs['ic_record'];
+            $payload['cap_record'] = $refs['cap_record'];
+            $payload['identity_binding'] = $refs['identity_binding'];
+            $payload['onboarding_decision_id'] = $refs['onboarding_decision_id'];
+            $payload['identity_evidence_refs'] = $refs['identity_evidence_refs'];
+        }
+
+        return $payload;
     }
 }
