@@ -1,0 +1,93 @@
+{
+    "schema_id": "adr023.exit_closure_matrix.v1",
+    "criterion": "P1-EXIT-06",
+    "created_at_utc": "2026-11-11T17:35:00Z",
+    "baseline_head": "88a13d2a00f189780c347df8cc55df1b1948ce71",
+    "authoritative_definition": {
+        "source": "ADR-023 §8.64.7 / §8.24.2",
+        "text": "Implemented only under Gate B; extends ScientificSourceAdapterRegistry (D-01); entries keyed by adr_id that reference IC, identity, and Cap records; Cap writes only through authorized producers; existing five-adapter path preserved"
+    },
+    "reported_status_r84": "PARTIAL (cluster in HEAD)",
+    "canonical_status": "PARTIAL",
+    "sub_criteria": [
+        {
+            "id": "P1-EXIT-06-1",
+            "requirement": "Gate B authorization",
+            "implementation_state": "COMPLETE",
+            "evidence": [
+                "GB-FOUNDATION-01 §8.82.2",
+                "docs/.../2026-11-11-GATE-B-FOUNDATION-01-ACCEPTANCE-CONTRACT.json"
+            ],
+            "tests": null,
+            "gap": null
+        },
+        {
+            "id": "P1-EXIT-06-2",
+            "requirement": "Registry extension with adr_id-keyed entries referencing IC/identity/Cap",
+            "implementation_state": "PARTIAL_ADVANCED",
+            "source_files": [
+                "backend/app/Services/Agriculture/Research/Search/ScientificSourceAdapterRegistry.php",
+                "backend/app/Services/Agriculture/Research/Search/Registry/ScientificSourceCatalog.php",
+                "backend/app/Services/Agriculture/Research/Search/Registry/ScientificSourceRegistration.php"
+            ],
+            "commits": [
+                "cfc9d1b"
+            ],
+            "tests_executed": {
+                "command": "phpunit Family+Registry+Contract+Onboarding+CapVerSeat",
+                "tests": 211,
+                "assertions": 6768,
+                "exit_code": 0,
+                "verified_at": "2026-11-11T17:22:10Z"
+            },
+            "gap": "adr_id secondary index (getByAdrId/adrIds) landed in ScientificSourceCatalog. Lookup by sourceKey remains primary for adapters. Governed entries still lack mandatory IC/identity/Cap record references required by §8.24.2.",
+            "gap_class": "implementation_incomplete"
+        },
+        {
+            "id": "P1-EXIT-06-3",
+            "requirement": "Cap writes only through authorized producers",
+            "implementation_state": "COMPLETE_FOR_WRITE_BOUNDARY",
+            "source_files": [
+                "backend/app/Services/Agriculture/Research/Capability/CapVer/CapVerWriteBoundary.php",
+                "backend/app/Services/Agriculture/Research/Capability/CapVer/CapVerSeatVerificationService.php"
+            ],
+            "tests_executed": {
+                "command": "phpunit CapVerWriteBoundaryTest (+ evidence suite)",
+                "exit_code": 0
+            },
+            "gap": null
+        },
+        {
+            "id": "P1-EXIT-06-4",
+            "requirement": "Existing five-adapter path preserved",
+            "implementation_state": "COMPLETE",
+            "source_files": [
+                "OpenAlexScientificSourceAdapter",
+                "CrossRefScientificSourceAdapter",
+                "SemanticScholarScientificSourceAdapter",
+                "ConsensusScientificSourceAdapter",
+                "FaoStatDeveloperPortalAdapter"
+            ],
+            "commits": [
+                "cfc9d1b"
+            ],
+            "gap": null
+        }
+    ],
+    "missing_implementation": [
+        "Mandatory IC/identity/Cap record references on governed adr_id entries per §8.24.2"
+    ],
+    "missing_tests": [
+        "Contract test asserting adr_id-keyed resolution and IC/Cap reference presence for governed seats"
+    ],
+    "missing_evidence": [],
+    "external_dependencies": [],
+    "owner_decision_required": false,
+    "remaining_blockers": [],
+    "exact_closure_conditions": [
+        "Governed runtime entries resolvable by adr_id",
+        "Each governed entry references IC, identity, and Cap records as required by §8.24.2",
+        "Recorded P1-EXIT-09 results for the implemented registry scope",
+        "No regression of five-adapter path"
+    ]
+}

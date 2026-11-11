@@ -37,12 +37,16 @@ final class ScientificSourceCatalog
     /** @var array<string, ScientificSourceRegistration> */
     private readonly array $registrations;
 
+    /** @var array<string, ScientificSourceRegistration> keyed by adr_id value for governed seats */
+    private readonly array $registrationsByAdrId;
+
     /**
      * @param  list<ScientificSourceRegistration>|null  $registrations  null = production registrations
      */
     public function __construct(?array $registrations = null)
     {
         $byKey = [];
+        $byAdr = [];
         foreach ($registrations ?? self::productionRegistrations() as $registration) {
             if (! $registration instanceof ScientificSourceRegistration) {
                 throw new ScientificSourceRegistryInvariantViolation('Catalog entries must be ScientificSourceRegistration instances.');
@@ -53,9 +57,19 @@ final class ScientificSourceCatalog
                 );
             }
             $byKey[$registration->sourceKey] = $registration;
+            if ($registration->adrId !== null) {
+                $adr = $registration->adrId->value;
+                if (isset($byAdr[$adr])) {
+                    throw new ScientificSourceRegistryInvariantViolation(
+                        "Duplicate registration for adr_id '{$adr}'."
+                    );
+                }
+                $byAdr[$adr] = $registration;
+            }
         }
 
         $this->registrations = $byKey;
+        $this->registrationsByAdrId = $byAdr;
     }
 
     public static function default(): self
@@ -89,6 +103,23 @@ final class ScientificSourceCatalog
     public function get(string $sourceKey): ?ScientificSourceRegistration
     {
         return $this->registrations[$sourceKey] ?? null;
+    }
+
+    /**
+     * Resolve a governed registration by ADR membership id (P1-EXIT-06 / §8.24.2 adr_id keying increment).
+     *
+     * Legacy EXTERNAL_ONLY sources have no adr_id and are not present in this index.
+     * This method does not claim IC / Cap record references are attached — those remain a separate gap.
+     */
+    public function getByAdrId(string $adrId): ?ScientificSourceRegistration
+    {
+        return $this->registrationsByAdrId[$adrId] ?? null;
+    }
+
+    /** @return list<string> */
+    public function adrIds(): array
+    {
+        return array_keys($this->registrationsByAdrId);
     }
 
     /** @return list<string> */

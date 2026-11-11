@@ -1,0 +1,57 @@
+{
+  "schema_id": "adr023.exit09_postgresql_assessment.v1",
+  "created_at_utc": "2026-11-11T17:40:00Z",
+  "criterion": "P1-EXIT-09",
+  "authoritative_definition": "ADR-023 §8.64.7: focused SQLite tests; for persistence and concurrency, isolated PostgreSQL via guarded suite (incl. single CURRENT Cap fact under concurrency §8.23.8); regression five-source/CSQ/Home-Crop; skipped work marked NOT RUN. Until §8.64.7 confirmed, §8.24.9 item 7 also applies.",
+  "questions": {
+    "is_postgresql_explicitly_required_by_exit_09": true,
+    "applies_to_primary_operational_database": false,
+    "applies_to_specific_integration_test": true,
+    "is_cap_postgresql_test_mandatory_for_phase1": true,
+    "is_phpunit_pgsql_xml_authoritative_mechanism": true,
+    "other_tests_satisfy_non_pg_parts": true
+  },
+  "operational_database_finding": {
+    "config_default_logic": "backend/config/database.php: env('DB_CONNECTION') ?? match APP_ENV (testing→sqlite, production→pgsql, else DATABASE_URL?pgsql:sqlite)",
+    "env_example": "backend/.env.example DB_CONNECTION=pgsql (example only)",
+    "local_env_observed": "backend/.env has DB_CONNECTION=pgsql (value observed; secrets not recorded)",
+    "separate_stores": {
+      "capver": "sqlite via CAPVER_DATABASE → storage/app/capver.sqlite (PROTECTED)",
+      "scientific_record_store": "sqlite scientific_record_store.sqlite (PROTECTED)",
+      "mission_artifact_archive": "sqlite mission-artifacts store"
+    },
+    "conclusion": "PostgreSQL may be configured as Laravel default connection in some environments, but CapVer LocalIndex/Archive remain separate SQLite stores. EXIT-09 does NOT authorize migrating operational or SQLite stores to PostgreSQL."
+  },
+  "dimensions": {
+    "non_postgresql_regression": {
+      "status": "PASS_RECORDED",
+      "evidence": [
+        "Evidence suite 22/598 EXIT 0",
+        "Cluster suite 211/6768 EXIT 0",
+        "Catalog contract tests including adr_id lookup"
+      ]
+    },
+    "postgresql_specific_integration": {
+      "status": "NOT_RUN",
+      "reason": "DB_TEST_HOST empty; phpunit.pgsql.xml requires isolated DB_TEST_* + destructive-reset authorization on *_test database",
+      "mechanism": "backend/phpunit.pgsql.xml → tests/Pgsql + IntegrationClassification under bootstrap-pgsql.php",
+      "q07_note": "ADR Q-07: current phpunit.pgsql.xml covers IC primarily; Cap concurrency §8.23.8 remains required for Cap scopes under EXIT-09"
+    },
+    "required_exit_condition": {
+      "sqlite_focused": "REQUIRED — partially satisfied for implemented scopes",
+      "pg_persistence_concurrency": "REQUIRED for implemented persistence/concurrency scopes — NOT_RUN this environment",
+      "regression": "REQUIRED — partially satisfied"
+    },
+    "environment_availability": "DB_TEST_* unavailable",
+    "overall_criterion_status": "PARTIAL"
+  },
+  "closure_evidence_still_missing": [
+    "Isolated PostgreSQL Cap concurrency (single CURRENT Cap fact) results with commands/exit codes",
+    "Or documented NOT RUN with environment blocker if Cap PG suite cannot run — still prevents PASS"
+  ],
+  "blocker_suggestion": {
+    "id": "P1-BLK-2026-11-11-EXIT09-PG-01",
+    "description": "Isolated PostgreSQL Cap/persistence-concurrency suite NOT_RUN (DB_TEST_* unavailable)",
+    "does_not_authorize": "Changing primary operational database or migrating SQLite stores"
+  }
+}

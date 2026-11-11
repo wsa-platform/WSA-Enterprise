@@ -1,0 +1,152 @@
+{
+  "schema_id": "adr023.phase1_dependency_matrix.v1",
+  "created_at_utc": "2026-11-11T17:35:00Z",
+  "baseline_head": "88a13d2a00f189780c347df8cc55df1b1948ce71",
+  "rule": "Only dependencies supported by ADR/contract/verified integration. Suggested order ≠ hard prerequisite.",
+  "relationships": [
+    {
+      "source_criterion": "P1-EXIT-01",
+      "dependent_criterion": "P1-EXIT-02",
+      "dependency_type": "approval",
+      "authoritative_basis": "ADR-023 §8.64.7",
+      "exact_reference": "P1-EXIT-02 Blocks/depends on P1-EXIT-01 decisions",
+      "mandatory": true,
+      "impact_if_unresolved": "Cannot record Gate A for overlapping items",
+      "independent_work": "None for same-scope Gate A",
+      "verification": "Inspect §8.64.7 table",
+      "status": "SATISFIED"
+    },
+    {
+      "source_criterion": "P1-EXIT-02",
+      "dependent_criterion": "P1-EXIT-03",
+      "dependency_type": "approval",
+      "authoritative_basis": "ADR-023 §8.64.4 / §8.64.7",
+      "exact_reference": "Gate B requires Gate A for same scope",
+      "mandatory": true,
+      "impact_if_unresolved": "No implementation authorization",
+      "independent_work": "Evidence/ledger review",
+      "verification": "GA/GB-FOUNDATION-01 present",
+      "status": "SATISFIED"
+    },
+    {
+      "source_criterion": "P1-EXIT-03",
+      "dependent_criterion": "P1-EXIT-06",
+      "dependency_type": "approval",
+      "authoritative_basis": "ADR-023 §8.64.7 P1-EXIT-06",
+      "exact_reference": "Implemented only under Gate B",
+      "mandatory": true,
+      "impact_if_unresolved": "Registry integration unauthorized",
+      "independent_work": "Design contracts under Gate A",
+      "verification": "GB-FOUNDATION-01 + cfc9d1b",
+      "status": "SATISFIED"
+    },
+    {
+      "source_criterion": "P1-EXIT-03",
+      "dependent_criterion": "P1-EXIT-08",
+      "dependency_type": "approval",
+      "authoritative_basis": "ADR-023 §8.64.7 P1-EXIT-08",
+      "exact_reference": "Adapter code under Gate B",
+      "mandatory": true,
+      "impact_if_unresolved": "Adapters unauthorized",
+      "independent_work": "Family contract design review",
+      "verification": "GB-FOUNDATION-01 + Family tree in HEAD",
+      "status": "SATISFIED"
+    },
+    {
+      "source_criterion": "P1-EXIT-01-f",
+      "dependent_criterion": "P1-EXIT-05",
+      "dependency_type": "operational",
+      "authoritative_basis": "ADR-023 §8.64.7 / §8.25.10",
+      "exact_reference": "Staging validates decided deployment order",
+      "mandatory": true,
+      "impact_if_unresolved": "EXIT-05 cannot close",
+      "independent_work": "Checklist prep only",
+      "verification": "Order decided; staging evidence absent",
+      "status": "OPEN_EXTERNAL"
+    },
+    {
+      "source_criterion": "P1-EXIT-04",
+      "dependent_criterion": "P1-EXIT-05",
+      "dependency_type": "suggested_execution_order",
+      "authoritative_basis": "§8.25.10 items 1–2 vs 3–4",
+      "exact_reference": "Technical persistence precedes operational closure",
+      "mandatory": false,
+      "impact_if_unresolved": "None for 04",
+      "independent_work": "04 already PASS qualified",
+      "verification": "IC levels §8.63.6",
+      "status": "NON_BLOCKING"
+    },
+    {
+      "source_criterion": "P1-EXIT-06",
+      "dependent_criterion": "P1-EXIT-08",
+      "dependency_type": "suggested_execution_order",
+      "authoritative_basis": "Shared GB-FOUNDATION-01 cluster — not a formal ADR hard prerequisite",
+      "exact_reference": "Rev 9.2 independent-work rule; EXIT-08 closure matrix independence note",
+      "mandatory": false,
+      "impact_if_unresolved": "Does not formally block EXIT-08",
+      "independent_work": "Family adapters and verified-family evidence",
+      "verification": "No ADR clause requiring 06 PASS before 08",
+      "status": "NON_MANDATORY"
+    },
+    {
+      "source_criterion": "P1-EXIT-09",
+      "dependent_criterion": "P1-EXIT-06",
+      "dependency_type": "evidence",
+      "authoritative_basis": "ADR-023 §8.64.7 P1-EXIT-06 evidence column",
+      "exact_reference": "Evidence required includes results of P1-EXIT-09",
+      "mandatory": true,
+      "impact_if_unresolved": "Cannot fully close 06 without recorded 09 results for implemented scope",
+      "independent_work": "Implement registry gaps; run SQLite suites now",
+      "verification": "Cluster suite 211/6768 EXIT 0 recorded; PG Cap concurrency NOT_RUN",
+      "status": "PARTIAL"
+    },
+    {
+      "source_criterion": "P1-EXIT-06",
+      "dependent_criterion": "P1-EXIT-10",
+      "dependency_type": "evidence",
+      "authoritative_basis": "ADR-023 §8.64.7 P1-EXIT-10",
+      "exact_reference": "Final matrix update depends on 06–08; membership integrity independently verifiable",
+      "mandatory": false,
+      "impact_if_unresolved": "Final capability-state matrix columns may lag",
+      "independent_work": "Current110SourceMatrixContractTest",
+      "verification": "1/455 EXIT 0 membership integrity",
+      "status": "PARTIAL"
+    },
+    {
+      "source_criterion": "P1-EXIT-01",
+      "dependent_criterion": "P1-EXIT-11",
+      "dependency_type": "hard_prerequisite",
+      "authoritative_basis": "ADR-023 §8.64.7 Rule",
+      "exact_reference": "Exit only when every item PASS + P1-EXIT-11 decision",
+      "mandatory": true,
+      "impact_if_unresolved": "Cannot declare Phase 1 complete",
+      "independent_work": "Prepare verification report draft only",
+      "verification": "Multiple criteria not PASS",
+      "status": "OPEN"
+    },
+    {
+      "source_criterion": "D-08",
+      "dependent_criterion": "P1-EXIT-11",
+      "dependency_type": "evidence",
+      "authoritative_basis": "OD-D08 / project Phase 1 archival completeness practice",
+      "exact_reference": "D-08 blocker register; Supplement 04",
+      "mandatory": true,
+      "impact_if_unresolved": "Archival completeness blocker remains for full Phase 1 package",
+      "independent_work": "All non-archive engineering criteria",
+      "verification": "SUPPLEMENT_04_NOT_FOUND",
+      "status": "OPEN_EXTERNAL"
+    },
+    {
+      "source_criterion": "AUD",
+      "dependent_criterion": "none",
+      "dependency_type": "none",
+      "authoritative_basis": "Blocker AUD-REF-01",
+      "exact_reference": "AUD-01..15 are UNVERIFIED_REFERENCE aliases, not independent exit criteria",
+      "mandatory": false,
+      "impact_if_unresolved": "Do not invent AUD history",
+      "independent_work": "All Phase 1 exits",
+      "verification": "No authoritative AUD register",
+      "status": "NOT_AN_EXIT_CRITERION"
+    }
+  ]
+}

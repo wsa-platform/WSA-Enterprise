@@ -1,0 +1,80 @@
+{
+  "schema_id": "adr023.exit_closure_matrix.v1",
+  "criterion": "P1-EXIT-08",
+  "created_at_utc": "2026-11-11T17:35:00Z",
+  "baseline_head": "88a13d2a00f189780c347df8cc55df1b1948ce71",
+  "authoritative_definition": {
+    "source": "ADR-023 §8.64.7 / §8.24.5",
+    "text": "Adapters only for verified access families, one per family with per-seat constraints; Stage-3 reused only where identity binding proves same resource; no speculative adapters; query construction stays with Builder (D-04)"
+  },
+  "reported_status_r84": "PARTIAL (cluster in HEAD)",
+  "canonical_status": "PARTIAL",
+  "sub_criteria": [
+    {
+      "id": "P1-EXIT-08-1",
+      "requirement": "Gate B authorization for access-family adapters",
+      "implementation_state": "COMPLETE",
+      "evidence": ["GB-FOUNDATION-01", "GATE-B-FOUNDATION-01-ACCEPTANCE-CONTRACT.json"],
+      "gap": null
+    },
+    {
+      "id": "P1-EXIT-08-2",
+      "requirement": "Family adapter implementations (Rest / OAI-PMH / Bulk) under contracts",
+      "implementation_state": "COMPLETE_CODE_AND_TESTS",
+      "source_files": [
+        "backend/app/Services/Agriculture/Research/Search/Family/",
+        "backend/app/Services/Agriculture/Research/Search/Contract/",
+        "backend/app/Contracts/ScientificSourceAdapterV2Interface.php"
+      ],
+      "commits": ["cfc9d1b"],
+      "tests_executed": {
+        "command": "phpunit Family+Registry+Contract+Onboarding+CapVerSeat",
+        "tests": 211,
+        "assertions": 6768,
+        "exit_code": 0,
+        "verified_at": "2026-11-11T17:22:10Z"
+      },
+      "gap": "Authoritative criterion requires adapters only for verified access families with authentic family-verification evidence packages. Code+tests landed; per-family verified-evidence package completeness remains incomplete for full PASS.",
+      "gap_class": "evidence_missing"
+    },
+    {
+      "id": "P1-EXIT-08-3",
+      "requirement": "Builder retains HTTP query construction (D-04 / OD-C)",
+      "implementation_state": "COMPLETE",
+      "tests_executed": {
+        "command": "phpunit ProjectionOrchestratorRuntimeIntegrationTest",
+        "exit_code": 0
+      },
+      "gap": null
+    },
+    {
+      "id": "P1-EXIT-08-4",
+      "requirement": "Stage-3 reuse only with identity binding",
+      "implementation_state": "PARTIAL",
+      "source_files": [
+        "backend/app/Services/Agriculture/Research/Coexistence/Stage3SourceKeyIdentityBridge.php",
+        "backend/app/Services/Agriculture/Research/Search/Registry/ScientificSourceRegistration.php"
+      ],
+      "gap": "Identity binding infrastructure exists; not every Stage-3 reuse path is proven with persisted identity-binding evidence for all seats.",
+      "gap_class": "integration_incomplete"
+    }
+  ],
+  "missing_implementation": [],
+  "missing_tests": [
+    "Additional verified-family evidence package contract tests keyed to authentic family verification artifacts"
+  ],
+  "missing_evidence": [
+    "Complete verified access-family evidence packages for each family claimed under §8.24.5"
+  ],
+  "external_dependencies": [],
+  "owner_decision_required": false,
+  "assumption_refs": ["ASM-R82-03"],
+  "remaining_blockers": [],
+  "exact_closure_conditions": [
+    "Verified family evidence packages for each authorized family",
+    "No speculative adapters beyond Gate B scope",
+    "D-04 Builder ownership preserved under regression",
+    "Identity-binding constraints enforced where Stage-3 adapters are reused"
+  ],
+  "independence_from_exit_06": "EXIT-08 may progress independently of full adr_id-keyed registry completion; shared GB-FOUNDATION-01 authorization and OD-C/D-04 constraints apply to both."
+}

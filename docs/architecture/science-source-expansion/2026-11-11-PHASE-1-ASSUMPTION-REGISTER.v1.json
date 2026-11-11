@@ -1,66 +1,108 @@
 {
-  "schema_id": "adr023.phase1_assumption_register.v1",
-  "created_at_utc": "2026-11-11T14:30:00Z",
-  "assumptions": [
-    {
-      "assumption_id": "ASM-R82-01",
-      "description": "Rev 8.2 §2 owner pre-approval is sufficient authority to record GA-FOUNDATION-01 / GB-FOUNDATION-01 without a new interactive Gate packet",
-      "source_or_reason": "Rev 8.2 §2.1–2.2 explicit Gate A/B pre-approval",
-      "confidence": "HIGH",
-      "impact": "Enables P1-EXIT-02/03 decision records",
-      "affected_criteria": ["P1-EXIT-02", "P1-EXIT-03"],
-      "verification_method": "Cite Rev 8.2 archived prompt SHA + ADR §8.82",
-      "owner_decision_required": false,
-      "status": "VERIFIED",
-      "date": "2026-11-11"
-    },
-    {
-      "assumption_id": "ASM-R82-02",
-      "description": "§8.63.8 seven-step IC→Capability→registry→activation order is the correct Gate A decision for P1-EXIT-01(e)",
-      "source_or_reason": "§8.63.8 conditional design requirement; chosen under Rev 8.2 pre-approval as NEW_ENGINEERING_DECISION aligning with IC-first proposals",
-      "confidence": "MEDIUM",
-      "impact": "Unblocks P1-EXIT-01(e) documentation",
-      "affected_criteria": ["P1-EXIT-01"],
-      "verification_method": "Architecture review against D-09 separation; no runtime reorder without tests",
-      "owner_decision_required": false,
-      "status": "INFERRED",
-      "date": "2026-11-11"
-    },
-    {
-      "assumption_id": "ASM-R82-03",
-      "description": "Existing five Stage-3 adapters (OpenAlex, Semantic Scholar, CrossRef, Consensus, FAOSTAT path) map to verified access families for P1-EXIT-08 without new speculative adapters",
-      "source_or_reason": "Live production path + Family WIP (Rest/OaiPmh/Bulk); §8.24.5",
-      "confidence": "MEDIUM",
-      "impact": "Scopes GB-FOUNDATION-01 adapter authorization",
-      "affected_criteria": ["P1-EXIT-08"],
-      "verification_method": "Family contract tests + conformance tests under Gate B",
-      "owner_decision_required": false,
-      "status": "UNVERIFIED",
-      "date": "2026-11-11"
-    },
-    {
-      "assumption_id": "ASM-R82-04",
-      "description": "Supplement 04 was referenced/planned but never created as an authentic archive artifact",
-      "source_or_reason": "ADR §8.80.4 / §8.81.3; no git deletion path",
-      "confidence": "MEDIUM",
-      "impact": "D-08 remains open; GAP-05",
-      "affected_criteria": ["D-08"],
-      "verification_method": "Historical search; cannot prove negative absolutely",
-      "owner_decision_required": true,
-      "status": "INFERRED",
-      "date": "2026-11-11"
-    },
-    {
-      "assumption_id": "ASM-R82-05",
-      "description": "Real staging + authorized operator §8.25.7 runs are unavailable in this engineering environment",
-      "source_or_reason": "No production/staging operator credentials; protected DBs must not be used",
-      "confidence": "HIGH",
-      "impact": "P1-EXIT-05 cannot PASS without external evidence",
-      "affected_criteria": ["P1-EXIT-05"],
-      "verification_method": "Document BLOCKED_BY_EXTERNAL_DEPENDENCY; implement dry-run runner only if safe",
-      "owner_decision_required": true,
-      "status": "VERIFIED",
-      "date": "2026-11-11"
-    }
-  ]
+    "schema_id": "adr023.phase1_assumption_register.v1",
+    "created_at_utc": "2026-11-11T14:30:00Z",
+    "assumptions": [
+        {
+            "assumption_id": "ASM-R82-01",
+            "description": "Rev 8.2 §2 owner pre-approval is sufficient authority to record GA-FOUNDATION-01 / GB-FOUNDATION-01 without a new interactive Gate packet",
+            "source_or_reason": "Rev 8.2 §2.1–2.2 explicit Gate A/B pre-approval",
+            "confidence": "HIGH",
+            "impact": "Enables P1-EXIT-02/03 decision records",
+            "affected_criteria": [
+                "P1-EXIT-02",
+                "P1-EXIT-03"
+            ],
+            "verification_method": "Cite Rev 8.2 archived prompt SHA + ADR §8.82",
+            "owner_decision_required": false,
+            "status": "VERIFIED",
+            "date": "2026-11-11"
+        },
+        {
+            "assumption_id": "ASM-R82-02",
+            "description": "§8.63.8 seven-step IC→Capability→registry→activation order is the correct Gate A decision for P1-EXIT-01(e)",
+            "source_or_reason": "§8.63.8 conditional design requirement; chosen under Rev 8.2 pre-approval as NEW_ENGINEERING_DECISION aligning with IC-first proposals",
+            "confidence": "MEDIUM",
+            "impact": "Unblocks P1-EXIT-01(e) documentation",
+            "affected_criteria": [
+                "P1-EXIT-01"
+            ],
+            "verification_method": "Architecture review against D-09 separation; no runtime reorder without tests",
+            "owner_decision_required": false,
+            "status": "INFERRED",
+            "date": "2026-11-11"
+        },
+        {
+            "assumption_id": "ASM-R82-03",
+            "description": "Existing five Stage-3 adapters (OpenAlex, Semantic Scholar, CrossRef, Consensus, FAOSTAT path) map to verified access families for P1-EXIT-08 without new speculative adapters",
+            "source_or_reason": "Live production path + Family WIP (Rest/OaiPmh/Bulk); §8.24.5",
+            "confidence": "MEDIUM",
+            "impact": "Scopes GB-FOUNDATION-01 adapter authorization",
+            "affected_criteria": [
+                "P1-EXIT-08"
+            ],
+            "verification_method": "Family contract tests + conformance tests under Gate B",
+            "owner_decision_required": false,
+            "status": "UNVERIFIED",
+            "date": "2026-11-11"
+        },
+        {
+            "assumption_id": "ASM-R82-04",
+            "description": "Supplement 04 was referenced/planned but never created as an authentic archive artifact",
+            "source_or_reason": "ADR §8.80.4 / §8.81.3; no git deletion path",
+            "confidence": "MEDIUM",
+            "impact": "D-08 remains open; GAP-05",
+            "affected_criteria": [
+                "D-08"
+            ],
+            "verification_method": "Historical search; cannot prove negative absolutely",
+            "owner_decision_required": true,
+            "status": "INFERRED",
+            "date": "2026-11-11"
+        },
+        {
+            "assumption_id": "ASM-R82-05",
+            "description": "Real staging + authorized operator §8.25.7 runs are unavailable in this engineering environment",
+            "source_or_reason": "No production/staging operator credentials; protected DBs must not be used",
+            "confidence": "HIGH",
+            "impact": "P1-EXIT-05 cannot PASS without external evidence",
+            "affected_criteria": [
+                "P1-EXIT-05"
+            ],
+            "verification_method": "Document BLOCKED_BY_EXTERNAL_DEPENDENCY; implement dry-run runner only if safe",
+            "owner_decision_required": true,
+            "status": "VERIFIED",
+            "date": "2026-11-11"
+        },
+        {
+            "assumption_id": "ASM-R92-01",
+            "description": "Laravel default connection may be pgsql when .env sets DB_CONNECTION=pgsql, but CapVer/LocalIndex/Archive remain separate SQLite stores; EXIT-09 PG requirement is integration-test scoped only",
+            "source_or_reason": "config/database.php + protected sqlite paths + ADR EXIT-09 wording",
+            "confidence": "HIGH",
+            "impact": "Prevents mis-migrating operational/SQLite stores; keeps EXIT-09 PARTIAL until DB_TEST_* Cap suite runs",
+            "affected_criteria": [
+                "P1-EXIT-09"
+            ],
+            "verification_method": "Inspect config + .env key presence without printing secrets; EXIT-09 assessment v9.2",
+            "owner_decision_required": false,
+            "status": "VERIFIED",
+            "date": "2026-11-11",
+            "resolution_verification_evidence": "2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-ASSESSMENT.v9.2.json"
+        },
+        {
+            "assumption_id": "ASM-R92-02",
+            "description": "getByAdrId catalog index advances §8.24.2 keying but does not satisfy mandatory IC/identity/Cap record references on governed entries",
+            "source_or_reason": "ADR §8.24.2 / EXIT-06 closure matrix",
+            "confidence": "HIGH",
+            "impact": "EXIT-06 remains PARTIAL",
+            "affected_criteria": [
+                "P1-EXIT-06"
+            ],
+            "verification_method": "ScientificSourceCatalogContractTest::test_governed_seats_are_resolvable_by_adr_id_without_claiming_ic_or_cap_refs",
+            "owner_decision_required": false,
+            "status": "VERIFIED",
+            "date": "2026-11-11",
+            "resolution_verification_evidence": "Catalog contract test EXIT 0 (15/149)"
+        }
+    ],
+    "updated_at_utc": "2026-11-11T17:45:00Z"
 }

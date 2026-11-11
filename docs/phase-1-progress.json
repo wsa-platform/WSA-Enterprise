@@ -1,9 +1,9 @@
 {
     "schema_version": "1.0",
-    "last_updated": "2026-11-11T16:14:30Z",
+    "last_updated": "2026-11-11T17:45:00Z",
     "repository": "wsa-platform/WSA-Enterprise",
     "branch": "phase-18-m18-ai-marketing-communications",
-    "head": "1e85419dfe55261bab5f7b8207aab7b5177301f5",
+    "head": "88a13d2a00f189780c347df8cc55df1b1948ce71",
     "remote_sync": "0/0",
     "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
     "progress_descriptor": "NEAR_COMPLETE",
@@ -29,10 +29,10 @@
                 "phpunit CapVerWriteBoundary + ProjectionOrchestratorRuntimeIntegration + binder/constraints"
             ],
             "test_results": {
-                "tests": null,
-                "assertions": null,
-                "exit_code": null,
-                "summary": "Decisions a–f recorded; CapVer+OD-C enforcement previously proven"
+                "tests": 22,
+                "assertions": 598,
+                "exit_code": 0,
+                "summary": "Rev9.2 evidence suite green"
             },
             "evidence_commits": [
                 "1e0e301",
@@ -42,7 +42,7 @@
             ],
             "blockers": [],
             "next_action": "Preserve; staging validation remains under P1-EXIT-05",
-            "verified_at": "2026-11-11T14:45:00Z"
+            "verified_at": "2026-11-11T17:22:00Z"
         },
         "P1-EXIT-02": {
             "status": "PASS",
@@ -141,23 +141,23 @@
                 "Runtime Source Registry + Cap integration under Gate B"
             ],
             "evidence_files": [
-                "docs/architecture/science-source-expansion/2026-11-11-GATE-B-FOUNDATION-01-ACCEPTANCE-CONTRACT.json",
-                "backend/app/Providers/ScientificSourceRuntimeServiceProvider.php"
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-06-CLOSURE-MATRIX.v9.2.json",
+                "backend/app/Services/Agriculture/Research/Search/Registry/ScientificSourceCatalog.php"
             ],
             "test_commands": [],
             "test_results": {
-                "tests": 232,
-                "assertions": 6911,
+                "tests": 211,
+                "assertions": 6768,
                 "exit_code": 0,
-                "summary": "Coupled Registry/Family/Onboarding/CapVerSeat/Projection suite"
+                "summary": "Cluster suite; catalog adr_id index 15/149"
             },
             "evidence_commits": [
                 "cfc9d1b",
                 "efd1e7d"
             ],
             "blockers": [],
-            "next_action": "Registry/Family landed; deepen IC/identity/Cap references per §8.24.2",
-            "verified_at": "2026-11-11T15:55:00Z"
+            "next_action": "Attach IC/identity/Cap references on governed adr_id entries per §8.24.2",
+            "verified_at": "2026-11-11T17:45:00Z"
         },
         "P1-EXIT-07": {
             "status": "BLOCKED",
@@ -190,13 +190,15 @@
             "requirements": [
                 "Verified access-family adapters under Gate B; Builder keeps query construction"
             ],
-            "evidence_files": [],
+            "evidence_files": [
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-08-CLOSURE-MATRIX.v9.2.json"
+            ],
             "test_commands": [],
             "test_results": {
-                "tests": 232,
-                "assertions": 6911,
+                "tests": 211,
+                "assertions": 6768,
                 "exit_code": 0,
-                "summary": "Coupled Registry/Family/Onboarding/CapVerSeat/Projection suite"
+                "summary": "Family/Contract cluster green; verified-family evidence packages incomplete"
             },
             "evidence_commits": [
                 "cfc9d1b",
@@ -204,7 +206,7 @@
             ],
             "blockers": [],
             "next_action": "Continue verified-family evidence packages; adapters landed under GB-FOUNDATION-01",
-            "verified_at": "2026-11-11T15:55:00Z"
+            "verified_at": "2026-11-11T17:45:00Z"
         },
         "P1-EXIT-09": {
             "status": "PARTIAL",
@@ -213,7 +215,7 @@
                 "Focused + regression tests for implemented scopes; PostgreSQL where required"
             ],
             "evidence_files": [
-                "backend/tests/Unit/Agriculture/Research/Search/ProjectionOrchestratorRuntimeIntegrationTest.php"
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-ASSESSMENT.v9.2.json"
             ],
             "test_commands": [
                 "phpunit ProjectionOrchestratorRuntimeIntegrationTest + Binder + Constraints + CapVerWriteBoundary + Matrix + CanonicalCompilation"
@@ -227,9 +229,11 @@
             "evidence_commits": [
                 "6e13c856dd65592ac05e9671bb8c257f06963034"
             ],
-            "blockers": [],
-            "next_action": "Run phpunit.pgsql.xml when isolated DB_TEST_* available",
-            "verified_at": "2026-11-11T15:55:00Z"
+            "blockers": [
+                "P1-BLK-2026-11-11-EXIT09-PG-01"
+            ],
+            "next_action": "Run phpunit.pgsql.xml Cap/persistence-concurrency when DB_TEST_* available",
+            "verified_at": "2026-11-11T17:45:00Z"
         },
         "P1-EXIT-10": {
             "status": "PARTIAL",
@@ -485,15 +489,17 @@
         }
     },
     "next_session_focus": [
-        "P1-EXIT-05 external staging/operator evidence",
-        "PostgreSQL Cap suite when DB_TEST_* available (GAP-07 REQUIRED)",
-        "G2-26 authentic evidence (no fabrication)",
-        "D-08 Supplement 04 authentic material or owner archival rule"
+        "P1-EXIT-06 IC/identity/Cap refs on adr_id entries",
+        "P1-EXIT-08 verified-family evidence packages",
+        "P1-EXIT-09 isolated PostgreSQL Cap suite (DB_TEST_*)",
+        "P1-EXIT-05/07/D-08 authentic external evidence"
     ],
-    "last_checkpoint": "Follow-up: superseded stale explore@6ada6fe; CAPVERSEAT-WIP-01 + WIP-COUPLING-01 marked RESOLVED in blocker register",
+    "last_checkpoint": "Rev9.2: baseline locked; 88a13d2 verified as HEAD; EXIT-01..04 evidence verified; EXIT-06 adr_id index; EXIT-09 PG assessed REQUIRED+NOT_RUN",
     "gap_report": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV8.4-GAP-01-08-REPORT.md",
-    "acceptance_baseline": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ACCEPTANCE-BASELINE.v1.json",
+    "acceptance_baseline": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ACCEPTANCE-BASELINE.v9.2.json",
     "assumption_register": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ASSUMPTION-REGISTER.v1.json",
     "wip_coupling_hazard": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WIP-COUPLING-HAZARD-R83.v1.json",
-    "push_safety_gate": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-PUSH-SAFETY-GATE.v1.json"
+    "push_safety_gate": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-PUSH-SAFETY-GATE.v1.json",
+    "evidence_ledger": "docs/evidence-ledger.json",
+    "dependency_matrix": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-DEPENDENCY-MATRIX.v9.2.json"
 }

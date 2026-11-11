@@ -2,14 +2,15 @@
     "schema_id": "adr023.phase1_blocker_register.v1",
     "governance_reference": "ADR-023/section-8.80;ADR-023/section-8.81;ADR-023/section-8.82",
     "created_at": "2026-11-11T00:00:00Z",
-    "updated_at": "2026-11-11T16:15:00Z",
+    "updated_at": "2026-11-11T17:45:00Z",
     "notes": [
         "AUD-01 through AUD-15 are not an authoritative architecture register in this repository.",
         "Unsupported AUD labels are recorded as UNVERIFIED_REFERENCE aliases only.",
         "This register does not rewrite historical reports.",
         "Rev 8.2: GA-FOUNDATION-01 / GB-FOUNDATION-01 recorded under owner pre-approval; Gate A/B blockers resolved for foundation+IC-inventory scopes.",
         "Rev 8.3/8.4: GB-FOUNDATION-01 coupled Registry/Family/Contract/Onboarding/CapVerSeat cluster committed (cfc9d1b) and remote-synced; WIP-COUPLING-01 and CAPVERSEAT-WIP-01 resolved.",
-        "Late explore snapshot at historical HEAD 6ada6fe is SUPERSEDED by HEAD >= cfc9d1b / 1e85419; do not re-open Gate A/B foundation or reclassify committed cluster as untracked."
+        "Late explore snapshot at historical HEAD 6ada6fe is SUPERSEDED by HEAD >= cfc9d1b / 1e85419; do not re-open Gate A/B foundation or reclassify committed cluster as untracked.",
+        "Rev 9.2: evidence ledger + acceptance baseline v9.2 locked; EXIT-09 PG assessment; adr_id catalog index landed."
     ],
     "entries": [
         {
@@ -95,6 +96,16 @@
             "dependency": "none",
             "resolved_at": "2026-11-11T15:45:00Z",
             "resolved_in_commit": "cfc9d1b"
+        },
+        {
+            "blocker_id": "P1-BLK-2026-11-11-EXIT09-PG-01",
+            "historical_aud_alias": null,
+            "original_reference": "P1-EXIT-09; §8.64.7; §8.23.8; phpunit.pgsql.xml",
+            "supporting_evidence": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT-09-POSTGRESQL-ASSESSMENT.v9.2.json",
+            "affected_exit_criterion": "P1-EXIT-09",
+            "current_status": "BLOCKED",
+            "resolution_condition": "Run isolated DB_TEST_* PostgreSQL Cap/persistence-concurrency suite and record commands/exit codes; do not migrate primary/SQLite stores",
+            "dependency": "Isolated disposable *_test PostgreSQL environment"
         }
     ]
 }

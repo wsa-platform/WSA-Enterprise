@@ -75,6 +75,21 @@ class ScientificSourceCatalogContractTest extends TestCase
         $this->assertNotNull($registration->familyProfile);
     }
 
+    public function test_governed_seats_are_resolvable_by_adr_id_without_claiming_ic_or_cap_refs(): void
+    {
+        $catalog = ScientificSourceCatalog::default();
+        $byKey = $catalog->get('gbif');
+        $byAdr = $catalog->getByAdrId('G5-04');
+        $this->assertNotNull($byKey);
+        $this->assertSame($byKey, $byAdr);
+        $this->assertContains('G5-04', $catalog->adrIds());
+        $this->assertNull($catalog->getByAdrId('G2-26'), 'Membership alone does not invent a runtime registration');
+        $payload = $byAdr->toArray();
+        $this->assertArrayNotHasKey('ic_record', $payload);
+        $this->assertArrayNotHasKey('cap_record', $payload);
+        $this->assertArrayNotHasKey('identity_binding', $payload);
+    }
+
     public function test_only_the_five_legacy_sources_hold_the_legacy_basis_and_only_for_search(): void
     {
         foreach (self::LEGACY_KEYS as $key) {

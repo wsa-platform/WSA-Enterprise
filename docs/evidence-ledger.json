@@ -1,0 +1,211 @@
+{
+  "schema_version": "1.0",
+  "schema_id": "adr023.phase1_evidence_ledger.v1",
+  "project": "WSA-Enterprise",
+  "review_reference": "2026-11-11-PHASE-1-REV9.2",
+  "created_at_utc": "2026-11-11T17:30:00Z",
+  "baseline_head": "88a13d2a00f189780c347df8cc55df1b1948ce71",
+  "roles": {
+    "canonical_status": "docs/phase-1-progress.json (Progress Register) + blocker register for blockers",
+    "evidence_ledger": "this file — evidence references and verification only; does not independently change canonical status",
+    "acceptance_baseline": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ACCEPTANCE-BASELINE.v9.2.json",
+    "blocker_register": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-BLOCKER-REGISTER.v1.json"
+  },
+  "criteria": [
+    {
+      "criterion": "P1-EXIT-01",
+      "authoritative_definition": {
+        "source": "docs/architecture/ADR-023-scientific-source-expansion.md",
+        "section": "§8.64.7 P1-EXIT-01; §8.80; §8.82.1"
+      },
+      "reported_status": "PASS",
+      "evidence_verification_status": "VERIFIED",
+      "canonical_status": "PASS",
+      "conditions": [
+        {
+          "id": "P1-EXIT-01-a",
+          "requirement": "CapVer ownership and enforcement placement decided",
+          "evidence_type": "owner_approval",
+          "evidence_source": {
+            "type": "historical",
+            "reference": "OD-A-ID / §8.80 + §8.82.1 GA-FOUNDATION-01",
+            "file": "docs/architecture/ADR-023-scientific-source-expansion.md"
+          },
+          "verified_at": "2026-11-11",
+          "verification_method": "Inspect ADR §8.80 OD-A-ID and §8.82.1 CapVer ownership row",
+          "verification_result": "PASS",
+          "what_it_proves": "Owner-approved CapVer ownership/enforcement design",
+          "what_it_does_not_prove": "Operational staging of CapVer services"
+        },
+        {
+          "id": "P1-EXIT-01-b",
+          "requirement": "Capability write authority / UNVERIFIED not persisted",
+          "evidence_type": "test",
+          "evidence_source": {
+            "type": "test",
+            "reference": "CapVerWriteBoundaryTest",
+            "file": "backend/tests/Unit/Agriculture/Research/Capability/CapVer/CapVerWriteBoundaryTest.php"
+          },
+          "verified_at": "2026-11-11",
+          "verification_method": "phpunit CapVerWriteBoundaryTest + ProjectionOrchestratorRuntimeIntegrationTest + Current110SourceMatrixContractTest + Phase1ProgressSchemaTest → 22 tests / 598 assertions / exit 0",
+          "verification_result": "PASS",
+          "what_it_proves": "Unauthorized VERIFIED writes fail at write boundary under CapVerAuthorizedAssessment",
+          "what_it_does_not_prove": "PostgreSQL Cap concurrency under §8.23.8"
+        },
+        {
+          "id": "P1-EXIT-01-c",
+          "requirement": "OD-C Option B Projection metadata; Builder owns HTTP",
+          "evidence_type": "test",
+          "evidence_source": {
+            "type": "test",
+            "reference": "ProjectionOrchestratorRuntimeIntegrationTest",
+            "file": "backend/tests/Unit/Agriculture/Research/Search/ProjectionOrchestratorRuntimeIntegrationTest.php"
+          },
+          "verified_at": "2026-11-11",
+          "verification_method": "Same evidence suite exit 0; ADR OD-C §8.80; commits 3329bbf / 6e13c85",
+          "verification_result": "PASS",
+          "what_it_proves": "Projection emits constraint metadata on Stage-3 options path without HTTP query construction",
+          "what_it_does_not_prove": "All future adapters automatically OD-C compliant"
+        },
+        {
+          "id": "P1-EXIT-01-d",
+          "requirement": "GO-1 vocabulary handling Option 1",
+          "evidence_type": "owner_approval",
+          "evidence_source": {
+            "type": "historical",
+            "reference": "§8.82.1 / §8.30.1 GO-1 Option 1",
+            "file": "docs/architecture/ADR-023-scientific-source-expansion.md"
+          },
+          "verified_at": "2026-11-11",
+          "verification_method": "Inspect ADR Gate A foundation decision table",
+          "verification_result": "PASS",
+          "what_it_proves": "Decision recorded that GO-1 states are historical inputs only",
+          "what_it_does_not_prove": "Runtime enforcement of GO-1 non-mapping beyond documentation"
+        },
+        {
+          "id": "P1-EXIT-01-e",
+          "requirement": "IC→Capability→registry→activation order",
+          "evidence_type": "owner_approval",
+          "evidence_source": {
+            "type": "historical",
+            "reference": "§8.82.1 / §8.63.8 decision under GA-FOUNDATION-01",
+            "file": "docs/architecture/ADR-023-scientific-source-expansion.md"
+          },
+          "verified_at": "2026-11-11",
+          "verification_method": "Inspect ADR; assumption ASM-R82-02 remains INFERRED for runtime reorder enforcement",
+          "verification_result": "PASS",
+          "what_it_proves": "Design decision recorded",
+          "what_it_does_not_prove": "A runtime orchestrator enforces the order automatically"
+        },
+        {
+          "id": "P1-EXIT-01-f",
+          "requirement": "Deployment order §8.25.6 decided subject to staging",
+          "evidence_type": "owner_approval",
+          "evidence_source": {
+            "type": "historical",
+            "reference": "§8.82.1 / §8.30.1(f)",
+            "file": "docs/architecture/ADR-023-scientific-source-expansion.md"
+          },
+          "verified_at": "2026-11-11",
+          "verification_method": "Inspect ADR decision; staging validation remains EXIT-05",
+          "verification_result": "PASS",
+          "what_it_proves": "Order decided",
+          "what_it_does_not_prove": "Staging validation or operator zero-row runs"
+        }
+      ],
+      "missing_evidence": [],
+      "blockers": []
+    },
+    {
+      "criterion": "P1-EXIT-02",
+      "authoritative_definition": {
+        "source": "docs/architecture/ADR-023-scientific-source-expansion.md",
+        "section": "§8.64.7 / §8.64.4 / §8.82.1"
+      },
+      "reported_status": "PASS",
+      "evidence_verification_status": "VERIFIED",
+      "canonical_status": "PASS",
+      "conditions": [
+        {
+          "id": "P1-EXIT-02-1",
+          "requirement": "Gate A record per implementation scope (IC inventory + foundation)",
+          "evidence_type": "owner_approval",
+          "evidence_source": {
+            "type": "implementation",
+            "reference": "GA-IC-01 + GA-FOUNDATION-01",
+            "file": "docs/architecture/science-source-expansion/2026-11-11-GATE-A-FOUNDATION-01-ACCEPTANCE-CONTRACT.json"
+          },
+          "verified_at": "2026-11-11",
+          "verification_method": "Inspect ADR §8.82.1 and Gate A acceptance contract; Gate text FOUND §8.64.4",
+          "verification_result": "PASS",
+          "what_it_proves": "Foundation + IC inventory scopes have Gate A records",
+          "what_it_does_not_prove": "Gate A for every conceivable future Phase 2 scope"
+        }
+      ],
+      "missing_evidence": [],
+      "blockers": []
+    },
+    {
+      "criterion": "P1-EXIT-03",
+      "authoritative_definition": {
+        "source": "docs/architecture/ADR-023-scientific-source-expansion.md",
+        "section": "§8.64.7 / §8.64.4 / §8.82.2"
+      },
+      "reported_status": "PASS",
+      "evidence_verification_status": "VERIFIED",
+      "canonical_status": "PASS",
+      "conditions": [
+        {
+          "id": "P1-EXIT-03-1",
+          "requirement": "Scope-limited Gate B with §8.64.4 fields",
+          "evidence_type": "owner_approval",
+          "evidence_source": {
+            "type": "implementation",
+            "reference": "GB-IC-01 + GB-FOUNDATION-01",
+            "file": "docs/architecture/science-source-expansion/2026-11-11-GATE-B-FOUNDATION-01-ACCEPTANCE-CONTRACT.json"
+          },
+          "verified_at": "2026-11-11",
+          "verification_method": "Inspect ADR §8.82.2 and Gate B acceptance contract; commit f731ec9 docs + cfc9d1b implementation under GB-FOUNDATION-01",
+          "verification_result": "PASS",
+          "what_it_proves": "Foundation implementation authorized under GB-FOUNDATION-01",
+          "what_it_does_not_prove": "Closure of EXIT-05 / EXIT-07 / D-08"
+        }
+      ],
+      "missing_evidence": [],
+      "blockers": []
+    },
+    {
+      "criterion": "P1-EXIT-04",
+      "authoritative_definition": {
+        "source": "docs/architecture/ADR-023-scientific-source-expansion.md",
+        "section": "§8.64.7 / §8.25.10 items 1–2 / §8.25.9"
+      },
+      "reported_status": "PASS",
+      "evidence_verification_status": "VERIFIED",
+      "canonical_status": "PASS",
+      "conditions": [
+        {
+          "id": "P1-EXIT-04-1",
+          "requirement": "IC technical persistence on isolated PostgreSQL",
+          "evidence_type": "historical",
+          "evidence_source": {
+            "type": "historical",
+            "reference": "§8.25.9 isolated runs; CI run 38315050442 job backend-pgsql; f2025315 tracks Pgsql IC tests",
+            "file": "docs/architecture/ADR-023-scientific-source-expansion.md"
+          },
+          "verified_at": "2026-11-11",
+          "verification_method": "Inspect ADR PASS (qualified) text and presence of backend/phpunit.pgsql.xml + tests/Pgsql IC workers; this session did NOT re-run PostgreSQL suite (DB_TEST_HOST empty)",
+          "verification_result": "PASS",
+          "what_it_proves": "Authoritative ADR records qualified historical IC PostgreSQL PASS",
+          "what_it_does_not_prove": "That CapVer Cap concurrency PostgreSQL tests pass today; that operational primary DB is PostgreSQL"
+        }
+      ],
+      "missing_evidence": [],
+      "blockers": [],
+      "notes": [
+        "Qualified historical PASS per ADR. Re-run not required by EXIT-04 definition for this review when ADR evidence remains intact.",
+        "Absence of local DB_TEST_* does not invalidate historical EXIT-04 evidence."
+      ]
+    }
+  ]
+}
