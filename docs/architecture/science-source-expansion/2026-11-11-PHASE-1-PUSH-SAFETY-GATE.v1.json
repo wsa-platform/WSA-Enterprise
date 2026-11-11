@@ -2,17 +2,17 @@
     "schema_id": "adr023.push_safety_gate.v1",
     "revision": "8.4",
     "created_at_utc": "2026-11-11T14:55:00Z",
-    "updated_at_utc": "2026-11-11T15:55:29Z",
-    "verified_at": "2026-11-11T15:55:29Z",
+    "updated_at_utc": "2026-11-11T15:56:53Z",
+    "verified_at": "2026-11-11T15:56:53Z",
     "local_branch": "phase-18-m18-ai-marketing-communications",
     "remote_name": "origin",
     "remote_branch": "origin/phase-18-m18-ai-marketing-communications",
-    "local_head": "7b1ad03261a2c64138ac32525c523aca904ecb96",
-    "remote_head": "7b1ad03261a2c64138ac32525c523aca904ecb96",
+    "local_head": "fdb076c166dc72d2092bdededef1f744cc0de51d",
+    "remote_head": "fdb076c166dc72d2092bdededef1f744cc0de51d",
     "ahead_count": 0,
     "behind_count": 0,
     "push_exit_code": 0,
-    "push_stdout": "efd1e7d..7b1ad03  HEAD -> phase-18-m18-ai-marketing-communications",
+    "push_stdout": "7b1ad03..fdb076c  HEAD -> phase-18-m18-ai-marketing-communications",
     "push_stderr": null,
     "fetch_exit_code": 0,
     "push_status": "PUSH_COMPLETED",
@@ -34,10 +34,11 @@
         "Push Exit Code captured from $LASTEXITCODE immediately after git push (no hardcoded 0).",
         "REMOTE_SYNC_VERIFIED only after fetch + local/remote HEAD equality + ahead/behind 0.",
         "Latest push range observed: efd1e7d..7b1ad03 (R8.4 docs delivery).",
-        "Prior coupled-cluster sync also verified at efd1e7d."
+        "Prior coupled-cluster sync also verified at efd1e7d.",
+        "Latest push range observed: 7b1ad03..fdb076c (post-push sync + D-08 history class)."
     ],
     "latest_commit": {
-        "hash": "7b1ad03261a2c64138ac32525c523aca904ecb96",
-        "subject": "docs(phase-1): archive Rev 8.4 delivery evidence and progress sync"
+        "hash": "fdb076c166dc72d2092bdededef1f744cc0de51d",
+        "subject": "docs(phase-1): record post-push sync and Supplement 04 history class"
     }
 }
