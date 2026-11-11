@@ -17,7 +17,7 @@
 - أُنشئت مصفوفة الحالية `110.v1` (110 مقعدًا بما فيها G2-26) مع حاجز مقعدي صريح لـ G2-26.
 - Layer H = NOT_APPLICABLE (H-2).
 - تحقيق Supplement 04 أسفر عن `SUPPLEMENT_04_NOT_FOUND`؛ D-08 يبقى مفتوحًا.
-- دُفعت التغييرات المؤهلة إلى الأصل: `1e0e301` (تنفيذ) ثم `9821151` (تقرير الإغلاق).
+- دُفعت التغييرات المؤهلة إلى الأصل: `1e0e301` (تنفيذ)، `9821151` (تقرير)، `c28c5c5` (تصحيح جرد الالتزامات).
 
 **حالة المرحلة 1 النهائية:** `PHASE_1_GAP_CLOSURE_PARTIAL` — لا يمكن الإغلاق الرسمي طالما بقيت معايير خروج إلزامية BLOCKED / PARTIAL / NOT RUN (خصوصًا P1-EXIT-05/06/07/08/09/11، D-08، وربط CSQ→Projection وقت التشغيل).
 
@@ -30,7 +30,7 @@
 | الجذر | `G:\WSA-Enterprise` |
 | الفرع | `phase-18-m18-ai-marketing-communications` |
 | HEAD الأولي (جلسة التنفيذ) | `02c35aadf63abe088b2341fe03e2f400ba3dc272` |
-| HEAD النهائي | `9821151959a24a99c0b4d389506b9f795217d143` |
+| HEAD النهائي | يُحدَّد بـ `git rev-parse HEAD` على الفرع بعد دفع هذا التقرير (سلسلة: `1e0e301` → `9821151` → `c28c5c5` → commit تثبيت النص) |
 | التتبع عن بُعد | `origin/phase-18-m18-ai-marketing-communications` |
 | ahead/behind بعد الدفع | `0 / 0` (متزامن) |
 | حالة WIP | محفوظة وغير مُدرجة: تعديلات كثيرة غير متعلقة + CapVerSeat* / Onboarding / أوامر / تقارير تاريخية غير مُراجعة |
@@ -231,8 +231,9 @@ php vendor/bin/phpunit --colors=never ^
 |---|---|
 | Commit 1 | `1e0e3010f0dc4f542c3031bdb32b7752e699d3ee` — `feat(research): enforce CapVer VERIFIED writes and OD-C Projection metadata` (19 ملفًا، +4408/−47) |
 | Commit 2 | `9821151959a24a99c0b4d389506b9f795217d143` — `docs(research): archive Phase 1 gap-closure engineering report (ar)` |
-| Push | ناجح إلى `origin/phase-18-m18-ai-marketing-communications` (`02c35aa..9821151`) |
-| التزامن | HEAD = upstream = `9821151` |
+| Commit 3 | `c28c5c5d9e84d78a437c33a805cb42829aece185` — `docs(research): correct Phase 1 report HEAD and commit inventory` |
+| Push | ناجح إلى `origin/phase-18-m18-ai-marketing-communications` (`02c35aa..c28c5c5`) |
+| التزامن | HEAD = upstream بعد دفع هذا الجرد؛ أي تصحيح لاحق لسطر HEAD فقط لا يغيّر التصنيف |
 | غير مُدرج عمدًا | CapVerSeatVerificationService، CapVerSeatOutcome، Onboarding، WIP الواسع |
 
 ---
