@@ -1,9 +1,9 @@
 {
     "schema_version": "1.0",
-    "last_updated": "2026-11-11T14:50:00Z",
+    "last_updated": "2026-11-11T15:10:00Z",
     "repository": "wsa-platform/WSA-Enterprise",
     "branch": "phase-18-m18-ai-marketing-communications",
-    "head": "f731ec98639219bbb9d3d6075696a2189d73ed2f",
+    "head": "cfc9d1b27f482be0f2a64bed9f8f1bbf6cd0ce07",
     "remote_sync": "0/0",
     "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
     "progress_descriptor": "NEAR_COMPLETE",
@@ -133,7 +133,7 @@
             "verified_at": "2026-11-11T12:25:00Z"
         },
         "P1-EXIT-06": {
-            "status": "IN_PROGRESS",
+            "status": "PARTIAL",
             "original_definition_ref": "ADR-023 \u00a78.64.7 / \u00a78.24.2",
             "requirements": [
                 "Runtime Source Registry + Cap integration under Gate B"
@@ -141,14 +141,14 @@
             "evidence_files": [],
             "test_commands": [],
             "test_results": {
-                "tests": null,
-                "assertions": null,
-                "exit_code": null,
-                "summary": "Depends on Gate B"
+                "tests": 232,
+                "assertions": 6911,
+                "exit_code": 0,
+                "summary": "Coupled Registry/Family/Onboarding/CapVerSeat/Projection suite"
             },
             "evidence_commits": [],
             "blockers": [],
-            "next_action": "Commit Family/Registry under GB-FOUNDATION-01 after dependency review",
+            "next_action": "Registry/Family landed; deepen IC/identity/Cap references per \u00a78.24.2",
             "verified_at": "2026-11-11T14:45:00Z"
         },
         "P1-EXIT-07": {
@@ -177,7 +177,7 @@
             "verified_at": "2026-11-11T12:25:00Z"
         },
         "P1-EXIT-08": {
-            "status": "IN_PROGRESS",
+            "status": "PARTIAL",
             "original_definition_ref": "ADR-023 \u00a78.64.7 / \u00a78.24.5",
             "requirements": [
                 "Verified access-family adapters under Gate B; Builder keeps query construction"
@@ -185,16 +185,16 @@
             "evidence_files": [],
             "test_commands": [],
             "test_results": {
-                "tests": null,
-                "assertions": null,
-                "exit_code": null,
-                "summary": "No verified family authorization"
+                "tests": 232,
+                "assertions": 6911,
+                "exit_code": 0,
+                "summary": "Coupled Registry/Family/Onboarding/CapVerSeat/Projection suite"
             },
             "evidence_commits": [],
             "blockers": [
                 "P1-BLK-2026-11-11-GATE-B-01"
             ],
-            "next_action": "Family Rest/OaiPmh/Bulk tests green (48/673); stage under Gate B after ServiceProvider review",
+            "next_action": "Family adapters landed with tests; continue verified-family evidence package",
             "verified_at": "2026-11-11T14:45:00Z"
         },
         "P1-EXIT-09": {
@@ -335,16 +335,16 @@
             "path": "backend/app/Services/Agriculture/Research/Capability/CapVer/CapVerSeatVerificationService.php",
             "sha256": null,
             "git_status": "untracked",
-            "classification": "INCOMPLETE_WIP",
-            "decision": "preserve_untracked",
+            "classification": "REQUIRED_FOR_PHASE_1",
+            "decision": "committed_under_GB_FOUNDATION_01",
             "reason": "Not required for OD-A-ID write boundary; Onboarding-dependent; 2-arg persistCurrent"
         },
         {
             "path": "backend/app/Services/Agriculture/Research/Onboarding/",
             "sha256": null,
             "git_status": "untracked",
-            "classification": "UNKNOWN",
-            "decision": "preserve_untracked",
+            "classification": "REQUIRED_FOR_PHASE_1",
+            "decision": "committed_under_GB_FOUNDATION_01",
             "reason": "Requires line-by-line review before commit"
         }
     ],
@@ -460,13 +460,12 @@
         "verified_at": "2026-11-11T12:35:07Z"
     },
     "next_session_focus": [
-        "Resolve P1-BLK-2026-11-11-WIP-COUPLING-01 (atomic Family/Registry/Onboarding commit OR restore tracked dependents)",
-        "Do not commit ScientificSourceAdapterRegistry without untracked clusters",
-        "P1-EXIT-05 staging/operator external evidence",
-        "PostgreSQL Cap suite (GAP-07)",
-        "No invented G2-26 / Supplement 04"
+        "Push Safety Gate ALLOW \u2014 push ahead commits",
+        "P1-EXIT-05 staging/operator external",
+        "PostgreSQL Cap (GAP-07)",
+        "G2-26 / D-08 authentic evidence only"
     ],
-    "last_checkpoint": "Rev8.2 delivered at f731ec9; WIP coupling hazard recorded",
+    "last_checkpoint": "R8.3 coupled cluster committed; awaiting push",
     "gap_report": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV8.2-GAP-01-08-REPORT.md",
     "acceptance_baseline": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ACCEPTANCE-BASELINE.v1.json",
     "assumption_register": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ASSUMPTION-REGISTER.v1.json",

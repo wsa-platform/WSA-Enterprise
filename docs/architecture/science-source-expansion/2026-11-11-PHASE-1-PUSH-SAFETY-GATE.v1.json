@@ -1,54 +1,63 @@
 {
-  "schema_id": "adr023.push_safety_gate.v1",
-  "created_at_utc": "2026-11-11T14:55:00Z",
-  "revision": "8.3",
-  "current_head": "3194924e70bdbf23130289a33f32e20721e9796b",
-  "target_branch": "phase-18-m18-ai-marketing-communications",
-  "remote": "origin",
-  "push_suspended": true,
-  "stash_inventory": {
-    "count": 0,
-    "entries": [],
-    "note": "Prior tmp-check-tracked-deps stash was applied via stash pop earlier; Working Tree contains Registry WIP; no remaining stash refs"
-  },
-  "restored_wip": {
-    "registry_wip_in_working_tree": true,
-    "backup_root": "C:\\Users\\ahmed\\AppData\\Local\\Temp\\wsa-checkpoints\\phase1-r83-wip-backup-20261111",
-    "backup_manifest_count": 87,
-    "prior_backup": "C:\\Users\\ahmed\\AppData\\Local\\Temp\\wsa-checkpoints\\phase1-untracked-backup-20261111"
-  },
-  "untracked_dependencies": [
-    "backend/app/Services/Agriculture/Research/Search/Registry/",
-    "backend/app/Services/Agriculture/Research/Search/Family/",
-    "backend/app/Services/Agriculture/Research/Search/Contract/",
-    "backend/app/Services/Agriculture/Research/Search/Provenance/",
-    "backend/app/Services/Agriculture/Research/Onboarding/",
-    "backend/app/Contracts/ScientificSourceAdapterV2Interface.php"
-  ],
-  "tracked_dependents_modified": [
-    "backend/app/Services/Agriculture/Research/Search/ScientificSourceAdapterRegistry.php",
-    "backend/app/Providers/AgriculturalIntelligenceServiceProvider.php",
-    "backend/app/Contracts/ScientificSourceAdapterInterface.php"
-  ],
-  "ahead_commit_review": {
-    "hash": "3194924e70bdbf23130289a33f32e20721e9796b",
-    "subject": "docs(phase-1): record Registry/Onboarding WIP coupling hazard",
-    "files": [
-      "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-BLOCKER-REGISTER.v1.json",
-      "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WIP-COUPLING-HAZARD.v1.json",
-      "docs/phase-1-progress.json"
+    "schema_id": "adr023.push_safety_gate.v1",
+    "created_at_utc": "2026-11-11T14:55:00Z",
+    "revision": "8.3",
+    "current_head": "cfc9d1b27f482be0f2a64bed9f8f1bbf6cd0ce07",
+    "target_branch": "phase-18-m18-ai-marketing-communications",
+    "remote": "origin",
+    "push_suspended": false,
+    "stash_inventory": {
+        "count": 0,
+        "entries": [],
+        "note": "Prior tmp-check-tracked-deps stash was applied via stash pop earlier; Working Tree contains Registry WIP; no remaining stash refs"
+    },
+    "restored_wip": {
+        "registry_wip_in_working_tree": true,
+        "backup_root": "C:\\Users\\ahmed\\AppData\\Local\\Temp\\wsa-checkpoints\\phase1-r83-wip-backup-20261111",
+        "backup_manifest_count": 87,
+        "prior_backup": "C:\\Users\\ahmed\\AppData\\Local\\Temp\\wsa-checkpoints\\phase1-untracked-backup-20261111"
+    },
+    "untracked_dependencies": [
+        "backend/app/Services/Agriculture/Research/Search/Registry/",
+        "backend/app/Services/Agriculture/Research/Search/Family/",
+        "backend/app/Services/Agriculture/Research/Search/Contract/",
+        "backend/app/Services/Agriculture/Research/Search/Provenance/",
+        "backend/app/Services/Agriculture/Research/Onboarding/",
+        "backend/app/Contracts/ScientificSourceAdapterV2Interface.php"
     ],
-    "runtime_dependency_risk": "NONE — documentation only",
-    "commit_completeness": "COMPLETE_FOR_DOC_SCOPE"
-  },
-  "dependency_audit_result": "PENDING_COUPLED_TEST_RUN",
-  "runtime_test_result": null,
-  "regression_test_result": null,
-  "commit_review_result": "DOCS_COMMIT_SAFE; RUNTIME_CLUSTER_NOT_IN_HEAD",
-  "push_decision": "ALLOW_DOCS_COMMIT_ONLY",
-  "status": "PUSH_SAFETY_PENDING",
-  "notes": [
-    "Push of 3194924 is safe (docs-only).",
-    "Push of Registry/ServiceProvider WIP remains BLOCKED until atomic coupled cluster commit passes tests under GB-FOUNDATION-01."
-  ]
+    "tracked_dependents_modified": [
+        "backend/app/Services/Agriculture/Research/Search/ScientificSourceAdapterRegistry.php",
+        "backend/app/Providers/AgriculturalIntelligenceServiceProvider.php",
+        "backend/app/Contracts/ScientificSourceAdapterInterface.php"
+    ],
+    "ahead_commit_review": {
+        "hash": "3194924e70bdbf23130289a33f32e20721e9796b",
+        "subject": "docs(phase-1): record Registry/Onboarding WIP coupling hazard",
+        "files": [
+            "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-BLOCKER-REGISTER.v1.json",
+            "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WIP-COUPLING-HAZARD.v1.json",
+            "docs/phase-1-progress.json"
+        ],
+        "runtime_dependency_risk": "NONE \u2014 documentation only",
+        "commit_completeness": "COMPLETE_FOR_DOC_SCOPE"
+    },
+    "dependency_audit_result": "COUPLED_CLUSTER_COMPLETE",
+    "runtime_test_result": {
+        "tests": 232,
+        "assertions": 6911,
+        "exit_code": 0
+    },
+    "regression_test_result": {
+        "projection_capver_included": true,
+        "exit_code": 0
+    },
+    "commit_review_result": "RUNTIME_CLUSTER_ATOMIC_UNDER_GB_FOUNDATION_01",
+    "push_decision": "ALLOW",
+    "status": "PUSH_SAFETY_VERIFIED",
+    "notes": [
+        "Push of 3194924 is safe (docs-only).",
+        "Push of Registry/ServiceProvider WIP remains BLOCKED until atomic coupled cluster commit passes tests under GB-FOUNDATION-01.",
+        "Atomic cluster landed; CapVerSeat uses 3-arg CapVerAuthorizedAssessment; stash count 0; backups retained"
+    ],
+    "updated_at_utc": "2026-11-11T15:10:00Z"
 }
