@@ -1,63 +1,40 @@
 {
-    "schema_id": "adr023.push_safety_gate.v1",
-    "created_at_utc": "2026-11-11T14:55:00Z",
-    "revision": "8.3",
-    "current_head": "cfc9d1b27f482be0f2a64bed9f8f1bbf6cd0ce07",
-    "target_branch": "phase-18-m18-ai-marketing-communications",
-    "remote": "origin",
-    "push_suspended": false,
-    "stash_inventory": {
-        "count": 0,
-        "entries": [],
-        "note": "Prior tmp-check-tracked-deps stash was applied via stash pop earlier; Working Tree contains Registry WIP; no remaining stash refs"
-    },
-    "restored_wip": {
-        "registry_wip_in_working_tree": true,
-        "backup_root": "C:\\Users\\ahmed\\AppData\\Local\\Temp\\wsa-checkpoints\\phase1-r83-wip-backup-20261111",
-        "backup_manifest_count": 87,
-        "prior_backup": "C:\\Users\\ahmed\\AppData\\Local\\Temp\\wsa-checkpoints\\phase1-untracked-backup-20261111"
-    },
-    "untracked_dependencies": [
-        "backend/app/Services/Agriculture/Research/Search/Registry/",
-        "backend/app/Services/Agriculture/Research/Search/Family/",
-        "backend/app/Services/Agriculture/Research/Search/Contract/",
-        "backend/app/Services/Agriculture/Research/Search/Provenance/",
-        "backend/app/Services/Agriculture/Research/Onboarding/",
-        "backend/app/Contracts/ScientificSourceAdapterV2Interface.php"
-    ],
-    "tracked_dependents_modified": [
-        "backend/app/Services/Agriculture/Research/Search/ScientificSourceAdapterRegistry.php",
-        "backend/app/Providers/AgriculturalIntelligenceServiceProvider.php",
-        "backend/app/Contracts/ScientificSourceAdapterInterface.php"
-    ],
-    "ahead_commit_review": {
-        "hash": "3194924e70bdbf23130289a33f32e20721e9796b",
-        "subject": "docs(phase-1): record Registry/Onboarding WIP coupling hazard",
-        "files": [
-            "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-BLOCKER-REGISTER.v1.json",
-            "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WIP-COUPLING-HAZARD.v1.json",
-            "docs/phase-1-progress.json"
-        ],
-        "runtime_dependency_risk": "NONE \u2014 documentation only",
-        "commit_completeness": "COMPLETE_FOR_DOC_SCOPE"
-    },
-    "dependency_audit_result": "COUPLED_CLUSTER_COMPLETE",
-    "runtime_test_result": {
-        "tests": 232,
-        "assertions": 6911,
-        "exit_code": 0
-    },
-    "regression_test_result": {
-        "projection_capver_included": true,
-        "exit_code": 0
-    },
-    "commit_review_result": "RUNTIME_CLUSTER_ATOMIC_UNDER_GB_FOUNDATION_01",
-    "push_decision": "ALLOW",
-    "status": "PUSH_SAFETY_VERIFIED",
-    "notes": [
-        "Push of 3194924 is safe (docs-only).",
-        "Push of Registry/ServiceProvider WIP remains BLOCKED until atomic coupled cluster commit passes tests under GB-FOUNDATION-01.",
-        "Atomic cluster landed; CapVerSeat uses 3-arg CapVerAuthorizedAssessment; stash count 0; backups retained"
-    ],
-    "updated_at_utc": "2026-11-11T15:10:00Z"
+    "schema_id":  "adr023.push_safety_gate.v1",
+    "revision":  "8.4",
+    "created_at_utc":  "2026-11-11T14:55:00Z",
+    "updated_at_utc":  "2026-11-11T15:45:58.8204859Z",
+    "verified_at":  "2026-11-11T15:45:58.8204859Z",
+    "local_branch":  "phase-18-m18-ai-marketing-communications",
+    "remote_name":  "origin",
+    "remote_branch":  "origin/phase-18-m18-ai-marketing-communications",
+    "local_head":  "efd1e7daef0678b0e95d74ead9d79697b0177ccd",
+    "remote_head":  "efd1e7daef0678b0e95d74ead9d79697b0177ccd",
+    "ahead_count":  0,
+    "behind_count":  0,
+    "push_exit_code":  0,
+    "push_stdout":  "git : To https://github.com/wsa-platform/WSA-Enterprise.git\r\nAt line:11 char:12\r\n+ $pushOut = git push origin HEAD 2\u003e\u00261\r\n+            ~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (To https://gith...-Enterprise.git:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n   f731ec9..efd1e7d  HEAD -\u003e phase-18-m18-ai-marketing-communications\r\n",
+    "push_stderr":  null,
+    "fetch_exit_code":  0,
+    "push_status":  "PUSH_COMPLETED",
+    "remote_sync_status":  "REMOTE_SYNC_VERIFIED",
+    "status":  "REMOTE_SYNC_VERIFIED",
+    "push_decision":  "ALLOW",
+    "stash_inventory":  {
+                            "count":  0,
+                            "entries":  [
+
+                                        ]
+                        },
+    "dependency_audit_result":  "COUPLED_CLUSTER_IN_HEAD_TRACKED",
+    "runtime_test_result":  {
+                                "assertions":  6911,
+                                "note":  "pre-push coupled suite",
+                                "tests":  232,
+                                "exit_code":  0
+                            },
+    "notes":  [
+                  "Push Exit Code captured from $LASTEXITCODE immediately after git push (no hardcoded 0).",
+                  "REMOTE_SYNC_VERIFIED only after fetch + local/remote HEAD equality + ahead/behind 0.",
+                  "Push range observed: f731ec9..efd1e7d"
+              ]
 }

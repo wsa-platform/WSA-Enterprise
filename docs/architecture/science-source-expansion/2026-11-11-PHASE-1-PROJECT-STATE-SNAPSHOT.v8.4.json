@@ -1,0 +1,61 @@
+{
+    "remote_sync_status":  "REMOTE_SYNC_VERIFIED",
+    "next_resume":  [
+                        "IC staging/operator external evidence",
+                        "PostgreSQL Cap suite if DB_TEST_* available",
+                        "G2-26 authentic evidence",
+                        "D-08 Supplement 04"
+                    ],
+    "version":  "8.4",
+    "open_blockers":  [
+                          "P1-BLK-2026-11-11-G2-26-01",
+                          "P1-BLK-2026-11-11-D08-01",
+                          "P1-BLK-2026-11-11-EXIT05-STAGING-01"
+                      ],
+    "artifact_type":  "project_state_snapshot",
+    "remote_head":  "efd1e7daef0678b0e95d74ead9d79697b0177ccd",
+    "head":  "efd1e7daef0678b0e95d74ead9d79697b0177ccd",
+    "classification":  "PHASE_1_GAP_CLOSURE_PARTIAL",
+    "progress_descriptor":  "NEAR_COMPLETE",
+    "push_range":  "f731ec9..efd1e7d",
+    "fact_classes":  {
+                         "exit_11":  "NOT_RUN",
+                         "exit_05":  "BLOCKED",
+                         "g2_26":  "BLOCKED",
+                         "gate_a":  "VERIFIED_FACT",
+                         "d08":  "BLOCKED",
+                         "push":  "VERIFIED_FACT",
+                         "remote_sync":  "VERIFIED_FACT",
+                         "coupled_cluster":  "VERIFIED_FACT",
+                         "gate_b":  "VERIFIED_FACT"
+                     },
+    "criteria":  {
+                     "P1-EXIT-11":  "NOT_RUN",
+                     "P1-EXIT-09":  "PARTIAL",
+                     "P1-EXIT-01":  "PASS",
+                     "D-08":  "BLOCKED",
+                     "P1-EXIT-04":  "PASS",
+                     "P1-EXIT-05":  "BLOCKED",
+                     "Layer-H":  "NOT_APPLICABLE",
+                     "P1-EXIT-10":  "PARTIAL",
+                     "P1-EXIT-02":  "PASS",
+                     "P1-EXIT-03":  "PASS",
+                     "P1-EXIT-06":  "PARTIAL",
+                     "P1-EXIT-07":  "BLOCKED",
+                     "P1-EXIT-08":  "PARTIAL"
+                 },
+    "project":  "WSA-Enterprise",
+    "branch":  "phase-18-m18-ai-marketing-communications",
+    "created_at_utc":  "2026-11-11T15:47:41.7515186Z",
+    "schema_id":  "adr023.project_state_snapshot.v1",
+    "tests":  {
+                  "coupled_suite":  {
+                                        "assertions":  6911,
+                                        "tests":  232,
+                                        "exit_code":  0
+                                    }
+              },
+    "push_exit_code":  0,
+    "remote_sync":  "0/0",
+    "repository":  "wsa-platform/WSA-Enterprise"
+}

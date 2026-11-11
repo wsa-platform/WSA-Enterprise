@@ -1,0 +1,42 @@
+{
+  "schema_id": "adr023.exit05_staging_operator_checklist.v1",
+  "created_at_utc": "2026-11-11T15:50:00Z",
+  "criterion": "P1-EXIT-05",
+  "original_definition_ref": "ADR-023 §8.64.7 / §8.25.10 items 3–4; §8.25.6; §8.25.7; §8.26.5",
+  "decision_classification": "NEW_ENGINEERING_DECISION",
+  "purpose": "Engineering prep checklist only — does NOT constitute staging validation or operator evidence",
+  "status": "BLOCKED_AWAITING_EXTERNAL_EVIDENCE",
+  "deployment_order": {
+    "source": "ADR-023 §8.25.6 (accepted under P1-EXIT-01 f / OD)",
+    "status": "DECIDED_SUBJECT_TO_STAGING_VALIDATION",
+    "steps_ref": "§8.25.6 five-step order"
+  },
+  "mandatory_external_evidence": [
+    {
+      "id": "EXIT05-EV-01",
+      "requirement": "Staging validation evidence per §8.26.5",
+      "owner": "authorized_operator",
+      "present": false,
+      "fabricated": false
+    },
+    {
+      "id": "EXIT05-EV-02",
+      "requirement": "§8.25.7 diagnostic run on each real environment with zero rows recorded",
+      "owner": "authorized_operator",
+      "present": false,
+      "fabricated": false
+    }
+  ],
+  "engineering_prep_completed": [
+    "Deployment order decided under Gate A foundation (subject to staging)",
+    "GB-FOUNDATION-01 records IC dependency explicitly not closed by foundation alone",
+    "Isolated PHPUnit / :memory: paths remain non-production"
+  ],
+  "non_claims": [
+    "No staging environment run claimed",
+    "No operator zero-row record claimed",
+    "CI green is not IC operational closure"
+  ],
+  "blocker_id": "P1-BLK-2026-11-11-EXIT05-STAGING-01",
+  "next_action": "Obtain authentic staging + operator records; attach Artifact IDs; then re-evaluate P1-EXIT-05"
+}

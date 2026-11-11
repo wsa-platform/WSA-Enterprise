@@ -1,23 +1,23 @@
 {
     "schema_version": "1.0",
-    "last_updated": "2026-11-11T15:10:00Z",
+    "last_updated": "2026-11-11T15:55:00Z",
     "repository": "wsa-platform/WSA-Enterprise",
     "branch": "phase-18-m18-ai-marketing-communications",
-    "head": "cfc9d1b27f482be0f2a64bed9f8f1bbf6cd0ce07",
+    "head": "efd1e7daef0678b0e95d74ead9d79697b0177ccd",
     "remote_sync": "0/0",
     "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
     "progress_descriptor": "NEAR_COMPLETE",
     "criteria": {
         "P1-EXIT-01": {
             "status": "PASS",
-            "original_definition_ref": "ADR-023 \u00a78.64.7 P1-EXIT-01 (a\u2013f); \u00a78.80; \u00a78.82.1",
+            "original_definition_ref": "ADR-023 §8.64.7 P1-EXIT-01 (a–f); §8.80; §8.82.1",
             "requirements": [
                 "(a) CapVer ownership/enforcement",
                 "(b) write authority",
                 "(c) OD-C Option B",
                 "(d) GO-1 Option 1",
-                "(e) \u00a78.63.8 order",
-                "(f) \u00a78.25.6 deployment order"
+                "(e) §8.63.8 order",
+                "(f) §8.25.6 deployment order"
             ],
             "evidence_files": [
                 "docs/architecture/ADR-023-scientific-source-expansion.md",
@@ -32,7 +32,7 @@
                 "tests": null,
                 "assertions": null,
                 "exit_code": null,
-                "summary": "Decisions a\u2013f recorded; CapVer+OD-C enforcement previously proven"
+                "summary": "Decisions a–f recorded; CapVer+OD-C enforcement previously proven"
             },
             "evidence_commits": [
                 "1e0e301",
@@ -46,7 +46,7 @@
         },
         "P1-EXIT-02": {
             "status": "PASS",
-            "original_definition_ref": "ADR-023 \u00a78.64.7 / \u00a78.64.4; \u00a78.82.1",
+            "original_definition_ref": "ADR-023 §8.64.7 / §8.64.4; §8.82.1",
             "requirements": [
                 "Gate A record per implementation scope"
             ],
@@ -59,7 +59,7 @@
                 "tests": null,
                 "assertions": null,
                 "exit_code": null,
-                "summary": "GA-IC-01 + GA-FOUNDATION-01; Gate text FOUND \u00a78.64.4"
+                "summary": "GA-IC-01 + GA-FOUNDATION-01; Gate text FOUND §8.64.4"
             },
             "evidence_commits": [],
             "blockers": [],
@@ -68,9 +68,9 @@
         },
         "P1-EXIT-03": {
             "status": "PASS",
-            "original_definition_ref": "ADR-023 \u00a78.64.7 / \u00a78.64.4; \u00a78.82.2",
+            "original_definition_ref": "ADR-023 §8.64.7 / §8.64.4; §8.82.2",
             "requirements": [
-                "Scope-limited Gate B record with \u00a78.64.4 fields"
+                "Scope-limited Gate B record with §8.64.4 fields"
             ],
             "evidence_files": [
                 "docs/architecture/ADR-023-scientific-source-expansion.md",
@@ -90,7 +90,7 @@
         },
         "P1-EXIT-04": {
             "status": "PASS",
-            "original_definition_ref": "ADR-023 \u00a78.64.7 / \u00a78.25.10 items 1\u20132",
+            "original_definition_ref": "ADR-023 §8.64.7 / §8.25.10 items 1–2",
             "requirements": [
                 "IC technical persistence evidence on isolated PostgreSQL"
             ],
@@ -102,7 +102,7 @@
                 "tests": null,
                 "assertions": null,
                 "exit_code": null,
-                "summary": "PASS qualified historical (\u00a78.25.9 / CI)"
+                "summary": "PASS qualified historical (§8.25.9 / CI)"
             },
             "evidence_commits": [],
             "blockers": [],
@@ -111,13 +111,15 @@
         },
         "P1-EXIT-05": {
             "status": "BLOCKED",
-            "original_definition_ref": "ADR-023 \u00a78.64.7 / \u00a78.25.10 items 3\u20134",
+            "original_definition_ref": "ADR-023 §8.64.7 / §8.25.10 items 3–4",
             "requirements": [
                 "Deployment order decision",
                 "Staging validation",
-                "Operator \u00a78.25.7 zero-row records"
+                "Operator §8.25.7 zero-row records"
             ],
-            "evidence_files": [],
+            "evidence_files": [
+                "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-EXIT05-STAGING-OPERATOR-CHECKLIST.v1.json"
+            ],
             "test_commands": [],
             "test_results": {
                 "tests": null,
@@ -129,16 +131,19 @@
             "blockers": [
                 "P1-BLK-2026-11-11-EXIT05-STAGING-01"
             ],
-            "next_action": "External staging/operator evidence",
-            "verified_at": "2026-11-11T12:25:00Z"
+            "next_action": "External staging/operator evidence only; checklist is prep not PASS",
+            "verified_at": "2026-11-11T15:55:00Z"
         },
         "P1-EXIT-06": {
             "status": "PARTIAL",
-            "original_definition_ref": "ADR-023 \u00a78.64.7 / \u00a78.24.2",
+            "original_definition_ref": "ADR-023 §8.64.7 / §8.24.2",
             "requirements": [
                 "Runtime Source Registry + Cap integration under Gate B"
             ],
-            "evidence_files": [],
+            "evidence_files": [
+                "docs/architecture/science-source-expansion/2026-11-11-GATE-B-FOUNDATION-01-ACCEPTANCE-CONTRACT.json",
+                "backend/app/Providers/ScientificSourceRuntimeServiceProvider.php"
+            ],
             "test_commands": [],
             "test_results": {
                 "tests": 232,
@@ -146,14 +151,17 @@
                 "exit_code": 0,
                 "summary": "Coupled Registry/Family/Onboarding/CapVerSeat/Projection suite"
             },
-            "evidence_commits": [],
+            "evidence_commits": [
+                "cfc9d1b",
+                "efd1e7d"
+            ],
             "blockers": [],
-            "next_action": "Registry/Family landed; deepen IC/identity/Cap references per \u00a78.24.2",
-            "verified_at": "2026-11-11T14:45:00Z"
+            "next_action": "Registry/Family landed; deepen IC/identity/Cap references per §8.24.2",
+            "verified_at": "2026-11-11T15:55:00Z"
         },
         "P1-EXIT-07": {
             "status": "BLOCKED",
-            "original_definition_ref": "ADR-023 \u00a78.64.7 / \u00a78.77; OD-07",
+            "original_definition_ref": "ADR-023 §8.64.7 / §8.77; OD-07",
             "requirements": [
                 "Per-seat IC artifact or post-review seat blocker"
             ],
@@ -178,7 +186,7 @@
         },
         "P1-EXIT-08": {
             "status": "PARTIAL",
-            "original_definition_ref": "ADR-023 \u00a78.64.7 / \u00a78.24.5",
+            "original_definition_ref": "ADR-023 §8.64.7 / §8.24.5",
             "requirements": [
                 "Verified access-family adapters under Gate B; Builder keeps query construction"
             ],
@@ -190,16 +198,17 @@
                 "exit_code": 0,
                 "summary": "Coupled Registry/Family/Onboarding/CapVerSeat/Projection suite"
             },
-            "evidence_commits": [],
-            "blockers": [
-                "P1-BLK-2026-11-11-GATE-B-01"
+            "evidence_commits": [
+                "cfc9d1b",
+                "efd1e7d"
             ],
-            "next_action": "Family adapters landed with tests; continue verified-family evidence package",
-            "verified_at": "2026-11-11T14:45:00Z"
+            "blockers": [],
+            "next_action": "Continue verified-family evidence packages; adapters landed under GB-FOUNDATION-01",
+            "verified_at": "2026-11-11T15:55:00Z"
         },
         "P1-EXIT-09": {
             "status": "PARTIAL",
-            "original_definition_ref": "ADR-023 \u00a78.64.7",
+            "original_definition_ref": "ADR-023 §8.64.7",
             "requirements": [
                 "Focused + regression tests for implemented scopes; PostgreSQL where required"
             ],
@@ -210,21 +219,21 @@
                 "phpunit ProjectionOrchestratorRuntimeIntegrationTest + Binder + Constraints + CapVerWriteBoundary + Matrix + CanonicalCompilation"
             ],
             "test_results": {
-                "tests": 67,
-                "assertions": 534,
+                "tests": 22,
+                "assertions": 598,
                 "exit_code": 0,
-                "summary": "Rev7 regression + archive/schema green; not full \u00a78.64.7 PostgreSQL Cap scope"
+                "summary": "R8.4 focused regression green; PostgreSQL Cap suite NOT_RUN (DB_TEST_HOST empty); GAP-07 REQUIRED"
             },
             "evidence_commits": [
                 "6e13c856dd65592ac05e9671bb8c257f06963034"
             ],
             "blockers": [],
-            "next_action": "Extend when Gate-B scopes land",
-            "verified_at": "2026-11-11T12:35:07Z"
+            "next_action": "Run phpunit.pgsql.xml when isolated DB_TEST_* available",
+            "verified_at": "2026-11-11T15:55:00Z"
         },
         "P1-EXIT-10": {
             "status": "PARTIAL",
-            "original_definition_ref": "ADR-023 \u00a78.64.7; OD-10",
+            "original_definition_ref": "ADR-023 §8.64.7; OD-10",
             "requirements": [
                 "Matrix evidence integrity; every state cites artifact"
             ],
@@ -250,9 +259,9 @@
         },
         "P1-EXIT-11": {
             "status": "NOT_RUN",
-            "original_definition_ref": "ADR-023 \u00a78.64.7",
+            "original_definition_ref": "ADR-023 §8.64.7",
             "requirements": [
-                "Formal Phase 1 verification report + exit decision after 01\u201310 PASS"
+                "Formal Phase 1 verification report + exit decision after 01–10 PASS"
             ],
             "evidence_files": [],
             "test_commands": [],
@@ -264,12 +273,12 @@
             },
             "evidence_commits": [],
             "blockers": [
-                "P1-EXIT-02",
-                "P1-EXIT-03",
                 "P1-EXIT-05",
                 "P1-EXIT-06",
                 "P1-EXIT-07",
                 "P1-EXIT-08",
+                "P1-EXIT-09",
+                "P1-EXIT-10",
                 "D-08"
             ],
             "next_action": "Execute only when prerequisites PASS",
@@ -278,7 +287,7 @@
     },
     "layer_h": {
         "status": "NOT_APPLICABLE",
-        "original_definition_ref": "ADR-023 \u00a78.80 OD-H H-2",
+        "original_definition_ref": "ADR-023 §8.80 OD-H H-2",
         "requirements": [
             "Record Layer H = NOT_APPLICABLE; no separate implementation"
         ],
@@ -301,7 +310,7 @@
     },
     "d08": {
         "status": "BLOCKED",
-        "original_definition_ref": "D-08; OD-D08; \u00a78.80.4; \u00a78.81.3",
+        "original_definition_ref": "D-08; OD-D08; §8.80.4; §8.81.3",
         "requirements": [
             "Authentic archive completeness; no fabricated Supplement 04"
         ],
@@ -325,27 +334,27 @@
     "wip_files": [
         {
             "path": "backend/app/Services/Agriculture/Research/Search/MultiSourceScientificSearchOrchestrator.php",
-            "sha256": "fd7484ead7f2ffc71b7854a197b83ce2432cbd367f962836ddf3ec207e1c690a",
+            "sha256": null,
             "git_status": "modified_unstaged",
             "classification": "INCOMPLETE_WIP",
             "decision": "preserve_unstaged",
-            "reason": "WIP Catalog/Capability/V2 supersets committed Projection path; dependencies unreviewed"
+            "reason": "Superset WIP outside committed Projection path; leave unstaged"
         },
         {
             "path": "backend/app/Services/Agriculture/Research/Capability/CapVer/CapVerSeatVerificationService.php",
             "sha256": null,
-            "git_status": "untracked",
+            "git_status": "tracked_in_HEAD",
             "classification": "REQUIRED_FOR_PHASE_1",
             "decision": "committed_under_GB_FOUNDATION_01",
-            "reason": "Not required for OD-A-ID write boundary; Onboarding-dependent; 2-arg persistCurrent"
+            "reason": "In HEAD after coupled cluster commit"
         },
         {
             "path": "backend/app/Services/Agriculture/Research/Onboarding/",
             "sha256": null,
-            "git_status": "untracked",
+            "git_status": "tracked_in_HEAD",
             "classification": "REQUIRED_FOR_PHASE_1",
             "decision": "committed_under_GB_FOUNDATION_01",
-            "reason": "Requires line-by-line review before commit"
+            "reason": "Coupling hazard closed by atomic commit"
         }
     ],
     "dependencies": [
@@ -354,8 +363,8 @@
             "depends_on": [
                 "P1-EXIT-01"
             ],
-            "dependency_type": "\u0642\u0631\u0627\u0631 \u0645\u0627\u0644\u0643 / \u0645\u0639\u0645\u0627\u0631\u064a",
-            "evidence": "ADR-023 \u00a78.64.4\u20137",
+            "dependency_type": "قرار مالك / معماري",
+            "evidence": "ADR-023 §8.64.4–7",
             "can_start_independently": false,
             "can_complete_independently": false,
             "blocking_reason": "Gate A owner record missing",
@@ -366,8 +375,8 @@
             "depends_on": [
                 "P1-EXIT-02"
             ],
-            "dependency_type": "\u0642\u0631\u0627\u0631 \u0645\u0627\u0644\u0643",
-            "evidence": "ADR-023 \u00a78.64.4\u20137",
+            "dependency_type": "قرار مالك",
+            "evidence": "ADR-023 §8.64.4–7",
             "can_start_independently": false,
             "can_complete_independently": false,
             "blocking_reason": "Gate B requires Gate A",
@@ -378,8 +387,8 @@
             "depends_on": [
                 "P1-EXIT-03"
             ],
-            "dependency_type": "\u062a\u0642\u0646\u064a + \u0642\u0631\u0627\u0631 \u0645\u0627\u0644\u0643",
-            "evidence": "ADR-023 \u00a78.24.2",
+            "dependency_type": "تقني + قرار مالك",
+            "evidence": "ADR-023 §8.24.2",
             "can_start_independently": false,
             "can_complete_independently": false,
             "blocking_reason": "Gate B",
@@ -390,7 +399,7 @@
             "depends_on": [
                 "P1-EXIT-03"
             ],
-            "dependency_type": "\u062f\u0644\u064a\u0644 \u062e\u0627\u0631\u062c\u064a + Gate B",
+            "dependency_type": "دليل خارجي + Gate B",
             "evidence": "OD-07; GB-IC-01 scope",
             "can_start_independently": true,
             "can_complete_independently": false,
@@ -411,8 +420,8 @@
                 "P1-EXIT-09",
                 "P1-EXIT-10"
             ],
-            "dependency_type": "\u062a\u0642\u0646\u064a + \u062d\u0648\u0643\u0645\u0629",
-            "evidence": "ADR-023 \u00a78.64.7",
+            "dependency_type": "تقني + حوكمة",
+            "evidence": "ADR-023 §8.64.7",
             "can_start_independently": false,
             "can_complete_independently": false,
             "blocking_reason": "Prerequisites not all PASS",
@@ -421,8 +430,8 @@
         {
             "criterion": "OD-C-Projection-runtime",
             "depends_on": [],
-            "dependency_type": "\u062a\u0642\u0646\u064a",
-            "evidence": "\u00a78.81; commits 3329bbf/6e13c85",
+            "dependency_type": "تقني",
+            "evidence": "§8.81; commits 3329bbf/6e13c85",
             "can_start_independently": true,
             "can_complete_independently": true,
             "blocking_reason": null,
@@ -444,30 +453,46 @@
             "maa_d56db95fb883ea11_c926aaae452e",
             "maa_8c58b9079adbc159_d25dc22c1340",
             "maa_5a427aa65680b8c5_69fc991dca47",
-            "maa_0412a95f891f1133_a9e337bd8e0f"
+            "maa_0412a95f891f1133_a9e337bd8e0f",
+            "maa_2d6a36642bf4bff8_abb8a93994a8",
+            "maa_41d9c9fca00fac6f_220f32d6c295",
+            "maa_7609402c06984640_bfa3f8cb390f",
+            "maa_7609402c06984640_ff0d813d17b3",
+            "maa_6bed4c170b86ad8c_0a39b4d19c8c",
+            "maa_5fd033bbfd2962c2_be50cbc03879",
+            "maa_9a44b2d4ed9df080_91303b345059"
         ],
         "archive_count_observed": 659,
-        "mission_id": "2026-11-11-PHASE-1-REV7",
-        "session_report": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV7-SESSION-REPORT.ar.md",
+        "mission_id": "2026-11-11-PHASE-1-REV8.4",
+        "session_report": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV8.4-SESSION-REPORT.ar.md",
         "session_report_archive_id": "maa_5a427aa65680b8c5_69fc991dca47",
         "snapshot_v71": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-PROJECT-STATE-SNAPSHOT.v7.1.json",
-        "snapshot_v71_archive_id": "maa_8c58b9079adbc159_d25dc22c1340"
+        "snapshot_v71_archive_id": "maa_8c58b9079adbc159_d25dc22c1340",
+        "snapshot_v84": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-PROJECT-STATE-SNAPSHOT.v8.4.json",
+        "snapshot_v84_archive_id": "maa_5fd033bbfd2962c2_be50cbc03879",
+        "r84_prompt_archive_id": "maa_9a44b2d4ed9df080_91303b345059"
     },
     "session_tests": {
-        "tests": 67,
-        "assertions": 534,
+        "tests": 22,
+        "assertions": 598,
         "exit_code": 0,
-        "verified_at": "2026-11-11T12:35:07Z"
+        "verified_at": "2026-11-11T15:55:00Z",
+        "coupled_suite_historical": {
+            "tests": 232,
+            "assertions": 6911,
+            "exit_code": 0
+        }
     },
     "next_session_focus": [
-        "Push Safety Gate ALLOW \u2014 push ahead commits",
-        "P1-EXIT-05 staging/operator external",
-        "PostgreSQL Cap (GAP-07)",
-        "G2-26 / D-08 authentic evidence only"
+        "P1-EXIT-05 external staging/operator evidence",
+        "PostgreSQL Cap suite when DB_TEST_* available (GAP-07 REQUIRED)",
+        "G2-26 authentic evidence (no fabrication)",
+        "D-08 Supplement 04 authentic material or owner archival rule"
     ],
-    "last_checkpoint": "R8.3 coupled cluster committed; awaiting push",
-    "gap_report": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV8.2-GAP-01-08-REPORT.md",
+    "last_checkpoint": "R8.4: push sync verified; R8.3/R8.4 archived; EXIT-05/07/D-08 remain external blockers",
+    "gap_report": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-REV8.4-GAP-01-08-REPORT.md",
     "acceptance_baseline": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ACCEPTANCE-BASELINE.v1.json",
     "assumption_register": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-ASSUMPTION-REGISTER.v1.json",
-    "wip_coupling_hazard": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WIP-COUPLING-HAZARD.v1.json"
+    "wip_coupling_hazard": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-WIP-COUPLING-HAZARD-R83.v1.json",
+    "push_safety_gate": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-PUSH-SAFETY-GATE.v1.json"
 }
