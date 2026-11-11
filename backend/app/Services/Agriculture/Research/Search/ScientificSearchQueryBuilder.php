@@ -370,16 +370,31 @@ class ScientificSearchQueryBuilder
      * Never maps publisher to geo.
      * Year is intentionally omitted here — see class docblock (FAOSTAT carries structured year).
      *
+     * Optional OD-C Projection approved metadata may omit geography-backed country when
+     * geography is unsupported/omitted/unresolved. Projection never supplies query text here.
+     *
+     * @param  array{
+     *     unsupported_facets?: list<string>,
+     *     omitted_facets?: list<string>,
+     *     unresolved_facets?: list<string>,
+     *     projection_warnings?: list<array{code: string, message: string}>
+     * }|null  $projectionApprovedMetadata
      * @return array{domain?: string, country?: string, include_semantic_score: bool}
      */
-    public function buildConsensusRequestOptions(KnowledgeQueryPlan $plan): array
-    {
+    public function buildConsensusRequestOptions(
+        KnowledgeQueryPlan $plan,
+        ?array $projectionApprovedMetadata = null,
+    ): array {
         $options = [
             'include_semantic_score' => true,
         ];
 
         if ($this->shouldUseAgriDomain($plan)) {
             $options['domain'] = 'agri';
+        }
+
+        if (! $this->geographyConstraintPermitted($projectionApprovedMetadata)) {
+            return $options;
         }
 
         $location = $this->resolveAskedLocation($plan);
@@ -391,6 +406,35 @@ class ScientificSearchQueryBuilder
         }
 
         return $options;
+    }
+
+    /**
+     * @param  array{
+     *     unsupported_facets?: list<string>,
+     *     omitted_facets?: list<string>,
+     *     unresolved_facets?: list<string>,
+     *     projection_warnings?: list<array{code: string, message: string}>
+     * }|null  $projectionApprovedMetadata
+     */
+    private function geographyConstraintPermitted(?array $projectionApprovedMetadata): bool
+    {
+        if ($projectionApprovedMetadata === null) {
+            return true;
+        }
+
+        foreach (['unsupported_facets', 'omitted_facets', 'unresolved_facets'] as $key) {
+            $facets = $projectionApprovedMetadata[$key] ?? [];
+            if (! is_array($facets)) {
+                continue;
+            }
+            foreach ($facets as $facet) {
+                if (is_string($facet) && strtolower(trim($facet)) === 'geography') {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**

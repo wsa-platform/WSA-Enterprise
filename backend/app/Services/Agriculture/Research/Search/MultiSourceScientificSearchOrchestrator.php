@@ -12,6 +12,7 @@ use App\Services\Agriculture\Research\Coexistence\CoexistenceMode;
 use App\Services\Agriculture\Research\Coexistence\CoexistenceRetrievalPlan;
 use App\Services\Agriculture\Research\Coexistence\Stage3CghiaCoexistenceBoundary;
 use App\Services\Agriculture\Research\KnowledgeQueryPlan;
+use App\Services\Agriculture\Research\Projection\ProjectionSearchOptionsBinder;
 use Illuminate\Support\Facades\Concurrency;
 use Illuminate\Support\Facades\Log;
 
@@ -34,6 +35,10 @@ class MultiSourceScientificSearchOrchestrator
         'semantic_scholar',
     ];
 
+    private ProjectionSearchOptionsBinder $projectionBinder;
+
+    private ?CoexistenceRetrievalPlan $activeCoexistencePlan = null;
+
     public function __construct(
         private ScientificSourceAdapterRegistry $registry,
         private ScientificSourceSelector $sourceSelector,
@@ -42,7 +47,10 @@ class MultiSourceScientificSearchOrchestrator
         private ScientificResultRanker $ranker,
         private ScientificQueryCompiler $queryCompiler = new ScientificQueryCompiler(),
         private Stage3CghiaCoexistenceBoundary $coexistenceBoundary = new Stage3CghiaCoexistenceBoundary(),
-    ) {}
+        ?ProjectionSearchOptionsBinder $projectionBinder = null,
+    ) {
+        $this->projectionBinder = $projectionBinder ?? new ProjectionSearchOptionsBinder();
+    }
 
     public function execute(KnowledgeQueryPlan $plan, int $limit = 10, ?array $sourceKeys = null): ScientificSearchExecutionReport
     {
@@ -57,6 +65,7 @@ class MultiSourceScientificSearchOrchestrator
             : $selectionTrace['selected'];
 
         $coexistencePlan = $this->buildCoexistencePlan($plan, $selectedSources, $searchQuery);
+        $this->activeCoexistencePlan = $coexistencePlan;
 
         if ($selectedSources === []) {
             return $this->emptyReport(
@@ -243,25 +252,46 @@ class MultiSourceScientificSearchOrchestrator
     /**
      * OpenAlex Consensus options (domain=agri, country=ISO) must not reach FAOSTAT.
      * FAOSTAT interprets domain as a dataset code (QCL) and must receive only FAOSTAT options.
+     * OD-C Projection approved metadata is attached per source from resolved Cap/Path decisions.
      *
      * @return array<string, mixed>
      */
     private function optionsForSource(string $sourceKey, KnowledgeQueryPlan $plan): array
     {
+        $entry = $this->activeCoexistencePlan?->entryFor($sourceKey);
+        $csq = $plan->normalizedQuery->canonicalQuestion;
+        $canonicalQueryId = $this->activeCoexistencePlan?->csqIdentity
+            ?? ('csq:'.hash('sha256', $plan->normalizedQuery->normalizedQuestion));
+
+        $projectionSeed = $this->projectionBinder->attach(
+            [],
+            $canonicalQueryId,
+            $csq,
+            $entry?->capabilityDecision,
+            $entry?->pathDecision,
+        );
+        $approved = $projectionSeed[ProjectionSearchOptionsBinder::OPTIONS_KEY] ?? null;
+        $projectionStatus = $projectionSeed[ProjectionSearchOptionsBinder::STATUS_KEY] ?? null;
+        $approvedForBuilder = $projectionStatus === ProjectionSearchOptionsBinder::STATUS_ATTACHED
+            && is_array($approved)
+            ? $approved
+            : null;
+
         if ($sourceKey === 'fao_stat') {
             $queries = FaoStatSearchOptionsResolver::canonicalQueriesFromPlan($plan);
             $primary = $queries[0] ?? FaoStatSearchOptionsResolver::fromPlan($plan);
             // Internal orchestration hint only — never sent as a FAOSTAT query parameter.
             $primary['_faostat_canonical_queries'] = $queries !== [] ? $queries : [$primary];
-
-            return $this->attachCompiledQueryMetadata($sourceKey, $plan, $primary);
+            $options = $this->attachCompiledQueryMetadata($sourceKey, $plan, $primary);
+        } else {
+            $options = $this->attachCompiledQueryMetadata(
+                $sourceKey,
+                $plan,
+                $this->queryBuilder->buildConsensusRequestOptions($plan, $approvedForBuilder),
+            );
         }
 
-        return $this->attachCompiledQueryMetadata(
-            $sourceKey,
-            $plan,
-            $this->queryBuilder->buildConsensusRequestOptions($plan),
-        );
+        return array_merge($options, $projectionSeed);
     }
 
     /**

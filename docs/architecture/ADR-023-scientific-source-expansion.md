@@ -9055,3 +9055,32 @@ Read-only search on 2026-11-11 found D-08 directories for the baseline archive a
 ### 8.80.5 — Phase 1 status after these decisions
 
 Owner decisions in §8.80.1 are approved within their stated boundaries. Technical gates (including P1-EXIT-07 evidence, D-08 completeness, CapVer integration across all write callers, CSQ end-to-end wiring, and P1-EXIT-11) remain subject to verification evidence. **Phase 1 is not closed by this section alone.**
+
+## 8.81 — OD-C Projection runtime wiring and CapVerSeat disposition (2026-11-11 Rev 4)
+
+Append-only. Does **not** rewrite §8.80. Does **not** create Gate A/B, does **not** close P1-EXIT-11, and does **not** declare Phase 1 complete.
+
+### 8.81.1 — Projection operational integration (OD-C)
+
+Implemented on the Stage-3 search path:
+
+| Component | Role |
+|---|---|
+| `ProjectionSearchOptionsBinder` | Derives `ProjectionQueryConstraints` from resolved Cap+Path decisions; emits OD-C `approvedMetadata()` into search options |
+| `CsqPresentFacetCodes` | Extracts present CSQ facet codes for Projection (does not invent Cap cells) |
+| `MultiSourceScientificSearchOrchestrator::optionsForSource` | Attaches binder output per source; Builder still owns HTTP text |
+| `ScientificSearchQueryBuilder::buildConsensusRequestOptions` | Consumes approved metadata to omit `country` when geography is unsupported/omitted/unresolved |
+
+When Cap or Path decision is absent (e.g. coexistence `LEGACY_ONLY`), status is `skipped_missing_capability_or_path_decision`. Absence is **not** CONSTRAINABLE. No `source_query` is introduced as Projection output.
+
+### 8.81.2 — CapVerSeat* disposition
+
+`CapVerSeatVerificationService` / `CapVerSeatOutcome` remain **untracked WIP**. They depend on untracked Onboarding catalogs and still call `persistCurrent` with two arguments while the CapVer write boundary requires an authorized assessment. They are **not** required for OD-A-ID write-boundary enforcement (already covered by `CapVerWriteBoundary` + `EloquentCapabilityStoreRepository`). They are **not** committed in this amendment.
+
+### 8.81.3 — Supplement 04 re-check
+
+Read-only re-search on 2026-11-11 (Rev 4): no git deletion history for Supplement 04 paths; supplements 01–03 remain present. Outcome unchanged: `SUPPLEMENT_04_NOT_FOUND` → scenario best supported by evidence: `REFERENCED_OR_PLANNED_BUT_NEVER_CREATED` (not proven deleted). D-08 remains open.
+
+### 8.81.4 — Phase 1 status after this amendment
+
+Executable OD-C runtime wiring and focused/regression tests advanced P1-EXIT-01(c) and P1-EXIT-09 evidence. Owner-gated items (Gate A/B, IC operational closure, per-seat IC evidence, access-family adapters, D-08 archive completeness, P1-EXIT-11) remain unresolved. **Classification remains `PHASE_1_GAP_CLOSURE_PARTIAL`.**

@@ -1,11 +1,13 @@
 {
   "schema_id": "adr023.phase1_blocker_register.v1",
-  "governance_reference": "ADR-023/section-8.80",
+  "governance_reference": "ADR-023/section-8.80;ADR-023/section-8.81",
   "created_at": "2026-11-11T00:00:00Z",
+  "updated_at": "2026-11-11T12:00:00Z",
   "notes": [
     "AUD-01 through AUD-15 are not an authoritative architecture register in this repository.",
     "Unsupported AUD labels are recorded as UNVERIFIED_REFERENCE aliases only.",
-    "This register does not rewrite historical reports."
+    "This register does not rewrite historical reports.",
+    "Rev 4: Projection runtime wiring advanced OD-C; Gate A/B/IC/D-08 remain external or evidence blockers."
   ],
   "entries": [
     {
@@ -21,8 +23,8 @@
     {
       "blocker_id": "P1-BLK-2026-11-11-D08-01",
       "historical_aud_alias": null,
-      "original_reference": "D-08; OD-D08; Supplement 04 investigation",
-      "supporting_evidence": "ADR-023 §8.80.4 SUPPLEMENT_04_NOT_FOUND; supplements 01–03 present",
+      "original_reference": "D-08; OD-D08; Supplement 04 investigation; §8.81.3",
+      "supporting_evidence": "ADR-023 §8.80.4 and §8.81.3 SUPPLEMENT_04_NOT_FOUND; scenario REFERENCED_OR_PLANNED_BUT_NEVER_CREATED; supplements 01–03 present",
       "affected_exit_criterion": "D-08 archival completeness",
       "current_status": "BLOCKED",
       "resolution_condition": "Authentic archival coverage for every required prompt/report, or owner-approved archival rule change",
@@ -32,11 +34,41 @@
       "blocker_id": "P1-BLK-2026-11-11-AUD-REF-01",
       "historical_aud_alias": "AUD-01..AUD-15",
       "original_reference": "Prior audit report labels; ADR-023 §8.79",
-      "supporting_evidence": "Repository search 2026-11-11 found no authoritative AUD register",
+      "supporting_evidence": "Repository search 2026-11-11 (and Rev 4 re-check) found no authoritative AUD register",
       "affected_exit_criterion": "none as gate IDs",
       "current_status": "UNVERIFIED_REFERENCE",
       "resolution_condition": "Do not invent historical AUD entries; track real blockers under P1-BLK identifiers",
       "dependency": "none"
+    },
+    {
+      "blocker_id": "P1-BLK-2026-11-11-GATE-A-01",
+      "historical_aud_alias": null,
+      "original_reference": "P1-EXIT-02; §8.64.4 Gate A",
+      "supporting_evidence": "No Gate A record appended for implementation scopes; §8.80/§8.81 are owner OD records, not Gate A",
+      "affected_exit_criterion": "P1-EXIT-02",
+      "current_status": "BLOCKED",
+      "resolution_condition": "Explicit owner Gate A record per implementation scope",
+      "dependency": "project owner"
+    },
+    {
+      "blocker_id": "P1-BLK-2026-11-11-GATE-B-01",
+      "historical_aud_alias": null,
+      "original_reference": "P1-EXIT-03; §8.64.4 Gate B",
+      "supporting_evidence": "No Gate B authorization record for Runtime Registry / adapters / IC inventory persistence",
+      "affected_exit_criterion": "P1-EXIT-03",
+      "current_status": "BLOCKED",
+      "resolution_condition": "Explicit owner Gate B record per scope",
+      "dependency": "Gate A + project owner"
+    },
+    {
+      "blocker_id": "P1-BLK-2026-11-11-CAPVERSEAT-WIP-01",
+      "historical_aud_alias": null,
+      "original_reference": "§8.81.2 CapVerSeat disposition",
+      "supporting_evidence": "Untracked CapVerSeatVerificationService still calls persistCurrent with two args; depends on untracked Onboarding; not required for OD-A-ID write boundary",
+      "affected_exit_criterion": "none (WIP hygiene)",
+      "current_status": "DEFERRED_UNTRACKED_WIP",
+      "resolution_condition": "Align to CapVerAuthorizedAssessment and review Onboarding before any commit, or discard",
+      "dependency": "engineering review of Onboarding catalogs"
     }
   ]
 }

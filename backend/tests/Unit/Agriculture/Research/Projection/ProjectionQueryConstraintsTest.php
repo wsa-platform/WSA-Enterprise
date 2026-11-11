@@ -687,24 +687,30 @@ final class ProjectionQueryConstraintsTest extends TestCase
         );
     }
 
-    public function test_contract_is_not_wired_into_runtime(): void
+    public function test_contract_is_wired_into_orchestrator_via_binder(): void
     {
-        $appDir = dirname(__DIR__, 5).DIRECTORY_SEPARATOR.'app';
-        $this->assertDirectoryExists($appDir);
+        $binder = dirname(__DIR__, 5).DIRECTORY_SEPARATOR.'app'
+            .DIRECTORY_SEPARATOR.'Services'
+            .DIRECTORY_SEPARATOR.'Agriculture'
+            .DIRECTORY_SEPARATOR.'Research'
+            .DIRECTORY_SEPARATOR.'Projection'
+            .DIRECTORY_SEPARATOR.'ProjectionSearchOptionsBinder.php';
+        $orchestrator = dirname(__DIR__, 5).DIRECTORY_SEPARATOR.'app'
+            .DIRECTORY_SEPARATOR.'Services'
+            .DIRECTORY_SEPARATOR.'Agriculture'
+            .DIRECTORY_SEPARATOR.'Research'
+            .DIRECTORY_SEPARATOR.'Search'
+            .DIRECTORY_SEPARATOR.'MultiSourceScientificSearchOrchestrator.php';
 
-        $references = [];
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($appDir, RecursiveDirectoryIterator::SKIP_DOTS));
-        foreach ($iterator as $file) {
-            if ($file->getExtension() !== 'php' || in_array($file->getFilename(), self::NEW_CLASS_FILES, true)) {
-                continue;
-            }
-            $source = (string) file_get_contents($file->getPathname());
-            if (str_contains($source, 'ProjectionQueryConstraints') || str_contains($source, 'ProjectionFacetConstraint')) {
-                $references[] = $file->getPathname();
-            }
-        }
-
-        $this->assertSame([], $references);
+        $this->assertFileExists($binder);
+        $this->assertFileExists($orchestrator);
+        $binderSource = (string) file_get_contents($binder);
+        $orchSource = (string) file_get_contents($orchestrator);
+        $this->assertStringContainsString('ProjectionQueryConstraintsFactory', $binderSource);
+        $this->assertStringContainsString('approvedMetadata()', $binderSource);
+        $this->assertStringNotContainsString('source_query', $binderSource);
+        $this->assertStringContainsString('ProjectionSearchOptionsBinder', $orchSource);
+        $this->assertStringContainsString('projectionBinder', $orchSource);
     }
 
     /**

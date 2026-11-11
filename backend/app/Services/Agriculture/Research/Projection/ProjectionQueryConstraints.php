@@ -14,7 +14,7 @@ use App\Services\Agriculture\Research\Path\PathId;
  * Consumed by ScientificSearchQueryBuilder, which remains the sole lexical construction and
  * expansion authority (D-04, D-10.9.2). Carries no query text, terms, expansions or fidelity:
  * source_query, expanded_terms and fidelity_class stay in ProjectionEnvelope.
- * In-memory only; not wired into runtime.
+ * Runtime attachment is via ProjectionSearchOptionsBinder on the Stage-3 orchestrator path (OD-C).
  */
 final readonly class ProjectionQueryConstraints
 {

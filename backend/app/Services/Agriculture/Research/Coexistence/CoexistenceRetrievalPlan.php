@@ -43,6 +43,18 @@ final readonly class CoexistenceRetrievalPlan
         return $keys;
     }
 
+    public function entryFor(string $sourceKey): ?CoexistenceSourcePlanEntry
+    {
+        $needle = strtolower(trim($sourceKey));
+        foreach ($this->entries as $entry) {
+            if (strtolower($entry->sourceKey) === $needle) {
+                return $entry;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @return list<\App\Services\Agriculture\Research\Disclosure\FidelityDisclosureHandoff>
      */
