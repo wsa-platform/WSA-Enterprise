@@ -1,0 +1,22 @@
+{
+  "schema_id": "adr023.archive_verification.v1",
+  "created_at_utc": "2026-11-12T22:50:00Z",
+  "revision": "10.8.3",
+  "mission": "2026-11-12-PHASE-1-REV10.8.3",
+  "method": "FilesystemMissionArtifactArchive::ingestFile + readOriginalBytes + verifyIntegrity",
+  "count_before": 742,
+  "count_after": 750,
+  "historical_17": "ALREADY_ARCHIVED_AND_VERIFIED (preserved; not re-ingested)",
+  "prompts_10_5_10_6": "NOT_FOUND",
+  "items": [
+    {"label": "exit09_pg_report_v1083", "archive_id": "maa_a22672f2d3fe22c9_fd240bfc6f69", "verification": "ARCHIVED_AND_VERIFIED"},
+    {"label": "exit09_gap_v1083", "archive_id": "maa_21da4c0e48543e84_4d5459e97242", "verification": "ARCHIVED_AND_VERIFIED"},
+    {"label": "ten_failure_v1083", "archive_id": "maa_b0e068366256b574_2285e11f140d", "verification": "ARCHIVED_AND_VERIFIED"},
+    {"label": "acceptance_matrix_v1083", "archive_id": "maa_394a96bb41efe36d_c7ad17ad5abb", "verification": "ARCHIVED_AND_VERIFIED"},
+    {"label": "discrepancy_register_v1083", "archive_id": "maa_0c80e628ac9dab1e_2dc76b483a88", "verification": "ARCHIVED_AND_VERIFIED"},
+    {"label": "dod_d01_d14_v1083", "archive_id": "maa_126cee6c3f634e5a_0fe490564c10", "verification": "ARCHIVED_AND_VERIFIED"},
+    {"label": "external_blockers_v1083", "archive_id": "maa_b7e2bd81f5857b17_51ef12f1f682", "verification": "ARCHIVED_AND_VERIFIED"},
+    {"label": "exit11_gate_v1083", "archive_id": "maa_c45f13d3f4997c11_88dd2a1e26a7", "verification": "ARCHIVED_AND_VERIFIED"}
+  ],
+  "evidence_log": "_tmp-r1083-archive-ingest.json"
+}
