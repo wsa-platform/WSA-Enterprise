@@ -1,0 +1,29 @@
+{
+    "schema_id": "adr023.seat_specific_blocker.v1",
+    "blocker_id": "P1-BLK-2026-11-11-G2-26-01",
+    "seat_id": "G2-26",
+    "blocker_type": "DOCUMENTARY_MISSING",
+    "missing_evidence": "No documentary IC evidence-review row for G2-26 under GB-IC-01 (109-seat scope). No persisted verified IC artifact. No identity binding. No endpoint test.",
+    "evidence_already_inspected": [
+        {
+            "path": "docs/architecture/science-source-expansion/ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+            "finding": "G2-26 is CURRENT membership; activation INACTIVE in identity evidence block."
+        },
+        {
+            "path": "docs/architecture/ADR-023-scientific-source-expansion.md",
+            "finding": "\u00a78.30.5 / \u00a78.77 cover 109 seats; \u00a78.45.2 adds G2-26 to 110.v1; \u00a78.79 labels gap no_documentary_review_in_gb_ic_01_scope."
+        },
+        {
+            "path": "docs/architecture/science-source-expansion/2026-10-13-PHASE-1-IC-EVIDENCE-REVIEW.v1.json",
+            "finding": "Artifact is the 109-seat GB-IC-01 review; G2-26 is absent by scope."
+        }
+    ],
+    "impact": "P1-EXIT-07 remains BLOCKED for current membership closure until G2-26 has a verified per-seat IC artifact or an owner-accepted substitute review under a later Gate B. This blocker does not PASS P1-EXIT-07.",
+    "resolution_condition": "Authorized per-seat evidence review for G2-26 producing either a verified persisted IC artifact (D-10.8.1) with identity binding where supported (D-10.3), or a replacement seat-specific blocker after that authorized review.",
+    "resolution_owner": "project owner (authorization) + IC evidence owner (review)",
+    "dependency": "Gate B scope that permits IC persistence beyond GB-IC-01 documentary prohibition",
+    "estimated_effort": "UNKNOWN",
+    "estimated_effort_reason": "Depends on owner Gate B authorization and availability of public documentary sources for the Wiley journal seat.",
+    "status": "BLOCKED",
+    "created_at": "2026-11-11T00:00:00Z"
+}

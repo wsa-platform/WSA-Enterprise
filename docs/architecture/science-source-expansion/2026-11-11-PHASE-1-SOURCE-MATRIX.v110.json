@@ -1,0 +1,2226 @@
+{
+    "schema_id": "adr023.phase1_source_matrix.v110",
+    "generated_at": "2026-11-11T00:00:00Z",
+    "governance_reference": "ADR-023/section-8.80#OD-10",
+    "membership_revision": "110.v1",
+    "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+    "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d",
+    "total_rows": 110,
+    "notes": [
+        "Historical 109.v1 matrices remain unchanged.",
+        "Membership is not classification, capability, endpoint verification, eligibility, or activation.",
+        "No unsupported classifications are asserted as verified."
+    ],
+    "summary": {
+        "membership_current": 110,
+        "identity_verified": 0,
+        "persisted_classification_artifacts": 0,
+        "endpoint_tested": 0,
+        "capver_verified": 0,
+        "operationally_eligible": 0,
+        "active": 0,
+        "seat_specific_blockers": 1
+    },
+    "rows": [
+        {
+            "adr_id": "G1-01",
+            "display_name": "FAO AGRIS",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-02",
+            "display_name": "Organic Eprints",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-03",
+            "display_name": "Turkish Journal of Agriculture and Forestry",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-04",
+            "display_name": "AgroSpace",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-05",
+            "display_name": "AgriRxiv",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-06",
+            "display_name": "AgroPortal",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-07",
+            "display_name": "YYU Journal of Agricultural Sciences",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-08",
+            "display_name": "J. Korean Soc. Int. Agriculture",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-09",
+            "display_name": "Int. J. Horticultural Science",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-10",
+            "display_name": "JISHS / eJHS",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-11",
+            "display_name": "Sarhad Journal of Agriculture",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-12",
+            "display_name": "FlowerBase",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-13",
+            "display_name": "HortDB V1.0",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-14",
+            "display_name": "Tropicals.cn",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-15",
+            "display_name": "sCentInDB",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-16",
+            "display_name": "AromaDb",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-17",
+            "display_name": "Dr. Duke's Databases",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-18",
+            "display_name": "MPNS \u2014 Kew",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-19",
+            "display_name": "Fruit and Nut Cultivars Database",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-20",
+            "display_name": "FEAtl",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-21",
+            "display_name": "CRFG",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G1-22",
+            "display_name": "GrainGenes",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-01",
+            "display_name": "Poultry Science",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-02",
+            "display_name": "Journal of Applied Poultry Research",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-03",
+            "display_name": "European Poultry Science",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-04",
+            "display_name": "Brazilian Journal of Poultry Science",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-05",
+            "display_name": "Journal of Poultry Science",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-06",
+            "display_name": "Journal of Animal Science and Biotechnology",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-07",
+            "display_name": "Animal Frontiers",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-08",
+            "display_name": "Veterinary and Animal Science",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-09",
+            "display_name": "Turkish Journal of Veterinary & Animal Sciences",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-10",
+            "display_name": "Journal of Animal Production (Hayvansal \u00dcretim)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-11",
+            "display_name": "Aquaculture and Fisheries",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-12",
+            "display_name": "Turkish Journal of Fisheries and Aquatic Sciences",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-13",
+            "display_name": "Marine and Fishery Sciences (MAFIS)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-14",
+            "display_name": "AIMS Animal Science",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-15",
+            "display_name": "Andalasian Livestock",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-16",
+            "display_name": "Hayvan Bilimi ve \u00dcr\u00fcnleri Dergisi (JASP)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-17",
+            "display_name": "REMVT",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-18",
+            "display_name": "Farm Animal Health and Nutrition",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-19",
+            "display_name": "Animal Bioscience",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-20",
+            "display_name": "Aquaculture Journal",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-21",
+            "display_name": "Aquaculture Reports",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-22",
+            "display_name": "LIVEMAP",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-23",
+            "display_name": "LivestockDev",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-24",
+            "display_name": "IDEAL Project",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-25",
+            "display_name": "CIRAD Portals",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G2-26",
+            "display_name": "Aquaculture, Fish and Fisheries",
+            "membership": "CURRENT",
+            "classification": "UNKNOWN_NO_PERSISTED_ARTIFACT",
+            "documentary_evidence": "MISSING_GB_IC_01_SCOPE",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": "P1-BLK-2026-11-11-G2-26-01",
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-01",
+            "display_name": "APIS",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-02",
+            "display_name": "Uludag Bee Journal",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-03",
+            "display_name": "Journal of Apicultural Science",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-04",
+            "display_name": "Frontiers in Bee Science",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-05",
+            "display_name": "OSMIA",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-06",
+            "display_name": "EUNK",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-07",
+            "display_name": "Apidologie",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-08",
+            "display_name": "USDA-ARS Carl Hayden Honey Bee Research Center",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-09",
+            "display_name": "USDA-ARS Bee Research Laboratory \u2014 Beltsville",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-10",
+            "display_name": "Harry H. Laidlaw Jr. Honey Bee Research Facility \u2014 UC Davis",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-11",
+            "display_name": "University of Minnesota Bee Lab",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-12",
+            "display_name": "Washington State University Bee Program",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-13",
+            "display_name": "MSPB",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G3-14",
+            "display_name": "UrBAN",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G4-01",
+            "display_name": "SilkBase",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G4-02",
+            "display_name": "KAIKObase",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G4-03",
+            "display_name": "Silkworm Gene Resources Database (SGRDB / NAAS)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G4-04",
+            "display_name": "SilkDB / Silkworm Knowledgebase",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G4-05",
+            "display_name": "International Sericultural Commission (ISC / INSERCO)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G4-06",
+            "display_name": "Sericologia",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G4-07",
+            "display_name": "Queen Sirikit Department of Sericulture (QSDS)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-01",
+            "display_name": "InsectBrainDatabase (IBdb)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-02",
+            "display_name": "AGRICOLA (USDA/NAL)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-03",
+            "display_name": "ELIE \u2014 Entomological Label Information Extraction",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-04",
+            "display_name": "GBIF",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-05",
+            "display_name": "Journal of Insect Science (JIS)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-06",
+            "display_name": "npj Entomology",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-07",
+            "display_name": "Insects (MDPI)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-08",
+            "display_name": "Current Research in Insect Science",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-09",
+            "display_name": "Frontiers in Insect Science",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-10",
+            "display_name": "Florida Entomologist",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-11",
+            "display_name": "Egyptian Academic Journal of Biological Sciences A \u2014 Entomology",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-12",
+            "display_name": "PhytoFrontiers\u2122",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-13",
+            "display_name": "Phytopathology Research",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-14",
+            "display_name": "Tropical Plant Pathology",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-15",
+            "display_name": "BMC Plant Biology",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-16",
+            "display_name": "Pathogens (MDPI)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-17",
+            "display_name": "Journal of Plant Protection and Pathology \u2014 Mansoura University",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-18",
+            "display_name": "Iranian Journal of Plant Pathology",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G5-19",
+            "display_name": "Plant Pathology Journal \u2014 ANSInet",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-01",
+            "display_name": "FlowerBase",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-02",
+            "display_name": "Tropicals.cn",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-03",
+            "display_name": "HortDB V1.0",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-04",
+            "display_name": "sCentInDB",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-05",
+            "display_name": "AromaDb",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-06",
+            "display_name": "Dr. Duke's Phytochemical and Ethnobotanical Databases",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-07",
+            "display_name": "MPNS \u2013 Kew",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-08",
+            "display_name": "Fruit and Nut Cultivars Database (FNCD)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-09",
+            "display_name": "FEAtl \u2013 Fruit Expression Atlas",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-10",
+            "display_name": "CRFG \u2013 California Rare Fruit Growers",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-11",
+            "display_name": "Chrysanthemum Genome Database (CGD)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-12",
+            "display_name": "OfIR \u2013 Osmanthus fragrans Information Resource",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-13",
+            "display_name": "PGRDEU",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-14",
+            "display_name": "GDR \u2013 Genome Database for Rosaceae",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-15",
+            "display_name": "PeachMD",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-16",
+            "display_name": "Citrus Genome Database (CGD)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-17",
+            "display_name": "HarnesstomDB",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-18",
+            "display_name": "INIA Peru \u2013 Banco de Germoplasma",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-19",
+            "display_name": "BINA \u2013 Paraguay",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-20",
+            "display_name": "Biodiversity Heritage Library (BHL)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-21",
+            "display_name": "New York Botanical Garden (NYBG)",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        },
+        {
+            "adr_id": "G6-22",
+            "display_name": "PG Syllabus \u2013 UBKV",
+            "membership": "CURRENT",
+            "classification": "UNCLASSIFIED_PROPOSAL_NOT_PERSISTED",
+            "documentary_evidence": "HISTORICAL_IC_ER_PROPOSAL_ONLY",
+            "identity": "NOT_VERIFIED",
+            "capability": "ABSENT_MEANS_UNVERIFIED",
+            "capver_assessment": "NONE",
+            "endpoint_verification": "NOT_RUN",
+            "integration": "NOT_VERIFIED",
+            "eligibility": "NOT_ELIGIBLE",
+            "activation": "INACTIVE",
+            "seat_specific_blocker_id": null,
+            "evidence_provenance": {
+                "membership_register": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+                "membership_revision": "110.v1",
+                "membership_register_sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d"
+            }
+        }
+    ]
+}

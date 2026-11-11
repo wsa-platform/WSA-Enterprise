@@ -17,6 +17,9 @@ use App\Services\Agriculture\Research\Capability\CapabilitySubject;
 use App\Services\Agriculture\Research\Capability\Persistence\CapabilityCellLifecycle;
 use App\Services\Agriculture\Research\Capability\Persistence\CapabilityStoreRepository;
 use App\Services\Agriculture\Research\Capability\Persistence\EloquentCapabilityStoreRepository;
+use App\Services\Agriculture\Research\Capability\CapVer\CapVerAssessmentIssuer;
+use App\Services\Agriculture\Research\Capability\CapVer\CapVerAssessmentRegistry;
+use App\Services\Agriculture\Research\Capability\CapVer\CapVerWriteBoundary;
 use App\Services\Agriculture\Research\Identity\AdrMembershipId;
 use App\Services\Agriculture\Research\Identity\CanonicalSourceIdentityId;
 use Illuminate\Database\QueryException;
@@ -36,10 +39,47 @@ final class CapabilityStorePersistenceTest extends TestCase
 
     private EloquentCapabilityStoreRepository $repo;
 
+    private CapVerAssessmentIssuer $capVerIssuer;
+
     protected function setUp(): void
     {
         parent::setUp();
-        $this->repo = new EloquentCapabilityStoreRepository;
+        $registry = new CapVerAssessmentRegistry;
+        $this->capVerIssuer = new CapVerAssessmentIssuer($registry);
+        $this->repo = new EloquentCapabilityStoreRepository(new CapVerWriteBoundary($registry));
+    }
+
+    /**
+     * @param  list<string>  $evidenceRefs
+     */
+    private function persistAuthorized(\App\Services\Agriculture\Research\Capability\CapabilityRecord $record, array $evidenceRefs): \App\Services\Agriculture\Research\Capability\Persistence\CapabilityCellFact
+    {
+        $assessment = $this->capVerIssuer->issue(
+            $record->subject->adrId->value,
+            $record->dimension,
+            $record->state,
+            $evidenceRefs,
+        );
+
+        return $this->repo->persistCurrent($record, $evidenceRefs, $assessment);
+    }
+
+    /**
+     * @param  list<string>  $evidenceRefs
+     */
+    private function supersedeAuthorized(
+        \App\Services\Agriculture\Research\Capability\CapabilityRecordId $priorRecordId,
+        \App\Services\Agriculture\Research\Capability\CapabilityRecord $replacement,
+        array $evidenceRefs,
+    ): \App\Services\Agriculture\Research\Capability\Persistence\CapabilityCellFact {
+        $assessment = $this->capVerIssuer->issue(
+            $replacement->subject->adrId->value,
+            $replacement->dimension,
+            $replacement->state,
+            $evidenceRefs,
+        );
+
+        return $this->repo->supersedeCurrent($priorRecordId, $replacement, $evidenceRefs, $assessment);
     }
 
     protected function tearDown(): void
@@ -87,7 +127,7 @@ final class CapabilityStorePersistenceTest extends TestCase
             true,
         );
 
-        $this->repo->persistCurrent($record, ['evidence://cap/b', 'evidence://cap/a']);
+        $this->persistAuthorized($record, ['evidence://cap/b', 'evidence://cap/a']);
 
         $loaded = $this->repo->findFact(CapabilityRecordId::fromString('cap-rt-1'));
         $this->assertNotNull($loaded);
@@ -100,7 +140,7 @@ final class CapabilityStorePersistenceTest extends TestCase
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
         $api = CapabilityDimension::accessMethod(CapabilityAccessMethod::OAI_PMH);
-        $this->repo->persistCurrent($this->record('cap-am-1', $subject, $api, CapabilityState::VERIFIED), ['ev-1']);
+        $this->persistAuthorized($this->record('cap-am-1', $subject, $api, CapabilityState::VERIFIED), ['ev-1']);
 
         $loaded = $this->repo->findCurrentFact($subject, $api, false);
         $this->assertNotNull($loaded);
@@ -150,27 +190,26 @@ final class CapabilityStorePersistenceTest extends TestCase
         $this->repo->findFact(CapabilityRecordId::fromString('raw-partial'));
     }
 
-    public function test_unverified_and_not_applicable_may_omit_evidence(): void
+    public function test_not_applicable_may_omit_evidence_and_unverified_is_rejected(): void
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
-        $a = $this->repo->persistCurrent(
-            $this->record('cap-unv', $subject, CapabilityDimension::licenseConstraint('lic.cc-by'), CapabilityState::UNVERIFIED),
-            [],
-        );
-        $b = $this->repo->persistCurrent(
+        $b = $this->persistAuthorized(
             $this->record('cap-na', $subject, CapabilityDimension::licenseConstraint('lic.nc'), CapabilityState::NOT_APPLICABLE),
             [],
         );
-
-        $this->assertSame([], $a->evidenceRefs);
         $this->assertSame([], $b->evidenceRefs);
-        $this->assertSame(2, CghiaCapabilityCell::query()->count());
+
+        $this->expectException(CapabilityInvariantViolation::class);
+        $this->persistAuthorized(
+            $this->record('cap-unv', $subject, CapabilityDimension::licenseConstraint('lic.cc-by'), CapabilityState::UNVERIFIED),
+            [],
+        );
     }
 
     public function test_duplicate_ref_within_fact_rejected(): void
     {
         $this->expectException(CapabilityInvariantViolation::class);
-        $this->repo->persistCurrent(
+        $this->persistAuthorized(
             $this->record('cap-dup-ref', $this->seat('ABSTRACT_CAP_SEAT'), $this->api(), CapabilityState::VERIFIED),
             ['ev-1', 'ev-1'],
         );
@@ -180,8 +219,8 @@ final class CapabilityStorePersistenceTest extends TestCase
     {
         foreach ([[''], ['   '], [' ev-1'], [42], [null]] as $i => $refs) {
             try {
-                $this->repo->persistCurrent(
-                    $this->record('cap-bad-ref-'.$i, $this->seat('ABSTRACT_CAP_SEAT'), $this->api(), CapabilityState::UNVERIFIED),
+                $this->persistAuthorized(
+                    $this->record('cap-bad-ref-'.$i, $this->seat('ABSTRACT_CAP_SEAT'), $this->api(), CapabilityState::NOT_APPLICABLE),
                     $refs,
                 );
                 $this->fail('Malformed evidence ref accepted: '.json_encode($refs));
@@ -195,8 +234,8 @@ final class CapabilityStorePersistenceTest extends TestCase
     public function test_same_ref_across_facts_permitted(): void
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
-        $this->repo->persistCurrent($this->record('cap-shared-ref-1', $subject, $this->api(), CapabilityState::VERIFIED), ['ev-shared']);
-        $this->repo->persistCurrent(
+        $this->persistAuthorized($this->record('cap-shared-ref-1', $subject, $this->api(), CapabilityState::VERIFIED), ['ev-shared']);
+        $this->persistAuthorized(
             $this->record('cap-shared-ref-2', $subject, CapabilityDimension::accessMethod(CapabilityAccessMethod::RSS), CapabilityState::UNAVAILABLE),
             ['ev-shared'],
         );
@@ -206,10 +245,10 @@ final class CapabilityStorePersistenceTest extends TestCase
 
     public function test_duplicate_record_id_rejected(): void
     {
-        $this->repo->persistCurrent($this->record('cap-dup-id', $this->seat('ABSTRACT_CAP_SEAT'), $this->api(), CapabilityState::VERIFIED), ['ev-1']);
+        $this->persistAuthorized($this->record('cap-dup-id', $this->seat('ABSTRACT_CAP_SEAT'), $this->api(), CapabilityState::VERIFIED), ['ev-1']);
 
         $this->expectException(CapabilityInvariantViolation::class);
-        $this->repo->persistCurrent(
+        $this->persistAuthorized(
             $this->record('cap-dup-id', $this->seat('ABSTRACT_OTHER_SEAT'), $this->api(), CapabilityState::VERIFIED),
             ['ev-1'],
         );
@@ -218,10 +257,10 @@ final class CapabilityStorePersistenceTest extends TestCase
     public function test_second_current_for_same_natural_tuple_rejected(): void
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
-        $this->repo->persistCurrent($this->record('cap-cur-1', $subject, $this->api(), CapabilityState::VERIFIED), ['ev-1']);
+        $this->persistAuthorized($this->record('cap-cur-1', $subject, $this->api(), CapabilityState::VERIFIED), ['ev-1']);
 
         try {
-            $this->repo->persistCurrent($this->record('cap-cur-2', $subject, $this->api(), CapabilityState::UNAVAILABLE), ['ev-2']);
+            $this->persistAuthorized($this->record('cap-cur-2', $subject, $this->api(), CapabilityState::UNAVAILABLE), ['ev-2']);
             $this->fail('Second CURRENT fact accepted.');
         } catch (CapabilityInvariantViolation) {
             $this->addToAssertionCount(1);
@@ -250,8 +289,8 @@ final class CapabilityStorePersistenceTest extends TestCase
     public function test_shared_and_override_current_coexist(): void
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
-        $this->repo->persistCurrent($this->record('cap-shared', $subject, $this->api(), CapabilityState::VERIFIED), ['ev-1']);
-        $this->repo->persistCurrent(
+        $this->persistAuthorized($this->record('cap-shared', $subject, $this->api(), CapabilityState::VERIFIED), ['ev-1']);
+        $this->persistAuthorized(
             $this->record('cap-override', $subject, $this->api(), CapabilityState::PARTIAL, 'Override limited', true),
             ['ev-2'],
         );
@@ -264,9 +303,9 @@ final class CapabilityStorePersistenceTest extends TestCase
     public function test_supersession_archives_prior_and_inserts_replacement(): void
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
-        $this->repo->persistCurrent($this->record('cap-v1', $subject, $this->api(), CapabilityState::UNVERIFIED), []);
+        $this->persistAuthorized($this->record('cap-v1', $subject, $this->api(), CapabilityState::UNAVAILABLE), ['ev-seed']);
 
-        $new = $this->repo->supersedeCurrent(
+        $new = $this->supersedeAuthorized(
             CapabilityRecordId::fromString('cap-v1'),
             $this->record('cap-v2', $subject, $this->api(), CapabilityState::VERIFIED),
             ['ev-v2'],
@@ -275,15 +314,15 @@ final class CapabilityStorePersistenceTest extends TestCase
         $this->assertSame(CapabilityCellLifecycle::CURRENT, $new->lifecycle);
         $prior = $this->repo->findFact(CapabilityRecordId::fromString('cap-v1'));
         $this->assertSame(CapabilityCellLifecycle::HISTORICAL, $prior?->lifecycle);
-        $this->assertSame(CapabilityState::UNVERIFIED, $prior?->record->state);
+        $this->assertSame(CapabilityState::UNAVAILABLE, $prior?->record->state);
         $this->assertSame('cap-v2', $this->repo->findCurrentFact($subject, $this->api(), false)?->record->recordId->value);
     }
 
     public function test_historical_facts_excluded_from_current_loads(): void
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
-        $this->repo->persistCurrent($this->record('cap-h1', $subject, $this->api(), CapabilityState::UNAVAILABLE), ['ev-1']);
-        $this->repo->supersedeCurrent(
+        $this->persistAuthorized($this->record('cap-h1', $subject, $this->api(), CapabilityState::UNAVAILABLE), ['ev-1']);
+        $this->supersedeAuthorized(
             CapabilityRecordId::fromString('cap-h1'),
             $this->record('cap-h2', $subject, $this->api(), CapabilityState::VERIFIED),
             ['ev-2'],
@@ -298,14 +337,14 @@ final class CapabilityStorePersistenceTest extends TestCase
     public function test_failed_supersession_rolls_back_lifecycle_and_insert(): void
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
-        $this->repo->persistCurrent($this->record('cap-rb-1', $subject, $this->api(), CapabilityState::UNVERIFIED), []);
+        $this->persistAuthorized($this->record('cap-rb-1', $subject, $this->api(), CapabilityState::UNAVAILABLE), ['ev-seed']);
 
         CghiaCapabilityCell::creating(static function (): void {
             throw new \RuntimeException('injected insert failure');
         });
 
         try {
-            $this->repo->supersedeCurrent(
+            $this->supersedeAuthorized(
                 CapabilityRecordId::fromString('cap-rb-1'),
                 $this->record('cap-rb-2', $subject, $this->api(), CapabilityState::VERIFIED),
                 ['ev-1'],
@@ -325,7 +364,7 @@ final class CapabilityStorePersistenceTest extends TestCase
     public function test_supersession_with_mismatched_tuple_rejected(): void
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
-        $this->repo->persistCurrent($this->record('cap-mm-1', $subject, $this->api(), CapabilityState::UNVERIFIED), []);
+        $this->persistAuthorized($this->record('cap-mm-1', $subject, $this->api(), CapabilityState::UNAVAILABLE), ['ev-seed']);
 
         $mismatches = [
             'subject' => $this->record('cap-mm-s', $this->seat('ABSTRACT_OTHER_SEAT'), $this->api(), CapabilityState::VERIFIED),
@@ -339,7 +378,7 @@ final class CapabilityStorePersistenceTest extends TestCase
 
         foreach ($mismatches as $label => $replacement) {
             try {
-                $this->repo->supersedeCurrent(CapabilityRecordId::fromString('cap-mm-1'), $replacement, ['ev-1']);
+                $this->supersedeAuthorized(CapabilityRecordId::fromString('cap-mm-1'), $replacement, ['ev-1']);
                 $this->fail("Mismatched {$label} supersession accepted.");
             } catch (CapabilityInvariantViolation) {
                 $this->addToAssertionCount(1);
@@ -353,8 +392,8 @@ final class CapabilityStorePersistenceTest extends TestCase
     public function test_supersession_of_historical_or_unknown_prior_rejected(): void
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
-        $this->repo->persistCurrent($this->record('cap-x1', $subject, $this->api(), CapabilityState::UNVERIFIED), []);
-        $this->repo->supersedeCurrent(
+        $this->persistAuthorized($this->record('cap-x1', $subject, $this->api(), CapabilityState::UNAVAILABLE), ['ev-seed']);
+        $this->supersedeAuthorized(
             CapabilityRecordId::fromString('cap-x1'),
             $this->record('cap-x2', $subject, $this->api(), CapabilityState::VERIFIED),
             ['ev-1'],
@@ -362,7 +401,7 @@ final class CapabilityStorePersistenceTest extends TestCase
 
         foreach (['cap-x1', 'cap-missing'] as $priorId) {
             try {
-                $this->repo->supersedeCurrent(
+                $this->supersedeAuthorized(
                     CapabilityRecordId::fromString($priorId),
                     $this->record('cap-x3-'.$priorId, $subject, $this->api(), CapabilityState::VERIFIED),
                     ['ev-1'],
@@ -421,9 +460,9 @@ final class CapabilityStorePersistenceTest extends TestCase
             AdrMembershipId::fromString('ABSTRACT_CAP_SEAT'),
             CanonicalSourceIdentityId::fromString('ABSTRACT_CANONICAL'),
         );
-        $this->repo->persistCurrent($this->record('cap-seat', $seat, $this->api(), CapabilityState::VERIFIED), ['ev-1']);
-        $this->repo->persistCurrent($this->record('cap-canon', $canonicalBound, $this->api(), CapabilityState::UNAVAILABLE), ['ev-2']);
-        $this->repo->persistCurrent($this->record('cap-other', $this->seat('ABSTRACT_OTHER_SEAT'), $this->api(), CapabilityState::VERIFIED), ['ev-3']);
+        $this->persistAuthorized($this->record('cap-seat', $seat, $this->api(), CapabilityState::VERIFIED), ['ev-1']);
+        $this->persistAuthorized($this->record('cap-canon', $canonicalBound, $this->api(), CapabilityState::UNAVAILABLE), ['ev-2']);
+        $this->persistAuthorized($this->record('cap-other', $this->seat('ABSTRACT_OTHER_SEAT'), $this->api(), CapabilityState::VERIFIED), ['ev-3']);
 
         $this->assertSame(['cap-seat'], array_map(fn (CapabilityRecord $r) => $r->recordId->value, $this->repo->loadCurrentForSubject($seat)));
         $this->assertSame(['cap-canon'], array_map(fn (CapabilityRecord $r) => $r->recordId->value, $this->repo->loadCurrentForSubject($canonicalBound)));
@@ -432,8 +471,8 @@ final class CapabilityStorePersistenceTest extends TestCase
     public function test_evaluator_restrictive_wins_over_persisted_shared_and_override(): void
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
-        $this->repo->persistCurrent($this->record('cap-ev-shared', $subject, $this->api(), CapabilityState::VERIFIED), ['ev-1']);
-        $this->repo->persistCurrent(
+        $this->persistAuthorized($this->record('cap-ev-shared', $subject, $this->api(), CapabilityState::VERIFIED), ['ev-1']);
+        $this->persistAuthorized(
             $this->record('cap-ev-override', $subject, $this->api(), CapabilityState::PARTIAL, 'Override limited', true),
             ['ev-2'],
         );
@@ -454,7 +493,7 @@ final class CapabilityStorePersistenceTest extends TestCase
     public function test_reads_do_not_write(): void
     {
         $subject = $this->seat('ABSTRACT_CAP_SEAT');
-        $this->repo->persistCurrent($this->record('cap-ro', $subject, $this->api(), CapabilityState::VERIFIED), ['ev-1']);
+        $this->persistAuthorized($this->record('cap-ro', $subject, $this->api(), CapabilityState::VERIFIED), ['ev-1']);
         $before = DB::table(self::TABLE)->get()->toArray();
 
         $this->repo->findFact(CapabilityRecordId::fromString('cap-ro'));
@@ -481,7 +520,7 @@ final class CapabilityStorePersistenceTest extends TestCase
         );
 
         try {
-            $this->repo->persistCurrent($record, []);
+            $this->persistAuthorized($record, []);
             $this->fail("{$state->value} persisted without evidence.");
         } catch (CapabilityInvariantViolation) {
             $this->addToAssertionCount(1);

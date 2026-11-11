@@ -12,6 +12,9 @@ use App\Services\Agriculture\Research\Capability\CapabilityRecord;
 use App\Services\Agriculture\Research\Capability\CapabilityRecordId;
 use App\Services\Agriculture\Research\Capability\CapabilityState;
 use App\Services\Agriculture\Research\Capability\CapabilitySubject;
+use App\Services\Agriculture\Research\Capability\CapVer\CapVerAssessmentRegistry;
+use App\Services\Agriculture\Research\Capability\CapVer\CapVerAuthorizedAssessment;
+use App\Services\Agriculture\Research\Capability\CapVer\CapVerWriteBoundary;
 use App\Services\Agriculture\Research\Identity\AdrMembershipId;
 use App\Services\Agriculture\Research\Identity\CanonicalSourceIdentityId;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,14 +23,29 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Eloquent adapter for Cap Store Persistence.
+ *
+ * Defensive CapVer enforcement runs before any write (OD-A-ID).
  */
 final class EloquentCapabilityStoreRepository implements CapabilityStoreRepository
 {
-    public function persistCurrent(CapabilityRecord $record, array $evidenceRefs): CapabilityCellFact
+    private readonly CapVerWriteBoundary $capVerWriteBoundary;
+
+    public function __construct(?CapVerWriteBoundary $capVerWriteBoundary = null)
     {
+        // Fail closed: a default empty registry rejects every write until an assessment is issued.
+        $this->capVerWriteBoundary = $capVerWriteBoundary
+            ?? new CapVerWriteBoundary(new CapVerAssessmentRegistry);
+    }
+
+    public function persistCurrent(
+        CapabilityRecord $record,
+        array $evidenceRefs,
+        CapVerAuthorizedAssessment $capVerAssessment,
+    ): CapabilityCellFact {
+        $this->capVerWriteBoundary->assertAuthorizedWrite($record, $capVerAssessment);
         $fact = CapabilityCellFact::forWrite($record, $evidenceRefs);
 
-        return $this->translateUniqueViolation(fn (): CapabilityCellFact => DB::transaction(
+        return $this->translateUniqueViolation(fn (): CapabilityCellFact => $this->transaction(
             function () use ($fact): CapabilityCellFact {
                 $this->assertRecordIdUnused($fact->record->recordId);
 
@@ -50,10 +68,12 @@ final class EloquentCapabilityStoreRepository implements CapabilityStoreReposito
         CapabilityRecordId $priorRecordId,
         CapabilityRecord $replacement,
         array $evidenceRefs,
+        CapVerAuthorizedAssessment $capVerAssessment,
     ): CapabilityCellFact {
+        $this->capVerWriteBoundary->assertAuthorizedWrite($replacement, $capVerAssessment);
         $fact = CapabilityCellFact::forWrite($replacement, $evidenceRefs);
 
-        return $this->translateUniqueViolation(fn (): CapabilityCellFact => DB::transaction(
+        return $this->translateUniqueViolation(fn (): CapabilityCellFact => $this->transaction(
             function () use ($priorRecordId, $fact): CapabilityCellFact {
                 $priorRow = CghiaCapabilityCell::query()
                     ->where('capability_record_id', $priorRecordId->value)
@@ -167,6 +187,19 @@ final class EloquentCapabilityStoreRepository implements CapabilityStoreReposito
         return $canonical === null
             ? $query->whereNull('canonical_identity_id')
             : $query->where('canonical_identity_id', $canonical);
+    }
+
+    /**
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    private function transaction(callable $callback): mixed
+    {
+        $name = (new CghiaCapabilityCell)->getConnectionName() ?? 'capver';
+
+        return DB::connection($name)->transaction($callback);
     }
 
     private function assertRecordIdUnused(CapabilityRecordId $recordId): void

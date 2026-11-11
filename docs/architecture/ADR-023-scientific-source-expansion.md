@@ -9016,3 +9016,42 @@ AUD-01 through AUD-15 do not occur in this ADR or in any other tracked architect
 `OperationalEligibilityGateTest` was run on 2026-10-25 from `backend` with PHP `8.4.26` and PHPUnit `11.5.56`: `OK (9 tests, 41 assertions)`, exit 0, time 00:05.421, memory 10.00 MB. The test class does not boot Laravel. Bootstrap forced `DB_DATABASE=:memory:` and `CAPVER_DATABASE=:memory:`. This run does not close P1-EXIT-07, P1-EXIT-09, or Phase 1.
 
 Flutter projects exist at `mobile/` and `admin-mobile/`. This inspection does not change them. Pre-existing working-tree modifications, and the untracked Projection and CapVer trees, were not staged.
+
+## 8.80 — Owner-approved packet decisions of 2026-11-11 (OD-C … OD-D08)
+
+Append-only. This section does **not** rewrite §8.79 or earlier historical reports. It records the owner mandate titled `PHASE 1 — FULL IMPLEMENTATION, GOVERNANCE RESOLUTION, VERIFICATION & FORMAL CLOSURE` (Revision 3). Implementation and verification remain separate from this decision record. This section is **not** P1-EXIT-11 and does **not** close Phase 1.
+
+### 8.80.1 — Decisions
+
+| ID | Owner decision | Scope and limits |
+|---|---|---|
+| OD-C | **Option B approved** | T10 and T8 retain their authoritative definitions (verify against source records; do not fabricate if missing). T2 means per-source Projection emits constraint metadata only. Projection does **not** construct HTTP queries. `ScientificSearchQueryBuilder` remains HTTP query construction owner (D-04). Approved metadata: `unsupported_facets`, `omitted_facets`, `unresolved_facets`, `projection_warnings`. Do **not** introduce `source_query`. Constraints must derive from resolved Capability decisions. Implementation authorized. |
+| OD-A-ID | **Granted** | Identifier format `capver-decision-{adr_id}-{dimension}-{UTC timestamp}` is **not** proof of authorization. Only an authorized CapVer assessment may issue a valid decision; the identifier must resolve to a genuine assessment matching source, capability, and dimension. Enforcement above the repository plus defensive write-boundary checks. Unauthorized VERIFIED writes fail. CapVer alone grants VERIFIED. UNVERIFIED is not persisted. Absence means UNVERIFIED. Stale evidence does not automatically downgrade VERIFIED. |
+| OD-H | **H-2 — `NOT_APPLICABLE`** | `Layer H = NOT_APPLICABLE`. No separate Layer H implementation. CapVer and P1-EXIT-01(a–b) obligations are not weakened. |
+| OD-07 | **Granted** | G2-26 is in current `110.v1`. Before Phase 1 closure it needs actual documented evidence and required review, **or** an explicit seat-specific blocker. A blocker documents unresolved state and does **not** automatically PASS. Do not classify/verify/activate G2-26 without evidence. Do not modify historical `109.v1`. |
+| OD-10 | **Granted** | Create a distinct current matrix from `ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json` (`110.v1`), exactly 110 entries including G2-26, separate evidence dimensions, preserve historical 109 matrices. Do not reopen 109-versus-110 membership. |
+| OD-CL | **Retain §8.64.7 as unconfirmed** | §8.64.7 remains proposed/unconfirmed unless an authoritative approval source is identified. Reconstruct mandatory exit criteria from original approved sources. Preserve every mandatory requirement. |
+| OD-D08 | **Keep open until requirements satisfied** | Reject automatic partial closure. Preserve authentic archives. Do not fabricate Supplement 04 or AUD-01–15. Investigate Supplement 04 absence without assuming deletion. Keep D-08 open while mandatory evidence remains missing. |
+
+### 8.80.2 — Layer H disposition
+
+**Recorded:** `Layer H = NOT_APPLICABLE` (H-2). §8.78 remains the historical proposal. CapVer ownership (§8.31.1), CapVer-only VERIFIED (D-10.5.8), and P1-EXIT-01(a–b) remain in force.
+
+### 8.80.3 — Implementation artifacts recorded with this amendment
+
+| Artifact | Role |
+|---|---|
+| `CapVerDecisionIdentifier`, `CapVerAuthorizedAssessment`, `CapVerAssessmentIssuer`, `CapVerAssessmentRegistry`, `CapVerWriteBoundary` | OD-A-ID enforcement model |
+| `EloquentCapabilityStoreRepository` CapVer write gate | Defensive persistence boundary |
+| `ProjectionQueryConstraints::approvedMetadata()` | OD-C metadata surface |
+| `2026-11-11-PHASE-1-SOURCE-MATRIX.v110.json` | OD-10 current matrix |
+| `2026-11-11-G2-26-SEAT-SPECIFIC-BLOCKER.v1.json` | OD-07 blocker `P1-BLK-2026-11-11-G2-26-01` |
+| `2026-11-11-PHASE-1-BLOCKER-REGISTER.v1.json` | Current blocker register (not a historical AUD registry) |
+
+### 8.80.4 — Supplement 04 investigation outcome
+
+Read-only search on 2026-11-11 found D-08 directories for the baseline archive and supplements 01–03 only. `git log` showed no deleted path named Supplement 04. §8.79 already recorded that no supplement 04 existed before that inspection. **Outcome:** `SUPPLEMENT_04_NOT_FOUND`. Supported scenario: planned/referenced in later prompts but **not created** as an authentic archive (not proven deleted). D-08 remains **open**. No fabricated Supplement 04 was written.
+
+### 8.80.5 — Phase 1 status after these decisions
+
+Owner decisions in §8.80.1 are approved within their stated boundaries. Technical gates (including P1-EXIT-07 evidence, D-08 completeness, CapVer integration across all write callers, CSQ end-to-end wiring, and P1-EXIT-11) remain subject to verification evidence. **Phase 1 is not closed by this section alone.**
