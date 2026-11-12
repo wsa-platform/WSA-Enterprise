@@ -1,0 +1,43 @@
+{
+  "schema_id": "adr023.exit08_family_verification_matrix.v1",
+  "created_at_utc": "2026-11-12T10:20:00Z",
+  "revision": "10.14",
+  "supersedes": "2026-11-12-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.9.1.json",
+  "criterion": "P1-EXIT-08",
+  "canonical_status": "PARTIAL",
+  "families": [
+    {
+      "family_name": "REST_API / RestJson",
+      "package_status": "PRESENT",
+      "contract_mock": "VERIFIED",
+      "endpoint_tested": "VERIFIED",
+      "endpoint_tested_detail": "GBIF + BHL live; BHL no longer credential-blocked",
+      "integration_verified": "VERIFIED",
+      "closure_status": "PARTIAL",
+      "notes": "Stage-3 Semantic Scholar 429 and Consensus credentials remain outside RestJson governed seats"
+    },
+    {
+      "family_name": "OAI-PMH",
+      "package_status": "PRESENT",
+      "contract_mock": "VERIFIED",
+      "endpoint_tested": "VERIFIED",
+      "endpoint_tested_detail": "Organic Eprints Identify+ListRecords",
+      "integration_verified": "PARTIAL",
+      "closure_status": "PARTIAL",
+      "notes": "Harvest expansion still open"
+    },
+    {
+      "family_name": "Bulk / Static Dataset + LocalIndex",
+      "package_status": "PRESENT",
+      "contract_mock": "VERIFIED",
+      "endpoint_tested": "PARTIAL",
+      "endpoint_tested_detail": "AGRIS catalog LIVE; Dr. Duke documentary/local only by contract",
+      "integration_verified": "PARTIAL",
+      "closure_status": "PARTIAL",
+      "notes": "Dr. Duke limited LocalIndex search integration verified; AGRIS bounded LocalIndex present; full AGRIS corpus not claimed"
+    }
+  ],
+  "overall_exit08": "PARTIAL",
+  "what_this_revision_proves": "Original EXIT-08 contract recovered; AGRIS 1244 vs 50 reconciled as non-comparable scopes; Dr. Duke LocalIndex orchestrator path fixed and verified",
+  "what_this_revision_does_not_prove": "EXIT-08 PASS; ServerRestart closed; full AGRIS 1244 ingest; Consensus/S2S/FAOSTAT live"
+}

@@ -1,0 +1,30 @@
+{
+  "schema_id": "adr023.exit08_original_contract_analysis.v1",
+  "created_at_utc": "2026-11-12T10:00:00Z",
+  "revision": "10.14",
+  "criterion": "P1-EXIT-08",
+  "authoritative_source": "ADR-023 §8.64.7 P1-EXIT-08 (2026-10-13 checklist)",
+  "exact_acceptance_condition": "Adapters only for verified access families, one per family with per-seat constraints; Stage-3 adapters reused only where an identity binding proves the same resource; no speculative adapters (§8.24.5); query construction stays with the Builder (D-04)",
+  "evidence_required": "Adapter code under Gate B; family evidence; tests",
+  "denominator_rule": "Source count is NOT an acceptance criterion unless the original contract explicitly makes it one — it does not. Denominator is verified access families with required family evidence, not an arbitrary N of connected sources.",
+  "required_dimensions": [
+    "verified access family",
+    "one adapter per family with per-seat constraints",
+    "no speculative adapters",
+    "Builder owns query construction (D-04)",
+    "Stage-3 reuse only with identity binding proving same resource"
+  ],
+  "not_required_by_original_wording": [
+    "All 110 membership seats live",
+    "Full AGRIS 1244 ingest",
+    "Arbitrary minimum LIVE source count",
+    "External API for every seat (Dr. Duke limited LocalIndex projection is owner-accepted under OD-G1-17)"
+  ],
+  "supporting_owner_scope_decisions": [
+    "OD-G1-01-SCOPE-BOUNDED-SUBSET — bounded AGRIS ODS subset; full corpus not claimed",
+    "OD-G1-17-SCOPE-LIMITED-PROJECTION — limited Dr. Duke LocalIndex projection; no public API claimed"
+  ],
+  "family_matrix_basis": "2026-11-12-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX + live/search updates through v10.10.1-bhl and v10.14",
+  "overall_exit08": "PARTIAL",
+  "rationale": "Access-family adapter packages exist (RestJson, OAI-PMH, Bulk/LocalIndex) with Gate B foundation authorization (§8.82) and substantial live/search evidence for GBIF/BHL/OE/AGRIS-bounded/Duke-limited paths, but family closure is not uniformly VERIFIED (Consensus credentials, Semantic Scholar 429, FAOSTAT NOT_TESTED, Bulk integration_verified still advancing). Original §8.64.7 wording is not waived."
+}

@@ -1,0 +1,45 @@
+{
+    "schema_id": "wsa.agris_1244_vs_50_reconciliation.v1",
+    "created_at_utc": "2026-11-12T09:42:13+00:00",
+    "revision": "10.14",
+    "definition_1244": {
+        "meaning": "Count of dcat:downloadURL entries in AGRIS.ODS.xml catalog (downloadable provider packages), not LocalIndex rows",
+        "authoritative_sources": [
+            "harvest_manifest.v6.json download_url_total",
+            "ADR-023 \u00a78.54 OD-G1-01-SCOPE-BOUNDED-SUBSET cursor N/1244",
+            "2026-10-19 remaining-blockers report: 1244 = dcat:downloadURL providers"
+        ],
+        "root_xml_bytes": 2555593,
+        "download_url_occurrences_scanned": 1244,
+        "unique_download_urls_scanned": 1244,
+        "manifest_download_url_total": 1244
+    },
+    "definition_50": {
+        "meaning": "Bounded harvester max_providers batch/cap for a single harvest run (agris_ods_bounded_harvester.v1), not the full catalog",
+        "manifest_max_providers": 50,
+        "providers_in_manifest": 50,
+        "status_counts": {
+            "download_failed": 3,
+            "skipped_unverified_license": 1,
+            "projected": 46
+        },
+        "projected_records_sum": 8628,
+        "contract_version": "agris_ods_bounded_harvester.v1",
+        "authoritative_sources": [
+            "harvest_manifest.v6.json max_providers",
+            "2026-10-22 prompt: Default batch size 50 providers"
+        ]
+    },
+    "comparable": false,
+    "relationship": "DIFFERENT_ENTITY_TYPES_OR_SCOPES \u2014 1244=catalog downloadURL inventory; 50=bounded harvest selection/cap",
+    "acceptance_contract": {
+        "decision_id": "OD-G1-01-SCOPE-BOUNDED-SUBSET",
+        "adr_section": "ADR-023 \u00a78.54.2",
+        "required_scope": "BOUNDED licensed ODS subset; full corpus NOT claimed",
+        "full_1244_required_for_activation": false,
+        "timeout_providers_required_for_bounded_accept": "Not required to complete full 1244; remaining timeouts are residual harvest hygiene within/beyond bounded batch",
+        "license_skip_fr0": "skipped_unverified_license is consistent with CC-BY-4.0-only ingest policy recorded for AGRIS harvest"
+    },
+    "completion_percentage_forbidden": "Do not compute 50/1244 as acceptance percentage \u2014 scopes are not equivalent",
+    "exit08_implication": "AGRIS Bulk family evidence is bounded LocalIndex search path + catalog connectivity; not blocked solely because 1244>50; not PASS for full corpus"
+}

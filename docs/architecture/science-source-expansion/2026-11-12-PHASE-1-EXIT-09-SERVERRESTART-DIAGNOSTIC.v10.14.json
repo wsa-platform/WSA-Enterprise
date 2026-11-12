@@ -1,0 +1,28 @@
+{
+  "schema_id": "adr023.exit09_serverrestart_diagnostic.v1",
+  "created_at_utc": "2026-11-12T10:10:00Z",
+  "revision": "10.14",
+  "test": "Tests\\Pgsql\\ScientificRecordStoreServerRestartTest::test_committed_state_survives_a_database_server_restart",
+  "preserved_expectation": "[dataset_example=2, repository_example=1]",
+  "observed_prior_failure": "[2, 2]",
+  "prior_evidence": "2026-11-12-PHASE-1-EXIT-09-SERVERRESTART-ATTEMPT.v10.9.1.json",
+  "protocol": {
+    "A_preserve_failing_case": "Original assertion at line 75 retained; expected [2,1] not altered",
+    "B_implementation_inspect": {
+      "write_sequence": [
+        "ingestSnapshot v1 → dataset gen1",
+        "ingestSnapshot v2 → dataset gen2",
+        "harvestOaiPmh maxPages=1 → PAUSED with IN_PROGRESS checkpoint; repository should remain gen1 after one incremental commit page"
+      ],
+      "generation_source": "scientific_source_states.generation via DatabaseScientificRecordStore::generation()",
+      "each_commit_bumps": "MODE_INCREMENTAL OAI page commit increments generation for that source_key"
+    },
+    "C_windows_reproduction": "Prior Rev 10.9.1 write PASS; verify FAIL after Windows volume restart with automatic recovery after improper shutdown",
+    "D_linux_comparison": "NOT_RUN this revision — comparative Linux/WSL harness not executed in this window",
+    "E_classification": "UNRESOLVED — evidence supports ENVIRONMENT_OR_RECOVERY_ANOMALY hypothesis (Windows volume unclean restore) but Linux equivalence not yet proven; application logic defect not confirmed",
+    "F_remediation": "No expected-value change; no forced PASS; EXIT-09 remains PARTIAL for ServerRestart"
+  },
+  "acceptance_protection": "Expected [2,1] preserved; changing to [2,2] requires owner approval — not taken",
+  "status": "BLOCKED_BY_INCOMPLETE_COMPARATIVE_EVIDENCE",
+  "exit09_impact": "PARTIAL retained"
+}

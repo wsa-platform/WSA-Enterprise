@@ -1,0 +1,56 @@
+{
+    "schema_id": "wsa.dr_duke_search_integration_probe.v1",
+    "created_at_utc": "2026-11-12T09:55:23+00:00",
+    "revision": "10.14",
+    "registration": {
+        "present": true,
+        "adapter_class": "App\\Services\\Agriculture\\Research\\Search\\LocalIndex\\LocalIndexScientificSourceAdapter",
+        "adr_id": "G1-17",
+        "selection_role": "governed_expansion"
+    },
+    "local_index": {
+        "connection": "scientific_records",
+        "driver": "sqlite",
+        "database": "/var/www/html/storage/app/scientific_record_store.sqlite",
+        "dr_duke_active_count": 0
+    },
+    "owner_scope": {
+        "decision": "OD-G1-17-SCOPE-LIMITED-PROJECTION",
+        "adr": "ADR-023 §8.54.2",
+        "external_api_required": false,
+        "full_projection_required": false
+    },
+    "adapter_search": {
+        "adapter_class": "App\\Services\\Agriculture\\Research\\Search\\LocalIndex\\LocalIndexScientificSourceAdapter",
+        "status": "success",
+        "error": null,
+        "result_count": 5,
+        "sample": {
+            "sourceKey": "dr_duke",
+            "sourceIdentifier": "fnftax:614",
+            "title": "Mentha aquatica",
+            "canonical_url_present": true,
+            "provenance_present": true,
+            "originalIdentifier": "fnftax:614"
+        }
+    },
+    "orchestrator_search": {
+        "attemptedSources": [
+            "dr_duke"
+        ],
+        "successfulSources": [
+            "dr_duke"
+        ],
+        "failedSources": [],
+        "result_count": 10,
+        "dr_duke_result_count": 10,
+        "sample": {
+            "sourceKey": "dr_duke",
+            "sourceIdentifier": "fnftax:619",
+            "title": "Mentha x piperita subsp. nothosubsp. piperita",
+            "provenance_present": true
+        }
+    },
+    "classification": "SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED_LIMITED_LOCAL_PROJECTION",
+    "exit08_scenario": "A_local_data_sufficient_under_OD_G1_17_limited_projection"
+}
