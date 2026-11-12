@@ -13,7 +13,7 @@
     {"id": "P1-EXIT-05", "previous": "BLOCKED", "current": "BLOCKED", "blocker": "staging/operator evidence"},
     {"id": "P1-EXIT-06", "previous": "PASS", "current": "PASS"},
     {"id": "P1-EXIT-07", "previous": "BLOCKED", "current": "BLOCKED", "blocker": "G2-26 original IC"},
-    {"id": "P1-EXIT-08", "previous": "PARTIAL", "current": "PARTIAL", "evidence": "Prior live connectivity retained; GBIF advanced from connectivity to runtime search integration (fixture E2E 3/31 + LIVE_SEARCH_VERIFIED). BHL/Consensus credentials and Semantic Scholar 429 remain.", "live_connectivity": "PARTIAL", "gbif_search_integration": "VERIFIED"},
+    {"id": "P1-EXIT-08", "previous": "PARTIAL", "current": "PARTIAL", "evidence": "GBIF search verified; BHL corrected from BLOCKED_CREDENTIALS to SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED with local BHL_API_KEY (v10.10.1-bhl). Consensus still credential-blocked; Semantic Scholar 429; FAOSTAT NOT_TESTED.", "live_connectivity": "PARTIAL", "gbif_search_integration": "VERIFIED", "bhl_search_integration": "VERIFIED"},
     {"id": "P1-EXIT-09", "previous": "PARTIAL", "current": "PARTIAL", "evidence": "§8.23.8 Cap CURRENT item RESOLVED under OD-8.23.8-A (CapVer-SQLite 27/101); Cap persist reconfirmed EXIT 0; ServerRestart residual remains open (do not fake [2,1]); prior CSQ/family 100/592 retained", "section_8_23_8": "RESOLVED_ALTERNATIVE_A", "server_restart": "OPEN"},
     {"id": "P1-EXIT-10", "previous": "PARTIAL", "current": "PARTIAL", "evidence": "Five-source audit + AGRIS inventory + GBIF search evidence updated without inventing membership counts"},
     {"id": "P1-EXIT-11", "previous": "NOT_RUN", "current": "NOT_RUN", "reason": "prerequisites incomplete"},

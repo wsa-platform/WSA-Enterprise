@@ -1,0 +1,85 @@
+{
+  "schema_id": "adr023.exit08_live_connectivity.v1",
+  "created_at_utc": "2026-11-12T09:20:00Z",
+  "revision": "10.10.1-bhl",
+  "supersedes_partial": "2026-11-12-PHASE-1-EXIT-08-LIVE-CONNECTIVITY.v10.9.1.json",
+  "criterion": "P1-EXIT-08",
+  "update_scope": "BHL credential correction and live search verification only; other sources retained from v10.9.1 unless restated",
+  "secret_policy": "no credential values",
+  "sources": [
+    {
+      "adr_id": "G6-20",
+      "source_key": "bhl",
+      "family": "REST_API / RestJson",
+      "endpoint": "https://www.biodiversitylibrary.org/api3",
+      "access_method": "REST API v3 PublicationSearch; apikey query parameter",
+      "env_key": "BHL_API_KEY",
+      "config_key": "agricultural_intelligence.bhl.api_key",
+      "previous_live_status": "BLOCKED_CREDENTIALS",
+      "live_status": "SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED",
+      "status_ladder": [
+        "CREDENTIAL_CONFIGURED",
+        "CREDENTIAL_LOADED",
+        "AUTHENTICATION_VERIFIED",
+        "LIVE_CONNECTIVITY_VERIFIED",
+        "DATA_RETRIEVAL_VERIFIED",
+        "SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED"
+      ],
+      "http_status": 200,
+      "provider_status": "ok",
+      "adapter_live_search": "SUCCESS",
+      "orchestrator_live_search": "SUCCESS",
+      "evidence": "2026-11-12-PHASE-1-BHL-CREDENTIAL-LIVE-VERIFICATION.v10.10.1.json",
+      "notes": "Owner confirmed key already in local .env; name BHL_API_KEY matches config/adapter; config cache not active"
+    },
+    {
+      "source_key": "gbif",
+      "live_status": "SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED",
+      "retained_from": "v10.10 GBIF live search package"
+    },
+    {
+      "source_key": "organic_eprints",
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "retained_from": "v10.9.1"
+    },
+    {
+      "source_key": "agris",
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "notes": "Catalog-level; full ingest not claimed",
+      "retained_from": "v10.9.1"
+    },
+    {
+      "source_key": "openalex",
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "retained_from": "v10.9.1"
+    },
+    {
+      "source_key": "crossref",
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "retained_from": "v10.9.1"
+    },
+    {
+      "source_key": "dr_duke",
+      "live_status": "LIVE_CONNECTIVITY_PARTIAL",
+      "retained_from": "v10.9.1"
+    },
+    {
+      "source_key": "semantic_scholar",
+      "live_status": "BLOCKED_EXTERNAL_SERVICE",
+      "http_status": 429,
+      "retained_from": "v10.9.1"
+    },
+    {
+      "source_key": "consensus",
+      "live_status": "BLOCKED_CREDENTIALS",
+      "retained_from": "v10.9.1"
+    },
+    {
+      "source_key": "fao_stat",
+      "live_status": "NOT_TESTED",
+      "retained_from": "v10.9.1"
+    }
+  ],
+  "overall_exit08": "PARTIAL",
+  "overall_rationale": "BHL advanced from BLOCKED_CREDENTIALS to SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED with local BHL_API_KEY. Consensus still BLOCKED_CREDENTIALS; Semantic Scholar 429; FAOSTAT NOT_TESTED; AGRIS catalog≠full ingest. EXIT-08 remains PARTIAL."
+}
