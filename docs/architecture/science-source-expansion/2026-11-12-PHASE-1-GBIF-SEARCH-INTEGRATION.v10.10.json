@@ -1,0 +1,58 @@
+{
+  "schema_id": "wsa.gbif_search_integration.v1",
+  "created_at_utc": "2026-11-12T08:15:00Z",
+  "revision": "10.10",
+  "objective": "Full scientific search path integration for GBIF (not probe-only)",
+  "architecture_path": "User Question → CSQ/plan → ScientificSearchQueryBuilder → ScientificQueryCompiler/profile → RestJsonScientificSourceAdapter (gbif) → normalize/provenance → MultiSourceScientificSearchOrchestrator → results",
+  "previous_state": {
+    "registry": "present (G5-04 GOVERNED_EXPANSION)",
+    "adapter": "RestJsonScientificSourceAdapter via NextGateEligibleSeatCatalog::gbifRestProfile",
+    "exit08": "LIVE_CONNECTIVITY_VERIFIED",
+    "gap": "Rev 10.10 required end-to-end search path proof including selector auto-select and live orchestrator search"
+  },
+  "changes_implemented": [
+    "Added GbifOrchestratorEndToEndTest::test_gbif_is_auto_selected_from_csq_plan_without_forced_source_keys",
+    "Documented CSQ q-parameter preservation and taxonomic record semantics",
+    "Live orchestrator smoke evidence with real GBIF results"
+  ],
+  "csq_preservation": {
+    "builder_to_adapter": "source query text passed as GBIF species search q",
+    "no_generic_keyword_collapse": "fixture asserts q equals CSQ query string",
+    "unsupported_filters": "geography/time/taxon_key not claimed without Capability"
+  },
+  "record_semantics": {
+    "provider_type": "taxonomic species search (and related ranks)",
+    "not_treated_as": "direct experimental agricultural claim evidence",
+    "abstract_field": "maps provider rank (e.g. SPECIES)"
+  },
+  "tests": {
+    "command": "php artisan test --filter=GbifOrchestratorEndToEndTest",
+    "tests": 3,
+    "assertions": 31,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "log": "_tmp-r1010-gbif-e2e.txt"
+  },
+  "live_smoke": {
+    "artifact": "2026-11-12-PHASE-1-GBIF-LIVE-SEARCH.v10.10.json",
+    "status": "LIVE_SEARCH_VERIFIED",
+    "sample_source_identifier": "194562490",
+    "sample_title": "Wheat associated vipovirus",
+    "canonical_url": null,
+    "note": "Provider response lacked URL field; identifier preserved"
+  },
+  "acceptance": {
+    "registry": true,
+    "capability_discovery": true,
+    "csq_translation": true,
+    "query_correctness": true,
+    "live_retrieval": true,
+    "error_isolation": true,
+    "normalization_provenance": true,
+    "orchestrator_integration": true,
+    "selector_auto_select": true,
+    "record_type_preservation": true
+  }
+}

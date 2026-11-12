@@ -1,0 +1,27 @@
+{
+    "schema_id": "wsa.gbif_live_search_smoke.v1",
+    "mode": "LIVE",
+    "created_at_utc": "2026-11-12T08:02:14+00:00",
+    "revision": "10.10",
+    "question": "Triticum aestivum",
+    "elapsed_ms": 2603,
+    "attemptedSources": [
+        "gbif"
+    ],
+    "successfulSources": [
+        "gbif"
+    ],
+    "failedSources": [],
+    "result_count": 3,
+    "gbif_result_count": 3,
+    "sample": {
+        "sourceKey": "gbif",
+        "sourceIdentifier": "194562490",
+        "title": "Wheat associated vipovirus",
+        "abstract": "SPECIES",
+        "canonical_url": null,
+        "provenance_adapter": "App\\Services\\Agriculture\\Research\\Search\\Family\\Rest\\RestJsonScientificSourceAdapter",
+        "record_semantics": "taxonomic_species_search_result_not_experimental_claim"
+    },
+    "status": "LIVE_SEARCH_VERIFIED"
+}

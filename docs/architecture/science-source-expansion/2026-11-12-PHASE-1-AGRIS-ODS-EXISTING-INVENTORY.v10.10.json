@@ -1,0 +1,66 @@
+{
+  "schema_id": "wsa.agris_ods_existing_inventory.v1",
+  "created_at_utc": "2026-11-12T07:48:26Z",
+  "revision": "10.10",
+  "objective": "Discover and assess existing AGRIS ODS downloads; do not re-download present data",
+  "search_roots": [
+    "backend/storage/app/scientific_datasets/agris",
+    "backend/storage/app/scientific_record_store.sqlite"
+  ],
+  "root_catalog": {
+    "path": "backend/storage/app/scientific_datasets/agris/AGRIS.ODS.xml",
+    "exists": true,
+    "bytes": 2555593,
+    "sha256_manifest": "58f8532ef23cfe2d40666c03a1e8352b702fccb7ad6171483ce0fa3e3fbc7c95",
+    "classification": "catalog"
+  },
+  "harvest_manifest": {
+    "path": "backend/storage/app/scientific_datasets/agris/harvest_manifest.v6.json",
+    "schema_id": "wsa.agris_ods_harvest_manifest.v1",
+    "download_url_total": 1244,
+    "max_providers": 50,
+    "providers_in_manifest": 50,
+    "status_counts": {
+      "download_failed": 3,
+      "skipped_unverified_license": 1,
+      "projected": 46
+    },
+    "projected_records_sum": 8628,
+    "projection_completed_providers": 46,
+    "bytes_sum_manifest": 2310915020
+  },
+  "filesystem": {
+    "agris_tree_files": 307,
+    "agris_tree_bytes": 5053294220,
+    "harvest_cache_files": 293,
+    "harvest_cache_bytes": 5050506995,
+    "re_download_performed": false
+  },
+  "data_states": {
+    "catalog": "PRESENT (AGRIS.ODS.xml)",
+    "application_profile": "NOT_SEPARATELY_INVENTORIED",
+    "downloadable_rdf_listed": "1244 URLs in catalog/manifest scope",
+    "downloaded_archive": "PARTIAL — 46 projected + large cache ZIPs/XML; 3 timeouts; 1 license skip",
+    "extracted_or_projected": "8628 bounded projected records across 46 providers (jsonl)",
+    "parsed_normalized": "Projection completed for 46 providers under agris_ods_bounded_harvester.v1",
+    "persisted_localindex": {
+      "store": "backend/storage/app/scientific_record_store.sqlite",
+      "source_key": "agris",
+      "scientific_source_records": 96615,
+      "note": "LocalIndex agris row count exceeds bounded harvest projection sum; prior ingest generations retained"
+    },
+    "indexed_fts": {
+      "scientific_source_fts_total_rows": 308749,
+      "agris_searchability": "SEARCHABLE_VIA_LOCALINDEX when agris adapter/LocalIndex path is selected"
+    }
+  },
+  "integrity": {
+    "manifest_sha256_present_for_projected": true,
+    "download_failed_providers": 3,
+    "license_skip": 1,
+    "original_files_preserved": true
+  },
+  "processing_recommendation": "Do not re-download completed/projected providers. Optional: retry only the 3 timed-out providers and resolve FR0 license/projection failure when authorized.",
+  "full_ingest_claim": false,
+  "catalog_connectivity_vs_full_integration": "Catalog and LocalIndex bulk path evidenced; full 1244-provider ODS ingest NOT claimed"
+}

@@ -9154,3 +9154,58 @@ Acceptance contracts: docs/architecture/science-source-expansion/2026-11-11-GATE
 ### 8.82.4 — Blocker register updates
 
 P1-BLK-2026-11-11-GATE-A-01 and P1-BLK-2026-11-11-GATE-B-01 are **resolved for foundation+IC-inventory scopes** by GA-IC-01/GB-IC-01 + GA-FOUNDATION-01/GB-FOUNDATION-01. Seat-specific and archival blockers remain.
+
+## 8.83 — Owner decision on §8.23.8 Cap CURRENT concurrency (Rev 10.10)
+
+Append-only. Does **not** rewrite §8.23.8. Does **not** delete or weaken any original acceptance condition. Authority: Master Engineering Prompt Revision 10.10 §0.2 OWNER_DECISION (PROJECT OWNER, APPROVED, 2026-11-12).
+
+### 8.83.1 — Context
+
+§8.23.8 requires, among other CapVer tests: “Single CURRENT per cell under concurrency, on PostgreSQL.” CapVer persistence is SQLite-by-design (`DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md`). Isolated PostgreSQL remains the Guard path for IC and ScientificRecordStore LocalIndex suites, not for CapVer cells. Rev 10.9.1 packaged alternatives A/B/C and left the Cap CURRENT item awaiting owner authorization.
+
+### 8.83.2 — Owner authorization
+
+The project owner authorized remediation of §8.23.8 within its original scope: re-examine the requirement, evaluate prior alternatives A/B/C without inventing content, implement the alternative that satisfies the original contract, test it, update this ADR and acceptance records, and commit/push eligible changes. The authorization does **not** waive original acceptance conditions, does **not** permit declaring N/A solely because implementation is hard, and does **not** authorize architectural exemptions beyond the selected alternative.
+
+### 8.83.3 — Decision (Alternative A)
+
+**Selected:** Alternative A from `2026-11-12-PHASE-1-SECTION-8-23-8-OWNER-DECISION-REQUEST.v10.9.1.json`.
+
+**Decision ID:** `OD-8.23.8-A-2026-11-12`.
+
+Accept CapVer-SQLite CURRENT uniqueness and concurrency-safety evidence as satisfying the dual-applicable intent of §8.23.8 for Phase 1 CapVer. Cap-on-PostgreSQL CURRENT store remains **not implemented** and is classified `REQUIREMENT_NOT_APPLICABLE_WITH_ARCHITECTURAL_EVIDENCE` under CapVer SQLite-by-design. CapVer-SQLite CURRENT concurrency is classified `REQUIREMENT_SATISFIED`.
+
+**Rejected:**
+- **B** — Require CapVer on PostgreSQL (would reverse CapVer SQLite ownership; needs a new Implementation Authorization not granted here).
+- **C** — Defer §8.23.8 (incompatible with owner authorization to remediate now).
+
+### 8.83.4 — Evidence
+
+| Clause of §8.23.8 | Status under OD-8.23.8-A |
+|---|---|
+| CapVer-only VERIFIED | Retained; covered by CapVer write-boundary / persistence suites |
+| Evidence and freshness (§8.23.3) | Retained |
+| CURRENT → HISTORICAL on supersession | Retained; `CapabilityStorePersistenceTest` supersession cases |
+| Single CURRENT per cell under concurrency, on PostgreSQL | Cap-on-PG CURRENT: N/A with architectural evidence; CapVer-SQLite CURRENT uniqueness/partial-unique/fail-closed: SATISFIED (`CapabilityStorePersistenceTest` 27 tests / 101 assertions / exit 0) |
+| Rejection cases (§8.23.5) | Retained |
+| Empty store → UNVERIFIED | Retained |
+| Seat isolation | Retained |
+| Cap ≠ IC ≠ Identity ≠ Activation | Retained |
+
+Acceptance artifact: `docs/architecture/science-source-expansion/2026-11-12-PHASE-1-SECTION-8-23-8-OWNER-DECISION-ACCEPTED.v10.10.json`.
+
+### 8.83.5 — Effect on exit criteria
+
+| Criterion | Effect |
+|---|---|
+| §8.23.8 Cap CURRENT item | **RESOLVED** under Alternative A |
+| P1-EXIT-09 overall | May remain **PARTIAL** if ServerRestart or unrelated residual regression scopes remain open |
+| CapVer store ownership | Unchanged (SQLite-by-design) |
+| Phase 1 overall | Remains incomplete until all mandatory exits close |
+
+### 8.83.6 — Consequences
+
+- Do not migrate CapVer to PostgreSQL under this decision.
+- Do not alter expected ServerRestart generations to force a pass.
+- Do not treat this decision as closure of EXIT-05, EXIT-07, D-08, or EXIT-11.
+- Future Gate text may still cite §8.23.8 wording; this section records the owner-authorized Phase 1 satisfaction path without rewriting the original bullet list.

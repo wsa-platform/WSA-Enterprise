@@ -1,0 +1,56 @@
+{
+  "schema_id": "adr023.section_8_23_8_owner_decision_accepted.v1",
+  "created_at_utc": "2026-11-12T08:00:00Z",
+  "revision": "10.10",
+  "criterion": "P1-EXIT-09 / ADR-023 §8.23.8",
+  "owner_decision": {
+    "authority": "PROJECT_OWNER",
+    "status": "APPROVED",
+    "authorization_date": "2026-11-12",
+    "scope": "§8.23.8 remediation within original acceptance conditions",
+    "source_prompt": "MASTER ENGINEERING EXECUTION PROMPT Revision 10.10 §0.2 OWNER_DECISION",
+    "selected_alternative": "A",
+    "request_artifact": "2026-11-12-PHASE-1-SECTION-8-23-8-OWNER-DECISION-REQUEST.v10.9.1.json"
+  },
+  "exact_original_text_preserved": [
+    "CapVer-only VERIFIED: every other role is rejected.",
+    "Evidence and freshness rules of §8.23.3.",
+    "CURRENT → HISTORICAL on supersession; no in-place mutation.",
+    "Single CURRENT per cell under concurrency, on PostgreSQL.",
+    "Rejection cases of §8.23.5.",
+    "No automatic population: an empty store evaluates to UNVERIFIED.",
+    "Seat isolation: no cross-seat or dual-pair inheritance.",
+    "Cap ≠ IC ≠ Identity ≠ Activation."
+  ],
+  "technical_decision": {
+    "id": "OD-8.23.8-A-2026-11-12",
+    "decision": "Accept CapVer-SQLite concurrency and CURRENT-uniqueness evidence as satisfying the dual-applicable intent of §8.23.8 for Phase 1 CapVer",
+    "does_not": [
+      "Rewrite or delete §8.23.8 wording",
+      "Migrate CapVer to PostgreSQL",
+      "Waive CapVer-only VERIFIED, freshness, supersession, rejection, empty-store, seat-isolation, or Cap≠IC≠Identity≠Activation clauses",
+      "Declare Cap-on-PostgreSQL CURRENT store implemented"
+    ],
+    "cap_on_postgresql_current": {
+      "status": "REQUIREMENT_NOT_APPLICABLE_WITH_ARCHITECTURAL_EVIDENCE",
+      "rationale": "Approved CapVer store is SQLite-by-design (DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md). Cap-on-PG CURRENT would reverse that boundary and is not authorized by §8.23.8 itself."
+    },
+    "capver_sqlite_current_concurrency": {
+      "status": "REQUIREMENT_SATISFIED",
+      "evidence_suite": "Tests\\Unit\\Agriculture\\Research\\Capability\\Persistence\\CapabilityStorePersistenceTest",
+      "focus_assertions": [
+        "test_second_current_for_same_natural_tuple_rejected",
+        "test_database_partial_unique_indexes_enforce_single_current",
+        "test_supersession_archives_prior_and_inserts_replacement",
+        "test_multiple_current_matches_fail_closed"
+      ]
+    }
+  },
+  "alternatives_evaluated": {
+    "A": "SELECTED — CapVer-SQLite evidence closes Cap CURRENT concurrency obligation for Phase 1 without Cap-on-PG migration",
+    "B": "REJECTED — CapVer-on-PostgreSQL would reverse SQLite-by-design store ownership; requires new Implementation Authorization not granted by this owner decision",
+    "C": "REJECTED — deferral would leave §8.23.8 unresolved despite owner authorization to remediate"
+  },
+  "acceptance_status": "RESOLVED_FOR_SECTION_8_23_8_CAP_CURRENT_ITEM",
+  "exit09_effect": "§8.23.8 Cap CURRENT item closed; EXIT-09 may remain PARTIAL for ServerRestart / residual regression scopes unrelated to this decision"
+}

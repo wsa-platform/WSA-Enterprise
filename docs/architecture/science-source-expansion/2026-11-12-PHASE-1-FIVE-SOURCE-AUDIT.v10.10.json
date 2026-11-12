@@ -1,0 +1,88 @@
+{
+  "schema_id": "wsa.five_scientific_source_audit.v1",
+  "created_at_utc": "2026-11-12T08:05:00Z",
+  "revision": "10.10",
+  "identity_basis": [
+    "docs/2026-10-22-FIVE-SOURCE-COMPLETION-REPORT.ar.md",
+    "NextGateEligibleSeatCatalog activated seats",
+    "2026-11-12-PHASE-1-EXIT-08-LIVE-CONNECTIVITY.v10.9.1.json"
+  ],
+  "five_sources": [
+    {
+      "source_key": "gbif",
+      "adr_id": "G5-04",
+      "registration": "ScientificSourceCatalog GOVERNED_EXPANSION RestJson",
+      "capability": "SEARCH VERIFIED (onboarding contract)",
+      "connectivity": "LIVE_CONNECTIVITY_VERIFIED (EXIT-08 v10.9.1)",
+      "retrieval": "Live species search + fixture E2E",
+      "files_downloaded": "N/A — REST live retrieval; no bulk archive required",
+      "parsing_normalization": "RestJson fieldPaths scientificName/rank/key",
+      "provenance": "adapterClass RestJsonScientificSourceAdapter; sourceIdentifier=key",
+      "persistence": "Not bulk-persisted in LocalIndex (0 gbif rows)",
+      "indexing": "Not LocalIndex-indexed; live path only",
+      "search_integration": "Orchestrator path verified (GbifOrchestratorEndToEndTest 3/31 EXIT 0) including selector auto-select",
+      "remaining_work": "Optional LocalIndex persistence only if contract later requires; occurrence vs taxonomy semantics already documented"
+    },
+    {
+      "source_key": "organic_eprints",
+      "adr_id": "G1-02",
+      "registration": "OAI-PMH governed seat",
+      "capability": "SEARCH via LocalIndex harvest",
+      "connectivity": "LIVE_CONNECTIVITY_VERIFIED (Identify+ListRecords)",
+      "retrieval": "OAI-PMH",
+      "files_downloaded": "Harvested into LocalIndex",
+      "parsing_normalization": "OaiPmh family",
+      "provenance": "oai_identifier preserved",
+      "persistence": "scientific_source_records organic_eprints=200",
+      "indexing": "Included in scientific_source_fts aggregate",
+      "search_integration": "LocalIndex search path when selected",
+      "remaining_work": "Expand harvest beyond current 200 rows if authorized; no re-download of present set"
+    },
+    {
+      "source_key": "bhl",
+      "adr_id": "G6-20",
+      "registration": "RestJson governed seat",
+      "capability": "SEARCH declared; runtime UNAVAILABLE without key",
+      "connectivity": "BLOCKED_CREDENTIALS (HTTP 401 without BHL_API_KEY)",
+      "retrieval": "Blocked",
+      "files_downloaded": "None",
+      "parsing_normalization": "Contract/fixture only",
+      "provenance": "N/A live",
+      "persistence": "0 bhl rows in LocalIndex",
+      "indexing": "None",
+      "search_integration": "Adapter returns UNAVAILABLE missing_api_key",
+      "remaining_work": "Owner supply BHL_API_KEY; then live PublicationSearch + runtime verification"
+    },
+    {
+      "source_key": "agris",
+      "adr_id": "G1-01",
+      "registration": "Bulk/LocalIndex governed seat",
+      "capability": "SEARCH via LocalIndex",
+      "connectivity": "LIVE_CONNECTIVITY_VERIFIED at ODS catalog",
+      "retrieval": "Existing ODS downloads + bounded harvest",
+      "files_downloaded": "307 files / ~5.05 GiB under scientific_datasets/agris; 46/50 providers projected",
+      "parsing_normalization": "8628 projected records in harvest_manifest.v6; LocalIndex agris=96615",
+      "provenance": "Original provider URLs + sha256 in manifest",
+      "persistence": "96615 agris rows in scientific_record_store.sqlite",
+      "indexing": "FTS populated (store-wide 308749)",
+      "search_integration": "LocalIndex searchable; full 1244-provider ingest NOT claimed",
+      "remaining_work": "Retry 3 timed-out providers; resolve FR0 license skip; no re-download of projected set"
+    },
+    {
+      "source_key": "dr_duke",
+      "adr_id": "G1-17",
+      "registration": "Bulk/LocalIndex governed seat",
+      "capability": "Local projection path",
+      "connectivity": "LIVE_CONNECTIVITY_PARTIAL (documentary about page)",
+      "retrieval": "Local dataset projection",
+      "files_downloaded": "Prior local projection (not re-fetched this revision)",
+      "parsing_normalization": "Completed historically",
+      "provenance": "fnfnum/chem identifiers in profile",
+      "persistence": "scientific_source_records dr_duke=212448",
+      "indexing": "Included in FTS aggregate",
+      "search_integration": "LocalIndex search when selected",
+      "remaining_work": "No public machine search API claimed; keep LocalIndex path"
+    }
+  ],
+  "stage3_path_note": "Stage-3 five (openalex/crossref/semantic_scholar/consensus/fao_stat) remain separate Internet-First defaults; audited under EXIT-08 connectivity, not this five-seat completion set."
+}

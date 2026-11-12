@@ -1,0 +1,22 @@
+{
+  "schema_id": "adr023.final_acceptance_matrix.v1",
+  "created_at_utc": "2026-11-12T08:20:00Z",
+  "revision": "10.10",
+  "supersedes": "2026-11-12-PHASE-1-FINAL-ACCEPTANCE-MATRIX.v10.9.1.json",
+  "baseline_head": "a6d020104a581aa57eebd57307b298f38c545e5b",
+  "phase_1_classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "criteria": [
+    {"id": "P1-EXIT-01", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-02", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-03", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-04", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-05", "previous": "BLOCKED", "current": "BLOCKED", "blocker": "staging/operator evidence"},
+    {"id": "P1-EXIT-06", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-07", "previous": "BLOCKED", "current": "BLOCKED", "blocker": "G2-26 original IC"},
+    {"id": "P1-EXIT-08", "previous": "PARTIAL", "current": "PARTIAL", "evidence": "Prior live connectivity retained; GBIF advanced from connectivity to runtime search integration (fixture E2E 3/31 + LIVE_SEARCH_VERIFIED). BHL/Consensus credentials and Semantic Scholar 429 remain.", "live_connectivity": "PARTIAL", "gbif_search_integration": "VERIFIED"},
+    {"id": "P1-EXIT-09", "previous": "PARTIAL", "current": "PARTIAL", "evidence": "§8.23.8 Cap CURRENT item RESOLVED under OD-8.23.8-A (CapVer-SQLite 27/101); Cap persist reconfirmed EXIT 0; ServerRestart residual remains open (do not fake [2,1]); prior CSQ/family 100/592 retained", "section_8_23_8": "RESOLVED_ALTERNATIVE_A", "server_restart": "OPEN"},
+    {"id": "P1-EXIT-10", "previous": "PARTIAL", "current": "PARTIAL", "evidence": "Five-source audit + AGRIS inventory + GBIF search evidence updated without inventing membership counts"},
+    {"id": "P1-EXIT-11", "previous": "NOT_RUN", "current": "NOT_RUN", "reason": "prerequisites incomplete"},
+    {"id": "D-08", "previous": "BLOCKED", "current": "BLOCKED"}
+  ]
+}

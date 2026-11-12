@@ -1,0 +1,21 @@
+{
+  "schema_id": "adr023.exit10_verified_family.v1",
+  "created_at_utc": "2026-11-12T08:18:00Z",
+  "revision": "10.10",
+  "supersedes": "2026-11-12-PHASE-1-EXIT-10-VERIFIED-FAMILY.v10.9.1.json",
+  "note": "Evidence-based update only; membership counts not altered",
+  "distinctions": {
+    "membership": "unchanged from 109.v1 / current membership registers",
+    "registry": "production catalog includes Stage-3 five + governed seats (agris, dr_duke, gbif, organic_eprints, bhl)",
+    "integration": {
+      "gbif": "runtime search path verified (fixture + live)",
+      "agris": "LocalIndex searchable; full ODS ingest not claimed",
+      "organic_eprints": "LocalIndex 200 rows",
+      "dr_duke": "LocalIndex 212448 rows",
+      "bhl": "credential-blocked live"
+    },
+    "connectivity": "see EXIT-08 v10.9.1 + GBIF live search v10.10",
+    "operational_readiness": "PARTIAL — credentials and ServerRestart residuals remain"
+  },
+  "status": "PARTIAL"
+}
