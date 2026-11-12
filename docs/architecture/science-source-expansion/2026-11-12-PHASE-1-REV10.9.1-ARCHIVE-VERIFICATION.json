@@ -1,0 +1,18 @@
+{
+  "schema_id": "adr023.archive_verification.v1",
+  "created_at_utc": "2026-11-12T06:30:00Z",
+  "revision": "10.9.1",
+  "mission": "2026-11-12-PHASE-1-REV10.9.1",
+  "count_before": 752,
+  "count_after": 761,
+  "method": "FilesystemMissionArtifactArchive::ingestFile + readback + verifyIntegrity",
+  "items": [
+    {"file": "2026-11-12-PHASE-1-EXIT-08-LIVE-CONNECTIVITY.v10.9.1.json", "archive_id": "maa_3eeb36630b7960af_b053ed6dc95d", "verification": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-12-PHASE-1-EXIT-08-CREDENTIAL-REQUIREMENTS.v10.9.1.json", "archive_id": "maa_17e3b80b10ab4558_af765bf1535c", "verification": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-12-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.9.1.json", "archive_id": "maa_529cc7d87fc94ae1_6661d30fffb9", "verification": "ARCHIVED_AND_VERIFIED"},
+    {"file": "2026-11-12-PHASE-1-SECTION-8-23-8-OWNER-DECISION-REQUEST.v10.9.1.json", "archive_id": "maa_90d2da70b0217d9e_0f096e490c08", "verification": "ARCHIVED_AND_VERIFIED"}
+  ],
+  "evidence_log": "_tmp-r1091-archive-ingest.json",
+  "final_head": "f999ec2",
+  "commits": ["8135818", "f999ec2"]
+}
