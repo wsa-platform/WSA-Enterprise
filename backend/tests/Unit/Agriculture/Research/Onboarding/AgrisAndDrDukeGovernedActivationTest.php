@@ -240,5 +240,89 @@ class AgrisAndDrDukeGovernedActivationTest extends TestCase
         $this->assertTrue(ScientificSourceCatalog::default()->has('organic_eprints'));
         $this->assertTrue(ScientificSourceCatalog::default()->has('bhl'));
         $this->assertTrue(ScientificSourceCatalog::default()->has('gbif'));
+
+        // Orchestrator path: scholarly NL variants lead with common name ("mint") which FTS
+        // misses; LocalIndex must prefer scientificName within MAX_VARIANTS_PER_PROVIDER.
+        $registration = new ScientificSourceRegistration(
+            sourceKey: 'dr_duke',
+            adapterClass: LocalIndexScientificSourceAdapter::class,
+            adapterContractVersion: ScientificSourceAdapterV2Interface::V2_CONTRACT_VERSION,
+            lifecycle: ScientificSourceLifecycle::GOVERNED_ONBOARDED,
+            accessFamily: ScientificSourceAccessFamily::STATIC_DATASET,
+            selectionRole: ScientificSourceSelectionRole::GOVERNED_EXPANSION,
+            executionGroup: ScientificSourceExecutionGroup::SEQUENTIAL,
+            enablement: new AlwaysEnabledSourceEnablement(),
+            pathFamily: PathFamily::P12,
+            adrId: \App\Services\Agriculture\Research\Identity\AdrMembershipId::fromString('G1-17'),
+            capabilities: [
+                new ScientificSourceCapabilityDeclaration(
+                    ScientificSourceOperation::SEARCH,
+                    ScientificSourceCapabilityStatus::VERIFIED_SUPPORTED,
+                    'test:fixture dr_duke limited',
+                    verifiedAt: '2026-10-18T17:00:00+00:00',
+                    expiresAt: '2027-10-18T17:00:00+00:00',
+                ),
+            ],
+            familyProfile: $seat->familyProfile,
+        );
+        app()->instance(LocalScientificIndex::class, $index);
+        app()->instance(\App\Services\Agriculture\Research\Search\LocalIndex\ScientificRecordStore::class, $store);
+        $catalog = new ScientificSourceCatalog([$registration]);
+        $builder = Mockery::mock(ScientificSearchQueryBuilder::class);
+        $builder->shouldReceive('buildVariantsFromPlan')->andReturn([
+            'mint',
+            'Mentha taxonomy',
+            'mint taxonomy',
+        ]);
+        $builder->shouldReceive('buildFromPlan')->andReturn('mint');
+        $builder->shouldReceive('buildConsensusRequestOptions')->andReturn([]);
+        $orchestrator = new MultiSourceScientificSearchOrchestrator(
+            new ScientificSourceAdapterRegistry(app(), $catalog),
+            new ScientificSourceSelector($catalog),
+            $builder,
+            app(ScientificResultDeduplicator::class),
+            app(ScientificResultRanker::class),
+            catalog: $catalog,
+        );
+        $query = new AgriculturalKnowledgeQuery(
+            originalQuestion: 'Mentha piperita ethnobotany',
+            normalizedQuestion: 'Mentha piperita ethnobotany',
+            language: 'en',
+            agriculturalDomain: 'agronomy',
+            subject: ['type' => 'crop', 'value' => 'mint'],
+            crop: 'mint',
+            cropId: null,
+            scientificName: 'Mentha piperita',
+            topic: 'taxonomy',
+            subtopic: null,
+            requestedInformation: ['classification'],
+            constraints: [],
+            location: null,
+            researchRequired: true,
+            ambiguityState: AgriculturalKnowledgeQuery::AMBIGUITY_CLEAR,
+            clarificationRequirements: [],
+            researchIntent: 'literature_review',
+        );
+        $plan = new KnowledgeQueryPlan(
+            normalizedQuery: $query,
+            researchIntent: 'literature_review',
+            agriculturalDomain: 'agronomy',
+            subjectEntity: ['type' => 'crop', 'value' => 'mint'],
+            topics: ['taxonomy'],
+            subtopics: [],
+            requestedInformation: ['classification'],
+            evidenceRequirements: [],
+            sourcePriorities: ['dr_duke'],
+            primaryResearchStrategy: KnowledgeQueryPlan::STRATEGY_INTERNET_FIRST,
+            researchSequence: KnowledgeQueryPlan::STAGE_EXECUTION_SEQUENCE,
+            ambiguityState: AgriculturalKnowledgeQuery::AMBIGUITY_CLEAR,
+            clarificationRequirements: [],
+            contextInput: [],
+            readyForStage3: true,
+        );
+        $report = $orchestrator->execute($plan, 5, ['dr_duke']);
+        $this->assertContains('dr_duke', $report->successfulSources);
+        $this->assertSame('drduke-fixture-1', (string) $report->results[0]->sourceIdentifier);
+        $this->assertNotNull($report->results[0]->primaryProvenance());
     }
 }

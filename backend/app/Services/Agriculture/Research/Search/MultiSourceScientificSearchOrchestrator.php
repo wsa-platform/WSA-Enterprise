@@ -17,6 +17,7 @@ use App\Services\Agriculture\Research\Projection\ProjectionSearchOptionsBinder;
 use App\Services\Agriculture\Research\Search\Contract\ScientificSourceFailureClassifier;
 use App\Services\Agriculture\Research\Search\Contract\ScientificSourceLicensingDeclaration;
 use App\Services\Agriculture\Research\Search\Contract\ScientificSourceSearchRequest;
+use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCapabilityPolicy;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceExecutionGroup;
@@ -744,7 +745,7 @@ class MultiSourceScientificSearchOrchestrator
             $key = $adapter->sourceKey();
             $collections[$key] = self::collectAdapterSearch(
                 $adapter,
-                $variants,
+                $this->variantsForAdapter($adapter, $plan, $variants),
                 $limit,
                 $this->optionsForSource($key, $plan),
                 $budget,
@@ -755,6 +756,41 @@ class MultiSourceScientificSearchOrchestrator
         }
 
         return $collections;
+    }
+
+    /**
+     * LocalIndex FTS is lexical and sensitive to scholarly NL expansions (e.g. "mint",
+     * "Mentha taxonomy"). Prefer bare scientific identity tokens so CSQ entity identity
+     * is attempted within MAX_VARIANTS_PER_PROVIDER before topic-suffixed scholarly variants.
+     *
+     * @param  list<string>  $variants
+     * @return list<string>
+     */
+    private function variantsForAdapter(
+        ScientificSourceAdapterInterface $adapter,
+        KnowledgeQueryPlan $plan,
+        array $variants,
+    ): array {
+        if (! $adapter instanceof LocalIndexScientificSourceAdapter) {
+            return $variants;
+        }
+
+        $preferred = [];
+        $scientific = trim((string) ($plan->normalizedQuery->scientificName ?? ''));
+        if ($scientific !== '') {
+            $preferred[] = $scientific;
+            $parts = preg_split('/\s+/u', $scientific) ?: [];
+            $genus = trim((string) ($parts[0] ?? ''));
+            if ($genus !== '' && strcasecmp($genus, $scientific) !== 0) {
+                $preferred[] = $genus;
+            }
+        }
+
+        if ($preferred === []) {
+            return $variants;
+        }
+
+        return ScientificSearchVariantBudget::apply([...$preferred, ...$variants])['variants'];
     }
 
     /**
