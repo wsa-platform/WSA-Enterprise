@@ -1,0 +1,58 @@
+{
+  "schema_id": "wsa.phase1_anti_repetition_register.v1",
+  "revision": "10.16",
+  "created_at_utc": "2026-11-12T19:40:00Z",
+  "baseline_head": "d2434043af438ad29600d8b0b435673c0522c2a0",
+  "completed_do_not_repeat": [
+    {
+      "work": "GBIF scientific search integration (selector/orchestrator/live)",
+      "status": "SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED",
+      "commit": "28cccb3",
+      "retest_allowed_only_if": "Regression affecting GBIF path or shared Orchestrator contract"
+    },
+    {
+      "work": "BHL live API key mapping + search integration",
+      "status": "SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED",
+      "commit": "e83d830",
+      "retest_allowed_only_if": "Credential/config mapping change or adapter contract change; never print secrets"
+    },
+    {
+      "work": "Dr. Duke LocalIndex orchestrator scientificName variant preference",
+      "status": "SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED_LIMITED_LOCAL_PROJECTION",
+      "commit": "68daeae",
+      "evidence": "2026-11-12-PHASE-1-DR-DUKE-SEARCH-INTEGRATION.v10.14.json",
+      "retest_allowed_only_if": "Targeted regression for variantsForAdapter / provenance / synthesis wiring"
+    },
+    {
+      "work": "AGRIS bounded harvest + ODS inventory + 1244 vs 50 scope reconciliation definitions",
+      "status": "OD-G1-01-SCOPE-BOUNDED-SUBSET ACCEPT; full corpus not claimed",
+      "commit": "d243404",
+      "evidence": "2026-11-12-PHASE-1-AGRIS-1244-VS-50-RECONCILIATION.v10.14.json",
+      "retest_allowed_only_if": "Independent uniqueness audit of downloadURL (Rev 10.16 Workstream A); no re-download"
+    },
+    {
+      "work": "EXIT-08 original contract recovery matrices",
+      "status": "CONTRACT_RECOVERED; EXIT-08 remains PARTIAL",
+      "commit": "d243404",
+      "retest_allowed_only_if": "Fill unmet original conditions only; do not rebuild matrices from scratch"
+    },
+    {
+      "work": "§8.23.8 Alternative A CapVer-SQLite owner decision",
+      "status": "OD-8.23.8-A-2026-11-12 ACCEPT",
+      "commit": "7fd319a",
+      "retest_allowed_only_if": "Do not re-request the same owner decision"
+    },
+    {
+      "work": "Organic Eprints OAI connectivity + LocalIndex path proofs",
+      "status": "Connectivity and fixture search path verified historically",
+      "retest_allowed_only_if": "Incremental harvest expansion / checkpoint resume; no general reconnect smoke"
+    }
+  ],
+  "open_this_revision": [
+    "AGRIS downloadURL uniqueness independent XML-aware audit",
+    "ServerRestart Linux comparative write/restart/verify keep expectation [2,1]",
+    "Organic Eprints incremental harvest expansion",
+    "Dr. Duke targeted regression tests",
+    "EXIT-08/05/07/09/10/11 and D-08 residual progress"
+  ]
+}

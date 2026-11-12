@@ -1,0 +1,28 @@
+{
+  "schema_id": "adr023.exit08_acceptance_matrix.v1",
+  "created_at_utc": "2026-11-12T19:55:00Z",
+  "revision": "10.16",
+  "supersedes_for_delta": "2026-11-12-PHASE-1-EXIT-08-ACCEPTANCE-MATRIX.v10.14.json",
+  "contract": "2026-11-12-PHASE-1-EXIT-08-ORIGINAL-CONTRACT-ANALYSIS.v10.14.json",
+  "owner_decision_chain": "2026-11-12-PHASE-1-OWNER-DECISION-CHAIN-G1-01-G1-17.v10.16.json",
+  "delta_only_notes": [
+    "AGRIS uniqueness of 1244 downloadURL independently PASS (XMLReader dual-run)",
+    "OE incremental harvest resumed: rows 200→500; LocalIndex probe success",
+    "Dr. Duke regression AgrisAndDrDukeGovernedActivationTest 4/38 exit 0",
+    "S2S/Consensus/FAOSTAT unchanged blockers/not-tested this revision"
+  ],
+  "rows": [
+    {"source": "gbif", "acceptance_result": "PASS_FOR_SEAT_EVIDENCE", "changed_this_revision": false},
+    {"source": "bhl", "acceptance_result": "PASS_FOR_SEAT_EVIDENCE", "changed_this_revision": false},
+    {"source": "organic_eprints", "connectivity": "LIVE_CONNECTIVITY_VERIFIED", "indexing": "INDEXING_VERIFIED", "scientific_search_integration": "PARTIAL", "acceptance_result": "PARTIAL", "changed_this_revision": true, "notes": "Incremental harvest expanded LocalIndex; checkpoint still in_progress; fixture orchestrator path retained"},
+    {"source": "agris", "acceptance_result": "PARTIAL", "changed_this_revision": true, "notes": "Uniqueness audit PASS for 1244; bounded OD-G1-01 scope unchanged; full corpus not claimed"},
+    {"source": "dr_duke", "integration_status": "VERIFIED", "coverage_scope": "LIMITED", "retrieval_mode": "LOCAL_PROJECTION", "acceptance_result": "PASS_FOR_BOUNDED_SCOPE", "changed_this_revision": false, "regression": "AgrisAndDrDukeGovernedActivationTest 4 tests / 38 assertions exit 0"},
+    {"source": "openalex", "acceptance_result": "PASS_FOR_SEAT_EVIDENCE", "changed_this_revision": false},
+    {"source": "crossref", "acceptance_result": "PASS_FOR_SEAT_EVIDENCE", "changed_this_revision": false},
+    {"source": "semantic_scholar", "acceptance_result": "BLOCKED", "http_status": 429, "changed_this_revision": false},
+    {"source": "consensus", "acceptance_result": "BLOCKED_OR_NOT_REQUIRED_IF_OPTIONAL", "changed_this_revision": false},
+    {"source": "fao_stat", "acceptance_result": "NOT_TESTED", "changed_this_revision": false}
+  ],
+  "exit08_outcome": "PARTIAL",
+  "pass_forbidden_until": "Remaining §8.64.7 family gaps (S2S/Consensus/FAOSTAT and OE/AGRIS residual search-integration closure) resolved without inventing source-count threshold"
+}

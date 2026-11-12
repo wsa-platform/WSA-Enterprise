@@ -1,0 +1,55 @@
+{
+  "schema_id": "wsa.organic_eprints_incremental_harvest.v1",
+  "revision": "10.16",
+  "created_at_utc": "2026-11-12T19:55:00Z",
+  "prior_checkpoint": {
+    "generation": 2,
+    "state": "in_progress",
+    "resumption_token_offset": 336,
+    "pages_committed": 2,
+    "active_rows_before": 200
+  },
+  "command": "php artisan scientific:harvest-oai organic_eprints --max-pages=3 --probe-query=organic farming",
+  "result": {
+    "status": "paused",
+    "pages_this_run": 3,
+    "generation_after": 5,
+    "counts": {
+      "inserted": 292,
+      "updated": 0,
+      "unchanged": 0,
+      "deleted": 8,
+      "withdrawn": 0,
+      "stale": 0
+    },
+    "checkpoint_state": "in_progress",
+    "resumption_token_offset_after": 853,
+    "pages_committed_after": 5,
+    "active_rows_after": 500,
+    "activated": false
+  },
+  "probe": {
+    "query": "organic farming",
+    "status": "success",
+    "result_count": 5,
+    "first_source_key": "organic_eprints",
+    "first_identifier": "oai:orgprints.org:346",
+    "first_url": "https://orgprints.org/346"
+  },
+  "tests": {
+    "OrganicEprintsOaiLocalIndexPathTest": {
+      "tests": 4,
+      "assertions": 46,
+      "exit_code": 0,
+      "log": "_tmp-r1016-oe-tests.txt"
+    }
+  },
+  "guarantees": [
+    "Resumed from last durable checkpoint; did not restart corpus download",
+    "Preserved OAI identifiers and record URLs in LocalIndex",
+    "Harvest does not activate seat",
+    "Expansion remains open (checkpoint still in_progress)"
+  ],
+  "search_integration_status": "PARTIAL_IMPROVED",
+  "notes": "Incremental expansion verified; full corpus harvest not claimed"
+}

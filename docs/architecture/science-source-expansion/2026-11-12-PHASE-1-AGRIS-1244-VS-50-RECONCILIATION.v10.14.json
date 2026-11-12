@@ -7,12 +7,16 @@
         "authoritative_sources": [
             "harvest_manifest.v6.json download_url_total",
             "ADR-023 \u00a78.54 OD-G1-01-SCOPE-BOUNDED-SUBSET cursor N/1244",
-            "2026-10-19 remaining-blockers report: 1244 = dcat:downloadURL providers"
+            "2026-10-19 remaining-blockers report: 1244 = dcat:downloadURL providers",
+            "2026-11-12-PHASE-1-AGRIS-DOWNLOADURL-UNIQUENESS-AUDIT.v10.16.json (XMLReader namespace-aware dual-run PASS)"
         ],
         "root_xml_bytes": 2555593,
         "download_url_occurrences_scanned": 1244,
         "unique_download_urls_scanned": 1244,
-        "manifest_download_url_total": 1244
+        "manifest_download_url_total": 1244,
+        "independent_uniqueness_audit_revision": "10.16",
+        "independent_uniqueness_classification": "PASS",
+        "duplicate_occurrences": 0
     },
     "definition_50": {
         "meaning": "Bounded harvester max_providers batch/cap for a single harvest run (agris_ods_bounded_harvester.v1), not the full catalog",

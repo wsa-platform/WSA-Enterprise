@@ -1,0 +1,82 @@
+{
+  "schema_id": "wsa.agris_downloadurl_uniqueness_audit_report.v1",
+  "revision": "10.16",
+  "created_at_utc": "2026-11-12T19:45:00Z",
+  "classification": "PASS",
+  "linked_reconciliation": "2026-11-12-PHASE-1-AGRIS-1244-VS-50-RECONCILIATION.v10.14.json",
+  "command": "docker exec php /tmp/agris_uniqueness_audit.php AGRIS.ODS.xml harvest_manifest.v6.json runN output.json (executed twice)",
+  "environment": {
+    "runner": "wsa-enterprise-backend-1 container",
+    "php_version": "8.4.25",
+    "parser": "XMLReader namespace-aware dcat#downloadURL"
+  },
+  "source": {
+    "path": "backend/storage/app/scientific_datasets/agris/AGRIS.ODS.xml",
+    "bytes": 2555593,
+    "sha256": "58f8532ef23cfe2d40666c03a1e8352b702fccb7ad6171483ce0fa3e3fbc7c95",
+    "sha256_matches_historical": true
+  },
+  "normalization_rules": [
+    "Read element text via XMLReader::readString",
+    "html_entity_decode ENT_QUOTES|ENT_XML1",
+    "trim",
+    "exclude empty",
+    "classify https vs non-https",
+    "uniqueness = exact string equality (no case fold, no URL canonicalization)"
+  ],
+  "xml_parser_counts": {
+    "raw_occurrences": 1244,
+    "empty_values": 0,
+    "non_empty_values": 1244,
+    "https_occurrences": 1244,
+    "non_https_occurrences": 0,
+    "unique_https_urls": 1244,
+    "duplicate_occurrences": 0,
+    "duplicate_groups": [],
+    "unique_allowed_host_urls": 1244,
+    "unique_non_allowed_https_urls": 0
+  },
+  "regex_comparison": {
+    "implementation": "AgrisOdsBoundedHarvester::extractDownloadUrls literal dcat: prefix regex",
+    "regex_raw_hits": 2488,
+    "regex_empty_after_normalize": 1244,
+    "regex_unique_https": 1244,
+    "sets_equal_to_xml_parser_unique_https": true,
+    "only_in_xml_parser": 0,
+    "only_in_regex": 0,
+    "literal_dcat_prefix_required": true,
+    "note": "Regex produces 2x raw hits with half empty captures on this file; after https+dedup the unique set matches XML-aware 1244 exactly. No harvester defect for uniqueness inventory. XML-aware counts are authoritative for uniqueness proof."
+  },
+  "manifest_reconciliation": {
+    "download_url_total": 1244,
+    "max_providers": 50,
+    "providers_count": 50,
+    "status_counts": {
+      "download_failed": 3,
+      "skipped_unverified_license": 1,
+      "projected": 46
+    },
+    "root_sha256_match": true,
+    "download_url_total_matches_unique_https": true,
+    "manifest_not_independent_uniqueness_proof": true
+  },
+  "dual_run_stability": {
+    "run1_artifact": "_tmp-r1016-agris-audit-run1.json",
+    "run2_artifact": "_tmp-r1016-agris-audit-run2.json",
+    "counts_identical": true,
+    "url_list_sha256_identical": true,
+    "url_list_sha256_sorted_unique_https": "a00bce0b677a4fe8bfc90e2537446bf1cef3a368c01e39adf865181001b130bc"
+  },
+  "relationship_1244_vs_50": {
+    "comparable_as_completion_ratio": false,
+    "definition_1244": "catalog dcat:downloadURL unique HTTPS inventory",
+    "definition_50": "bounded harvest max_providers cap",
+    "owner_decision": "OD-G1-01-SCOPE-BOUNDED-SUBSET"
+  },
+  "mutations": {
+    "xml_modified": false,
+    "manifest_modified": false,
+    "harvest_rerun": false,
+    "redownload": false
+  }
+}

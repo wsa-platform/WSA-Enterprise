@@ -1,0 +1,20 @@
+{
+  "schema_id": "wsa.phase1_exit_matrix_update.v1",
+  "revision": "10.16",
+  "created_at_utc": "2026-11-12T19:55:00Z",
+  "exits": [
+    {"id": "EXIT-01", "status": "PASS", "changed": false, "notes": "Prior acceptance retained; no invalidating change"},
+    {"id": "EXIT-02", "status": "PASS", "changed": false},
+    {"id": "EXIT-03", "status": "PASS", "changed": false},
+    {"id": "EXIT-04", "status": "PASS", "changed": false},
+    {"id": "EXIT-05", "status": "BLOCKED", "changed": false, "blocker": "Staging/Operator requirements — engineering local prep only; no staging execution claimed"},
+    {"id": "EXIT-06", "status": "PASS", "changed": false},
+    {"id": "EXIT-07", "status": "BLOCKED", "changed": false, "blocker": "G2-26 — not declared N/A"},
+    {"id": "EXIT-08", "status": "PARTIAL", "changed": true, "evidence": ["2026-11-12-PHASE-1-EXIT-08-ACCEPTANCE-MATRIX.v10.16.json", "AGRIS uniqueness PASS", "OE incremental harvest"], "remaining": "S2S 429; Consensus credentials; FAOSTAT NOT_TESTED; OE/AGRIS residual search-integration"},
+    {"id": "EXIT-09", "status": "PARTIAL", "changed": true, "evidence": "2026-11-12-PHASE-1-EXIT-09-SERVERRESTART-LINUX-COMPARISON.v10.16.json", "notes": "Linux comparative ServerRestart PASS with preserved [2,1]; Windows historical [2,2] residual remains; expectation not weakened"},
+    {"id": "EXIT-10", "status": "PARTIAL", "changed": false, "notes": "Open conditions retained; independent work progressed under EXIT-08/09 evidence"},
+    {"id": "EXIT-11", "status": "NOT_RUN", "changed": false, "notes": "Prerequisites not fully met; not declared PASS"},
+    {"id": "D-08", "status": "BLOCKED", "changed": false, "blocker": "Supplement 04 missing; Supplement 03 not a substitute"}
+  ],
+  "phase_classification": "PHASE_1_GAP_CLOSURE_PARTIAL"
+}

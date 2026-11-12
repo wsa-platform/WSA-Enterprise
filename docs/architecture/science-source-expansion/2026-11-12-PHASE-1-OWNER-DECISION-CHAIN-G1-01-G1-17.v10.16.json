@@ -1,0 +1,43 @@
+{
+  "schema_id": "wsa.owner_decision_chain_verification.v1",
+  "revision": "10.16",
+  "verified_at_utc": "2026-11-12T19:40:00Z",
+  "decisions": [
+    {
+      "id": "OD-G1-01-SCOPE-BOUNDED-SUBSET",
+      "adr_section": "ADR-023 §8.54.2",
+      "adr_outcome": "ACCEPT",
+      "recorded_artifact": "docs/architecture/science-source-expansion/2026-10-17-SOURCE-EXPANSION-MISSION/2026-10-18-OWNER-DECISION-RECORDED-G1-01-G1-17-SCOPE.v1.json",
+      "artifact_present_in_tree": true,
+      "artifact_kind": "OWNER_DECISION_RECORD",
+      "actor": "owner",
+      "classification": "OWNER_DECISION",
+      "chain_status": "VERIFIED_ADR_PLUS_RECORDED_ARTIFACT",
+      "notes": "Earlier Rev noted artifact not visible on published tip path; located under SOURCE-EXPANSION-MISSION/"
+    },
+    {
+      "id": "OD-G1-17-SCOPE-LIMITED-PROJECTION",
+      "adr_section": "ADR-023 §8.54.2",
+      "adr_outcome": "ACCEPT",
+      "recorded_artifact": "docs/architecture/science-source-expansion/2026-10-17-SOURCE-EXPANSION-MISSION/2026-10-18-OWNER-DECISION-RECORDED-G1-01-G1-17-SCOPE.v1.json",
+      "artifact_present_in_tree": true,
+      "artifact_kind": "OWNER_DECISION_RECORD",
+      "actor": "owner",
+      "classification": "OWNER_DECISION",
+      "chain_status": "VERIFIED_ADR_PLUS_RECORDED_ARTIFACT",
+      "notes": "Same recorded artifact; limited projection not full corpus"
+    },
+    {
+      "id": "OD-8.23.8-A-2026-11-12",
+      "adr_section": "ADR-023 §8.23.8 Alternative A",
+      "recorded_artifact": "docs/architecture/science-source-expansion/2026-11-12-PHASE-1-SECTION-8-23-8-OWNER-DECISION-ACCEPTED.v10.10.json",
+      "artifact_present_in_tree": true,
+      "chain_status": "VERIFIED",
+      "notes": "Do not re-request"
+    }
+  ],
+  "not_elevated_to_owner_decision": [
+    "Engineering recommendations",
+    "Historical proposal packages superseded by recorded ACCEPT artifacts"
+  ]
+}

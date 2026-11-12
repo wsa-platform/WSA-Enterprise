@@ -1,0 +1,57 @@
+{
+  "schema_id": "adr023.exit09_serverrestart_linux_comparison.v1",
+  "revision": "10.16",
+  "created_at_utc": "2026-11-12T19:50:00Z",
+  "test": "Tests\\Pgsql\\ScientificRecordStoreServerRestartTest::test_committed_state_survives_a_database_server_restart",
+  "preserved_expectation": "[dataset_example=2, repository_example=1]",
+  "environment": {
+    "kind": "Linux PostgreSQL 16.14-alpine container on Docker Desktop Linux VM",
+    "pg_container": "wsa-r1016-srs-pg",
+    "volume": "wsa-r1016-srs-pgdata",
+    "database": "wsa_r1016_store_test",
+    "php_runner": "wsa-enterprise-backend-test:latest --network container:pg",
+    "operational_db_touched": false,
+    "wsa_enterprise_untouched": true,
+    "native_wsl_distro_bash": "NOT_AVAILABLE (docker-desktop WSL only)",
+    "classification_of_runner": "LINUX_CONTAINER_EQUIVALENT"
+  },
+  "phases": {
+    "write": {
+      "status": "PASSED",
+      "tests": 1,
+      "assertions": 5,
+      "exit_code": 0,
+      "postmaster_start": "2026-11-12 19:39:16.385324+00",
+      "log": "_tmp-r1016-srs-linux-write.txt"
+    },
+    "restart": {
+      "status": "COMPLETED_WITH_DELAYED_RECOVERY",
+      "restart_exit": 0,
+      "notes": "docker restart succeeded; accepting connections delayed by end-of-recovery checkpoint (sync ~49s). Premature verify before ready refused bootstrap. After ready: verify executed."
+    },
+    "verify": {
+      "status": "PASSED",
+      "tests": 1,
+      "assertions": 15,
+      "exit_code": 0,
+      "postmaster_start_after": "2026-11-12 19:43:07.645916+00",
+      "observed_generations": "[2, 1]",
+      "log": "_tmp-r1016-srs-linux-verify.txt"
+    }
+  },
+  "windows_prior": {
+    "revision": "10.9.1 / 10.14 diagnostic",
+    "verify_status": "FAILED",
+    "observed": "[2, 2]",
+    "evidence": "2026-11-12-PHASE-1-EXIT-09-SERVERRESTART-ATTEMPT.v10.9.1.json"
+  },
+  "root_cause_classification": {
+    "application_logic_defect_confirmed": false,
+    "os_or_volume_recovery_sensitivity": true,
+    "expectation_changed": false,
+    "summary": "Same fixture/protocol: Linux container volume verify PASS with preserved [2,1]; prior Windows-volume attempt observed [2,2] after unclean/recovery path. Defect is not proven in application generation contract; environment/recovery timing remains the differentiating factor."
+  },
+  "acceptance_protection": "Expected [2,1] preserved and satisfied on Linux comparative run",
+  "status": "LINUX_COMPARISON_PASS",
+  "exit09_impact": "ServerRestart criterion evidence strengthened; EXIT-09 may remain PARTIAL if other residual scopes remain — do not auto-close EXIT-09 solely from this unit without full EXIT-09 contract review"
+}

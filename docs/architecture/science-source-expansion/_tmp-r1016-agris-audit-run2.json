@@ -1,0 +1,75 @@
+{
+    "schema_id": "wsa.agris_downloadurl_uniqueness_audit.v1",
+    "revision": "10.16",
+    "run_id": "run2",
+    "inspected_at_utc": "2026-11-12T19:35:22+00:00",
+    "completed_at_utc": "2026-11-12T19:35:22+00:00",
+    "php_version": "8.4.25",
+    "xml_extensions": [
+        "dom",
+        "xml",
+        "xmlreader",
+        "libxml"
+    ],
+    "method": {
+        "parser": "XMLReader namespace-aware localName=downloadURL ns=http://www.w3.org/ns/dcat#",
+        "normalization": [
+            "html_entity_decode ENT_QUOTES|ENT_XML1",
+            "trim",
+            "exclude empty",
+            "split https vs non-https",
+            "uniqueness via exact string equality (no case fold, no URL canonicalization)"
+        ],
+        "regex_comparator": "preg_match_all #dcat:downloadURL[^>]*>([^<]+)# then same normalize+https filter+assoc dedup as AgrisOdsBoundedHarvester::extractDownloadUrls"
+    },
+    "source": {
+        "path": "/var/www/html/storage/app/scientific_datasets/agris/AGRIS.ODS.xml",
+        "bytes": 2555593,
+        "sha256": "58f8532ef23cfe2d40666c03a1e8352b702fccb7ad6171483ce0fa3e3fbc7c95",
+        "sha256_matches_historical": true,
+        "historical_sha256": "58f8532ef23cfe2d40666c03a1e8352b702fccb7ad6171483ce0fa3e3fbc7c95"
+    },
+    "xml_parser_counts": {
+        "raw_occurrences": 1244,
+        "empty_values": 0,
+        "non_empty_values": 1244,
+        "https_occurrences": 1244,
+        "non_https_occurrences": 0,
+        "unique_https_urls": 1244,
+        "duplicate_occurrences": 0,
+        "duplicate_groups_count": 0,
+        "unique_allowed_host_urls": 1244,
+        "unique_non_allowed_https_urls": 0,
+        "non_https_sample": [],
+        "non_allowed_https_sample": []
+    },
+    "duplicate_groups": [],
+    "regex_comparison": {
+        "regex_raw_hits": 2488,
+        "regex_empty_after_normalize": 1244,
+        "regex_non_https": 0,
+        "regex_unique_https": 1244,
+        "literal_dcat_prefix_required": true,
+        "sets_equal": true,
+        "only_in_xml_parser_count": 0,
+        "only_in_regex_count": 0,
+        "only_in_xml_parser_sample": [],
+        "only_in_regex_sample": []
+    },
+    "manifest_reconciliation": {
+        "download_url_total": 1244,
+        "max_providers": 50,
+        "providers_count": 50,
+        "status_counts": {
+            "download_failed": 3,
+            "skipped_unverified_license": 1,
+            "projected": 46
+        },
+        "root_sha256": "58f8532ef23cfe2d40666c03a1e8352b702fccb7ad6171483ce0fa3e3fbc7c95",
+        "contract_version": "agris_ods_bounded_harvester.v1",
+        "matches_unique_https": true,
+        "note": "manifest download_url_total is post-dedup count from extractDownloadUrls (regex path), not independent uniqueness proof"
+    },
+    "url_list_sha256_sorted_unique_https": "a00bce0b677a4fe8bfc90e2537446bf1cef3a368c01e39adf865181001b130bc",
+    "classification_hint": "PASS_CANDIDATE"
+}
