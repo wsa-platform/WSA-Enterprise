@@ -118,8 +118,65 @@ class GbifOrchestratorEndToEndTest extends TestCase
         });
     }
 
+    public function test_gbif_is_auto_selected_from_csq_plan_without_forced_source_keys(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-17T21:00:00+00:00'));
+        Http::fake([
+            'https://api.gbif.org/v1/species/search*' => Http::response([
+                'offset' => 0,
+                'limit' => 1,
+                'endOfRecords' => true,
+                'count' => 1,
+                'results' => [
+                    [
+                        'key' => 2704179,
+                        'scientificName' => 'Triticum aestivum L.',
+                        'rank' => 'SPECIES',
+                        'publishedIn' => 'Sp. Pl. 1: 85 (1753)',
+                    ],
+                ],
+            ], 200),
+            '*' => Http::response(['results' => [], 'message' => ['items' => []]], 200),
+        ]);
+
+        config(['agricultural_intelligence.gbif.enabled' => true]);
+        $catalog = ScientificSourceCatalog::default();
+        $csqQuery = 'Triticum aestivum species classification';
+        $builder = Mockery::mock(ScientificSearchQueryBuilder::class);
+        $builder->shouldReceive('buildVariantsFromPlan')->andReturn([$csqQuery]);
+        $builder->shouldReceive('buildFromPlan')->andReturn($csqQuery);
+        $builder->shouldReceive('buildConsensusRequestOptions')->andReturn([]);
+
+        $selector = new ScientificSourceSelector($catalog);
+        $selected = $selector->selectSources($this->plan($csqQuery));
+        $this->assertContains('gbif', $selected, 'GOVERNED_EXPANSION must include GBIF when enabled');
+
+        $orchestrator = new MultiSourceScientificSearchOrchestrator(
+            new ScientificSourceAdapterRegistry(app(), $catalog),
+            $selector,
+            $builder,
+            app(ScientificResultDeduplicator::class),
+            app(ScientificResultRanker::class),
+            catalog: $catalog,
+        );
+
+        // Null sourceKeys → selector-driven runtime path (home research agent).
+        $report = $orchestrator->execute($this->plan($csqQuery), 3, null);
+        $this->assertContains('gbif', $report->attemptedSources);
+        $this->assertContains('gbif', $report->successfulSources);
+        $gbifHits = array_values(array_filter(
+            $report->results,
+            static fn ($r): bool => $r->sourceKey === 'gbif',
+        ));
+        $this->assertNotEmpty($gbifHits);
+        $this->assertSame('2704179', (string) $gbifHits[0]->sourceIdentifier);
+        $this->assertSame('SPECIES', $gbifHits[0]->abstract);
+        $this->assertSame(RestJsonScientificSourceAdapter::class, $gbifHits[0]->primaryProvenance()?->adapterClass);
+    }
+
     public function test_gbif_provider_errors_are_isolated_on_orchestrator_path(): void
     {
+
         Http::fake([
             'https://api.gbif.org/v1/species/search*' => Http::response('upstream unavailable', 503),
         ]);
