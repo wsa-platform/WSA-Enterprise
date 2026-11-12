@@ -1,0 +1,56 @@
+{
+  "schema_id": "adr023.section_8_23_8_owner_decision_request.v1",
+  "created_at_utc": "2026-11-12T06:05:00Z",
+  "revision": "10.9.1",
+  "criterion": "P1-EXIT-09 / ADR-023 §8.23.8",
+  "executor_authority_limit": "Executor may investigate and recommend but MUST NOT independently finalize N/A or waive mandatory acceptance (Rev 10.9.1 §6.5.1)",
+  "exact_original_text": [
+    "CapVer-only VERIFIED: every other role is rejected.",
+    "Evidence and freshness rules of §8.23.3.",
+    "CURRENT → HISTORICAL on supersession; no in-place mutation.",
+    "Single CURRENT per cell under concurrency, on PostgreSQL.",
+    "Rejection cases of §8.23.5.",
+    "No automatic population: an empty store evaluates to UNVERIFIED.",
+    "Seat isolation: no cross-seat or dual-pair inheritance.",
+    "Cap ≠ IC ≠ Identity ≠ Activation."
+  ],
+  "adr_classification": "OPEN — proposed requirements for a future Gate A covering Capability (§8.64.5 / §8.23 table)",
+  "authorization_note_in_adr": "This section does not authorize a CapVer implementation, CapVer producer, Capability population, CapVer ownership, or seat activation",
+  "current_architecture": {
+    "capver_persistence": "SQLite-by-design (DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md + Phase 1 decisions)",
+    "isolated_postgresql": "IC persistence/concurrency + ScientificRecordStore LocalIndex PG suite under Guard",
+    "primary_app_db": "unchanged; not CapVer"
+  },
+  "implementation_evidence": {
+    "sqlite_cap_persist": "CapabilityStorePersistenceTest 27/101 EXIT 0 includes partial-unique single CURRENT and supersession",
+    "pg_ic_suite": "157/933 EXIT 0 (IC+Guard) at Rev 10.8.3",
+    "srs_pg": "19/308 EXIT 0 LocalIndex-on-PG with bind trait",
+    "cap_on_pg_store": "NOT IMPLEMENTED — would reverse CapVer-SQLite architecture"
+  },
+  "technical_analysis": {
+    "applies_to": "Capability CapVer cell CURRENT uniqueness under concurrency",
+    "literal_pg_phrase": "Single CURRENT per cell under concurrency, on PostgreSQL",
+    "conflict": "Literal wording names PostgreSQL; approved CapVer store is SQLite; migrating CapVer to PG is not authorized by §8.23.8 itself and would cross persistence boundaries",
+    "recommendation": "REQUIREMENT_NOT_APPLICABLE_WITH_ARCHITECTURAL_EVIDENCE for Cap-on-PostgreSQL CURRENT concurrency, with CapVer-SQLite concurrency evidence accepted as the dual-applicable persistence proof — OR owner directs CapVer PG implementation as a new authorized scope"
+  },
+  "alternatives": [
+    {
+      "id": "A",
+      "decision": "Accept CapVer-SQLite concurrency evidence as satisfying the dual-applicable intent of §8.23.8 for Phase 1 CapVer",
+      "consequence": "EXIT-09 may close §8.23.8 Cap CURRENT item; residual five-source/Home-Crop regression may still keep EXIT-09 PARTIAL"
+    },
+    {
+      "id": "B",
+      "decision": "Require CapVer persistence on PostgreSQL",
+      "consequence": "New Implementation Authorization needed; CapVer SQLite architecture reversal; Guard-isolated Cap-on-PG suite; EXIT-09 stays PARTIAL until delivered"
+    },
+    {
+      "id": "C",
+      "decision": "Defer §8.23.8 to future Gate A as ADR OPEN status already states",
+      "consequence": "EXIT-09 remains PARTIAL for this item; Phase 1 cannot close on §8.23.8 alone"
+    }
+  ],
+  "recommended_owner_decision": "A — with explicit written acceptance that CapVer-SQLite concurrency evidence closes the Cap CURRENT concurrency obligation for Phase 1 without Cap-on-PG migration",
+  "exit09_until_owner_decision": "PARTIAL",
+  "proposed_status_if_owner_accepts_A": "REQUIREMENT_NOT_APPLICABLE_WITH_ARCHITECTURAL_EVIDENCE (Cap-on-PG CURRENT) + REQUIREMENT_SATISFIED on CapVer-SQLite CURRENT concurrency evidence"
+}

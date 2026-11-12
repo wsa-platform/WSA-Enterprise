@@ -1,0 +1,22 @@
+{
+  "schema_id": "adr023.final_acceptance_matrix.v1",
+  "created_at_utc": "2026-11-12T06:15:00Z",
+  "revision": "10.9.1",
+  "supersedes": "2026-11-12-PHASE-1-FINAL-ACCEPTANCE-MATRIX.v10.8.3.json",
+  "baseline_head": "526a16ab73ee3472a845f7a888799bbf2b31bc81",
+  "phase_1_classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "criteria": [
+    {"id": "P1-EXIT-01", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-02", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-03", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-04", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-05", "previous": "BLOCKED", "current": "BLOCKED", "blocker": "staging/operator evidence"},
+    {"id": "P1-EXIT-06", "previous": "PASS", "current": "PASS"},
+    {"id": "P1-EXIT-07", "previous": "BLOCKED", "current": "BLOCKED", "blocker": "G2-26 original IC"},
+    {"id": "P1-EXIT-08", "previous": "PARTIAL", "current": "PARTIAL", "evidence": "2026-11-12-PHASE-1-EXIT-08-LIVE-CONNECTIVITY.v10.9.1.json — live verified for GBIF/Organic Eprints/AGRIS ODS/OpenAlex/Crossref; BHL/Consensus credentials blocked; Semantic Scholar 429", "live_connectivity": "PARTIAL"},
+    {"id": "P1-EXIT-09", "previous": "PARTIAL", "current": "PARTIAL", "evidence": "SRS/IC/Cap retain prior PASS; CSQ/family regression 100/592 EXIT 0; ServerRestart NOT_RUN (PG readiness failure); §8.23.8 awaiting owner decision package"},
+    {"id": "P1-EXIT-10", "previous": "PARTIAL", "current": "PARTIAL", "evidence": "2026-11-12-PHASE-1-EXIT-10-VERIFIED-FAMILY.v10.9.1.json"},
+    {"id": "P1-EXIT-11", "previous": "NOT_RUN", "current": "NOT_RUN", "reason": "prerequisites incomplete"},
+    {"id": "D-08", "previous": "BLOCKED", "current": "BLOCKED"}
+  ]
+}

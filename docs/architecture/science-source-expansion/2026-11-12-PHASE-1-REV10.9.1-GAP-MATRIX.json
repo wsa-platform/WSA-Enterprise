@@ -1,0 +1,19 @@
+{
+  "schema_id": "adr023.rev1091_gap_matrix.v1",
+  "created_at_utc": "2026-11-12T06:20:00Z",
+  "baseline_head": "526a16ab73ee3472a845f7a888799bbf2b31bc81",
+  "from_revision": "10.8.3",
+  "gaps": [
+    {"id": "G-EXIT08-LIVE", "start": "LIVE_CONNECTIVITY=NOT_VERIFIED", "end": "PARTIAL — GBIF/OAI/AGRIS/OpenAlex/Crossref verified; BHL/Consensus credentials; S2S 429", "status": "ADVANCED_PARTIAL"},
+    {"id": "G-EXIT09-SRS", "start": "VERIFIED_COMPLETE at 10.8.3", "end": "not re-run (no regression evidence)", "status": "VERIFIED_COMPLETE"},
+    {"id": "G-EXIT09-CSQ", "start": "open residual", "end": "CSQ/family focused 100/592 EXIT 0", "status": "ADVANCED_PARTIAL"},
+    {"id": "G-EXIT09-RESTART", "start": "skipped", "end": "attempted; see ServerRestart attempt record", "status": "IN_PROGRESS_OR_BLOCKED"},
+    {"id": "G-8238", "start": "PARTIAL Cap-on-PG N/A claim without owner waiver", "end": "Owner decision package prepared; EXIT-09 stays PARTIAL", "status": "OWNER_DECISION_REQUIRED"},
+    {"id": "G-EXIT10", "start": "PARTIAL", "end": "updated verified-family columns for probed seats; still PARTIAL", "status": "ADVANCED_PARTIAL"},
+    {"id": "G-EXIT05", "start": "BLOCKED", "end": "BLOCKED unchanged", "status": "BLOCKED"},
+    {"id": "G-EXIT07", "start": "BLOCKED", "end": "BLOCKED unchanged", "status": "BLOCKED"},
+    {"id": "G-D08", "start": "BLOCKED", "end": "BLOCKED unchanged", "status": "BLOCKED"},
+    {"id": "G-PROMPTS1056", "start": "NOT_FOUND", "end": "NOT_FOUND preserved", "status": "BLOCKED"},
+    {"id": "G-EXIT11", "start": "NOT_RUN", "end": "NOT_RUN", "status": "NOT_RUN"}
+  ]
+}

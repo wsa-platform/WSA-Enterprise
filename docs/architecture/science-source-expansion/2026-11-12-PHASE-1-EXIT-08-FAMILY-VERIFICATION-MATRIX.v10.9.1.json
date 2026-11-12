@@ -1,0 +1,40 @@
+{
+  "schema_id": "adr023.exit08_family_verification_matrix.v1",
+  "created_at_utc": "2026-11-12T06:00:00Z",
+  "revision": "10.9.1",
+  "supersedes": "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.6.1.json",
+  "criterion": "P1-EXIT-08",
+  "canonical_status": "PARTIAL",
+  "live_evidence": "2026-11-12-PHASE-1-EXIT-08-LIVE-CONNECTIVITY.v10.9.1.json",
+  "families": [
+    {
+      "family_name": "REST_API / RestJson",
+      "package_status": "PRESENT",
+      "contract_mock": "VERIFIED",
+      "endpoint_tested": "PARTIAL",
+      "endpoint_tested_detail": "GBIF LIVE_CONNECTIVITY_VERIFIED; BHL BLOCKED_CREDENTIALS",
+      "integration_verified": "PARTIAL",
+      "closure_status": "PARTIAL"
+    },
+    {
+      "family_name": "OAI-PMH",
+      "package_status": "PRESENT",
+      "contract_mock": "VERIFIED",
+      "endpoint_tested": "VERIFIED",
+      "endpoint_tested_detail": "Organic Eprints Identify+ListRecords LIVE_CONNECTIVITY_VERIFIED",
+      "integration_verified": "PARTIAL",
+      "closure_status": "PARTIAL"
+    },
+    {
+      "family_name": "Bulk / Dataset",
+      "package_status": "PRESENT",
+      "contract_mock": "VERIFIED",
+      "endpoint_tested": "PARTIAL",
+      "endpoint_tested_detail": "AGRIS ODS catalog LIVE_CONNECTIVITY_VERIFIED; Dr. Duke documentary PARTIAL",
+      "integration_verified": "NOT_RUN",
+      "closure_status": "PARTIAL"
+    }
+  ],
+  "what_this_revision_proves": "Bounded live reachability for selected family endpoints + Stage-3 OpenAlex/Crossref public search",
+  "what_this_revision_does_not_prove": "Full 110-seat operational readiness; BHL/Consensus live; complete Bulk ingest integration; EXIT-08 PASS"
+}

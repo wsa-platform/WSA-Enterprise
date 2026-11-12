@@ -1,0 +1,122 @@
+{
+  "schema_id": "adr023.exit08_live_connectivity.v1",
+  "created_at_utc": "2026-11-12T06:00:00Z",
+  "revision": "10.9.1",
+  "criterion": "P1-EXIT-08",
+  "authoritative": [
+    "ADR-023 §8.64.7 P1-EXIT-08",
+    "ADR-023 §8.24.5",
+    "D-10.8 verified access-family bar",
+    "2026-11-11-PHASE-1-EXIT-08-FAMILY-VERIFICATION-MATRIX.v10.6.1.json"
+  ],
+  "baseline_head": "526a16ab73ee3472a845f7a888799bbf2b31bc81",
+  "method": "Read-only live HTTP/API probes + opt-in PHPUnit Exit08LiveConnectivityProbeTest (WSA_EXIT08_LIVE_PROBES=1); no secrets logged",
+  "phpunit": {
+    "command": "phpunit tests/Integration/Exit08LiveConnectivityProbeTest.php with WSA_EXIT08_LIVE_PROBES=1 --network host",
+    "tests": 5,
+    "assertions": 25,
+    "exit_code": 0,
+    "log": "_tmp-r1091-exit08-live.txt"
+  },
+  "sources": [
+    {
+      "adr_id": "G5-04",
+      "source_key": "gbif",
+      "family": "REST_API / RestJson",
+      "endpoint": "https://api.gbif.org/v1/species/search",
+      "access_method": "public REST JSON; no API key for species search",
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "http_status": 200,
+      "adapter_live_search": "SUCCESS via RestJsonScientificSourceAdapter",
+      "provenance": "sourceKey preserved on results",
+      "csq_note": "query text Triticum aestivum passed as species search q parameter"
+    },
+    {
+      "adr_id": "G1-02",
+      "source_key": "organic_eprints",
+      "family": "OAI-PMH",
+      "endpoint": "https://orgprints.org/cgi/oai2",
+      "access_method": "public OAI-PMH Identify + ListRecords oai_dc",
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "http_status": 200,
+      "notes": "Identify + ListRecords HTTP verified; OaiPmhHarvester may still surface transport noise as failed while direct HTTP succeeds"
+    },
+    {
+      "adr_id": "G1-01",
+      "source_key": "agris",
+      "family": "Bulk / Dataset",
+      "endpoint": "https://agris.fao.org/ods/AGRIS.ODS.xml",
+      "access_method": "public ODS/DCAT catalog GET",
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "http_status": 200,
+      "notes": "Catalog root reachable (>1KB). Full bulk ingest / LocalIndex rebuild not claimed as this probe."
+    },
+    {
+      "adr_id": "G6-20",
+      "source_key": "bhl",
+      "family": "REST_API / RestJson",
+      "endpoint": "https://www.biodiversitylibrary.org/api3",
+      "access_method": "REST API v3 PublicationSearch; apikey required",
+      "live_status": "BLOCKED_CREDENTIALS",
+      "http_status": 401,
+      "adapter_behavior": "STATUS_UNAVAILABLE missing_api_key when agricultural_intelligence.bhl.api_key absent",
+      "credential_required": "BHL_API_KEY → agricultural_intelligence.bhl.api_key"
+    },
+    {
+      "adr_id": "G1-17",
+      "source_key": "dr_duke",
+      "family": "Bulk / Dataset",
+      "endpoint": "https://phytochem.nal.usda.gov/about",
+      "access_method": "documentary about page; no public search API in profile",
+      "live_status": "LIVE_CONNECTIVITY_PARTIAL",
+      "http_status": 200,
+      "notes": "About page reachable; machine search API not claimed. Local projection remains the governed path."
+    },
+    {
+      "adr_id": "stage3",
+      "source_key": "openalex",
+      "family": "Stage-3 five-source path",
+      "endpoint": "https://api.openalex.org/works",
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "http_status": 200,
+      "credential_optional": "OPENALEX_API_KEY / OPENALEX_MAILTO recommended; public search worked without key"
+    },
+    {
+      "adr_id": "stage3",
+      "source_key": "crossref",
+      "family": "Stage-3 five-source path",
+      "endpoint": "https://api.crossref.org/works",
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "http_status": 200
+    },
+    {
+      "adr_id": "stage3",
+      "source_key": "semantic_scholar",
+      "family": "Stage-3 five-source path",
+      "endpoint": "https://api.semanticscholar.org/graph/v1/paper/search",
+      "live_status": "BLOCKED_EXTERNAL_SERVICE",
+      "http_status": 429,
+      "notes": "Rate limited without SEMANTIC_SCHOLAR_API_KEY; may also be BLOCKED_CREDENTIALS for sustained use"
+    },
+    {
+      "adr_id": "stage3",
+      "source_key": "consensus",
+      "family": "Stage-3 five-source path",
+      "endpoint": "https://api.consensus.app",
+      "live_status": "BLOCKED_CREDENTIALS",
+      "credential_required": "CONSENSUS_API_KEY",
+      "notes": "Not probed live; key absent from process env"
+    },
+    {
+      "adr_id": "stage3",
+      "source_key": "fao_stat",
+      "family": "Stage-3 five-source path",
+      "endpoint": "https://faostatservices.fao.org/api/v1",
+      "live_status": "NOT_TESTED",
+      "notes": "FAOSTAT_USERNAME/PASSWORD present in process env but live probe deferred to avoid unsafe credential use in evidence scripts; contract/mock path unchanged"
+    }
+  ],
+  "contract_mock_status": "VERIFIED_COMPLETE from Rev 10.6 family packages; not re-run as live proof",
+  "overall_exit08": "PARTIAL",
+  "overall_rationale": "Live connectivity verified for GBIF, Organic Eprints, AGRIS ODS catalog, OpenAlex, Crossref. BHL/Consensus blocked on credentials. Semantic Scholar 429. Dr. Duke documentary-only. FAOSTAT not live-tested. D-10.8 endpoint_tested advanced for probed families but integration_verified / operational readiness still not fully claimed for all mandatory seats → EXIT-08 remains PARTIAL."
+}

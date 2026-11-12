@@ -1,0 +1,28 @@
+{
+  "schema_id": "adr023.exit10_verified_family.v1",
+  "created_at_utc": "2026-11-12T06:10:00Z",
+  "revision": "10.9.1",
+  "criterion": "P1-EXIT-10",
+  "membership_authority": "110.v1 / 109.v1 preserved; membership ≠ verification ≠ live ≠ readiness",
+  "depends_on": ["P1-EXIT-06", "P1-EXIT-08"],
+  "updates_from_1091": {
+    "rest_json": {
+      "gbif_G5-04": {"endpoint_tested": "VERIFIED", "integration_verified": "PARTIAL", "evidence": "EXIT-08 live connectivity v10.9.1"},
+      "bhl_G6-20": {"endpoint_tested": "BLOCKED_CREDENTIALS", "integration_verified": "NOT_RUN"}
+    },
+    "oai_pmh": {
+      "organic_eprints_G1-02": {"endpoint_tested": "VERIFIED", "integration_verified": "PARTIAL"}
+    },
+    "bulk": {
+      "agris_G1-01": {"endpoint_tested": "VERIFIED_CATALOG", "integration_verified": "NOT_RUN"},
+      "dr_duke_G1-17": {"endpoint_tested": "PARTIAL_DOCUMENTARY", "integration_verified": "NOT_RUN"}
+    }
+  },
+  "overall": "PARTIAL",
+  "missing": [
+    "Full verified-family IC columns for all seats",
+    "BHL live with API key",
+    "Bulk ingest integration_verified",
+    "Complete operational readiness columns"
+  ]
+}
