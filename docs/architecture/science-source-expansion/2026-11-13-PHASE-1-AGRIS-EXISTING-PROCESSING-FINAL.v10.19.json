@@ -1,0 +1,32 @@
+{
+  "schema_id": "wsa.agris_existing_processing_final.v1",
+  "revision": "10.19",
+  "completed_at_utc": "2026-11-13T14:15:00Z",
+  "no_redownload": true,
+  "command": "php artisan scientific:harvest-agris-ods --no-download --max-providers=1244 --max-records-per-provider=500000",
+  "manifest_path": "backend/storage/app/scientific_datasets/agris/harvest_manifest.v10.19.local-only.json",
+  "checkpoint_path": "backend/storage/app/scientific_datasets/agris/harvest_cache/existing_local_process_checkpoint.v1.json",
+  "manifest_totals": {
+    "attempted": 147,
+    "reused_local": 144,
+    "projected": 143,
+    "missing_local_no_redownload": 1100,
+    "skipped_unverified_license": 1,
+    "failed": 0,
+    "records": 1927157
+  },
+  "providers_in_manifest": 1244,
+  "completed_flag": true,
+  "checkpoint": {
+    "completed_providers": 143,
+    "cursor": 1244
+  },
+  "processing_conclusion": "COMPLETED_WITH_CATALOG_GAPS",
+  "catalog_conclusion": "COMPLETED_WITH_CATALOG_GAPS",
+  "notes": [
+    "100% of existing local packages were attempted under --no-download",
+    "143 projected; 1 license-blocked; 0 projection/download failures",
+    "1100 catalog URLs remain Missing after exhaustive search — not redownloaded per owner rule",
+    "LocalIndex historical 96615 rows were not wiped by this projection-only run; JSONL ingest activation is a follow-on step"
+  ]
+}
