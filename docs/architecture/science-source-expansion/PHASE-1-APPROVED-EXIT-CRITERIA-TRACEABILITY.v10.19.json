@@ -1,0 +1,128 @@
+{
+  "schema_id": "wsa.phase1_approved_exit_criteria_traceability.v1",
+  "revision": "10.19",
+  "generated_at_utc": "2026-11-13T11:10:00Z",
+  "authority_note": "§8.64.7 is PROPOSED/NOT OWNER-APPROVED and is not the sole acceptance authority. Original criteria from §8.21.4, §8.24.9, §8.25.10, §8.25.11, §8.26.7, §8.63.10 and owner decisions apply.",
+  "criteria": [
+    {
+      "original_section": "§8.21.4 Phase 1",
+      "exact_criterion": "Design-gate CapVer authority, Capability population, Runtime Source Registry contract, seat identity bindings, IC steps, family adapters",
+      "owner_approval_status": "HISTORICAL_DESIGN_REQUIREMENT",
+      "affected_exit": ["EXIT-01", "EXIT-02", "EXIT-04", "EXIT-05", "EXIT-06", "EXIT-07", "EXIT-08", "EXIT-09", "EXIT-10"],
+      "implementation_reference": "ADR-023 §8.21.4; §8.64.7 mapping table",
+      "test_reference": null,
+      "evidence_path": "docs/architecture/ADR-023-scientific-source-expansion.md",
+      "current_status": "PARTIAL",
+      "unresolved_ambiguity": null,
+      "resolution_authority": "owner+executor"
+    },
+    {
+      "original_section": "§8.24.9",
+      "exact_criterion": "Phase 1 acceptance items 1–7 (design acceptance, IC closed, registry/capability, seat binding, family adapters, matrix integrity, focused tests)",
+      "owner_approval_status": "CONDITIONALLY_ACCEPTED_VIA_§8.63",
+      "affected_exit": ["EXIT-01", "EXIT-02", "EXIT-03", "EXIT-04", "EXIT-05", "EXIT-06", "EXIT-07", "EXIT-08", "EXIT-09", "EXIT-10"],
+      "implementation_reference": "ADR-023 §8.24.9",
+      "test_reference": null,
+      "evidence_path": "docs/architecture/ADR-023-scientific-source-expansion.md",
+      "current_status": "PARTIAL",
+      "unresolved_ambiguity": "Overlapping exit lists vs §8.64.7 proposed consolidation",
+      "resolution_authority": "owner for formal Gate A/B; executor for evidence"
+    },
+    {
+      "original_section": "§8.25.10",
+      "exact_criterion": "IC closure items 1–2 technical persistence; items 3–4 staging/operator",
+      "owner_approval_status": "APPROVED_IC_DEFINITION",
+      "affected_exit": ["EXIT-04", "EXIT-05"],
+      "implementation_reference": "ADR-023 §8.25.10",
+      "test_reference": "phpunit.pgsql.xml IC suite (historical)",
+      "evidence_path": "ADR-023 §8.25.9 historical isolated PostgreSQL evidence",
+      "current_status": "EXIT-04 PASS_QUALIFIED; EXIT-05 BLOCKED",
+      "unresolved_ambiguity": null,
+      "resolution_authority": "operator for EXIT-05"
+    },
+    {
+      "original_section": "§8.25.11",
+      "exact_criterion": "Runtime registry, Capability alignment, identity bindings, family adapters, IC closure, no Phase 2 until Phase 1 exit",
+      "owner_approval_status": "RECORDED_REQUIREMENT",
+      "affected_exit": ["EXIT-01", "EXIT-05", "EXIT-06", "EXIT-07", "EXIT-08", "EXIT-11"],
+      "implementation_reference": "ADR-023 §8.25.11",
+      "test_reference": null,
+      "evidence_path": "docs/architecture/ADR-023-scientific-source-expansion.md",
+      "current_status": "PARTIAL",
+      "unresolved_ambiguity": null,
+      "resolution_authority": "owner+executor"
+    },
+    {
+      "original_section": "§8.26.7",
+      "exact_criterion": "Phase 1 status row / blockers snapshot (historical)",
+      "owner_approval_status": "HISTORICAL_STATUS_RECORD",
+      "affected_exit": ["EXIT-01", "EXIT-11"],
+      "implementation_reference": "ADR-023 §8.26.7",
+      "test_reference": null,
+      "evidence_path": "docs/architecture/ADR-023-scientific-source-expansion.md",
+      "current_status": "SUPERSEDED_AS_SNAPSHOT_NOT_SOLE_EXIT_LIST",
+      "unresolved_ambiguity": null,
+      "resolution_authority": "executor"
+    },
+    {
+      "original_section": "§8.63.10",
+      "exact_criterion": "Conditions 1–10 for Phase 1 to leave BLOCKED",
+      "owner_approval_status": "CONDITIONAL_DESIGN_PROGRESSION",
+      "affected_exit": ["EXIT-01", "EXIT-02", "EXIT-03", "EXIT-04", "EXIT-05", "EXIT-09"],
+      "implementation_reference": "ADR-023 §8.63.10",
+      "test_reference": null,
+      "evidence_path": "docs/architecture/ADR-023-scientific-source-expansion.md",
+      "current_status": "PARTIAL",
+      "unresolved_ambiguity": "Formal acceptance Gate A scopes set incomplete historically",
+      "resolution_authority": "owner"
+    },
+    {
+      "original_section": "§8.64.7",
+      "exact_criterion": "Proposed consolidated P1-EXIT-01..11 checklist",
+      "owner_approval_status": "PROPOSED_NOT_OWNER_APPROVED",
+      "affected_exit": ["EXIT-01", "EXIT-02", "EXIT-03", "EXIT-04", "EXIT-05", "EXIT-06", "EXIT-07", "EXIT-08", "EXIT-09", "EXIT-10", "EXIT-11"],
+      "implementation_reference": "ADR-023 §8.64.7; OD-CL §8.80.1 retains unapproved status",
+      "test_reference": null,
+      "evidence_path": "docs/architecture/ADR-023-scientific-source-expansion.md",
+      "current_status": "NOT_SOLE_AUTHORITY",
+      "unresolved_ambiguity": "Must not supersede original criteria alone",
+      "resolution_authority": "owner"
+    },
+    {
+      "original_section": "§8.83 / OD-8.23.8-A",
+      "exact_criterion": "CapVer SQLite-by-design satisfies dual-applicable §8.23.8 Cap CURRENT intent for Phase 1",
+      "owner_approval_status": "OWNER_ACCEPTED",
+      "affected_exit": ["EXIT-09"],
+      "implementation_reference": "ADR-023 §8.83",
+      "test_reference": "CapabilityStorePersistenceTest 27/101",
+      "evidence_path": "docs/architecture/science-source-expansion/2026-11-12-PHASE-1-SECTION-8-23-8-OWNER-DECISION-ACCEPTED.v10.10.json",
+      "current_status": "RESOLVED_FOR_CAPVER_CLAUSE",
+      "unresolved_ambiguity": "ServerRestart residual independent",
+      "resolution_authority": "n/a"
+    },
+    {
+      "original_section": "§8.84 / OD-AGRIS-FULL-CATALOG-*",
+      "exact_criterion": "Full 1244 catalog forensic verification; no redownload; process existing eligible; separate processing vs catalog completeness",
+      "owner_approval_status": "OWNER_ACCEPTED",
+      "affected_exit": ["EXIT-08", "EXIT-10"],
+      "implementation_reference": "ADR-023 §8.84; AgrisOdsBoundedHarvester --no-download",
+      "test_reference": "AgrisOdsBoundedHarvesterTest",
+      "evidence_path": "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-OWNER-DECISION-AGRIS-FULL-CATALOG.v10.19.json",
+      "current_status": "IN_PROGRESS",
+      "unresolved_ambiguity": null,
+      "resolution_authority": "executor under owner authorization"
+    },
+    {
+      "original_section": "OD-10 / CURRENT membership 110",
+      "exact_criterion": "Current membership = 110; preserve historical 109; include G2-26; Current Matrix separate",
+      "owner_approval_status": "OWNER_ACCEPTED",
+      "affected_exit": ["EXIT-07", "EXIT-10"],
+      "implementation_reference": "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json; 2026-11-11-PHASE-1-SOURCE-MATRIX.v110.json",
+      "test_reference": "EXIT-10 validator (Rev 10.19)",
+      "evidence_path": "docs/architecture/science-source-expansion/ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+      "current_status": "TO_VERIFY",
+      "unresolved_ambiguity": null,
+      "resolution_authority": "executor"
+    }
+  ]
+}

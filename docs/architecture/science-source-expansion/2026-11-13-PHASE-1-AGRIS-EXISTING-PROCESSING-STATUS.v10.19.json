@@ -1,0 +1,32 @@
+{
+  "schema_id": "wsa.agris_existing_processing_status.v1",
+  "revision": "10.19",
+  "updated_at_utc": "2026-11-13T11:45:00Z",
+  "no_redownload": true,
+  "mode": "scientific:harvest-agris-ods --no-download --max-providers=1244 --max-records-per-provider=500000",
+  "checkpoint_path": "backend/storage/app/scientific_datasets/agris/harvest_cache/existing_local_process_checkpoint.v1.json",
+  "manifest_path_pending_until_completion": "backend/storage/app/scientific_datasets/agris/harvest_manifest.v10.19.local-only.json",
+  "catalog": {
+    "urls": 1244,
+    "mapped_existing_packages": 144,
+    "missing_after_exhaustive_search": 1100
+  },
+  "processing_progress_snapshot": {
+    "completed_providers_projected": 71,
+    "cursor": 72,
+    "note": "In-progress full-body re-projection of existing local packages; large providers (e.g. BR1) produce 100MB+ JSONL"
+  },
+  "processing_conclusion": "PARTIALLY_COMPLETED_RESUMABLE",
+  "catalog_conclusion": "COMPLETED_WITH_CATALOG_GAPS",
+  "engineering": {
+    "allow_download_false": true,
+    "separate_checkpoint_from_historical_download": true,
+    "tests": {
+      "AgrisOdsBoundedHarvesterTest": "3/16 exit 0",
+      "AgrisAndDrDukeGovernedActivationTest|AgrisOdsAndDrDukeProjectorTest": "6/54 exit 0",
+      "Exit10CurrentMembershipMatrixValidatorTest": "1/6 exit 0"
+    }
+  },
+  "unexplained_losses": "none_observed_in_completed_providers_this_run",
+  "next": "Allow local-only job to finish or resume from existing_local_process_checkpoint.v1.json; then ingest projected JSONL into LocalIndex with generation-safe upsert"
+}

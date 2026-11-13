@@ -1,0 +1,48 @@
+{
+  "schema_id": "wsa.owner_decision.recorded.agris_full_catalog.v1",
+  "kind": "OWNER_DECISION_RECORD",
+  "decision_id": "OD-AGRIS-FULL-CATALOG-EXISTING-PROCESS-2026-11-13",
+  "recorded_at_utc": "2026-11-13T10:20:00Z",
+  "revision": "10.19",
+  "provenance": {
+    "source": "MASTER ENGINEERING EXECUTION PROMPT — REVISION 10.19",
+    "actor": "owner",
+    "classification": "OWNER_DECISION"
+  },
+  "decisions": [
+    {
+      "id": "OD-AGRIS-FULL-CATALOG-AUDIT",
+      "outcome": "ACCEPT",
+      "text": "Authorize forensic verification of the full AGRIS catalog target of 1,244 dcat:downloadURL entries across GitHub, local Git, runtime storage, archives, caches, and Docker mounts."
+    },
+    {
+      "id": "OD-AGRIS-NO-REDOWNLOAD-1244",
+      "outcome": "ACCEPT",
+      "text": "Forbid re-download of the 1,244 catalog packages within this mission; reuse existing packages only; document Missing after exhaustive search."
+    },
+    {
+      "id": "OD-AGRIS-PROCESS-EXISTING-ELIGIBLE",
+      "outcome": "ACCEPT",
+      "text": "Process 100% of existing verified eligible packages into LocalIndex search path under license constraints."
+    },
+    {
+      "id": "OD-AGRIS-PROCESSING-VS-CATALOG-SEPARATION",
+      "outcome": "ACCEPT",
+      "text": "Processing Completeness and Catalog Coverage Completeness are independent acceptance dimensions."
+    },
+    {
+      "id": "OD-REV1019-ENGINEERING-COMMIT-PUSH",
+      "outcome": "AUTHORIZE",
+      "text": "Authorize ordinary engineering design/implementation/test decisions and Commit/Push of tested task-owned changes within stated boundaries."
+    }
+  ],
+  "boundaries": [
+    "No CapVer migration to PostgreSQL",
+    "No CSQ authority change",
+    "No secret disclosure",
+    "No destructive Git or LocalIndex generation deletion",
+    "No Phase 2/3 start",
+    "No invented PASS"
+  ],
+  "adr_append_section": "8.84"
+}

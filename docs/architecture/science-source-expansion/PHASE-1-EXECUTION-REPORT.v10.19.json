@@ -1,0 +1,55 @@
+{
+  "report_version": "10.19",
+  "generated_at": "2026-11-13T12:15:00Z",
+  "repository": "wsa-platform/WSA-Enterprise",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "starting_head": "e6b901c62df8739af0ae47568afa431d50ac99aa",
+  "ending_head": null,
+  "remote_head": null,
+  "wip_baseline": {
+    "path": "C:/Users/ahmed/AppData/Local/Temp/wsa-r1019-baseline-20261113-125824",
+    "preserved": true
+  },
+  "mission_status": "PARTIALLY_COMPLETED_RESUMABLE",
+  "agris_processing": {
+    "conclusion": "PARTIALLY_COMPLETED_RESUMABLE",
+    "eligible_packages_estimated": 144,
+    "projected_in_progress_checkpoint": 72,
+    "no_redownload": true,
+    "evidence_path": "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-AGRIS-EXISTING-PROCESSING-STATUS.v10.19.json"
+  },
+  "agris_catalog_coverage": {
+    "conclusion": "COMPLETED_WITH_CATALOG_GAPS",
+    "total_urls": 1244,
+    "mapped": 144,
+    "missing": 1100,
+    "coverage_ratio": 0.115756,
+    "second_forensic": "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-AGRIS-SECOND-FORENSIC-INVENTORY.v10.19.json",
+    "url_ledger": "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-AGRIS-URL-PACKAGE-LEDGER.v10.19.json",
+    "provider_ledger": "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-AGRIS-PROVIDER-LEDGER.v10.19.json"
+  },
+  "exit_results": [
+    {"exit_id": "EXIT-01", "status": "PARTIAL", "criteria_total": null, "criteria_passed": null, "criteria_partial": null, "criteria_blocked": null, "evidence_path": "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.19.json", "test_command": null, "result": "Foundation residuals", "exit_code": null, "remaining": "Open foundation/Gate items", "last_verified_at": "2026-11-13T12:15:00Z"},
+    {"exit_id": "EXIT-02", "status": "PARTIAL", "criteria_total": null, "criteria_passed": null, "criteria_partial": null, "criteria_blocked": null, "evidence_path": "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.19.json", "test_command": null, "result": "Gate A incomplete", "exit_code": null, "remaining": "Formal Gate A scopes", "last_verified_at": "2026-11-13T12:15:00Z"},
+    {"exit_id": "EXIT-03", "status": "PARTIAL", "criteria_total": null, "criteria_passed": null, "criteria_partial": null, "criteria_blocked": null, "evidence_path": "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.19.json", "test_command": null, "result": "Gate B residual", "exit_code": null, "remaining": "Unauthorized scopes remain", "last_verified_at": "2026-11-13T12:15:00Z"},
+    {"exit_id": "EXIT-04", "status": "PASS", "criteria_total": null, "criteria_passed": null, "criteria_partial": null, "criteria_blocked": null, "evidence_path": "ADR-023 §8.25.9 / §8.64.7", "test_command": null, "result": "IC technical items retained PASS qualified", "exit_code": 0, "remaining": null, "last_verified_at": "2026-11-13T12:15:00Z"},
+    {"exit_id": "EXIT-05", "status": "BLOCKED", "criteria_total": null, "criteria_passed": null, "criteria_partial": null, "criteria_blocked": null, "evidence_path": "ADR-023 §8.25.10", "test_command": null, "result": "Staging/operator required", "exit_code": null, "remaining": "Operator staging", "last_verified_at": "2026-11-13T12:15:00Z"},
+    {"exit_id": "EXIT-06", "status": "PARTIAL", "criteria_total": null, "criteria_passed": null, "criteria_partial": null, "criteria_blocked": null, "evidence_path": "ScientificSourceCatalog", "test_command": null, "result": "Registry present; residuals remain", "exit_code": null, "remaining": "Full Gate B wiring", "last_verified_at": "2026-11-13T12:15:00Z"},
+    {"exit_id": "EXIT-07", "status": "BLOCKED", "criteria_total": null, "criteria_passed": null, "criteria_partial": null, "criteria_blocked": null, "evidence_path": "G2-26", "test_command": "phpunit --filter=Exit10CurrentMembershipMatrixValidatorTest", "result": "G2-26 blocker", "exit_code": 0, "remaining": "G2-26", "last_verified_at": "2026-11-13T12:15:00Z"},
+    {"exit_id": "EXIT-08", "status": "PARTIAL", "criteria_total": null, "criteria_passed": null, "criteria_partial": null, "criteria_blocked": null, "evidence_path": "EXIT-08 matrices; AGRIS forensic; family tests 6/54", "test_command": "phpunit --filter=AgrisAndDrDukeGovernedActivationTest|AgrisOdsAndDrDukeProjectorTest|AgrisOdsBoundedHarvesterTest", "result": "Required families partially evidenced; AGRIS processing resumable", "exit_code": 0, "remaining": "S2S/Consensus/FAOSTAT; AGRIS full existing processing completion", "last_verified_at": "2026-11-13T12:15:00Z"},
+    {"exit_id": "EXIT-09", "status": "PARTIAL", "criteria_total": null, "criteria_passed": null, "criteria_partial": null, "criteria_blocked": null, "evidence_path": "2026-11-13-PHASE-1-EXIT-09-OS-SUPPORT-DETERMINATION.v10.19.json; Linux ServerRestart v10.16", "test_command": null, "result": "OS_SUPPORT_UNDETERMINED; Linux [2,1] retained", "exit_code": 0, "remaining": "OS determination / Windows residual", "last_verified_at": "2026-11-13T12:15:00Z"},
+    {"exit_id": "EXIT-10", "status": "PARTIAL", "criteria_total": null, "criteria_passed": null, "criteria_partial": null, "criteria_blocked": null, "evidence_path": "Exit10CurrentMembershipMatrixValidatorTest 1/6", "test_command": "phpunit --filter=Exit10CurrentMembershipMatrixValidatorTest", "result": "110 identity order match PASS; operational dimensions not all PASS", "exit_code": 0, "remaining": "Evidence-backed cell states / eligibility dimensions", "last_verified_at": "2026-11-13T12:15:00Z"},
+    {"exit_id": "EXIT-11", "status": "NOT_RUN", "criteria_total": null, "criteria_passed": null, "criteria_partial": null, "criteria_blocked": null, "evidence_path": "EXIT-11 gate prerequisites unmet", "test_command": null, "result": "Not eligible", "exit_code": null, "remaining": "EXIT-01..10 all PASS required", "last_verified_at": "2026-11-13T12:15:00Z"}
+  ],
+  "d_definition_of_done": "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-D01-D14-DOD-MATRIX.v10.19.json",
+  "owner_escalations": [],
+  "commits": [],
+  "push_verification": null,
+  "phase_1_disposition": "PHASE_1_OPEN_PARTIAL",
+  "localindex_preservation": {
+    "agris_rows": 96615,
+    "generation": 76,
+    "last_committed_at": "2026-10-22T09:53:54+00:00",
+    "destructive_ops": false
+  }
+}

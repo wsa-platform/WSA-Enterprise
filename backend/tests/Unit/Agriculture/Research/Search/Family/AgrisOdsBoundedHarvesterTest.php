@@ -61,4 +61,37 @@ XML);
         $this->assertSame(0, (int) $report['totals']['projected']);
         $this->assertSame('skipped_non_allowlisted_host', $report['providers'][0]['status'] ?? null);
     }
+
+    public function test_no_download_mode_marks_missing_local_without_network(): void
+    {
+        $cache = storage_path('framework/testing/agris_ods_harvest_nodl');
+        $manifest = storage_path('framework/testing/agris_ods_harvest_nodl_manifest.json');
+        @mkdir($cache, 0775, true);
+        @unlink($manifest);
+        @unlink($cache.DIRECTORY_SEPARATOR.'harvest_checkpoint.v1.json');
+        $tinyRoot = $cache.DIRECTORY_SEPARATOR.'missing_root.xml';
+        file_put_contents($tinyRoot, <<<'XML'
+<?xml version="1.0"?>
+<root xmlns:dcat="http://www.w3.org/ns/dcat#">
+  <dcat:downloadURL>https://agris.fao.org/ods/AGRIS.ODS.ZZ9.xml</dcat:downloadURL>
+</root>
+XML);
+
+        $report = (new AgrisOdsBoundedHarvester)->harvest(
+            $tinyRoot,
+            $cache,
+            $manifest,
+            1,
+            10,
+            10,
+            allowDownload: false,
+        );
+
+        $this->assertSame('existing_local_only_no_redownload', $report['scan_mode'] ?? null);
+        $this->assertFalse(($report['allow_download'] ?? true));
+        $this->assertSame(1, (int) ($report['totals']['missing_local_no_redownload'] ?? 0));
+        $this->assertSame('missing_local_no_redownload', $report['providers'][0]['status'] ?? null);
+        $this->assertSame('MISSING_AFTER_EXHAUSTIVE_SEARCH', $report['providers'][0]['failure_code'] ?? null);
+        $this->assertFileDoesNotExist($cache.DIRECTORY_SEPARATOR.'AGRIS.ODS.ZZ9.xml');
+    }
 }

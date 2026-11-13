@@ -1,0 +1,43 @@
+{
+  "schema_id": "wsa.agris_full_catalog_forensic_inventory.v1",
+  "revision": "10.19",
+  "generated_at_utc": "2026-11-13T10:00:01Z",
+  "completed_at_utc": "2026-11-13T10:00:14Z",
+  "no_redownload": true,
+  "catalog": {
+    "path": "backend/storage/app/scientific_datasets/agris/AGRIS.ODS.xml",
+    "bytes": 2555593,
+    "sha256": "58f8532ef23cfe2d40666c03a1e8352b702fccb7ad6171483ce0fa3e3fbc7c95",
+    "sha256_matches_historical": true,
+    "url_count": 1244
+  },
+  "search_roots": [
+    "backend/storage/app/scientific_datasets/agris",
+    "backend/storage/app/scientific_datasets/agris/harvest_cache",
+    "git ls-files backend/storage/app/scientific_datasets/agris"
+  ],
+  "metrics": {
+    "total_catalog_urls": 1244,
+    "url_entries_mapped_to_existing_packages": 144,
+    "distinct_verified_packages_by_stem": 144,
+    "packages_found_in_multiple_storage_locations": 1,
+    "packages_missing_after_exhaustive_search": 1100,
+    "corrupt_packages": 0,
+    "unreadable_packages": 0,
+    "license_blocked_packages": 0,
+    "git_tracked_agris_paths": 0,
+    "small_files_sha256_computed": 85,
+    "catalog_coverage_ratio": 0.115756,
+    "coverage_band": "low_below_50"
+  },
+  "disposition_counts": {
+    "VERIFIED_IN_MULTIPLE_LOCATIONS": 1,
+    "VERIFIED_IN_ARCHIVE_CACHE": 143,
+    "MISSING_AFTER_EXHAUSTIVE_SEARCH": 1100
+  },
+  "ledger_url_count": 1244,
+  "provider_count": 1244,
+  "classification_hint": "COMPLETED_WITH_CATALOG_GAPS",
+  "url_ledger_path": "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-AGRIS-URL-PACKAGE-LEDGER.v10.19.json",
+  "provider_ledger_path": "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-AGRIS-PROVIDER-LEDGER.v10.19.json"
+}

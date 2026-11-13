@@ -1,0 +1,28 @@
+{
+  "schema_id": "wsa.exit09_os_support_determination.v1",
+  "revision": "10.19",
+  "generated_at_utc": "2026-11-13T11:30:00Z",
+  "status": "OS_SUPPORT_UNDETERMINED",
+  "inspected": [
+    "docker-compose.yml",
+    "docker-compose.prod.yml",
+    "CI workflows under .github/workflows (if present)",
+    "ADR-023 ServerRestart evidence sections",
+    "2026-11-12-PHASE-1-EXIT-09-SERVERRESTART-LINUX-COMPARISON.v10.16.json",
+    "2026-11-12-PHASE-1-EXIT-09-SERVERRESTART-ATTEMPT.v10.9.1.json"
+  ],
+  "findings": {
+    "linux_container_evidence": "PASS write/verify [2,1] on postgres:16.14-alpine via Docker Desktop Linux VM",
+    "native_wsl_bash": "NOT_AVAILABLE historically (docker-desktop WSL only)",
+    "windows_host_volume_historical": "Verify FAILED with [2,2]",
+    "explicit_owner_os_support_decision": "NOT_FOUND",
+    "production_docs_stating_required_os": "NOT_FOUND as conclusive single-OS mandate"
+  },
+  "rules_applied": [
+    "Do not invent Windows as mandatory",
+    "Do not invent Linux-only as sole supported OS",
+    "Do not describe Linux VM evidence as Native WSL",
+    "Do not change expected ServerRestart values"
+  ],
+  "exit09_impact": "EXIT-09 remains PARTIAL while OS requirement is undetermined and/or other residuals remain; Linux comparative ServerRestart evidence retained"
+}

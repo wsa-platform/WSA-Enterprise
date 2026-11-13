@@ -9209,3 +9209,30 @@ Acceptance artifact: `docs/architecture/science-source-expansion/2026-11-12-PHAS
 - Do not alter expected ServerRestart generations to force a pass.
 - Do not treat this decision as closure of EXIT-05, EXIT-07, D-08, or EXIT-11.
 - Future Gate text may still cite §8.23.8 wording; this section records the owner-authorized Phase 1 satisfaction path without rewriting the original bullet list.
+
+## 8.84 — Owner authorization: AGRIS full catalog forensic verification and existing-package processing — 2026-11-13
+
+**Status:** OWNER DECISION RECORDED (append-only). Does **not** rewrite §8.54, §8.64.7, or prior AGRIS bounded-scope ACCEPT records. Does **not** authorize re-download of the 1,244 catalog packages in this mission.
+
+### 8.84.1 — Decision identifiers
+
+| ID | Outcome |
+|---|---|
+| OD-AGRIS-FULL-CATALOG-AUDIT | ACCEPT forensic verification of all 1,244 `dcat:downloadURL` entries |
+| OD-AGRIS-NO-REDOWNLOAD-1244 | ACCEPT — reuse existing packages only; Missing after exhaustive search must be documented |
+| OD-AGRIS-PROCESS-EXISTING-ELIGIBLE | ACCEPT processing of 100% of existing verified eligible packages under license constraints |
+| OD-AGRIS-PROCESSING-VS-CATALOG-SEPARATION | ACCEPT — Processing Completeness ≠ Catalog Coverage Completeness |
+| OD-REV1019-ENGINEERING-COMMIT-PUSH | AUTHORIZE ordinary engineering design/implementation/test and Commit/Push of tested task-owned changes within stated boundaries |
+
+Authoritative JSON: `docs/architecture/science-source-expansion/2026-11-13-PHASE-1-OWNER-DECISION-AGRIS-FULL-CATALOG.v10.19.json`.
+
+### 8.84.2 — Relation to OD-G1-01
+
+`OD-G1-01-SCOPE-BOUNDED-SUBSET` remains the accepted activation/onboarding scope for AGRIS bounded subset. This section **adds** an owner-authorized forensic and existing-data processing mission over the full 1,244 URL catalog inventory. It does **not** claim that full-corpus download or full-corpus availability is required for OD-G1-01 activation.
+
+### 8.84.3 — Boundaries retained
+
+- No CapVer migration to PostgreSQL (`OD-8.23.8-A-2026-11-12`).
+- No CSQ authority change; Builder ownership retained (D-04).
+- No secret disclosure; no destructive Git; no LocalIndex generation deletion; no Phase 2/3.
+- §8.64.7 remains PROPOSED / not sole acceptance authority.

@@ -16,7 +16,8 @@ final class HarvestAgrisOdsBoundedCommand extends Command
         {--manifest= : Output harvest manifest JSON path}
         {--max-providers=5 : Provider download/projection budget (max 2000; resume via checkpoint)}
         {--max-records-per-provider=200 : Projection budget per provider (max 500000 for full-body)}
-        {--timeout=60 : HTTPS download timeout seconds}';
+        {--timeout=60 : HTTPS download timeout seconds}
+        {--no-download : Process existing local packages only; never download missing URLs}';
 
     protected $description = 'Bounded resumable harvest of AGRIS ODS provider XMLs into local cache + manifest';
 
@@ -33,6 +34,7 @@ final class HarvestAgrisOdsBoundedCommand extends Command
 
         // Full legally accessible AGRIS body may require all ODS providers (~1244).
         // Hard ceiling protects accidental unbounded CLI misuse; resume remains checkpointed.
+        // --no-download enforces owner Rev 10.19 rule: reuse local packages only.
         $report = (new AgrisOdsBoundedHarvester)->harvest(
             $root,
             $cache,
@@ -40,6 +42,7 @@ final class HarvestAgrisOdsBoundedCommand extends Command
             max(1, min(2_000, (int) $this->option('max-providers'))),
             max(1, min(500_000, (int) $this->option('max-records-per-provider'))),
             max(10, min(300, (int) $this->option('timeout'))),
+            allowDownload: ! (bool) $this->option('no-download'),
         );
 
         $this->line(json_encode($report, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));

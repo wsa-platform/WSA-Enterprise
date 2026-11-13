@@ -1,0 +1,36 @@
+{
+  "schema_id": "wsa.agris_second_forensic_inventory.v1",
+  "revision": "10.19",
+  "created_at_utc": "2026-11-13T10:15:00Z",
+  "trigger": "catalog_coverage_ratio < 0.50 (first pass 144/1244 = 0.115756)",
+  "no_redownload": true,
+  "searched_roots": [
+    "G:/WSA-Enterprise/backend/storage (recursive AGRIS.ODS*)",
+    "G:/WSA-Enterprise/backups",
+    "G:/WSA-Enterprise/tools",
+    "G:/WSA-Enterprise/e2e-tmp",
+    "G:/WSA-Enterprise/backend/e2e-tmp",
+    "git ls-files backend/storage/app/scientific_datasets/agris",
+    "git check-ignore harvest_cache (ignored by backend/storage/app/.gitignore *)",
+    "Docker volume inventory — daemon unavailable at first pass; rechecked when Docker ready"
+  ],
+  "findings": {
+    "storage_agris_hits": 299,
+    "extensions": {".xml": 148, ".jsonl": 150, ".zip": 1},
+    "backups_hits": 0,
+    "tools_hits": 0,
+    "e2e_tmp_hits": 0,
+    "git_tracked_agris_data_files": 0,
+    "github_remote_package_presence": "NOT_IN_GIT — data is runtime/ignored storage only; code+docs tracked",
+    "additional_packages_beyond_first_pass": 0,
+    "conclusion": "Second forensic pass confirms low catalog package availability is real, not a missed root. Missing URLs remain MISSING_AFTER_EXHAUSTIVE_SEARCH under no-redownload."
+  },
+  "coverage_band": "low_below_50",
+  "processing_vs_catalog": {
+    "catalog_urls": 1244,
+    "mapped_existing_packages": 144,
+    "missing": 1100,
+    "eligible_existing_to_process": 144,
+    "note": "Do not claim catalog completeness from processing success of the 144"
+  }
+}

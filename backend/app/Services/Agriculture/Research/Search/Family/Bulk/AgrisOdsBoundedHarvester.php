@@ -28,6 +28,7 @@ final class AgrisOdsBoundedHarvester
         int $maxProviders = 5,
         int $maxRecordsPerProvider = 200,
         int $timeoutSeconds = 60,
+        bool $allowDownload = true,
     ): array {
         if (preg_match('#^[A-Za-z][A-Za-z0-9+.-]*://#', $rootXmlPath) === 1) {
             throw new ScientificSourceContractViolation('Root catalog must be a local file path.');
@@ -39,7 +40,11 @@ final class AgrisOdsBoundedHarvester
             return $this->failManifest($manifestPath, 'cache_dir');
         }
 
-        $checkpointPath = $cacheDir.DIRECTORY_SEPARATOR.'harvest_checkpoint.v1.json';
+        // Local-only processing uses a separate checkpoint so historical download
+        // completed_providers do not permanently skip full-body re-projection.
+        $checkpointPath = $cacheDir.DIRECTORY_SEPARATOR.($allowDownload
+            ? 'harvest_checkpoint.v1.json'
+            : 'existing_local_process_checkpoint.v1.json');
         $checkpoint = $this->readJson($checkpointPath) ?? [
             'completed_providers' => [],
             'cursor' => 0,
@@ -57,17 +62,20 @@ final class AgrisOdsBoundedHarvester
             'root_sha256' => hash_file('sha256', $rootXmlPath) ?: null,
             'download_url_total' => count($urls),
             'max_providers' => $maxProviders,
+            'allow_download' => $allowDownload,
             'providers' => [],
             'totals' => [
                 'attempted' => 0,
                 'downloaded' => 0,
+                'reused_local' => 0,
                 'projected' => 0,
                 'skipped_unverified_license' => 0,
+                'missing_local_no_redownload' => 0,
                 'failed' => 0,
                 'records' => 0,
             ],
             'resumed_from_cursor' => $resumedHint,
-            'scan_mode' => 'full_skip_completed',
+            'scan_mode' => $allowDownload ? 'full_skip_completed' : 'existing_local_only_no_redownload',
             'completed' => false,
         ];
 
@@ -100,6 +108,15 @@ final class AgrisOdsBoundedHarvester
             ];
 
             if (! is_file($localXml)) {
+                if (! $allowDownload) {
+                    $entry['status'] = 'missing_local_no_redownload';
+                    $entry['failure_code'] = 'MISSING_AFTER_EXHAUSTIVE_SEARCH';
+                    $manifest['totals']['missing_local_no_redownload']++;
+                    $manifest['providers'][] = $entry;
+                    $checkpoint['cursor'] = $i;
+                    $this->writeJson($checkpointPath, $checkpoint);
+                    continue;
+                }
                 $download = $this->downloadHttps($url, $localXml, $timeoutSeconds);
                 if ($download['ok'] !== true) {
                     $entry['status'] = 'download_failed';
@@ -117,6 +134,7 @@ final class AgrisOdsBoundedHarvester
                 $entry['bytes'] = filesize($localXml) ?: 0;
                 $entry['sha256'] = hash_file('sha256', $localXml) ?: null;
                 $entry['reused_local'] = true;
+                $manifest['totals']['reused_local']++;
                 $manifest['totals']['downloaded']++;
             }
 
