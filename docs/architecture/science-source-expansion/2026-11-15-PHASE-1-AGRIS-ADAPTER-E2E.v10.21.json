@@ -1,0 +1,21 @@
+{
+  "schema_id": "wsa.agris_adapter_e2e_evidence.v10.21",
+  "generated_at_utc": "2026-11-15T07:10:00Z",
+  "command": "php e2e-tmp/_r1021_agris_adapter_e2e_probe.php",
+  "exit_code": 0,
+  "pass": true,
+  "store_generation": 79,
+  "active_count_sql": 97196,
+  "registry_has_agris": true,
+  "adapter_status": "success",
+  "adapter_result_count": 1,
+  "first_source_key": "agris",
+  "first_identifier": "10.22067/gsc.v17i1.57485",
+  "first_provenance_present": true,
+  "empty_query_status": "empty",
+  "builder_class": "App\\Services\\Agriculture\\Research\\Search\\ScientificSearchQueryBuilder",
+  "no_download": true,
+  "no_mock_evidence": true,
+  "raw_probe_path": "docs/architecture/science-source-expansion/_tmp-r1021-agris-adapter-e2e.json",
+  "index_rebuild_path": "docs/architecture/science-source-expansion/_tmp-r1021-agris-index-rebuild.json"
+}

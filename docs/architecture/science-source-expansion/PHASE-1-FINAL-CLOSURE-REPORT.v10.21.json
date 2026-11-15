@@ -67,8 +67,11 @@
     "rollback_available": "prior generations 76.. retained in scientific_source_generations"
   },
   "search_integration": {
-    "adapter_e2e": "BLOCKED_PENDING_FTS_REBUILD",
-    "note": "Live adapter search triggers full FTS rebuild when generations diverge; rebuild streaming in progress"
+    "adapter_e2e": "PASS",
+    "evidence_path": "docs/architecture/science-source-expansion/2026-11-15-PHASE-1-AGRIS-ADAPTER-E2E.v10.21.json",
+    "store_generation": 79,
+    "active_count": 97196,
+    "note": "Live LocalIndex adapter search returned real AGRIS records with provenance; empty query returns empty"
   },
   "exit_results": "see 2026-11-15-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.21.json",
   "d_definition_of_done": "see 2026-11-15-PHASE-1-D01-D14-DOD-MATRIX.v10.21.json",
