@@ -9236,3 +9236,33 @@ Authoritative JSON: `docs/architecture/science-source-expansion/2026-11-13-PHASE
 - No CSQ authority change; Builder ownership retained (D-04).
 - No secret disclosure; no destructive Git; no LocalIndex generation deletion; no Phase 2/3.
 - §8.64.7 remains PROPOSED / not sole acceptance authority.
+
+## 8.85 — Owner authorization: D-08 HISTORY_INDETERMINATE and EXIT-09 Linux container target — 2026-11-14
+
+**Status:** OWNER DECISION RECORDED (append-only). Does **not** fabricate Supplement 04. Does **not** claim Native Windows/WSL support.
+
+### 8.85.1 — D-08 alternative (OD-D08-HISTORY-INDETERMINATE-2026-11-14)
+
+Authority: Master Engineering Execution Prompt Revision 10.21 §2.2.
+
+The project owner authorizes `HISTORY_INDETERMINATE` as the official D-08 alternative when authentic Supplement 04 cannot be located after documented archive search. Locating Supplement 04 is **not** a prerequisite to applying this alternative. Requirements binding this path:
+
+1. Document search locations and results.
+2. Do not invent Supplement 04.
+3. Do not create a derived document and claim it is original.
+4. Record this owner approval in ADR-023 (this section).
+5. Bind acceptance to the original D-08 requirement and related OD records when available.
+6. If original D-08 text is unreachable, use the latest approved archive/matrix record and document that constraint.
+7. Complete the alternative path, then evaluate D-08 under this owner authorization.
+
+**Search result (Rev 10.21):** Supplements 01–03 present under `docs/architecture/science-source-expansion/`; Supplement 04 **not found**; not fabricated. Disposition artifact: `2026-11-14-PHASE-1-D-08-HISTORY-INDETERMINATE-DISPOSITION.v10.21.json`.
+
+**Effect:** D-08 may be recorded `SATISFIED_VIA_OWNER_AUTHORIZED_ALTERNATIVE` / `HISTORY_INDETERMINATE`.
+
+### 8.85.2 — EXIT-09 OS / ServerRestart target (OD-EXIT09-LINUX-CONTAINERS-2026-11-14)
+
+Authority: Master Engineering Execution Prompt Revision 10.21 §2.3.
+
+Deployment evidence (`docker-compose.yml` / prod / ghcr; `postgres:16-alpine`; backend PHP container) establishes the application target as **Linux containers**. ServerRestart acceptance therefore uses the Linux container target. Historical Linux evidence retaining expected generations `[2,1]` remains valid under impact analysis when ServerRestart code/contract is unchanged. Native Windows is **not** required absent an approved support contract. Linux container/VM evidence must **not** be described as Native WSL or Native Windows.
+
+Disposition artifact: `2026-11-14-PHASE-1-EXIT-09-OS-SUPPORT-DETERMINATION.v10.21.json`.

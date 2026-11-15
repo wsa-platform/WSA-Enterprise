@@ -1,0 +1,63 @@
+{
+  "schema_id": "wsa.phase1_revision_test_impact_matrix.v1",
+  "revision": "10.21",
+  "generated_at_utc": "2026-11-15T06:40:00Z",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "entries": [
+    {
+      "changed_file": "backend/app/Services/Agriculture/Research/Search/Family/Bulk/BulkDatasetReader.php",
+      "affected_components": ["BulkDatasetReader", "LocalIndexIngestionService"],
+      "affected_tests": ["ChunkedIncrementalBulkIngestTest", "IncrementalBulkIngestDoesNotWithdrawPeersTest"],
+      "prior_passing_evidence": "IncrementalBulkIngestDoesNotWithdrawPeersTest historical PASS",
+      "prior_evidence_valid": false,
+      "test_required_now": true,
+      "exact_command": "phpunit --filter=ChunkedIncrementalBulkIngestTest|IncrementalBulkIngestDoesNotWithdrawPeersTest",
+      "actual_result": "PASS",
+      "exit_code": 0
+    },
+    {
+      "changed_file": "backend/app/Services/Agriculture/Research/Search/LocalIndex/LocalIndexIngestionService.php",
+      "affected_components": ["chunked incremental ingest", "defer index sync", "rebuildIndex streaming"],
+      "affected_tests": ["ChunkedIncrementalBulkIngestTest"],
+      "prior_passing_evidence": null,
+      "prior_evidence_valid": false,
+      "test_required_now": true,
+      "exact_command": "phpunit --filter=ChunkedIncrementalBulkIngestTest",
+      "actual_result": "PASS 2 tests / 11 assertions",
+      "exit_code": 0
+    },
+    {
+      "changed_file": "backend/app/Console/Commands/IngestAgrisProjectedPackagesCommand.php",
+      "affected_components": ["AGRIS projected ingest CLI"],
+      "affected_tests": ["manual dry-run + smoke ingest"],
+      "prior_passing_evidence": null,
+      "prior_evidence_valid": false,
+      "test_required_now": true,
+      "exact_command": "php artisan scientific:ingest-agris-projected --dry-run ...",
+      "actual_result": "dry-run OK; BG3+BRI completed; BRY failed once under concurrent lock then cleared for resume",
+      "exit_code": 0
+    },
+    {
+      "changed_file": "backend/config/database.php",
+      "affected_components": ["scientific_records SQLite busy_timeout/WAL"],
+      "affected_tests": ["impact: LocalIndex concurrency"],
+      "prior_passing_evidence": null,
+      "prior_evidence_valid": false,
+      "test_required_now": false,
+      "exact_command": null,
+      "actual_result": "config-only; busy_timeout=60000 journal_mode=WAL",
+      "exit_code": null
+    },
+    {
+      "changed_file": "docs/... EXIT/D matrices and ADR-023 §8.85",
+      "affected_components": ["governance"],
+      "affected_tests": ["Exit10CurrentMembershipMatrixValidatorTest"],
+      "prior_passing_evidence": "1 test / 6 assertions",
+      "prior_evidence_valid": true,
+      "test_required_now": true,
+      "exact_command": "phpunit --filter=Exit10CurrentMembershipMatrixValidatorTest",
+      "actual_result": "PASS",
+      "exit_code": 0
+    }
+  ]
+}

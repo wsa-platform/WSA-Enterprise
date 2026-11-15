@@ -1,0 +1,21 @@
+{
+  "schema_id": "wsa.phase1_d01_d14_dod_matrix.v1",
+  "revision": "10.21",
+  "generated_at_utc": "2026-11-15T06:40:00Z",
+  "definitions": [
+    {"d_id": "D-01", "status": "PASS", "acceptance_conditions": "WIP baseline protection", "evidence_path": "C:/Users/ahmed/AppData/Local/Temp/wsa-r1021-delta-baseline-20261114/manifest.json", "test_command": null, "result": "Prior r1019 baseline missing; delta baseline captured; WIP protected", "exit_code": null, "remaining": null},
+    {"d_id": "D-02", "status": "PASS", "acceptance_conditions": "Report-to-Git reconciliation", "evidence_path": "git log; 35c1ce2 ancestor of 1dcbb43", "test_command": null, "result": "Rev10.19 commits present and synced", "exit_code": null, "remaining": null},
+    {"d_id": "D-03", "status": "PASS", "acceptance_conditions": "CapVer SQLite-by-design", "evidence_path": "OD-8.23.8-A", "test_command": null, "result": "No CapVer-PG migration", "exit_code": null, "remaining": null},
+    {"d_id": "D-04", "status": "PARTIAL", "acceptance_conditions": "EXIT-09 DB verification", "evidence_path": "EXIT-09 OS Linux containers v10.21; ServerRestart v10.16", "test_command": null, "result": "OS determined; Linux [2,1] retained", "exit_code": 0, "remaining": "Any remaining EXIT-09 mandatory regression items"},
+    {"d_id": "D-05", "status": "PASS", "acceptance_conditions": "Storage inventory roles", "evidence_path": "DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md", "test_command": null, "result": "LocalIndex SQLite retained", "exit_code": null, "remaining": null},
+    {"d_id": "D-06", "status": "PASS", "acceptance_conditions": "Evidence-backed status", "evidence_path": "EXIT/D matrices v10.21", "test_command": null, "result": "Statuses cite paths", "exit_code": null, "remaining": null},
+    {"d_id": "D-07", "status": "PASS", "acceptance_conditions": "Test log separation", "evidence_path": "_tmp-r1021-*", "test_command": null, "result": "Current logs under _tmp-r1021-*", "exit_code": null, "remaining": null},
+    {"d_id": "D-08", "status": "SATISFIED_VIA_OWNER_AUTHORIZED_ALTERNATIVE", "acceptance_conditions": "Supplement 04 OR HISTORY_INDETERMINATE", "evidence_path": "2026-11-14-PHASE-1-D-08-HISTORY-INDETERMINATE-DISPOSITION.v10.21.json; ADR-023 §8.85", "test_command": null, "result": "HISTORY_INDETERMINATE under Rev10.21 §2.2; Supplement 04 not found; not invented", "exit_code": null, "remaining": null},
+    {"d_id": "D-09", "status": "PASS", "acceptance_conditions": "EXIT-11 dependency enforcement", "evidence_path": "PHASE-1-EXIT-11-PREFLIGHT.v10.21.json", "test_command": null, "result": "Formal gate not run; dependency enforced", "exit_code": null, "remaining": null},
+    {"d_id": "D-10", "status": "PASS", "acceptance_conditions": "Status dimension separation", "evidence_path": "AGRIS eligibility/processing/catalog metrics", "test_command": null, "result": "Dimensions reported separately", "exit_code": null, "remaining": null},
+    {"d_id": "D-11", "status": "PARTIAL", "acceptance_conditions": "Archive 17-item verification", "evidence_path": "Mission artifact archive", "test_command": null, "result": "New artifacts archived; full 17-item not re-audited", "exit_code": null, "remaining": "Complete 17-item checklist"},
+    {"d_id": "D-12", "status": "PASS", "acceptance_conditions": "CapVer regression SQLite", "evidence_path": "OD-8.23.8-A", "test_command": null, "result": "No CapVer code change requiring re-run", "exit_code": null, "remaining": null},
+    {"d_id": "D-13", "status": "PARTIAL", "acceptance_conditions": "Master Prompt 10.5/10.6 archive", "evidence_path": "science-source-expansion archives", "test_command": null, "result": "Not claimed complete", "exit_code": null, "remaining": "Verify originals or owner minimum"},
+    {"d_id": "D-14", "status": "PARTIAL", "acceptance_conditions": "Archive checkpoints A–F", "evidence_path": "Prior archive checkpoint docs", "test_command": null, "result": "Not fully re-verified item-by-item", "exit_code": null, "remaining": "Per-checkpoint completeness audit"}
+  ]
+}

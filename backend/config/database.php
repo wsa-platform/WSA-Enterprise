@@ -73,9 +73,10 @@ return [
             'search_path' => 'public',
             'sslmode' => env('SCIENTIFIC_RECORD_STORE_SSLMODE', 'prefer'),
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
-            'synchronous' => null,
+            // Long busy wait: Windows-mounted SQLite + concurrent LocalIndex writers/readers.
+            'busy_timeout' => env('SCIENTIFIC_RECORD_STORE_BUSY_TIMEOUT', 60000),
+            'journal_mode' => env('SCIENTIFIC_RECORD_STORE_JOURNAL_MODE', 'WAL'),
+            'synchronous' => env('SCIENTIFIC_RECORD_STORE_SYNCHRONOUS', 'NORMAL'),
             'transaction_mode' => 'DEFERRED',
         ],
 

@@ -1,0 +1,29 @@
+{
+  "schema_id": "wsa.exit10_1_of_6_metric_resolution.v1",
+  "revision": "10.21",
+  "generated_at_utc": "2026-11-14T18:30:00Z",
+  "metric_raw": "1/6",
+  "sources_examined": [
+    "backend/tests/Unit/Agriculture/Research/Membership/Exit10CurrentMembershipMatrixValidatorTest.php",
+    "docs/architecture/science-source-expansion/PHASE-1-EXECUTION-REPORT.v10.19.json",
+    "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-AGRIS-EXISTING-PROCESSING-STATUS.v10.19.json"
+  ],
+  "resolution": "RESOLVED",
+  "meaning": "PHPUnit run summary for Exit10CurrentMembershipMatrixValidatorTest: 1 test, 6 assertions (not 1 of 6 acceptance criteria).",
+  "phpunit_equivalent": "OK (1 test, 6 assertions)",
+  "test_method": "test_register_and_matrix_have_exactly_110_matching_identities",
+  "six_assertions": [
+    "assertIsArray($register)",
+    "assertIsArray($matrix)",
+    "assertCount(110, $regRows)",
+    "assertCount(110, $matRows)",
+    "assertSame($regIds, $matIds) identity+order match",
+    "assertCount(110, array_unique($regIds)) no duplicates"
+  ],
+  "passed": 6,
+  "failed": 0,
+  "distinct_from_section_13_3_eight_evidence_dimensions": true,
+  "eight_evidence_dimensions_note": "Membership / Identity Verified / Persisted Classification / Endpoint Tested / CapVer / Operational Eligibility / Active / Seat-Specific Blockers remain separate operational evidence dimensions and are NOT the denominator of 1/6.",
+  "exit10_status_impact": "Identity/order integrity criterion evidenced PASS via 1 test / 6 assertions. EXIT-10 overall remains subject to remaining operational evidence dimensions, not to inventing five more '1/6 criteria'.",
+  "not_invented_six_acceptance_criteria": true
+}

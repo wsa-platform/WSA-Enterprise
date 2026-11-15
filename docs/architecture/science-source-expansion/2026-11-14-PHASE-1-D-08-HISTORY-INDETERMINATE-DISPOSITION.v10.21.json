@@ -1,0 +1,45 @@
+{
+  "schema_id": "wsa.d08_history_indeterminate_disposition.v1",
+  "revision": "10.21",
+  "generated_at_utc": "2026-11-14T18:15:00Z",
+  "d_id": "D-08",
+  "status": "SATISFIED_VIA_OWNER_AUTHORIZED_ALTERNATIVE",
+  "disposition": "HISTORY_INDETERMINATE",
+  "owner_authorization": {
+    "source": "Master Engineering Execution Prompt Revision 10.21 §2.2",
+    "decision_id": "OD-D08-HISTORY-INDETERMINATE-2026-11-14",
+    "summary": "Owner explicitly authorizes HISTORY_INDETERMINATE as the official alternative when authentic Supplement 04 cannot be located after documented archive search. Finding Supplement 04 is not a prerequisite to using this path."
+  },
+  "search_performed": {
+    "locations": [
+      "docs/architecture/science-source-expansion/2026-10-14-D-08-archive-supplement-01",
+      "docs/architecture/science-source-expansion/2026-10-14-D-08-archive-supplement-02",
+      "docs/architecture/science-source-expansion/2026-10-24-D-08-archive-supplement-03",
+      "docs/architecture/science-source-expansion/**/*Supplement*04*",
+      "docs/architecture/science-source-expansion/**/*D-08*",
+      "Prior discrepancy register entries citing SUPPLEMENT_04_NOT_FOUND"
+    ],
+    "found_supplements": ["01", "02", "03"],
+    "supplement_04_found": false,
+    "fabricated": false,
+    "derivative_presented_as_original": false
+  },
+  "constraints_honored": [
+    "Did not invent Supplement 04",
+    "Did not create a derived document claiming authenticity",
+    "Documented search locations and results",
+    "Recorded owner approval in ADR-023 append-only section",
+    "Linked acceptance to D-08 original requirement and OD-D08 history"
+  ],
+  "original_requirement_binding": {
+    "d08_text_available": "partial — latest approved matrix/ADR OD-D08 keep-open until authentic evidence or authorized alternative",
+    "fallback_authority": "2026-11-13-PHASE-1-D01-D14-DOD-MATRIX.v10.19.json D-08 entry; ADR-023 §8.80 OD-D08; Rev 10.21 §2.2 owner alternative",
+    "constraint_documented": true
+  },
+  "adr_023_append": "§8.85",
+  "evidence_paths": [
+    "docs/architecture/science-source-expansion/2026-11-14-PHASE-1-D-08-HISTORY-INDETERMINATE-DISPOSITION.v10.21.json",
+    "docs/architecture/ADR-023-scientific-source-expansion.md §8.85"
+  ],
+  "remaining": null
+}

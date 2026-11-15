@@ -149,9 +149,132 @@ final class LocalIndexIngestionService
         return new LocalIngestionReport($key, LocalIngestionReport::COMPLETED, 1, $commit->generation, $counts, $refusals);
     }
 
+    /**
+     * Chunked incremental JSONL ingest: upserts windows without withdrawing absent peers.
+     * Safe for multi-hundred-thousand-record AGRIS provider projections; preserves prior generations' rows.
+     * When $deferIndexSync is true, FTS is rebuilt once after all chunks (faster on large corpora).
+     *
+     * @param  (callable(int $chunks, int $offset, LocalIngestionReport $chunkReport): void)|null  $afterChunk
+     * @return array{report: LocalIngestionReport, chunks: int, records_read: int, skip_resume: int}
+     */
+    public function ingestIncrementalBulkChunked(
+        BulkDatasetSourceProfile $profile,
+        string $path,
+        DateTimeImmutable $now,
+        int $chunkSize = 5_000,
+        int $skipRecords = 0,
+        ?callable $afterChunk = null,
+        bool $deferIndexSync = false,
+    ): array {
+        $key = $profile->sourceKey;
+        $refusal = $this->policy->sourceRefusal($profile->licensing);
+        if ($refusal !== null) {
+            return [
+                'report' => new LocalIngestionReport($key, LocalIngestionReport::LICENCE_REFUSED, generation: $this->store->generation($key), failure: $refusal),
+                'chunks' => 0,
+                'records_read' => 0,
+                'skip_resume' => $skipRecords,
+            ];
+        }
+        if ($chunkSize < 1) {
+            throw new LocalIndexInvariantViolation('Chunk size must be at least 1.');
+        }
+
+        $counts = array_fill_keys(self::COUNTS, 0);
+        $refusals = [];
+        $chunks = 0;
+        $offset = $skipRecords;
+        $lastGeneration = $this->store->generation($key);
+        $deferredChanged = [];
+
+        while (true) {
+            $slice = $this->reader->readJsonlSlice($profile, $path, $offset, $chunkSize, $now->format(DATE_ATOM));
+            if (! $slice->isComplete()) {
+                return [
+                    'report' => new LocalIngestionReport(
+                        $key,
+                        LocalIngestionReport::SNAPSHOT_REJECTED,
+                        $chunks,
+                        $lastGeneration,
+                        $counts,
+                        $refusals,
+                        $slice->failure ?? $slice->status,
+                    ),
+                    'chunks' => $chunks,
+                    'records_read' => $offset - $skipRecords,
+                    'skip_resume' => $offset,
+                ];
+            }
+            // Slice window position is record-line based; do not include pre-window malformed scans.
+            $windowLines = count($slice->records) + count($slice->withdrawnIdentifiers) + $slice->unusableRecords + $slice->duplicateIdentifiers;
+            if ($windowLines === 0) {
+                break;
+            }
+            $commit = $this->commit(
+                $key,
+                ScientificRecordStore::MODE_INCREMENTAL,
+                $slice->records,
+                $slice->withdrawnIdentifiers,
+                LocalRecordState::WITHDRAWN,
+                'flagged_withdrawn_in_dataset',
+                $now,
+                null,
+                $refusals,
+                synchronizeIndex: ! $deferIndexSync,
+            );
+            $lastGeneration = $commit->generation;
+            if ($deferIndexSync) {
+                foreach ($commit->changed as $record) {
+                    $deferredChanged[] = $record;
+                }
+            }
+            foreach (self::COUNTS as $count) {
+                $counts[$count] += $commit->toArray()[$count];
+            }
+            $chunks++;
+            $offset += $windowLines;
+            $chunkCounts = array_intersect_key($commit->toArray(), array_flip(self::COUNTS));
+            $chunkReport = new LocalIngestionReport($key, LocalIngestionReport::COMPLETED, $chunks, $lastGeneration, $chunkCounts, $refusals);
+            if ($afterChunk !== null) {
+                $afterChunk($chunks, $offset, $chunkReport);
+            }
+            if ($windowLines < $chunkSize) {
+                break;
+            }
+        }
+
+        if ($deferIndexSync && $deferredChanged !== []) {
+            $this->index->synchronize(new LocalStoreCommit(
+                $key,
+                $lastGeneration,
+                inserted: $counts['inserted'],
+                updated: $counts['updated'],
+                unchanged: $counts['unchanged'],
+                deleted: $counts['deleted'],
+                withdrawn: $counts['withdrawn'],
+                stale: $counts['stale'],
+                changed: $deferredChanged,
+            ));
+        }
+
+        return [
+            'report' => new LocalIngestionReport($key, LocalIngestionReport::COMPLETED, $chunks, $lastGeneration, $counts, $refusals),
+            'chunks' => $chunks,
+            'records_read' => $offset - $skipRecords,
+            'skip_resume' => $offset,
+        ];
+    }
+
     /** Rebuilds the source's index from the store, e.g. after an index version change or a restart. */
     public function rebuildIndex(string $sourceKey): void
     {
+        $generation = $this->store->generation($sourceKey);
+        if ($this->store instanceof DatabaseScientificRecordStore && method_exists($this->store, 'iterateActive')) {
+            // Stream ACTIVE rows — never materialize the full corpus for rebuild.
+            $this->index->rebuild($sourceKey, $this->store->iterateActive($sourceKey), $generation);
+
+            return;
+        }
         ['generation' => $generation, 'records' => $records] = $this->store->readActive($sourceKey);
         $this->index->rebuild($sourceKey, $records, $generation);
     }
@@ -171,6 +294,7 @@ final class LocalIndexIngestionService
         DateTimeImmutable $now,
         ?HarvestCheckpoint $checkpoint,
         array &$refusals,
+        bool $synchronizeIndex = true,
     ): LocalStoreCommit {
         $generation = $this->store->begin($key, $mode);
         try {
@@ -193,7 +317,9 @@ final class LocalIndexIngestionService
 
             throw $exception;
         }
-        $this->index->synchronize($commit);
+        if ($synchronizeIndex) {
+            $this->index->synchronize($commit);
+        }
 
         return $commit;
     }

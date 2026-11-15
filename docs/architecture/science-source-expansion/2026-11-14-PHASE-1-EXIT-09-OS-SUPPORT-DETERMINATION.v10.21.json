@@ -1,0 +1,39 @@
+{
+  "schema_id": "wsa.exit09_os_support_determination.v1",
+  "revision": "10.21",
+  "generated_at_utc": "2026-11-14T18:15:00Z",
+  "prior_status": "OS_SUPPORT_UNDETERMINED",
+  "owner_authorization": {
+    "source": "Master Engineering Execution Prompt Revision 10.21 §2.3",
+    "summary": "Engineer may select target runtime for ServerRestart from actual deployment evidence; if Linux containers are the application target, adopt that environment. Do not require Windows Native without an approved support contract."
+  },
+  "deployment_evidence_examined": [
+    "docker-compose.yml — backend build ./backend; postgres:16-alpine; redis:7-alpine; nginx; Linux container network `wsa`",
+    "docker-compose.prod.yml",
+    "docker-compose.ghcr.yml",
+    "Historical Linux ServerRestart evidence v10.16: Write 1/5 PASS; Verify 1/15 PASS; expected [2,1]; recovery ~49s",
+    "Historical Native WSL unavailable; Windows native historically [2,2] not [2,1]"
+  ],
+  "determination": {
+    "target_deployment_environment": "LINUX_CONTAINERS",
+    "native_windows_required": false,
+    "native_wsl_claimed": false,
+    "linux_vm_described_as_native_wsl": false,
+    "server_restart_target": "Linux PostgreSQL 16 via Docker Desktop Linux VM / compose services",
+    "expected_values_retained": [2, 1],
+    "status": "DETERMINED_LINUX_CONTAINERS"
+  },
+  "server_restart_evidence": {
+    "path": "docs/architecture/science-source-expansion/2026-11-12-PHASE-1-EXIT-09-SERVERRESTART-LINUX-COMPARISON.v10.16.json",
+    "result": "PASS",
+    "expected": [2, 1],
+    "reuse_without_rerun": true,
+    "rerun_required": false,
+    "reason": "No ServerRestart code/contract change in Rev 10.21; prior Linux container evidence remains valid under impact analysis"
+  },
+  "exit09_impact": "OS undetermined residual cleared for target-environment selection; EXIT-09 overall still depends on remaining mandatory DB/regression items if any remain open",
+  "not_claimed": [
+    "Native Windows support",
+    "Native WSL support"
+  ]
+}

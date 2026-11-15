@@ -1,0 +1,84 @@
+{
+  "schema_id": "wsa.phase1_exit11_preflight.v1",
+  "revision": "10.21",
+  "evaluation_timestamp": "2026-11-15T06:25:00Z",
+  "run_kind": "EXIT_11_PREFLIGHT",
+  "formal_gate_eligible": false,
+  "input_matrix_paths": [
+    "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.19.json",
+    "docs/architecture/science-source-expansion/2026-11-13-PHASE-1-D01-D14-DOD-MATRIX.v10.19.json",
+    "docs/architecture/science-source-expansion/PHASE-1-APPROVED-EXIT-CRITERIA-TRACEABILITY.v10.19.json",
+    "docs/architecture/science-source-expansion/2026-11-14-PHASE-1-EXIT-10-1-OF-6-METRIC-RESOLUTION.v10.21.json",
+    "docs/architecture/science-source-expansion/2026-11-14-PHASE-1-D-08-HISTORY-INDETERMINATE-DISPOSITION.v10.21.json",
+    "docs/architecture/science-source-expansion/2026-11-14-PHASE-1-EXIT-09-OS-SUPPORT-DETERMINATION.v10.21.json"
+  ],
+  "exit_status_summary": {
+    "EXIT-01": "PARTIAL",
+    "EXIT-02": "PARTIAL",
+    "EXIT-03": "PARTIAL",
+    "EXIT-04": "PASS",
+    "EXIT-05": "BLOCKED",
+    "EXIT-06": "PARTIAL",
+    "EXIT-07": "BLOCKED",
+    "EXIT-08": "PARTIAL",
+    "EXIT-09": "PARTIAL",
+    "EXIT-10": "PARTIAL",
+    "EXIT-11": "NOT_RUN"
+  },
+  "d_status_summary": {
+    "D-01": "PASS",
+    "D-02": "PASS",
+    "D-03": "PASS",
+    "D-04": "PARTIAL",
+    "D-05": "PASS",
+    "D-06": "PASS",
+    "D-07": "PASS",
+    "D-08": "SATISFIED_VIA_OWNER_AUTHORIZED_ALTERNATIVE",
+    "D-09": "PASS",
+    "D-10": "PASS",
+    "D-11": "PARTIAL",
+    "D-12": "PASS",
+    "D-13": "PARTIAL",
+    "D-14": "PARTIAL"
+  },
+  "missing_evidence": [
+    "EXIT-05 staging/operator runs",
+    "EXIT-07 G2-26 original IC or owner seat disposition",
+    "Full AGRIS projected JSONL LocalIndex ingest completion (in progress; GEN76 preserved)",
+    "AGRIS live adapter E2E evidence file after stable ingest",
+    "EXIT-08 S2S/Consensus/FAOSTAT residuals where still required",
+    "D-11/D-13/D-14 complete archive checklist verification"
+  ],
+  "failed_prerequisites": [
+    "EXIT-01..10 not all PASS",
+    "D-01..D-14 not all satisfied (D-04/D-11/D-13/D-14 residual; EXIT-05/07 blockers)"
+  ],
+  "unresolved_criteria": [
+    {
+      "id": "EXIT-05",
+      "reason": "Staging/operator evidence not executed; local-only checks do not substitute production staging"
+    },
+    {
+      "id": "EXIT-07",
+      "reason": "G2-26 original IC evidence not located; owner disposition still required (not covered by D-08 alternative)"
+    },
+    {
+      "id": "EXIT-10_1_of_6",
+      "reason": "RESOLVED as PHPUnit 1 test / 6 assertions; not a blocker invented criterion set"
+    }
+  ],
+  "recommended_next_actions": [
+    "Resume AGRIS projected incremental ingest to completion (no download)",
+    "Run AGRIS adapter E2E probe after ingest idle; archive evidence",
+    "Close EXIT-08 remaining required-family residuals with evidence-backed statuses",
+    "Re-evaluate EXIT-09 after OS Linux-container determination + retained ServerRestart [2,1]",
+    "Complete EXIT-01..03/06 residuals from approved criteria only",
+    "Escalate EXIT-05/EXIT-07 only if owner staging/G2-26 decisions remain mandatory",
+    "Second EXIT-11 preflight before any formal gate"
+  ],
+  "notes": [
+    "This preflight MUST NOT change official EXIT statuses or write PHASE_1_CLOSED",
+    "Prior WIP baseline missing; delta baseline C:/Users/ahmed/AppData/Local/Temp/wsa-r1021-delta-baseline-20261114 used",
+    "AGRIS projection completed 143/1 LICENSE_BLOCKED; catalog gaps 1100 retained"
+  ]
+}

@@ -20,6 +20,38 @@ final class BulkDatasetReader
 
     public function read(BulkDatasetSourceProfile $profile, string $path, ?string $retrievedAt = null): BulkDatasetSnapshot
     {
+        return $this->readInternal($profile, $path, 0, $profile->maxRecords, failOnMaxRecords: true, retrievedAt: $retrievedAt);
+    }
+
+    /**
+     * Read one JSONL window for chunked incremental ingest. Hitting $limit ends the slice as
+     * COMPLETE (not max_records_exceeded). Never downloads.
+     */
+    public function readJsonlSlice(
+        BulkDatasetSourceProfile $profile,
+        string $path,
+        int $skipRecords,
+        int $limit,
+        ?string $retrievedAt = null,
+    ): BulkDatasetSnapshot {
+        if ($profile->format !== BulkDatasetSourceProfile::FORMAT_JSONL) {
+            throw new ScientificSourceContractViolation('readJsonlSlice supports JSONL profiles only.');
+        }
+        if ($skipRecords < 0 || $limit < 1) {
+            throw new ScientificSourceContractViolation('readJsonlSlice requires skipRecords >= 0 and limit >= 1.');
+        }
+
+        return $this->readInternal($profile, $path, $skipRecords, $limit, failOnMaxRecords: false, retrievedAt: $retrievedAt);
+    }
+
+    private function readInternal(
+        BulkDatasetSourceProfile $profile,
+        string $path,
+        int $skipRecords,
+        int $limit,
+        bool $failOnMaxRecords,
+        ?string $retrievedAt = null,
+    ): BulkDatasetSnapshot {
         if (preg_match('#^[A-Za-z][A-Za-z0-9+.-]*://#', $path) === 1 || str_contains($path, "\0")) {
             throw new ScientificSourceContractViolation('A dataset is read from a local file path; URLs and stream wrappers are refused.');
         }
@@ -75,8 +107,15 @@ final class BulkDatasetReader
 
                     continue;
                 }
-                if (++$recordLines > $profile->maxRecords) {
-                    $failure = 'max_records_exceeded';
+                $recordLines++;
+                if ($recordLines <= $skipRecords) {
+                    continue;
+                }
+                // Window position counts every record-bearing line (same semantics as maxRecords).
+                if (($recordLines - $skipRecords) > $limit) {
+                    if ($failOnMaxRecords) {
+                        $failure = 'max_records_exceeded';
+                    }
 
                     break;
                 }
@@ -154,7 +193,7 @@ final class BulkDatasetReader
             malformedLines: $malformed,
             duplicateIdentifiers: $duplicates,
             failure: $failure,
-            contentSha256: $failure === null ? hash_final($hash) : null,
+            contentSha256: ($failure === null && $skipRecords === 0 && $failOnMaxRecords) ? hash_final($hash) : null,
         );
     }
 

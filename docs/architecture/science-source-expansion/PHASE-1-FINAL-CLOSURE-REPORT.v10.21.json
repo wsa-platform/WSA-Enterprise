@@ -1,0 +1,100 @@
+{
+  "report_version": "10.21",
+  "generated_at": "2026-11-15T06:45:00Z",
+  "repository": "wsa-platform/WSA-Enterprise",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "starting_head": "1dcbb43d7e345d140f3784d2c464bdebc51b0f71",
+  "ending_head": null,
+  "remote_head": "1dcbb43d7e345d140f3784d2c464bdebc51b0f71",
+  "previous_revision_commit": "35c1ce2428cdba42191efcc06489c568d798ee11",
+  "wip_baseline": {
+    "prior_r1019_path": "C:/Users/ahmed/AppData/Local/Temp/wsa-r1019-baseline-20261113-125824",
+    "prior_available": false,
+    "delta_path": "C:/Users/ahmed/AppData/Local/Temp/wsa-r1021-delta-baseline-20261114",
+    "note": "Prior baseline missing; delta-only capture; WIP not secretly replaced"
+  },
+  "agris_eligibility": {
+    "total_existing": 144,
+    "validated": 144,
+    "eligible": 143,
+    "license_blocked": 1,
+    "corrupt_or_unreadable": 0,
+    "identity_unresolved": 0,
+    "pending": 0,
+    "ledger_path": "docs/architecture/science-source-expansion/2026-11-14-PHASE-1-AGRIS-PACKAGE-ELIGIBILITY-LEDGER.v10.21.json"
+  },
+  "agris_processing": {
+    "projection_completed": true,
+    "projected_packages": 143,
+    "projected_records": 1927157,
+    "persisted_packages_completed": 2,
+    "persisted_packages_note": "BG3+BRI completed; BRY failed once under concurrent SQLite lock; resume remaining",
+    "active_count_after_partial_ingest": 97196,
+    "baseline_active_count": 96612,
+    "generation_after": 79,
+    "baseline_generation": 76,
+    "historical_gen76_preserved": true,
+    "searchable_records": "FTS rebuild in progress after index drift (index was 77/6000 vs store 79/97196)",
+    "failed": 0,
+    "pending": 141,
+    "unexplained_losses": 0
+  },
+  "agris_catalog_coverage": {
+    "catalog_urls": 1244,
+    "existing": 144,
+    "missing": 1100,
+    "conclusion": "COMPLETED_WITH_CATALOG_GAPS",
+    "no_redownload": true
+  },
+  "agris_checkpoint": {
+    "projection_checkpoint": "existing_local_process_checkpoint.v1.json",
+    "projection_completed_providers": 143,
+    "projection_cursor": 1244,
+    "meaning_of_72": "mid-run completed_providers count; final=143",
+    "ingest_checkpoint": "agris_projected_ingest_checkpoint.v10.21.json"
+  },
+  "br1_lifecycle": {
+    "projection_process": "idle/completed",
+    "ingest_process": "resumable; stopped for FTS rebuild and lock hygiene"
+  },
+  "localindex_reconciliation": {
+    "baseline_rows_total": 96615,
+    "baseline_active": 96612,
+    "baseline_generation": 76,
+    "current_active": 97196,
+    "current_generation": 79,
+    "destructive_rebuild": false,
+    "rollback_available": "prior generations 76.. retained in scientific_source_generations"
+  },
+  "search_integration": {
+    "adapter_e2e": "BLOCKED_PENDING_FTS_REBUILD",
+    "note": "Live adapter search triggers full FTS rebuild when generations diverge; rebuild streaming in progress"
+  },
+  "exit_results": "see 2026-11-15-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.21.json",
+  "d_definition_of_done": "see 2026-11-15-PHASE-1-D01-D14-DOD-MATRIX.v10.21.json",
+  "exit_11_preflight": {
+    "path": "PHASE-1-EXIT-11-PREFLIGHT.v10.21.json",
+    "formal_gate_eligible": false,
+    "status": "EXIT_11_PREFLIGHT_COMPLETED"
+  },
+  "owner_decisions": [
+    "OD-D08-HISTORY-INDETERMINATE-2026-11-14",
+    "OD-EXIT09-LINUX-CONTAINERS-2026-11-14",
+    "OD-AGRIS-* from §8.84 retained"
+  ],
+  "owner_escalations": [
+    {
+      "id": "EXIT-05-staging-operator",
+      "required": true,
+      "reason": "Staging/operator evidence cannot be fabricated locally"
+    },
+    {
+      "id": "EXIT-07-G2-26",
+      "required": true,
+      "reason": "Original G2-26 IC or owner seat disposition still required"
+    }
+  ],
+  "commits": [],
+  "push_verification": null,
+  "phase_1_disposition": "PHASE_1_OPEN_PARTIAL"
+}
