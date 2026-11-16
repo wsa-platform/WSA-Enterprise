@@ -1,0 +1,80 @@
+{
+  "schema_id": "wsa.agris_scale_preflight_pilot.v1",
+  "revision": "10.27",
+  "recorded_at_utc": "2026-11-16T16:25:00Z",
+  "head": "3384a7cc96d79c793dc7e80aa7cc63582194ee22",
+  "filesystem": {
+    "target_volume": "G:",
+    "free_gb": 69.59,
+    "used_gb": 163.19,
+    "total_gb": 232.79,
+    "localindex_path": "G:/WSA-Enterprise/backend/storage/app/scientific_record_store.sqlite",
+    "localindex_bytes": 1460883456,
+    "fts_physically_embedded": true,
+    "wal_bytes_when_writer_active_historical": 25074352
+  },
+  "candidate_storage_design": {
+    "decision": "Option A — Shared Tables with Generation ID (existing hybrid isolation via search pin)",
+    "evidence": [
+      "scientific_source_records.generation column",
+      "scientific_source_states.generation advances on persist (agris=144)",
+      "scientific_source_fts_meta.agris.generation remains 79 while candidate persists",
+      "AgrisCandidateIngestCoordinator::SEARCH_PIN_GENERATION=79",
+      "deferIndexSync / fts_pending checkpoint independent of Persist"
+    ],
+    "gen82_validity": "Historical candidate baseline; store has advanced beyond 82 to 144 — continue same Candidate store, do not mint GEN80/81",
+    "activation_boundary": "Persist completion ≠ activation; GEN79 search pin until E2E",
+    "gen76_preservation": "Required — never delete generation log rows"
+  },
+  "five_package_pilot": {
+    "method": "Formalized from already-completed Persist packages (no-redo); representative small/medium/large/insert-heavy",
+    "packages": [
+      {"id": "AGRIS.ODS.BG3", "class": "small", "projected": 14, "records_read": 14, "elapsed_ms": 1519, "inserted": 0, "unchanged": 14},
+      {"id": "AGRIS.ODS.BRT", "class": "small-medium", "projected": 66, "records_read": 66, "elapsed_ms": 354, "inserted": 0, "unchanged": 66},
+      {"id": "AGRIS.ODS.TR6", "class": "medium", "projected": 427, "records_read": 427, "elapsed_ms": 2357, "inserted": 0, "unchanged": 427},
+      {"id": "AGRIS.ODS.IR8", "class": "large_unchanged_heavy", "projected": 3645, "records_read": 3645, "elapsed_ms": 21135, "inserted": 0, "unchanged": 3645},
+      {"id": "AGRIS.ODS.IN8", "class": "large_insert_heavy_upper_risk", "projected": 3064, "records_read": 3064, "elapsed_ms": 146781, "inserted": 2914, "unchanged": 150}
+    ],
+    "aggregate_completed_27": {
+      "inserted": 5517,
+      "unchanged": 17607,
+      "elapsed_ms_sum_26": 742895,
+      "median_approx_rps_insert_capable": 103.5,
+      "note": "Projected remaining records ≠ unique new rows; heavy dedup observed"
+    },
+    "resume_demo": "Checkpoint skip_records supported; ID1 partial at skip=23000 is valid resume point",
+    "pilot_status": "COMPLETE_FORMALIZED"
+  },
+  "storage_forecast": {
+    "remaining_packages": 116,
+    "remaining_projected_records": 1901262,
+    "id1_partial_remaining_unknown": true,
+    "bytes_per_active_row_rough": "≈13870 (1.460GB / ~105284 earlier active sample)",
+    "worst_case_if_all_unique_gb": 26.3,
+    "fts_embedded_additional_note": "FTS rebuild at activation grows same file; do not double-count separate FTS file",
+    "wal_temp_reserve_gb": 2,
+    "snapshot_reserve_gb": 2,
+    "operational_reserve_gb": 10,
+    "total_additional_capacity_needed_conservative_gb": 40.3,
+    "free_gb": 69.59,
+    "capacity_verdict": "SUFFICIENT_WITH_RESERVE"
+  },
+  "runtime_forecast": {
+    "unbounded_single_run_estimate": "Likely exceeds 24h when including large BR1/NL0 packages and insert-heavy variance",
+    "segmentation": "max-packages<=20 bounded windows with persist+fts checkpoints",
+    "lifecycle": "Observable via checkpoint last_progress_at + chunk_progress log + store generation"
+  },
+  "decision": {
+    "result": "GO",
+    "scope": "BOUNDED_SEGMENTED_PERSIST_ONLY",
+    "also": "NO-GO_FOR_UNBOUNDED_RUN",
+    "conditions": [
+      "max-packages <= 20 per window",
+      "resume from agris_projected_ingest_checkpoint.v10.21.json only",
+      "no-download",
+      "FTS remains deferred/pending until activation eligibility",
+      "preserve search pin 79 and GEN76",
+      "stop window on graceful boundary; no hard-kill of writers"
+    ]
+  }
+}

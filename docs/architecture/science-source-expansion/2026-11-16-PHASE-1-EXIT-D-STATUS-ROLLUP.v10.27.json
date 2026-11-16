@@ -1,0 +1,51 @@
+{
+  "schema_id": "wsa.phase1_exit_d_status_rollup.v1",
+  "revision": "10.27",
+  "generated_at_utc": "2026-11-16T16:50:00Z",
+  "method": "evidence_reuse_no_db_reinspection_no_test_rerun",
+  "supersedes_note": "Rollup only; does not rewrite original EXIT definitions",
+  "sources": [
+    "2026-11-15-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.21.json",
+    "2026-11-15-PHASE-1-D01-D14-DOD-MATRIX.v10.21.json",
+    "PHASE-1-EXIT-11-PREFLIGHT.v10.23.json",
+    "2026-11-16-PHASE-1-SCALE-PREFLIGHT-AND-PILOT.v10.27.json"
+  ],
+  "exits": {
+    "EXIT-01": "PARTIAL",
+    "EXIT-02": "PARTIAL",
+    "EXIT-03": "PARTIAL",
+    "EXIT-04": "PASS",
+    "EXIT-05": "BLOCKED",
+    "EXIT-06": "PARTIAL",
+    "EXIT-07": "BLOCKED",
+    "EXIT-08": "PARTIAL",
+    "EXIT-09": "PARTIAL",
+    "EXIT-10": "PARTIAL",
+    "EXIT-11": "NOT_RUN"
+  },
+  "d_requirements": {
+    "D-01": "PASS",
+    "D-02": "PASS",
+    "D-03": "PASS",
+    "D-04": "PARTIAL",
+    "D-05": "PASS",
+    "D-06": "PASS",
+    "D-07": "PASS",
+    "D-08": "SATISFIED_VIA_OWNER_AUTHORIZED_ALTERNATIVE",
+    "D-09": "PASS",
+    "D-10": "PASS",
+    "D-11": "PARTIAL",
+    "D-12": "PASS",
+    "D-13": "PARTIAL",
+    "D-14": "PARTIAL"
+  },
+  "phase_10_27_1": {
+    "scale_preflight": "GO_BOUNDED",
+    "unbounded_persist": "NO-GO_FOR_UNBOUNDED_RUN",
+    "persist": "IN_PROGRESS_BOUNDED_WINDOW_LAUNCHED",
+    "fts": "PENDING_INDEPENDENT",
+    "activation": "NOT_ELIGIBLE"
+  },
+  "formal_gate_eligible": false,
+  "classification": "PHASE_1_OPEN_PARTIAL"
+}

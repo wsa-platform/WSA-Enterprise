@@ -1,0 +1,67 @@
+{
+  "schema_id": "wsa.agris_ingest_lifecycle.v1",
+  "revision": "10.27",
+  "recorded_at_utc": "2026-11-16T16:45:00Z",
+  "basis": "Scale Preflight GO BOUNDED_SEGMENTED_PERSIST_ONLY — 2026-11-16-PHASE-1-SCALE-PREFLIGHT-AND-PILOT.v10.27.json",
+  "no_new_db_inspection": true,
+  "run_identity_contract": {
+    "required_fields": [
+      "run_id",
+      "pid",
+      "container_id_if_any",
+      "start_timestamp",
+      "branch",
+      "head",
+      "candidate_store_generation_at_start",
+      "current_package",
+      "current_batch_or_chunk",
+      "last_persist_checkpoint_path",
+      "fts_checkpoint_path",
+      "last_progress_at"
+    ],
+    "secrets": "never logged"
+  },
+  "progress_states": [
+    "ACTIVE_PROGRESSING",
+    "ACTIVE_SLOW",
+    "WAITING",
+    "BLOCKED",
+    "STALLED",
+    "FAILED",
+    "GRACEFULLY_STOPPED",
+    "ABNORMALLY_TERMINATED",
+    "COMPLETED"
+  ],
+  "durable_progress_sources": [
+    "agris_projected_ingest_checkpoint.v10.21.json",
+    "agris_fts_checkpoint.v10.23.json",
+    "chunk_progress log lines with skip_records"
+  ],
+  "stall_policy": {
+    "do_not_kill_on_missing_log_lines_alone": true,
+    "require": ["process alive", "checkpoint or WAL activity if writers allowed", "no unresolved lock from foreign diagnostic"]
+  },
+  "graceful_shutdown": {
+    "signal": "application-level stop or SIGTERM to ingest artisan only",
+    "allow_current_chunk_commit": true,
+    "hard_kill": "last resort only with Hard Kill evidence checklist; never kill container"
+  },
+  "resume_guarantees": {
+    "from": "last valid Persist checkpoint / partial.skip_records",
+    "no_redownload": true,
+    "no_repersist_complete_packages": true,
+    "fts_independent": true,
+    "known_resume_point_at_lifecycle_doc": {
+      "package": "AGRIS.ODS.ID1",
+      "skip_records": 23000,
+      "completed_packages": 27,
+      "source": "checkpoint state recorded before DB-inspection stop — not re-verified"
+    }
+  },
+  "execution_windows": {
+    "max_packages_per_window": 5,
+    "authorized_ceiling": 20,
+    "unbounded_run": "NO-GO"
+  },
+  "status": "CONTRACT_DOCUMENTED — bounded Persist start pending operator/runtime launch without further DB probes"
+}

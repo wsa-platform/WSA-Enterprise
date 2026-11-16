@@ -1,0 +1,92 @@
+{
+  "schema_id": "wsa.sqlite_safety_recovery.v1",
+  "revision": "10.27",
+  "intervention_of": "temporary_safety_within_phase1_continuation",
+  "timestamp_utc": "2026-11-16T16:20:00Z",
+  "container": {
+    "name": "wsa-enterprise-backend-1",
+    "id_prefix": "b487cc906fb2",
+    "state": "running"
+  },
+  "pid_5348": {
+    "exists_at_verification": false,
+    "prior_observed_command": "php storage/app/scientific_datasets/agris/harvest_cache/_r1027_pragma_probe.php",
+    "prior_classification": "Diagnostic",
+    "purpose": "Hung PRAGMA integrity_check / schema probe against scientific_record_store.sqlite",
+    "not_writer": true,
+    "termination_action": "None",
+    "termination_result": "Process already absent after container process-table refresh; no SIGTERM/SIGKILL issued in this intervention",
+    "note": "Earlier kill attempt was blocked by policy; subsequent docker top showed PID 5348 gone and only php-fpm workers present."
+  },
+  "sqlite_lock": {
+    "status": "Cleared",
+    "evidence": "Bounded OPEN_OK probe: journal_mode=wal, SELECT 1 succeeded in 291ms; light metadata probe succeeded",
+    "database_affected": "backend/storage/app/scientific_record_store.sqlite (DB-LOCALINDEX-SCIENTIFIC)"
+  },
+  "databases": {
+    "scientific_record_store": {
+      "path": "backend/storage/app/scientific_record_store.sqlite",
+      "bytes": 1460883456,
+      "page_count": 356661,
+      "page_size": 4096,
+      "freelist_count": 0,
+      "journal_mode": "wal",
+      "wal_shm_at_idle_listing": "absent_after_writer_exit_then_recreated_on_read_open",
+      "wal_shm_preservation": "Preserved — no manual WAL/SHM deletion; main DB size increased 1460232192→1460883456 consistent with checkpoint merge",
+      "schema_note": "Tables are scientific_source_records / scientific_source_fts_* (not legacy name scientific_records)",
+      "agris_store_generation": 144,
+      "agris_fts_generation_pin": 79,
+      "integrity": "OPEN_OK; full PRAGMA integrity_check intentionally NOT re-run (prior hung probe)"
+    },
+    "mission_artifact_archive": {
+      "path": "backend/storage/app/mission_artifact_archive/archive.sqlite",
+      "bytes": 7827456,
+      "last_write_local": "2026-11-12T22:58:11",
+      "mission_artifacts_count": 792,
+      "open_status": "OPEN_OK",
+      "active_writer_observed": false
+    },
+    "capver": {
+      "path": "backend/storage/app/capver.sqlite",
+      "bytes": 32768,
+      "untouched": true
+    }
+  },
+  "ingest_writer": {
+    "mission_artifact_archive_writer": "Completed / Not running",
+    "agris_candidate_persist_writer": "Failed / Abnormally terminated",
+    "agris_detail": {
+      "last_log": "AGRIS.ODS.ID1 chunk_progress chunks=23 skip_records=23000 generation=144",
+      "checkpoint_partial": {
+        "AGRIS.ODS.ID1": {
+          "skip_records": 23000,
+          "chunks": 23,
+          "generation": 144,
+          "at": "2026-11-16T12:34:51+00:00"
+        }
+      },
+      "completed_packages": 27,
+      "generation_after_checkpoint_field": 121,
+      "store_state_generation": 144,
+      "no_process_in_docker_top": true
+    }
+  },
+  "diagnostic_script_protection": {
+    "existing_file": "backend/storage/app/scientific_datasets/agris/harvest_cache/_r1027_proc_scan.sh",
+    "action": "Preserved — not overwritten",
+    "new_versioned_probes_only": [
+      "_r1027_safe_lock_probe.v1.php",
+      "_r1027_srs_schema_probe.v1.php",
+      "_r1027_srs_meta_probe.v4.php",
+      "_r1027_bhl_presence_probe.v1.php"
+    ]
+  },
+  "archive_data": "Preserved",
+  "recovery_action": "No destructive recovery; confirmed lock cleared; recorded abnormal AGRIS persist stop; ready for bounded resume from persist checkpoint skip=23000 on ID1",
+  "remaining_blocker": "None for SQLite open/lock. AGRIS Persist remains incomplete (116 packages + ID1 partial). Scale Preflight GO required before unbounded Persist; bounded max-packages windows authorized after formal GO artifact.",
+  "bhl_config_presence": {
+    "bhl_key_present": true,
+    "bhl_key_length": 36,
+    "secret_value_disclosed": false
+  }
+}

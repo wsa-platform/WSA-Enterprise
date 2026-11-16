@@ -1,0 +1,56 @@
+{
+  "schema_id": "wsa.phase1_execution_checkpoint.v1",
+  "recorded_at_utc": "2026-11-16T16:22:00Z",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "head": "3384a7cc96d79c793dc7e80aa7cc63582194ee22",
+  "remote_sync_at_record": "tracking origin/phase-18-m18-ai-marketing-communications",
+  "active_master_context": {
+    "interrupted_revision": "10.27",
+    "interrupted_phase": "10.27.1 Scale Preflight / Initial Assessment",
+    "user_safety_overlay": "SQLite Safety Recovery directive referencing 10.9.1 resumption",
+    "reconciliation": "Revision 10.9.1 already produced PHASE_1_GAP_CLOSURE_PARTIAL on 2026-11-12 (HEAD f999ec2 era). Later revisions 10.21/10.23/10.27 supersede gap states. Do NOT restart 10.9.1 from zero. Resume remaining executable Phase 1 work using latest evidence; map 10.9.1 priority list onto current open gaps."
+  },
+  "last_completed_before_sqlite_issue": [
+    "Read-only Initial Assessment measurements (branch/HEAD, free disk ~69.6GB, DB ~1.46GB, completed_packages=27)",
+    "Pilot package metric extraction (BG3/BRT/TR6/IR8/IN8)",
+    "Partial SQLite pragma page_count/page_size/journal_mode before integrity_check hang"
+  ],
+  "active_when_sqlite_issue_occurred": {
+    "task": "Scale Preflight measurements via _r1027_pragma_probe.php",
+    "interrupted_command": "docker exec ... php .../_r1027_pragma_probe.php (hung on PRAGMA integrity_check while prior AGRIS ingest writer had been active)",
+    "collateral": "AGRIS bounded ingest (max-packages=20) no longer present in process table; last durable progress ID1 skip=23000 gen=144"
+  },
+  "running_or_pending_at_checkpoint": {
+    "agris_persist": "ABNORMALLY_TERMINATED — resume from checkpoint",
+    "fts": "25 batches fts_pending; search pin 79",
+    "archive_writer": "not running",
+    "pragma_probe_5348": "absent"
+  },
+  "changes_already_made_this_session": {
+    "code": "none committed in this safety segment",
+    "runtime_probes": "versioned under harvest_cache/_r1027_*",
+    "wip": "large unrelated WIP preserved; not staged"
+  },
+  "prior_verified_results_reuse": {
+    "rev_10_9_1_final": "docs/architecture/science-source-expansion/2026-11-12-PHASE-1-REV10.9.1-SESSION-REPORT.ar.md",
+    "d08_history_indeterminate": "2026-11-14-PHASE-1-D-08-HISTORY-INDETERMINATE-DISPOSITION.v10.21.json",
+    "exit09_linux_containers": "2026-11-14-PHASE-1-EXIT-09-OS-SUPPORT-DETERMINATION.v10.21.json",
+    "exit10_1of6": "2026-11-14-PHASE-1-EXIT-10-1-OF-6-METRIC-RESOLUTION.v10.21.json",
+    "agris_adapter_e2e": "2026-11-15-PHASE-1-AGRIS-ADAPTER-E2E.v10.21.json",
+    "bry_membership": "2026-11-16-PHASE-1-BRY-MEMBERSHIP-RESOLUTION.v10.23.json",
+    "exit11_preflight": "PHASE-1-EXIT-11-PREFLIGHT.v10.23.json formal_gate_eligible=false"
+  },
+  "commits_already_created_recent": ["3384a7c", "0a188a7", "d1b4f7f", "c962adc"],
+  "remaining_tasks_priority_mapped": [
+    {"from_10_9_1": "EXIT-08 live connectivity", "current": "Reuse v10.9.1/v10.21 evidence; BHL key now present — run minimal BHL live probe only", "status": "EXECUTABLE"},
+    {"from_10_9_1": "EXIT-09 SRS/CSQ/§8.23.8", "current": "Reuse; Linux containers DETERMINED; §8.23.8 owner package exists; no N/A waiver", "status": "PARTIAL_OWNER_OR_REUSE"},
+    {"from_10_9_1": "EXIT-10 verified families", "current": "Reuse updated matrices; 1/6 interpretation settled", "status": "PARTIAL_REUSE"},
+    {"from_10_9_1": "EXIT-05", "current": "BLOCKED staging/operator", "status": "BLOCKED"},
+    {"from_10_9_1": "EXIT-07 G2-26", "current": "BLOCKED original IC", "status": "BLOCKED"},
+    {"from_10_9_1": "D-08", "current": "SATISFIED_VIA_OWNER_AUTHORIZED_ALTERNATIVE HISTORY_INDETERMINATE", "status": "CLOSED_ALTERNATIVE"},
+    {"from_10_9_1": "Prompts 10.5/10.6", "current": "SOURCE_ARTIFACT_NOT_AVAILABLE historically", "status": "BLOCKED_UNAVAILABLE"},
+    {"from_10_27": "Scale Preflight + Pilot + bounded Persist/FTS", "current": "IN_PROGRESS — issue GO then resume ID1", "status": "EXECUTABLE"},
+    {"from_10_9_1": "EXIT-11", "current": "NOT_RUN formal_gate_eligible=false", "status": "NOT_ELIGIBLE"}
+  ],
+  "working_tree": "Dirty with extensive unrelated WIP — preserve; stage only scoped new evidence files"
+}
