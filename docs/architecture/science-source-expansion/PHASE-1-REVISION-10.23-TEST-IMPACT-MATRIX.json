@@ -1,0 +1,33 @@
+{
+  "schema_id": "wsa.phase1_revision_test_impact_matrix.v1",
+  "revision": "10.23",
+  "generated_at_utc": "2026-11-16T11:50:00Z",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "starting_head": "d1b4f7f2be06060fccfe2751c382174c1757bed1",
+  "entries": [
+    {
+      "changed_file": "backend/app/Services/Agriculture/Research/Search/LocalIndex/LocalIndexIngestionService.php",
+      "affected_tests": ["AgrisCandidateSearchPinTest", "ChunkedIncrementalBulkIngestTest"],
+      "test_required_now": true,
+      "exact_command": "phpunit AgrisCandidateSearchPinTest ChunkedIncrementalBulkIngestTest",
+      "actual_result": "PASS 3 tests / 18 assertions",
+      "exit_code": 0
+    },
+    {
+      "changed_file": "backend/app/Services/Agriculture/Research/Search/LocalIndex/LocalIndexScientificSourceAdapter.php",
+      "affected_tests": ["AgrisCandidateSearchPinTest"],
+      "test_required_now": true,
+      "exact_command": "phpunit AgrisCandidateSearchPinTest",
+      "actual_result": "PASS",
+      "exit_code": 0
+    },
+    {
+      "changed_file": "backend/app/Console/Commands/IngestAgrisProjectedPackagesCommand.php",
+      "affected_tests": ["manual dry-run / resume ingest"],
+      "test_required_now": true,
+      "exact_command": "php artisan scientific:ingest-agris-projected ...",
+      "actual_result": "BRY persist_completed_from_partial; resume R26+",
+      "exit_code": null
+    }
+  ]
+}

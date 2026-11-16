@@ -63,6 +63,48 @@ return [
         'enabled' => filter_var(env('CROSSREF_ENABLED', true), FILTER_VALIDATE_BOOL),
     ],
 
+    'gbif' => [
+        'enabled' => filter_var(env('GBIF_ENABLED', true), FILTER_VALIDATE_BOOL),
+    ],
+
+    'organic_eprints' => [
+        'enabled' => filter_var(env('ORGANIC_EPRINTS_ENABLED', true), FILTER_VALIDATE_BOOL),
+    ],
+
+    'bhl' => [
+        'enabled' => filter_var(env('BHL_ENABLED', true), FILTER_VALIDATE_BOOL),
+        // Never commit a real key. Empty ⇒ RestJson adapter returns UNAVAILABLE (missing_api_key).
+        'api_key' => env('BHL_API_KEY'),
+    ],
+
+    'agris' => [
+        'enabled' => filter_var(env('AGRIS_ENABLED', true), FILTER_VALIDATE_BOOL),
+    ],
+
+    'dr_duke' => [
+        'enabled' => filter_var(env('DR_DUKE_ENABLED', true), FILTER_VALIDATE_BOOL),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | LocalIndex durable store connection (ADR-023 §8.41)
+    |--------------------------------------------------------------------------
+    | Defaults to the dedicated `scientific_records` connection (sqlite file under
+    | storage/app) so harvest/ingest works when Compose hostname `postgres` is
+    | unreachable. Point SCIENTIFIC_RECORD_STORE_CONNECTION at `pgsql` in
+    | environments where the primary PostgreSQL LocalIndex is provisioned.
+    */
+    'local_index' => [
+        'connection' => env('SCIENTIFIC_RECORD_STORE_CONNECTION', 'scientific_records'),
+        /*
+         | Rev 10.23: while AGRIS candidate ingest runs, keep search on the pinned
+         | FTS generation (GEN79) and do not auto-rebuild LocalIndex to the latest
+         | store generation on every adapter search.
+         */
+        'agris_candidate_mode' => filter_var(env('AGRIS_CANDIDATE_MODE', true), FILTER_VALIDATE_BOOL),
+        'agris_search_pin_generation' => max(0, (int) env('AGRIS_SEARCH_PIN_GENERATION', 79)),
+    ],
+
     /*
     | IU-09 Stage-3 ↔ CGHIA coexistence gate.
     | Default LEGACY_ONLY preserves current Stage-3 behavior.

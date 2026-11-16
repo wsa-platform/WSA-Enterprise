@@ -83,7 +83,13 @@ final class LocalIndexScientificSourceAdapter implements ScientificSourceAdapter
         $key = $this->profile->sourceKey();
         try {
             $committed = $this->store->generation($key);
-            if ($committed !== 0 && (! $this->index->hasSource($key) || $this->index->generation($key) !== $committed || $this->index->documentCount($key) === 0)) {
+            $candidateMode = $key === 'agris'
+                && (bool) config('agricultural_intelligence.local_index.agris_candidate_mode', false);
+            $pin = (int) config('agricultural_intelligence.local_index.agris_search_pin_generation', 0);
+            if ($candidateMode && $pin > 0 && $this->index->hasSource($key) && $this->index->documentCount($key) > 0) {
+                // Keep serving the pinned search generation while candidate ingest advances the store.
+                $committed = $pin;
+            } elseif ($committed !== 0 && (! $this->index->hasSource($key) || $this->index->generation($key) !== $committed || $this->index->documentCount($key) === 0)) {
                 // Stream ACTIVE rows — never materialize the full corpus for rebuild.
                 $this->index->rebuild($key, $this->store->iterateActive($key), $committed);
             }

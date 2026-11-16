@@ -1,0 +1,23 @@
+{
+  "schema_id": "wsa.bry_membership_resolution.v1",
+  "revision": "10.23",
+  "resolved_at_utc": "2026-11-16T11:30:00Z",
+  "resolution_window_minutes": 15,
+  "status": "RESOLVED",
+  "package_id": "AGRIS.ODS.BRY",
+  "catalog_url": "https://agris.fao.org/ods/AGRIS.ODS.BRY.xml",
+  "projected_records": 2771,
+  "membership": "WITHIN_REMAINING_141",
+  "evidence": [
+    "harvest_manifest.v10.19.local-only.json status=projected",
+    "agris_projected_ingest_checkpoint.v10.21.json completed=[BG3,BRI]; remaining projected not completed = 141",
+    "BRY is first identity in remaining_not_in_completed list",
+    "BRY present in checkpoint.partial with prior chunk progress skip_records path"
+  ],
+  "not_a_second_package": true,
+  "completed": false,
+  "partial": true,
+  "failures": false,
+  "resume_policy": "Idempotent incremental ingest from partial skip_records; do not double-count in denominator; do not create duplicate package identity",
+  "denominator_note": "143 eligible = 2 completed (BG3,BRI) + 141 remaining including BRY"
+}

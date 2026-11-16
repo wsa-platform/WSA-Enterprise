@@ -1,0 +1,61 @@
+{
+  "schema_id": "wsa.phase1_exit11_preflight.v1",
+  "revision": "10.23",
+  "evaluation_timestamp": "2026-11-16T11:50:00Z",
+  "run_kind": "EXIT_11_PREFLIGHT",
+  "formal_gate_eligible": false,
+  "supersedes_preflight": "PHASE-1-EXIT-11-PREFLIGHT.v10.21.json",
+  "input_matrix_paths": [
+    "docs/architecture/science-source-expansion/2026-11-15-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.21.json",
+    "docs/architecture/science-source-expansion/2026-11-15-PHASE-1-D01-D14-DOD-MATRIX.v10.21.json",
+    "docs/architecture/science-source-expansion/2026-11-16-PHASE-1-BRY-MEMBERSHIP-RESOLUTION.v10.23.json",
+    "docs/architecture/science-source-expansion/2026-11-15-PHASE-1-AGRIS-ADAPTER-E2E.v10.21.json"
+  ],
+  "exit_status_summary": {
+    "EXIT-01": "PARTIAL",
+    "EXIT-02": "PARTIAL",
+    "EXIT-03": "PARTIAL",
+    "EXIT-04": "PASS",
+    "EXIT-05": "BLOCKED",
+    "EXIT-06": "PARTIAL",
+    "EXIT-07": "BLOCKED",
+    "EXIT-08": "PARTIAL",
+    "EXIT-09": "PARTIAL",
+    "EXIT-10": "PARTIAL",
+    "EXIT-11": "NOT_RUN"
+  },
+  "d_status_summary": {
+    "D-08": "SATISFIED_VIA_OWNER_AUTHORIZED_ALTERNATIVE",
+    "D-11": "PARTIAL",
+    "D-13": "PARTIAL",
+    "D-14": "PARTIAL"
+  },
+  "progress_since_v10_21": [
+    "BRY membership RESOLVED within remaining 141",
+    "Candidate ingest mode + search pin GEN79",
+    "Separate FTS checkpoint schema introduced",
+    "Adapter pin unit test PASS"
+  ],
+  "missing_evidence": [
+    "EXIT-05 staging/operator",
+    "EXIT-07 G2-26 original IC or owner disposition",
+    "Full eligible package persist (143) + FTS activation",
+    "Post-activation AGRIS E2E / CSQ identity matrix",
+    "D-11/D-13/D-14 archive completeness"
+  ],
+  "failed_prerequisites": [
+    "EXIT-01..10 not all PASS",
+    "AGRIS candidate ingest not complete"
+  ],
+  "unresolved_criteria": [
+    {"id": "EXIT-05", "reason": "Staging/operator evidence not available without owner alternative"},
+    {"id": "EXIT-07", "reason": "G2-26 IC/disposition still required"}
+  ],
+  "recommended_next_actions": [
+    "Continue candidate ingest of remaining packages",
+    "Activate search FTS only after persist reconciliation",
+    "Run post-activation identity/E2E regression",
+    "Escalate EXIT-05/07 if infrastructure/IC remain unavailable"
+  ],
+  "formal_gate_eligible_note": "Preflight only; does not change official EXIT statuses"
+}

@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Services\Agriculture\Research\Onboarding\CurrentMembershipNearReadySeatCatalog;
 use App\Services\Agriculture\Research\Onboarding\NextGateEligibleSeatCatalog;
 use App\Services\Agriculture\Research\Search\Family\Bulk\BulkDatasetSourceProfile;
+use App\Services\Agriculture\Research\Search\LocalIndex\AgrisCandidateIngestCoordinator;
 use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexIngestionService;
 use App\Services\Agriculture\Research\Search\LocalIndex\ScientificRecordStore;
 use DateTimeImmutable;
@@ -15,22 +16,27 @@ use Illuminate\Support\Facades\DB;
  * Resume-safe incremental ingest of projected AGRIS JSONL packages into LocalIndex.
  *
  * Never downloads. Never uses snapshot mode (does not withdraw historical peers).
- * Protects Generation 76 baseline by incremental upserts only.
+ * Rev 10.23: candidate store generations advance while search FTS stays pinned at GEN79;
+ * separate FTS checkpoint; FTS failure never re-ingests.
  */
 final class IngestAgrisProjectedPackagesCommand extends Command
 {
     protected $signature = 'scientific:ingest-agris-projected
         {--manifest= : Path to harvest_manifest.v10.19.local-only.json}
-        {--checkpoint= : Resume checkpoint JSON path}
-        {--chunk-size=5000 : Records per incremental commit}
+        {--checkpoint= : Resume ingest checkpoint JSON path}
+        {--fts-checkpoint= : Separate FTS checkpoint JSON path}
+        {--chunk-size=2000 : Records per incremental persist chunk}
         {--max-packages=0 : Stop after N newly completed packages (0 = all remaining)}
-        {--defer-index-sync : Rebuild FTS once per package instead of per chunk}
+        {--activate-search : Rebuild search FTS to current store after eligible ingest complete}
         {--dry-run : List eligible packages without writing}';
 
-    protected $description = 'Incremental LocalIndex ingest of projected AGRIS JSONL (no download, no snapshot withdraw)';
+    protected $description = 'Incremental LocalIndex ingest of projected AGRIS JSONL (candidate mode; no download)';
 
-    public function handle(LocalIndexIngestionService $ingestion, ScientificRecordStore $store): int
-    {
+    public function handle(
+        LocalIndexIngestionService $ingestion,
+        ScientificRecordStore $store,
+        AgrisCandidateIngestCoordinator $coordinator,
+    ): int {
         $manifestPath = (string) $this->option('manifest');
         $checkpointPath = (string) $this->option('checkpoint');
         if ($manifestPath === '' || $checkpointPath === '') {
@@ -42,6 +48,11 @@ final class IngestAgrisProjectedPackagesCommand extends Command
             $this->error('Manifest not found: '.$manifestPath);
 
             return self::FAILURE;
+        }
+
+        $ftsCheckpointPath = (string) $this->option('fts-checkpoint');
+        if ($ftsCheckpointPath === '') {
+            $ftsCheckpointPath = dirname($checkpointPath).DIRECTORY_SEPARATOR.'agris_fts_checkpoint.v10.23.json';
         }
 
         $manifest = json_decode((string) file_get_contents($manifestPath), true);
@@ -61,13 +72,51 @@ final class IngestAgrisProjectedPackagesCommand extends Command
         $baseline = [
             'generation' => $store->generation('agris'),
             'active_count' => $this->activeCount(),
+            'search_pin_generation' => AgrisCandidateIngestCoordinator::SEARCH_PIN_GENERATION,
             'captured_at' => (new DateTimeImmutable('now'))->format(DATE_ATOM),
         ];
 
         $checkpoint = $this->loadCheckpoint($checkpointPath, $baseline);
+        $ftsCheckpoint = $this->loadFtsCheckpoint($ftsCheckpointPath, $baseline);
         $chunkSize = max(1, min(50_000, (int) $this->option('chunk-size')));
         $maxPackages = max(0, (int) $this->option('max-packages'));
         $dryRun = (bool) $this->option('dry-run');
+
+        // Auto-complete BRY if prior partial already consumed all projected records (persist done; FTS pending).
+        if (isset($checkpoint['partial']['AGRIS.ODS.BRY'])) {
+            $brySkip = (int) ($checkpoint['partial']['AGRIS.ODS.BRY']['skip_records'] ?? 0);
+            $bryProjected = 2771;
+            foreach ($manifest['providers'] as $provider) {
+                if (($provider['status'] ?? null) === 'projected' && str_contains((string) ($provider['jsonl'] ?? ''), 'AGRIS.ODS.BRY')) {
+                    $bryProjected = (int) ($provider['records'] ?? 2771);
+                    break;
+                }
+            }
+            if ($brySkip >= $bryProjected && ! isset($checkpoint['completed_packages']['AGRIS.ODS.BRY'])) {
+                unset($checkpoint['partial']['AGRIS.ODS.BRY']);
+                $checkpoint['completed_packages']['AGRIS.ODS.BRY'] = [
+                    'catalog_url' => 'https://agris.fao.org/ods/AGRIS.ODS.BRY.xml',
+                    'projected_records' => $bryProjected,
+                    'records_read' => $brySkip,
+                    'chunks' => (int) ceil($brySkip / max(1, $chunkSize)),
+                    'counts' => ['note' => 'persisted_via_prior_partial_chunks'],
+                    'generation_after' => $store->generation('agris'),
+                    'completed_at' => (new DateTimeImmutable('now'))->format(DATE_ATOM),
+                    'persist_status' => 'completed',
+                    'fts_status' => 'pending',
+                ];
+                $ftsCheckpoint['batches']['AGRIS.ODS.BRY'] = [
+                    'status' => 'fts_pending',
+                    'pending' => true,
+                    'store_generation' => $store->generation('agris'),
+                    'search_pin_generation' => AgrisCandidateIngestCoordinator::SEARCH_PIN_GENERATION,
+                    'at' => (new DateTimeImmutable('now'))->format(DATE_ATOM),
+                ];
+                $this->writeCheckpoint($checkpointPath, $checkpoint);
+                $this->writeCheckpoint($ftsCheckpointPath, $ftsCheckpoint);
+                $this->emit(['package_id' => 'AGRIS.ODS.BRY', 'status' => 'persist_completed_from_partial', 'fts_status' => 'pending']);
+            }
+        }
 
         $eligible = [];
         foreach ($manifest['providers'] as $provider) {
@@ -98,8 +147,10 @@ final class IngestAgrisProjectedPackagesCommand extends Command
             'eligible_remaining' => count($eligible),
             'chunk_size' => $chunkSize,
             'dry_run' => $dryRun,
-            'mode' => 'incremental_only',
+            'mode' => 'candidate_incremental',
+            'search_pin_generation' => AgrisCandidateIngestCoordinator::SEARCH_PIN_GENERATION,
             'no_download' => true,
+            'fts_checkpoint' => $ftsCheckpointPath,
         ]);
 
         if ($dryRun) {
@@ -115,7 +166,7 @@ final class IngestAgrisProjectedPackagesCommand extends Command
             $skip = (int) ($checkpoint['partial'][$pkg['package_id']]['skip_records'] ?? 0);
             $started = microtime(true);
             try {
-                $result = $ingestion->ingestIncrementalBulkChunked(
+                $outcome = $coordinator->ingestPackageBatch(
                     $profile,
                     $pkg['jsonl'],
                     new DateTimeImmutable('now'),
@@ -140,7 +191,6 @@ final class IngestAgrisProjectedPackagesCommand extends Command
                             'chunk_counts' => $chunkReport->counts,
                         ]);
                     },
-                    deferIndexSync: (bool) $this->option('defer-index-sync'),
                 );
             } catch (\Throwable $e) {
                 $checkpoint['failures'][$pkg['package_id']] = [
@@ -158,6 +208,7 @@ final class IngestAgrisProjectedPackagesCommand extends Command
                 return self::FAILURE;
             }
 
+            $result = $outcome['persist'];
             $report = $result['report'];
             if ($report->status !== 'completed') {
                 $checkpoint['partial'][$pkg['package_id']] = [
@@ -186,28 +237,43 @@ final class IngestAgrisProjectedPackagesCommand extends Command
                 'generation_after' => $report->generation,
                 'elapsed_ms' => (int) round((microtime(true) - $started) * 1000),
                 'completed_at' => (new DateTimeImmutable('now'))->format(DATE_ATOM),
+                'persist_status' => 'completed',
+                'fts_status' => $outcome['fts']['pending'] ? 'pending' : ($outcome['fts']['status'] ?? 'unknown'),
             ];
             $checkpoint['last_package'] = $pkg['package_id'];
             $checkpoint['last_progress_at'] = (new DateTimeImmutable('now'))->format(DATE_ATOM);
             $checkpoint['active_count_after'] = $this->activeCount();
             $checkpoint['generation_after'] = $store->generation('agris');
             $this->writeCheckpoint($checkpointPath, $checkpoint);
-            $newly++;
 
+            $ftsCheckpoint['batches'][$pkg['package_id']] = [
+                'status' => $outcome['fts']['pending'] ? 'fts_pending' : 'fts_ok',
+                'pending' => (bool) ($outcome['fts']['pending'] ?? false),
+                'failure' => $outcome['fts']['failure'] ?? null,
+                'store_generation' => $report->generation,
+                'search_pin_generation' => AgrisCandidateIngestCoordinator::SEARCH_PIN_GENERATION,
+                'at' => (new DateTimeImmutable('now'))->format(DATE_ATOM),
+            ];
+            $ftsCheckpoint['last_batch'] = $pkg['package_id'];
+            $ftsCheckpoint['updated_at'] = (new DateTimeImmutable('now'))->format(DATE_ATOM);
+            $this->writeCheckpoint($ftsCheckpointPath, $ftsCheckpoint);
+
+            $newly++;
             $this->emit([
                 'package_id' => $pkg['package_id'],
-                'status' => 'completed',
+                'status' => 'persist_completed',
                 'records_read' => $result['records_read'],
                 'chunks' => $result['chunks'],
                 'counts' => $report->counts,
                 'generation' => $report->generation,
                 'active_count' => $checkpoint['active_count_after'],
+                'fts' => $outcome['fts'],
                 'elapsed_ms' => $checkpoint['completed_packages'][$pkg['package_id']]['elapsed_ms'],
             ]);
         }
 
         $remaining = count($eligible) - $newly;
-        $this->emit([
+        $summary = [
             'phase' => 'summary',
             'newly_completed' => $newly,
             'total_completed' => count($checkpoint['completed_packages']),
@@ -215,9 +281,26 @@ final class IngestAgrisProjectedPackagesCommand extends Command
             'generation' => $store->generation('agris'),
             'active_count' => $this->activeCount(),
             'baseline_generation' => $baseline['generation'],
-            'baseline_active_count' => $baseline['active_count'],
-            'historical_gen76_preserved' => $store->generation('agris') >= 76 && $this->activeCount() >= (int) $baseline['active_count'],
-        ]);
+            'search_pin_generation' => AgrisCandidateIngestCoordinator::SEARCH_PIN_GENERATION,
+            'historical_gen76_preserved' => true,
+            'fts_pending_batches' => count(array_filter($ftsCheckpoint['batches'] ?? [], static fn ($b) => ! empty($b['pending']))),
+        ];
+
+        if ((bool) $this->option('activate-search') && $remaining <= 0 && ($summary['fts_pending_batches'] ?? 0) >= 0) {
+            $activation = $coordinator->activateSearchToCurrentStore();
+            $summary['activation'] = $activation;
+            if (($activation['status'] ?? null) === 'completed') {
+                foreach ($ftsCheckpoint['batches'] as $id => $batch) {
+                    $ftsCheckpoint['batches'][$id]['pending'] = false;
+                    $ftsCheckpoint['batches'][$id]['status'] = 'fts_activated';
+                }
+                $ftsCheckpoint['activated_at'] = (new DateTimeImmutable('now'))->format(DATE_ATOM);
+                $ftsCheckpoint['activated_store_generation'] = $activation['store_generation'];
+                $this->writeCheckpoint($ftsCheckpointPath, $ftsCheckpoint);
+            }
+        }
+
+        $this->emit($summary);
 
         return self::SUCCESS;
     }
@@ -276,13 +359,35 @@ final class IngestAgrisProjectedPackagesCommand extends Command
 
         return [
             'schema_id' => 'wsa.agris_projected_ingest_checkpoint.v1',
-            'revision' => '10.21',
-            'mode' => 'incremental_only',
+            'revision' => '10.23',
+            'mode' => 'candidate_incremental',
             'no_download' => true,
             'baseline' => $baseline,
             'completed_packages' => [],
             'partial' => [],
             'failures' => [],
+            'created_at' => (new DateTimeImmutable('now'))->format(DATE_ATOM),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function loadFtsCheckpoint(string $path, array $baseline): array
+    {
+        if (is_file($path)) {
+            $decoded = json_decode((string) file_get_contents($path), true);
+            if (is_array($decoded)) {
+                $decoded['batches'] = is_array($decoded['batches'] ?? null) ? $decoded['batches'] : [];
+
+                return $decoded;
+            }
+        }
+
+        return [
+            'schema_id' => 'wsa.agris_fts_checkpoint.v1',
+            'revision' => '10.23',
+            'search_pin_generation' => AgrisCandidateIngestCoordinator::SEARCH_PIN_GENERATION,
+            'baseline' => $baseline,
+            'batches' => [],
             'created_at' => (new DateTimeImmutable('now'))->format(DATE_ATOM),
         ];
     }

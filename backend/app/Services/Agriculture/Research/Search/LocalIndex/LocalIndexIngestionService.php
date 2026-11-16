@@ -152,7 +152,7 @@ final class LocalIndexIngestionService
     /**
      * Chunked incremental JSONL ingest: upserts windows without withdrawing absent peers.
      * Safe for multi-hundred-thousand-record AGRIS provider projections; preserves prior generations' rows.
-     * When $deferIndexSync is true, FTS is rebuilt once after all chunks (faster on large corpora).
+     * When $deferIndexSync is true, no FTS writes occur (Rev 10.23 candidate/search-pin mode).
      *
      * @param  (callable(int $chunks, int $offset, LocalIngestionReport $chunkReport): void)|null  $afterChunk
      * @return array{report: LocalIngestionReport, chunks: int, records_read: int, skip_resume: int}
@@ -185,7 +185,6 @@ final class LocalIndexIngestionService
         $chunks = 0;
         $offset = $skipRecords;
         $lastGeneration = $this->store->generation($key);
-        $deferredChanged = [];
 
         while (true) {
             $slice = $this->reader->readJsonlSlice($profile, $path, $offset, $chunkSize, $now->format(DATE_ATOM));
@@ -210,6 +209,7 @@ final class LocalIndexIngestionService
             if ($windowLines === 0) {
                 break;
             }
+            // Rev 10.23: deferIndexSync means persist-only — FTS stays on the search pin until activation.
             $commit = $this->commit(
                 $key,
                 ScientificRecordStore::MODE_INCREMENTAL,
@@ -223,11 +223,6 @@ final class LocalIndexIngestionService
                 synchronizeIndex: ! $deferIndexSync,
             );
             $lastGeneration = $commit->generation;
-            if ($deferIndexSync) {
-                foreach ($commit->changed as $record) {
-                    $deferredChanged[] = $record;
-                }
-            }
             foreach (self::COUNTS as $count) {
                 $counts[$count] += $commit->toArray()[$count];
             }
@@ -241,20 +236,6 @@ final class LocalIndexIngestionService
             if ($windowLines < $chunkSize) {
                 break;
             }
-        }
-
-        if ($deferIndexSync && $deferredChanged !== []) {
-            $this->index->synchronize(new LocalStoreCommit(
-                $key,
-                $lastGeneration,
-                inserted: $counts['inserted'],
-                updated: $counts['updated'],
-                unchanged: $counts['unchanged'],
-                deleted: $counts['deleted'],
-                withdrawn: $counts['withdrawn'],
-                stale: $counts['stale'],
-                changed: $deferredChanged,
-            ));
         }
 
         return [
