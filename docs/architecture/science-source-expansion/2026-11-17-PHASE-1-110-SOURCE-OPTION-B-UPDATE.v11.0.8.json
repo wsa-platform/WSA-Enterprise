@@ -1,0 +1,54 @@
+{
+  "schema_id": "wsa.phase1_110_source_option_b_update.v1",
+  "revision": "11.0.8",
+  "recorded_at_utc": "2026-11-17T21:45:00Z",
+  "baseline_head": "5427cdc677a17e31b0817c13fd0b30cdb3194cd2",
+  "authority": {
+    "membership_register": "docs/architecture/science-source-expansion/ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+    "membership_register_mutated": false,
+    "matrix_v110": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-SOURCE-MATRIX.v110.json",
+    "matrix_v110_mutated": false,
+    "prior_option_b": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-110-SOURCE-MASTER-STATUS-REGISTRY.v11.0.3.json"
+  },
+  "claim_guard": [
+    "Answer-identity suite is shared composer contract evidence; not per-source SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "ACTIVE seats remain PARTIALLY_VERIFIED for scientific integration.",
+    "Membership and matrix untouched."
+  ],
+  "scientific_integration_verified_count": 0,
+  "shared_answer_identity_suite": {
+    "test": "backend/tests/Unit/Agriculture/Research/Synthesis/ScientificAnswerIdentityIntegrityContractTest.php",
+    "result": "9 passed / 30 assertions",
+    "exit_links": ["EXIT-09", "EXIT-10"],
+    "covers_section_14_1_partially": true,
+    "covers_section_14_fully_per_source": false
+  },
+  "seat_deltas": [
+    {
+      "adr_id": "G1-01",
+      "scientific_answer_identity_status": "PARTIALLY_VERIFIED",
+      "scientific_integration_verified": false,
+      "note": "Shared AnswerComposer identity suite + prior C1→C3 agris bridge; not full §14/§14.1"
+    },
+    {
+      "adr_id": "G1-02",
+      "scientific_answer_identity_status": "PARTIALLY_VERIFIED",
+      "scientific_integration_verified": false
+    },
+    {
+      "adr_id": "G1-17",
+      "scientific_answer_identity_status": "PARTIALLY_VERIFIED",
+      "scientific_integration_verified": false
+    },
+    {
+      "adr_id": "G5-04",
+      "scientific_answer_identity_status": "PARTIALLY_VERIFIED",
+      "scientific_integration_verified": false
+    },
+    {
+      "adr_id": "G6-20",
+      "scientific_answer_identity_status": "PARTIALLY_VERIFIED",
+      "scientific_integration_verified": false
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema_id": "wsa.phase1_current_state.v1",
+  "revision": "11.0.8",
+  "recorded_at_utc": "2026-11-17T21:40:00Z",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "head_at_start": "5427cdc677a17e31b0817c13fd0b30cdb3194cd2",
+  "remote_sync_at_start": { "ahead": 0, "behind": 0 },
+  "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "engineering_integrity_verdict": "VERIFIED_WITH_LIMITATIONS",
+  "phase1_exit_closure": "PARTIAL",
+  "phase2_eligibility": false,
+  "wip_preserved": true,
+  "archive_count_last_known": 821,
+  "archive_supersession_this_package": false,
+  "membership_sot_preserved": true,
+  "membership_sha256_prefix": "94b586ee38f2b3dc",
+  "matrix_v110_preserved": true,
+  "matrix_sha256_prefix": "49b3dd65012d6eb3",
+  "scientific_integration_verified_count": 0,
+  "governed_active_runtime_seats": ["G1-01", "G1-02", "G1-17", "G5-04", "G6-20"],
+  "runtime_registration_absent": 105,
+  "prior_revision_lineage": ["11.0.3", "11.0.4", "11.0.6"],
+  "execution_levels": {
+    "level_1": "PASS_WITH_LIMITATIONS",
+    "level_2": "PARTIAL_ANSWER_IDENTITY_SUITE",
+    "level_3": "PARTIAL_INVENTORY_HELD"
+  },
+  "exit_snapshot": {
+    "EXIT-05": "BLOCKED",
+    "EXIT-06": "PARTIAL",
+    "EXIT-07": "BLOCKED",
+    "EXIT-08": "PARTIAL",
+    "EXIT-09": "PARTIAL",
+    "EXIT-10": "PARTIAL",
+    "EXIT-11": "NOT_RUN"
+  },
+  "note": "Rev 11.0.8 starts at 5427cdc; does not rebuild membership; ACTIVE≠SCIENTIFIC_INTEGRATION_VERIFIED; WIP preserved"
+}
