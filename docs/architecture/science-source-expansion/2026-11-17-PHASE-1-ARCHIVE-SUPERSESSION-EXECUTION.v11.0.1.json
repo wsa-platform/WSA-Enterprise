@@ -1,0 +1,49 @@
+{
+  "schema_id": "wsa.maa_supersession_execution.v1",
+  "revision": "11.0.1",
+  "recorded_at_utc": "2026-11-17T19:07:00Z",
+  "inspection_report": "2026-11-17-PHASE-1-ARCHIVE-SUPERSESSION-INSPECTION.v11.0.1.json",
+  "script": "_tmp-r1096-archive-supersede.php",
+  "executed_once": true,
+  "preconditions_section_19_6": "all_pass",
+  "results": [
+    {
+      "file": "2026-11-17-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.9.6.md",
+      "status": "archived",
+      "new_archive_id": "maa_94a04ea7fb68ea32_d307cd620a22",
+      "supersedes": "maa_0b8f9ab37997d1e6_726ecafd25f3",
+      "matches_disk": true,
+      "integrity_ok": true,
+      "historical_readable": true,
+      "historical_integrity_ok": true,
+      "historical_is_superseded": true,
+      "verification": "ARCHIVED_AND_VERIFIED"
+    },
+    {
+      "file": "2026-11-17-PHASE-1-EXIT-D-STATUS-ROLLUP.v10.9.6.json",
+      "status": "archived",
+      "new_archive_id": "maa_eddadde1b1ca060a_cc76b27d4702",
+      "supersedes": "maa_a17ef03ad383e3b2_d57a079411da",
+      "matches_disk": true,
+      "integrity_ok": true,
+      "historical_readable": true,
+      "historical_integrity_ok": true,
+      "historical_is_superseded": true,
+      "verification": "ARCHIVED_AND_VERIFIED"
+    },
+    {
+      "file": "2026-11-17-PHASE-1-REV10.9.6-ENGINEERING-REPORT.ar.md",
+      "status": "archived",
+      "new_archive_id": "maa_f7ec74dad34a4053_af90751a0dbb",
+      "supersedes": "maa_6ef1ac51970025ea_fcf2447503d8",
+      "matches_disk": true,
+      "integrity_ok": true,
+      "historical_readable": true,
+      "historical_integrity_ok": true,
+      "historical_is_superseded": true,
+      "verification": "ARCHIVED_AND_VERIFIED"
+    }
+  ],
+  "archive_count_after": 806,
+  "final_status": "SUPERSESSION_COMPLETED_HISTORY_PRESERVED"
+}

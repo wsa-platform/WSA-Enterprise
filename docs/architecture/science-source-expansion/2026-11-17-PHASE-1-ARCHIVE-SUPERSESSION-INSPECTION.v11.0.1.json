@@ -1,0 +1,88 @@
+{
+  "schema_id": "wsa.maa_supersession_inspection.v1",
+  "revision": "11.0.1",
+  "recorded_at_utc": "2026-11-17T19:05:00Z",
+  "script": "docs/architecture/science-source-expansion/_tmp-r1096-archive-supersede.php",
+  "execution_authorized_by_inspection": true,
+  "why_unchanged_despite_drift": {
+    "root_cause": "FilesystemMissionArtifactArchive::ingestFile short-circuits on ingestion_identity only (lines 97–99). Same logical path identity returns status=unchanged and prior archive_id without comparing content_sha256 to disk bytes.",
+    "not_content_hash_dedup_for_identity_hit": true,
+    "content_addressed_blobs": "New content still lands under sha256 blob path when a NEW ingestion_identity is used; historical blobs are never overwritten by path of old archive_id."
+  },
+  "services_inspected": [
+    {
+      "class": "App\\Services\\Architecture\\MissionArtifactArchive\\MissionArtifactArchiveFactory",
+      "role": "Constructs FilesystemMissionArtifactArchive with SQLite metadata + blob root"
+    },
+    {
+      "class": "App\\Services\\Architecture\\MissionArtifactArchive\\FilesystemMissionArtifactArchive",
+      "methods": ["ingestFile", "commitBytes", "readOriginalBytes", "verifyIntegrity", "findByIngestionIdentity", "markSuperseded"],
+      "file": "backend/app/Services/Architecture/MissionArtifactArchive/FilesystemMissionArtifactArchive.php"
+    }
+  ],
+  "affected_artifacts": [
+    {
+      "source_filename": "2026-11-17-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.9.6.md",
+      "disk_path": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.9.6.md",
+      "existing_archive_id": "maa_0b8f9ab37997d1e6_726ecafd25f3",
+      "proposed_ingestion_identity": "phase1/rev10.9.6/2026-11-17-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.9.6.md#extraction-followup",
+      "proposed_new_archive_id": "deterministic maa_{sha256(bytes)[0:16]}_{sha256(identity)[0:12]} after ingest"
+    },
+    {
+      "source_filename": "2026-11-17-PHASE-1-EXIT-D-STATUS-ROLLUP.v10.9.6.json",
+      "disk_path": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-EXIT-D-STATUS-ROLLUP.v10.9.6.json",
+      "existing_archive_id": "maa_a17ef03ad383e3b2_d57a079411da",
+      "proposed_ingestion_identity": "phase1/rev10.9.6/2026-11-17-PHASE-1-EXIT-D-STATUS-ROLLUP.v10.9.6.json#extraction-followup",
+      "proposed_new_archive_id": "deterministic after ingest"
+    },
+    {
+      "source_filename": "2026-11-17-PHASE-1-REV10.9.6-ENGINEERING-REPORT.ar.md",
+      "disk_path": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-REV10.9.6-ENGINEERING-REPORT.ar.md",
+      "existing_archive_id": "maa_6ef1ac51970025ea_fcf2447503d8",
+      "proposed_ingestion_identity": "phase1/rev10.9.6/2026-11-17-PHASE-1-REV10.9.6-ENGINEERING-REPORT.ar.md#extraction-followup",
+      "proposed_new_archive_id": "deterministic after ingest"
+    }
+  ],
+  "supersession_behavior": {
+    "creates_immutable_new_version": true,
+    "overwrites_existing_blob_or_row": false,
+    "marks_prior_is_superseded": true,
+    "deletes_prior_row": false,
+    "deletes_prior_blob": false,
+    "relationship_written": "mission_artifact_relationships (from=new, type=supersedes, to=old)",
+    "transaction": "PDO beginTransaction; rollback on failure; partial blob unlinked only on failure (.partial)",
+    "idempotent": "Re-run with same new ingestion_identity returns unchanged for the NEW version; historical IDs remain readable"
+  },
+  "database_filesystem_effects": {
+    "sqlite": "INSERT new mission_artifacts row; UPDATE old row SET is_superseded=1; INSERT OR IGNORE relationship; no DELETE",
+    "blobs": "Write new content-addressed .bin if sha not already present; never unlink old sha blob",
+    "direct_archive_sqlite_mutation_by_script": false,
+    "direct_blob_mutation_by_script": false
+  },
+  "preservation_guarantees": [
+    "Prior archive_id remains queryable via get()/readOriginalBytes()",
+    "Prior content_sha256 and blob_relative_path unchanged",
+    "Original filename retained on new row via relativeHint/classifier",
+    "supersedes_archive_id links new→old"
+  ],
+  "readback_integrity_method": {
+    "readback": "readOriginalBytes(new_id) compared by sha256 to disk file_get_contents",
+    "integrity": "verifyIntegrity(new_id) compares hash_file(blob) to content_sha256",
+    "historical_check": "readOriginalBytes(old_id) still succeeds after supersession"
+  },
+  "section_19_6_conditions": {
+    "1_artifacts_identified": true,
+    "2_archive_ids_identified": true,
+    "3_historical_preserved": true,
+    "4_approved_workflow": true,
+    "5_no_silent_overwrite": true,
+    "6_supersession_consistent": true,
+    "7_idempotent_or_recovery": true,
+    "8_no_unauthorized_delete": true,
+    "9_effects_understood": true,
+    "10_readback_integrity_plan": true,
+    "all_pass": true
+  },
+  "unresolved_risks": [],
+  "execution_decision": "EXECUTE_ONCE_AFTER_THIS_REPORT"
+}
