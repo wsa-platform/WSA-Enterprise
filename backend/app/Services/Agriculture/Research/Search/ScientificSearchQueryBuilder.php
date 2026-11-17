@@ -1364,12 +1364,62 @@ class ScientificSearchQueryBuilder
         }
 
         $spec = RetrievalSpecification::fromCanonical($csq);
+        $location = $this->resolveAskedLocation($plan)
+            ?? $this->resolveCanonicalGeographyLabel($csq);
+        $sense = trim((string) ($csq->context->scientificSense
+            ?? $plan->normalizedQuery->constraints['scientific_sense']
+            ?? ''));
+
+        // Land classification inventories must retain national geography (EXIT-09 / CSQ identity).
+        $isLandClassification = $sense === 'land_classification'
+            || $plan->researchIntent === 'land_classification';
+        if ($isLandClassification && ! $this->isClassificationMethodQuestion($plan)) {
+            $inventory = $this->buildLandSoilInventoryVariants($plan, $location);
+            if ($inventory !== []) {
+                $bounded = $this->uniqueBoundedVariantsPreservingLocation($inventory, $location);
+                if ($bounded !== []) {
+                    return $bounded;
+                }
+            }
+        }
+
+        // Plant-family member inventories prefer the canonical Latin family identity.
+        $plantFamily = $this->resolveBotanicalFamily($plan);
+        if ($plantFamily !== null && (
+            $sense === 'plant_family_members'
+            || $plan->researchIntent === 'plant_family_members'
+        )) {
+            $familyVariants = $this->buildPlantFamilyMemberVariants($plantFamily);
+            $bounded = $this->uniqueBoundedVariantsPreservingLocation($familyVariants, $location);
+            if ($bounded !== []) {
+                return $bounded;
+            }
+        }
 
         $variants = $this->compileCanonicalRoleCombinations($spec);
         $variants = $this->prependCanonicalConstraintCombinations($plan, $spec, $variants);
+        $unique = $this->uniqueBoundedVariantsPreservingLocation($variants, $location);
+
+        return $unique !== [] ? $unique : ['agriculture'];
+    }
+
+    /**
+     * Geography on CSQ is authoritative context: retain it on every emitted variant.
+     *
+     * @param  list<string>  $variants
+     * @return list<string>
+     */
+    private function uniqueBoundedVariantsPreservingLocation(array $variants, ?string $location): array
+    {
         $unique = [];
         foreach ($variants as $variant) {
             $trimmed = trim($variant);
+            if ($trimmed === '') {
+                continue;
+            }
+            if ($location !== null && ! $this->variantMentionsLocation($trimmed, $location)) {
+                $trimmed = $this->joinTerms([$trimmed, $location]);
+            }
             if ($trimmed === '' || in_array($trimmed, $unique, true)) {
                 continue;
             }
@@ -1379,7 +1429,18 @@ class ScientificSearchQueryBuilder
             }
         }
 
-        return $unique !== [] ? $unique : ['agriculture'];
+        return $unique;
+    }
+
+    private function resolveCanonicalGeographyLabel(CanonicalScientificQuestion $csq): ?string
+    {
+        $country = trim((string) ($csq->geography->country ?? ''));
+        if ($country !== '') {
+            return $country;
+        }
+        $label = trim((string) ($csq->geography->label ?? ''));
+
+        return $label !== '' ? $label : null;
     }
 
     /**

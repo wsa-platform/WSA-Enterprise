@@ -816,6 +816,66 @@ class QueryUnderstandingService
     }
 
     /**
+     * Drop process/property surfaces that only echo the Crop knowledge-option key
+     * (e.g. "farming" from farming-needs). Preserves genuine independent roles.
+     *
+     * @param  array<string, mixed>  $constraints
+     */
+    private function stripKnowledgeOptionEchoRoles(array &$constraints, string $knowledgeOption): void
+    {
+        $option = trim($knowledgeOption);
+        if ($option === '' || ! isset($constraints['semantic_role_graph']) || ! is_array($constraints['semantic_role_graph'])) {
+            return;
+        }
+
+        $echoTokens = [];
+        foreach (preg_split('/[-_\s]+/u', mb_strtolower($option)) ?: [] as $token) {
+            $token = trim((string) $token);
+            if ($token !== '' && mb_strlen($token) >= 3) {
+                $echoTokens[] = $token;
+            }
+        }
+        foreach (CropKnowledgeOptionCatalog::options() as $catalogOption) {
+            if (($catalogOption['key'] ?? null) !== $option) {
+                continue;
+            }
+            foreach (['title_en', 'title_ar', 'title_fr', 'title_tr', 'key'] as $field) {
+                $title = mb_strtolower(trim((string) ($catalogOption[$field] ?? '')));
+                if ($title === '') {
+                    continue;
+                }
+                foreach (preg_split('/[-_\s]+/u', $title) ?: [] as $token) {
+                    $token = trim((string) $token);
+                    if ($token !== '' && mb_strlen($token) >= 3) {
+                        $echoTokens[] = $token;
+                    }
+                }
+            }
+        }
+        $echoTokens = array_values(array_unique($echoTokens));
+        if ($echoTokens === []) {
+            return;
+        }
+
+        $graph = $constraints['semantic_role_graph'];
+        $process = mb_strtolower(trim((string) ($graph['process_surface'] ?? '')));
+        if ($process !== '' && in_array($process, $echoTokens, true)) {
+            $graph['process_surface'] = null;
+            $graph['process_resolution'] = CanonicalScientificQuestion::RESOLUTION_NONE;
+            $constraints['process_surface'] = null;
+            $constraints['process_resolution'] = CanonicalScientificQuestion::RESOLUTION_NONE;
+        }
+
+        $propertySurface = mb_strtolower(trim((string) ($graph['property_surface'] ?? '')));
+        if ($propertySurface !== '' && in_array($propertySurface, $echoTokens, true)) {
+            $graph['property_surface'] = null;
+            // Keep property_key when it encodes a real requested property; only clear echo surface.
+        }
+
+        $constraints['semantic_role_graph'] = $graph;
+    }
+
+    /**
      * @param  array<string, mixed>  $constraints
      * @param  list<string>  $requestedInformation
      * @param  list<string>  $clarificationRequirements
@@ -1007,6 +1067,9 @@ class QueryUnderstandingService
                 $researchIntent,
                 rewriteRetrievalTopics: false,
             );
+            // Knowledge-option echoes (e.g. "farming" from farming-needs) are not
+            // independent question roles; strip them so crop-profile CSQ stays option-bound.
+            $this->stripKnowledgeOptionEchoRoles($constraints, $knowledgeOption);
         }
         $constraints['question_language'] = $language;
         // R2: answer language follows question language (UI locale is independent).

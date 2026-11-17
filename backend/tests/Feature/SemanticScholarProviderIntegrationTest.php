@@ -363,7 +363,11 @@ class SemanticScholarProviderIntegrationTest extends TestCase
         );
     }
 
-    /** N — supporting answer eligible when multiple strong supporting */
+    /**
+     * N — multiple answer-eligible SUPPORTING → supported_answer hatch.
+     * Outcome B / DIRECT gate: SUPPORTING never enters primary citations[];
+     * framing remains insufficient-direct with supporting retained as additional context.
+     */
     public function test_n_supporting_answer_eligible(): void
     {
         $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
@@ -407,8 +411,14 @@ class SemanticScholarProviderIntegrationTest extends TestCase
         $report = $composer->compose($plan, $this->validationReport($items));
         $this->assertTrue($report->performed);
         $this->assertSame('supported_answer', $report->researchMetadata['sufficiency_mode'] ?? null);
-        $this->assertGreaterThanOrEqual(1, count($report->citations));
-        $this->assertStringNotContainsString('لم يتم العثور على دليل علمي مباشر كافٍ', $report->conciseSummary);
+        $this->assertSame(0, (int) ($report->researchMetadata['direct_evidence_count'] ?? -1));
+        $this->assertGreaterThanOrEqual(2, (int) ($report->researchMetadata['supporting_evidence_count'] ?? 0));
+        $this->assertSame([], $report->citations);
+        $this->assertSame([], $report->claims);
+        $this->assertStringContainsString('لم يتم العثور على دليل علمي مباشر كافٍ', $report->conciseSummary);
+        $this->assertNotEmpty($report->evidenceReferences);
+        $this->assertNotNull($report->additionalInformation);
+        $this->assertStringContainsString('Agricultural land types', (string) $report->additionalInformation);
     }
 
     /** O — one weak supporting is insufficient */
