@@ -1,10 +1,10 @@
 {
   "schema_id": "wsa.phase1_current_state.v1",
   "revision": "11.0.6",
-  "recorded_at_utc": "2026-11-17T20:55:00Z",
+  "recorded_at_utc": "2026-11-17T21:20:00Z",
   "branch": "phase-18-m18-ai-marketing-communications",
+  "head": "fa2217d187e94904b0a187083ece3ccf690d000f",
   "head_at_package_start": "5a643f30f420ad327613698018f2887f495e0631",
-  "head": "55bc01a0ce3c3a22fab2f2b9b0598f88678a2c5b",
   "remote_sync": { "ahead": 0, "behind": 0 },
   "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
   "engineering_integrity_verdict": "VERIFIED_WITH_LIMITATIONS",
@@ -18,19 +18,22 @@
   "matrix_v110_preserved": true,
   "scientific_integration_verified_count": 0,
   "governed_active_runtime_seats": ["G1-01", "G1-02", "G1-17", "G5-04", "G6-20"],
+  "runtime_inventory_counts": {
+    "membership_total": 110,
+    "runtime_registered": 5,
+    "runtime_active": 5,
+    "runtime_registration_absent": 105
+  },
   "execution_levels": {
     "level_1": "PASS_WITH_LIMITATIONS",
     "level_2": "PARTIAL",
-    "level_3": "IN_PROGRESS_OPTION_B_DELTA_ONLY"
+    "level_3": "PARTIAL_INVENTORY_AND_ACTIVE_SEAT_GAPS"
   },
-  "deliverables": [
-    "2026-11-17-PHASE-1-SCIENTIFIC-SEARCH-ARCHITECTURE-MAP.v11.0.6.md",
-    "2026-11-17-PHASE-1-SOURCE-ACTIVATION-MATRIX.v11.0.6.json",
-    "2026-11-17-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.6.json",
-    "2026-11-17-PHASE-1-LEVEL1-SCIENTIFIC-SEARCH-AUDIT.v11.0.6.md",
-    "2026-11-17-PHASE-1-LEVEL2-SCIENTIFIC-SEARCH-AUDIT.v11.0.6.md",
-    "2026-11-17-PHASE-1-REV11.0.6-ENGINEERING-REPORT.ar.md",
-    "backend/tests/Unit/Agriculture/Research/Search/GovernedSourceRuntimeActivationContractTest.php"
+  "commits_this_revision": [
+    "55bc01a",
+    "32988d0",
+    "807e0ce",
+    "fa2217d"
   ],
   "exit_snapshot": {
     "EXIT-05": "BLOCKED",
@@ -40,10 +43,5 @@
     "EXIT-10": "PARTIAL",
     "EXIT-11": "NOT_RUN"
   },
-  "prior_commits": {
-    "level1_csq": "bb84cc0",
-    "option_b_110": "c13bee4",
-    "tier1_archive_note": "5a643f3"
-  },
-  "note": "Rev 11.0.6 does not rebuild 110 membership; ACTIVE≠SCIENTIFIC_INTEGRATION_VERIFIED; WIP preserved out of staging"
+  "note": "ACTIVE≠SCIENTIFIC_INTEGRATION_VERIFIED; WIP preserved; no membership rewrite"
 }
