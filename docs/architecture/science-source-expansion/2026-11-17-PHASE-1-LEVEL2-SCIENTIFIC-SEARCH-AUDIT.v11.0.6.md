@@ -1,31 +1,30 @@
-# Level-2 Scientific Search Audit — Rev 11.0.6
+# Level-2 Scientific Search Audit — Rev 11.0.6 (continued)
 
 **EXIT:** EXIT-09 / EXIT-10  
-**Baseline HEAD:** `5a643f3`  
-**Verdict:** `PARTIAL` (composer Outcome B PASS; full provenance/synthesis matrix not exhausted)
+**HEAD:** `b42d314`  
+**Verdict:** `PARTIAL`
 
-## Scope
+## Progress since prior Level-2 note
 
-AnswerComposer, Outcome B citation gate, provenance/synthesis integrity overlapping Level-1.
+C1→C3 Evidence Bridge Mirrors landed for all five ACTIVE governed seats (AGRIS, Organic Eprints, Dr. Duke, BHL, GBIF regression). AnswerComposer now has source-specific tests proving citation identity handoff from orchestrator hits.
 
 ## Evidence
 
-| Suite | Result | Artifact |
-|---|---|---|
-| `OutcomeBIndependentCitationProvidersTest` | 4 passed / 17 assertions | `_tmp-r1106-l2-composer.txt` |
+| Suite | Result |
+|---|---|
+| OutcomeBIndependentCitationProvidersTest | PASS (prior) |
+| GovernedSourceAnswerTraceabilityContractTest | PASS |
+| GovernedSourceC1C3EvidenceBridgeContractTest | PASS |
+| GovernedActiveSourceC1C3EvidenceBridgeMirrorsTest | PASS (5 methods) |
+| GbifOrchestratorEndToEndTest (incl. bridge) | PASS |
 
-## Findings
+## Still PARTIAL
 
-1. SUPPORTING-only evidence does not enter primary `citations[]` (Outcome B preserved).
-2. Independent DIRECT providers appear as separate citation contributors.
-3. Broader provenance/normalization/dedup/synthesis coverage remains PARTIAL pending Level-3 seat-specific §8.1 packages.
-4. Wrong prior test path (`Research/OutcomeB...`) corrected to `Research/Synthesis/OutcomeB...`.
+- Full validation-layer mapping (no forced DIRECT) per seat
+- Live (non-fixture) retrieval→composer packages
+- Contradiction / ranking / dedup depth beyond Outcome B contracts
+- `SCIENTIFIC_INTEGRATION_VERIFIED` remains **0**
 
-## Remediation this package
+## Level-3 handoff
 
-- Corrected Level-2 composer verification path and re-recorded PASS evidence.
-- Documented ACTIVE vs answer-traceability separation in Option B delta.
-
-## Residual risk
-
-Per-source answer traceability for all 110 seats is NOT claimed. Five ACTIVE seats remain `PARTIALLY_VERIFIED`.
+110 runtime inventory unchanged: 5 ACTIVE, 105 registration-absent. No unjustified activations.
