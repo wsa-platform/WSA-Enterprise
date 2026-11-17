@@ -1,0 +1,238 @@
+# Phase 1 — 110-Source Next Actions (Rev 11.0.3)
+
+Recorded: `2026-11-17T19:49:01Z`
+
+## Aggregated next-action counts
+
+| next_action | count |
+|---|---:|
+| Classify access family, establish identity/licence evidence, then schedule onboarding wave | 91 |
+| Clear onboarding blockers, CapVer, and endpoint evidence before runtime registration | 10 |
+| Execute seat-specific CSQ scientific-integration minimum evidence suite; retain EXIT-08 live evidence | 5 |
+| Keep deferred while primary G1-13 remains the runtime seat; reassess only after primary scientific integration | 1 |
+| Keep deferred while primary G1-15 remains the runtime seat; reassess only after primary scientific integration | 1 |
+| Keep deferred while primary G1-17 remains the runtime seat; reassess only after primary scientific integration | 1 |
+| Keep deferred while primary G1-19 remains the runtime seat; reassess only after primary scientific integration | 1 |
+
+## Per-source next actions
+
+- **G1-01** (FAO AGRIS): Execute seat-specific CSQ scientific-integration minimum evidence suite; retain EXIT-08 live evidence
+  - scientific_integration_next_action: Run Level-3 seat CSQ→routing→adapter→provenance→answer traceability tests
+- **G1-02** (Organic Eprints): Execute seat-specific CSQ scientific-integration minimum evidence suite; retain EXIT-08 live evidence
+  - scientific_integration_next_action: Run Level-3 seat CSQ→routing→adapter→provenance→answer traceability tests
+- **G1-03** (Turkish Journal of Agriculture and Forestry): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-04** (AgroSpace): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-05** (AgriRxiv): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-06** (AgroPortal): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-07** (YYU Journal of Agricultural Sciences): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-08** (J. Korean Soc. Int. Agriculture): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-09** (Int. J. Horticultural Science): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-10** (JISHS / eJHS): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-11** (Sarhad Journal of Agriculture): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-12** (FlowerBase): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-13** (HortDB V1.0): Clear onboarding blockers, CapVer, and endpoint evidence before runtime registration
+  - scientific_integration_next_action: Complete identity/licence/endpoint/onboarding prerequisites then activate
+- **G1-14** (Tropicals.cn): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-15** (sCentInDB): Clear onboarding blockers, CapVer, and endpoint evidence before runtime registration
+  - scientific_integration_next_action: Complete identity/licence/endpoint/onboarding prerequisites then activate
+- **G1-16** (AromaDb): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-17** (Dr. Duke's Databases): Execute seat-specific CSQ scientific-integration minimum evidence suite; retain EXIT-08 live evidence
+  - scientific_integration_next_action: Run Level-3 seat CSQ→routing→adapter→provenance→answer traceability tests
+- **G1-18** (MPNS — Kew): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-19** (Fruit and Nut Cultivars Database): Clear onboarding blockers, CapVer, and endpoint evidence before runtime registration
+  - scientific_integration_next_action: Complete identity/licence/endpoint/onboarding prerequisites then activate
+- **G1-20** (FEAtl): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-21** (CRFG): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G1-22** (GrainGenes): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-01** (Poultry Science): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-02** (Journal of Applied Poultry Research): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-03** (European Poultry Science): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-04** (Brazilian Journal of Poultry Science): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-05** (Journal of Poultry Science): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-06** (Journal of Animal Science and Biotechnology): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-07** (Animal Frontiers): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-08** (Veterinary and Animal Science): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-09** (Turkish Journal of Veterinary & Animal Sciences): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-10** (Journal of Animal Production (Hayvansal Üretim)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-11** (Aquaculture and Fisheries): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-12** (Turkish Journal of Fisheries and Aquatic Sciences): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-13** (Marine and Fishery Sciences (MAFIS)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-14** (AIMS Animal Science): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-15** (Andalasian Livestock): Clear onboarding blockers, CapVer, and endpoint evidence before runtime registration
+  - scientific_integration_next_action: Complete identity/licence/endpoint/onboarding prerequisites then activate
+- **G2-16** (Hayvan Bilimi ve Ürünleri Dergisi (JASP)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-17** (REMVT): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-18** (Farm Animal Health and Nutrition): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-19** (Animal Bioscience): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-20** (Aquaculture Journal): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-21** (Aquaculture Reports): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-22** (LIVEMAP): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-23** (LivestockDev): Clear onboarding blockers, CapVer, and endpoint evidence before runtime registration
+  - scientific_integration_next_action: Complete identity/licence/endpoint/onboarding prerequisites then activate
+- **G2-24** (IDEAL Project): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-25** (CIRAD Portals): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G2-26** (Aquaculture, Fish and Fisheries): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-01** (APIS): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-02** (Uludag Bee Journal): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-03** (Journal of Apicultural Science): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-04** (Frontiers in Bee Science): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-05** (OSMIA): Clear onboarding blockers, CapVer, and endpoint evidence before runtime registration
+  - scientific_integration_next_action: Complete identity/licence/endpoint/onboarding prerequisites then activate
+- **G3-06** (EUNK): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-07** (Apidologie): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-08** (USDA-ARS Carl Hayden Honey Bee Research Center): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-09** (USDA-ARS Bee Research Laboratory — Beltsville): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-10** (Harry H. Laidlaw Jr. Honey Bee Research Facility — UC Davis): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-11** (University of Minnesota Bee Lab): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-12** (Washington State University Bee Program): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-13** (MSPB): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G3-14** (UrBAN): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G4-01** (SilkBase): Clear onboarding blockers, CapVer, and endpoint evidence before runtime registration
+  - scientific_integration_next_action: Complete identity/licence/endpoint/onboarding prerequisites then activate
+- **G4-02** (KAIKObase): Clear onboarding blockers, CapVer, and endpoint evidence before runtime registration
+  - scientific_integration_next_action: Complete identity/licence/endpoint/onboarding prerequisites then activate
+- **G4-03** (Silkworm Gene Resources Database (SGRDB / NAAS)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G4-04** (SilkDB / Silkworm Knowledgebase): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G4-05** (International Sericultural Commission (ISC / INSERCO)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G4-06** (Sericologia): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G4-07** (Queen Sirikit Department of Sericulture (QSDS)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-01** (InsectBrainDatabase (IBdb)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-02** (AGRICOLA (USDA/NAL)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-03** (ELIE — Entomological Label Information Extraction): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-04** (GBIF): Execute seat-specific CSQ scientific-integration minimum evidence suite; retain EXIT-08 live evidence
+  - scientific_integration_next_action: Run Level-3 seat CSQ→routing→adapter→provenance→answer traceability tests
+- **G5-05** (Journal of Insect Science (JIS)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-06** (npj Entomology): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-07** (Insects (MDPI)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-08** (Current Research in Insect Science): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-09** (Frontiers in Insect Science): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-10** (Florida Entomologist): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-11** (Egyptian Academic Journal of Biological Sciences A — Entomology): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-12** (PhytoFrontiers™): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-13** (Phytopathology Research): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-14** (Tropical Plant Pathology): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-15** (BMC Plant Biology): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-16** (Pathogens (MDPI)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-17** (Journal of Plant Protection and Pathology — Mansoura University): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-18** (Iranian Journal of Plant Pathology): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G5-19** (Plant Pathology Journal — ANSInet): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-01** (FlowerBase): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-02** (Tropicals.cn): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-03** (HortDB V1.0): Keep deferred while primary G1-13 remains the runtime seat; reassess only after primary scientific integration
+  - scientific_integration_next_action: No scientific integration until dual-peer activation policy changes
+- **G6-04** (sCentInDB): Keep deferred while primary G1-15 remains the runtime seat; reassess only after primary scientific integration
+  - scientific_integration_next_action: No scientific integration until dual-peer activation policy changes
+- **G6-05** (AromaDb): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-06** (Dr. Duke's Phytochemical and Ethnobotanical Databases): Keep deferred while primary G1-17 remains the runtime seat; reassess only after primary scientific integration
+  - scientific_integration_next_action: No scientific integration until dual-peer activation policy changes
+- **G6-07** (MPNS – Kew): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-08** (Fruit and Nut Cultivars Database (FNCD)): Keep deferred while primary G1-19 remains the runtime seat; reassess only after primary scientific integration
+  - scientific_integration_next_action: No scientific integration until dual-peer activation policy changes
+- **G6-09** (FEAtl – Fruit Expression Atlas): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-10** (CRFG – California Rare Fruit Growers): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-11** (Chrysanthemum Genome Database (CGD)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-12** (OfIR – Osmanthus fragrans Information Resource): Clear onboarding blockers, CapVer, and endpoint evidence before runtime registration
+  - scientific_integration_next_action: Complete identity/licence/endpoint/onboarding prerequisites then activate
+- **G6-13** (PGRDEU): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-14** (GDR – Genome Database for Rosaceae): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-15** (PeachMD): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-16** (Citrus Genome Database (CGD)): Clear onboarding blockers, CapVer, and endpoint evidence before runtime registration
+  - scientific_integration_next_action: Complete identity/licence/endpoint/onboarding prerequisites then activate
+- **G6-17** (HarnesstomDB): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-18** (INIA Peru – Banco de Germoplasma): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-19** (BINA – Paraguay): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-20** (Biodiversity Heritage Library (BHL)): Execute seat-specific CSQ scientific-integration minimum evidence suite; retain EXIT-08 live evidence
+  - scientific_integration_next_action: Run Level-3 seat CSQ→routing→adapter→provenance→answer traceability tests
+- **G6-21** (New York Botanical Garden (NYBG)): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)
+- **G6-22** (PG Syllabus – UBKV): Classify access family, establish identity/licence evidence, then schedule onboarding wave
+  - scientific_integration_next_action: Begin seat onboarding prerequisites (identity, access family, licence, endpoint)

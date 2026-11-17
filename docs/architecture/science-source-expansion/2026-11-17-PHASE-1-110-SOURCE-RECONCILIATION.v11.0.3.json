@@ -1,0 +1,325 @@
+{
+  "schema_id": "wsa.phase1_110_source_reconciliation.v1",
+  "revision": "11.0.3",
+  "generated_at_utc": "2026-11-17T19:51:36Z",
+  "head": "547563e5d81d512aedc01bcd2e57dd73868410c9",
+  "subject": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-110-SOURCE-MASTER-STATUS-REGISTRY.v11.0.3.json",
+  "subject_sha256": "218b05b114b17ee81bf1e2d68b63db24629f39c2d431c5a8b2623b742ad3b891",
+  "result": "RECONCILED_110_UNIQUE_NO_INVENTED_IDS",
+  "method": "Registry re-read from disk and compared set/order/field-wise to the authoritative register, the prior v110 matrix and the historical IC review.",
+  "authoritative_membership": {
+    "path": "docs/architecture/science-source-expansion/ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+    "sha256": "94b586ee38f2b3dc8b2e0df70e3be0d10f5310f928ad8e2cb1568c280467f69d",
+    "revision": "110.v1",
+    "schema_id": "adr023.membership_register.v2",
+    "adr_baseline_commit": "9de9ed874510dad1970abe14b2aadb4441e9137a",
+    "predecessor_register": "ADR-023-109-MEMBERSHIP-REGISTER.v1.json",
+    "predecessor_sha256": "783035186579aa558d637f581c11c6701ae7bb39951cdc085fdb83cad59a6897",
+    "expansion_over_109": "G2-26"
+  },
+  "counts": {
+    "register_seats": 110,
+    "registry_sources": 110,
+    "prior_v110_matrix_rows": 110,
+    "unique_adr_ids": 110,
+    "duplicate_adr_ids": 0,
+    "missing_from_registry": [],
+    "extra_in_registry": [],
+    "group_counts_register": {
+      "G1": 22,
+      "G2": 26,
+      "G3": 14,
+      "G4": 7,
+      "G5": 19,
+      "G6": 22
+    },
+    "group_counts_registry": {
+      "G1": 22,
+      "G2": 26,
+      "G3": 14,
+      "G4": 7,
+      "G5": 19,
+      "G6": 22
+    },
+    "historical_ic_review_records": 109,
+    "seats_without_ic_review_record": [
+      "G2-26"
+    ]
+  },
+  "checks": [
+    {
+      "check": "registry_source_count_equals_110",
+      "passed": true
+    },
+    {
+      "check": "register_seat_count_equals_110",
+      "passed": true
+    },
+    {
+      "check": "register_declares_total_current_seats_110",
+      "passed": true
+    },
+    {
+      "check": "no_duplicate_adr_ids_in_registry",
+      "passed": true
+    },
+    {
+      "check": "no_duplicate_adr_ids_in_register",
+      "passed": true
+    },
+    {
+      "check": "registry_ids_equal_register_ids_as_sets",
+      "passed": true
+    },
+    {
+      "check": "registry_order_equals_register_order",
+      "passed": true
+    },
+    {
+      "check": "registry_ids_equal_prior_v110_matrix_ids",
+      "passed": true
+    },
+    {
+      "check": "every_id_matches_G[1-6]-NN_pattern",
+      "passed": true
+    },
+    {
+      "check": "no_invented_ids (registry minus register empty)",
+      "passed": true
+    },
+    {
+      "check": "no_missing_ids (register minus registry empty)",
+      "passed": true
+    },
+    {
+      "check": "display_name_group_ordinal_preserved_verbatim",
+      "passed": true
+    },
+    {
+      "check": "group_counts_match_register",
+      "passed": true
+    },
+    {
+      "check": "register_sha256_matches_prior_matrix_pin",
+      "passed": true
+    },
+    {
+      "check": "duplicate_display_names_explained_by_dual_pairs_only",
+      "passed": true
+    },
+    {
+      "check": "every_membership_status_VERIFIED_and_register_state_CURRENT",
+      "passed": true
+    },
+    {
+      "check": "every_source_has_all_21_dimensions",
+      "passed": true
+    },
+    {
+      "check": "every_source_has_all_10_section_5_12_1_fields",
+      "passed": true
+    },
+    {
+      "check": "no_empty_status_values",
+      "passed": true
+    },
+    {
+      "check": "every_source_has_evidence_references",
+      "passed": true
+    },
+    {
+      "check": "no_source_assigned_SCIENTIFIC_INTEGRATION_VERIFIED",
+      "passed": true
+    },
+    {
+      "check": "exactly_5_seats_bound_to_runtime_catalog",
+      "passed": true
+    },
+    {
+      "check": "non_member_provider_keys_not_counted",
+      "passed": true
+    },
+    {
+      "check": "evidence_paths_exist_on_disk",
+      "passed": true
+    },
+    {
+      "check": "historical_IC_review_gap_is_G2-26_only",
+      "passed": true
+    }
+  ],
+  "checks_passed": 25,
+  "checks_total": 25,
+  "identity_notes": {
+    "dual_pairs": {
+      "count": 10,
+      "seats_involved": 20,
+      "treatment": "Each seat is a distinct membership identity in 110.v1; neither merged nor deduplicated",
+      "pairs": [
+        {
+          "seat_a": "G1-12",
+          "seat_b": "G6-01",
+          "label": "FlowerBase"
+        },
+        {
+          "seat_a": "G1-13",
+          "seat_b": "G6-03",
+          "label": "HortDB V1.0"
+        },
+        {
+          "seat_a": "G1-14",
+          "seat_b": "G6-02",
+          "label": "Tropicals.cn"
+        },
+        {
+          "seat_a": "G1-15",
+          "seat_b": "G6-04",
+          "label": "sCentInDB"
+        },
+        {
+          "seat_a": "G1-16",
+          "seat_b": "G6-05",
+          "label": "AromaDb"
+        },
+        {
+          "seat_a": "G1-17",
+          "seat_b": "G6-06",
+          "label": "Dr. Duke's"
+        },
+        {
+          "seat_a": "G1-18",
+          "seat_b": "G6-07",
+          "label": "MPNS"
+        },
+        {
+          "seat_a": "G1-19",
+          "seat_b": "G6-08",
+          "label": "FNCD"
+        },
+        {
+          "seat_a": "G1-20",
+          "seat_b": "G6-09",
+          "label": "FEAtl"
+        },
+        {
+          "seat_a": "G1-21",
+          "seat_b": "G6-10",
+          "label": "CRFG"
+        }
+      ]
+    },
+    "verbatim_duplicate_display_names": {
+      "FlowerBase": [
+        "G1-12",
+        "G6-01"
+      ],
+      "HortDB V1.0": [
+        "G1-13",
+        "G6-03"
+      ],
+      "Tropicals.cn": [
+        "G1-14",
+        "G6-02"
+      ],
+      "sCentInDB": [
+        "G1-15",
+        "G6-04"
+      ],
+      "AromaDb": [
+        "G1-16",
+        "G6-05"
+      ]
+    },
+    "verbatim_duplicate_names_explanation": "All verbatim duplicate display names are dual-pair seats declared by the register; no other duplicate names exist.",
+    "g2_26": "Owner-authorized 110th seat (ADR-023/section-8.45); no GB-IC-01 review record; seat-specific blocker P1-BLK-2026-11-11-G2-26-01 retained; no IC fabricated."
+  },
+  "runtime_seat_bindings": {
+    "G1-01": {
+      "source_key": "agris",
+      "binding_evidence": "ScientificSourceCatalogContractTest + seat catalogs (code-asserted)"
+    },
+    "G1-02": {
+      "source_key": "organic_eprints",
+      "binding_evidence": "ScientificSourceCatalogContractTest + seat catalogs (code-asserted)"
+    },
+    "G1-17": {
+      "source_key": "dr_duke",
+      "binding_evidence": "ScientificSourceCatalogContractTest + seat catalogs (code-asserted)"
+    },
+    "G5-04": {
+      "source_key": "gbif",
+      "binding_evidence": "ScientificSourceCatalogContractTest + seat catalogs (code-asserted)"
+    },
+    "G6-20": {
+      "source_key": "bhl",
+      "binding_evidence": "ScientificSourceCatalogContractTest + seat catalogs (code-asserted)"
+    }
+  },
+  "runtime_seat_binding_notes": [
+    "Source keys were mapped to seats only where code asserts the binding (5 seats).",
+    "G6-06 (Dr. Duke's Phytochemical and Ethnobotanical Databases) is the dual peer of G1-17; the runtime catalog binds G1-17 only, so no Dr. Duke evidence is attributed to G6-06."
+  ],
+  "non_member_provider_keys": {
+    "keys": [
+      "openalex",
+      "crossref",
+      "semantic_scholar",
+      "fao_stat",
+      "consensus"
+    ],
+    "finding": "Live-connectivity keys openalex, crossref, semantic_scholar, fao_stat and consensus have no seat in 110.v1 (LEGACY_STAGE3, adr_id null). No identity was invented for them; their results are preserved separately under non_member_provider_evidence and are not counted.",
+    "register_name_search": "none of the five names occurs in any of the 110 display names"
+  },
+  "live_connectivity_preservation": {
+    "source": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-EXIT-08-LIVE-CONNECTIVITY.v11.0.1.json",
+    "keys_requested": [
+      "openalex",
+      "crossref",
+      "gbif",
+      "bhl",
+      "organic_eprints",
+      "agris",
+      "semantic_scholar",
+      "fao_stat",
+      "consensus",
+      "dr_duke"
+    ],
+    "keys_mapped_to_110_seats": {
+      "gbif": "G5-04",
+      "bhl": "G6-20",
+      "organic_eprints": "G1-02",
+      "agris": "G1-01",
+      "dr_duke": "G1-17"
+    },
+    "keys_preserved_as_non_member_evidence": [
+      "openalex",
+      "crossref",
+      "semantic_scholar",
+      "fao_stat",
+      "consensus"
+    ],
+    "values_preserved": {
+      "openalex": "LIVE_CONNECTIVITY_VERIFIED",
+      "crossref": "LIVE_CONNECTIVITY_VERIFIED",
+      "gbif": "LIVE_CONNECTIVITY_VERIFIED",
+      "bhl": "LIVE_CONNECTIVITY_VERIFIED",
+      "organic_eprints": "LIVE_CONNECTIVITY_VERIFIED",
+      "agris": "LIVE_CONNECTIVITY_VERIFIED",
+      "semantic_scholar": "BLOCKED_EXTERNAL_SERVICE",
+      "fao_stat": "BLOCKED_CREDENTIALS",
+      "consensus": "BLOCKED_CREDENTIALS",
+      "dr_duke": "CONTRACT_VERIFIED_ONLY"
+    },
+    "new_probes_run": false
+  },
+  "scope_exclusions": [
+    "No application code modified",
+    "No unrelated WIP staged",
+    "No live probes executed",
+    "No secrets read or recorded"
+  ],
+  "unresolved_for_owner": [
+    "Master Prompt 11.0.3 text is not present as a repo file; section 5.3 / 5.12.1 field lists were taken from the prompt text recorded in the agent transcript.",
+    "Whether dual-pair seat G6-06 shares runtime identity with G1-17 (affects Dr. Duke evidence attribution)."
+  ]
+}
