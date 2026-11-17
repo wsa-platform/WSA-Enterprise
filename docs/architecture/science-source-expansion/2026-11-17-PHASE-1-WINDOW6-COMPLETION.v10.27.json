@@ -1,0 +1,72 @@
+{
+  "schema_id": "wsa.agris_bounded_window_completion.v1",
+  "revision": "10.27",
+  "window": 6,
+  "recorded_at_utc": "2026-11-17T14:20:00Z",
+  "status": "COMPLETE",
+  "evidence": {
+    "log": "backend/storage/app/scientific_datasets/agris/harvest_cache/_r1027_ingest_bounded.log",
+    "checkpoint": "backend/storage/app/scientific_datasets/agris/harvest_cache/agris_projected_ingest_checkpoint.v10.21.json",
+    "plan": {
+      "already_completed": 97,
+      "eligible_remaining": 46,
+      "baseline_generation": 1039,
+      "captured_at": "2026-11-16T19:58:41+00:00"
+    },
+    "summary": {
+      "newly_completed": 20,
+      "total_completed": 117,
+      "remaining_eligible": 26,
+      "generation": 1669,
+      "active_count": 1528973,
+      "baseline_generation": 1039,
+      "search_pin_generation": 79,
+      "historical_gen76_preserved": true,
+      "fts_pending_batches": 115
+    },
+    "last_package": "AGRIS.ODS.XF0",
+    "last_package_persist": {
+      "records_read": 191016,
+      "chunks": 192,
+      "inserted": 190816,
+      "unchanged": 200,
+      "generation": 1669
+    },
+    "checkpoint_after": {
+      "completed_packages": 117,
+      "partial": [],
+      "last_package": "AGRIS.ODS.XF0",
+      "updated_at": "2026-11-17T10:42:14+00:00"
+    },
+    "historical_midrun_observation_not_current": {
+      "note": "Earlier reports of PID 58554 / NL0 / completed=97 / gen=1054 were mid-window observations only",
+      "superseded_by": "Window 6 summary + checkpoint 117"
+    }
+  },
+  "process_at_verification": {
+    "ingest_writer_active": false,
+    "prior_pid_58554": "absent_at_resume_verification",
+    "container_processes": "php-fpm only (no scientific:ingest-agris-projected)"
+  },
+  "next_window_readiness": {
+    "first_remaining": "AGRIS.ODS.PHC",
+    "remaining_eligible": 26,
+    "max_packages_authorized": 20,
+    "duplicate_risk": "none — PHC not in completed_packages",
+    "window_7_auto_launch": false,
+    "window_7_launched_after_verified_transition": true,
+    "window_7_container_pid": 7269,
+    "window_7_first_package": "AGRIS.ODS.PHC",
+    "window_7_authorized_by_rev_10_27": "GO_BOUNDED_SEGMENTED_PERSIST — continue unfinished eligible packages",
+    "transition_conditions": [
+      "W6 COMPLETE verified",
+      "no active ingest writer",
+      "checkpoint partial empty",
+      "manifest remaining matches summary remaining_eligible=26"
+    ]
+  },
+  "preservation": {
+    "sqlite_wal_shm_checkpoint_manifest": "preserved_no_destructive_ops",
+    "db_pragma_inspection": "stopped_per_owner"
+  }
+}

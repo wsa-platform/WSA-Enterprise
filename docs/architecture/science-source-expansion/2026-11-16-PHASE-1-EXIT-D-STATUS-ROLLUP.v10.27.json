@@ -42,7 +42,8 @@
   "phase_10_27_1": {
     "scale_preflight": "GO_BOUNDED",
     "unbounded_persist": "NO-GO_FOR_UNBOUNDED_RUN",
-    "persist": "IN_PROGRESS_BOUNDED_WINDOW_LAUNCHED",
+    "persist": "PARTIAL_W6_COMPLETE_W7_IN_PROGRESS",
+    "persist_detail": "Window6 COMPLETE total_completed=117 remaining=26; Window7 launched once PID7269 starting AGRIS.ODS.PHC",
     "fts": "PENDING_INDEPENDENT",
     "activation": "NOT_ELIGIBLE"
   },
