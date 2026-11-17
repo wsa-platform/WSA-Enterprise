@@ -1,0 +1,55 @@
+{
+  "schema_id": "wsa.window6_git_delivery.v1",
+  "revision": "10.9.6",
+  "recorded_at_utc": "2026-11-17T16:55:00Z",
+  "official_window6_reference": {
+    "identifier": "Window 6 / Persist GO_BOUNDED segment",
+    "execution_evidence": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-WINDOW6-COMPLETION.v10.27.json",
+    "completion_status": "COMPLETE",
+    "scope_summary": "Bounded AGRIS projected ingest of 20 packages (completed 97→117), ending at AGRIS.ODS.XF0; GEN79 search pin retained; FTS deferred; GEN76 preserved."
+  },
+  "intended_branch": "phase-18-m18-ai-marketing-communications",
+  "intended_remote": "origin",
+  "git_delivery_scope": {
+    "classification": "Window 6 documentation/evidence (runtime SQLite ingest is not a Git artifact)",
+    "files": [
+      {
+        "path": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-WINDOW6-COMPLETION.v10.27.json",
+        "evidence": "Primary Window 6 completion record; introduced in 9501b13"
+      },
+      {
+        "path": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-REV10.27-RESUME-EXECUTION-REPORT.ar.md",
+        "evidence": "Resume report documenting W6 COMPLETE; introduced in 9501b13"
+      },
+      {
+        "path": "docs/architecture/science-source-expansion/2026-11-16-PHASE-1-EXIT-D-STATUS-ROLLUP.v10.27.json",
+        "evidence": "Rollup touch accompanying W6 completion commit; modified in 9501b13"
+      }
+    ],
+    "excluded_ambiguous": "Unrelated WIP under backend/app, tests, CapVer, Evaluation, Membership, and _tmp-* probes — not Window 6"
+  },
+  "commits": [
+    {
+      "hash": "9501b13",
+      "message": "docs(phase-1): record Window 6 complete and Rev 10.27 resume state",
+      "role": "Window 6 evidence Commit"
+    }
+  ],
+  "delivery_actions_this_execution": {
+    "new_commit_created": false,
+    "reason": "All Window 6 Git-scoped files already present in 9501b13; duplicate Commit prohibited",
+    "push_required": false,
+    "fetch_performed": true,
+    "ancestor_check": "9501b13 is ancestor of origin/phase-18-m18-ai-marketing-communications",
+    "ahead_behind_after_fetch": "0 0"
+  },
+  "remote_verification": {
+    "branch": "origin/phase-18-m18-ai-marketing-communications",
+    "paths_present_on_remote": [
+      "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-WINDOW6-COMPLETION.v10.27.json",
+      "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-REV10.27-RESUME-EXECUTION-REPORT.ar.md"
+    ],
+    "local_remote_synchronized": true
+  },
+  "final_status": "WINDOW_6_FULLY_COMMITTED_AND_PUSHED"
+}

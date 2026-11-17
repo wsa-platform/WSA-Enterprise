@@ -1,0 +1,62 @@
+{
+  "schema_id": "wsa.by0_resume_execution.v1",
+  "revision": "10.9.6",
+  "recorded_at_utc": "2026-11-17T17:16:30Z",
+  "authorization": "Master Engineering Execution Prompt Revision 10.9.6 §23 — owner prior authorization; no additional owner review required",
+  "preflight": {
+    "ingest_writer_before": false,
+    "container_processes": "php-fpm only",
+    "checkpoint_before": {
+      "completed_packages": 123,
+      "partial": {
+        "AGRIS.ODS.BY0": {
+          "skip_records": 5000,
+          "chunks": 5,
+          "generation": 1723
+        }
+      }
+    },
+    "approved_command_source": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-BY0-RESUME-SAFETY.v10.27.json#proposed_command",
+    "safety_classification": "RESUME_SAFETY_PROVEN (logical Path B); physical PRAGMA not performed per owner boundary"
+  },
+  "execution": {
+    "started_at_utc": "2026-11-17T17:00:04Z",
+    "command": "docker exec wsa-enterprise-backend-1 sh -lc '/var/www/html/storage/app/scientific_datasets/agris/harvest_cache/_r1096_by0_resume.sh'",
+    "equivalent_artisan": "scientific:ingest-agris-projected --max-packages=1 --chunk-size=1000 (manifest/checkpoint/fts-checkpoint as approved)",
+    "activate_search": false,
+    "log": "backend/storage/app/scientific_datasets/agris/harvest_cache/_r1096_by0_resume.log",
+    "container_php_pid": 84716
+  },
+  "result": {
+    "package_id": "AGRIS.ODS.BY0",
+    "status": "persist_completed",
+    "records_read_this_resume": 23213,
+    "chunks": 24,
+    "inserted": 23213,
+    "updated": 0,
+    "unchanged": 0,
+    "generation": 1747,
+    "active_count": 1601577,
+    "fts": {
+      "status": "deferred_until_activation",
+      "pending": true,
+      "search_pin_generation": 79
+    },
+    "elapsed_ms": 226824,
+    "checkpoint_after": {
+      "completed_packages": 124,
+      "partial": [],
+      "last_package": "AGRIS.ODS.BY0",
+      "updated_at": "2026-11-17T17:15:59+00:00"
+    }
+  },
+  "safety_after": {
+    "sqlite_main_grew": true,
+    "note": "Main DB size increased ~96MB during successful resume commits; WAL present during finalize",
+    "no_activate_search": true,
+    "gen79_pin_retained": true,
+    "hy000_recovered": true,
+    "path": "Path B resume from skip 5000 without replay of committed chunks 1–5"
+  },
+  "final_status": "BY0_RESUME_PERSIST_COMPLETED"
+}

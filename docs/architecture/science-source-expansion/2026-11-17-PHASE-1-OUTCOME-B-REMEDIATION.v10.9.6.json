@@ -1,0 +1,49 @@
+{
+  "schema_id": "wsa.semantic_scholar_outcome_b_remediation.v1",
+  "revision": "10.9.6",
+  "recorded_at_utc": "2026-11-17T17:18:00Z",
+  "prior_audit": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-SEMANTIC-SCHOLAR-SOURCE-AUDIT.v10.27.json",
+  "prior_outcome_b": "FAIL_NOT_OPERATIONALLY_ACCEPTED",
+  "acceptance_rule": "At least two independent providers contribute to final citations for representative queries.",
+  "direct_gate_preserved": true,
+  "code_changes": [
+    {
+      "file": "backend/app/Services/Agriculture/Research/Synthesis/ResearchAnswerCitation.php",
+      "change": "Added sourceKey and contributingProviders; toArray exposes provider/source_key/contributing_providers"
+    },
+    {
+      "file": "backend/app/Services/Agriculture/Research/Synthesis/AnswerComposer.php",
+      "change": "Populate contributing providers from source_key + found_by_sources; diversify citation order by uncovered providers; emit citation_provider_contribution observability; primary_evidence.provider prefers source_key"
+    },
+    {
+      "file": "backend/app/Services/Agriculture/Research/Synthesis/ScientificUserPresentation.php",
+      "change": "Expose provider, source_key, contributing_providers on user_presentation sources"
+    },
+    {
+      "file": "backend/tests/Unit/Agriculture/Research/Synthesis/OutcomeBIndependentCitationProvidersTest.php",
+      "change": "Regression fixture reproducing multi-provider DIRECT contribution and SUPPORTING exclusion"
+    }
+  ],
+  "outcome_b_semantics": {
+    "selected_interpretation": "Independent provider contribution is measured by unique source_key values in the union of citation.contributingProviders (primary source_key plus found_by_sources). SUPPORTING-only evidence remains excluded from primary citations.",
+    "rejected_interpretations": [
+      "Force SUPPORTING citations into primary citations[] to inflate provider count (weakens DIRECT gate)",
+      "Count peer_reviewed_journal source_type as the provider identity (collapses scholarly providers)",
+      "Treat retrieval success alone as citation contribution"
+    ]
+  },
+  "tests": {
+    "command": "docker exec wsa-enterprise-backend-1 sh -lc 'cd /var/www/html && php artisan test --no-ansi tests/Unit/Agriculture/Research/Synthesis/OutcomeBIndependentCitationProvidersTest.php'",
+    "exit_code": 0,
+    "passed": 4,
+    "assertions": 17,
+    "failed": 0,
+    "head_at_test": "5b5cdd9 (working tree includes Outcome B changes)"
+  },
+  "live_representative_queries": {
+    "status": "NOT_RE_RUN_THIS_EXECUTION",
+    "reason": "BY0 writer held LocalIndex SQLite; live remote multi-source probe deferred to avoid concurrent store pressure. Contract/regression fixture proves remediation path.",
+    "prior_live_status": "FAIL on three representative queries (0 or 1 citation provider)"
+  },
+  "final_status": "OUTCOME_B_REMEDIATION_IMPLEMENTED_TESTS_PASS_LIVE_PENDING"
+}
