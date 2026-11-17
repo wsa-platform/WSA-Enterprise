@@ -32,11 +32,16 @@ class GovernedSourceRuntimeActivationContractTest extends TestCase
         $selected = $selector->selectSources($plan);
         foreach ($expected as $key) {
             $this->assertContains($key, $registry->registeredSourceKeys(), $key.' must be registered');
-            $this->assertContains($key, $selected, $key.' must be selected for internet-first plans');
             $adapter = $registry->get($key);
             $this->assertNotNull($adapter, $key.' adapter must resolve');
             $this->assertSame($key, $adapter->sourceKey());
         }
+        // Rev 11.0.10 §16: land-classification selects agricultural literature (AGRIS),
+        // not phytochemistry / taxonomy / organic-cued seats by default.
+        $this->assertContains('agris', $selected, 'AGRIS must be selected for agricultural land queries');
+        $this->assertNotContains('dr_duke', $selected);
+        $this->assertNotContains('gbif', $selected);
+        $this->assertNotContains('bhl', $selected);
         $this->assertNotContains('consensus', $selected);
     }
 

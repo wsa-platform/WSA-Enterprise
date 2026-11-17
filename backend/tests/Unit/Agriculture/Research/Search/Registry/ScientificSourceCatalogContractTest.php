@@ -254,21 +254,25 @@ class ScientificSourceCatalogContractTest extends TestCase
         $selector = app(ScientificSourceSelector::class);
         $trace = $selector->selectionTrace($this->plan());
 
+        // Barley irrigation is agricultural literature (AGRIS) but not phytochem/taxonomy/organic-cued.
         $this->assertSame(
-            ['fao_stat', 'openalex', 'semantic_scholar', 'agris', 'dr_duke', 'gbif', 'organic_eprints', 'bhl'],
+            ['fao_stat', 'openalex', 'semantic_scholar', 'agris'],
             $selector->selectSources($this->plan()),
         );
         $this->assertSame(
-            ['fao_stat', 'openalex', 'semantic_scholar', 'agris', 'dr_duke', 'gbif', 'organic_eprints', 'bhl'],
+            ['fao_stat', 'openalex', 'semantic_scholar', 'agris'],
             $trace['selected'],
         );
         $this->assertSame(['crossref'], $trace['skipped_inactive']);
         $this->assertSame(['consensus'], $trace['optional_not_selected']);
+        $excludedKeys = array_column($trace['relevance_excluded'], 'source_key');
+        sort($excludedKeys);
+        $this->assertSame(['bhl', 'dr_duke', 'gbif', 'organic_eprints'], $excludedKeys);
 
         config(['agricultural_intelligence.faostat.enabled' => false, 'agricultural_intelligence.crossref.enabled' => true]);
         $trace = $selector->selectionTrace($this->plan());
         $this->assertSame(
-            ['openalex', 'crossref', 'semantic_scholar', 'agris', 'dr_duke', 'gbif', 'organic_eprints', 'bhl'],
+            ['openalex', 'crossref', 'semantic_scholar', 'agris'],
             $trace['selected'],
         );
         $this->assertSame(['fao_stat'], $trace['skipped_inactive']);

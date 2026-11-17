@@ -269,6 +269,65 @@ class ScientificAnswerIdentityIntegrityContractTest extends TestCase
         );
     }
 
+    public function test_genus_level_evidence_does_not_answer_species_specific_question(): void
+    {
+        $plan = $this->phase5Plan(question: 'What is Triticum aestivum production quantity in Egypt?');
+        $genusOnly = $this->identityEvidence(
+            'e-genus',
+            'Triticum genus production systems vary widely across North Africa without species-resolved Egypt quantities.',
+            quality: [
+                'evidence_directness' => ScientificEvidenceDirectnessAssessor::SUPPORTING,
+                'species_relation' => 'related_genus',
+                'entity_matched' => false,
+                'topic_matched' => true,
+            ],
+            title: 'Triticum genus agronomy overview',
+        );
+
+        $report = $this->composer->compose($plan, $this->phase5Validation([$genusOnly], true));
+
+        $this->assertTrue(
+            in_array($report->status, [
+                'insufficient_evidence',
+                'no_validated_evidence',
+                'synthesis_completed_with_partial_conflicts',
+            ], true)
+            || $report->confidence < 0.55
+            || $report->citations === [],
+            'Genus-only evidence must not become a species-resolved confident answer; status='.$report->status,
+        );
+    }
+
+    public function test_correlational_evidence_is_not_upgraded_to_causal_claim_language(): void
+    {
+        $plan = $this->phase5Plan(question: 'Does deficit irrigation cause higher wheat yield in Egypt?');
+        $correlational = $this->identityEvidence(
+            'e-corr',
+            'Wheat yield in Egypt was associated with deficit irrigation practices in observational surveys (correlation observed; causation not established).',
+            relationship: ClaimEvidenceRelationship::PARTIALLY_SUPPORTED,
+            quality: [
+                'evidence_directness' => ScientificEvidenceDirectnessAssessor::SUPPORTING,
+            ],
+        );
+
+        $report = $this->composer->compose($plan, $this->phase5Validation([$correlational], true));
+        $joined = mb_strtolower(implode(' ', array_filter([
+            (string) $report->answer,
+            ...array_map(static fn ($c): string => (string) $c->claimText, $report->claims),
+        ])));
+
+        $this->assertTrue(
+            in_array($report->status, ['insufficient_evidence', 'no_validated_evidence'], true)
+            || $report->confidence < 0.6
+            || $report->citations === []
+            || ! str_contains($joined, 'causally proves')
+            || str_contains($joined, 'correlation')
+            || str_contains($joined, 'associated'),
+            'Correlational evidence must not be upgraded to causal certainty: '.$joined,
+        );
+        $this->assertStringNotContainsString('causally proves', $joined);
+    }
+
     /**
      * @param  array<string, mixed>  $quality
      */

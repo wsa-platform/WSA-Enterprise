@@ -1,0 +1,190 @@
+{
+  "schema_id": "wsa.phase1_110_source_option_b_update.v1",
+  "revision": "11.0.10",
+  "recorded_at_utc": "2026-11-18T01:15:00Z",
+  "baseline_head": "b4fc029906afd4db1eed797aa79e29ff1eef0e32",
+  "authority": {
+    "membership_register": "docs/architecture/science-source-expansion/ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+    "membership_register_mutated": false,
+    "membership_sha256_prefix": "94b586ee",
+    "matrix_v110": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-SOURCE-MATRIX.v110.json",
+    "matrix_v110_mutated": false,
+    "matrix_sha256_prefix": "49b3dd65",
+    "prior_option_b": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.8.json"
+  },
+  "claim_guard": [
+    "No seat is assigned SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "Relevance routing and production-path tests do not alone satisfy all fifteen §12/§12.1 conditions.",
+    "Fixture retrieval ≠ live HTTP scientific integration.",
+    "Membership register and 2026-11-11 matrix untouched."
+  ],
+  "scientific_integration_verified_count": 0,
+  "runtime_active_count": 5,
+  "levels": {
+    "level_1": "PASS_WITH_LIMITATIONS",
+    "level_2": "PARTIAL",
+    "level_3": "PARTIAL"
+  },
+  "shared_suites": {
+    "relevance_routing": {
+      "components": [
+        "backend/app/Services/Agriculture/Research/Search/GovernedScientificSourceEligibility.php",
+        "backend/app/Services/Agriculture/Research/Search/ScientificSourceSelector.php"
+      ],
+      "tests": [
+        "GovernedScientificSourceEligibilityTest",
+        "GovernedSourceRuntimeActivationContractTest",
+        "ScientificSourceCatalogContractTest::test_selector_follows_catalog_roles_and_flags"
+      ],
+      "result": "pass"
+    },
+    "production_path": {
+      "test": "GovernedActiveSourceProductionPathIntegrityTest",
+      "path": "plan → relevance → orchestrator(fixture) → AgriculturalScientificValidationService → AnswerComposer",
+      "result": "3 passed",
+      "live_http": false
+    },
+    "answer_identity": {
+      "test": "ScientificAnswerIdentityIntegrityContractTest",
+      "result": "11 passed (extended genus/causation)",
+      "covers_section_14_1_partially": true,
+      "covers_section_14_fully_per_source": false
+    }
+  },
+  "seat_deltas": [
+    {
+      "adr_id": "G1-01",
+      "source_key": "agris",
+      "source_identity": "AGRIS",
+      "scientific_domain": "agricultural_literature",
+      "capability_contract": "VERIFIED_SUPPORTED (search)",
+      "adapter_status": "ADAPTER_VERIFIED",
+      "live_connectivity_status": "PRIOR_PARTIAL_NOT_RE_PROBED_THIS_REVISION",
+      "retrieval_status": "RETRIEVAL_VERIFIED_FIXTURE",
+      "production_path_participation": "YES_FIXTURE_VALIDATION_COMPOSER",
+      "evidence_quality": "FIXTURE_STUB_ABSTRACTS_LIMIT_DIRECTNESS",
+      "provenance_verification": "PARTIAL",
+      "scientific_entity_preservation": "PARTIAL",
+      "csq_identity_preservation": "PARTIAL",
+      "scientific_answer_identity": "PARTIAL",
+      "answer_traceability": "PARTIAL",
+      "relevance_routing": "PASS",
+      "scientific_integration_verified": false,
+      "current_integration_status": "PARTIALLY_VERIFIED",
+      "remaining_acceptance_conditions": [
+        "Live HTTP retrieval evidence package",
+        "Full §12 six + §12.1 nine cumulative mapping without fixture-only promotion"
+      ],
+      "known_limitations": [
+        "LocalIndex/fixture abstracts are engineering stubs",
+        "ACTIVE ≠ SCIENTIFIC_INTEGRATION_VERIFIED"
+      ],
+      "external_blockers": []
+    },
+    {
+      "adr_id": "G1-02",
+      "source_key": "organic_eprints",
+      "source_identity": "Organic Eprints",
+      "scientific_domain": "organic_agriculture_literature",
+      "capability_contract": "VERIFIED_SUPPORTED (search)",
+      "adapter_status": "ADAPTER_VERIFIED",
+      "live_connectivity_status": "PRIOR_PARTIAL_NOT_RE_PROBED_THIS_REVISION",
+      "retrieval_status": "RETRIEVAL_VERIFIED_FIXTURE_PRIOR",
+      "production_path_participation": "RELEVANCE_GATED_PLUS_PRIOR_C1C3",
+      "relevance_routing": "PASS_ORGANIC_CUES_REQUIRED",
+      "scientific_integration_verified": false,
+      "current_integration_status": "PARTIALLY_VERIFIED",
+      "remaining_acceptance_conditions": [
+        "Dedicated Stage-4 validation→composer fixture path for OE",
+        "Full §12/§12.1 cumulative package"
+      ]
+    },
+    {
+      "adr_id": "G1-17",
+      "source_key": "dr_duke",
+      "source_identity": "Dr. Duke",
+      "scientific_domain": "phytochemistry_ethnobotany",
+      "capability_contract": "VERIFIED_SUPPORTED (search via static dataset)",
+      "adapter_status": "ADAPTER_VERIFIED",
+      "live_connectivity_status": "NOT_APPLICABLE_STATIC_DATASET",
+      "retrieval_status": "RETRIEVAL_VERIFIED_FIXTURE",
+      "production_path_participation": "YES_FIXTURE_VALIDATION_COMPOSER",
+      "relevance_routing": "PASS",
+      "scientific_integration_verified": false,
+      "current_integration_status": "PARTIALLY_VERIFIED",
+      "known_limitations": [
+        "No public live API assumed; static/local dataset path",
+        "Plant/compound equivalence must not be invented"
+      ],
+      "remaining_acceptance_conditions": [
+        "Full §12/§12.1 cumulative package"
+      ]
+    },
+    {
+      "adr_id": "G5-04",
+      "source_key": "gbif",
+      "source_identity": "GBIF",
+      "scientific_domain": "taxonomy_occurrence_biodiversity",
+      "capability_contract": "VERIFIED_SUPPORTED (search)",
+      "adapter_status": "ADAPTER_VERIFIED",
+      "live_connectivity_status": "PRIOR_PARTIAL_NOT_RE_PROBED_THIS_REVISION",
+      "retrieval_status": "RETRIEVAL_VERIFIED_PRIOR_E2E",
+      "production_path_participation": "RELEVANCE_GATED_PLUS_PRIOR_C1C3",
+      "relevance_routing": "PASS_SCIENTIFIC_NAME_OR_TAXONOMY_CUES",
+      "scientific_integration_verified": false,
+      "current_integration_status": "PARTIALLY_VERIFIED",
+      "remaining_acceptance_conditions": [
+        "Full §12/§12.1 cumulative package with occurrence≠causation guards evidenced per seat"
+      ]
+    },
+    {
+      "adr_id": "G6-20",
+      "source_key": "bhl",
+      "source_identity": "Biodiversity Heritage Library",
+      "scientific_domain": "historical_biodiversity_literature",
+      "capability_contract": "VERIFIED_SUPPORTED (search)",
+      "adapter_status": "ADAPTER_VERIFIED",
+      "live_connectivity_status": "PRIOR_PARTIAL_NOT_RE_PROBED_THIS_REVISION",
+      "retrieval_status": "RETRIEVAL_VERIFIED_FIXTURE_PRIOR",
+      "production_path_participation": "RELEVANCE_GATED_PLUS_PRIOR_C1C3",
+      "relevance_routing": "PASS",
+      "scientific_integration_verified": false,
+      "current_integration_status": "PARTIALLY_VERIFIED",
+      "known_limitations": [
+        "OCR text must not be treated as verified modern conclusions"
+      ],
+      "remaining_acceptance_conditions": [
+        "Page-level provenance completeness on live path",
+        "Full §12/§12.1 cumulative package"
+      ]
+    }
+  ],
+  "before_after": [
+    {
+      "component": "ScientificSourceSelector GOVERNED_EXPANSION",
+      "before": "All enabled governed seats selected for every internet-first plan",
+      "repair": "GovernedScientificSourceEligibility + selector wiring + relevance_excluded trace",
+      "after": "AGRIS/OE/Duke/GBIF/BHL selected by scientific relevance cues",
+      "tests": "GovernedScientificSourceEligibilityTest; catalog/runtime contract updates"
+    },
+    {
+      "component": "Production validation path for ACTIVE seats",
+      "before": "C1→C3 bridge skipped Stage-4 validation (test-only handoff)",
+      "repair": "GovernedActiveSourceProductionPathIntegrityTest exercises real AgriculturalScientificValidationService",
+      "after": "Fixture orchestrator → validate() → AnswerComposer with identity assertions",
+      "tests": "GovernedActiveSourceProductionPathIntegrityTest (3)"
+    },
+    {
+      "component": "Level-2 Answer Identity",
+      "before": "9 identity tests (Rev 11.0.8)",
+      "repair": "Genus-vs-species + correlation-not-causation cases",
+      "after": "11 identity tests",
+      "tests": "ScientificAnswerIdentityIntegrityContractTest"
+    }
+  ],
+  "exit_impact": {
+    "EXIT-08": "PARTIAL — relevance routing evidenced; formal closure not claimed",
+    "EXIT-09": "PARTIAL — CSQ/answer identity suites extended; formal closure not claimed",
+    "EXIT-10": "PARTIAL — validation path exercised for AGRIS/Dr.Duke fixtures; formal closure not claimed"
+  }
+}

@@ -18,7 +18,8 @@ use App\Services\Agriculture\Research\Search\Registry\ScientificSourceSelectionR
  * - FAOSTAT Developer Portal is universally considered when enabled (Phase 3-A);
  *   consideration ≠ evidence acceptance (gate/pipeline outcomes still apply).
  * - Governed ADR expansion seats (GOVERNED_EXPANSION) join after statistical
- *   consideration when enabled and capability-authorized; Stage-3 defaults remain.
+ *   consideration when enabled, capability-authorized, and scientifically eligible
+ *   for the plan (Rev 11.0.10 §16 relevance — not every ACTIVE seat for every query).
  * - Inactive providers are excluded; unknown keys are never invented here.
  */
 class ScientificSourceSelector
@@ -50,12 +51,16 @@ class ScientificSourceSelector
 
     private readonly ScientificSourceCapabilityPolicy $capabilityPolicy;
 
+    private readonly GovernedScientificSourceEligibility $governedEligibility;
+
     public function __construct(
         ?ScientificSourceCatalog $catalog = null,
         ?ScientificSourceCapabilityPolicy $capabilityPolicy = null,
+        ?GovernedScientificSourceEligibility $governedEligibility = null,
     ) {
         $this->catalog = $catalog ?? ScientificSourceCatalog::default();
         $this->capabilityPolicy = $capabilityPolicy ?? new ScientificSourceCapabilityPolicy();
+        $this->governedEligibility = $governedEligibility ?? new GovernedScientificSourceEligibility();
     }
 
     /** @return list<string> */
@@ -70,19 +75,30 @@ class ScientificSourceSelector
         }
 
         return [
-            ...$this->authorizedKeysWithRole(ScientificSourceSelectionRole::STATISTICAL_CONSIDERATION),
-            ...$this->authorizedKeysWithRole(ScientificSourceSelectionRole::INTERNET_FIRST_DEFAULT),
-            ...$this->authorizedKeysWithRole(ScientificSourceSelectionRole::GOVERNED_EXPANSION),
+            ...$this->authorizedKeysWithRole(ScientificSourceSelectionRole::STATISTICAL_CONSIDERATION, $plan),
+            ...$this->authorizedKeysWithRole(ScientificSourceSelectionRole::INTERNET_FIRST_DEFAULT, $plan),
+            ...$this->authorizedKeysWithRole(ScientificSourceSelectionRole::GOVERNED_EXPANSION, $plan),
         ];
     }
 
     /** @return list<string> */
-    private function authorizedKeysWithRole(ScientificSourceSelectionRole $role): array
+    private function authorizedKeysWithRole(ScientificSourceSelectionRole $role, KnowledgeQueryPlan $plan): array
     {
         return array_values(array_filter(
             $this->catalog->enabledKeysWithRole($role),
-            fn (string $key): bool => $this->capabilityPolicy
-                ->decide($this->catalog->get($key), self::REQUIRED_OPERATION)->allowed,
+            function (string $key) use ($role, $plan): bool {
+                if (! $this->capabilityPolicy
+                    ->decide($this->catalog->get($key), self::REQUIRED_OPERATION)->allowed) {
+                    return false;
+                }
+
+                if ($role === ScientificSourceSelectionRole::GOVERNED_EXPANSION
+                    && ! $this->governedEligibility->isEligible($key, $plan)) {
+                    return false;
+                }
+
+                return true;
+            },
         ));
     }
 
@@ -95,7 +111,8 @@ class ScientificSourceSelector
      *     optional_not_selected: list<string>,
      *     faostat_consideration: string,
      *     policy: string,
-     *     capability_denied: list<array<string, string|bool|null>>
+     *     capability_denied: list<array<string, string|bool|null>>,
+     *     relevance_excluded: list<array{source_key: string, reason: string}>
      * }
      */
     public function selectionTrace(KnowledgeQueryPlan $plan): array
@@ -103,6 +120,7 @@ class ScientificSourceSelector
         $selected = $this->selectSources($plan);
         $skippedInactive = [];
         $capabilityDenied = [];
+        $relevanceExcluded = [];
         $planSelects = ! $plan->needsClarification() && $plan->readyForStage3 && $plan->isInternetFirst();
 
         foreach ([
@@ -124,6 +142,15 @@ class ScientificSourceSelector
                     $decision = $this->capabilityPolicy->decide($registration, self::REQUIRED_OPERATION);
                     if (! $decision->allowed) {
                         $capabilityDenied[] = $decision->toArray();
+
+                        continue;
+                    }
+                    if ($role === ScientificSourceSelectionRole::GOVERNED_EXPANSION
+                        && ! $this->governedEligibility->isEligible($key, $plan)) {
+                        $relevanceExcluded[] = [
+                            'source_key' => $key,
+                            'reason' => (string) $this->governedEligibility->exclusionReason($key, $plan),
+                        ];
                     }
                 }
             }
@@ -134,8 +161,9 @@ class ScientificSourceSelector
             'skipped_inactive' => array_values(array_unique($skippedInactive)),
             'optional_not_selected' => $this->catalog->keysWithRole(ScientificSourceSelectionRole::OPTIONAL_EXPLICIT_ONLY),
             'faostat_consideration' => FaoStatConsiderationPolicy::decision(),
-            'policy' => 'internet_first_defaults_plus_universal_faostat_when_enabled',
+            'policy' => 'internet_first_defaults_plus_faostat_plus_governed_relevance',
             'capability_denied' => $capabilityDenied,
+            'relevance_excluded' => $relevanceExcluded,
         ];
     }
 }
