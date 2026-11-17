@@ -92,9 +92,10 @@
       },
       "evidence": [
         "GbifOrchestratorEndToEndTest (auto-select from CSQ; error isolation)",
+        "GbifOrchestratorEndToEndTest::test_gbif_orchestrator_result_identity_traces_into_answer_citations",
         "GovernedSourceAnswerTraceabilityContractTest"
       ],
-      "gap_to_verified": "Live GBIF retrieval→AnswerComposer claim linkage under full §8.1 package",
+      "gap_to_verified": "Live HTTP (non-fixture) + full validation-layer mapping without forced DIRECT; still not SCIENTIFIC_INTEGRATION_VERIFIED",
       "scientific_integration_status": "PARTIALLY_VERIFIED"
     },
     {
