@@ -552,7 +552,11 @@ class SemanticScholarProviderIntegrationTest extends TestCase
             'query' => 'ما أفضل الظروف لزراعة الزنجبيل؟',
         ]);
         $sources = app(ScientificSourceSelector::class)->selectSources($plan);
-        $this->assertSame(['openalex', 'crossref', 'semantic_scholar'], $sources);
+        // Stage-3 scholarly path must include SS and exclude Consensus; other authorized
+        // governed sources (e.g. fao_stat, agris, gbif) may also be selected.
+        foreach (['openalex', 'crossref', 'semantic_scholar'] as $required) {
+            $this->assertContains($required, $sources);
+        }
         $this->assertNotContains('consensus', $sources);
         $keys = app(ScientificSourceAdapterRegistry::class)->registeredSourceKeys();
         $this->assertContains('semantic_scholar', $keys);

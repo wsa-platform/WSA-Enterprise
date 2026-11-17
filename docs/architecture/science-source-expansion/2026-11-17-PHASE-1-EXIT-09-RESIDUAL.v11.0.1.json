@@ -27,11 +27,26 @@
   },
   "five_source_csq_home_crop": {
     "status": "PARTIAL_RESIDUAL",
-    "note": "Historical residual remains; Outcome B citation attribution advanced in 78b9cbc but five-source live regression not redeclared green",
+    "focused_run": "2026-11-17-PHASE-1-EXIT-09-FIVE-SOURCE-CSQ-RUN.v11.0.1.json",
+    "focused_result": "140 passed / 5 failed / 737 assertions / exit 1; after stale-selector fix expect 4 remaining failures",
+    "stale_selector_fix": "SemanticScholarProviderIntegrationTest::test_selector_uses_semantic_scholar_not_consensus now asserts contains scholarly trio and excludes consensus",
+    "retained_failures": [
+      "PostCsqSemanticPreservationTest::test_crop_knowledge_option_without_independent_roles_keeps_existing_variant_family",
+      "SemanticScholarProviderIntegrationTest query compilation (cucurbitaceae, egypt)",
+      "SemanticScholarProviderIntegrationTest supporting_answer citations count"
+    ],
+    "home_crop": "Phase4HomeCropEvidenceContractTest PASS in focused run",
     "related": [
+      "2026-11-17-PHASE-1-EXIT-09-FIVE-SOURCE-CSQ-RUN.v11.0.1.json",
       "2026-11-17-PHASE-1-OUTCOME-B-REMEDIATION.v10.9.6.json",
       "2026-11-17-PHASE-1-SEMANTIC-SCHOLAR-SOURCE-AUDIT.v10.27.json"
     ]
+  },
+  "audit_confirmation": {
+    "source": "agent 19a3b72b-ca93-44d3-9fca-5107c5362f73",
+    "server_restart": "closed_linux_reuse_valid",
+    "section_8_23_8": "OD-8.23.8-A already owner-approved N/A for Cap-on-PG",
+    "only_real_open_gap": "five_source_csq_home_crop"
   },
   "historical_passing_groups_not_rerun": [
     {"group": "ScientificRecordStore", "reported": "19/308 EXIT 0 1 skipped"},
@@ -40,7 +55,7 @@
   ],
   "overall_exit09": "PARTIAL",
   "remaining": [
-    "Five-source / CSQ / Home-Crop regression residual",
-    "Do not equate historical suite PASS with current HEAD without focused re-run when code changes"
+    "Four retained focused-regression failures (compilation/citation/role-independence)",
+    "Do not declare five-source green until focused suite exit 0"
   ]
 }

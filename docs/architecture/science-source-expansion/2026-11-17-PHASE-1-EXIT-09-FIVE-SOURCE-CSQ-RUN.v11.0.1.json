@@ -1,0 +1,63 @@
+{
+  "schema_id": "wsa.exit09_five_source_csq_run.v1",
+  "revision": "11.0.1",
+  "recorded_at_utc": "2026-11-17T19:25:00Z",
+  "trigger": "Follow-up from EXIT-09 residual audit (agent 19a3b72b-ca93-44d3-9fca-5107c5362f73): five-source/CSQ/Home-Crop is the open gap",
+  "head": "9b3bf52",
+  "command": "docker exec wsa-enterprise-backend-1 sh -lc 'cd /var/www/html && php artisan test --no-ansi tests/Unit/Agriculture/Research/Search/ScientificSearchQueryBuilderAuthorityTest.php tests/Unit/Agriculture/Research/PostCsqSemanticPreservationTest.php tests/Unit/Agriculture/Research/CsqArchitecturalClosureTest.php tests/Unit/Agriculture/Research/Search/ScientificSearchCanonicalCompilationTest.php tests/Unit/Agriculture/Research/VerifiedIdentityConsumptionAtCsqFreezeContractTest.php tests/Unit/Agriculture/Research/RetrievalSemanticContractSlimTest.php tests/Feature/SemanticScholarProviderIntegrationTest.php tests/Feature/Phase4HomeCropEvidenceContractTest.php tests/Feature/Agriculture/Intelligence/ScientificProviderIsolationFeatureTest.php tests/Unit/Agriculture/Research/Search/ScientificProviderContractIsolationTest.php'",
+  "log": "docs/architecture/science-source-expansion/_tmp-r1101-exit09-five-source-csq.txt",
+  "result": {
+    "passed": 140,
+    "failed": 5,
+    "assertions": 737,
+    "duration_s": 54.27,
+    "exit_code": 1
+  },
+  "failures": [
+    {
+      "test": "PostCsqSemanticPreservationTest::test_crop_knowledge_option_without_independent_roles_keeps_existing_variant_family",
+      "classification": "COMMITTED_OR_RUNTIME_REGRESSION",
+      "note": "Expected hasIndependentQuestionRoles=false; got true. Test file not WIP-dirty; related WIP may exist in QUS/CSQ — not mixed into this fix.",
+      "action": "RETAIN_FAIL_EXIT09_PARTIAL"
+    },
+    {
+      "test": "SemanticScholarProviderIntegrationTest::test_k_cucurbitaceae_family_compiled",
+      "classification": "QUERY_COMPILATION_EXPECTATION",
+      "note": "Variants lack latin cucurbitaceae token; Arabic family surface present. Matches prior SS audit residual.",
+      "action": "RETAIN_FAIL_EXIT09_PARTIAL"
+    },
+    {
+      "test": "SemanticScholarProviderIntegrationTest::test_l_egypt_land_types_compiled",
+      "classification": "QUERY_COMPILATION_EXPECTATION",
+      "note": "Location Egypt on plan but not in compiled variants joined string.",
+      "action": "RETAIN_FAIL_EXIT09_PARTIAL"
+    },
+    {
+      "test": "SemanticScholarProviderIntegrationTest::test_n_supporting_answer_emits_citations",
+      "classification": "CITATION_ELIGIBILITY_STRICTNESS",
+      "note": "supported_answer mode with 0 citations — DIRECT/SUPPORTING eligibility gate; do not weaken.",
+      "action": "RETAIN_FAIL_EXIT09_PARTIAL"
+    },
+    {
+      "test": "SemanticScholarProviderIntegrationTest::test_selector_uses_semantic_scholar_not_consensus",
+      "classification": "STALE_TEST_EXPECTATION",
+      "note": "Asserted exact [openalex,crossref,semantic_scholar]; runtime correctly selects expanded authorized set including fao_stat/agris/gbif/…",
+      "action": "FIXED_ASSERT_CONTAINS_REQUIRED_SCHOLARLY_EXCLUDES_CONSENSUS"
+    }
+  ],
+  "passing_groups": [
+    "ScientificSearchQueryBuilderAuthorityTest",
+    "CsqArchitecturalClosureTest",
+    "ScientificSearchCanonicalCompilationTest",
+    "VerifiedIdentityConsumptionAtCsqFreezeContractTest",
+    "RetrievalSemanticContractSlimTest",
+    "Phase4HomeCropEvidenceContractTest",
+    "ScientificProviderIsolationFeatureTest",
+    "ScientificProviderContractIsolationTest"
+  ],
+  "overall_exit09": "PARTIAL",
+  "closure_blocked_by": [
+    "4 retained failures after stale-selector fix",
+    "No claim of five-source green without exit 0"
+  ]
+}
