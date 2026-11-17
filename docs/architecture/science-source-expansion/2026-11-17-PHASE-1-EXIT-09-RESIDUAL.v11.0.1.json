@@ -1,0 +1,46 @@
+{
+  "schema_id": "wsa.exit09_residual.v1",
+  "revision": "11.0.1",
+  "recorded_at_utc": "2026-11-17T19:15:00Z",
+  "criterion": "P1-EXIT-09",
+  "method": "evidence_reuse_no_full_suite_rerun",
+  "section_8_23_8": {
+    "owner_decision": "OD-8.23.8-A-2026-11-12",
+    "evidence": "2026-11-12-PHASE-1-SECTION-8-23-8-OWNER-DECISION-ACCEPTED.v10.10.json",
+    "cap_on_postgresql_current": "REQUIREMENT_NOT_APPLICABLE_WITH_ARCHITECTURAL_EVIDENCE",
+    "capver_sqlite_current": "REQUIREMENT_SATISFIED",
+    "executor_note": "Owner already accepted Alternative A; no new N/A waiver request required this revision"
+  },
+  "server_restart": {
+    "test": "Tests\\Pgsql\\ScientificRecordStoreServerRestartTest::test_committed_state_survives_a_database_server_restart",
+    "default_phpunit_behavior": "markTestSkipped unless explicit write/verify pair",
+    "linux_container_evidence": "2026-11-12-PHASE-1-EXIT-09-SERVERRESTART-LINUX-COMPARISON.v10.16.json",
+    "linux_result": "write 1/5 PASS; verify 1/15 PASS; generations [2,1]",
+    "os_target": "DETERMINED_LINUX_CONTAINERS (OD-EXIT09-LINUX-CONTAINERS-2026-11-14)",
+    "native_windows_required": false,
+    "status": "EVIDENCED_LINUX_CONTAINERS_NOT_RERUN"
+  },
+  "ten_failures": {
+    "prior": "2026-11-12-PHASE-1-EXIT-09-TEN-FAILURE-INVESTIGATION.v10.8.3.json",
+    "reopen": false,
+    "reason": "No new regression evidence against committed implementation this revision"
+  },
+  "five_source_csq_home_crop": {
+    "status": "PARTIAL_RESIDUAL",
+    "note": "Historical residual remains; Outcome B citation attribution advanced in 78b9cbc but five-source live regression not redeclared green",
+    "related": [
+      "2026-11-17-PHASE-1-OUTCOME-B-REMEDIATION.v10.9.6.json",
+      "2026-11-17-PHASE-1-SEMANTIC-SCHOLAR-SOURCE-AUDIT.v10.27.json"
+    ]
+  },
+  "historical_passing_groups_not_rerun": [
+    {"group": "ScientificRecordStore", "reported": "19/308 EXIT 0 1 skipped"},
+    {"group": "IC+Guard", "reported": "157/933 EXIT 0"},
+    {"group": "CapVer Persistence", "reported": "27/101 EXIT 0"}
+  ],
+  "overall_exit09": "PARTIAL",
+  "remaining": [
+    "Five-source / CSQ / Home-Crop regression residual",
+    "Do not equate historical suite PASS with current HEAD without focused re-run when code changes"
+  ]
+}

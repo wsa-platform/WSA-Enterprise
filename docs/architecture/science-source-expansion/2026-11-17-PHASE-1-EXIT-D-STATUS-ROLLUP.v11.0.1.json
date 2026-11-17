@@ -1,0 +1,45 @@
+{
+  "schema_id": "wsa.phase1_exit_d_status_rollup.v1",
+  "revision": "11.0.1",
+  "generated_at_utc": "2026-11-17T19:20:00Z",
+  "baseline_head": "fc21503",
+  "method": "evidence_based_update_from_v10.9.6_plus_live_probes_and_archive_supersession",
+  "exits": {
+    "EXIT-01": "PARTIAL",
+    "EXIT-02": "PARTIAL",
+    "EXIT-03": "PARTIAL",
+    "EXIT-04": "PASS",
+    "EXIT-05": "BLOCKED",
+    "EXIT-06": "PARTIAL",
+    "EXIT-07": "BLOCKED",
+    "EXIT-08": "PARTIAL",
+    "EXIT-09": "PARTIAL",
+    "EXIT-10": "PARTIAL",
+    "EXIT-11": "NOT_RUN"
+  },
+  "d_requirements": {
+    "D-01": "PASS",
+    "D-02": "PASS",
+    "D-03": "PASS",
+    "D-04": "PARTIAL",
+    "D-05": "PASS",
+    "D-06": "PASS",
+    "D-07": "PASS",
+    "D-08": "SATISFIED_VIA_OWNER_AUTHORIZED_ALTERNATIVE",
+    "D-09": "PASS",
+    "D-10": "PASS",
+    "D-11": "PARTIAL",
+    "D-12": "PASS",
+    "D-13": "PARTIAL",
+    "D-14": "PARTIAL"
+  },
+  "this_execution": {
+    "archive_supersession": "SUPERSESSION_COMPLETED_HISTORY_PRESERVED",
+    "exit08_live_probe": "PARTIAL — openalex/crossref/gbif/bhl/oe/agris catalog LIVE; s2s 429; consensus missing key; faostat 403",
+    "exit09": "PARTIAL — §8.23.8 closed by OD-8.23.8-A; ServerRestart Linux evidenced; five-source residual open",
+    "by0_checkpoint": "completed=124 partial=[] remaining_eligible=19",
+    "tier1_archive_of_new_v11_artifacts": "PENDING_OWNER_SCRIPT_APPROVAL"
+  },
+  "formal_gate_eligible": false,
+  "classification": "PHASE_1_GAP_CLOSURE_PARTIAL"
+}
