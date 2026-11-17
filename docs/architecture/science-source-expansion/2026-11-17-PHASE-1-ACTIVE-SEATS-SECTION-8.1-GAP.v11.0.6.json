@@ -1,0 +1,123 @@
+{
+  "schema_id": "wsa.phase1_section_8_1_gap.v1",
+  "revision": "11.0.6",
+  "recorded_at_utc": "2026-11-17T21:05:00Z",
+  "head": "55bc01a0ce3c3a22fab2f2b9b0598f88678a2c5b",
+  "claim_guard": [
+    "No seat is assigned SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "PASS on individual onboarding/E2E tests does not alone satisfy all six §8.1 cumulative conditions.",
+    "Membership register and 2026-11-11 matrix untouched."
+  ],
+  "suite_artifact": "docs/architecture/science-source-expansion/_tmp-r1106-active-seat-suite.txt",
+  "conditions": [
+    "C1_E2E_SOURCE_PATH",
+    "C2_PROVENANCE",
+    "C3_ANSWER_TRACEABILITY",
+    "C4_QUESTION_CSQ_IDENTITY",
+    "C5_OPTION_B_TECHNICAL_RECORD",
+    "C6_SOURCE_SPECIFIC_ADDITIONAL"
+  ],
+  "seats": [
+    {
+      "adr_id": "G1-01",
+      "source_key": "agris",
+      "runtime_activation": "ACTIVE",
+      "conditions": {
+        "C1_E2E_SOURCE_PATH": "PARTIAL",
+        "C2_PROVENANCE": "PARTIAL",
+        "C3_ANSWER_TRACEABILITY": "PARTIAL",
+        "C4_QUESTION_CSQ_IDENTITY": "PARTIAL",
+        "C5_OPTION_B_TECHNICAL_RECORD": "PASS",
+        "C6_SOURCE_SPECIFIC_ADDITIONAL": "PARTIAL"
+      },
+      "evidence": [
+        "AgrisAndDrDukeGovernedActivationTest (fixture→orchestrator)",
+        "GovernedSourceRuntimeActivationContractTest",
+        "GovernedSourceAnswerTraceabilityContractTest",
+        "2026-11-17-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.6.json"
+      ],
+      "gap_to_verified": "Orchestrator→AnswerComposer live path with source-specific retrieval identity; full §8.1 cumulative package",
+      "scientific_integration_status": "PARTIALLY_VERIFIED"
+    },
+    {
+      "adr_id": "G1-02",
+      "source_key": "organic_eprints",
+      "runtime_activation": "ACTIVE",
+      "conditions": {
+        "C1_E2E_SOURCE_PATH": "PARTIAL",
+        "C2_PROVENANCE": "PARTIAL",
+        "C3_ANSWER_TRACEABILITY": "PARTIAL",
+        "C4_QUESTION_CSQ_IDENTITY": "PARTIAL",
+        "C5_OPTION_B_TECHNICAL_RECORD": "PASS",
+        "C6_SOURCE_SPECIFIC_ADDITIONAL": "PARTIAL"
+      },
+      "evidence": [
+        "OrganicEprintsOaiLocalIndexPathTest (CSQ→orchestrator seeded index)",
+        "GovernedSourceRuntimeActivationContractTest",
+        "GovernedSourceAnswerTraceabilityContractTest"
+      ],
+      "gap_to_verified": "Orchestrator→AnswerComposer live path for OE under Outcome B",
+      "scientific_integration_status": "PARTIALLY_VERIFIED"
+    },
+    {
+      "adr_id": "G1-17",
+      "source_key": "dr_duke",
+      "runtime_activation": "ACTIVE",
+      "conditions": {
+        "C1_E2E_SOURCE_PATH": "PARTIAL",
+        "C2_PROVENANCE": "PARTIAL",
+        "C3_ANSWER_TRACEABILITY": "PARTIAL",
+        "C4_QUESTION_CSQ_IDENTITY": "PARTIAL",
+        "C5_OPTION_B_TECHNICAL_RECORD": "PASS",
+        "C6_SOURCE_SPECIFIC_ADDITIONAL": "PARTIAL"
+      },
+      "evidence": [
+        "AgrisAndDrDukeGovernedActivationTest (identity preservation on governed path)",
+        "GovernedSourceAnswerTraceabilityContractTest"
+      ],
+      "gap_to_verified": "OD-G1-17 scope-limited projection + full orchestrator→composer §8.1 package",
+      "scientific_integration_status": "PARTIALLY_VERIFIED"
+    },
+    {
+      "adr_id": "G5-04",
+      "source_key": "gbif",
+      "runtime_activation": "ACTIVE",
+      "conditions": {
+        "C1_E2E_SOURCE_PATH": "PARTIAL",
+        "C2_PROVENANCE": "PARTIAL",
+        "C3_ANSWER_TRACEABILITY": "PARTIAL",
+        "C4_QUESTION_CSQ_IDENTITY": "PARTIAL",
+        "C5_OPTION_B_TECHNICAL_RECORD": "PASS",
+        "C6_SOURCE_SPECIFIC_ADDITIONAL": "PARTIAL"
+      },
+      "evidence": [
+        "GbifOrchestratorEndToEndTest (auto-select from CSQ; error isolation)",
+        "GovernedSourceAnswerTraceabilityContractTest"
+      ],
+      "gap_to_verified": "Live GBIF retrieval→AnswerComposer claim linkage under full §8.1 package",
+      "scientific_integration_status": "PARTIALLY_VERIFIED"
+    },
+    {
+      "adr_id": "G6-20",
+      "source_key": "bhl",
+      "runtime_activation": "ACTIVE",
+      "conditions": {
+        "C1_E2E_SOURCE_PATH": "PARTIAL",
+        "C2_PROVENANCE": "PARTIAL",
+        "C3_ANSWER_TRACEABILITY": "PARTIAL",
+        "C4_QUESTION_CSQ_IDENTITY": "PARTIAL",
+        "C5_OPTION_B_TECHNICAL_RECORD": "PASS",
+        "C6_SOURCE_SPECIFIC_ADDITIONAL": "PARTIAL"
+      },
+      "evidence": [
+        "BhlOrchestratorNearReadyPathTest",
+        "BhlApiEnvelopeAndCredentialTest",
+        "GovernedSourceAnswerTraceabilityContractTest"
+      ],
+      "gap_to_verified": "Live credential path attribution without secret exposure + full §8.1 package",
+      "scientific_integration_status": "PARTIALLY_VERIFIED"
+    }
+  ],
+  "scientific_integration_verified_count": 0,
+  "exit_links": ["EXIT-08", "EXIT-09", "EXIT-10"]
+}
