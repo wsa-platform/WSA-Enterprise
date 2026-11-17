@@ -10,28 +10,17 @@ use App\Services\Agriculture\Research\Onboarding\SeatActivationState;
 use App\Services\Agriculture\Research\Search\Family\Rest\RestJsonScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\MultiSourceScientificSearchOrchestrator;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
-use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
-use App\Services\Agriculture\Research\Search\ScientificEvidenceRelevanceGate;
 use App\Services\Agriculture\Research\Search\ScientificResultDeduplicator;
 use App\Services\Agriculture\Research\Search\ScientificResultRanker;
 use App\Services\Agriculture\Research\Search\ScientificSearchQueryBuilder;
 use App\Services\Agriculture\Research\Search\ScientificSourceAdapterRegistry;
 use App\Services\Agriculture\Research\Search\ScientificSourceSearchOutcome;
 use App\Services\Agriculture\Research\Search\ScientificSourceSelector;
-use App\Services\Agriculture\Research\Search\ScientificStatisticalClaimAligner;
-use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
-use App\Services\Agriculture\Research\Synthesis\AnswerExpressionAccuracyGate;
-use App\Services\Agriculture\Research\Synthesis\ResearchAnswerCitation;
-use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
-use App\Services\Agriculture\Research\Validation\EvidenceValidationStatus;
-use App\Services\Agriculture\Research\Validation\EvidenceVerificationLayer;
-use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
-use App\Services\Agriculture\ScientificSourceValidator;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Mockery;
-use ReflectionMethod;
+use Tests\Support\ScientificEvidenceAnswerCitationBridge;
 use Tests\TestCase;
 
 /**
@@ -232,70 +221,15 @@ class GbifOrchestratorEndToEndTest extends TestCase
         $this->assertSame('gbif', $result->sourceKey);
         $this->assertSame('2704179', (string) $result->sourceIdentifier);
 
-        $relevance = Mockery::mock(ScientificEvidenceRelevanceGate::class);
-        $relevance->shouldReceive('isRelevant')->andReturn(true);
-        $relevance->shouldReceive('assess')->andReturn([
-            'species_relation' => 'same_species',
-            'entity_matched' => true,
-            'topic_matched' => true,
-            'sense_coverage' => true,
-            'factor_coverage' => 1.0,
-        ]);
-        $composer = new AnswerComposer(
-            app(ScientificSourceValidator::class),
-            $relevance,
-            app(ScientificEvidenceDirectnessAssessor::class),
-            app(EvidenceVerificationLayer::class),
-            new ScientificStatisticalClaimAligner,
-            expressionAccuracyGate: new AnswerExpressionAccuracyGate,
-        );
-
-        $evidence = new ScientificEvidenceItem(
-            evidenceId: 'ev-gbif-'.$result->sourceIdentifier,
-            sourceId: (string) $result->sourceIdentifier,
-            sourceKey: $result->sourceKey,
-            sourceType: 'peer_reviewed_journal',
-            publicationTitle: $result->title.' taxonomy evidence for Triticum aestivum classification',
-            authors: $result->authors !== [] ? $result->authors : ['GBIF Backbone'],
-            institution: 'University Research Institute',
-            journal: 'Agronomy Journal',
-            doi: $result->doi ?? '10.1000/gbif-'.$result->sourceIdentifier,
-            url: $result->canonicalUrl ?? 'https://www.gbif.org/species/'.$result->sourceIdentifier,
-            publicationYear: $result->publicationYear ?? 2023,
-            retrievedAt: $result->primaryProvenance()?->retrievedAt ?? now()->toIso8601String(),
-            agriculturalDomain: 'agronomy',
+        $composer = ScientificEvidenceAnswerCitationBridge::makeComposer();
+        $evidence = ScientificEvidenceAnswerCitationBridge::evidenceFromSearchResult(
+            $result,
             claimTopic: 'taxonomy',
-            evidenceText: $result->title.' reports species classification evidence for Triticum aestivum.',
-            validationStatus: EvidenceValidationStatus::EVIDENCE_USABLE,
-            validationFailures: [],
-            claimRelationship: ClaimEvidenceRelationship::SUPPORTED,
-            confidence: 0.9,
-            qualityScore: 0.9,
-            qualityFactors: [
-                'evidence_directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
-            ],
-            sourceAttribution: [
-                'organization' => 'University Research Institute',
-                'source_type' => 'peer_reviewed_journal',
-                'found_by_sources' => [$result->sourceKey],
-                'evidence_directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
-                'provenance' => [
-                    'source_key' => $result->sourceKey,
-                    'source_identifier' => $result->sourceIdentifier,
-                    'adapter_class' => $result->primaryProvenance()?->adapterClass,
-                ],
-            ],
+            scientificIdentityPhrase: 'Triticum aestivum species classification',
         );
-
-        $method = new ReflectionMethod(AnswerComposer::class, 'buildCitations');
-        $method->setAccessible(true);
-        /** @var list<ResearchAnswerCitation> $citations */
-        $citations = $method->invoke($composer, [$evidence], []);
+        $citations = ScientificEvidenceAnswerCitationBridge::buildCitations($composer, [$evidence]);
         $this->assertCount(1, $citations);
-        $this->assertSame('gbif', $citations[0]->sourceKey);
-        $this->assertSame('2704179', $citations[0]->sourceId);
-        $this->assertSame('ev-gbif-2704179', $citations[0]->evidenceId);
-        $this->assertContains('gbif', $citations[0]->contributingProviders);
+        ScientificEvidenceAnswerCitationBridge::assertCitationPreservesSourceIdentity($citations[0], $result);
     }
 
     public function test_gbif_provider_errors_are_isolated_on_orchestrator_path(): void

@@ -32,11 +32,12 @@
       },
       "evidence": [
         "AgrisAndDrDukeGovernedActivationTest (fixture→orchestrator)",
+        "GovernedActiveSourceC1C3EvidenceBridgeMirrorsTest::test_agris_orchestrator_result_identity_traces_into_answer_citations",
         "GovernedSourceRuntimeActivationContractTest",
         "GovernedSourceAnswerTraceabilityContractTest",
         "2026-11-17-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.6.json"
       ],
-      "gap_to_verified": "Orchestrator→AnswerComposer live path with source-specific retrieval identity; full §8.1 cumulative package",
+      "gap_to_verified": "Live HTTP/validation-layer mapping without forced DIRECT; full §8.1 cumulative package",
       "scientific_integration_status": "PARTIALLY_VERIFIED"
     },
     {
@@ -53,10 +54,11 @@
       },
       "evidence": [
         "OrganicEprintsOaiLocalIndexPathTest (CSQ→orchestrator seeded index)",
+        "GovernedActiveSourceC1C3EvidenceBridgeMirrorsTest::test_organic_eprints_orchestrator_result_identity_traces_into_answer_citations",
         "GovernedSourceRuntimeActivationContractTest",
         "GovernedSourceAnswerTraceabilityContractTest"
       ],
-      "gap_to_verified": "Orchestrator→AnswerComposer live path for OE under Outcome B",
+      "gap_to_verified": "Live harvest corpus + validation-layer mapping without forced DIRECT",
       "scientific_integration_status": "PARTIALLY_VERIFIED"
     },
     {
@@ -73,9 +75,10 @@
       },
       "evidence": [
         "AgrisAndDrDukeGovernedActivationTest (identity preservation on governed path)",
+        "GovernedActiveSourceC1C3EvidenceBridgeMirrorsTest::test_dr_duke_orchestrator_result_identity_traces_into_answer_citations",
         "GovernedSourceAnswerTraceabilityContractTest"
       ],
-      "gap_to_verified": "OD-G1-17 scope-limited projection + full orchestrator→composer §8.1 package",
+      "gap_to_verified": "OD-G1-17 scope-limited projection + live dump + validation-layer §8.1 package",
       "scientific_integration_status": "PARTIALLY_VERIFIED"
     },
     {
@@ -113,9 +116,10 @@
       "evidence": [
         "BhlOrchestratorNearReadyPathTest",
         "BhlApiEnvelopeAndCredentialTest",
+        "GovernedActiveSourceC1C3EvidenceBridgeMirrorsTest::test_bhl_orchestrator_result_identity_traces_into_answer_citations",
         "GovernedSourceAnswerTraceabilityContractTest"
       ],
-      "gap_to_verified": "Live credential path attribution without secret exposure + full §8.1 package",
+      "gap_to_verified": "Live credential path without secret exposure + validation-layer §8.1 package",
       "scientific_integration_status": "PARTIALLY_VERIFIED"
     }
   ],
