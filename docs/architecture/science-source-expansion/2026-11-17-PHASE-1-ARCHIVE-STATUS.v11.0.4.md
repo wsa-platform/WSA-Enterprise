@@ -2,25 +2,11 @@
 
 | Item | Status |
 |---|---|
-| Historical archive count (post 11.0.1 supersession) | 806 (preserved) |
-| New Tier-1 artifacts from 11.0.3/11.0.4 (reports, Option B assessment, EXIT evidence) | `READY_FOR_ARCHIVE` / `PENDING` ingestion batch |
+| Count before this batch | 806 historical (11.0.1) → **821** after first successful ingest pass |
+| Count after verification re-run | **821** (identity-idempotent `unchanged`) |
+| Tier-1 batch 11.0.4 | `ARCHIVED_AND_VERIFIED` / `ALREADY_ARCHIVED_AND_VERIFIED` |
+| Evidence | `2026-11-17-PHASE-1-ARCHIVE-TIER1-EXECUTION.v11.0.4.json` |
 | Direct `archive.sqlite` writes | Not used |
-| Duplicate historical archival of prior 17 verified artifacts | Not repeated |
-| Active ingestion writer | None observed |
+| Active ingestion writer | None after batch |
 
-Eligible new Tier-1 candidates (batch ≤20 when ingested via approved services):
-
-- `2026-11-17-PHASE-1-REV11.0.3-ENGINEERING-REPORT.ar.md`
-- `2026-11-17-PHASE-1-110-SOURCE-PRESERVATION-GUARD.v11.0.4.md`
-- `2026-11-17-PHASE-1-110-SOURCE-MASTER-STATUS-REGISTRY.v11.0.3.json`
-- `2026-11-17-PHASE-1-EXIT-D-STATUS-ROLLUP.v11.0.3.json`
-- `2026-11-17-PHASE-1-EXIT-09-FIVE-SOURCE-CSQ-RUN.v11.0.3.json`
-- `2026-11-17-PHASE-1-SCIENTIFIC-SEARCH-DEFECT-REGISTER.v11.0.3.json`
-- `2026-11-17-PHASE-1-LEVEL1-SCIENTIFIC-SEARCH-AUDIT.v11.0.3.md`
-- `2026-11-17-PHASE-1-LEVEL2-SCIENTIFIC-SEARCH-AUDIT.v11.0.4.md`
-- `2026-11-17-PHASE-1-EXIT-10-EVIDENCE.v11.0.4.json`
-- `2026-11-17-PHASE-1-D01-D14-RECONCILIATION.v11.0.4.md`
-- `2026-11-17-PHASE-1-OWNER-EXTERNAL-BLOCKERS.v11.0.4.md`
-- `2026-11-17-PHASE-1-COMMIT-PUSH-REGISTER.v11.0.4.json`
-
-Next: approved `ingestFile` → readback → `verifyIntegrity` → manifest update (no blob overwrite).
+All listed eligible artifacts were ingested via `MissionArtifactArchiveFactory::default()->ingestFile`, with readback + `verifyIntegrity` per item. Re-run returned `unchanged` (identity short-circuit), confirming preservation without duplicate blob overwrite.
