@@ -1,0 +1,60 @@
+{
+  "schema_id": "wsa.phase1_exit_d_status_rollup.v1",
+  "revision": "11.0.3",
+  "generated_at_utc": "2026-11-17T20:20:00Z",
+  "baseline_head_at_start": "547563e5d81d512aedc01bcd2e57dd73868410c9",
+  "method": "evidence_based_update_from_v11.0.1_plus_level1_csq_repairs_and_110_registry",
+  "exits": {
+    "EXIT-01": "PARTIAL",
+    "EXIT-02": "PARTIAL",
+    "EXIT-03": "PARTIAL",
+    "EXIT-04": "PASS",
+    "EXIT-05": "BLOCKED",
+    "EXIT-06": "PARTIAL",
+    "EXIT-07": "BLOCKED",
+    "EXIT-08": "PARTIAL",
+    "EXIT-09": "PARTIAL",
+    "EXIT-10": "PARTIAL",
+    "EXIT-11": "NOT_RUN"
+  },
+  "exit_notes": {
+    "EXIT-05": "External staging/operator evidence still unavailable — preserve BLOCKED",
+    "EXIT-07": "Original IC evidence for G2-26 still unavailable — preserve BLOCKED",
+    "EXIT-08": "Live connectivity evidence from v11.0.1 preserved; no unjustified reprobes; credential/rate-limit blockers remain",
+    "EXIT-09": "Focused five-source/CSQ suite now 145 pass / 0 fail / 755 assert (was 140/5/737). Overall EXIT-09 remains PARTIAL pending broader original acceptance dimensions",
+    "EXIT-10": "110-source registry completed with verified-family evidence columns still incomplete for non-runtime seats",
+    "EXIT-11": "formal_gate_eligible=false — NOT_RUN"
+  },
+  "d_requirements": {
+    "D-01": "PASS",
+    "D-02": "PASS",
+    "D-03": "PASS",
+    "D-04": "PARTIAL",
+    "D-05": "PASS",
+    "D-06": "PASS",
+    "D-07": "PASS",
+    "D-08": "SATISFIED_VIA_OWNER_AUTHORIZED_ALTERNATIVE",
+    "D-09": "PASS",
+    "D-10": "PASS",
+    "D-11": "PARTIAL",
+    "D-12": "PASS",
+    "D-13": "PARTIAL",
+    "D-14": "PARTIAL"
+  },
+  "this_execution": {
+    "level1_csq_repairs": "REPAIRED_AND_VERIFIED (SSD-1103-01/02/03)",
+    "exit09_focused_suite": "145_PASS_0_FAIL_755_ASSERT_EXIT_0",
+    "source_110_registry": "RECONCILED_110_UNIQUE",
+    "exit08_live_probe": "PRESERVED_FROM_v11.0.1_NO_REPROBE",
+    "by0_checkpoint": "completed=124 partial=[] (verified at session start)",
+    "formal_gate_eligible": false
+  },
+  "owner_external_blockers": [
+    "Consensus API key via approved secret mechanism",
+    "FAOSTAT credential verification/correction (HTTP 403)",
+    "Semantic Scholar rate-limit resolution (HTTP 429)",
+    "EXIT-05 staging/operator evidence",
+    "EXIT-07 original IC evidence for G2-26"
+  ],
+  "classification": "PHASE_1_GAP_CLOSURE_PARTIAL"
+}

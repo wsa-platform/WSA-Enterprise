@@ -1,0 +1,73 @@
+{
+  "schema_id": "wsa.phase1_scientific_search_defect_register.v1",
+  "revision": "11.0.3",
+  "generated_at_utc": "2026-11-17T20:15:00Z",
+  "defects": [
+    {
+      "defect_id": "SSD-1103-01",
+      "component": "ScientificSearchQueryBuilder",
+      "file_method": "backend/app/Services/Agriculture/Research/Search/ScientificSearchQueryBuilder.php::buildVariantsFromCanonicalSpecification",
+      "root_cause": "When CSQ present, canonical compilation emitted role/sense terms without national geography or Latin plant-family inventory specialization",
+      "severity": "CRITICAL",
+      "impact": "Egypt land questions lost Egypt; Cucurbitaceae questions lost Latin family identity in retrieval queries",
+      "scope": "CSQ compilation path / multiple sources",
+      "scientific_identity_impact": "SCIENTIFIC_IDENTITY_LOSS",
+      "classification": "QUERY_COMPILATION_DEFECT",
+      "related_exit": ["EXIT-09"],
+      "related_d": ["D-04", "D-11"],
+      "reproduction": "Plan Arabic Egypt land or cucurbit family question; buildVariantsFromPlan; observe missing egypt/cucurbitaceae",
+      "evidence": ["_tmp-r1103-csq-probe3-out.json", "SemanticScholarProviderIntegrationTest K/L"],
+      "corrective_action": "Specialize CSQ path for land_classification and plant_family_members; uniqueBoundedVariantsPreservingLocation",
+      "tests": ["test_k_cucurbitaceae_family_variants", "test_l_egypt_land_national_first_variants"],
+      "before_after": {
+        "before": "types land classification | Arabic family species only",
+        "after": "national land inventory with Egypt; Cucurbitaceae plants/species/members"
+      },
+      "status": "REPAIRED_AND_VERIFIED"
+    },
+    {
+      "defect_id": "SSD-1103-02",
+      "component": "QueryUnderstandingService",
+      "file_method": "backend/app/Services/Agriculture/Research/QueryUnderstandingService.php::stripKnowledgeOptionEchoRoles",
+      "root_cause": "Crop-profile question echoing knowledge_option (farming-needs → process farming) marked hasIndependentQuestionRoles=true",
+      "severity": "HIGH",
+      "impact": "Crop knowledge-option CSQ treated as independent question; variant family contract broke",
+      "scope": "crop_profile CSQ freeze",
+      "scientific_identity_impact": "CSQ_CONTRACT_VIOLATION",
+      "classification": "CSQ_CONTRACT_VIOLATION",
+      "related_exit": ["EXIT-09"],
+      "related_d": ["D-11"],
+      "reproduction": "planKnowledgeQuery sweet potato farming needs + farming-needs option; assert hasIndependentQuestionRoles",
+      "evidence": ["PostCsqSemanticPreservationTest"],
+      "corrective_action": "Strip knowledge-option echo process/property surfaces before freeze",
+      "tests": ["test_crop_knowledge_option_without_independent_roles_keeps_existing_variant_family"],
+      "before_after": {
+        "before": "hasIndependentQuestionRoles=true process=farming",
+        "after": "hasIndependentQuestionRoles=false; Ipomoea batatas variants retained"
+      },
+      "status": "REPAIRED_AND_VERIFIED"
+    },
+    {
+      "defect_id": "SSD-1103-03",
+      "component": "SemanticScholarProviderIntegrationTest",
+      "file_method": "backend/tests/Feature/SemanticScholarProviderIntegrationTest.php::test_n_supporting_answer_eligible",
+      "root_cause": "Test expected primary citations from SUPPORTING-only supported_answer, contradicting Outcome B DIRECT gate",
+      "severity": "MEDIUM",
+      "impact": "False regression against authorized Outcome B contract",
+      "scope": "test expectation",
+      "scientific_identity_impact": "DOCUMENTATION_OR_EVIDENCE_GAP",
+      "classification": "TEST_DEFECT",
+      "related_exit": ["EXIT-09"],
+      "related_d": [],
+      "reproduction": "Compose two answer-eligible SUPPORTING items for Egypt land; citations empty by design",
+      "evidence": ["AnswerComposerEvidenceStateContractTest::test_03", "Outcome B commit 78b9cbc"],
+      "corrective_action": "Assert supported_answer hatch without admitting SUPPORTING into citations[]",
+      "tests": ["test_n_supporting_answer_eligible"],
+      "before_after": {
+        "before": "expected citations>=1 and no insufficient-direct summary",
+        "after": "citations=[]; evidenceReferences retained; Outcome B framing preserved"
+      },
+      "status": "REPAIRED_AND_VERIFIED"
+    }
+  ]
+}

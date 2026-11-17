@@ -1,0 +1,50 @@
+{
+  "schema_id": "wsa.phase1_exit09_five_source_csq_run.v1",
+  "revision": "11.0.3",
+  "generated_at_utc": "2026-11-17T20:15:00Z",
+  "scope_refs": ["EXIT-09", "D-04", "D-11"],
+  "working_directory": "/var/www/html (docker: wsa-enterprise-backend-1)",
+  "command": "php artisan test tests/Unit/Agriculture/Research/Search/ScientificSearchQueryBuilderAuthorityTest.php tests/Unit/Agriculture/Research/PostCsqSemanticPreservationTest.php tests/Unit/Agriculture/Research/CsqArchitecturalClosureTest.php tests/Unit/Agriculture/Research/Search/ScientificSearchCanonicalCompilationTest.php tests/Unit/Agriculture/Research/VerifiedIdentityConsumptionAtCsqFreezeContractTest.php tests/Unit/Agriculture/Research/RetrievalSemanticContractSlimTest.php tests/Feature/SemanticScholarProviderIntegrationTest.php tests/Feature/Phase4HomeCropEvidenceContractTest.php tests/Feature/Agriculture/Intelligence/ScientificProviderIsolationFeatureTest.php tests/Unit/Agriculture/Research/Search/ScientificProviderContractIsolationTest.php",
+  "prior_v11_0_1": {
+    "tests_passed": 140,
+    "tests_failed": 5,
+    "assertions": 737,
+    "exit_code": 1
+  },
+  "result_v11_0_3": {
+    "tests_passed": 145,
+    "tests_failed": 0,
+    "assertions": 755,
+    "exit_code": 0,
+    "evidence_log": "docs/architecture/science-source-expansion/_tmp-r1103-exit09-five-source-csq.txt"
+  },
+  "repairs_applied": [
+    {
+      "defect_id": "SSD-1103-01",
+      "classification": "QUERY_COMPILATION_DEFECT",
+      "component": "ScientificSearchQueryBuilder::buildVariantsFromCanonicalSpecification",
+      "root_cause": "CSQ path omitted national land-inventory geography and Latin botanical-family variants",
+      "fix": "Preserve geography on CSQ variants; specialize land_classification and plant_family_members inventories"
+    },
+    {
+      "defect_id": "SSD-1103-02",
+      "classification": "CSQ_CONTRACT_VIOLATION",
+      "component": "QueryUnderstandingService::understandCropProfileContext",
+      "root_cause": "Knowledge-option echo process (farming from farming-needs) counted as independent role",
+      "fix": "stripKnowledgeOptionEchoRoles before CSQ freeze"
+    },
+    {
+      "defect_id": "SSD-1103-03",
+      "classification": "TEST_DEFECT",
+      "component": "SemanticScholarProviderIntegrationTest::test_n_supporting_answer_eligible",
+      "root_cause": "Stale expectation admitted SUPPORTING into primary citations contrary to Outcome B DIRECT gate",
+      "fix": "Align assertions with AnswerComposerEvidenceStateContractTest / Outcome B"
+    }
+  ],
+  "exit09_five_source_csq_residual": "CLOSED_FOR_FOCUSED_SUITE",
+  "exit09_overall_status": "PARTIAL",
+  "exit09_remaining": [
+    "Original acceptance may still require broader PostgreSQL/persistence dimensions beyond this focused suite",
+    "EXIT-08 live credential blockers remain external"
+  ]
+}

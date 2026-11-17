@@ -1,0 +1,30 @@
+{
+  "schema_id": "wsa.phase1_current_state.v1",
+  "revision": "11.0.3",
+  "recorded_at_utc": "2026-11-17T20:25:00Z",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "head_at_session_start": "547563e5d81d512aedc01bcd2e57dd73868410c9",
+  "remote_sync_at_session_start": { "ahead": 0, "behind": 0 },
+  "wip_preserved": true,
+  "ingest_writer_active": false,
+  "persist": {
+    "completed_packages": 124,
+    "partial": [],
+    "last_package": "AGRIS.ODS.BY0"
+  },
+  "latest_exit_rollup": "2026-11-17-PHASE-1-EXIT-D-STATUS-ROLLUP.v11.0.3.json",
+  "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "level1_csq_repairs": "REPAIRED_AND_VERIFIED",
+  "exit09_focused_suite": {
+    "passed": 145,
+    "failed": 0,
+    "assertions": 755,
+    "exit_code": 0
+  },
+  "registry_artifacts": {
+    "master_status_registry": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-110-SOURCE-MASTER-STATUS-REGISTRY.v11.0.3.json",
+    "reconciliation_result": "RECONCILED_110_UNIQUE_NO_INVENTED_IDS",
+    "source_identities": 110
+  },
+  "arabic_report": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-REV11.0.3-ENGINEERING-REPORT.ar.md"
+}
