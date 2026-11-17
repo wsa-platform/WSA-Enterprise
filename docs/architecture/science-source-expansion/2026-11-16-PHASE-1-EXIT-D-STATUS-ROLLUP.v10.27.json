@@ -42,8 +42,8 @@
   "phase_10_27_1": {
     "scale_preflight": "GO_BOUNDED",
     "unbounded_persist": "NO-GO_FOR_UNBOUNDED_RUN",
-    "persist": "PARTIAL_W6_COMPLETE_W7_IN_PROGRESS",
-    "persist_detail": "Window6 COMPLETE total_completed=117 remaining=26; Window7 launched once PID7269 starting AGRIS.ODS.PHC",
+    "persist": "PARTIAL_W7_ABNORMAL_EXIT",
+    "persist_detail": "W6 COMPLETE; W7 completed 6 packages then failed AGRIS.ODS.BY0 SQLSTATE HY000; checkpoint completed=123 partial BY0 skip=5000; resume blocked pending integrity authorization",
     "fts": "PENDING_INDEPENDENT",
     "activation": "NOT_ELIGIBLE"
   },

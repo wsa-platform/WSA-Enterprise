@@ -1,0 +1,1745 @@
+<timestamp>Monday, Nov 16, 2026, 4:06 PM (UTC+3)</timestamp>
+<user_query>
+# WSA-Enterprise — MASTER EXECUTION PROMPT
+# REVISION 10.27
+## Phase 1 Gap Closure — AGRIS Scale Safety, Ingest Completion, FTS, Scientific E2E, Preservation Archive & Formal Exit Readiness
+**Project:** WSA-Enterprise  
+**Repository:** `wsa-platform/WSA-Enterprise`  
+**Local Path:** `G:\WSA-Enterprise`  
+**Branch:** `phase-18-m18-ai-marketing-communications`  
+**Mission:** Continue Phase 1 Gap Closure  
+**Execution Model:** Evidence-driven, resumable, non-destructive, phase-gated  
+**Preservation Model:** Append-only, hash-verified  
+**Owner Authorization:** The Agent is authorized to investigate, design, implement, test, document, archive, commit, and push completed and verified changes within the boundaries of this Master Prompt.
+---
+# PART 0 — EXECUTIVE CONTROL AND MISSION STRUCTURE
+## 0.1 Mission Objective
+Continue the existing WSA-Enterprise Phase 1 Gap Closure mission.
+This is a continuation, not a restart.
+The mission must complete only the outstanding work required by the original approved Phase 1 architecture, acceptance contracts, EXIT criteria, and D01–D14 requirements.
+The mission covers:
+1. Read-only discovery and evidence reuse.
+2. AGRIS Candidate state verification.
+3. Scale Preflight and physical storage measurements.
+4. Five-package Pilot.
+5. Candidate Storage Design Decision.
+6. Ingest Lifecycle safety and recovery.
+7. AGRIS Persist completion.
+8. Independent FTS synchronization and reconciliation.
+9. Candidate Search E2E acceptance and activation eligibility.
+10. Preservation Archive reconciliation.
+11. Scientific Sources E2E acceptance.
+12. CSQ and Answer Identity integrity.
+13. EXIT-05, EXIT-07, EXIT-08, EXIT-09, EXIT-10 and applicable EXIT requirements.
+14. D01–D14 reconciliation.
+15. EXIT-11 Formal Gate, only when formally eligible.
+**Do not attempt to execute all these workstreams as one unbounded task or one continuous execution session.**
+## 0.2 Execution Phases
+The mission consists of four sequential execution phases.
+| Phase | Scope | Time estimation | Required completion condition |
+|---|---|---|---|
+| 10.27.1 | Scale Preflight, Pilot, Candidate Storage, Ingest Lifecycle, AGRIS Persist and FTS | Establish initial estimates; update after Pilot | Safe GO decision and verified Persist/FTS state, or documented NO-GO |
+| 10.27.2 | Preservation Archive reconciliation | Estimate after archive inventory | Append-only archive reconciliation with verified artifacts and explicit unavailable-source records |
+| 10.27.3 | Scientific E2E, CSQ/Answer Identity, EXIT-05/07/08/09/10 and D01–D14 | Estimate remaining mandatory work after evidence reuse | Mandatory acceptance criteria PASS or accurately classified as PARTIAL/BLOCKED |
+| 10.27.4 | EXIT-11 Formal Gate and final Phase 1 classification | Estimate after formal preflight | Formal Gate executed only when every prerequisite is satisfied |
+Each phase must have a separately identifiable status, even when multiple phases are completed during the same working session.
+A phase may be completed while another remains blocked, provided there is no dependency violation.
+## 0.3 Time Estimation Policy
+For each phase and major workstream, estimate separately:
+- Engineering and investigation effort.
+- Automated processing and execution time.
+- Waiting time and external dependencies.
+- Confidence level: HIGH / MEDIUM / LOW.
+- Dependencies and blockers.
+- Completed work excluded from the remaining estimate.
+- Actual elapsed time after execution.
+Do not estimate the entire mission solely by counting checklist items.
+Do not report a speculative 100-hour estimate as a verified fact.
+Estimates must refer to remaining work only.
+### Estimate updates after Pilot
+Update the Persist and FTS estimates using the measured results of the five-package Pilot.
+These updated estimates are operational inputs to the GO/NO-GO decision, not merely report information.
+Use actual measurements for:
+- Records persisted per unit of time.
+- Physical database growth per package.
+- FTS growth per searchable record.
+- WAL and temporary storage growth.
+- Package-level processing variation.
+- Recovery and checkpoint overhead.
+- Expected remaining workload.
+### 24-hour Persist threshold
+If the estimated full Persist duration exceeds 24 hours, invoke the additional safety assessment defined in §3.5.6.
+The 24-hour threshold is a mandatory operational review trigger.
+It does not automatically cancel AGRIS Ingest.
+A long total processing duration may be acceptable when the work is safely segmented into bounded, monitored, resumable execution windows.
+However:
+- Do not run a single unbounded Persist operation expected to exceed 24 hours.
+- Do not start long-running Persist without a verified Ingest Lifecycle.
+- Do not rely on an untested checkpoint mechanism.
+- Do not rely on an operator having to monitor an unsafe process continuously.
+- Do not treat a planned multi-session execution as safe until its checkpoint and recovery behavior is verified.
+If the work cannot be segmented and resumed safely, issue:
+`NO-GO_FOR_UNBOUNDED_RUN`
+If safe segmented operation is demonstrated and the storage forecast remains acceptable, a GO decision may be issued for bounded execution.
+If any other mandatory capacity or integrity condition fails, issue the corresponding NO-GO decision.
+## 0.4 Initial Assessment — 30-Minute Target
+The initial assessment should be completed within 30 minutes from the start of execution.
+Use read-only inspection.
+The assessment must establish:
+1. Current branch and HEAD.
+2. Working tree state.
+3. Current Active Search Generation.
+4. Current Candidate Generation.
+5. Store Generation pointer.
+6. FTS Generation pointer.
+7. Search routing pointer.
+8. Current AGRIS package inventory.
+9. Existing Persist checkpoints.
+10. Existing FTS checkpoint.
+11. Current LocalIndex physical size.
+12. Current free disk space on the actual target filesystem.
+13. Current Candidate storage layout.
+14. Current Ingest process status.
+15. Latest source E2E evidence.
+16. Current EXIT/D evidence.
+17. Current archive inventory and manifest version.
+18. Remaining-work estimate.
+If the full assessment cannot be completed within 30 minutes:
+- Produce a partial assessment.
+- State which measurements or facts remain unknown.
+- Explain the exact reason.
+- Identify the next required read-only inspection.
+- Provide an updated completion estimate.
+- Do not invent missing measurements.
+- Do not start unsafe writes merely to meet the time target.
+The 30-minute target is a reporting discipline, not permission to compromise safety.
+Do not start large Persist, FTS synchronization, database restructuring, or generation activation before the necessary safety facts are known.
+## 0.5 Mandatory Execution Sequence
+The required sequence is:
+1. Read-only discovery and evidence reuse.
+2. Phase 10.27.1 — Scale safety and AGRIS completion.
+3. Phase 10.27.2 — Preservation Archive reconciliation.
+4. Phase 10.27.3 — Scientific E2E and EXIT/D closure.
+5. Phase 10.27.4 — EXIT-11 Formal Gate, if eligible.
+Do not execute Preservation Archive reconciliation concurrently with large SQLite Persist, FTS synchronization, or other resource-intensive database operations.
+If a phase is blocked, independent tasks may continue only when they do not depend on the blocked condition.
+## 0.6 No-Repeat / No-Redo Rule
+Before every task:
+1. Identify existing implementation.
+2. Locate existing reports and evidence.
+3. Locate existing tests and their actual results.
+4. Locate existing checkpoints.
+5. Identify relevant commits.
+6. Check whether the evidence remains applicable to the current implementation.
+7. Identify only the missing, changed, stale, or affected portion.
+8. Execute only that portion.
+Do not repeat completed investigation, tests, package downloads, Projection, Persist, membership resolution, or archive work when valid evidence remains applicable.
+Do not reopen a previously resolved question without a specific contradictory fact.
+Do not run a test simply because this Master Prompt has a newer revision number.
+Reuse valid evidence and reference its exact location.
+---
+# PART 1 — ARCHITECTURAL INVARIANTS AND SAFETY
+## 1.1 Database Architecture
+The following decision remains binding:
+`OD-8.23.8-A-2026-11-12`
+Architecture inventory:
+`docs/architecture/DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md`
+Rules:
+- LocalIndex remains SQLite-by-design.
+- CapVer remains SQLite-by-design.
+- PostgreSQL is not the primary application database merely because it is installed.
+- Do not move LocalIndex or CapVer to PostgreSQL contrary to the approved decision.
+- PostgreSQL may be tested only if an original approved architectural contract or EXIT criterion explicitly requires it.
+- Do not introduce new database acceptance requirements without an approved basis.
+## 1.2 Generation Preservation
+Historical generation state:
+- GEN79 was reported as the active Search Generation.
+- GEN76 is a historical generation that must remain preserved.
+- GEN82 was reported as the Candidate generation in a previous execution.
+These are historical references, not permission to assume the current pointers.
+Verify the real current state before acting.
+Required invariants:
+- Preserve the actual current Active Search Generation.
+- Preserve GEN76.
+- Preserve GEN79 if it remains the verified active generation.
+- Reuse the existing valid Candidate when possible.
+- Never create generations just to fill numerical gaps.
+- Never manually assign generation identifiers.
+- Never delete a generation to simplify execution.
+- Never switch Search routing before acceptance conditions pass.
+## 1.3 Database and Filesystem Preservation
+Never:
+- Delete Docker volumes.
+- Delete LocalIndex generations.
+- Delete operational SQLite databases.
+- Delete SQLite WAL or SHM files as a cleanup shortcut.
+- Run `migrate:fresh` against an operational or unknown database.
+- Copy a live SQLite database using ordinary filesystem copy while writes are active.
+- Perform unapproved compaction or vacuum operations.
+- Rebuild the LocalIndex merely because a new Candidate is required.
+- Remove existing checkpoints for convenience.
+- Change the approved database architecture without authorization.
+Use the existing safe SQLite backup, snapshot, transaction, and recovery mechanisms.
+## 1.4 Secrets and Private Configuration
+Never print or disclose:
+- API keys.
+- Passwords.
+- Tokens.
+- `.env` contents.
+- Private database credentials.
+- Sensitive connection strings.
+BHL configuration has been reported as existing historically. Verify configuration presence without exposing secret values or requesting the key again unnecessarily.
+## 1.5 Git Safety
+Never execute:
+```bash id="1w7rn5"
+git reset --hard
+git clean -fd
+git clean -fdx
+git restore .
+git checkout .
+git add .
+git add -A
+git push --force
+git push --force-with-lease
+```
+Do not use equivalent destructive commands.
+For commits:
+1. Inspect branch and HEAD.
+2. Inspect working tree.
+3. Identify files related to the completed task.
+4. Stage only explicit paths.
+5. Review the full staged diff.
+6. Check for secrets and unrelated changes.
+7. Run relevant tests.
+8. Commit verified changes.
+9. Push to the authorized branch only.
+10. Verify remote synchronization.
+Commit and Push are authorized for completed, scoped, verified changes.
+Do not push operational databases, large runtime datasets, secrets, or archive content that must remain outside Git.
+---
+# PART 2 — SCIENTIFIC ARCHITECTURE AND EVIDENCE INTEGRITY
+## 2.1 Canonical Scientific Question
+The Canonical Scientific Question (CSQ) is the semantic authority of the scientific query.
+Preserve this flow:
+```text id="hx65mt"
+User Question
+    ↓
+Canonical Scientific Question (CSQ)
+    ↓
+ScientificSearchQueryBuilder
+    ↓
+ScientificQueryCompiler
+    ↓
+Source-Specific Query
+    ↓
+Source Adapter
+    ↓
+Retrieval
+    ↓
+Normalization
+    ↓
+Provenance
+    ↓
+MultiSourceScientificSearchOrchestrator
+    ↓
+Evidence Evaluation
+    ↓
+Claim-to-Evidence Mapping
+    ↓
+Synthesis
+    ↓
+Final Answer
+```
+Preserve:
+- Original scientific question identity.
+- Original question language.
+- Plant, crop, animal, livestock, poultry, or fish identity.
+- Scientific entities.
+- Conditions and constraints.
+- User intent.
+- Requested outcome.
+- Relevant scientific context.
+Do not reduce the scientific search to keyword-only retrieval.
+No source, including AGRIS, may redefine or silently alter the CSQ.
+## 2.2 Claim-to-Evidence Integrity
+Keep separate:
+- Directness.
+- Claim relation.
+- Evidence sufficiency.
+- Bibliographic metadata.
+- Experimental evidence.
+- Provenance.
+Every substantive scientific claim must have valid evidence and traceable provenance.
+A title or abstract alone must not be misrepresented as direct experimental evidence.
+When Claim-to-Evidence mapping fails:
+- Remove unsupported non-central claims when the remaining evidence is sufficient.
+- Return a qualified partial answer when appropriate.
+- Do not present a conclusive answer when a central claim lacks sufficient evidence.
+- Explain limitations.
+- Never invent evidence.
+- Never use a fallback that hides weak or insufficient evidence.
+## 2.3 Answer Language
+Preserve the approved Answer Language policy.
+The language of a retrieved source must not silently override the required answer language.
+## 2.4 Existing Source Integration Decisions
+Preserve the following historical integration decisions and use their existing evidence where applicable.
+### GBIF
+Historical state:
+`SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED`
+Reuse valid, unaffected evidence.
+### BHL
+Historical state:
+`SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED`
+Verify current connectivity where required, without disclosing the API key.
+### Dr. Duke
+Historical state:
+`SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED_LIMITED_LOCAL_PROJECTION`
+Approved decision:
+`OD-G1-17-SCOPE-LIMITED-PROJECTION`
+Do not expand beyond the approved limited scope.
+### Organic Eprints
+Historical OAI-PMH Identify/ListRecords connectivity was verified.
+Operational integration was previously partial.
+Identify only mandatory remaining Phase 1 gaps.
+### AGRIS
+Adapter and real-data E2E evidence were reported successful in Revision 10.21.
+Persist and Candidate activation are separate acceptance requirements.
+Do not assume successful Adapter E2E means Candidate activation is complete.
+---
+# PART 3 — PHASE 10.27.1
+# SCALE PREFLIGHT, CANDIDATE STORAGE, INGEST LIFECYCLE, AGRIS PERSIST AND FTS
+## 3.1 Phase Objective
+Complete the outstanding AGRIS Candidate work without risking:
+- Active Search Generation.
+- Historical generations.
+- Persisted records.
+- Candidate checkpoints.
+- Source identity.
+- Provenance.
+- Available disk space.
+- SQLite integrity.
+- FTS consistency.
+- Ability to resume safely.
+No large-scale Persist or FTS synchronization may begin until the Scale Preflight issues a documented GO decision.
+## 3.2 AGRIS Historical Baseline
+Preserve the following historical evidence:
+- AGRIS catalog: 1,244 `dcat:downloadURL` entries.
+- Historical URL audit: 1,244 raw entries.
+- Unique HTTPS URLs: 1,244.
+- Duplicate URLs: 0.
+- Historical XML SHA-256:
+`58f8532ef23cfe2d40666c03a1e8352b702fccb7ad6171483ce0fa3e3fbc7c95`
+- Historical sorted URL SHA-256:
+`a00bce0b677a4fe8bfc90e2537446bf1cef3a368c01e39adf865181001b130bc`
+Revision 10.19 reported:
+- 144 existing packages.
+- 1,100 missing packages.
+- Existing cache approximately 5.05 GB.
+Revision 10.21 reported:
+- 143 eligible packages.
+- 1 license-blocked package.
+- Projected records: 1,927,157.
+- Persist reported complete for BG3 and BRI.
+- 141 packages remained at that reporting point.
+Revision 10.23 reported:
+- BRY was resolved as part of the remaining 141, not an additional package.
+- BRY had partial Persist progress.
+- `skip=2771` was reported.
+- Candidate execution and Search pin evidence.
+- GEN79 remained the reported active Search Generation.
+- GEN76 remained preserved.
+- GEN82 was the reported Candidate at that time.
+- Approximately 99,767 active rows were reported.
+- `agris_search_pin_generation=79`.
+- FTS checkpoint:
+`agris_fts_checkpoint.v10.23.json`
+AGRIS Adapter E2E baseline:
+`2026-11-15-PHASE-1-AGRIS-ADAPTER-E2E.v10.21.json`
+BRY membership resolution:
+`2026-11-16-PHASE-1-BRY-MEMBERSHIP-RESOLUTION.v10.23.json`
+Do not repeat BRY membership investigation.
+Do not count BRY as an additional package.
+Do not treat historical counts as current without verifying current state.
+## 3.3 Absolute No-Redownload Policy
+Do not re-download any of the 1,244 AGRIS packages.
+Use only:
+- Existing downloaded packages.
+- Existing verified cache.
+- Existing Projection artifacts.
+- Existing manifests.
+- Existing checkpoints.
+- Existing local data.
+If a required package is absent:
+- Verify its state using existing inventory.
+- Record `MISSING_NOT_DOWNLOADED`.
+- Do not attempt to download it.
+- Do not disguise missing data as a successful Projection or Persist.
+Preserve the existing `--no-download` execution path.
+## 3.4 Read-Only AGRIS State Discovery
+Before any writes, inspect:
+- Existing package inventory.
+- Actual Candidate Generation.
+- Actual Store Generation.
+- Actual FTS Generation.
+- Actual Search routing pointer.
+- Existing Persist checkpoints.
+- Existing FTS checkpoint.
+- Existing package completion states.
+- BRY partial state.
+- LocalIndex file layout.
+- Existing generation ledger.
+- Existing active writers and SQLite transactions.
+Classify each package as:
+- `PERSIST_COMPLETE`
+- `PERSIST_PARTIAL`
+- `PERSIST_PENDING`
+- `PROJECTION_COMPLETE`
+- `PROJECTION_INCOMPLETE`
+- `EXCLUDED_BY_APPROVED_POLICY`
+- `MISSING_NOT_DOWNLOADED`
+- `BLOCKED`
+- `UNKNOWN_REQUIRES_INVESTIGATION`
+A package is not complete merely because a log message says so.
+Completion requires committed persistence evidence and a valid corresponding state.
+---
+## 3.5 SCALE PREFLIGHT — MANDATORY
+### 3.5.1 Purpose
+Prevent the Candidate Ingest from exhausting available storage and failing after substantial partial work.
+Historical risk estimates:
+| Variable | Historical value |
+|---|---:|
+| Projected AGRIS records | 1,927,157 |
+| Previously reported active rows | 99,767 |
+| Approximate numerical difference | 1,827,390 |
+| Preliminary SQLite size warning | 5–15 GB |
+| Preliminary FTS size warning | 3–8 GB |
+| Preliminary combined warning | 8–23 GB |
+These are preliminary estimates, not guaranteed physical storage requirements.
+The numerical difference between projected records and existing active rows is not necessarily the number of new rows.
+Deduplication, exclusions, eligibility, projection, existing records, and storage design affect the real result.
+### 3.5.2 Measure Actual Free Disk Space
+Identify the exact filesystem used by:
+- Active LocalIndex database.
+- Candidate database or Candidate storage.
+- SQLite WAL.
+- SQLite SHM.
+- Temporary files.
+- FTS storage.
+- Approved snapshots or backups.
+- Batch workspaces.
+Measure:
+- Filesystem capacity.
+- Current free space.
+- Current used space.
+- Exact target paths.
+- Available Candidate storage.
+- Temporary write requirements.
+- Recovery requirements.
+- Any approved snapshot space.
+Do not rely on generic system disk information when the database uses another mounted filesystem.
+For Linux containers, inspect the actual mounted filesystem.
+### 3.5.3 Measure Current LocalIndex Footprint
+Measure:
+- SQLite database physical size.
+- WAL size.
+- SHM size.
+- Candidate files.
+- FTS files, if physically separate.
+- Indexes.
+- Temporary files.
+- Related generation data.
+Where supported, inspect:
+- `PRAGMA page_count`
+- `PRAGMA page_size`
+- `PRAGMA freelist_count`
+- `PRAGMA journal_mode`
+- `PRAGMA integrity_check`
+- FTS schema and metadata.
+- `dbstat`, where available.
+Use actual filesystem measurements as the final physical-size evidence.
+**Important:** If FTS5 is stored inside the same SQLite database, do not add its logical table size again as though it were a separate physical file.
+Determine whether FTS is physically embedded or stored separately before estimating combined disk usage.
+### 3.5.4 Estimate Final Storage
+Calculate, using existing data:
+1. Current unique persisted records.
+2. Projected eligible records.
+3. Expected new unique records.
+4. Expected deduplication.
+5. Expected exclusions.
+6. Average physical bytes per persisted record.
+7. FTS bytes per searchable record, if measurable.
+8. Index and metadata growth.
+9. WAL and temporary write growth.
+10. Candidate storage overhead.
+11. Recovery and snapshot overhead.
+Report separately:
+- Main database growth.
+- FTS growth.
+- WAL growth.
+- Temporary space.
+- Snapshot or backup space.
+- Total additional filesystem capacity.
+Use actual measurements from the Pilot.
+Do not represent preliminary ranges as verified requirements.
+### 3.5.5 Five-Package Pilot
+Execute a controlled Pilot on five representative packages.
+Select packages by measured or known characteristics:
+- Small.
+- Medium.
+- Large.
+- Different record distributions or storage characteristics.
+- Representative upper-risk package.
+Do not select five packages arbitrarily.
+The Pilot must:
+1. Use existing packages only.
+2. Use the valid Candidate or an isolated approved Candidate location.
+3. Preserve the active Search Generation.
+4. Preserve GEN76.
+5. Avoid overwriting operational or historical data.
+6. Respect completed Persist checkpoints.
+7. Record package-level start and completion states.
+8. Measure actual physical database growth.
+9. Measure FTS physical growth or its contribution to the same SQLite database.
+10. Measure WAL and temporary growth.
+11. Measure records per unit of time.
+12. Record failures and skipped records.
+13. Verify identities and provenance.
+14. Verify the resulting Candidate state.
+15. Verify checkpoint integrity.
+16. Demonstrate safe resumption.
+Do not delete the Pilot results as an ordinary cleanup step.
+If the current Candidate can safely continue after the Pilot, continue on that Candidate.
+Otherwise, document the approved isolation strategy before proceeding.
+### 3.5.6 GO / NO-GO and 24-Hour Persist Threshold
+Produce a formal Scale Preflight decision.
+The result must be one of:
+- `GO`
+- `NO-GO`
+- `NO-GO_FOR_UNBOUNDED_RUN`
+- `NO-GO_INSUFFICIENT_CAPACITY_EVIDENCE`
+- Another specific NO-GO classification supported by evidence.
+A GO decision requires:
+- Verified filesystem capacity.
+- Verified storage architecture.
+- Five-package Pilot completion.
+- Measured storage growth.
+- Reliable remaining-work forecast.
+- WAL and temporary storage accounting.
+- Recovery capacity.
+- Operational reserve supported by measured behavior.
+- Safe Ingest Lifecycle.
+- Valid checkpoints.
+- No unresolved integrity or concurrency risk.
+- Preservation of the active and historical generations.
+#### 24-hour rule
+If the post-Pilot estimate indicates that full Persist will require more than 24 hours:
+1. Invoke this additional safety review.
+2. Do not start a single unbounded Persist run.
+3. Split the operation into bounded execution windows.
+4. Verify package/Batch-level checkpoint behavior.
+5. Verify process monitoring and shutdown.
+6. Verify safe recovery and resumption.
+7. Recalculate storage and WAL requirements across all windows.
+8. Verify FTS scheduling and pending-state tracking.
+9. Establish an explicit execution plan.
+The total mission duration may exceed 24 hours.
+That alone does not force a full Ingest NO-GO.
+However, if safe segmentation, monitoring, or resumption cannot be demonstrated:
+`NO-GO_FOR_UNBOUNDED_RUN`
+If the capacity or integrity criteria fail, the corresponding NO-GO remains mandatory.
+Do not allow the 24-hour rule to become permission for an unsafe long-running process.
+#### Insufficient evidence
+If the storage or runtime forecast remains too uncertain to support a reliable decision:
+`NO-GO_INSUFFICIENT_CAPACITY_EVIDENCE`
+Do not attempt full Persist to discover whether the estimate was wrong.
+If storage is insufficient:
+- Stop before large-scale Persist.
+- Do not delete valuable data.
+- Do not delete generations.
+- Do not delete WAL/SHM files.
+- Do not run unapproved VACUUM or compaction.
+- Report exact additional capacity required.
+- Continue independent work where safe.
+**No documented GO means no full Ingest.**
+---
+## 3.6 Candidate Storage Design Decision — §3.6 / Architecture §9.6
+### 3.6.1 Objective
+Establish how LocalIndex actually stores and isolates generations.
+Do not assume GEN80 or GEN81 must exist.
+Do not create missing generation numbers manually.
+### 3.6.2 Inspect Actual Implementation
+Inspect:
+- Generation allocator.
+- Generation ledger.
+- Store Generation pointer.
+- FTS Generation pointer.
+- Search routing pointer.
+- Database schema.
+- Generation-specific queries.
+- Isolation logic.
+- Indexes.
+- FTS implementation.
+- Backup and snapshot mechanisms.
+- Activation and rollback implementation.
+- Transaction and concurrency behavior.
+### 3.6.3 Evaluate Storage Model
+Evaluate the actual existing storage design.
+**Option A — Shared Tables with Generation ID**
+Assess:
+- Generation isolation.
+- Query filtering.
+- Index strategy.
+- FTS isolation.
+- Cross-generation leakage.
+- Transaction behavior.
+- Physical storage growth.
+**Option B — Separate Candidate Database or Physical Snapshot**
+Assess:
+- Physical copy size.
+- Snapshot consistency.
+- Incremental writes.
+- SQLite backup mechanism.
+- Disk overhead.
+- WAL overhead.
+- FTS overhead.
+- Activation complexity.
+- Rollback cost.
+**Option C — Existing Hybrid Design**
+If the implementation uses another approved model, document and evaluate that model rather than forcing A or B.
+### 3.6.4 Required Decision Record
+Document:
+- Actual current architecture.
+- Generation layout.
+- Candidate layout.
+- GEN82 validity.
+- Need for a new generation.
+- Official generation allocation process.
+- Shared/copy/incremental storage behavior.
+- Physical storage cost.
+- FTS storage cost.
+- WAL and temporary overhead.
+- Activation mechanism.
+- Rollback mechanism.
+- Data isolation evidence.
+- Risks and mitigations.
+If GEN82 is still valid, use it.
+If GEN82 is invalid, follow the approved generation allocator.
+Do not create GEN80 or GEN81 merely to fill numerical gaps.
+Do not change the current architecture unnecessarily.
+Do not create a live filesystem copy of SQLite while writes are active.
+### 3.6.5 Candidate Activation Boundary
+Persist completion is not Candidate activation.
+Candidate remains non-active until the required E2E, integrity, provenance, regression, and activation conditions in Phase 10.27.3 are satisfied.
+GEN79 remains the Search Generation during Candidate construction if it remains the verified active state.
+GEN76 remains historically preserved.
+---
+## 3.7 Ingest Lifecycle — Mandatory Operational Contract
+### 3.7.1 Purpose
+Every Ingest run must be observable, safely stoppable, auditable, and recoverable.
+A Persistence Checkpoint alone is not a complete Ingest Lifecycle.
+### 3.7.2 Run Identity
+Record for every run:
+- Unique Run ID.
+- PID.
+- Container ID, if applicable.
+- Start timestamp.
+- Branch.
+- HEAD.
+- Implementation version.
+- Candidate Generation.
+- Current package.
+- Current Batch.
+- Current Chunk.
+- Last successful Commit.
+- Last valid Persist checkpoint.
+- FTS checkpoint, if relevant.
+- Last verified progress timestamp.
+Do not expose secrets or environment variable contents.
+### 3.7.3 Progress Detection
+Progress must be supported by persistent evidence, not console logs alone.
+Track:
+- Last completed package.
+- Last committed Batch.
+- Last completed Chunk.
+- Committed persisted record count.
+- Last checkpoint update.
+- Last completed database transaction.
+- Last durable progress marker.
+Distinguish:
+- `ACTIVE_PROGRESSING`
+- `ACTIVE_SLOW`
+- `WAITING`
+- `BLOCKED`
+- `STALLED`
+- `FAILED`
+- `GRACEFULLY_STOPPED`
+- `ABNORMALLY_TERMINATED`
+- `COMPLETED`
+New log lines alone do not prove durable progress.
+### 3.7.4 Stalled Detection
+Define the stall threshold using:
+- Historical throughput.
+- Package size.
+- Current workload.
+- Last durable progress.
+- Database and filesystem activity.
+- Current system conditions.
+Before declaring a stall:
+1. Check process state.
+2. Check CPU and I/O activity.
+3. Check SQLite locks.
+4. Check writer activity.
+5. Check WAL changes.
+6. Check transaction state.
+7. Check the last valid checkpoint.
+8. Check whether the process is waiting on another resource.
+Do not terminate a process merely because no new log line appeared.
+Do not use an arbitrary short inactivity threshold.
+### 3.7.5 Graceful Shutdown
+When a stop is required:
+1. Record the reason.
+2. Capture the current Run ID and process state.
+3. Issue the supported application-level stop request or graceful signal.
+4. Allow the current safe transaction boundary to finish.
+5. Allow checkpoint persistence.
+6. Close database connections and file handles correctly.
+7. Verify process exit.
+8. Verify checkpoint validity.
+9. Verify no remaining writer.
+Do not terminate the process during an active transaction simply to save time.
+### 3.7.6 Graceful Shutdown Timeout
+Set and document the timeout using observed behavior and approved configuration.
+Timeout expiration is a diagnostic trigger, not automatic authorization for Hard Kill.
+After timeout:
+- Recheck process state.
+- Recheck durable progress.
+- Recheck transaction state.
+- Recheck database locks.
+- Recheck active writers.
+- Preserve logs and checkpoint data.
+If the process is still safely progressing, do not terminate it simply because the timeout elapsed.
+### 3.7.7 Hard Kill Restriction
+Hard Kill is the last resort.
+It may be considered only when the following evidence has been captured:
+1. Exact process identity and PID.
+2. Exact Container identity, if applicable.
+3. Graceful Shutdown request.
+4. Timeout expiration.
+5. Evidence graceful shutdown failed.
+6. Evidence of no durable progress during the diagnosed stall interval.
+7. Current transaction and database-lock state.
+8. Confirmation that no other writer is active.
+9. Current checkpoint.
+10. Current WAL/SHM state.
+11. Relevant logs.
+12. Documented reason waiting is no longer viable.
+13. Recovery and integrity-verification plan.
+If a required critical item is unavailable:
+`HARD_KILL_NOT_AUTHORIZED — INSUFFICIENT_EVIDENCE`
+Do not kill an entire container or unrelated workloads.
+Do not delete WAL or SHM files.
+Do not delete Candidate data.
+Do not discard checkpoints.
+### 3.7.8 Recovery After Abnormal Exit
+After abnormal termination:
+1. Confirm the process has exited.
+2. Confirm no other writer remains.
+3. Preserve database, WAL, SHM, checkpoints, and logs.
+4. Use the approved SQLite recovery/open procedure.
+5. Run the appropriate integrity verification.
+6. Identify the last committed Batch and Chunk.
+7. Verify record identities.
+8. Verify provenance.
+9. Verify package completion state.
+10. Resume only from the last valid committed Persist checkpoint.
+If integrity is uncertain, do not resume writes.
+Preserve the data and investigate.
+### 3.7.9 Resume Guarantees
+Resumption must not repeat:
+- Completed Projection.
+- Completed Persist.
+- Previously committed Batch.
+- Previously downloaded package.
+- Completed identity reconciliation.
+Persist and FTS must have independent states:
+- Persist complete.
+- Persist pending.
+- Persist partial.
+- FTS pending.
+- FTS complete.
+A Persist-complete package with FTS pending must not be re-persisted.
+---
+## 3.8 AGRIS Persist Execution
+Proceed only after documented GO.
+Use the existing Candidate and valid checkpoints.
+Complete only the unfinished portion of the 143 eligible packages.
+Preserve:
+- BG3 and BRI reported completion, subject to evidence.
+- BRY as part of the existing 141 package set.
+- BRY existing partial progress.
+- Existing `skip=2771` evidence.
+- Existing Candidate checkpoints.
+- Existing Projection artifacts.
+- No-redownload policy.
+For every package verify:
+- Source identity.
+- Projection validity.
+- Record identity.
+- Deduplication.
+- Persisted count.
+- Transaction completion.
+- Checkpoint completion.
+- Provenance.
+- Candidate generation association.
+A package is complete only when the actual persistence evidence proves it.
+Report separately:
+- Complete.
+- Partial.
+- Pending.
+- Blocked.
+- Excluded.
+- Missing.
+- Unknown.
+Do not count partially persisted packages as complete.
+Do not count projected records as persisted records.
+---
+## 3.9 Batch and Chunk Policy
+A Batch is the logical Ingest unit.
+A Chunk is the smaller write unit inside a Batch.
+Follow the existing approved package and Batch architecture.
+For each Batch:
+1. Identify its scope.
+2. Record expected work.
+3. Process Chunks.
+4. Commit according to the approved transaction strategy.
+5. Verify record identities.
+6. Verify provenance.
+7. Update Persist checkpoint.
+8. Schedule FTS only after Persist completion conditions pass.
+A successful Chunk does not mean its entire Batch is complete.
+Do not mark a Batch complete until its acceptance conditions pass.
+---
+## 3.10 FTS Reconciliation and Independent Checkpoint
+Historical checkpoint reference:
+`agris_fts_checkpoint.v10.23.json`
+Inspect actual location and current validity.
+FTS must use its own checkpoint, independent of Persist.
+Required sequence:
+```text id="i83zd3"
+Persist Batch
+    ↓
+Database Commit
+    ↓
+Identity Reconciliation
+    ↓
+Provenance Verification
+    ↓
+Persist Checkpoint
+    ↓
+FTS Synchronization
+    ↓
+FTS Verification
+    ↓
+FTS Checkpoint
+```
+If FTS fails after Persist:
+- Mark or retain `fts_pending`.
+- Do not repeat Projection.
+- Do not repeat Persist.
+- Do not download packages.
+- Do not roll back valid persisted records simply because FTS failed.
+- Retry FTS only.
+FTS retries must use existing persisted records.
+Track:
+- FTS pending.
+- FTS processing.
+- FTS completed.
+- FTS failed.
+- FTS retried.
+- FTS blocked.
+No Candidate activation while required FTS work remains pending or unaccounted for.
+Before activation verify:
+- Persist complete.
+- Required FTS complete.
+- FTS generation alignment.
+- Search routing.
+- Record identity.
+- Provenance.
+- No unresolved mismatch.
+- Required E2E pass.
+---
+# PART 4 — PHASE 10.27.2
+# PRESERVATION ARCHIVE RECONCILIATION
+## 4.1 Objective
+Preserve original prompts, reports, owner decisions, evidence, and checkpoints in the existing canonical archive.
+Canonical archive:
+`FilesystemMissionArtifactArchive`
+Do not create a competing archive system unless the existing system is proven unusable and an owner-approved architectural decision is required.
+## 4.2 Archive Inventory First
+Inspect the existing:
+- Archive root.
+- Index.
+- Manifest.
+- Checkpoint inventory.
+- Artifact registry.
+- Hash records.
+- Version directories.
+Use targeted read-only inspection.
+Do not repeat a full archive audit if a valid current inventory already exists.
+Do not assume an artifact is missing because it is absent from a folder. Verify the canonical manifest and hash registry.
+## 4.3 Artifact Reconciliation Scope
+The following is a reconciliation list, not an assertion that every item is missing.
+### Master Prompts
+- Revision 10.19.
+- Revision 10.20.
+- Revision 10.21.
+- Revision 10.22.
+- Revision 10.23.
+- Revision 10.24.
+- Revision 10.25.
+- Revision 10.26.
+- Current Revision 10.27.
+If any original artifact is not accessible, use the recovery procedure in §4.4.
+Do not invent missing revision numbers or content.
+### AGRIS Artifacts
+Where present and not already archived:
+- Revisions 10.19, 10.21, 10.23, 10.24, 10.25, 10.26 and 10.27 reports.
+- Scale Preflight.
+- Five-package Pilot.
+- Candidate Storage Design Decision.
+- Persist reports.
+- Persist checkpoints.
+- FTS checkpoints.
+- FTS synchronization reports.
+- BRY membership/resume evidence.
+- Adapter E2E evidence.
+- Candidate activation evidence.
+- Integrity verification.
+### Phase 1 Artifacts
+Where present and not already archived:
+- EXIT matrices.
+- EXIT traceability reports.
+- Source membership registers.
+- Source matrices.
+- D01–D14 evidence.
+- D11 original inventory.
+- D13 prompt records.
+- D14 checkpoint definitions.
+- EXIT-11 preflight.
+- Database and ServerRestart evidence.
+- Gap Closure Matrix.
+- Final Phase 1 reports.
+- Commit and Push verification reports.
+- Archive inventory and manifest versions.
+Do not invent historical titles.
+Do not assume an artifact exists solely because a later report mentions it.
+## 4.4 Source Recovery Limit — 15 Minutes per Artifact
+For every missing or inaccessible original artifact:
+Allow no more than 15 minutes of targeted recovery effort per artifact.
+Search only the relevant sources:
+- Canonical Archive Index.
+- Manifest.
+- Known archive paths.
+- Known project paths.
+- Relevant Git history, if needed and accessible.
+- Other already identified authoritative sources.
+Do not launch an open-ended historical investigation.
+Do not spend more than 15 minutes trying to recover a single unavailable artifact.
+If not found:
+1. Record `SOURCE_ARTIFACT_NOT_AVAILABLE`.
+2. Record the exact artifact identifier or expected title.
+3. Record the locations searched.
+4. Record the recovery time spent.
+5. Record why the artifact could not be recovered.
+6. Do not fabricate its contents.
+7. Do not reconstruct it and label it Original.
+8. Continue independent work.
+If the unavailable item is mandatory for D11, D13, D14, or an EXIT criterion, report the impact and escalate appropriately.
+The 15-minute rule does not permit silently omitting a mandatory acceptance requirement.
+## 4.5 Classification and Exact Preservation
+Classify every artifact using:
+- `ORIGINAL`
+- `APPROVED_REVISION`
+- `DERIVED`
+- `RECONSTRUCTED`
+- `REPORT`
+- `TEST_EVIDENCE`
+- `MATRIX`
+- `CHECKPOINT`
+- `OWNER_DECISION`
+- `SOURCE_ARTIFACT_NOT_AVAILABLE`
+### Current Master Prompt Special Rule
+The Agent must not claim exact preservation of Revision 10.27 unless the exact text is available verbatim in the current input context or a readable source file.
+If exact text is available:
+1. Save the text without shortening or paraphrasing.
+2. Verify saved content.
+3. Calculate SHA-256 from actual saved bytes.
+4. Record source and integrity status.
+If exact text is unavailable:
+1. Do not reconstruct it from a summary.
+2. Do not rewrite it and call it Original.
+3. Do not calculate a summary hash and label it as the original prompt hash.
+4. Record reference-only metadata.
+5. Use `SOURCE_ARTIFACT_NOT_AVAILABLE`.
+6. State that the owner must provide the exact original text if preservation is required.
+Apply the same rule to historical prompts.
+## 4.6 Append-Only and Hash Deduplication
+The archive is append-only.
+Never:
+- Delete historical artifacts.
+- Overwrite existing versions.
+- Replace old contents.
+- Mutate historical artifact contents.
+- Replace a manifest without preserving its previous version.
+- Reuse a filename for different content without collision handling.
+For each available artifact:
+1. Identify actual source bytes.
+2. Compute SHA-256.
+3. Compare with existing hashes.
+4. If identical content exists, skip duplicate storage and reference the existing artifact.
+5. If filename matches but content differs, use a collision-safe versioned path.
+6. Preserve original filename in metadata.
+If the current manifest is mutable, preserve its previous version and create a new versioned manifest.
+### Atomic Archive Procedure
+Use:
+1. Temporary write.
+2. Complete write.
+3. Size verification.
+4. SHA-256 verification.
+5. Final atomic placement where supported.
+6. Manifest append/version update.
+7. Read-back verification of newly archived artifacts.
+Verify newly archived items rather than repeating a full historical integrity audit unless a specific integrity issue requires it.
+## 4.7 Archive Metadata
+Record, where available:
+- Artifact ID.
+- Title.
+- Type.
+- Revision.
+- Original filename.
+- Source path.
+- Archive path.
+- SHA-256.
+- Size.
+- Creation timestamp.
+- Archive timestamp.
+- Repository.
+- Branch.
+- Commit.
+- Classification.
+- Related EXIT criteria.
+- Related D requirements.
+- Related ADR decisions.
+- Parent artifact ID.
+- Source availability.
+- Integrity status.
+Do not fabricate unavailable metadata.
+## 4.8 Archive Reporting
+Create or update the canonical reconciliation report:
+`PHASE-1-PRESERVATION-ARCHIVE-RECONCILIATION.v10.27.json`
+Do not create duplicate reports unnecessarily.
+Record:
+- Existing inventory version.
+- Candidate artifacts reviewed.
+- Already archived items.
+- Newly archived items.
+- Identical duplicates skipped.
+- Filename collisions.
+- Unavailable source artifacts.
+- Reference-only records.
+- Integrity verification results.
+- Manifest version.
+- Remaining owner actions.
+---
+# PART 5 — PHASE 10.27.3
+# SCIENTIFIC E2E ACCEPTANCE, EVIDENCE AGE, CSQ/ANSWER IDENTITY AND EXIT/D CLOSURE
+## 5.1 Purpose
+Complete mandatory Phase 1 E2E and architecture requirements without opening unrelated source investigations.
+Use the existing:
+`SCIENTIFIC-SOURCES-E2E-ACCEPTANCE-MATRIX`
+Update its current valid version rather than recreating it unnecessarily.
+## 5.2 E2E Evidence Reuse
+For every source:
+1. Locate the latest relevant test evidence.
+2. Verify exact tested implementation.
+3. Verify the test configuration.
+4. Verify whether code or contract changed after the test.
+5. Verify whether evidence is current enough for the behavior being proved.
+6. Rerun only missing, stale, or affected tests.
+Do not repeat valid tests merely because this Master Prompt has a new revision.
+Do not confuse:
+- Membership.
+- Connectivity.
+- Capability.
+- Retrieval.
+- Persistence.
+- Search Integration.
+- Evidence Participation.
+- Operational Readiness.
+### 5.2.1 Evidence Age — 45-Day Dynamic Connectivity Rule
+Evidence older than 45 days must be re-verified when it relates to dynamic connectivity or other externally changing runtime behavior.
+Examples include:
+- API endpoint availability.
+- Network connectivity.
+- Authentication and authorization.
+- API response behavior.
+- OAI-PMH availability.
+- Real-data retrieval.
+- External provider availability.
+- Rate-limit or access behavior where relevant.
+- Dynamic source service operation.
+Calculate evidence age from the actual execution timestamp to the current verification date.
+Use a consistent timezone and record both timestamps.
+When an applicable dynamic-connectivity artifact is older than 45 days:
+1. Preserve the historical artifact.
+2. Mark it as historical evidence.
+3. Re-run the smallest applicable connectivity verification.
+4. Record the new execution result.
+5. Link the new result to the previous evidence.
+Do not delete or replace the historical evidence.
+#### Stable evidence exemption
+Stable Unit and Contract evidence is exempt from automatic re-verification merely because it is older than 45 days.
+Examples:
+- Pure unit tests for stable logic.
+- Contract tests for unchanged internal contracts.
+- Deterministic validation tests.
+- Stable schema validation where the schema and implementation remain unchanged.
+However, even stable evidence must be reconsidered if:
+- Relevant code changed.
+- The tested contract changed.
+- A dependency changed.
+- The test environment materially changed.
+- The original test was invalidated by a new regression.
+**The 45-day rule must not trigger a complete retest of the project.**
+It applies specifically to dynamic evidence and does not override the No-Repeat Rule.
+## 5.3 Mandatory Source Scope
+### GBIF
+Historical:
+`SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED`
+Reuse valid evidence.
+Reverify only dynamic connectivity evidence older than 45 days or affected by a change.
+### BHL
+Historical:
+`SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED`
+Verify current runtime configuration and connectivity when required.
+Never disclose or print the API key.
+### Dr. Duke
+Preserve:
+`OD-G1-17-SCOPE-LIMITED-PROJECTION`
+Historical:
+`SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED_LIMITED_LOCAL_PROJECTION`
+Do not expand source scope.
+### Organic Eprints
+Historical OAI-PMH Identify/ListRecords connectivity was verified.
+Operational integration was previously partial.
+Determine the exact remaining mandatory Phase 1 acceptance conditions.
+Do not expand into unrelated research.
+### AGRIS
+Use the existing Adapter E2E evidence:
+`2026-11-15-PHASE-1-AGRIS-ADAPTER-E2E.v10.21.json`
+Assess its applicability after actual implementation changes.
+A historical Adapter E2E does not prove newly activated Candidate behavior.
+Test only affected Candidate and Search behavior.
+## 5.4 Scope Containment — Phase 2 Backlog
+When a new E2E gap appears, classify it against the original approved Phase 1 contract.
+Use:
+- `PHASE_1_MANDATORY_GAP`
+- `PHASE_1_SCOPE_LIMITED_ACCEPTANCE`
+- `PHASE_2_BACKLOG`
+- `NON_BLOCKING_OBSERVATION`
+- `OWNER_DECISION_REQUIRED`
+If a finding is not mandatory for Phase 1:
+1. Record its evidence.
+2. Record its impact.
+3. Add it to Phase 2 Backlog.
+4. Record dependencies.
+5. Do not launch an expanded investigation now.
+6. Do not expand approved source scope.
+7. Do not count it as a Phase 1 blocker without an original contractual requirement.
+Do not relabel a genuine Phase 1 mandatory gap as Phase 2 merely to achieve closure.
+## 5.5 E2E Acceptance Matrix
+For each required source, record:
+- Source name.
+- Membership state.
+- Approved capability scope.
+- Query types.
+- Endpoint behavior.
+- Real-data retrieval.
+- Identity verification.
+- Provenance verification.
+- CSQ preservation.
+- Claim-to-Evidence mapping.
+- Error behavior.
+- Empty-result behavior.
+- Executed tests.
+- Exact result.
+- Evidence path.
+- Evidence hash, where applicable.
+- Implementation version.
+- Evidence age.
+- Remaining blocker.
+- Phase 1 or Phase 2 classification.
+An empty query must return the approved empty-result behavior.
+A source failure must not be presented as a successful empty result.
+## 5.6 Candidate Search E2E and Activation
+Candidate activation is allowed only after mandatory acceptance checks pass.
+Requirements:
+- Required Persist complete.
+- Required FTS complete.
+- No unaccounted FTS pending items.
+- Generation identity verified.
+- Record identities verified.
+- Provenance verified.
+- Query isolation verified.
+- CSQ preservation verified.
+- Claim-to-Evidence behavior verified.
+- Search result correctness verified.
+- Empty-result behavior verified.
+- Error handling verified.
+- Candidate Search E2E passed.
+- Applicable regression tests passed.
+- Rollback procedure verified.
+### Atomic Activation
+Before activation:
+- Record current active generation.
+- Record current FTS pointer.
+- Record current Search routing pointer.
+- Preserve GEN76.
+- Preserve GEN79 where it is the verified active state.
+- Preserve Candidate data and evidence.
+Align:
+- Store Generation.
+- FTS Generation.
+- Search routing pointer.
+Use the actual architecture's approved atomic mechanism.
+If all pointers are in one transactional store, use the approved transaction.
+If they span separate stores, use the approved coordinated activation mechanism and prove consistency and recovery.
+Do not call independent pointer updates atomic without evidence.
+### Rollback
+Keep GEN79 available for rollback if it is the prior active generation.
+Never immediately delete the previous active generation.
+Never delete GEN76.
+If activation fails:
+- Restore prior routing through the approved rollback mechanism.
+- Preserve Candidate data.
+- Preserve diagnostic evidence.
+- Do not repeat the entire Ingest.
+- Investigate only the failed activation or affected Search behavior.
+---
+# PART 6 — EXIT CRITERIA
+## 6.1 General Rules
+Original approved acceptance requirements remain authoritative.
+Retrieve each criterion from its original approved documents and history.
+Do not replace original requirements with a later simplified checklist.
+In particular, §8.64.7 is proposed/unapproved and must not be used as the sole authority.
+Maintain traceability from every mandatory criterion to:
+- Original source.
+- Approved version.
+- Required outcome.
+- Existing evidence.
+- Current status.
+- Remaining work.
+- Owner alternative, if any.
+- Dependencies.
+Use only evidence-supported statuses:
+- `PASS`
+- `PARTIAL`
+- `BLOCKED`
+- `NOT_RUN`
+- `NOT_APPLICABLE` only with a documented contractual basis.
+No unsupported PASS.
+## 6.2 EXIT-05 — Staging and Operator Readiness
+Retrieve original EXIT-05 criteria.
+Do not infer them from a later report.
+### Internal Staging Feasibility Trial
+Before escalating to the owner:
+1. Determine whether the original contract permits Internal Staging as an alternative.
+2. Identify technical requirements.
+3. Inspect existing local/container infrastructure.
+4. Identify security and network boundaries.
+5. Identify permissions.
+6. Conduct a limited feasibility assessment.
+7. Execute a controlled internal trial only when safe and contractually permitted.
+8. Record actual test evidence.
+Classify findings:
+- `TECHNICALLY_FEASIBLE`
+- `TECHNICALLY_INFEASIBLE`
+- `ENVIRONMENT_UNAVAILABLE`
+- `PERMISSION_UNAVAILABLE`
+- `ORGANIZATIONAL_OR_CONTRACTUAL_RESTRICTION`
+- `OWNER_APPROVAL_REQUIRED`
+Internal Staging success does not automatically close EXIT-05.
+It may satisfy EXIT-05 only if the original acceptance contract permits it or an authorized owner decision accepts the alternative.
+If external staging is required, do not represent internal testing as proof of external readiness.
+### Owner Escalation
+Create or update:
+`OWNER_ESCALATION_NEEDED.md`
+Include:
+- Exact original criterion.
+- Evidence.
+- Internal Staging results.
+- Technical limitation.
+- Organizational or contractual limitation.
+- Options.
+- Recommended option.
+- Exact owner decision required.
+- Consequence of deferral.
+Do not incur external costs without authorization.
+## 6.3 Owner Escalation — No Silent Timeout Closure
+An unanswered owner escalation remains OPEN.
+The passage of time does not:
+- Approve an alternative.
+- Close EXIT-05.
+- Convert PARTIAL to PASS.
+- Authorize external expenditure.
+- Remove a contractual requirement.
+Record:
+- Escalation creation timestamp.
+- Last follow-up.
+- Owner-response status.
+- Next follow-up.
+- Escalation history.
+- Dependent tasks.
+Continue independent work that does not depend on the missing decision.
+Do not perform tasks requiring the owner decision.
+Do not close the related criterion without contractual evidence or authorized approval.
+## 6.4 EXIT-07 — G2-26
+G2-26 membership remains preserved.
+Evaluate independently:
+- Membership.
+- Identity.
+- Classification.
+- Capability.
+- Endpoint verification.
+- Persistence.
+- Operational eligibility.
+- Active state.
+- Evidence participation.
+- Seat-specific blockers.
+Do not remove or alter G2-26 membership to make the matrix pass.
+Do not repeat the settled membership investigation without contradictory evidence.
+## 6.5 EXIT-08 — Required Verified Access Families
+The denominator is Required Verified Access Families, not the number of sources or membership seats.
+Historical families include:
+- REST_API / RestJson.
+- OAI-PMH.
+- Bulk / Static Dataset + LocalIndex.
+Retrieve the complete latest approved family list.
+Do not assume the denominator is exactly three unless the latest approved contract confirms it.
+For every family, verify:
+- Actual capability.
+- Applicable sources.
+- Access method.
+- Required endpoint behavior.
+- Real-data behavior.
+- Evidence.
+- Remaining limitations.
+Report exact numerator and denominator.
+## 6.6 EXIT-09 — Database and Recovery Criteria
+Reconstruct original approved requirements using relevant sections, including:
+- §8.21.4.
+- §8.24.9.
+- §8.25.10.
+- §8.25.11.
+- §8.26.7.
+- §8.63.10.
+- Other original linked criteria.
+Do not replace original acceptance requirements with a simplified checklist.
+### Database Architecture
+- LocalIndex remains SQLite.
+- CapVer remains SQLite.
+- PostgreSQL is not automatically a requirement.
+- PostgreSQL is tested only when required by an original approved contract or EXIT criterion.
+### Operating Environment
+Preserve:
+`DETERMINED_LINUX_CONTAINERS`
+Do not assert Native WSL or Windows as the approved target without authoritative evidence.
+### Historical Evidence
+Historical Linux ServerRestart evidence includes:
+- Values `[2,1]`.
+- Write: 1 test / 5 assertions.
+- Verify: 1 test / 15 assertions.
+- Recovery: approximately 49 seconds.
+Reuse evidence if still applicable.
+Rerun only affected or invalidated tests.
+## 6.7 EXIT-10 — Membership and Registry Integrity
+Historical references:
+- Current membership register: 110 entries.
+- Historical 109 register preserved.
+- Source matrix:
+`2026-11-11-PHASE-1-SOURCE-MATRIX.v110.json`
+- Membership:
+`ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json`
+Preserve the historical 109 register.
+Keep separate:
+1. Membership.
+2. Identity Verified.
+3. Persisted Classification Artifacts.
+4. Endpoint Tested.
+5. CapVer Verified.
+6. Operational Eligibility.
+7. Active.
+8. Seat-Specific Blockers.
+Historical clarification:
+The reported `1/6` referred to PHPUnit: 1 test / 6 assertions PASS for identity/order.
+It did not mean one of six acceptance criteria passed.
+Do not reopen this settled interpretation without contradictory evidence.
+## 6.8 EXIT-01 through EXIT-03 and EXIT-06
+Retrieve original acceptance definitions and linked evidence.
+Reuse valid evidence.
+Rerun only impacted tests.
+Missing evidence remains NOT_RUN or PARTIAL as appropriate.
+Do not invent completion.
+## 6.9 EXIT-11 — Formal Gate
+Distinguish:
+### Preflight / Dry-run
+May run before final eligibility.
+Must not change official acceptance states.
+Must not claim Formal Gate completion.
+### Formal Gate
+May run only when:
+- EXIT-01 through EXIT-10 are PASS.
+- D01 through D14 satisfy original approved criteria.
+- Required Archive and evidence-integrity conditions are satisfied.
+- No mandatory blocker remains.
+- The original formal eligibility requirements are met.
+If any prerequisite fails:
+`formal_gate_eligible=false`
+Formal execution remains `NOT_RUN` or the exact status required by the original contract.
+Do not force a PASS by changing denominators or ignoring prerequisites.
+---
+# PART 7 — D01 THROUGH D14 AND HISTORICAL REQUIREMENTS
+## 7.1 General Procedure
+Retrieve original definitions from original inventories, ADRs, archives, and checkpoint registers.
+Do not guess missing definitions.
+Use original approved wording where available.
+Map every D requirement to current evidence.
+A mention in a later report is not enough to prove completion.
+## 7.2 D-08 — Settled Owner Alternative
+Approved alternative:
+`HISTORY_INDETERMINATE`
+Recorded in ADR-023 §8.85.
+Do not reopen Supplement04 investigation unless contradictory evidence appears.
+Use the owner-approved alternative exactly.
+## 7.3 D-11 — Archive Inventory
+Historical D-11 contains 17 archive items.
+Retrieve the exact 17-item list from original inventories.
+Do not invent titles.
+Do not replace unavailable originals with reconstructed artifacts while calling them original.
+Verify each item against the canonical archive and metadata.
+## 7.4 D-13 — Master Prompt Records
+Historical D-13 includes:
+- Master Prompt 10.5.
+- Master Prompt 10.6.
+Retrieve original contents and provenance from archive or Git history where available.
+Distinguish:
+- Original.
+- Approved Revision.
+- Derived.
+- Reconstructed.
+- Unavailable.
+A reconstructed document must never be labelled Original.
+## 7.5 D-14 — Archive Checkpoints
+Preserve Archive Checkpoints A–F.
+Retrieve original definitions from checkpoint register and manifests.
+Do not invent titles, contents, dates, or completion conditions.
+## 7.6 Other D Requirements
+For D01–D07, D09–D10, and D12:
+- Retrieve original definitions.
+- Preserve approved changes.
+- Map existing evidence.
+- Complete remaining requirements only.
+- Record blockers and unavailable sources.
+- Do not rewrite criteria to fit current implementation.
+D01–D14 must have traceable statuses before EXIT-11 Formal Gate.
+---
+# PART 8 — REPORT CONSOLIDATION AND OPERATIONAL EFFICIENCY
+## 8.1 Avoid Report Proliferation
+Do not create a separate repetitive report for every small execution step.
+The mission should minimize unnecessary reporting overhead for the owner.
+When multiple execution phases are completed in the same working session, one consolidated detailed report and one executive summary are acceptable.
+The consolidated detailed report must retain:
+- Separate phase sections.
+- Separate phase statuses.
+- Exact evidence paths.
+- Tests and results.
+- Commit/Push details.
+- Blockers.
+- Remaining work.
+- Next-phase eligibility.
+The executive summary must provide:
+- What was completed.
+- What remains.
+- What is blocked.
+- What decisions are required.
+- Current official classification.
+## 8.2 Preserve Independent Technical Evidence
+Report consolidation must not eliminate:
+- Original test output.
+- Test evidence files.
+- Checkpoints.
+- Hash manifests.
+- Database measurements.
+- Pilot measurements.
+- Ingest run records.
+- FTS records.
+- Archive metadata.
+- EXIT traceability.
+These are independent evidence artifacts.
+Do not replace actual evidence with narrative summaries.
+## 8.3 Existing Official Report Paths
+If an existing architecture or workflow depends on a specific report path or filename:
+- Preserve that path.
+- Update/version it according to established rules.
+- Do not silently rename or remove it.
+- Reference it from the consolidated report.
+Do not create duplicate versions solely to satisfy a reporting checklist.
+---
+# PART 9 — TESTING AND QUALITY CONTROL
+## 9.1 Evidence Requirements
+Every material PASS requires:
+- Test or verification name.
+- Actual result.
+- Exit code or equivalent.
+- Assertion count where available.
+- Timestamp.
+- Implementation version.
+- Evidence path.
+- Hash where appropriate.
+Do not use unsupported descriptions such as:
+- Looks correct.
+- Probably complete.
+- Should work.
+- No obvious issue.
+## 9.2 Impact-Based Testing
+Before running tests:
+1. Identify changed files.
+2. Determine affected components.
+3. Identify relevant unit and integration tests.
+4. Identify required E2E tests.
+5. Reuse valid unaffected evidence.
+6. Run the smallest sufficient test set.
+7. Run broader regression when impact requires it.
+Do not run all tests indiscriminately.
+Do not skip mandatory tests to save time.
+## 9.3 Regression Assessment
+Assess affected behavior in:
+- Source-specific query compilation.
+- CSQ preservation.
+- Original question language.
+- Entity and crop/animal identity.
+- Search routing.
+- Generation isolation.
+- LocalIndex persistence.
+- FTS synchronization.
+- Provenance.
+- Claim-to-Evidence mapping.
+- Empty-result behavior.
+- Error handling.
+- Answer language.
+- Candidate activation.
+- Rollback.
+- Existing source adapters.
+## 9.4 No Invented Outcomes
+Do not report:
+- PASS without actual execution.
+- E2E success based only on Unit tests.
+- Real-data success based only on mocks.
+- Persist completion based only on Projection.
+- FTS completion based only on database row counts.
+- Activation success without Search routing verification.
+---
+# PART 10 — PHASE TRANSITION GATES
+## 10.1 Phase 10.27.1 → Phase 10.27.2
+Phase 10.27.1 must have a recorded result.
+The result may be PASS, PARTIAL, or NO-GO.
+Document all checkpoints and current database state before Archive reconciliation.
+Do not execute Archive reconciliation concurrently with active heavy SQLite operations.
+## 10.2 Phase 10.27.2 → Phase 10.27.3
+Proceed when:
+- Archive reconciliation has a recorded result.
+- Newly archived artifacts are verified.
+- Missing original sources are explicitly recorded.
+- No historical artifact was deleted or overwritten.
+- Manifest integrity is established.
+An unavailable original source must not be fabricated to pass the transition.
+## 10.3 Phase 10.27.3 → Phase 10.27.4
+Proceed only when:
+- Mandatory source acceptance passes.
+- EXIT-01 through EXIT-10 pass.
+- D01–D14 satisfy original approved definitions.
+- Candidate activation, where required, is verified.
+- Required archive and evidence conditions pass.
+- No mandatory blocker remains.
+A genuine non-mandatory Phase 2 backlog item does not automatically block Phase 1.
+A mandatory Phase 1 requirement cannot be relabelled as Phase 2 simply to close the gate.
+---
+# PART 11 — EXECUTION START AND STOP CONDITIONS
+## 11.1 Start with Read-only Discovery
+Do not begin with a broad code rewrite.
+Do not ask the owner to repeat information available in repository, approved decisions, reports, or checkpoints.
+Begin with the Initial Assessment in §0.4.
+## 11.2 Stop Conditions
+Stop the affected workstream if:
+- Scale Preflight is NO-GO.
+- Candidate Storage Design remains unknown and unsafe.
+- Database integrity is uncertain.
+- Unsafe writer concurrency exists.
+- Ingest cannot be safely controlled.
+- Checkpoints are inconsistent.
+- Active generation is at risk.
+- Mandatory owner decision is missing.
+- Proposed operation violates an approved architectural decision.
+- Original acceptance contract cannot be established safely.
+- Required disk reserve cannot be demonstrated.
+- Hard Kill evidence is insufficient.
+- A required recovery path is unverified.
+Preserve existing state and continue independent work where possible.
+## 11.3 Owner Questions
+Do not request information already available.
+Ask the owner only when a genuine owner-only decision is required, such as:
+- Unapproved contractual alternative.
+- External expenditure.
+- Architecture change.
+- Change to original EXIT criteria.
+- Action outside the granted authorization.
+Present:
+- Exact decision required.
+- Supporting evidence.
+- Available options.
+- Consequences.
+- Recommended option.
+---
+# PART 12 — PRESERVATION RULES
+## 12.1 Database and Generation Preservation
+Never delete:
+- GEN76.
+- GEN79 when it is the current or rollback generation.
+- Existing Candidate data.
+- Valid checkpoints.
+- Operational SQLite data.
+- Docker volumes.
+- Historical LocalIndex generations.
+Never use destructive cleanup as a substitute for storage planning.
+## 12.2 AGRIS Preservation
+Never:
+- Re-download the 1,244 packages.
+- Re-Projection completed packages without evidence of invalidity.
+- Re-Persist completed packages.
+- Repeat BRY membership resolution.
+- Count partial Persist as complete.
+- Treat FTS failure as reason to repeat Persist.
+- Change Search pin without verified reason.
+## 12.3 Scientific Source Preservation
+Never:
+- Remove a source membership seat to make a matrix pass.
+- Expand limited-scope sources without approval.
+- Replace scientific identity.
+- Substitute metadata for experimental evidence.
+- Hide source failure as an empty result.
+- Change capability declarations to simulate operational readiness.
+---
+# PART 13 — PHASE REPORTING AND FINAL CLASSIFICATION
+## 13.1 Consolidated Detailed Report
+Create or update reports according to established project naming conventions.
+Where multiple phases are completed in the same session, a single detailed consolidated report is acceptable, provided each phase has a distinct section and independent status.
+The report must include:
+- Starting branch and HEAD.
+- Initial state.
+- Workstreams executed.
+- Existing evidence reused.
+- New evidence.
+- Changes implemented.
+- Test results.
+- Scale Preflight measurements.
+- Pilot measurements.
+- Ingest Run IDs.
+- Persist and FTS status.
+- Generation state.
+- Archive reconciliation.
+- EXIT/D status.
+- Remaining blockers.
+- Actual elapsed time.
+- Remaining time estimate.
+- Commit and Push result.
+- Next eligible phase.
+## 13.2 Executive Summary
+Provide one Arabic executive summary for the owner.
+Avoid repetitive reports and unnecessary technical prose.
+The summary must clearly identify:
+- Official classification.
+- Completed phases.
+- Incomplete phases.
+- NO-GO decisions.
+- Candidate state.
+- Active generation.
+- Critical risks.
+- Owner decisions required.
+- Next step.
+## 13.3 Final Phase 1 Report
+At the end of all eligible work, update or create the canonical final Phase 1 report according to existing project conventions.
+It must distinguish:
+- Mandatory criteria completed.
+- Historical evidence reused.
+- New evidence generated.
+- Approved alternatives.
+- Owner decisions pending.
+- Phase 2 backlog.
+- Technical blockers.
+- Organizational/contractual blockers.
+- Formal Gate result.
+- Final classification.
+Do not claim Phase 1 closed while any mandatory criterion remains unresolved.
+---
+# PART 14 — FINAL OWNER DIRECTIVE
+Execute Revision 10.27 as a controlled continuation of the existing WSA-Enterprise mission.
+Priority order:
+1. Protect existing databases, generations, checkpoints, and scientific data.
+2. Complete the Initial Assessment within the 30-minute target, reporting partial results honestly if necessary.
+3. Establish Scale Preflight before large-scale Ingest.
+4. Execute the five-package Pilot.
+5. Establish the actual Candidate Storage Design.
+6. Apply the 24-hour Persist safety threshold and use bounded resumable execution.
+7. Restore and enforce a complete Ingest Lifecycle.
+8. Complete AGRIS Persist without repeating completed work.
+9. Complete FTS independently.
+10. Preserve GEN79 as Active until Candidate acceptance is proven.
+11. Preserve GEN76 historically.
+12. Use the existing valid Candidate where possible.
+13. Run Candidate Search E2E before activation.
+14. Reconcile the Preservation Archive as a separate sequential phase.
+15. Recover unavailable original artifacts for no more than 15 minutes per item.
+16. Preserve exact original prompts; never fabricate originals.
+17. Reverify dynamic connectivity evidence older than 45 days.
+18. Reuse stable Unit and Contract evidence unless implementation or contract changes invalidate it.
+19. Limit new source investigations to mandatory Phase 1 gaps.
+20. Continue independent work while owner escalation remains OPEN.
+21. Preserve all original EXIT and D acceptance definitions.
+22. Consolidate reports to reduce operational burden without losing technical evidence.
+23. Run EXIT-11 Formal Gate only when eligible.
+24. Commit and Push only completed, scoped, tested, and verified changes.
+25. Report limitations and blockers honestly.
+## FINAL SUCCESS CONDITIONS
+The mission succeeds only when:
+- Required data is safely persisted.
+- FTS is consistent with the accepted Candidate.
+- Search routing is correct.
+- CSQ and scientific identity are preserved.
+- Claims are supported by evidence.
+- All mandatory acceptance criteria are satisfied.
+- D01–D14 are traceable.
+- Preservation requirements are fulfilled or accurately classified as unavailable.
+- EXIT-11 is executed only when eligible.
+- The official Phase 1 classification is supported by evidence.
+**No artificial completion.  
+No destructive shortcuts.  
+No repeated work.  
+No fabricated evidence.  
+No unsafe Ingest.  
+No unbounded execution.  
+No hidden blockers.  
+No unnecessary report proliferation.  
+No deletion or overwriting of historical artifacts.**
+The objective is not to produce a report that says Phase 1 is complete.
+The objective is to prove that Phase 1 is complete.
+</user_query>

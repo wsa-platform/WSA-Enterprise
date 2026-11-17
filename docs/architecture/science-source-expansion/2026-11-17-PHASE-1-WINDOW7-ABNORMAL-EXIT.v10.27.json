@@ -1,0 +1,63 @@
+{
+  "schema_id": "wsa.agris_bounded_window_abnormal_exit.v1",
+  "revision": "10.27",
+  "window": 7,
+  "recorded_at_utc": "2026-11-17T15:20:00Z",
+  "status": "ABNORMALLY_TERMINATED",
+  "process": {
+    "historical_pid_reported": 7269,
+    "ingest_writer_at_audit": false,
+    "note": "No scientific:ingest-agris-projected process present at audit"
+  },
+  "plan": {
+    "already_completed": 117,
+    "eligible_remaining": 26,
+    "baseline_generation": 1669,
+    "captured_at": "2026-11-17T14:24:51+00:00"
+  },
+  "completed_in_window_before_failure": [
+    "AGRIS.ODS.PHC",
+    "AGRIS.ODS.NI0",
+    "AGRIS.ODS.Q10",
+    "AGRIS.ODS.PE0",
+    "AGRIS.ODS.QC4",
+    "AGRIS.ODS.MY0"
+  ],
+  "failure": {
+    "package_id": "AGRIS.ODS.BY0",
+    "status": "failed",
+    "error": "The record store failed during commit (SQLSTATE HY000).",
+    "last_chunk_progress": {
+      "chunks": 5,
+      "skip_records": 5000,
+      "generation": 1723
+    }
+  },
+  "checkpoint_after": {
+    "completed_packages": 123,
+    "partial": {
+      "AGRIS.ODS.BY0": {
+        "skip_records": 5000,
+        "chunks": 5,
+        "generation": 1723,
+        "at": "2026-11-17T15:06:34+00:00"
+      }
+    },
+    "last_package": "AGRIS.ODS.BY0",
+    "updated_at": "2026-11-17T15:07:43+00:00",
+    "remaining_eligible_packages": 20,
+    "first_remaining": "AGRIS.ODS.BY0"
+  },
+  "recovery_per_3_7_8": {
+    "process_exited": true,
+    "no_other_writer": true,
+    "preserve_db_wal_shm_checkpoints_logs": true,
+    "integrity_verification": "NOT_RUN — owner directive forbids PRAGMA/integrity_check in this mission overlay",
+    "resume_writes": "BLOCKED_UNTIL_INTEGRITY_CLEARED_OR_OWNER_AUTHORIZES_ALTERNATIVE",
+    "reason": "§3.7.8 requires integrity verification before resume; if uncertain, do not resume writes"
+  },
+  "filesystem_observation_no_pragma": {
+    "sqlite_bytes": 7613120512,
+    "free_disk_bytes_approx": 67844141056
+  }
+}
