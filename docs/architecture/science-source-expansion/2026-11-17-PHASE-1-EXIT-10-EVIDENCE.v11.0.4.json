@@ -1,0 +1,27 @@
+{
+  "schema_id": "wsa.phase1_exit10_evidence.v1",
+  "revision": "11.0.4",
+  "status": "PARTIAL",
+  "membership_sot": "docs/architecture/science-source-expansion/ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+  "status_matrix_sot": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-SOURCE-MATRIX.v110.json",
+  "matrix_mutation": "NONE",
+  "option_b_assessment": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-110-SOURCE-MASTER-STATUS-REGISTRY.v11.0.3.json",
+  "preservation_guard": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-110-SOURCE-PRESERVATION-GUARD.v11.0.4.md",
+  "verified_family_evidence": {
+    "method": "Map Option B technical fields onto existing adr_id seats; do not rewrite SOURCE-MATRIX.v110.json",
+    "complete_for_all_110": false,
+    "runtime_active_seats_note": "Option B records contract/live/scientific-integration dimensions separately; scientific integration verified count remains 0",
+    "live_connectivity_preserved_from": "2026-11-17-PHASE-1-EXIT-08-LIVE-CONNECTIVITY.v11.0.1.json",
+    "missing_columns_for_non_runtime_seats": [
+      "adapter_status largely NOT_IMPLEMENTED",
+      "live_connectivity_status NOT_TESTED/UNKNOWN",
+      "scientific_integration_* NOT_TESTED",
+      "verified-family evidence columns incomplete pending per-seat activation work"
+    ]
+  },
+  "acceptance": {
+    "original_exit10_satisfied": false,
+    "reason": "Verified-family evidence columns incomplete for non-runtime majority; membership identity intact"
+  },
+  "next_action": "Extend Option B evidence columns seat-by-seat without mutating membership or 2026-11-11 matrix"
+}
