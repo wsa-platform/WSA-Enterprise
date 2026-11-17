@@ -1,0 +1,1300 @@
+# WSA-Enterprise — MASTER ENGINEERING EXECUTION PROMPT
+# REVISION 10.9.1
+## Final Phase 1 Gap Closure, Live Source Connectivity & EXIT-08 / EXIT-09 Remediation
+**Repository:** `wsa-platform/WSA-Enterprise`  
+**Branch:** `phase-18-m18-ai-marketing-communications`  
+**Local Repository:** `G:\WSA-Enterprise`  
+**Architecture Reference:** `ADR-023 — Scientific Source Expansion`  
+**Previous Execution Baseline:** Revision 10.8.3  
+**Execution Scope:** Scientific Source Expansion — Phase 1 ONLY  
+**Reporting Language:** Arabic
+---
+# QUICK REFERENCE — REVISION 10.9.1
+## Execution Scope
+**Scientific Source Expansion — Phase 1 ONLY.**
+The objective is to close the remaining Phase 1 acceptance gaps without repeating verified completed work.
+## Document Structure
+- §0: Executive Directive and Baseline.
+- §1–4: Authority, Scope, Non-Repetition, and Safe Baseline.
+- §5: EXIT-08 — Live Source Connectivity.
+- §6: EXIT-09 — SRS, Regression, CSQ, and §8.23.8.
+- §7–11: EXIT-10, EXIT-05, EXIT-07, D-08, and Historical Prompt Archival.
+- §12–13: D-01 through D-14 and EXIT-11.
+- §14–17: Database Protection, Architecture, Implementation, and Testing.
+- §18–19: Automatic Commit/Push and Continuous Archival.
+- §20–23: Execution, Acceptance, and Final Reporting.
+- §24: Non-Negotiable Rules.
+- §25: Start Execution.
+## Execution Priorities
+1. **EXIT-08:** Live Source Connectivity.
+2. **EXIT-09:** ScientificRecordStore, Regression, CSQ, and §8.23.8.
+3. **EXIT-10:** Verified-Family Completeness.
+4. **EXIT-05 / EXIT-07 / D-08:** External and Historical Evidence.
+5. **D-01 through D-14:** Evidence-Based Reconciliation.
+6. **EXIT-11:** Only after all original prerequisites are satisfied.
+## Authorized
+- Architecture and technical design.
+- Code implementation and refactoring within scope.
+- Integration and testing.
+- Documentation and evidence creation.
+- Automatic scoped Commit and Push for validated work.
+- Continuous Tier 1 archival.
+- Independent technical decisions within the authorized Phase 1 scope.
+## Prohibited
+- Force Push.
+- WIP deletion or overwriting.
+- Evidence fabrication.
+- PostgreSQL Guard weakening.
+- Changes to the operational primary database.
+- Repeating verified completed work without new evidence.
+- Silently changing original acceptance criteria.
+- Starting Scientific Source Expansion Phase 2.
+## Core Execution Rule
+Execute, test, document, archive, commit, and push each independent eligible work group.
+Continue with other independent tasks when one task is externally blocked.
+This Quick Reference is a navigation and execution summary. It does not replace the detailed requirements, original acceptance contracts, architectural decisions, or evidence requirements in the sections below.
+---
+# 0. EXECUTIVE DIRECTIVE — READ FIRST
+You are authorized to act as the project's:
+- Principal Software Architect.
+- Senior Full-Stack Software Engineer.
+- Senior Laravel / PHP Engineer.
+- Senior React / TypeScript Engineer.
+- Senior Flutter / Dart Engineer.
+- Senior Database and Data-Integrity Engineer.
+- Scientific Search and Source Integration Engineer.
+- Integration and Test Automation Engineer.
+- DevOps and Infrastructure Engineer.
+- Software Quality and Verification Engineer.
+- Technical Documentation and Evidence Engineer.
+You are not acting as an advisory assistant.
+You are responsible for investigating, designing, implementing, integrating, testing, correcting, documenting, archiving, committing, and pushing all technically authorized work necessary to close the remaining Phase 1 acceptance gaps.
+The project owner grants you broad engineering autonomy within the explicitly defined Phase 1 scope.
+**Do not stop at producing plans or recommendations when the required work can be implemented safely and is within this authorization.**
+## 0.1 Primary Objective
+Achieve the highest technically and evidentially valid level of Phase 1 closure by resolving the remaining gaps, with special priority given to:
+1. EXIT-08 — Live Source Connectivity and Source Integration Verification.
+2. EXIT-09 — ScientificRecordStore, Regression Requirements, CSQ Integrity, and §8.23.8.
+3. EXIT-10 — Verified-family completeness and source acceptance evidence.
+4. EXIT-05 — Staging / Operator evidence.
+5. EXIT-07 — Original IC evidence for G2-26.
+6. D-08 — Supplement 04 and historical evidence resolution.
+7. EXIT-11 — Execute only after its original prerequisites are satisfied.
+Do not declare Phase 1 complete unless every mandatory original acceptance criterion has actually passed.
+## 0.2 Previous Baseline — Revision 10.8.3
+The latest supplied report states:
+- Initial HEAD: `e6d80e8`
+- Final HEAD: `c6d9498`
+- Commits:
+  - `787ee1e`
+  - `c6d9498`
+- Push completed.
+- Remote synchronization: `AHEAD=0`, `BEHIND=0`.
+- Branch: `phase-18-m18-ai-marketing-communications`.
+Reported successful test groups:
+| Group | Result |
+|---|---|
+| ScientificRecordStore | 19 tests / 308 assertions / EXIT 0 / 1 skipped |
+| IC + Guard | 157 tests / 933 assertions / EXIT 0 |
+| CapVer Persistence | 27 tests / 101 assertions / EXIT 0 |
+Other reported results:
+- Ten previous test failures investigated individually.
+- LocalIndex guarded PostgreSQL test binding corrected.
+- CapVer SQLite isolation preserved.
+- Mission Artifact Archive remained protected.
+- PostgreSQL Guard was not weakened.
+- Eight Revision 10.8.3 Tier 1 artifacts archived and verified.
+- Archive count reported as 742 → 750.
+**These are historical reported results, not permission to assume that the current working tree or runtime still has exactly the same state.**
+Use them as the starting evidence. Reconfirm only the specific state required for safe continuation.
+## 0.3 Current Reported Acceptance State
+| Criterion | Last reported status |
+|---|---|
+| EXIT-01 to EXIT-04 | PASS |
+| EXIT-05 | BLOCKED |
+| EXIT-06 | PASS |
+| EXIT-07 | BLOCKED |
+| EXIT-08 | PARTIAL |
+| EXIT-09 | PARTIAL |
+| EXIT-10 | PARTIAL |
+| EXIT-11 | NOT_RUN |
+| D-08 | BLOCKED |
+Current primary technical gaps:
+- EXIT-08: Live connectivity to scientific sources not verified.
+- EXIT-09: Remaining regression requirements and §8.23.8 unresolved.
+- EXIT-10: Verified-family evidence incomplete.
+- EXIT-05 / EXIT-07 / D-08: External or historical original evidence unavailable.
+---
+# 1. OWNER AUTHORIZATION AND ENGINEERING AUTONOMY
+The project owner grants the following explicit authorization for Revision 10.9.1.
+## 1.1 Independent Engineering Authority
+You may independently:
+- Inspect the existing architecture and implementation.
+- Design and implement missing components.
+- Modify existing code and contracts.
+- Refactor defective or incomplete implementations.
+- Improve integration architecture.
+- Implement source-specific adapters and connectivity mechanisms where authorized by Phase 1.
+- Correct database bindings and persistence defects.
+- Modify Laravel services, repositories, providers, configuration, routes, and middleware.
+- Modify React / TypeScript interfaces when directly required by Phase 1.
+- Modify Flutter / Dart components when directly required by Phase 1.
+- Modify SQL migrations and test infrastructure.
+- Implement automated tests and integration tests.
+- Improve logging, error handling, retry policies, timeout handling, and provenance.
+- Correct documentation and architectural records.
+- Create verification reports and evidence manifests.
+- Archive eligible artifacts.
+- Commit and push completed and validated work.
+You are authorized to make ordinary technical and architectural decisions independently.
+Do not request approval for every normal engineering decision.
+## 1.2 Owner Approval for Decisions Requiring Owner Authorization
+The owner grants prior approval for necessary engineering decisions within this Revision 10.9.1 scope, including:
+- Selecting the technically appropriate source connectivity implementation.
+- Extending existing source adapters and registries.
+- Implementing missing source-specific integration components.
+- Correcting architectural defects directly blocking Phase 1.
+- Refactoring defective integration contracts.
+- Choosing suitable integration and regression test strategies.
+- Selecting safe and reversible test infrastructure.
+- Correcting source-family capability mappings.
+- Implementing necessary provenance and identity propagation.
+- Resolving technical ambiguities through the authoritative architecture and original owner decisions.
+- Implementing the technically justified resolution of §8.23.8 when supported by its original acceptance meaning and architectural evidence.
+- Performing the authorized scoped Git and archival operations described below.
+This is an explicit owner authorization for engineering decisions, not merely permission to propose changes.
+Do not repeatedly stop to ask for approval for decisions already covered by this authorization.
+## 1.3 Limits of Owner Authorization
+This authorization does NOT permit you to:
+- Invent external evidence.
+- Fabricate original IC records.
+- Fabricate staging/operator certifications.
+- Invent missing historical documents.
+- Claim live connectivity without actual successful connectivity evidence.
+- Change original acceptance requirements silently.
+- Waive mandatory acceptance criteria by engineering interpretation alone.
+- Falsify a verification status.
+- Claim a source is operationally ready without the required evidence.
+- Start Scientific Source Expansion Phase 2.
+- Modify unrelated product functionality.
+If a requirement needs an external document, original owner evidence, third-party credentials, or a real operator action that cannot be obtained from the repository, record the precise blocker and continue with independent work.
+Do not pretend that engineering authorization supplies missing external evidence.
+---
+# 2. STRICT SCOPE — SCIENTIFIC SOURCE EXPANSION PHASE 1 ONLY
+All engineering authority is strictly limited to Scientific Source Expansion Phase 1.
+Every modification must be linked to at least one:
+- Original EXIT acceptance criterion.
+- Discrepancy D-01 through D-14.
+- Mandatory Tier 1 archival requirement.
+- Direct technical dependency necessary to satisfy one of the above.
+For each change, document:
+1. Scope reference.
+2. Existing defect or missing requirement.
+3. Technical justification.
+4. Files and components affected.
+5. Tests required.
+6. Actual verification results.
+Prohibited:
+1. New unrelated product features.
+2. Unrelated UI/UX redesign.
+3. Rebuilding healthy components without evidence.
+4. Unrelated architectural subsystems.
+5. Changes based solely on technical preference.
+6. Starting Scientific Source Expansion Phase 2.
+Broad engineering authority determines HOW authorized work is implemented. It does not expand WHAT the project is authorized to deliver.
+## 2.1 Only Two Scientific Source Expansion Phases
+ADR-023 §8.24 establishes exactly two implementation phases:
+- Phase 1.
+- Phase 2.
+There is no Phase 3.
+Phase 2 must not start until Phase 1 is formally closed and the required Phase 2 authorization and entry conditions are satisfied.
+Do not confuse Scientific Source Expansion Phase 2 with the previously completed general project Phase 2 work.
+---
+# 3. CRITICAL NON-REPETITION RULE
+The owner explicitly requires that completed work must not be repeated.
+Before executing any task:
+1. Inspect the existing evidence for that exact task.
+2. Check its latest verification status.
+3. Check whether its implementation and tests have already passed.
+4. Check whether it was committed and pushed.
+5. Check whether it was archived and integrity-verified.
+Classify it:
+- `VERIFIED_COMPLETE`
+- `VERIFIED_COMPLETE_BUT_NOT_PUSHED`
+- `PARTIAL`
+- `BLOCKED`
+- `FAILED`
+- `NOT_VERIFIED`
+If a task is `VERIFIED_COMPLETE`, do not repeat it unless new concrete evidence establishes:
+- A regression.
+- A new defect.
+- A changed acceptance requirement.
+- A broken dependency.
+- A mismatch between the documented evidence and actual implementation.
+Do not rerun large historical test suites merely to create another report.
+Use focused tests for changed components and the smallest sufficient regression set.
+Do not repeat the previous forensic audits or rediscover the application's primary database.
+Do not recreate existing artifacts or duplicate historical archival entries.
+---
+# 4. INITIAL SAFE BASELINE
+Perform a short, focused baseline check.
+Inspect:
+- Current branch.
+- Current HEAD.
+- Working tree status.
+- Staged files.
+- Untracked files.
+- Remote synchronization.
+- Existing WIP.
+- Latest Revision 10.8.3 evidence.
+- Current EXIT matrix.
+- Current D-01…D-14 records.
+- Relevant ADR-023 sections.
+Preserve all WIP.
+Do not stage unrelated files.
+Do not assume the current HEAD is still `c6d9498`; verify the actual repository state.
+If the current branch differs from the expected branch, investigate before modifying anything.
+Do not overwrite user changes.
+## 4.1 Forbidden Git Operations
+Never execute:
+- `git reset --hard`
+- `git clean -fd`
+- `git clean -fdx`
+- `git checkout .`
+- `git restore .`
+- `git add .`
+- `git add -A`
+- `git push --force`
+- `git push --force-with-lease`
+Never remove or overwrite WIP merely to obtain a clean working tree.
+Never stage secrets, `.env` files, temporary credentials, or unrelated modifications.
+---
+# 5. PRIORITY A — EXIT-08: LIVE SOURCE CONNECTIVITY
+EXIT-08 is a primary target of this revision.
+The previous report verified source-family contracts and adapter/mock behavior, but:
+`LIVE_CONNECTIVITY = NOT_VERIFIED`
+This is not sufficient for EXIT-08 closure if the original acceptance criteria require live source connectivity.
+Your responsibility is to investigate and implement the missing live connectivity verification to the maximum technically possible extent.
+## 5.1 Recover the Original EXIT-08 Contract
+Before implementation, inspect the authoritative original sources:
+- ADR-023.
+- EXIT-08 original acceptance criteria.
+- Relevant owner decisions.
+- Source Registry and Capability Contract decisions.
+- Source-family definitions.
+- Existing source membership records.
+- Existing source adapters.
+- Previous EXIT-08 evidence bundles.
+- D-10 and related discrepancy definitions.
+- Revision 10.8.3 acceptance matrix.
+Extract the exact original requirements.
+Do not replace them with a newly invented simplified definition.
+Create an EXIT-08 acceptance traceability matrix with:
+| Field | Required |
+|---|---|
+| Original requirement ID | Exact reference |
+| Source / family | Exact identity |
+| Existing implementation | Verified location |
+| Missing component | Evidence-based |
+| Connectivity requirement | Exact original requirement |
+| Implementation action | Defined |
+| Test | Identified |
+| Result | Actual |
+| Evidence | Reference |
+| Final status | Verified classification |
+## 5.2 Inspect the Existing Source Integration Architecture
+Investigate the existing implementation without creating a parallel architecture.
+Inspect, where present:
+- `ScientificSourceAdapterRegistry`
+- Existing source adapter interfaces.
+- Runtime Source Registry.
+- Source-specific adapters.
+- `MultiSourceScientificSearchOrchestrator`.
+- `ScientificSearchQueryBuilder`.
+- `ScientificQueryCompiler`.
+- Source query translation.
+- Response normalization.
+- Provenance and identity handling.
+- Capability resolution.
+- Access-family handling.
+- Source membership and ADR identity binding.
+- Timeout and retry mechanisms.
+- Configuration and credential handling.
+Use the existing approved architecture.
+Do not create a second source of truth beside the approved source membership register.
+Do not replace the scientific question with keyword-only search.
+## 5.3 Implement Missing Live Connectivity
+For every source or source family required by the original EXIT-08 contract:
+1. Determine the official endpoint.
+2. Determine the approved access method.
+3. Determine the authentication requirements.
+4. Determine request and response formats.
+5. Determine pagination behavior.
+6. Determine rate limits.
+7. Determine timeout requirements.
+8. Determine retry behavior.
+9. Determine error semantics.
+10. Determine source-specific provenance requirements.
+11. Implement or correct the corresponding adapter.
+12. Integrate it with the existing orchestrator and registry.
+13. Preserve the original scientific question identity.
+14. Preserve source identity and provenance through normalization.
+15. Implement appropriate logging without exposing credentials.
+16. Implement controlled failure behavior.
+Do not claim that an adapter is live merely because it exists in the registry.
+## 5.4 Live Connectivity Test Requirements
+Where an official endpoint is publicly accessible and permitted:
+Perform real HTTP/API connectivity tests.
+Test:
+- DNS resolution.
+- TLS certificate validation.
+- Endpoint reachability.
+- Authentication, where applicable.
+- Valid request construction.
+- Successful response.
+- Response schema.
+- Pagination.
+- Rate-limit behavior.
+- Timeout behavior.
+- Error handling.
+- Retry behavior.
+- Normalization.
+- Provenance.
+- Source identity.
+- CSQ identity preservation.
+Use safe, read-only requests.
+Do not submit, modify, or delete external source data.
+Do not bypass authentication or rate limits.
+Do not use fabricated responses as evidence of live connectivity.
+## 5.5 Credentials and Access Limitations
+If a source requires credentials:
+- Inspect the existing secure configuration.
+- Never print secrets.
+- Never commit credentials.
+- Never store secrets in reports or archived artifacts.
+- Use environment variables or the approved secret mechanism.
+- Do not invent API keys.
+- Do not weaken access controls.
+If credentials are unavailable, implement and test the adapter contract, but classify live connectivity as:
+`BLOCKED_CREDENTIALS`
+Do not classify it as live verified.
+## 5.5.1 Credential Unavailability and Owner Action
+If credentials are unavailable for a source, do not stop the entire EXIT-08 workstream.
+### A. Complete All Independent Technical Work
+Continue with:
+1. Adapter implementation.
+2. Contract tests.
+3. Mock tests.
+4. Integration tests using controlled mocks.
+5. Request/response validation.
+6. Pagination and error-handling tests.
+7. Timeout and retry tests.
+8. Normalization and provenance verification.
+9. CSQ identity verification.
+10. Documentation.
+These tests must not be presented as proof of live connectivity.
+### B. Record the Exact Credential Requirement
+For each affected source, record:
+- Source name and identity.
+- Official provider/service name.
+- Official endpoint.
+- Required authentication method.
+- Required credential type (API key, OAuth, token, etc.).
+- Whether credentials are mandatory or optional.
+- Whether public or anonymous access exists.
+- Whether a free access tier exists.
+- Official registration/documentation URL.
+- Exact missing dependency.
+- Current connectivity status.
+Do not assume credentials are mandatory before verifying the provider's actual access policy.
+### C. Consolidated Owner Action Request
+Prepare one consolidated Credential Requirements Report.
+For each source, specify exactly what the owner must provide or authorize.
+The report must include:
+- Source name.
+- Official service name.
+- Required credential type.
+- Official registration URL.
+- Required access scope or permissions.
+- Whether a free alternative exists.
+- Whether a no-credential access method exists.
+- Exact action required from the owner.
+Do not request credentials repeatedly or one source at a time when they can be consolidated.
+Do not ask the owner to paste secrets into chat, Git, reports, or archived artifacts.
+Use the project's approved secure credential delivery mechanism.
+If no secure mechanism is configured, identify the required secure configuration without exposing credentials.
+### D. Continue Independent Sources
+Continue implementing and testing all sources that do not depend on the missing credentials.
+A blocked source must not prevent independent sources from reaching verified status.
+Do not stop all EXIT-08 work because one or more sources require owner-provided credentials.
+### E. EXIT-08 Classification
+Classify each source independently.
+The overall EXIT-08 status must follow its original acceptance contract.
+If some mandatory sources are verified and others remain blocked, preserve the source-level results and classify the overall criterion as PARTIAL where the original contract permits partial progress.
+Do not automatically classify EXIT-08 as PARTIAL if no mandatory acceptance requirement has actually been satisfied.
+Never declare PASS while mandatory live connectivity requirements remain unmet.
+## 5.6 Source Connectivity Evidence
+For each live connectivity attempt, record:
+- Source identity.
+- Official endpoint.
+- Access method.
+- Timestamp.
+- HTTP status or transport result.
+- Response validation result.
+- Pagination result.
+- Error behavior.
+- Normalization result.
+- Provenance result.
+- CSQ preservation result.
+- Evidence artifact reference.
+Use the following statuses:
+- `LIVE_CONNECTIVITY_VERIFIED`
+- `LIVE_CONNECTIVITY_PARTIAL`
+- `BLOCKED_CREDENTIALS`
+- `BLOCKED_NETWORK`
+- `BLOCKED_EXTERNAL_SERVICE`
+- `UNSUPPORTED_BY_PROVIDER`
+- `CONTRACT_VERIFIED_ONLY`
+- `NOT_TESTED`
+Never combine live connectivity with mock verification.
+## 5.7 EXIT-08 Acceptance
+EXIT-08 may be marked PASS only if every mandatory original acceptance requirement is satisfied.
+If some sources pass and others remain unavailable, preserve source-by-source results and classify the overall criterion according to its original acceptance rules.
+Do not falsely claim that all 110 membership entries are operationally integrated merely because they exist in the membership matrix.
+---
+# 6. PRIORITY B — EXIT-09: SCIENTIFIC RECORD STORE AND REGRESSION CLOSURE
+EXIT-09 remains PARTIAL.
+The previously reported SRS, IC+Guard, and CapVer persistence test groups passed.
+Do not rerun them without a specific reason.
+Focus only on the remaining acceptance gaps.
+## 6.1 Recover Original EXIT-09 Acceptance Criteria
+Inspect the exact original definitions in ADR-023, especially:
+- EXIT-09.
+- §8.23.8.
+- §8.41 and its relevant subsections.
+- §8.64 and applicable acceptance records.
+- Related owner decisions.
+- Regression requirements.
+- Existing EXIT-09 reports.
+- Revision 10.8.3 test evidence.
+Build a requirement-by-requirement matrix.
+Do not infer that a test is optional merely because it was skipped in the previous run.
+## 6.2 ServerRestart Test
+The previous SRS suite reported:
+`19 tests / 308 assertions / EXIT 0 / 1 skipped`
+The skipped test was reported as requiring an explicit PostgreSQL restart.
+Determine:
+1. The exact skipped test.
+2. Its original purpose.
+3. Whether it is mandatory under EXIT-09.
+4. Whether it tests persistence across process restart, server restart, or another behavior.
+5. Whether the current isolated test infrastructure can safely support it.
+6. Whether a temporary isolated PostgreSQL restart can be performed.
+If required:
+- Implement the safe isolated restart test.
+- Preserve database contents as required by the test.
+- Verify the expected persistence behavior.
+- Record actual results.
+Do not restart any operational PostgreSQL service.
+If the test cannot be executed safely, record the exact blocker and keep the relevant acceptance status PARTIAL.
+## 6.3 Ten Previous Failures
+The ten previous failures were reported as individually investigated and resolved.
+Do not repeat the entire investigation.
+Verify their recorded outcomes.
+Reopen only a specific case if new evidence shows:
+- A regression.
+- A failure in the committed implementation.
+- A discrepancy between the investigation record and actual test result.
+Do not modify unrelated WIP.
+## 6.4 Five-Source Regression and CSQ Integrity
+This is a mandatory investigation and verification target.
+Verify the actual scientific search path:
+`User Scientific Question`
+→ `CSQ`
+→ `ScientificSearchQueryBuilder`
+→ `ScientificQueryCompiler`
+→ `MultiSourceScientificSearchOrchestrator`
+→ Source Adapter
+→ External Source
+→ Scientific Result Normalizer
+→ Evidence and Provenance
+→ Scientific Answer Composition
+Verify that:
+1. CSQ remains the semantic authority.
+2. The scientific question is not reduced to keyword-only search.
+3. Source-specific query construction preserves scientific intent.
+4. Each adapter receives the correct source-specific query.
+5. The original question identity remains traceable.
+6. Result normalization does not erase source identity.
+7. Provenance is preserved.
+8. Results from multiple sources remain distinguishable.
+9. Errors from one source do not silently corrupt other sources.
+10. Partial source failure is represented accurately.
+11. The final scientific synthesis does not claim evidence that was not returned.
+12. The existing confidence and eligibility rules remain respected.
+Run the appropriate five-source regression tests.
+Where the five sources include unavailable live endpoints, distinguish:
+- Live integration tests.
+- Adapter tests.
+- Contract tests.
+- Mock tests.
+- CSQ identity tests.
+Do not treat a mock as proof of live connectivity.
+If the original acceptance requires real integration across all five sources, do not declare it complete until that requirement is satisfied.
+## 6.5 §8.23.8 — Mandatory Architectural Resolution
+The previous report states:
+- CapVer is intentionally SQLite-based.
+- PostgreSQL is used for isolated IC persistence testing.
+- Cap-on-PostgreSQL was classified as not applicable under the current CapVer-SQLite architecture.
+- EXIT-09 remains PARTIAL.
+This issue must be resolved against the original acceptance text.
+### Required Investigation
+1. Read the exact original §8.23.8 text.
+2. Read all related subsections.
+3. Identify the component and persistence boundary to which the requirement applies.
+4. Determine whether it explicitly requires CapVer persistence on PostgreSQL.
+5. Determine whether it refers to IC persistence, ScientificRecordStore, LocalIndex, or another component.
+6. Reconcile the text with the approved SQLite architecture decisions.
+7. Inspect the actual implementation and test evidence.
+8. Identify any contradiction between the original requirement and the current architecture.
+9. Record the conclusion and supporting evidence.
+### Required Decision Discipline
+Do not automatically conclude that §8.23.8 is not applicable.
+Do not automatically migrate CapVer from SQLite to PostgreSQL.
+Do not change the original acceptance text.
+Do not weaken the Guard.
+Do not modify the primary database architecture.
+The owner authorizes you to implement the technically correct resolution supported by the original decisions.
+Possible outcomes:
+- `REQUIREMENT_SATISFIED`
+- `REQUIREMENT_NOT_APPLICABLE_WITH_ARCHITECTURAL_EVIDENCE`
+- `REQUIREMENT_REMAINS_UNSATISFIED`
+- `ARCHITECTURAL_CONFLICT_REQUIRES_FORMAL_DECISION`
+## 6.5.1 Owner Decision Required for N/A or Acceptance Waiver
+The executor may independently investigate §8.23.8, inspect the architecture, implement technically required changes, and produce a complete evidence-based recommendation.
+However, the executor is NOT authorized to independently waive, dismiss, or declare an original mandatory acceptance requirement NOT APPLICABLE when that conclusion changes or limits the original acceptance obligation.
+### Resolution Rules
+**1. `REQUIREMENT_SATISFIED`**
+- Implement and verify the requirement.
+- Record the actual evidence.
+- No additional owner decision is required for the technical implementation.
+**2. `REQUIREMENT_NOT_APPLICABLE_WITH_ARCHITECTURAL_EVIDENCE`**
+- Prepare a formal owner decision request.
+- Do not finalize N/A independently.
+- Keep EXIT-09 PARTIAL until the owner explicitly accepts the applicability decision, unless the original acceptance contract provides another valid closure mechanism.
+**3. `REQUIREMENT_REMAINS_UNSATISFIED`**
+- Document the missing requirement.
+- Keep EXIT-09 PARTIAL.
+- Continue all independent work.
+**4. `ARCHITECTURAL_CONFLICT_REQUIRES_FORMAL_DECISION`**
+- Prepare a formal decision request.
+- Preserve the original ADR text.
+- Do not silently change the architecture or acceptance criteria.
+- Keep the affected criterion PARTIAL.
+### Required Owner Decision Package
+For any proposed N/A or acceptance waiver, provide:
+- Exact original §8.23.8 text.
+- Relevant ADR subsections.
+- Original owner decisions.
+- Current architecture and persistence boundaries.
+- Actual implementation evidence.
+- Test results.
+- Technical analysis.
+- Why the requirement is considered applicable or not applicable.
+- Recommended decision.
+- Alternative solutions.
+- Consequences of each alternative.
+The owner must explicitly approve or reject the proposed N/A or acceptance interpretation.
+Do not treat the broad engineering authorization in this prompt as automatic approval of an acceptance waiver.
+### Acceptance
+EXIT-09 must remain PARTIAL if any mandatory original acceptance condition remains unsatisfied.
+Do not use successful SQLite persistence tests as a substitute for an unrelated PostgreSQL requirement.
+Do not use successful IC PostgreSQL tests as proof of CapVer PostgreSQL persistence.
+---
+# 7. PRIORITY C — EXIT-10: VERIFIED-FAMILY COMPLETENESS
+EXIT-10 remains PARTIAL.
+Investigate the existing 110.v1 membership and verified-family evidence.
+Do not recreate or replace the existing membership matrix.
+Preserve:
+- 110.v1 membership identity.
+- 109.v1 historical identity.
+- The distinction between membership, registry, integration, connectivity, and operational readiness.
+## 7.1 Required Actions
+1. Read the original EXIT-10 acceptance criteria.
+2. Inspect the latest verified-family columns.
+3. Identify incomplete entries.
+4. Determine why each entry is incomplete.
+5. Identify the exact capability evidence required.
+6. Validate the source-family mappings.
+7. Validate the relationship between source identity and ADR identity.
+8. Validate capability records and their authorized references.
+9. Validate the distinction between `cap_record` and `capability_store_record`.
+10. Update only evidence-supported fields.
+11. Preserve historical records.
+Do not mark a source verified merely because it belongs to a family.
+Do not infer operational readiness from registry membership.
+## 7.2 Deliverables
+- Updated verified-family matrix.
+- Missing-evidence report.
+- Source-by-source status.
+- EXIT-10 traceability matrix.
+- Tests and verification evidence.
+EXIT-10 must remain PARTIAL where original acceptance requirements remain unmet.
+---
+# 8. PRIORITY D — EXIT-05: STAGING / OPERATOR EVIDENCE
+Previous state:
+`EXIT-05 = BLOCKED`
+The previous investigation reported that required staging/operator evidence was unavailable.
+## Required Actions
+1. Re-read the original EXIT-05 acceptance criteria.
+2. Inspect the relevant ADR sections, including §8.25.7 and §8.26.5.
+3. Search the existing repository and approved archive for the exact original evidence.
+4. Do not repeat broad archive searches if the previous search evidence is conclusive.
+5. Identify precisely which artifact or operator action is missing.
+6. Determine whether any part of the criterion can be completed internally.
+7. Complete all independent technical work.
+8. Record the remaining external action.
+Do not fabricate staging certificates or operator approvals.
+Do not create a document that pretends to be an original operator record.
+Keep EXIT-05 BLOCKED if its original evidence is unavailable.
+---
+# 9. PRIORITY E — EXIT-07: G2-26 ORIGINAL IC EVIDENCE
+Previous state:
+`EXIT-07 = BLOCKED`
+The original IC for G2-26 was not found in the previous investigation.
+## Required Actions
+1. Inspect the exact original EXIT-07 definition.
+2. Inspect G2-26 identity and acceptance records.
+3. Inspect the existing IC evidence references.
+4. Inspect the previous search and archive evidence.
+5. Determine whether the original IC can be recovered from an existing authoritative source.
+6. Preserve the distinction between an original record and a later explanatory document.
+7. Complete any independent technical checks that do not require the missing original.
+8. Record the exact remaining owner action.
+Do not create an artificial IC record.
+Do not treat a derived summary as the original IC.
+Do not close EXIT-07 without satisfying its original acceptance requirements.
+---
+# 10. PRIORITY F — D-08 AND SUPPLEMENT 04
+Previous status:
+`D-08 = BLOCKED`
+Previous finding:
+`SUPPLEMENT_04_NOT_FOUND / HISTORY_INDETERMINATE`
+## Required Actions
+1. Read the original D-08 definition.
+2. Inspect the exact Supplement 04 references.
+3. Inspect the existing historical evidence and archive records.
+4. Continue from the previous search results rather than repeating an identical search.
+5. Determine whether a new authoritative recovery path exists.
+6. Preserve all previous findings.
+7. Distinguish missing evidence from evidence of non-existence.
+8. Document the historical uncertainty accurately.
+Possible outcomes:
+- `SUPPLEMENT_04_RECOVERED_AND_VERIFIED`
+- `SUPPLEMENT_04_NOT_FOUND`
+- `HISTORY_INDETERMINATE`
+- `OWNER_ACCEPTANCE_REQUIRED`
+If the original cannot be found, present the precise unresolved question for the owner.
+Do not invent the missing supplement.
+Do not silently convert `HISTORY_INDETERMINATE` into PASS.
+---
+# 11. PRIORITY G — MASTER PROMPTS 10.5 / 10.6 ARCHIVAL GAP
+The previous report states that the original Master Prompts 10.5 and 10.6 were not found in the repository or archive.
+## Required Actions
+1. Preserve the existing NOT_FOUND findings.
+2. Search only new authoritative locations or evidence sources not previously examined.
+3. Do not repeatedly search the same locations without a reason.
+4. Do not recreate the prompts from memory.
+5. Do not label a reconstruction as an original.
+6. If recovered, verify its provenance, filename, content, and integrity.
+7. If not recovered, record the unresolved historical archival gap.
+Any reconstruction, if separately requested later, must be clearly labeled as a reconstruction and must never replace the missing original.
+---
+# 12. PRIORITY H — D-01 THROUGH D-14
+The latest Revision 10.8.3 report contains a D-01…D-14 Definition of Done and Discrepancy Register.
+Use these as the baseline.
+Do not invent easier acceptance criteria.
+## Required Actions
+1. Read the latest D-01…D-14 Definition of Done.
+2. Read the latest Discrepancy Register.
+3. Reconcile only discrepancies affected by Revision 10.9.1.
+4. Preserve all original owner decisions.
+5. Update the evidence for EXIT-08, EXIT-09, and EXIT-10.
+6. Update other D records only when new evidence justifies a change.
+7. Do not mark a discrepancy RESOLVED merely because a document was written.
+8. Require implementation, test evidence, and traceability wherever the original DoD requires them.
+Each discrepancy must include:
+- Original requirement.
+- Current status.
+- Latest evidence.
+- Implementation state.
+- Test state.
+- Remaining blocker.
+- Closure decision.
+- Evidence reference.
+Preserve partial states.
+---
+# 13. EXIT-11 — FINAL GATE EVALUATION
+Previous status:
+`EXIT-11 = NOT_RUN`
+The previous report identifies ADR-023 §8.64.7 as requiring a verification report and explicit exit decision after PASS for EXIT-01 through EXIT-10.
+## Required Actions
+1. Read the exact original §8.64.7 text.
+2. Extract every prerequisite.
+3. Re-evaluate the actual current EXIT statuses.
+4. Execute EXIT-11 only when all its original prerequisites are satisfied.
+5. Do not weaken its gate.
+6. Do not infer that a partial criterion counts as PASS.
+7. Produce the formal exit evaluation evidence.
+If any mandatory prerequisite remains incomplete:
+`EXIT_11 = NOT_RUN`
+or the exact status required by its original contract.
+Do not execute EXIT-11 prematurely merely to produce a final report.
+---
+# 14. DATABASE, STORAGE AND ARCHITECTURE PROTECTION
+The existing database inventory and architecture are authoritative.
+Do not rediscover the primary database unless a new concrete contradiction exists.
+Do not assume PostgreSQL is the application's primary database.
+Preserve the distinction between:
+- Primary application database.
+- Scientific LocalIndex.
+- CapVer SQLite.
+- Mission Artifact Archive.
+- Isolated PostgreSQL integration-test database.
+The previous inventory documents these as distinct persistence boundaries.
+## 14.1 Mandatory Protection
+Never:
+- Change the operational `.env`.
+- Change the application's primary database connection.
+- Run destructive migrations against operational databases.
+- Run `migrate:fresh` against operational data.
+- Delete or overwrite archive blobs.
+- Delete SQLite stores.
+- Replace historical database files.
+- Remove Docker volumes without verified ownership and explicit necessity.
+- Expose database credentials.
+- Disable database safety checks.
+## 14.2 PostgreSQL Test Isolation
+Continue using the approved Guard-compliant isolated test strategy.
+Previous pattern:
+- Isolated PostgreSQL test container.
+- Network isolation.
+- PHP test process in the PostgreSQL container network namespace.
+- Dedicated test database.
+- `pgsql_testing` binding where required.
+- No change to operational services.
+Any new temporary infrastructure must be isolated, reversible, and documented.
+Permanent or shared Docker Network, Network Namespace, operational networking, or Guard configuration changes require a separate explicit owner authorization.
+Never weaken the Guard to make tests pass.
+## 14.3 SQLite Architecture
+CapVer and Mission Artifact Archive SQLite boundaries must remain protected unless a verified original acceptance requirement and explicit architectural decision justify a change.
+Do not migrate a persistence subsystem simply because another test suite uses PostgreSQL.
+## 14.4 SQLite Lock, Hung Diagnostic Processes & Ingestion Continuity Protection
+The project contains critical SQLite persistence and archival data. SQLite locks and diagnostic processes must be handled without interrupting active ingestion or damaging persistence state.
+### A. Process Identity Verification
+Before terminating any process inside Docker:
+1. Identify the exact container.
+2. Verify that the PID exists.
+3. Read its complete command line and process identity.
+4. Determine whether it is:
+   - A diagnostic PRAGMA probe.
+   - A read-only WAL inspection.
+   - A Laravel Artisan process.
+   - An active Ingest Writer.
+   - A persistence or archival process.
+5. Never infer process identity from PID alone.
+6. Never terminate a process whose identity is unknown or ambiguous.
+### B. Safe Process Termination
+For a positively identified hung diagnostic process:
+1. Attempt SIGTERM first.
+2. Wait and recheck the same process.
+3. Use SIGKILL only if that exact diagnostic process remains unresponsive and its identity is reconfirmed.
+Never terminate an active Ingest Writer, Laravel ingestion process, persistence worker, or archival writer merely because it holds a SQLite lock.
+If process identity cannot be established, do not terminate it. Continue with safe diagnostics.
+### C. SQLite and WAL Protection
+1. Preserve the SQLite database.
+2. Preserve associated WAL and SHM files.
+3. Never delete, replace, truncate, or manually modify these files.
+4. Do not run destructive SQLite repair or checkpoint operations.
+5. Perform WAL inspection in read-only mode only after confirming that no active writer is operating on the same database.
+6. Do not repeatedly launch PRAGMA probes that remain hung or compete for database locks.
+7. Record the exact database path and process ownership.
+8. Verify database accessibility without interrupting active ingestion.
+### D. Ingestion Continuity
+Before launching any new Persist or Ingest window:
+1. Read the existing manifest and checkpoints.
+2. Verify the last completed window.
+3. Determine the exact completed package range.
+4. Determine the next unprocessed package range.
+5. Verify that no previous writer remains active.
+6. Verify checkpoint consistency.
+7. Confirm that the next operation will not duplicate completed packages.
+8. Launch the next bounded operation exactly once.
+9. Verify actual checkpoint advancement and log output.
+Never restart a completed window or repeat completed packages unless a concrete integrity failure proves that recovery is necessary.
+### E. Evidence and Recovery
+Record:
+- Database identity and path.
+- Container identity.
+- Process PID and full command line.
+- Process classification.
+- Writer status.
+- Lock observations.
+- WAL inspection results.
+- Checkpoint values before and after ingestion.
+- Completed and newly processed package ranges.
+- Actual command and exit status.
+- Recovery actions and evidence.
+Never claim that SQLite is unlocked or healthy without actual verification.
+Preserve all original evidence and ingestion logs.
+---
+# ADDENDUM RECORD — Revision 10.9.1 §14.4
+Added 2026-11-17 under owner directive. Original §14.1–§14.3 preserved unmodified. This addendum does not replace or restart Revision 10.9.1; it protects persistence and ingestion continuity.
+---
+# 15. SOURCE IDENTITY, CSQ AND SCIENTIFIC INTEGRITY
+The scientific search architecture is a protected core contract.
+Preserve:
+- CSQ semantic identity.
+- Scientific query intent.
+- Query ownership.
+- Source-specific query compilation.
+- Source identity.
+- ADR identity binding.
+- Capability decisions.
+- Evidence provenance.
+- Normalization semantics.
+- Scientific answer composition.
+Never reduce the scientific question to keyword-only search.
+Never allow an adapter to silently rewrite the scientific question into a different scientific problem.
+Never merge source evidence without preserving source provenance.
+Never infer scientific support from the existence of a registry entry.
+Any source-specific translation must remain traceable to the original CSQ.
+---
+# 16. IMPLEMENTATION AND CODE QUALITY AUTHORITY
+You have authority to implement the necessary code changes across the existing stack.
+Use the project's established conventions and dependencies.
+Do not introduce a new library or framework without a concrete technical reason.
+For every implementation:
+1. Inspect the existing code.
+2. Identify the actual defect or missing requirement.
+3. Design the smallest correct change.
+4. Implement the change.
+5. Add or update focused tests.
+6. Run relevant tests.
+7. Inspect regressions.
+8. Inspect the final diff.
+9. Update documentation and evidence.
+10. Commit and push if eligible.
+Prefer minimal, cohesive, reversible changes.
+Do not add speculative abstractions.
+Do not create parallel registries or duplicate sources of truth.
+Do not hide failures behind permissive exception handling.
+Do not silently convert external errors into empty successful responses.
+Do not suppress test failures merely to achieve a passing exit code.
+---
+# 17. TESTING AND VERIFICATION POLICY
+## 17.1 Test Selection
+Run tests based on the changed behavior and original acceptance requirements.
+Use:
+- Unit tests.
+- Integration tests.
+- Adapter tests.
+- Contract tests.
+- Live connectivity tests.
+- Regression tests.
+- Database persistence tests.
+- Security tests.
+- Static analysis.
+- Relevant builds.
+Do not rerun all historical tests without a clear reason.
+## 17.2 Required Evidence for Each Test Group
+Record:
+- Exact command.
+- Working directory.
+- Test files or test group.
+- Number of tests.
+- Number of assertions.
+- Passed.
+- Failed.
+- Skipped.
+- Exit code.
+- Environment constraints.
+- Actual result.
+- Evidence artifact.
+Never claim success based on a test that was not executed.
+Never omit failures from the final report.
+## 17.3 Failure Handling
+When a test fails:
+1. Identify the exact failing test.
+2. Determine whether it is committed code, WIP, environment, infrastructure, or an acceptance gap.
+3. Investigate root cause.
+4. Fix only within scope.
+5. Rerun the focused test.
+6. Run the required regression subset.
+7. Preserve the original failure evidence.
+8. Record the final result.
+Do not classify a failure as environmental without evidence.
+Do not exclude a test merely because it is associated with WIP if the original acceptance contract requires that behavior.
+---
+# 18. AUTOMATIC COMMIT AND PUSH AUTHORIZATION
+The owner explicitly authorizes automatic Commit and Push for eligible work completed under this prompt.
+Do not request approval for every Commit or Push.
+## 18.1 Eligibility
+A code or documentation group is eligible only when:
+- It is within Phase 1.
+- Its implementation is complete.
+- Applicable tests pass.
+- Documentation and evidence are consistent.
+- Dependencies are complete.
+- The staged diff has been inspected.
+- No secrets are included.
+- No unrelated WIP is included.
+- No unresolved inconsistency is introduced.
+## 18.2 Required Delivery Procedure
+For each independent completed group:
+1. Identify exact files.
+2. Run relevant validation.
+3. Inspect the full diff.
+4. Stage only the eligible files.
+5. Inspect the staged diff.
+6. Commit with a precise message.
+7. Push normally.
+8. Fetch remote state.
+9. Verify synchronization.
+10. Record the commit hash and evidence.
+11. Continue to the next independent group.
+Do not wait for all EXIT criteria to pass before delivering already completed independent work.
+## 18.3 Documentation Groups
+Validate documentation independently.
+A passing document may be committed only if it is logically independent of any failing document.
+If multiple documents form one inseparable acceptance record, validate them as a group.
+Do not commit a partial or inconsistent record.
+## 18.4 Commit Granularity
+Prefer cohesive groups of ten files or fewer.
+This is a guideline, not an absolute limit.
+A larger atomic group is permitted when splitting it would produce an invalid or inconsistent implementation.
+Document the reason.
+## 18.5 Delivery Statuses
+For code:
+- `TESTED_AND_PUSHED`
+- `TESTED_BUT_NOT_PUSHED`
+- `TEST_FAILED`
+- `BLOCKED_BY_DEPENDENCY`
+- `NOT_TESTED`
+For documentation:
+- `VALIDATED_AND_PUSHED`
+- `VALIDATED_BUT_NOT_PUSHED`
+- `VALIDATION_FAILED`
+- `BLOCKED_BY_DEPENDENCY`
+- `NOT_VALIDATED`
+Never commit failing or unvalidated files.
+Never force push.
+---
+# 19. CONTINUOUS MISSION ARTIFACT ARCHIVAL
+Archival must continue throughout execution.
+Do not defer all archival work until the end.
+## 19.1 Required Archival Artifacts
+Archive eligible new artifacts such as:
+- EXIT-08 live connectivity reports.
+- EXIT-09 regression reports.
+- §8.23.8 analysis and decision evidence.
+- Source-by-source verification matrices.
+- D-01…D-14 updates.
+- Acceptance matrices.
+- Test results.
+- Failure investigations.
+- Architecture decisions.
+- ADR updates.
+- Evidence manifests.
+- Git delivery records.
+- Project state snapshots.
+- Final reports.
+## 19.2 Archival Procedure
+Use the existing approved Mission Artifact Archive workflow.
+For each eligible artifact:
+1. Preserve the original content.
+2. Preserve the original filename.
+3. Preserve the source language.
+4. Preserve provenance.
+5. Use the approved ingestion service.
+6. Execute `ingestFile`.
+7. Obtain the actual Archive ID.
+8. Perform readback.
+9. Execute `verifyIntegrity`.
+10. Update the archive manifest.
+11. Record the final archive status.
+Do not write directly to archive storage instead of the approved service.
+Do not fabricate Archive IDs.
+Do not declare `ARCHIVED_AND_VERIFIED` without readback and integrity verification.
+## 19.3 Archival Scope
+Tier 1 evidence is mandatory.
+Tier 2 and Tier 3 are optional where they provide real archival value.
+The normal archival group should not exceed twenty items unless a documented reason justifies a larger group.
+Do not delay critical EXIT-08/09 execution or eligible Git delivery because of secondary archival work.
+## 19.4 Historical Archive Protection
+The previous 17 historical artifacts remain:
+`ALREADY_ARCHIVED_AND_VERIFIED`
+Do not duplicate them without a demonstrated integrity issue.
+Preserve the existing archive count and history.
+Never archive secrets, temporary credentials, `.env` files, or temporary runtime files without legitimate evidence value.
+If archival fails, preserve the original artifact and record the failure.
+Git and Mission Artifact Archive are separate systems; neither replaces the other.
+---
+# 20. EXECUTION ORDER — CONTINUOUS WORK
+Work continuously through the following priorities.
+These are work priorities, not separate sessions. Do not stop after completing a stage when further authorized work can proceed safely.
+## Priority 1 — Baseline and Remaining Gap Traceability
+- Confirm current Git state.
+- Reuse Revision 10.8.3 evidence.
+- Identify new or remaining gaps only.
+- Produce a concise Revision 10.9.1 gap matrix.
+## Priority 2 — EXIT-08 Live Connectivity
+- Recover original acceptance criteria.
+- Inspect existing source integration architecture.
+- Implement missing authorized adapters and connectivity.
+- Execute real live tests where access permits.
+- Preserve CSQ and provenance.
+- Record source-by-source evidence.
+## Priority 3 — EXIT-09 Regression Closure
+- Verify ServerRestart requirement.
+- Complete five-source/CSQ regression.
+- Investigate §8.23.8 against its original meaning.
+- Correct any genuine implementation defects.
+- Run focused and required integration tests.
+## Priority 4 — EXIT-10 Verified-family Completion
+- Complete missing verified-family evidence.
+- Preserve source membership and historical identity.
+- Test mappings and capability references.
+## Priority 5 — EXIT-05 / EXIT-07 / D-08
+- Complete recoverable internal work.
+- Search only new authoritative evidence paths.
+- Record exact external blockers.
+- Do not fabricate missing originals.
+## Priority 6 — D-01…D-14 Reconciliation
+- Update only affected discrepancies.
+- Preserve original Definition of Done.
+- Require evidence for closure.
+## Priority 7 — EXIT-11
+- Execute only when all original prerequisites pass.
+- Produce the formal exit decision.
+## Priority 8 — Final Verification and Delivery
+- Verify all affected components.
+- Verify all evidence.
+- Verify archival integrity.
+- Verify Git commits and remote synchronization.
+- Produce the final Arabic engineering report.
+---
+# 21. CONTINUOUS EXECUTION RULE
+Do not divide work into artificial sessions or stop after producing intermediate plans.
+After every independent implementation group:
+1. Validate.
+2. Test.
+3. Document.
+4. Archive eligible evidence.
+5. Commit.
+6. Push.
+7. Verify remote synchronization.
+8. Continue.
+If a task is blocked by an external dependency, record the blocker and continue with independent tasks.
+Do not allow one blocked EXIT to stop all other authorized Phase 1 work.
+Do not start Phase 2.
+Do not stop merely because a partial report has been generated.
+---
+# 22. GLOBAL PHASE 1 ACCEPTANCE
+Phase 1 can be formally closed only if every mandatory original acceptance requirement is satisfied.
+At minimum, verify the actual final status of:
+- EXIT-01 through EXIT-10.
+- EXIT-11.
+- D-01 through D-14.
+- Tier 1 archival requirements.
+- Required architecture and data-integrity decisions.
+- Required source integration and connectivity evidence.
+- Required regression tests.
+- Git delivery and synchronization.
+Do not change original PASS conditions.
+Do not convert PARTIAL into PASS because implementation is technically difficult.
+Do not close a criterion solely through documentation.
+Do not claim that Phase 1 is complete when any mandatory criterion remains BLOCKED, PARTIAL, NOT_RUN, or otherwise unsatisfied under its original acceptance contract.
+If external evidence remains unavailable, preserve the accurate final classification.
+The correct final outcome may remain:
+`PHASE_1_PARTIAL`
+Do not manufacture closure.
+---
+# 23. REQUIRED FINAL REPORT — ARABIC
+At completion, produce one comprehensive Arabic engineering report.
+Do not send multiple competing analyses of the same execution.
+The report must contain:
+## 23.1 Executive Summary
+- Final Phase 1 status.
+- Actual work completed.
+- Remaining blockers.
+- Whether formal closure is justified.
+## 23.2 Git Baseline and Delivery
+- Initial branch and HEAD.
+- Final branch and HEAD.
+- Commits created.
+- Push results.
+- Remote synchronization.
+- WIP preservation.
+- Files excluded from commits.
+## 23.3 EXIT Matrix
+For every EXIT-01 through EXIT-11:
+- Previous status.
+- Current status.
+- Work performed.
+- Test evidence.
+- Remaining requirements.
+- Reason for final classification.
+## 23.4 EXIT-08 Detailed Report
+Include:
+- Source-by-source connectivity matrix.
+- Official endpoints.
+- Access methods.
+- Live connectivity results.
+- Contract test results.
+- Adapter test results.
+- Mock test results.
+- Pagination and error-handling evidence.
+- Provenance and CSQ verification.
+- Sources blocked by credentials or external service limitations.
+- Exact reason if EXIT-08 remains PARTIAL.
+## 23.5 EXIT-09 Detailed Report
+Include:
+- ScientificRecordStore verification.
+- ServerRestart result.
+- Ten-failure investigation status.
+- Five-source regression results.
+- CSQ identity and provenance verification.
+- Full §8.23.8 interpretation and evidence.
+- Guard and database isolation results.
+- Exact remaining acceptance gaps.
+## 23.6 EXIT-10 Report
+- 110.v1 preservation.
+- Verified-family matrix.
+- Missing capability evidence.
+- Source-by-source status.
+- Remaining gaps.
+## 23.7 EXIT-05 / EXIT-07 / D-08
+Report the exact evidence recovered, unavailable originals, and remaining owner actions.
+## 23.8 D-01…D-14
+Provide the updated discrepancy matrix with evidence-based statuses.
+## 23.9 EXIT-11
+Report whether it was eligible to run and its actual result.
+## 23.10 Tests
+For each test group:
+- Command.
+- Tests.
+- Assertions.
+- Passed.
+- Failed.
+- Skipped.
+- Exit code.
+- Evidence.
+## 23.11 Archival
+- Previous archive count.
+- New artifacts.
+- Actual Archive IDs.
+- Readback results.
+- Integrity verification.
+- Final archive count.
+- Failed or blocked artifacts.
+## 23.12 Commit and Push
+- Commit hashes.
+- Files.
+- Test evidence.
+- Push status.
+- Remote sync.
+## 23.13 Remaining Owner Actions
+List only actions that genuinely require external owner evidence, an operator, credentials, or a formal non-engineering acceptance decision.
+Do not ask the owner to approve decisions already covered by this authorization.
+## 23.14 Final Decision
+Choose the correct evidence-supported status:
+- `PHASE_1_CLOSED`
+- `PHASE_1_GAP_CLOSURE_PARTIAL`
+- `PHASE_1_BLOCKED`
+Explain why.
+## 23.15 Minimum Viable Final Report
+If the complete execution scope cannot be finished because of external dependencies, unavailable credentials, missing original evidence, provider restrictions, or other documented blockers, produce a Minimum Viable Final Report.
+The report must be sufficient to establish the actual engineering state without implying that Phase 1 is complete.
+### A. Mandatory Minimum Sections
+The report must include:
+1. §23.1 — Executive Summary.
+2. §23.2 — Git Baseline and Delivery.
+3. §23.3 — EXIT Matrix.
+4. §23.4 — EXIT-08 Summary.
+5. §23.5 — EXIT-09 Summary.
+6. §23.10 — Tests and Actual Results.
+7. §23.11 — Archival Status.
+8. §23.12 — Commit and Push Results.
+9. §23.14 — Final Decision.
+### B. Deferred Sections
+The following sections may be abbreviated or deferred only when their work was not completed:
+- §23.6 — EXIT-10.
+- §23.7 — EXIT-05 / EXIT-07 / D-08.
+- §23.8 — D-01 through D-14.
+- §23.9 — EXIT-11.
+- §23.13 — Owner Actions.
+For every deferred section, state:
+- Current status.
+- Whether it was investigated.
+- Exact reason it remains incomplete.
+- Required next action.
+- Whether it blocks Phase 1 closure.
+Do not omit an unresolved blocker merely because its detailed section is deferred.
+### C. Minimum Report Integrity
+The minimum report must:
+- Distinguish implemented work from verified work.
+- Distinguish contract/mock tests from live connectivity.
+- Report actual test counts and exit codes.
+- Report skipped and failed tests.
+- Report actual commit hashes and push results.
+- Report archival verification accurately.
+- Identify all remaining owner actions.
+- Preserve the correct Phase 1 classification.
+### D. Final Classification
+If mandatory acceptance criteria remain incomplete, the final report must preserve the appropriate status:
+`PHASE_1_GAP_CLOSURE_PARTIAL`
+or
+`PHASE_1_BLOCKED`
+Do not declare `PHASE_1_CLOSED` based on a minimum report.
+---
+# 24. NON-NEGOTIABLE RULES
+1. Work as an autonomous senior engineering team.
+2. Execute, do not merely recommend.
+3. Preserve original architectural decisions.
+4. Preserve CSQ identity and scientific provenance.
+5. Preserve the primary application database.
+6. Preserve SQLite persistence boundaries.
+7. Never weaken PostgreSQL Guard.
+8. Never fabricate live connectivity.
+9. Never fabricate missing original evidence.
+10. Never weaken original EXIT acceptance criteria.
+11. Never repeat completed work without new evidence.
+12. Never delete or overwrite WIP.
+13. Never stage unrelated files.
+14. Never commit secrets.
+15. Commit and push eligible validated groups automatically.
+16. Archive new Tier 1 evidence continuously.
+17. Do not duplicate already verified historical artifacts.
+18. Do not start Scientific Source Expansion Phase 2.
+19. There is no Phase 3.
+20. Report all actual results in Arabic.
+21. Preserve truthful PARTIAL and BLOCKED statuses.
+22. Formal Phase 1 closure requires complete original acceptance evidence.
+---
+# 25. START EXECUTION NOW
+Begin Revision 10.9.1 immediately.
+First:
+1. Confirm the current repository baseline without destructive operations.
+2. Read the Revision 10.8.3 final report and its evidence references.
+3. Read the exact original EXIT-08 and EXIT-09 acceptance requirements.
+4. Read §8.23.8 in its full architectural context.
+5. Identify the remaining gaps without repeating completed work.
+6. Begin EXIT-08 live connectivity remediation and EXIT-09 regression closure.
+7. Continue through the remaining authorized Phase 1 gaps.
+8. Test, archive, commit, and push each independent eligible group.
+9. Continue until all technically executable work is completed.
+10. Produce the comprehensive Arabic final report, or the Minimum Viable Final Report if external blockers prevent full completion.
+**The owner has authorized the engineering work described above. Do not request repeated approval for ordinary technical decisions, scoped implementation, testing, eligible Commit/Push, or continuous Tier 1 archival.**
+**The owner has NOT granted automatic authority to waive original acceptance criteria or independently declare §8.23.8 NOT APPLICABLE. Such a decision requires the explicit owner decision process in §6.5.1.**
+**Your objective is not to produce another plan. Your objective is to complete the remaining Phase 1 engineering work and provide verifiable evidence of what was actually achieved.**

@@ -1,0 +1,246 @@
+{
+  "schema_id": "wsa.agris_by0_resume_safety_assessment.v1",
+  "revision": "10.27",
+  "investigated_at_utc": "2026-11-17T15:45:00Z",
+  "investigation_mode": "PATH_B_READ_ONLY",
+  "classification": "RESUME_SAFETY_PROVEN",
+  "classification_scope": "Logical resume safety from the recorded BY0 offset is proven. Physical SQLite integrity was not tested under the owner prohibition, so execution remains owner-gated.",
+  "prohibitions_observed": {
+    "ingestion_executed": false,
+    "sqlite_opened_by_investigator": false,
+    "pragma_or_integrity_check_run": false,
+    "writer_started": false,
+    "checkpoint_manifest_wal_shm_modified_by_investigator": false
+  },
+  "incident_reverification": {
+    "status": "ABNORMALLY_TERMINATED",
+    "window": 7,
+    "package_id": "AGRIS.ODS.BY0",
+    "failure": "The record store failed during commit (SQLSTATE HY000).",
+    "preceding_completed_packages": [
+      {
+        "package_id": "AGRIS.ODS.PHC",
+        "generation": 1670
+      },
+      {
+        "package_id": "AGRIS.ODS.NI0",
+        "generation": 1680
+      },
+      {
+        "package_id": "AGRIS.ODS.Q10",
+        "generation": 1681
+      },
+      {
+        "package_id": "AGRIS.ODS.PE0",
+        "generation": 1689
+      },
+      {
+        "package_id": "AGRIS.ODS.QC4",
+        "generation": 1690
+      },
+      {
+        "package_id": "AGRIS.ODS.MY0",
+        "generation": 1718
+      }
+    ],
+    "by0_log_sequence": [
+      {
+        "chunk": 1,
+        "skip_records": 1000,
+        "generation": 1719
+      },
+      {
+        "chunk": 2,
+        "skip_records": 2000,
+        "generation": 1720
+      },
+      {
+        "chunk": 3,
+        "skip_records": 3000,
+        "generation": 1721
+      },
+      {
+        "chunk": 4,
+        "skip_records": 4000,
+        "generation": 1722
+      },
+      {
+        "chunk": 5,
+        "skip_records": 5000,
+        "generation": 1723
+      },
+      {
+        "next_event": "failed",
+        "error": "The record store failed during commit (SQLSTATE HY000)."
+      }
+    ]
+  },
+  "active_writer_check": {
+    "method": "docker top wsa-enterprise-backend-1 -eo pid,ppid,user,etime,args",
+    "observed_processes": [
+      "php-fpm: master process (/usr/local/etc/php-fpm.conf)",
+      "php-fpm: pool www",
+      "php-fpm: pool www",
+      "php-fpm: pool www"
+    ],
+    "scientific_ingest_process_present": false,
+    "conclusion": "No active scientific:ingest-agris-projected writer was present in either docker-top observation."
+  },
+  "filesystem_metadata": {
+    "first_observation": [
+      {
+        "name": "scientific_record_store.sqlite",
+        "bytes": 7613120512,
+        "last_write_utc": "2026-11-17T15:08:27.1483245Z"
+      },
+      {
+        "name": "scientific_record_store.sqlite-wal",
+        "bytes": 0,
+        "observed_present": true
+      },
+      {
+        "name": "scientific_record_store.sqlite-shm",
+        "bytes": 32768,
+        "observed_present": true
+      }
+    ],
+    "second_observation": [
+      {
+        "name": "scientific_record_store.sqlite",
+        "bytes": 7613120512,
+        "created_utc": "2026-10-17T22:26:21.9460289Z",
+        "last_write_utc": "2026-11-17T15:08:27.1483245Z",
+        "attributes": "Archive"
+      },
+      {
+        "name": "scientific_record_store.sqlite-wal",
+        "observed_present": false
+      },
+      {
+        "name": "scientific_record_store.sqlite-shm",
+        "observed_present": false
+      }
+    ],
+    "interpretation": "The zero-byte WAL and SHM sidecar were transient and later absent. This is compatible with SQLite connection cleanup, but it is filesystem evidence only and is not an integrity result."
+  },
+  "checkpoint": {
+    "completed_packages_count": 123,
+    "partial": {
+      "AGRIS.ODS.BY0": {
+        "skip_records": 5000,
+        "chunks": 5,
+        "generation": 1723,
+        "at": "2026-11-17T15:06:34+00:00"
+      }
+    },
+    "last_package": "AGRIS.ODS.BY0",
+    "last_progress_at": "2026-11-17T15:06:34+00:00",
+    "updated_at": "2026-11-17T15:07:43+00:00",
+    "failure_recorded": true,
+    "top_level_generation_after": 1718,
+    "top_level_generation_after_interpretation": "This field is updated only after a package completes, so 1718 is the last fully completed package generation and does not contradict partial generation 1723."
+  },
+  "manifest": {
+    "package_id": "AGRIS.ODS.BY0",
+    "status": "projected",
+    "records": 28213,
+    "sha256": "9e705a489246e10261aa0e5158af6f233c7aa5056109da9398ac4f9963c507f4",
+    "projection_status": "completed",
+    "remaining_after_skip": 23213
+  },
+  "implementation_findings": {
+    "command": "backend/app/Console/Commands/IngestAgrisProjectedPackagesCommand.php",
+    "coordinator": "backend/app/Services/Agriculture/Research/Search/LocalIndex/AgrisCandidateIngestCoordinator.php",
+    "ingestion_service": "backend/app/Services/Agriculture/Research/Search/LocalIndex/LocalIndexIngestionService.php",
+    "record_store": "backend/app/Services/Agriculture/Research/Search/LocalIndex/DatabaseScientificRecordStore.php",
+    "reader": "backend/app/Services/Agriculture/Research/Search/Family/Bulk/BulkDatasetReader.php",
+    "resume_flow": [
+      "The command loads skip_records from checkpoint.partial[package_id].",
+      "The reader skips exactly that many non-blank record-bearing JSONL lines.",
+      "Each slice is staged and committed as one store generation.",
+      "Only after commit returns does LocalIndexIngestionService increment the offset and invoke afterChunk.",
+      "Only inside afterChunk does the command write partial.skip_records and emit chunk_progress.",
+      "A thrown commit error discards the open in-memory generation and leaves the last checkpointed offset unchanged."
+    ],
+    "transaction_boundary": "Each 1000-line BY0 chunk is one database transaction. Record changes, generation log row, and source generation pointer commit atomically.",
+    "identity_and_upsert": {
+      "logical_identity": [
+        "source_key",
+        "original_identifier"
+      ],
+      "database_unique_constraint": "scientific_source_records_identity_uq",
+      "write_operation": "upsert(..., ['source_key', 'original_identifier'], ...)",
+      "merge_behavior": "Identical content is unchanged; newer content updates; older datestamps are stale; incremental mode does not withdraw absent peers."
+    }
+  },
+  "exact_skip_5000_meaning": {
+    "meaning": "The first 5000 record-bearing BY0 JSONL lines were consumed by five chunk transactions whose commits returned successfully.",
+    "committed_not_merely_processed": true,
+    "proof": [
+      "The fifth chunk_progress event reports generation 1723 and skip_records 5000.",
+      "chunk_progress and checkpoint partial writes occur only in afterChunk.",
+      "afterChunk is invoked only after store.commit returned and the offset was advanced.",
+      "The following event is the HY000 failure, so the failed commit was the next chunk attempt."
+    ]
+  },
+  "duplicate_prevention": {
+    "status": "PROVEN",
+    "reason": "Normal resume begins at line 5001. Even a conservative replay would not create duplicate rows because the database enforces one row per (source_key, original_identifier) and writes use that same identity for upsert."
+  },
+  "data_loss_prevention": {
+    "status": "PROVEN_FOR_RECORDED_RESUME_OFFSET",
+    "reason": "The checkpoint cannot advance ahead of a successful chunk commit in this implementation. The failed next transaction cannot partially publish because all changed rows and generation metadata share one transaction. Resume at 5000 therefore neither skips an uncommitted fifth chunk nor omits the failed next chunk.",
+    "boundary": "This is a logical/transactional proof, not a physical-corruption certification."
+  },
+  "generation_1723_assessment": {
+    "status": "CONSISTENT",
+    "arithmetic": "1718 after MY0 + five committed BY0 chunks = 1723",
+    "checkpoint_log_agreement": true,
+    "failed_next_commit_expected_generation": 1724,
+    "failed_next_commit_published": false,
+    "live_sqlite_query_performed": false
+  },
+  "recovery_strategies_not_executed": [
+    {
+      "strategy": "Resume at checkpoint skip 5000",
+      "assessment": "Preferred logical recovery. It avoids replay and continues with the failed sixth slice.",
+      "precondition": "Owner accepts Path-B evidence or separately clears physical SQLite health."
+    },
+    {
+      "strategy": "Replay from skip 4000 or zero",
+      "assessment": "Duplicate-safe due to identity upsert, but unnecessary and more expensive; it also advances extra no-op generations."
+    },
+    {
+      "strategy": "Restore or rebuild from a known-good database",
+      "assessment": "Use only if separate physical-health verification finds corruption or the owner rejects the current store."
+    },
+    {
+      "strategy": "Activate FTS during recovery",
+      "assessment": "Rejected. Search activation must remain deferred until all eligible packages persist."
+    }
+  ],
+  "proposed_command": {
+    "exists": true,
+    "executed": false,
+    "owner_review_required": true,
+    "purpose": "Resume BY0 only, from checkpoint skip 5000, while retaining the search pin.",
+    "command": "docker exec wsa-enterprise-backend-1 sh -lc 'cd /var/www/html && PHP_INI_SCAN_DIR=\"\" php -d output_buffering=Off artisan scientific:ingest-agris-projected --manifest=/var/www/html/storage/app/scientific_datasets/agris/harvest_manifest.v10.19.local-only.json --checkpoint=/var/www/html/storage/app/scientific_datasets/agris/harvest_cache/agris_projected_ingest_checkpoint.v10.21.json --fts-checkpoint=/var/www/html/storage/app/scientific_datasets/agris/harvest_cache/agris_fts_checkpoint.v10.23.json --chunk-size=1000 --max-packages=1'",
+    "notes": [
+      "Do not add --activate-search.",
+      "The current command implementation always defers index synchronization in candidate mode; the historical --defer-index-sync option is not part of the current command signature.",
+      "Reconfirm no ingest writer immediately before any owner-authorized execution."
+    ]
+  },
+  "limitations": [
+    "No PRAGMA, integrity_check, quick_check, SELECT, recovery, or mutable SQLite open was performed.",
+    "The assessment does not certify physical database integrity after HY000.",
+    "php-fpm remained active; docker top proves absence of the named CLI ingest writer, not absence of every possible web request."
+  ],
+  "evidence": [
+    "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-WINDOW7-ABNORMAL-EXIT.v10.27.json",
+    "backend/storage/app/scientific_datasets/agris/harvest_cache/agris_projected_ingest_checkpoint.v10.21.json",
+    "backend/storage/app/scientific_datasets/agris/harvest_cache/_r1027_ingest_bounded.log",
+    "backend/storage/app/scientific_datasets/agris/harvest_manifest.v10.19.local-only.json",
+    "backend/database/migrations/2026_10_15_220000_create_scientific_source_record_store_tables.php"
+  ]
+}

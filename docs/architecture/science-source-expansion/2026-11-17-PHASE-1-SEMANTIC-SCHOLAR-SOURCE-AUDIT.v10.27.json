@@ -1,0 +1,356 @@
+{
+  "schema_id": "wsa.semantic_scholar_source_audit.v10_27",
+  "revision": "10.27",
+  "audit_date": "2026-11-17",
+  "scope": "Scientific search source-dominance audit, independent of BY0",
+  "safety": {
+    "production_localindex_writes_performed": false,
+    "ingestion_or_fts_or_checkpoint_commands_run": false,
+    "live_probe_scope": "Remote adapters only: openalex, crossref, semantic_scholar, gbif, bhl",
+    "excluded_from_live_probe": [
+      "agris",
+      "dr_duke",
+      "organic_eprints"
+    ],
+    "reason": "LocalIndexScientificSourceAdapter may rebuild FTS when generations differ. The production SQLite also had an active/busy writer, so the read-only count probe was stopped without retry."
+  },
+  "outcomes": {
+    "outcome_a": {
+      "status": "PASS_DIAGNOSTIC_COMPLETE_NO_SAFE_CODE_REMEDIATION_REQUIRED",
+      "meaning": "The pipeline, registry, configuration, runtime selection, remote invocation, normalization, ranking, validation, composition, API and frontend presentation were traced. Tier-1 hypotheses were resolved.",
+      "code_changed": false,
+      "documentation_changed": true
+    },
+    "outcome_b": {
+      "status": "FAIL_NOT_OPERATIONALLY_ACCEPTED",
+      "acceptance_rule": "At least two independent providers contribute to final citations for representative queries.",
+      "observed": "All three representative queries produced zero or one final citation provider.",
+      "important_distinction": "Multiple providers were invoked and returned live records, but multi-source retrieval is not the same as multi-provider final citation contribution."
+    }
+  },
+  "tier_1_hypotheses": [
+    {
+      "hypothesis": "The orchestrator only calls Semantic Scholar",
+      "result": "REJECTED",
+      "evidence": "ScientificSourceSelector selected fao_stat, openalex, crossref, semantic_scholar, agris, dr_duke, gbif, organic_eprints and bhl for a representative ready Internet-First plan. Remote-only probes attempted all five explicitly allowed remote providers."
+    },
+    {
+      "hypothesis": "Configuration or feature flags disable other sources",
+      "result": "REJECTED",
+      "evidence": "Runtime catalog reported every registered provider enabled. OpenAlex, Crossref, GBIF, Organic Eprints, AGRIS and Dr Duke use enabled=true defaults when their environment keys are unset."
+    },
+    {
+      "hypothesis": "Missing or invalid credentials prevent non-Semantic providers",
+      "result": "PARTIALLY_REJECTED",
+      "evidence": "Semantic Scholar optional key present; OpenAlex optional key absent; Crossref and GBIF require no key; BHL required key present; FAOSTAT credential pair present. Consensus required key absent but Consensus is optional-explicit-only and not auto-selected.",
+      "security": "Only presence/absence was inspected; no credential value was printed or recorded."
+    }
+  ],
+  "root_causes": [
+    {
+      "id": "RC-1",
+      "severity": "PRIMARY",
+      "finding": "Final citations are evidence-gated, not source-balanced.",
+      "detail": "AnswerComposer emits DIRECT citations only, except narrowly eligible SUPPORTING citations in supported-answer mode. There is no minimum provider-diversity rule. A multi-source retrieval can therefore legitimately end with one provider in citations."
+    },
+    {
+      "id": "RC-2",
+      "severity": "PRIMARY",
+      "finding": "Provider metadata fitness differs materially.",
+      "detail": "Crossref fetched 50 records per query and contributed many post-rank/validated records, but often lacks useful abstracts. Semantic Scholar commonly supplies abstracts and OpenAlex sometimes reconstructs them, making those records more likely to satisfy directness and claim-evidence gates."
+    },
+    {
+      "id": "RC-3",
+      "severity": "CONTEXTUAL",
+      "finding": "Some registered providers are domain-specific rather than interchangeable scholarly sources.",
+      "detail": "GBIF species search was empty for the three agronomic physiology/management queries. BHL returned records but none survived relevance ranking. Their invocation does not imply citation eligibility for every agricultural question."
+    },
+    {
+      "id": "RC-4",
+      "severity": "CONTEXTUAL",
+      "finding": "Semantic Scholar has a credential advantage in this runtime.",
+      "detail": "Semantic Scholar has an optional API key present while OpenAlex has no optional key. This can improve Semantic Scholar reliability, although Semantic Scholar still failed one of the three live probes and therefore was not universally dominant."
+    },
+    {
+      "id": "RC-5",
+      "severity": "OBSERVABILITY",
+      "finding": "The frontend does not prominently expose provider identity.",
+      "detail": "Backend provenance retains source_key and found_by_sources, but frontend PresentedSource/PresentedResearchResult focuses on title, journal, organization and URL. This can make multi-source contribution difficult to see even when provenance exists."
+    },
+    {
+      "id": "RC-6",
+      "severity": "NOT_CAUSAL_FOR_SEMANTIC_DOMINANCE",
+      "finding": "Deduplication preserves the first provider as primary sourceKey.",
+      "detail": "Catalog merge order favors OpenAlex, then Crossref, then Semantic Scholar. Provenance and found_by_sources are preserved. This behavior could affect attribution, but it biases toward earlier providers, not toward Semantic Scholar."
+    }
+  ],
+  "pipeline_trace": [
+    {
+      "stage": "query",
+      "component": "ScientificSearchQueryBuilder / ScientificSearchVariantBudget",
+      "behavior": "Builds plan-derived variants, capped globally and at two variants per provider."
+    },
+    {
+      "stage": "selection",
+      "component": "ScientificSourceSelector / ScientificSourceCatalog / ScientificSourceCapabilityPolicy",
+      "behavior": "Selects enabled, capability-authorized Internet-First, statistical and governed-expansion registrations."
+    },
+    {
+      "stage": "resolution",
+      "component": "ScientificSourceAdapterRegistry",
+      "behavior": "Resolves each selected source from the canonical catalog and validates sourceKey/contract invariants."
+    },
+    {
+      "stage": "execution",
+      "component": "MultiSourceScientificSearchOrchestrator",
+      "behavior": "Runs independent scholarly providers concurrently for generic Home research, isolates provider failures, enforces shared time budget and records per-provider outcomes."
+    },
+    {
+      "stage": "normalization",
+      "component": "ScientificResultNormalizer / source-family adapters",
+      "behavior": "Maps provider responses to ScientificSearchResult with source identity and provenance."
+    },
+    {
+      "stage": "deduplication",
+      "component": "ScientificResultDeduplicator",
+      "behavior": "Deduplicates by DOI/URL/provider identity, preserves all provenance, and keeps the first result's primary sourceKey."
+    },
+    {
+      "stage": "ranking",
+      "component": "ScientificResultRanker",
+      "behavior": "Ranks by query relevance/directness/quality, filters irrelevant records and mildly diversifies ordering."
+    },
+    {
+      "stage": "validation",
+      "component": "AgriculturalScientificValidationService",
+      "behavior": "Validates identity, metadata, quality, claim match and evidence directness; only usable evidence proceeds."
+    },
+    {
+      "stage": "composition",
+      "component": "AnswerComposer",
+      "behavior": "Builds claims and citations from usable evidence; primary citations are DIRECT-only unless supported-answer eligibility applies."
+    },
+    {
+      "stage": "api",
+      "component": "AgriculturalResearchAgentController / AgriculturalResearchAgent",
+      "behavior": "POST /public/research-agent/query executes Stage 2-5 and returns scientific_search, validation, synthesis and user_presentation."
+    },
+    {
+      "stage": "frontend",
+      "component": "researchAgent.ts / scientificUserPresentation.ts / ScientificResearchResultsList.tsx",
+      "behavior": "Uses backend user_presentation, filters results at confidence >=0.50 and renders source/result links without direct provider-balancing logic."
+    }
+  ],
+  "source_matrix": [
+    {
+      "source": "openalex",
+      "registered": true,
+      "contract": "scientific_source_adapter.v2",
+      "adapter": "OpenAlexScientificSourceAdapter",
+      "enabled": true,
+      "credential_status": "optional_absent",
+      "default_selected": true,
+      "live_probe": "SUCCESS_3_OF_3",
+      "raw_results": 25,
+      "final_primary_results": 10,
+      "final_citation_queries": 1
+    },
+    {
+      "source": "crossref",
+      "registered": true,
+      "contract": "scientific_source_adapter.v2",
+      "adapter": "CrossRefScientificSourceAdapter",
+      "enabled": true,
+      "credential_status": "not_required",
+      "default_selected": true,
+      "live_probe": "SUCCESS_3_OF_3",
+      "raw_results": 150,
+      "final_primary_results": 57,
+      "final_citation_queries": 0
+    },
+    {
+      "source": "semantic_scholar",
+      "registered": true,
+      "contract": "scientific_source_adapter.v2",
+      "adapter": "SemanticScholarScientificSourceAdapter",
+      "enabled": true,
+      "credential_status": "optional_present",
+      "default_selected": true,
+      "live_probe": "SUCCESS_2_OF_3_FAILED_1_OF_3",
+      "raw_results": 15,
+      "final_primary_results": 1,
+      "final_citation_queries": 1
+    },
+    {
+      "source": "consensus",
+      "registered": true,
+      "contract": "scientific_source_adapter.v2",
+      "adapter": "ConsensusScientificSourceAdapter",
+      "enabled": true,
+      "credential_status": "required_absent",
+      "default_selected": false,
+      "live_probe": "NOT_RUN_OPTIONAL_EXPLICIT_ONLY",
+      "final_citation_queries": 0
+    },
+    {
+      "source": "fao_stat",
+      "registered": true,
+      "contract": "scientific_source_adapter.v2",
+      "adapter": "FaoStatDeveloperPortalAdapter",
+      "enabled": true,
+      "credential_status": "required_pair_present",
+      "default_selected": true,
+      "live_probe": "NOT_RUN_QUERY_SET_NOT_STATISTICAL_AND_REMOTE_PROBE_EXCLUDED_FAOSTAT",
+      "final_citation_queries": 0
+    },
+    {
+      "source": "agris",
+      "registered": true,
+      "contract": "scientific_source_adapter.v2",
+      "adapter": "LocalIndexScientificSourceAdapter",
+      "enabled": true,
+      "credential_status": "not_required",
+      "default_selected": true,
+      "live_probe": "NOT_RUN_PRODUCTION_SQLITE_SAFETY",
+      "historical_evidence": "Bounded LocalIndex integration documented; current candidate ingest/FTS work remains independent.",
+      "final_citation_queries": "NOT_ASSESSED"
+    },
+    {
+      "source": "dr_duke",
+      "registered": true,
+      "contract": "scientific_source_adapter.v2",
+      "adapter": "LocalIndexScientificSourceAdapter",
+      "enabled": true,
+      "credential_status": "not_required",
+      "default_selected": true,
+      "live_probe": "NOT_RUN_PRODUCTION_SQLITE_SAFETY",
+      "historical_evidence": "Limited local projection integration documented.",
+      "final_citation_queries": "NOT_ASSESSED"
+    },
+    {
+      "source": "gbif",
+      "registered": true,
+      "contract": "scientific_source_adapter.v2",
+      "adapter": "RestJsonScientificSourceAdapter",
+      "enabled": true,
+      "credential_status": "not_required",
+      "default_selected": true,
+      "live_probe": "EMPTY_3_OF_3_FOR_REPRESENTATIVE_AGRONOMIC_QUERIES",
+      "raw_results": 0,
+      "final_primary_results": 0,
+      "final_citation_queries": 0
+    },
+    {
+      "source": "organic_eprints",
+      "registered": true,
+      "contract": "scientific_source_adapter.v2",
+      "adapter": "LocalIndexScientificSourceAdapter",
+      "enabled": true,
+      "credential_status": "not_required",
+      "default_selected": true,
+      "live_probe": "NOT_RUN_PRODUCTION_SQLITE_SAFETY",
+      "historical_evidence": "OAI-PMH to LocalIndex integration documented.",
+      "final_citation_queries": "NOT_ASSESSED"
+    },
+    {
+      "source": "bhl",
+      "registered": true,
+      "contract": "scientific_source_adapter.v2",
+      "adapter": "RestJsonScientificSourceAdapter",
+      "enabled": true,
+      "credential_status": "required_present",
+      "default_selected": true,
+      "live_probe": "SUCCESS_3_OF_3",
+      "raw_results": 25,
+      "final_primary_results": 0,
+      "final_citation_queries": 0
+    }
+  ],
+  "representative_queries": [
+    {
+      "query": "maize drought tolerance physiology",
+      "successful_sources": [
+        "openalex",
+        "crossref",
+        "bhl"
+      ],
+      "failed_sources": [
+        "semantic_scholar"
+      ],
+      "empty_sources": [
+        "gbif"
+      ],
+      "final_primary_results": {
+        "openalex": 8,
+        "crossref": 33
+      },
+      "citations": {
+        "openalex": 1
+      }
+    },
+    {
+      "query": "tomato salinity yield response",
+      "successful_sources": [
+        "openalex",
+        "crossref",
+        "semantic_scholar",
+        "bhl"
+      ],
+      "empty_sources": [
+        "gbif"
+      ],
+      "final_primary_results": {
+        "semantic_scholar": 1,
+        "crossref": 20
+      },
+      "citations": {
+        "semantic_scholar": 1
+      }
+    },
+    {
+      "query": "wheat nitrogen fertilizer efficiency",
+      "successful_sources": [
+        "openalex",
+        "crossref",
+        "semantic_scholar",
+        "bhl"
+      ],
+      "empty_sources": [
+        "gbif"
+      ],
+      "final_primary_results": {
+        "crossref": 4,
+        "openalex": 2
+      },
+      "citations": {}
+    }
+  ],
+  "remediation": {
+    "code_changes": [],
+    "reason_no_code_change": "No Tier-1 routing, flag or credential defect was confirmed. Forcing a second provider into citations would weaken the existing direct-evidence contract. Provider identity display and an explicit diversity acceptance metric are suitable follow-up changes but require product/contract approval.",
+    "recommended_follow_up": [
+      "Add citation-contribution observability keyed by source_key and found_by_sources.",
+      "Expose provider identity in user_presentation sources/results and frontend source metadata.",
+      "Define Outcome-B semantics for deduplicated records found by multiple providers.",
+      "Create a non-production acceptance fixture where two independent providers each supply citation-eligible DIRECT evidence.",
+      "Review Crossref abstract enrichment only if licensing and upstream API constraints permit it."
+    ]
+  },
+  "verification": {
+    "live_remote_probe": {
+      "result": "COMPLETED",
+      "production_localindex_touched": false
+    },
+    "test_command": "docker compose exec -T backend php artisan test --no-ansi tests/Unit/Agriculture/Research/Search/Registry/ScientificSourceCatalogContractTest.php tests/Unit/Agriculture/Research/Search/ProviderConcurrencyOrchestratorTest.php tests/Unit/Agriculture/Research/Search/ScientificResultProvenanceTest.php tests/Feature/SemanticScholarProviderIntegrationTest.php",
+    "test_result": {
+      "passed": 58,
+      "failed": 4,
+      "assertions": 501,
+      "interpretation": "Core catalog, concurrency and provenance suites passed. Four failures in the broad SemanticScholarProviderIntegrationTest are pre-existing/current-worktree contract mismatches: two query-builder expectations, one supported-answer citation expectation and one stale selector expectation that assumes only three providers."
+    }
+  },
+  "files_written": [
+    "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-SEMANTIC-SCHOLAR-SOURCE-AUDIT.v10.27.json",
+    "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-SEMANTIC-SCHOLAR-SOURCE-AUDIT.ar.md"
+  ]
+}

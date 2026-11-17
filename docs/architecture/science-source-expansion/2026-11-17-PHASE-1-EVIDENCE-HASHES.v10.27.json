@@ -1,0 +1,35 @@
+{
+  "schema_id": "wsa.phase1_evidence_hashes.v1",
+  "recorded_at_utc": "2026-11-17T16:20:00Z",
+  "artifacts": [
+    {
+      "file": "2026-11-17-MASTER-PROMPT-REVISION-10.9.1.exact.txt",
+      "note": "Rev 10.9.1 exact text + §14.4 addendum appended; original §14.1–14.3 preserved",
+      "sha256": "001A809B74EC4B620F07A5E41CE5BBAD858EFAB6433D458E5B6FCB493C6978B9"
+    },
+    {
+      "file": "2026-11-17-PHASE-1-BY0-RESUME-SAFETY.v10.27.json",
+      "note": "Path B read-only; classification RESUME_SAFETY_PROVEN; writer not executed",
+      "sha256": "8A09CE37D9EE0F5E61287E367847BDAEAF9C45C02A2503571C21FF0507E584E5"
+    },
+    {
+      "file": "2026-11-17-PHASE-1-SEMANTIC-SCHOLAR-SOURCE-AUDIT.v10.27.json",
+      "note": "Outcome A diagnostic PASS; Outcome B multi-source FAIL",
+      "sha256": "9B9990386F6F50372B4428ED657DD36B9A8B309B4682A216A07D406F6D26BF1F"
+    },
+    {
+      "file": "2026-11-17-MASTER-PROMPT-REVISION-10.27.exact.txt",
+      "note": "Unmodified Rev 10.27 original",
+      "sha256": "637EA2C367FFD9075AD5BEC031B44326E63F3F487B8AB08483C82C869C079E2C"
+    }
+  ],
+  "diagnostic_probe_termination": {
+    "docker_top_host_pid": 43091,
+    "container_pid": 1847,
+    "cmdline": "php .../_r1027_by0_readonly_probe2.php",
+    "classification": "hung_readonly_diagnostic_probe",
+    "action": "SIGTERM",
+    "result": "TERMINATED",
+    "ingest_writer_affected": false
+  }
+}
