@@ -100,5 +100,8 @@
     {"source_key": "consensus", "enabled": true, "role": "optional_explicit_only", "selected_on_defaults": false}
   ],
   "fixable_wiring_gaps_found": [],
-  "note": "No ready authorized seat lacked registry/router binding. Remaining gaps are blocker-gated, not omitted wiring."
+  "explore_activation_gaps_agent": "fec37f2a-2cdb-42ee-aed6-7283f3735a5c",
+  "explore_conclusion": "No READY auto source is code-disconnected; 105/110 seats lack runtime adapters; consensus optional-only; fao_stat/ss external soft-blocks.",
+  "c1_c3_bridge_commit": "b42d3144af67def81a24b31d42bc9bb0a875fe17",
+  "note": "No ready authorized seat lacked registry/router binding. Remaining gaps are blocker-gated, not omitted wiring. C1→C3 bridges are PARTIAL evidence only."
 }
