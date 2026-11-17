@@ -1,0 +1,112 @@
+{
+  "schema_id": "wsa.phase1_110_source_option_b_update.v1",
+  "revision": "11.0.6",
+  "recorded_at_utc": "2026-11-17T20:50:00Z",
+  "baseline_head": "5a643f30f420ad327613698018f2887f495e0631",
+  "authority": {
+    "membership_register": "docs/architecture/science-source-expansion/ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+    "membership_register_mutated": false,
+    "matrix_v110": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-SOURCE-MATRIX.v110.json",
+    "matrix_v110_mutated": false,
+    "prior_option_b_registry": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-110-SOURCE-MASTER-STATUS-REGISTRY.v11.0.3.json",
+    "preservation_guard": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-110-SOURCE-PRESERVATION-GUARD.v11.0.4.md"
+  },
+  "claim_guard": [
+    "This file is Option B technical assessment delta only; it does not replace membership or matrix.",
+    "ACTIVE runtime seats remain SCIENTIFIC_INTEGRATION_VERIFIED=false until §8.1 six conditions are source-specific.",
+    "No inflation of scientific_integration_status beyond PARTIALLY_VERIFIED for the five ACTIVE seats."
+  ],
+  "section_8_1_gate": {
+    "scientific_integration_verified_count": 0,
+    "reason": "Per-source E2E+provenance+answer-traceability+identity+Option-B-record+source-specific suite not fully re-proven as cumulative §8.1 package in this revision"
+  },
+  "activation_vs_scientific_verification": {
+    "ACTIVE_runtime_seats": ["G1-01", "G1-02", "G1-17", "G5-04", "G6-20"],
+    "SCIENTIFIC_INTEGRATION_VERIFIED": []
+  },
+  "seat_deltas": [
+    {
+      "adr_id": "G1-01",
+      "source_key": "agris",
+      "runtime_activation": "ACTIVE",
+      "registry_bound": true,
+      "router_selected_on_egypt_land": true,
+      "scientific_integration_status": "PARTIALLY_VERIFIED",
+      "scientific_integration_verified": false,
+      "evidence": [
+        "GovernedSourceRuntimeActivationContractTest",
+        "_tmp-r1106-activation-probe-out.json",
+        "2026-11-17-PHASE-1-SOURCE-ACTIVATION-MATRIX.v11.0.6.json"
+      ],
+      "exit_links": ["EXIT-08", "EXIT-10"]
+    },
+    {
+      "adr_id": "G1-02",
+      "source_key": "organic_eprints",
+      "runtime_activation": "ACTIVE",
+      "registry_bound": true,
+      "router_selected_on_egypt_land": true,
+      "scientific_integration_status": "PARTIALLY_VERIFIED",
+      "scientific_integration_verified": false,
+      "evidence": [
+        "GovernedSourceRuntimeActivationContractTest",
+        "_tmp-r1106-activation-probe-out.json"
+      ],
+      "exit_links": ["EXIT-08", "EXIT-10"]
+    },
+    {
+      "adr_id": "G1-17",
+      "source_key": "dr_duke",
+      "runtime_activation": "ACTIVE",
+      "registry_bound": true,
+      "router_selected_on_egypt_land": true,
+      "scientific_integration_status": "PARTIALLY_VERIFIED",
+      "scientific_integration_verified": false,
+      "evidence": [
+        "GovernedSourceRuntimeActivationContractTest",
+        "_tmp-r1106-activation-probe-out.json"
+      ],
+      "exit_links": ["EXIT-08", "EXIT-10"]
+    },
+    {
+      "adr_id": "G5-04",
+      "source_key": "gbif",
+      "runtime_activation": "ACTIVE",
+      "registry_bound": true,
+      "router_selected_on_egypt_land": true,
+      "scientific_integration_status": "PARTIALLY_VERIFIED",
+      "scientific_integration_verified": false,
+      "evidence": [
+        "GovernedSourceRuntimeActivationContractTest",
+        "_tmp-r1106-activation-probe-out.json"
+      ],
+      "exit_links": ["EXIT-08", "EXIT-10"]
+    },
+    {
+      "adr_id": "G6-20",
+      "source_key": "bhl",
+      "runtime_activation": "ACTIVE",
+      "registry_bound": true,
+      "router_selected_on_egypt_land": true,
+      "scientific_integration_status": "PARTIALLY_VERIFIED",
+      "scientific_integration_verified": false,
+      "evidence": [
+        "GovernedSourceRuntimeActivationContractTest",
+        "_tmp-r1106-activation-probe-out.json"
+      ],
+      "exit_links": ["EXIT-08", "EXIT-10"]
+    }
+  ],
+  "level1_identity_regression": {
+    "status": "PASS",
+    "tests": "15 passed / 74 assertions (prior Level-1 CSQ/routing suite re-run under 11.0.6)",
+    "artifact": "docs/architecture/science-source-expansion/_tmp-r1106-l1-regression.txt",
+    "exit_links": ["EXIT-09"]
+  },
+  "level2_composer_regression": {
+    "status": "PASS",
+    "tests": "OutcomeBIndependentCitationProvidersTest 4 passed / 17 assertions; prior broader composer suite 21/99 when path corrected",
+    "artifact": "docs/architecture/science-source-expansion/_tmp-r1106-l2-composer.txt",
+    "exit_links": ["EXIT-09", "EXIT-10"]
+  }
+}

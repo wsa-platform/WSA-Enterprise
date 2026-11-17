@@ -1,0 +1,104 @@
+{
+  "schema_id": "wsa.phase1_source_activation_matrix.v1",
+  "revision": "11.0.6",
+  "recorded_at_utc": "2026-11-17T20:50:00Z",
+  "baseline_head": "5a643f30f420ad327613698018f2887f495e0631",
+  "claim_guard": [
+    "ACTIVE means runtime activation per AcceptedOnboardingDecisionCatalog / seat catalogs with empty seat blockers.",
+    "ACTIVE does not imply SCIENTIFIC_INTEGRATION_VERIFIED (§8.1 six cumulative conditions).",
+    "Membership SoT and 2026-11-11-PHASE-1-SOURCE-MATRIX.v110.json are untouched.",
+    "No NOT_READY or DEFERRED seat was activated in Rev 11.0.6.",
+    "Legacy Stage-3 keys are operational but outside 110.v1 membership claims."
+  ],
+  "probe_artifact": "docs/architecture/science-source-expansion/_tmp-r1106-activation-probe-out.json",
+  "regression_test": "backend/tests/Unit/Agriculture/Research/Search/GovernedSourceRuntimeActivationContractTest.php",
+  "runtime_catalog_keys": [
+    "openalex",
+    "crossref",
+    "semantic_scholar",
+    "consensus",
+    "fao_stat",
+    "agris",
+    "dr_duke",
+    "gbif",
+    "organic_eprints",
+    "bhl"
+  ],
+  "governed_active_seats": [
+    {
+      "adr_id": "G1-01",
+      "source_key": "agris",
+      "runtime_active": true,
+      "activation": "ACTIVE",
+      "adapter": "App\\Services\\Agriculture\\Research\\Search\\LocalIndex\\LocalIndexScientificSourceAdapter",
+      "selected_on_egypt_land_probe": true,
+      "scientific_integration_verified": false,
+      "scientific_integration_status": "PARTIALLY_VERIFIED",
+      "exit_links": ["EXIT-08", "EXIT-09", "EXIT-10"]
+    },
+    {
+      "adr_id": "G1-02",
+      "source_key": "organic_eprints",
+      "runtime_active": true,
+      "activation": "ACTIVE",
+      "adapter": "App\\Services\\Agriculture\\Research\\Search\\LocalIndex\\LocalIndexScientificSourceAdapter",
+      "selected_on_egypt_land_probe": true,
+      "scientific_integration_verified": false,
+      "scientific_integration_status": "PARTIALLY_VERIFIED",
+      "exit_links": ["EXIT-08", "EXIT-09", "EXIT-10"]
+    },
+    {
+      "adr_id": "G1-17",
+      "source_key": "dr_duke",
+      "runtime_active": true,
+      "activation": "ACTIVE",
+      "adapter": "App\\Services\\Agriculture\\Research\\Search\\LocalIndex\\LocalIndexScientificSourceAdapter",
+      "selected_on_egypt_land_probe": true,
+      "scientific_integration_verified": false,
+      "scientific_integration_status": "PARTIALLY_VERIFIED",
+      "exit_links": ["EXIT-08", "EXIT-09", "EXIT-10"]
+    },
+    {
+      "adr_id": "G5-04",
+      "source_key": "gbif",
+      "runtime_active": true,
+      "activation": "ACTIVE",
+      "adapter": "App\\Services\\Agriculture\\Research\\Search\\Family\\Rest\\RestJsonScientificSourceAdapter",
+      "selected_on_egypt_land_probe": true,
+      "scientific_integration_verified": false,
+      "scientific_integration_status": "PARTIALLY_VERIFIED",
+      "exit_links": ["EXIT-08", "EXIT-09", "EXIT-10"]
+    },
+    {
+      "adr_id": "G6-20",
+      "source_key": "bhl",
+      "runtime_active": true,
+      "activation": "ACTIVE",
+      "adapter": "App\\Services\\Agriculture\\Research\\Search\\Family\\Rest\\RestJsonScientificSourceAdapter",
+      "selected_on_egypt_land_probe": true,
+      "scientific_integration_verified": false,
+      "scientific_integration_status": "PARTIALLY_VERIFIED",
+      "exit_links": ["EXIT-08", "EXIT-09", "EXIT-10"]
+    }
+  ],
+  "governed_active_count": 5,
+  "scientific_integration_verified_count": 0,
+  "not_activated_this_revision": {
+    "reason": "Seat intended_activation is NOT_READY or DEFERRED with non-empty seat blockers (ingest/identity/endpoint/dual-peer). Activating would violate selective activation policy.",
+    "examples": [
+      {"adr_id": "G1-13", "source_key": "hortdb", "intended": "NOT_READY"},
+      {"adr_id": "G1-15", "source_key": "scentindb", "intended": "NOT_READY"},
+      {"adr_id": "G2-15", "source_key": "andalasian_livestock", "intended": "NOT_READY"},
+      {"adr_id": "G6-06", "note": "dual_peer_runtime_deferred with G1-17"}
+    ]
+  },
+  "legacy_stage3_outside_110_membership": [
+    {"source_key": "openalex", "enabled": true, "role": "internet_first_default"},
+    {"source_key": "crossref", "enabled": true, "role": "internet_first_default"},
+    {"source_key": "semantic_scholar", "enabled": true, "role": "internet_first_default"},
+    {"source_key": "fao_stat", "enabled": true, "role": "statistical_consideration"},
+    {"source_key": "consensus", "enabled": true, "role": "optional_explicit_only", "selected_on_defaults": false}
+  ],
+  "fixable_wiring_gaps_found": [],
+  "note": "No ready authorized seat lacked registry/router binding. Remaining gaps are blocker-gated, not omitted wiring."
+}

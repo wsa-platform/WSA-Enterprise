@@ -1,0 +1,48 @@
+{
+  "schema_id": "wsa.phase1_current_state.v1",
+  "revision": "11.0.6",
+  "recorded_at_utc": "2026-11-17T20:55:00Z",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "head_at_package_start": "5a643f30f420ad327613698018f2887f495e0631",
+  "remote_sync_at_start": { "ahead": 0, "behind": 0 },
+  "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "engineering_integrity_verdict": "VERIFIED_WITH_LIMITATIONS",
+  "phase1_exit_closure": "PARTIAL",
+  "phase2_eligibility": false,
+  "wip_preserved": true,
+  "ingest_writer_active": false,
+  "archive_count_last_known": 821,
+  "archive_supersession_this_package": false,
+  "membership_sot_preserved": true,
+  "matrix_v110_preserved": true,
+  "scientific_integration_verified_count": 0,
+  "governed_active_runtime_seats": ["G1-01", "G1-02", "G1-17", "G5-04", "G6-20"],
+  "execution_levels": {
+    "level_1": "PASS_WITH_LIMITATIONS",
+    "level_2": "PARTIAL",
+    "level_3": "IN_PROGRESS_OPTION_B_DELTA_ONLY"
+  },
+  "deliverables": [
+    "2026-11-17-PHASE-1-SCIENTIFIC-SEARCH-ARCHITECTURE-MAP.v11.0.6.md",
+    "2026-11-17-PHASE-1-SOURCE-ACTIVATION-MATRIX.v11.0.6.json",
+    "2026-11-17-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.6.json",
+    "2026-11-17-PHASE-1-LEVEL1-SCIENTIFIC-SEARCH-AUDIT.v11.0.6.md",
+    "2026-11-17-PHASE-1-LEVEL2-SCIENTIFIC-SEARCH-AUDIT.v11.0.6.md",
+    "2026-11-17-PHASE-1-REV11.0.6-ENGINEERING-REPORT.ar.md",
+    "backend/tests/Unit/Agriculture/Research/Search/GovernedSourceRuntimeActivationContractTest.php"
+  ],
+  "exit_snapshot": {
+    "EXIT-05": "BLOCKED",
+    "EXIT-07": "BLOCKED",
+    "EXIT-08": "PARTIAL",
+    "EXIT-09": "PARTIAL",
+    "EXIT-10": "PARTIAL",
+    "EXIT-11": "NOT_RUN"
+  },
+  "prior_commits": {
+    "level1_csq": "bb84cc0",
+    "option_b_110": "c13bee4",
+    "tier1_archive_note": "5a643f3"
+  },
+  "note": "Rev 11.0.6 does not rebuild 110 membership; ACTIVE≠SCIENTIFIC_INTEGRATION_VERIFIED; WIP preserved out of staging"
+}
