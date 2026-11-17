@@ -3,7 +3,8 @@
   "revision": "11.0.4",
   "recorded_at_utc": "2026-11-17T20:45:00Z",
   "branch": "phase-18-m18-ai-marketing-communications",
-  "head": "5dbd924922cb329df75f494ee6b6e8c7f75ad324",
+  "head": "4c1dc52",
+  "head_full_note": "Update after each push; see git log -1 for full hash",
   "remote_sync": { "ahead": 0, "behind": 0 },
   "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
   "amendment_11_0_4": {
