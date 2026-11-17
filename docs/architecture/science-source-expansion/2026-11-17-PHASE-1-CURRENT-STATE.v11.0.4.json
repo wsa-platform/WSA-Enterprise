@@ -1,0 +1,35 @@
+{
+  "schema_id": "wsa.phase1_current_state.v1",
+  "revision": "11.0.4",
+  "recorded_at_utc": "2026-11-17T20:45:00Z",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "head": "5dbd924922cb329df75f494ee6b6e8c7f75ad324",
+  "remote_sync": { "ahead": 0, "behind": 0 },
+  "classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "amendment_11_0_4": {
+    "membership_register": "PRESERVED_UNCHANGED",
+    "source_matrix_v110": "PRESERVED_UNCHANGED",
+    "option_b_assessment": "PUBLISHED_AND_PUSHED"
+  },
+  "completed_this_continuation": [
+    "Level-1 CSQ repairs TESTED_AND_PUSHED (bb84cc0)",
+    "Option B 110 technical assessment VALIDATED_AND_PUSHED (c13bee4)",
+    "Arabic/EXIT reports pushed (4267c81, a4979ce, 5dbd924)",
+    "EXIT-09 focused suite 145/0/755",
+    "Level-2 audit PARTIAL documented",
+    "EXIT-10/D reconciliation under preservation guard"
+  ],
+  "remaining": [
+    "EXIT-05 BLOCKED (staging/operator evidence)",
+    "EXIT-07 BLOCKED (IC G2-26)",
+    "EXIT-08 PARTIAL (credentials/429)",
+    "EXIT-09 PARTIAL (broader acceptance beyond focused suite)",
+    "EXIT-10 PARTIAL (verified-family columns for non-runtime seats)",
+    "EXIT-11 NOT_RUN",
+    "Tier-1 archival of new v11.0.3/11.0.4 artifacts PENDING",
+    "Level-3 per-source SCIENTIFIC_INTEGRATION_VERIFIED still 0"
+  ],
+  "wip_preserved": true,
+  "ingest_writer_active": false,
+  "persist_completed_packages": 124
+}
