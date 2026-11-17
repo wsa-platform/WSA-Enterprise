@@ -1,0 +1,107 @@
+{
+  "schema_id": "adr023.exit08_live_connectivity.v1",
+  "revision": "11.0.1",
+  "recorded_at_utc": "2026-11-17T19:08:22Z",
+  "criterion": "P1-EXIT-08",
+  "head": "fc21503",
+  "prior": "2026-11-12-PHASE-1-EXIT-08-LIVE-CONNECTIVITY.v10.10.1.json",
+  "secret_policy": "no credential values; presence only",
+  "probe_artifact": "docs/architecture/science-source-expansion/_tmp-r1101-exit08-live-probe-out.json",
+  "denominator_note": "EXIT-08 denominator = verified access families (RestJson, OAI-PMH, Bulk/LocalIndex), not source count",
+  "credential_presence": {
+    "BHL_API_KEY": true,
+    "SEMANTIC_SCHOLAR_API_KEY": true,
+    "CONSENSUS_API_KEY": false,
+    "FAOSTAT_USERNAME": true,
+    "FAOSTAT_PASSWORD": true,
+    "OPENALEX_API_KEY": false
+  },
+  "sources": [
+    {
+      "source_key": "openalex",
+      "family": "REST_API / RestJson",
+      "endpoint": "https://api.openalex.org/works?search=wheat%20nitrogen&per-page=1",
+      "http_status": 200,
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "elapsed_ms": 5737
+    },
+    {
+      "source_key": "crossref",
+      "family": "REST_API / RestJson",
+      "endpoint": "https://api.crossref.org/works?query=wheat%20nitrogen&rows=1",
+      "http_status": 200,
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "elapsed_ms": 492
+    },
+    {
+      "source_key": "gbif",
+      "family": "REST_API / RestJson",
+      "endpoint": "https://api.gbif.org/v1/species/search?q=Triticum%20aestivum&limit=1",
+      "http_status": 200,
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "elapsed_ms": 320
+    },
+    {
+      "source_key": "bhl",
+      "family": "REST_API / RestJson",
+      "endpoint": "https://www.biodiversitylibrary.org/api3?op=PublicationSearch",
+      "http_status": 200,
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "elapsed_ms": 9893,
+      "note": "apikey present; value redacted from evidence"
+    },
+    {
+      "source_key": "organic_eprints",
+      "family": "OAI-PMH",
+      "endpoint": "https://orgprints.org/cgi/oai2?verb=Identify",
+      "http_status": 200,
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "elapsed_ms": 973
+    },
+    {
+      "source_key": "agris",
+      "family": "Bulk / LocalIndex",
+      "endpoint": "https://agris.fao.org/ods/AGRIS.ODS.xml",
+      "http_status": 200,
+      "live_status": "LIVE_CONNECTIVITY_VERIFIED",
+      "note": "catalog endpoint; LocalIndex persist advanced separately (completed_packages=124); FTS deferred"
+    },
+    {
+      "source_key": "semantic_scholar",
+      "family": "REST_API / RestJson",
+      "endpoint": "https://api.semanticscholar.org/graph/v1/paper/search",
+      "http_status": 429,
+      "live_status": "BLOCKED_EXTERNAL_SERVICE",
+      "note": "API key present; provider still returned 429"
+    },
+    {
+      "source_key": "fao_stat",
+      "family": "REST_API / RestJson",
+      "endpoint": "https://faostatservices.fao.org/api/v1/en/definitions",
+      "http_status": 403,
+      "live_status": "BLOCKED_CREDENTIALS",
+      "note": "username/password present in config; HTTP 403 — authorization/permission or credential validity issue; values not printed"
+    },
+    {
+      "source_key": "consensus",
+      "family": "REST_API / RestJson",
+      "endpoint": "https://api.consensus.app/health",
+      "http_status": null,
+      "live_status": "BLOCKED_CREDENTIALS",
+      "note": "CONSENSUS_API_KEY absent — probe skipped"
+    },
+    {
+      "source_key": "dr_duke",
+      "family": "Bulk / LocalIndex",
+      "live_status": "CONTRACT_VERIFIED_ONLY",
+      "note": "Not re-probed this revision; OD-G1-17 limited LocalIndex projection; prior LIVE_CONNECTIVITY_PARTIAL retained"
+    }
+  ],
+  "family_summary": {
+    "REST_API_RestJson": "PARTIAL — GBIF/BHL/OpenAlex/Crossref live; S2S 429; Consensus/FAOSTAT blocked",
+    "OAI_PMH": "LIVE_CONNECTIVITY_VERIFIED for Organic Eprints Identify",
+    "Bulk_LocalIndex": "AGRIS catalog live + LocalIndex persist progressing; Duke contract/partial retained"
+  },
+  "overall_exit08": "PARTIAL",
+  "overall_rationale": "Mandatory family live evidence advanced for RestJson/OAI/Bulk catalog paths, but Semantic Scholar 429, Consensus missing key, FAOSTAT 403, and Duke limited projection keep EXIT-08 PARTIAL under original family-verified acceptance."
+}
