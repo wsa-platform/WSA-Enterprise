@@ -1,0 +1,35 @@
+{
+  "schema_id": "wsa.phase1_commit_push_register.v1",
+  "revision": "11.0.4",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "session_start_head": "547563e5d81d512aedc01bcd2e57dd73868410c9",
+  "final_head": "4267c815",
+  "remote_sync": { "ahead": 0, "behind": 0, "verified_by": "git fetch + rev-list --left-right --count" },
+  "membership_preservation": {
+    "ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json": "UNCHANGED",
+    "2026-11-11-PHASE-1-SOURCE-MATRIX.v110.json": "UNCHANGED",
+    "option_b_technical_assessment": "2026-11-17-PHASE-1-110-SOURCE-* + PRESERVATION-GUARD.v11.0.4"
+  },
+  "commits": [
+    {
+      "hash": "bb84cc0",
+      "status": "TESTED_AND_PUSHED",
+      "scope_refs": ["EXIT-09", "D-04", "D-11"],
+      "summary": "Level-1 CSQ geography/family identity + option-echo strip + Outcome B test N alignment"
+    },
+    {
+      "hash": "c13bee4",
+      "status": "VALIDATED_AND_PUSHED",
+      "scope_refs": ["EXIT-06", "EXIT-10", "D-01"],
+      "summary": "Option B 110-source technical assessment; membership SoT preserved"
+    },
+    {
+      "hash": "4267c81",
+      "status": "VALIDATED_AND_PUSHED",
+      "scope_refs": ["EXIT-09", "EXIT-08", "EXIT-10"],
+      "summary": "Level-1 audit, EXIT rollup, defect register, Arabic report"
+    }
+  ],
+  "wip_preserved": true,
+  "qus_wip_restored_after_scoped_commit": true
+}
