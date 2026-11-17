@@ -306,10 +306,13 @@ class AnswerComposer
                         'year' => $citation->publicationYear,
                         'doi' => $citation->doi,
                         'url' => $citation->url,
-                        'provider' => $citation->sourceType,
+                        'provider' => $citation->sourceKey ?? $citation->sourceType,
+                        'source_key' => $citation->sourceKey,
+                        'contributing_providers' => $citation->contributingProviders,
                     ],
                     $citations,
                 ),
+                'citation_provider_contribution' => $this->citationProviderContribution($citations),
             ] + $this->homeEvidenceLifecycleMetadata(
                 $plan,
                 $validationReport,
@@ -324,6 +327,7 @@ class AnswerComposer
                 'independent_search' => false,
                 'validation_bypassed' => false,
                 'evidence_directness_filter' => true,
+                'citation_provider_contribution' => $this->citationProviderContribution($citations),
             ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, $usable, $claims)
               + $this->homeEvidenceLifecycleMetadata(
                 $plan,
@@ -954,7 +958,9 @@ class AnswerComposer
             $citations[] = $reference;
         }
 
-        return $citations;
+        // Preserve every DIRECT-eligible citation; reorder only to surface distinct
+        // independent providers earlier when multiple providers contributed.
+        return $this->diversifyCitationsByIndependentProvider($citations);
     }
 
     private function citationFromEvidence(ScientificEvidenceItem $item, bool $supportedAnswer = false): ?ResearchAnswerCitation
@@ -994,6 +1000,8 @@ class AnswerComposer
             return null;
         }
 
+        $contributing = $this->contributingProvidersForEvidence($item);
+
         return new ResearchAnswerCitation(
             citationId: 'cite-'.$item->evidenceId,
             sourceId: $item->sourceId,
@@ -1006,7 +1014,139 @@ class AnswerComposer
             url: $item->url,
             publicationYear: $item->publicationYear,
             sourceType: $item->sourceType,
+            sourceKey: $item->sourceKey !== '' ? $item->sourceKey : null,
+            contributingProviders: $contributing,
         );
+    }
+
+    /**
+     * Independent providers that contributed to a citation-eligible evidence item.
+     * Primary source_key plus found_by_sources (deduplicated). Does not invent providers.
+     *
+     * @return list<string>
+     */
+    private function contributingProvidersForEvidence(ScientificEvidenceItem $item): array
+    {
+        $providers = [];
+        $primary = trim($item->sourceKey);
+        if ($primary !== '') {
+            $providers[$primary] = true;
+        }
+
+        $foundBy = $item->sourceAttribution['found_by_sources'] ?? null;
+        if (is_array($foundBy)) {
+            foreach ($foundBy as $key) {
+                if (! is_string($key)) {
+                    continue;
+                }
+                $normalized = trim($key);
+                if ($normalized !== '') {
+                    $providers[$normalized] = true;
+                }
+            }
+        }
+
+        $provenance = $item->sourceAttribution['provenance'] ?? null;
+        if (is_array($provenance)) {
+            $provFound = $provenance['found_by_sources'] ?? null;
+            if (is_array($provFound)) {
+                foreach ($provFound as $key) {
+                    if (! is_string($key)) {
+                        continue;
+                    }
+                    $normalized = trim($key);
+                    if ($normalized !== '') {
+                        $providers[$normalized] = true;
+                    }
+                }
+            }
+        }
+
+        return array_keys($providers);
+    }
+
+    /**
+     * @param  list<ResearchAnswerCitation>  $citations
+     * @return list<ResearchAnswerCitation>
+     */
+    private function diversifyCitationsByIndependentProvider(array $citations): array
+    {
+        if (count($citations) < 2) {
+            return $citations;
+        }
+
+        $selected = [];
+        $remaining = $citations;
+        $covered = [];
+
+        while ($remaining !== []) {
+            $bestIndex = null;
+            $bestNew = -1;
+            foreach ($remaining as $index => $citation) {
+                $providers = $citation->contributingProviders !== []
+                    ? $citation->contributingProviders
+                    : array_values(array_filter([(string) ($citation->sourceKey ?? '')]));
+                $newCount = 0;
+                foreach ($providers as $provider) {
+                    if ($provider !== '' && ! isset($covered[$provider])) {
+                        $newCount++;
+                    }
+                }
+                if ($newCount > $bestNew) {
+                    $bestNew = $newCount;
+                    $bestIndex = $index;
+                }
+            }
+
+            if ($bestIndex === null) {
+                break;
+            }
+
+            $chosen = $remaining[$bestIndex];
+            $selected[] = $chosen;
+            unset($remaining[$bestIndex]);
+            $remaining = array_values($remaining);
+
+            $providers = $chosen->contributingProviders !== []
+                ? $chosen->contributingProviders
+                : array_values(array_filter([(string) ($chosen->sourceKey ?? '')]));
+            foreach ($providers as $provider) {
+                if ($provider !== '') {
+                    $covered[$provider] = true;
+                }
+            }
+        }
+
+        return $selected;
+    }
+
+    /**
+     * Outcome B metric: unique independent providers contributing to final citations.
+     *
+     * @param  list<ResearchAnswerCitation>  $citations
+     * @return array{independent_provider_count: int, providers: list<string>, by_provider: array<string, int>}
+     */
+    private function citationProviderContribution(array $citations): array
+    {
+        $byProvider = [];
+        foreach ($citations as $citation) {
+            $providers = $citation->contributingProviders !== []
+                ? $citation->contributingProviders
+                : array_values(array_filter([(string) ($citation->sourceKey ?? $citation->sourceType ?? '')]));
+            foreach ($providers as $provider) {
+                if ($provider === '') {
+                    continue;
+                }
+                $byProvider[$provider] = ($byProvider[$provider] ?? 0) + 1;
+            }
+        }
+        ksort($byProvider);
+
+        return [
+            'independent_provider_count' => count($byProvider),
+            'providers' => array_keys($byProvider),
+            'by_provider' => $byProvider,
+        ];
     }
 
     /**

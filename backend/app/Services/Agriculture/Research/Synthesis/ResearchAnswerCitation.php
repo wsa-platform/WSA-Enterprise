@@ -9,6 +9,8 @@ final class ResearchAnswerCitation
 {
     /**
      * @param  list<string>  $authors
+     * @param  list<string>  $contributingProviders Independent provider keys that discovered this evidence
+     *                                              (primary source_key plus found_by_sources).
      */
     public function __construct(
         public readonly string $citationId,
@@ -22,6 +24,8 @@ final class ResearchAnswerCitation
         public readonly ?string $url,
         public readonly ?int $publicationYear,
         public readonly ?string $sourceType,
+        public readonly ?string $sourceKey = null,
+        public readonly array $contributingProviders = [],
     ) {}
 
     /** @return array<string, mixed> */
@@ -39,6 +43,9 @@ final class ResearchAnswerCitation
             'url' => $this->url,
             'publication_year' => $this->publicationYear,
             'source_type' => $this->sourceType,
+            'source_key' => $this->sourceKey,
+            'contributing_providers' => $this->contributingProviders,
+            'provider' => $this->sourceKey ?? $this->sourceType,
         ];
     }
 
