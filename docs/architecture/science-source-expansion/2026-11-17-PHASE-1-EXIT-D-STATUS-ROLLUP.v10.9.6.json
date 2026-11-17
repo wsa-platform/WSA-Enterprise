@@ -1,16 +1,23 @@
 {
   "schema_id": "wsa.phase1_exit_d_status_rollup.v1",
   "revision": "10.9.6",
-  "generated_at_utc": "2026-11-17T17:25:00Z",
-  "method": "evidence_based_update_from_v10.27_plus_this_execution",
+  "generated_at_utc": "2026-11-17T18:25:00Z",
+  "method": "evidence_based_update_from_v10.27_plus_this_execution_plus_acceptance_extraction",
   "supersedes_note": "Rollup only; does not rewrite original EXIT definitions",
   "sources": [
     "2026-11-16-PHASE-1-EXIT-D-STATUS-ROLLUP.v10.27.json",
     "2026-11-17-PHASE-1-EXIT-01-11-DOD-MATRIX.v10.9.6.md",
+    "2026-11-17-PHASE-1-EXIT-08-10-ACCEPTANCE-EXTRACTION.v10.9.6.json",
     "2026-11-17-PHASE-1-BY0-RESUME-EXECUTION.v10.9.6.json",
     "2026-11-17-PHASE-1-OUTCOME-B-REMEDIATION.v10.9.6.json",
     "2026-11-17-PHASE-1-WINDOW6-GIT-DELIVERY.v10.9.6.json"
   ],
+  "acceptance_extraction_corrections": {
+    "EXIT-08_denominator": "verified_access_families (latest approved: RestJson, OAI-PMH, Bulk/LocalIndex) — not 5 and not 110",
+    "EXIT-09_os": "DETERMINED_LINUX_CONTAINERS; Native Windows not required (OD-EXIT09-LINUX-CONTAINERS-2026-11-14)",
+    "EXIT-10_original_clauses": "evidence-only matrix; register-order rows; cited artifacts; register unchanged — no original named verified-family subcriterion list",
+    "EXIT-11_gate": "every_dependency_must_be_pass=true; partial not permitted for formal gate run"
+  },
   "exits": {
     "EXIT-01": "PARTIAL",
     "EXIT-02": "PARTIAL",

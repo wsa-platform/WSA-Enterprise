@@ -1,0 +1,84 @@
+{
+  "schema_id": "wsa.phase1_exit_acceptance_extraction.v1",
+  "revision": "10.9.6",
+  "generated_at_utc": "2026-11-17T18:25:00Z",
+  "method": "read_only_extraction_then_persisted_follow_up",
+  "source_agent": "31197de8-e38e-4269-a08a-2581bc93ef83",
+  "authority": {
+    "primary_exit_text": "ADR-023 §8.64.7 (PROPOSED CONSOLIDATED CHECKLIST — NOT OWNER-APPROVED as sole authority)",
+    "also_applicable": [
+      "§8.21.4",
+      "§8.24.9",
+      "§8.25.10",
+      "§8.25.11",
+      "§8.26.7 Phase 1 row",
+      "§8.63.10"
+    ],
+    "traceability": "docs/architecture/science-source-expansion/PHASE-1-APPROVED-EXIT-CRITERIA-TRACEABILITY.v10.19.json",
+    "note": "§8.64.7 is necessary but not sufficient; earlier criteria remain applicable together with the list."
+  },
+  "exit_08": {
+    "verbatim_acceptance": "Adapters only for verified access families, one per family with per-seat constraints; Stage-3 adapters reused only where an identity binding proves the same resource; no speculative adapters (§8.24.5); query construction stays with the Builder (D-04)",
+    "mandatory_source_set": "verified_access_families",
+    "not_required": [
+      "all 110 membership seats live",
+      "full AGRIS 1244 ingest",
+      "arbitrary minimum LIVE source count",
+      "exactly five Stage-3 sources as EXIT-08 denominator"
+    ],
+    "approved_family_list_latest": [
+      "REST_API / RestJson",
+      "OAI-PMH",
+      "Bulk / Static Dataset + LocalIndex"
+    ],
+    "selected_interpretation": "PASS only when every authorized family has verified-family evidence (endpoint_tested VERIFIED and integration_verified VERIFIED); mock/contract alone insufficient; live and mock never combined",
+    "status": "PARTIAL"
+  },
+  "exit_09": {
+    "verbatim_acceptance": "For each implemented scope: focused tests on SQLite and, for persistence and concurrency, on isolated PostgreSQL through the guarded suite (including single CURRENT Cap fact under concurrency, §8.23.8); regression of the existing five-source path, CSQ identity, and Home/Crop isolation; commands, exit codes, and counts recorded; skipped work marked NOT RUN",
+    "os_requirement": {
+      "selected": "Linux containers only",
+      "authority": "ADR §8.85.2 OD-EXIT09-LINUX-CONTAINERS-2026-11-14",
+      "native_windows_required": false,
+      "status_value": "DETERMINED_LINUX_CONTAINERS",
+      "evidence": "2026-11-14-PHASE-1-EXIT-09-OS-SUPPORT-DETERMINATION.v10.21.json; ServerRestart Linux comparison v10.16 [2,1]"
+    },
+    "cap_current_on_postgresql": "REQUIREMENT_NOT_APPLICABLE_WITH_ARCHITECTURAL_EVIDENCE via OD-8.23.8-A; CapVer-SQLite CURRENT uniqueness/concurrency REQUIREMENT_SATISFIED",
+    "open_residuals": [
+      "five-source / CSQ / Home-Crop regression residual",
+      "no-PRAGMA boundary vs integrity verification after HY000 (owner overlay)"
+    ],
+    "status": "PARTIAL"
+  },
+  "exit_10": {
+    "verbatim_acceptance": "Matrix updated from evidence only; 109 rows in register order; every state backed by a cited artifact; the register unchanged",
+    "membership_update": "110 by OD-10 / CURRENT membership 110; historical 109.v1 preserved",
+    "original_subcriteria": [
+      "Matrix updated from evidence only",
+      "Rows in register order (110 after OD-10; 109.v1 preserved)",
+      "Every state backed by a cited artifact",
+      "The register is unchanged"
+    ],
+    "note": "Original text has no named verified-family subcriterion list; Master Prompt 'verified-family completeness' is a later label. Per-seat verified-family columns are evidence dimensions that follow from evidence-only matrix updates and EXIT-06/08 dependencies.",
+    "one_of_six_metric": "PHPUnit 1 test / 6 assertions PASS for identity match — not 1 of 6 acceptance criteria",
+    "status": "PARTIAL"
+  },
+  "exit_11": {
+    "verbatim_acceptance": "A Phase 1 verification report appended to this ADR that re-verifies P1-EXIT-01 to P1-EXIT-10 on current evidence, followed by an explicit decision recording Phase 1 exit",
+    "prerequisite_gate": {
+      "every_dependency_must_be_pass": true,
+      "partial_permitted_for_gate_run": false,
+      "requires_exit_01_through_10_pass": true,
+      "requires_d01_through_d14_satisfied": true
+    },
+    "status": "NOT_RUN",
+    "formal_gate_eligible": false
+  },
+  "d_register_note": "Phase 1 discrepancy register D-01–D-14 is distinct from ADR-native decisions D-01–D-11; EXIT-11 depends on the discrepancy register.",
+  "persist_context_update_after_extraction": {
+    "by0": "BY0_RESUME_COMPLETED_EXIT_0",
+    "completed_packages": 124,
+    "remaining_eligible": 19,
+    "note": "Extraction narrative still referenced pre-resume 123/HY000; superseded by this execution evidence"
+  }
+}
