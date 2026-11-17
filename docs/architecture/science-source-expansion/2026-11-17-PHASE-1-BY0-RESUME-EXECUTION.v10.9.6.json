@@ -48,15 +48,33 @@
       "partial": [],
       "last_package": "AGRIS.ODS.BY0",
       "updated_at": "2026-11-17T17:15:59+00:00"
+    },
+    "summary": {
+      "phase": "summary",
+      "newly_completed": 1,
+      "total_completed": 124,
+      "remaining_eligible": 19,
+      "generation": 1747,
+      "active_count": 1601577,
+      "baseline_generation": 1723,
+      "search_pin_generation": 79,
+      "historical_gen76_preserved": true,
+      "fts_pending_batches": 122
+    },
+    "process_exit": {
+      "code": 0,
+      "at_utc": "2026-11-17T17:19:42Z",
+      "log_marker": "BY0_RESUME_EXIT 0"
     }
   },
   "safety_after": {
     "sqlite_main_grew": true,
-    "note": "Main DB size increased ~96MB during successful resume commits; WAL present during finalize",
+    "note": "Main DB size increased ~96MB during successful resume commits; summary activeCount completed; writer exited cleanly",
     "no_activate_search": true,
     "gen79_pin_retained": true,
     "hy000_recovered": true,
-    "path": "Path B resume from skip 5000 without replay of committed chunks 1–5"
+    "path": "Path B resume from skip 5000 without replay of committed chunks 1–5",
+    "ingest_writer_after": false
   },
-  "final_status": "BY0_RESUME_PERSIST_COMPLETED"
+  "final_status": "BY0_RESUME_COMPLETED_EXIT_0"
 }

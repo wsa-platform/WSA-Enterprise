@@ -1,0 +1,85 @@
+{
+  "schema_id": "wsa.phase1_evidence_ledger.v1",
+  "revision": "10.9.6",
+  "generated_at_utc": "2026-11-17T17:25:00Z",
+  "head": "25a2d4a",
+  "claims": [
+    {
+      "claim_id": "C-W6-GIT",
+      "exit_d_ref": "Window 6 delivery",
+      "claim": "Window 6 documentation/evidence fully committed and pushed",
+      "evidence_type": "Git delivery",
+      "source_artifact": "2026-11-17-PHASE-1-WINDOW6-GIT-DELIVERY.v10.9.6.json",
+      "test_result": null,
+      "commit": "9501b13 (evidence); delivery record 25a2d4a",
+      "archive_id": "maa_c9f6b0bd6ef3760e_fa189e874b85",
+      "status": "VERIFIED"
+    },
+    {
+      "claim_id": "C-BY0-RESUME",
+      "exit_d_ref": "Persist / AGRIS LocalIndex",
+      "claim": "BY0 Path-B resume completed EXIT 0; package in completed_packages; partial cleared",
+      "evidence_type": "Integration / persistence",
+      "source_artifact": "2026-11-17-PHASE-1-BY0-RESUME-EXECUTION.v10.9.6.json",
+      "test_result": "artisan ingest max-packages=1 → persist_completed + summary EXIT 0",
+      "commit": "25a2d4a (+ updated JSON pending re-commit)",
+      "archive_id": "maa_8a3e72976b4ba1f7_4035fa2d72f3",
+      "status": "VERIFIED"
+    },
+    {
+      "claim_id": "C-OUTCOME-B",
+      "exit_d_ref": "Scientific search integrity / Outcome B",
+      "claim": "Independent provider attribution implemented; DIRECT gate preserved; unit regression PASS",
+      "evidence_type": "Unit test + implementation",
+      "source_artifact": "2026-11-17-PHASE-1-OUTCOME-B-REMEDIATION.v10.9.6.json",
+      "test_result": "OutcomeBIndependentCitationProvidersTest 4 passed / 17 assertions / EXIT 0",
+      "commit": "78b9cbc",
+      "archive_id": "maa_e04a2b018b3fbf94_3da9837db082",
+      "status": "PARTIALLY_VERIFIED"
+    },
+    {
+      "claim_id": "C-EXIT-08",
+      "exit_d_ref": "EXIT-08",
+      "claim": "Mandatory set is verified access families (not 5 / not 110)",
+      "evidence_type": "Architecture decision",
+      "source_artifact": "2026-11-12-PHASE-1-EXIT-08-ORIGINAL-CONTRACT-ANALYSIS.v10.14.json",
+      "test_result": null,
+      "commit": null,
+      "archive_id": null,
+      "status": "PARTIALLY_VERIFIED"
+    },
+    {
+      "claim_id": "C-EXIT-05",
+      "exit_d_ref": "EXIT-05",
+      "claim": "External operator/staging evidence still missing",
+      "evidence_type": "External owner/operator evidence",
+      "source_artifact": "2026-11-16-PHASE-1-EXIT-D-STATUS-ROLLUP.v10.27.json",
+      "test_result": null,
+      "commit": null,
+      "archive_id": null,
+      "status": "BLOCKED"
+    },
+    {
+      "claim_id": "C-EXIT-07",
+      "exit_d_ref": "EXIT-07",
+      "claim": "Original G2-26 IC evidence still missing",
+      "evidence_type": "External owner/operator evidence",
+      "source_artifact": "2026-11-16-PHASE-1-EXIT-D-STATUS-ROLLUP.v10.27.json",
+      "test_result": null,
+      "commit": null,
+      "archive_id": null,
+      "status": "BLOCKED"
+    },
+    {
+      "claim_id": "C-EXIT-11",
+      "exit_d_ref": "EXIT-11",
+      "claim": "Formal gate not run — prerequisites unmet",
+      "evidence_type": "Architecture decision",
+      "source_artifact": "PHASE-1-EXIT-11-PREFLIGHT.v10.23.json",
+      "test_result": "NOT_RUN",
+      "commit": null,
+      "archive_id": null,
+      "status": "NOT_RUN"
+    }
+  ]
+}
