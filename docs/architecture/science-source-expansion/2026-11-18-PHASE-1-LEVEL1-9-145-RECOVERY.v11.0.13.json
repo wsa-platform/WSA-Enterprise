@@ -1,0 +1,38 @@
+{
+  "schema_id": "wsa.level1_9_145_recovery.v1",
+  "revision": "11.0.13",
+  "recorded_at_utc": "2026-11-18T10:20:00Z",
+  "historical_misreading_risk": "Later summaries treated 9/145 as nine unresolved bridge failures. Original evidence does not support that reading.",
+  "historical_meanings_recovered": [
+    {
+      "label": "EXIT-09_FOCUSED_SUITE_11.0.3",
+      "meaning": "145 tests passed / 0 failed / 755 assertions",
+      "evidence": [
+        "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-LEVEL1-SCIENTIFIC-SEARCH-AUDIT.v11.0.3.md",
+        "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-EXIT-09-FIVE-SOURCE-CSQ-RUN.v11.0.3.json",
+        "docs/architecture/science-source-expansion/_tmp-r1103-exit09-five-source-csq.txt"
+      ],
+      "classification": "RESOLVED_WITH_EVIDENCE"
+    },
+    {
+      "label": "C1C3_BRIDGE_SUITE_11.0.8",
+      "meaning": "9 tests passed / 145 assertions (Governed activation + C1→C3 mirrors + bridge contract)",
+      "evidence": [
+        "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-REV11.0.8-ENGINEERING-REPORT.ar.md#الاختبارات"
+      ],
+      "classification": "RESOLVED_WITH_EVIDENCE",
+      "note": "9/145 = pass counts, not failure counts"
+    }
+  ],
+  "current_reassessment": {
+    "command": "php artisan test --filter=GovernedSourceRuntimeActivationContractTest|GovernedActiveSourceC1C3EvidenceBridgeMirrorsTest|GovernedSourceC1C3EvidenceBridgeContractTest|GovernedScientificSourceEligibilityTest|GovernedActiveSourceProductionPathIntegrityTest|ScientificAnswerIdentityIntegrityContractTest",
+    "result": "29 passed (235 assertions), exit 0",
+    "comparison_to_historical_bridge_9_145": "IMPROVED_FROM_HISTORICAL",
+    "comparison_notes": "Bridge/activation/identity/eligibility suites currently green; historical 9/145 was already a PASS count, not an open failure ledger"
+  },
+  "level_1_status": {
+    "historical_label_retained": "PASS_WITH_LIMITATIONS",
+    "limitation_basis_corrected": "Limitations are incomplete live/fifteen-condition scientific integration — not nine failing bridge tests",
+    "current_label": "PASS_WITH_LIMITATIONS"
+  }
+}

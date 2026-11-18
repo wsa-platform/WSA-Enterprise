@@ -1,0 +1,102 @@
+{
+  "schema_id": "wsa.phase1_110_source_option_b_update.v1",
+  "revision": "11.0.13",
+  "recorded_at_utc": "2026-11-18T10:45:00Z",
+  "baseline_head": "9713afa8cef1fc0bdbc4356e7b2f3277cc7d3af3",
+  "authority": {
+    "membership_register": "docs/architecture/science-source-expansion/ADR-023-CURRENT-MEMBERSHIP-REGISTER.v2.json",
+    "membership_register_mutated": false,
+    "matrix_v110": "docs/architecture/science-source-expansion/2026-11-11-PHASE-1-SOURCE-MATRIX.v110.json",
+    "matrix_v110_mutated": false,
+    "prior_option_b": "docs/architecture/science-source-expansion/2026-11-18-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.10.json"
+  },
+  "claim_guard": [
+    "fully_verified_count=0",
+    "Rev 10.27 LocalIndex protection preserved — no Persist/FTS/BY0/schema mutation",
+    "9/145 recovered as PASS counts, not nine failures",
+    "Membership and matrix untouched"
+  ],
+  "scientific_integration_verified_count": 0,
+  "five_source_completion_classification": "BLOCKED",
+  "phase_1_formal_classification": "PHASE_1_GAP_CLOSURE_PARTIAL",
+  "levels": {
+    "level_1": "PASS_WITH_LIMITATIONS",
+    "level_1_9_145": "RESOLVED_WITH_EVIDENCE as pass-count notation; current bridge/eligibility suites green",
+    "level_2": "PARTIAL",
+    "level_3": "PARTIAL"
+  },
+  "rev10_27_protection": {
+    "status": "ACTIVE",
+    "localindex_modified": false,
+    "recovery_artifact": "2026-11-18-PHASE-1-REV10.27-RECOVERY.v11.0.13.json"
+  },
+  "seat_deltas": [
+    {
+      "adr_id": "G1-01",
+      "source_key": "agris",
+      "routing": "IMPLEMENTED_AND_USED",
+      "scientific_integration_verified": false,
+      "blocker": "BLOCKED_REVISION_10_27_STORAGE_PROTECTION"
+    },
+    {
+      "adr_id": "G1-02",
+      "source_key": "organic_eprints",
+      "routing": "IMPLEMENTED_AND_USED",
+      "scientific_integration_verified": false
+    },
+    {
+      "adr_id": "G1-17",
+      "source_key": "dr_duke",
+      "routing": "IMPLEMENTED_AND_USED",
+      "owner_decision": "OD-G1-17-SCOPE-LIMITED-PROJECTION",
+      "historical_limited_class": "SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED_LIMITED_LOCAL_PROJECTION",
+      "scientific_integration_verified": false
+    },
+    {
+      "adr_id": "G5-04",
+      "source_key": "gbif",
+      "routing": "IMPLEMENTED_AND_USED",
+      "scientific_integration_verified": false
+    },
+    {
+      "adr_id": "G6-20",
+      "source_key": "bhl",
+      "routing": "IMPLEMENTED_AND_USED",
+      "credential": {
+        "CREDENTIAL_PRESENT": true,
+        "CREDENTIAL_RUNTIME_AVAILABLE": true,
+        "LIVE_AUTHENTICATION_VERIFIED": true,
+        "LIVE_RETRIEVAL_VERIFIED": true,
+        "secret_echoed": false
+      },
+      "scientific_integration_verified": false
+    }
+  ],
+  "fifteen_conditions_artifact": "docs/architecture/science-source-expansion/2026-11-18-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.13.json",
+  "before_after": [
+    {
+      "component": "BHL eligibility false-positive on peer_reviewed_publication",
+      "before": "BHL selected for irrigation plans because evidence_requirements contained publication",
+      "after": "BHL requires heritage/taxonomy literature cues; irrigation excludes BHL",
+      "tests": "GovernedEligibilityProductionSearchPathTest; GovernedScientificSourceEligibilityTest"
+    },
+    {
+      "component": "Production null-sourceKeys path evidence",
+      "before": "Eligibility proven mainly via direct selector unit tests",
+      "after": "Orchestrator execute(plan, limit, null) with stub adapters proves production selection path without LocalIndex writes",
+      "tests": "GovernedEligibilityProductionSearchPathTest"
+    },
+    {
+      "component": "Level-1 9/145 historical meaning",
+      "before": "Summaries risked reading 9/145 as nine failures",
+      "after": "Recovered as 9 passed/145 assertions (and separate 145/0/755 EXIT-09 suite)",
+      "evidence": "2026-11-18-PHASE-1-LEVEL1-9-145-RECOVERY.v11.0.13.json"
+    }
+  ],
+  "exit_impact": {
+    "EXIT-08": "PARTIAL",
+    "EXIT-09": "PARTIAL",
+    "EXIT-10": "PARTIAL",
+    "EXIT-11": "NOT_RUN"
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "schema_id": "wsa.rev10_27_recovery.v1",
+  "revision": "11.0.13",
+  "recorded_at_utc": "2026-11-18T10:10:00Z",
+  "head": "9713afa8cef1fc0bdbc4356e7b2f3277cc7d3af3",
+  "protection_boundary": "ACTIVE",
+  "localindex_modified_this_mission": false,
+  "stop_conditions_section": {
+    "source": "docs/architecture/science-source-expansion/2026-11-17-MASTER-PROMPT-REVISION-10.27.exact.txt",
+    "section": "11.2 Stop Conditions",
+    "status": "RECOVERED_EXACT",
+    "items": [
+      "Scale Preflight is NO-GO",
+      "Candidate Storage Design remains unknown and unsafe",
+      "Database integrity is uncertain",
+      "Unsafe writer concurrency exists",
+      "Ingest cannot be safely controlled",
+      "Checkpoints are inconsistent",
+      "Active generation is at risk",
+      "Mandatory owner decision is missing",
+      "Proposed operation violates an approved architectural decision",
+      "Original acceptance contract cannot be established safely",
+      "Required disk reserve cannot be demonstrated",
+      "Hard Kill evidence is insufficient",
+      "A required recovery path is unverified"
+    ]
+  },
+  "work_items": [
+    {
+      "item": "BY0",
+      "status": "COMPLETE_VERIFIED",
+      "evidence": [
+        "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-BY0-RESUME-EXECUTION.v10.9.6.json",
+        "final_status=BY0_RESUME_COMPLETED_EXIT_0",
+        "checkpoint_after.completed_packages=124",
+        "partial=[]"
+      ],
+      "verification_method": "artifact_readback",
+      "remaining_work": "None for BY0 package itself",
+      "effect_on_this_mission": "AGRIS LocalIndex writes remain gated by incomplete FTS/Persist remainder"
+    },
+    {
+      "item": "121_FTS_items",
+      "status": "PARTIAL",
+      "evidence": [
+        "2026-11-17-PHASE-1-REV10.27-FULL-COMPLIANCE-AUDIT.ar.md reports fts_pending=121 NOT_YET_ELIGIBLE",
+        "2026-11-17-PHASE-1-BY0-RESUME-EXECUTION.v10.9.6.json fts.status=deferred_until_activation fts_pending_batches=122"
+      ],
+      "verification_method": "artifact_readback_no_live_fts_mutation",
+      "remaining_work": "Independent FTS reconciliation after Persist completion and activation eligibility",
+      "effect_on_this_mission": "BLOCKED_REVISION_10_27_STORAGE_PROTECTION for LocalIndex FTS/schema/reindex"
+    },
+    {
+      "item": "20_Persist_packages",
+      "status": "PARTIAL",
+      "evidence": [
+        "Window 6 bounded segment completed 97→117 (20 packages) — WINDOW6-COMPLETION.v10.27.json / WINDOW6-GIT-DELIVERY.v10.9.6.json",
+        "After BY0: completed_packages=124 remaining_eligible=19 (EXIT-D rollup v10.9.6 / v11.0.1)"
+      ],
+      "verification_method": "artifact_readback",
+      "remaining_work": "19 remaining eligible Persist packages; no new Persist window in 11.0.13",
+      "effect_on_this_mission": "BLOCKED_REVISION_10_27_STORAGE_PROTECTION for Persist checkpoints/writes"
+    },
+    {
+      "item": "Phase_1_classification",
+      "status": "COMPLETE_VERIFIED",
+      "evidence": [
+        "2026-11-17-PHASE-1-CURRENT-STATE.v11.0.3.json classification=PHASE_1_GAP_CLOSURE_PARTIAL",
+        "Rev 11.0.10 Arabic report retained same formal class"
+      ],
+      "verification_method": "artifact_readback",
+      "remaining_work": "Formal closure still blocked by EXIT-05/07 and incomplete EXIT-08/09/10",
+      "effect_on_this_mission": "Do not auto-close Phase 1"
+    },
+    {
+      "item": "Scientific_LocalIndex",
+      "status": "PARTIAL",
+      "evidence": [
+        "DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md DB-LOCALINDEX-SCIENTIFIC",
+        "Persist advanced; FTS deferred; GEN79 pin retained historically"
+      ],
+      "verification_method": "inventory_and_artifact_readback",
+      "remaining_work": "FTS + remaining Persist under bounded windows",
+      "effect_on_this_mission": "PROTECTED — no schema/record/FTS/Persist/BY0 mutation in 11.0.13"
+    },
+    {
+      "item": "Storage_ownership",
+      "status": "COMPLETE_VERIFIED",
+      "evidence": [
+        "DATABASE-AND-ARCHIVE-STORAGE-INVENTORY.md",
+        "Rev 10.27 ingest lifecycle ownership of AGRIS projected Persist/FTS checkpoints"
+      ],
+      "verification_method": "artifact_readback",
+      "remaining_work": "None for identity of ownership",
+      "effect_on_this_mission": "AGRIS storage work owned by Persist/FTS workstream — isolated from five-source non-storage work"
+    },
+    {
+      "item": "Outstanding_checkpoints",
+      "status": "PARTIAL",
+      "evidence": [
+        "remaining_eligible=19 Persist packages",
+        "fts_pending_batches≈121–122 deferred",
+        "No live checkpoint file re-read this mission (avoid DB/FTS mutation risk)"
+      ],
+      "verification_method": "historical_artifact_only",
+      "remaining_work": "Live checkpoint pointer verification when owner-safe",
+      "effect_on_this_mission": "Treat outstanding checkpoints as open; preserve"
+    }
+  ],
+  "agris_storage_workstream": "BLOCKED_REVISION_10_27_STORAGE_PROTECTION",
+  "independent_work_allowed": [
+    "relevance routing / eligibility",
+    "production-path selector evidence with stub adapters",
+    "BHL credential/live auth probes (no LocalIndex write)",
+    "GBIF/OE/Duke fixture validation paths that do not mutate operational LocalIndex",
+    "documentation / Option B / fifteen-condition matrix"
+  ]
+}

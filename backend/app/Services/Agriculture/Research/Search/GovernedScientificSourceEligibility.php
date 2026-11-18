@@ -171,19 +171,30 @@ final class GovernedScientificSourceEligibility
         }
 
         // Historical botanical/zoological literature for named taxa or phytochemical ethnobotany.
+        // Use token matching for short stems so "requirements" does not match "species".
         if ($nq->scientificName !== null && trim($nq->scientificName) !== ''
-            && $this->hasAny($bag, [
-                'phytochem', 'ethnobotan', 'medicinal', 'taxonomy', 'species',
-                'classification', 'biodiversity', 'literature', 'nomenclature',
-            ])) {
+            && (
+                $this->hasAny($bag, [
+                    'phytochem', 'ethnobotan', 'medicinal', 'taxonomy', 'taxonomic',
+                    'biodiversity', 'nomenclature', 'botanical literature',
+                ])
+                || $this->hasToken($bag, [
+                    'species', 'taxonomy', 'taxonomic', 'biodiversity', 'classification',
+                    'literature', 'nomenclature', 'flora', 'fauna',
+                ])
+            )) {
             return true;
         }
 
-        // BHL shares biodiversity/taxonomy literature scope with GBIF when literature cues exist.
-        if ($this->gbifEligible($plan) && $this->hasAny($bag, [
-            'literature', 'publication', 'historical', 'archive', 'library', 'book',
-            'treatise', 'monograph', 'description',
-        ])) {
+        // BHL shares GBIF taxonomic scope only with heritage/library literature cues.
+        // Do not treat generic evidence_requirements like peer_reviewed_publication as BHL scope.
+        if ($this->gbifEligible($plan) && (
+            $this->hasAny($bag, [
+                'historical', 'archive', 'heritage library', 'biodiversity heritage',
+                'treatise', 'monograph', 'botanical literature', 'zoological literature',
+            ])
+            || $this->hasToken($bag, ['historical', 'archive', 'monograph', 'treatise', 'flora', 'fauna'])
+        )) {
             return true;
         }
 

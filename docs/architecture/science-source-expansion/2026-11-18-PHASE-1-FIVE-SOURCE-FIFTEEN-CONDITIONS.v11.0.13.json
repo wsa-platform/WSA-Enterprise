@@ -1,0 +1,128 @@
+{
+  "schema_id": "wsa.five_source_fifteen_conditions.v1",
+  "revision": "11.0.13",
+  "recorded_at_utc": "2026-11-18T10:40:00Z",
+  "head": "9713afa8cef1fc0bdbc4356e7b2f3277cc7d3af3",
+  "claim_guard": [
+    "No source reaches SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "BHL live auth/retrieval is not full production-path scientific integration.",
+    "AGRIS LocalIndex Persist/FTS work remains protected under Rev 10.27."
+  ],
+  "mission_completion_classification": "BLOCKED",
+  "fully_verified_count": 0,
+  "conditions": ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", "C13", "C14", "C15"],
+  "seats": [
+    {
+      "adr_id": "G1-01",
+      "source_key": "agris",
+      "conditions": {
+        "C1": {"status": "PASS", "evidence": "membership G1-01; AGRIS agricultural literature scope"},
+        "C2": {"status": "PARTIAL", "evidence": "Bulk/LocalIndex capability; full ODS not claimed"},
+        "C3": {"status": "PASS", "evidence": "GovernedScientificSourceEligibility agris cues"},
+        "C4": {"status": "PASS", "evidence": "GovernedEligibilityProductionSearchPathTest null sourceKeys"},
+        "C5": {"status": "PARTIAL", "evidence": "fixture/LocalIndex retrieval; live full corpus not claimed; storage writes blocked"},
+        "C6": {"status": "PARTIAL", "evidence": "GovernedActiveSourceProductionPathIntegrityTest fixture validate→composer"},
+        "C7": {"status": "NOT_APPLICABLE_WITH_RATIONALE", "evidence": "No API key required for catalog/LocalIndex path"},
+        "C8": {"status": "PARTIAL", "evidence": "prior adapter empty/failure contracts; not re-proven live this revision"},
+        "C9": {"status": "PARTIAL", "evidence": "prior normalization/provenance fixtures"},
+        "C10": {"status": "PARTIAL", "evidence": "Answer identity suite + production-path identity asserts"},
+        "C11": {"status": "PARTIAL", "evidence": "eligibility negatives; identity negatives; not full per-source matrix"},
+        "C12": {"status": "PARTIAL", "evidence": "stub/fixture production-path; not live agent E2E"},
+        "C13": {"status": "PASS", "evidence": "FULL_ODS_INGEST_NOT_CLAIMED; Rev 10.27 storage protection respected"},
+        "C14": {"status": "PASS", "evidence": "bridge/eligibility suites green; membership/matrix untouched"},
+        "C15": {"status": "PARTIAL", "evidence": "Option B + this matrix; live package incomplete"}
+      },
+      "scientific_integration_verified": false,
+      "blocker": "BLOCKED_REVISION_10_27_STORAGE_PROTECTION for further LocalIndex Persist/FTS; live fifteen-condition package incomplete"
+    },
+    {
+      "adr_id": "G1-02",
+      "source_key": "organic_eprints",
+      "conditions": {
+        "C1": {"status": "PASS", "evidence": "G1-02 organic agriculture literature"},
+        "C2": {"status": "PARTIAL", "evidence": "OAI-PMH capability verified historically"},
+        "C3": {"status": "PASS", "evidence": "organic cue eligibility"},
+        "C4": {"status": "PASS", "evidence": "null sourceKeys organic query selects OE"},
+        "C5": {"status": "PARTIAL", "evidence": "prior fixture/OAI path; live not re-packaged"},
+        "C6": {"status": "PARTIAL", "evidence": "prior C1→C3 bridge; Stage-4 production-path fixture still thin"},
+        "C7": {"status": "NOT_APPLICABLE_WITH_RATIONALE", "evidence": "Public OAI-PMH; no API key"},
+        "C8": {"status": "PARTIAL", "evidence": "prior harvest/empty contracts"},
+        "C9": {"status": "PARTIAL", "evidence": "prior provenance fixtures"},
+        "C10": {"status": "PARTIAL", "evidence": "shared identity suite"},
+        "C11": {"status": "PARTIAL", "evidence": "eligibility negatives"},
+        "C12": {"status": "PARTIAL", "evidence": "routing path proven; full validate→composer OE-specific still partial"},
+        "C13": {"status": "PASS", "evidence": "organic scope preserved"},
+        "C14": {"status": "PASS", "evidence": "regression green"},
+        "C15": {"status": "PARTIAL", "evidence": "matrix/Option B linked by adr_id"}
+      },
+      "scientific_integration_verified": false
+    },
+    {
+      "adr_id": "G1-17",
+      "source_key": "dr_duke",
+      "conditions": {
+        "C1": {"status": "PASS", "evidence": "OD-G1-17-SCOPE-LIMITED-PROJECTION recovered"},
+        "C2": {"status": "PASS", "evidence": "STATIC_DATASET / limited local projection contract"},
+        "C3": {"status": "PASS", "evidence": "phytochem/ethnobotany eligibility"},
+        "C4": {"status": "PASS", "evidence": "eligibility + prior activation"},
+        "C5": {"status": "PARTIAL", "evidence": "fixture/local projection retrieval; not live API"},
+        "C6": {"status": "PARTIAL", "evidence": "ProductionPathIntegrityTest Dr. Duke path"},
+        "C7": {"status": "NOT_APPLICABLE_WITH_RATIONALE", "evidence": "No live API under OD-G1-17"},
+        "C8": {"status": "PARTIAL", "evidence": "prior adapter contracts"},
+        "C9": {"status": "PARTIAL", "evidence": "prior fixtures"},
+        "C10": {"status": "PARTIAL", "evidence": "Mentha identity preserved in production-path test"},
+        "C11": {"status": "PARTIAL", "evidence": "identity suite genus/causation"},
+        "C12": {"status": "PARTIAL", "evidence": "fixture production-path"},
+        "C13": {"status": "PASS", "evidence": "OD-G1-17 scope not expanded; limited projection respected"},
+        "C14": {"status": "PASS", "evidence": "regression green"},
+        "C15": {"status": "PARTIAL", "evidence": "historical limited verification ≠ mission SCIENTIFIC_INTEGRATION_VERIFIED"}
+      },
+      "scientific_integration_verified": false,
+      "note": "SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED_LIMITED_LOCAL_PROJECTION is historical limited-scope class, not mission-level VERIFIED"
+    },
+    {
+      "adr_id": "G5-04",
+      "source_key": "gbif",
+      "conditions": {
+        "C1": {"status": "PASS", "evidence": "G5-04 taxonomy/occurrence"},
+        "C2": {"status": "PASS", "evidence": "REST species search capability"},
+        "C3": {"status": "PASS", "evidence": "scientificName/taxonomy eligibility"},
+        "C4": {"status": "PASS", "evidence": "selector/orchestrator path"},
+        "C5": {"status": "PARTIAL", "evidence": "prior E2E HTTP; not full live acceptance package this revision"},
+        "C6": {"status": "PARTIAL", "evidence": "prior C1→C3; Stage-4 package partial"},
+        "C7": {"status": "NOT_APPLICABLE_WITH_RATIONALE", "evidence": "Public GBIF API; no key"},
+        "C8": {"status": "PARTIAL", "evidence": "prior pagination/empty contracts"},
+        "C9": {"status": "PARTIAL", "evidence": "taxon key provenance historically evidenced"},
+        "C10": {"status": "PARTIAL", "evidence": "identity suite; occurrence≠causation guarded in answer identity"},
+        "C11": {"status": "PARTIAL", "evidence": "eligibility + identity negatives"},
+        "C12": {"status": "PARTIAL", "evidence": "routing proven; full live composer package incomplete"},
+        "C13": {"status": "PASS", "evidence": "no causation inflation from occurrence"},
+        "C14": {"status": "PASS", "evidence": "regression green"},
+        "C15": {"status": "PARTIAL", "evidence": "Option B / matrix"}
+      },
+      "scientific_integration_verified": false
+    },
+    {
+      "adr_id": "G6-20",
+      "source_key": "bhl",
+      "conditions": {
+        "C1": {"status": "PASS", "evidence": "G6-20 BHL heritage literature"},
+        "C2": {"status": "PASS", "evidence": "REST api3 PublicationSearch contract"},
+        "C3": {"status": "PASS", "evidence": "BHL eligibility tightened vs generic publication requirements"},
+        "C4": {"status": "PASS", "evidence": "selector/orchestrator eligibility"},
+        "C5": {"status": "PARTIAL", "evidence": "LIVE_RETRIEVAL_VERIFIED probe (sanitized) + prior fixtures; production-path composer partial"},
+        "C6": {"status": "PARTIAL", "evidence": "prior C1→C3 fixture bridge"},
+        "C7": {"status": "PASS", "evidence": "CREDENTIAL_PRESENT + CREDENTIAL_RUNTIME_AVAILABLE + LIVE_AUTHENTICATION_VERIFIED (sanitized probe)"},
+        "C8": {"status": "PARTIAL", "evidence": "prior adapter credential/envelope tests"},
+        "C9": {"status": "PARTIAL", "evidence": "prior PartID provenance fixtures"},
+        "C10": {"status": "PARTIAL", "evidence": "shared identity suite; OCR≠modern conclusion preserved in known limitations"},
+        "C11": {"status": "PARTIAL", "evidence": "eligibility negatives after publication false-positive fix"},
+        "C12": {"status": "PARTIAL", "evidence": "live auth probe ≠ full agent E2E"},
+        "C13": {"status": "PASS", "evidence": "no new key requested; secret not echoed"},
+        "C14": {"status": "PASS", "evidence": "regression green"},
+        "C15": {"status": "PARTIAL", "evidence": "Option B / matrix"}
+      },
+      "scientific_integration_verified": false
+    }
+  ]
+}
