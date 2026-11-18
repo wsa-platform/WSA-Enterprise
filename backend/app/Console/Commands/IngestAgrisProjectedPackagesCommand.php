@@ -82,7 +82,48 @@ final class IngestAgrisProjectedPackagesCommand extends Command
         $maxPackages = max(0, (int) $this->option('max-packages'));
         $dryRun = (bool) $this->option('dry-run');
 
+        $eligible = [];
+        foreach ($manifest['providers'] as $provider) {
+            if (! is_array($provider) || ($provider['status'] ?? null) !== 'projected') {
+                continue;
+            }
+            $jsonl = (string) ($provider['jsonl'] ?? '');
+            if ($jsonl === '' || ! is_file($jsonl)) {
+                continue;
+            }
+            $packageId = pathinfo($jsonl, PATHINFO_FILENAME);
+            if (isset($checkpoint['completed_packages'][$packageId])) {
+                continue;
+            }
+            $eligible[] = [
+                'package_id' => $packageId,
+                'jsonl' => $jsonl,
+                'catalog_url' => $provider['url'] ?? null,
+                'license' => $provider['license'] ?? null,
+                'projected_records' => (int) ($provider['records'] ?? 0),
+            ];
+        }
+
+        $this->emit([
+            'phase' => 'plan',
+            'baseline' => $baseline,
+            'already_completed' => count($checkpoint['completed_packages']),
+            'eligible_remaining' => count($eligible),
+            'eligible_package_ids' => array_column($eligible, 'package_id'),
+            'chunk_size' => $chunkSize,
+            'dry_run' => $dryRun,
+            'mode' => 'candidate_incremental',
+            'search_pin_generation' => AgrisCandidateIngestCoordinator::SEARCH_PIN_GENERATION,
+            'no_download' => true,
+            'fts_checkpoint' => $ftsCheckpointPath,
+        ]);
+
+        if ($dryRun) {
+            return self::SUCCESS;
+        }
+
         // Auto-complete BRY if prior partial already consumed all projected records (persist done; FTS pending).
+        // Runs only after dry-run gate so --dry-run cannot mutate checkpoints.
         if (isset($checkpoint['partial']['AGRIS.ODS.BRY'])) {
             $brySkip = (int) ($checkpoint['partial']['AGRIS.ODS.BRY']['skip_records'] ?? 0);
             $bryProjected = 2771;
@@ -115,46 +156,11 @@ final class IngestAgrisProjectedPackagesCommand extends Command
                 $this->writeCheckpoint($checkpointPath, $checkpoint);
                 $this->writeCheckpoint($ftsCheckpointPath, $ftsCheckpoint);
                 $this->emit(['package_id' => 'AGRIS.ODS.BRY', 'status' => 'persist_completed_from_partial', 'fts_status' => 'pending']);
+                $eligible = array_values(array_filter(
+                    $eligible,
+                    static fn (array $pkg): bool => ($pkg['package_id'] ?? null) !== 'AGRIS.ODS.BRY',
+                ));
             }
-        }
-
-        $eligible = [];
-        foreach ($manifest['providers'] as $provider) {
-            if (! is_array($provider) || ($provider['status'] ?? null) !== 'projected') {
-                continue;
-            }
-            $jsonl = (string) ($provider['jsonl'] ?? '');
-            if ($jsonl === '' || ! is_file($jsonl)) {
-                continue;
-            }
-            $packageId = pathinfo($jsonl, PATHINFO_FILENAME);
-            if (isset($checkpoint['completed_packages'][$packageId])) {
-                continue;
-            }
-            $eligible[] = [
-                'package_id' => $packageId,
-                'jsonl' => $jsonl,
-                'catalog_url' => $provider['url'] ?? null,
-                'license' => $provider['license'] ?? null,
-                'projected_records' => (int) ($provider['records'] ?? 0),
-            ];
-        }
-
-        $this->emit([
-            'phase' => 'plan',
-            'baseline' => $baseline,
-            'already_completed' => count($checkpoint['completed_packages']),
-            'eligible_remaining' => count($eligible),
-            'chunk_size' => $chunkSize,
-            'dry_run' => $dryRun,
-            'mode' => 'candidate_incremental',
-            'search_pin_generation' => AgrisCandidateIngestCoordinator::SEARCH_PIN_GENERATION,
-            'no_download' => true,
-            'fts_checkpoint' => $ftsCheckpointPath,
-        ]);
-
-        if ($dryRun) {
-            return self::SUCCESS;
         }
 
         $newly = 0;

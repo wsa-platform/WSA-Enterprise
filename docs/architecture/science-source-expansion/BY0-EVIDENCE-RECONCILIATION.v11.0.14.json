@@ -1,0 +1,89 @@
+{
+  "schema_id": "wsa.by0_evidence_reconciliation.v1",
+  "revision": "11.0.14",
+  "canonical_filename": "BY0-EVIDENCE-RECONCILIATION.v11.0.14.json",
+  "detailed_sibling": "2026-11-18-PHASE-1-BY0-EVIDENCE-RECONCILIATION.v11.0.14.json",
+  "recorded_at_utc": "2026-11-18T12:05:00Z",
+  "head_at_recording": "4e354c2349124b80d3e97a851ffff66979c34191",
+  "mode": "READ_ONLY",
+  "writes_to_by0": false,
+  "original_artifact": {
+    "path": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-BY0-RESUME-EXECUTION.v10.9.6.json",
+    "sha256": "8A3E72976B4BA1F72379B33BE9F455DE2572B6F17BDFA546BD09BDB31D76FBAE",
+    "git_commit_introducing_or_updating": "4d14e3a8a725e82f965ef3ff6a896c512e37a540",
+    "git_committed_at": "2026-11-17 20:26:19 +0300"
+  },
+  "version_classification": {
+    "filename_token_v10_9_6": "mission_execution_revision",
+    "explanation": "JSON field revision=10.9.6 identifies Master Engineering Execution Prompt Revision 10.9.6 that authorized and recorded the BY0 resume. It is NOT a schema version (schema_id=wsa.by0_resume_execution.v1) and NOT Revision 10.27.",
+    "schema_id": "wsa.by0_resume_execution.v1",
+    "related_10_27_artifact": "docs/architecture/science-source-expansion/2026-11-17-PHASE-1-BY0-RESUME-SAFETY.v10.27.json"
+  },
+  "actual_execution_revision": "10.9.6",
+  "execution_timestamp": {
+    "started_at_utc": "2026-11-17T17:00:04Z",
+    "ended_at_utc": "2026-11-17T17:19:42Z"
+  },
+  "commit_reference": "4d14e3a8a725e82f965ef3ff6a896c512e37a540",
+  "original_execution": {
+    "package_id": "AGRIS.ODS.BY0",
+    "workflow": "scientific:ingest-agris-projected --max-packages=1 (via _r1096_by0_resume.sh)",
+    "activate_search": false,
+    "process_exit_code": 0,
+    "log_marker": "BY0_RESUME_EXIT 0",
+    "records_inserted_this_resume": 23213,
+    "reported_active_count": 1601577
+  },
+  "database_identity": {
+    "store": "DB-LOCALINDEX-SCIENTIFIC",
+    "path": "backend/storage/app/scientific_record_store.sqlite",
+    "connection": "scientific_records",
+    "engine": "SQLite"
+  },
+  "read_only_verification": {
+    "checkpoint_path": "backend/storage/app/scientific_datasets/agris/harvest_cache/agris_projected_ingest_checkpoint.v10.21.json",
+    "checkpoint_updated_at": "2026-11-17T17:15:59+00:00",
+    "completed_packages_count": 124,
+    "by0_in_completed_packages": true,
+    "partial_empty": true,
+    "last_package": "AGRIS.ODS.BY0",
+    "sqlite_query": "SELECT COUNT(*) FROM scientific_source_records WHERE source_key='agris' AND lifecycle_state='active' (PDO SQLITE_OPEN_READONLY + PRAGMA query_only=ON)",
+    "agris_active_count": 1601577,
+    "active_count_matches_execution_summary": true,
+    "count_unit": "unique package_id keys in checkpoint.completed_packages map",
+    "count_uniqueness": "map keys are unique package IDs; verified 124 distinct keys including AGRIS.ODS.BY0",
+    "reported_completed_count": 124,
+    "independently_verified_completed_count": 124
+  },
+  "revision_10_27_reconciliation": {
+    "status": "CONSISTENT",
+    "note": "10.27 established abnormal BY0 partial and resume safety; 10.9.6 executed the authorized resume"
+  },
+  "revision_11_0_13_reconciliation": {
+    "status": "SUPERSEDED_BY_INDEPENDENT_VERIFICATION",
+    "prior_claim": "COMPLETE_VERIFIED via artifact readback only",
+    "this_mission": "Same conclusion after checkpoint+log+sqlite reconciliation; checkpoint timestamps unchanged since 2026-11-17T17:15:59Z"
+  },
+  "subsequent_modification_history": {
+    "checkpoint_mtime_match_by0_completion": true,
+    "ingest_writer_active_at_verification": false,
+    "rev_11_0_13_localindex_writes": false,
+    "rev_11_0_14_by0_writes": false
+  },
+  "final_by0_classification": "COMPLETE_VERIFIED",
+  "fts_persist_dependency_decision": {
+    "persist_remaining_packages_depend_on_by0_reprocessing": false,
+    "persist_remaining_require_by0_present_in_completed": true,
+    "condition_met": true,
+    "fts_activation_depends_on_persist_remaining_zero": true,
+    "gate": "BY0_GATE_CLEARED_FOR_DEPENDENT_PERSIST_CONTINUATION",
+    "blocked_operations": [
+      "BY0 reprocessing",
+      "BY0 checkpoint reset",
+      "FTS activate-search before Persist remaining_eligible=0"
+    ]
+  },
+  "limitations": [
+    "No PRAGMA integrity_check performed (owner physical-integrity boundary preserved unless separately required)"
+  ]
+}

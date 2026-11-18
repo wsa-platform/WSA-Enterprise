@@ -1,0 +1,82 @@
+{
+  "schema_id": "wsa.persist_package_reconciliation.v1",
+  "revision": "11.0.14",
+  "recorded_at_utc": "2026-11-18T12:05:00Z",
+  "head_at_recording": "4e354c2349124b80d3e97a851ffff66979c34191",
+  "mode": "READ_ONLY_THEN_BOUNDED_WRITE",
+  "checkpoint_path": "backend/storage/app/scientific_datasets/agris/harvest_cache/agris_projected_ingest_checkpoint.v10.21.json",
+  "manifest_path": "backend/storage/app/scientific_datasets/agris/harvest_manifest.v10.19.local-only.json",
+  "before_state": {
+    "completed_packages": 124,
+    "partial": [],
+    "last_package": "AGRIS.ODS.BY0",
+    "checkpoint_updated_at": "2026-11-17T17:15:59+00:00",
+    "generation": 1747,
+    "active_count": 1601577,
+    "by0_complete": true
+  },
+  "window_6_reconciliation": {
+    "completed_before": 97,
+    "completed_after": 117,
+    "newly_completed": 20,
+    "remaining_eligible_then": 26,
+    "evidence": "2026-11-17-PHASE-1-WINDOW6-COMPLETION.v10.27.json"
+  },
+  "post_window_6_to_by0": {
+    "packages_completed": 7,
+    "tail_including_by0": [
+      "AGRIS.ODS.PHC",
+      "AGRIS.ODS.NI0",
+      "AGRIS.ODS.Q10",
+      "AGRIS.ODS.PE0",
+      "AGRIS.ODS.QC4",
+      "AGRIS.ODS.MY0",
+      "AGRIS.ODS.BY0"
+    ],
+    "arithmetic": "26 - 7 = 19 remaining_eligible"
+  },
+  "dry_run": {
+    "command": "sh /var/www/html/storage/app/scientific_datasets/agris/harvest_cache/_r1114_persist_dry_run.sh",
+    "exit_code": 0,
+    "already_completed": 124,
+    "eligible_remaining": 19,
+    "dry_run": true
+  },
+  "remaining_eligible_packages": [
+    {"package_id": "AGRIS.ODS.KR0", "projected_records": 109029, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.IN0", "projected_records": 81749, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.FR1", "projected_records": 110915, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.IN3", "projected_records": 402, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.SY1", "projected_records": 90, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.AU7", "projected_records": 1017, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.AUC", "projected_records": 1587, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.AUA", "projected_records": 13392, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.AU8", "projected_records": 808, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.AL2", "projected_records": 189, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.AL3", "projected_records": 256, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.NG4", "projected_records": 28, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.UA3", "projected_records": 261, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.TRC", "projected_records": 674, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.UAG", "projected_records": 320, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.UAH", "projected_records": 5289, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.R28", "projected_records": 2680, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.IRJ", "projected_records": 130, "status": "ELIGIBLE"},
+    {"package_id": "AGRIS.ODS.UAI", "projected_records": 28, "status": "ELIGIBLE"}
+  ],
+  "dependencies": {
+    "by0": "COMPLETE_VERIFIED — required present in completed_packages; reprocessing forbidden",
+    "fts": "Persist does not require FTS activation; each completed package registers fts_pending batch under GEN79 pin",
+    "activate_search": "blocked until remaining_eligible=0"
+  },
+  "bounded_window_plan": {
+    "script": "_r1114_persist_window.sh",
+    "max_packages": 1,
+    "activate_search": false,
+    "first_target": "AGRIS.ODS.KR0",
+    "disk_avail_before": "63G",
+    "no_overlapping_writer": true
+  },
+  "workstream_classification": "PARTIAL",
+  "revision_10_27_stop_conditions_recovered": true,
+  "stop_conditions_source": "docs/architecture/science-source-expansion/2026-11-17-MASTER-PROMPT-REVISION-10.27.exact.txt §11.2"
+}

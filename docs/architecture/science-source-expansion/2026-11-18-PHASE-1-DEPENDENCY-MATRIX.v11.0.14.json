@@ -1,0 +1,52 @@
+{
+  "schema_id": "wsa.fts_persist_by0_dependency_matrix.v1",
+  "revision": "11.0.14",
+  "recorded_at_utc": "2026-11-18T12:05:00Z",
+  "matrix": [
+    {
+      "component": "BY0",
+      "depends_on": ["projected JSONL AGRIS.ODS.BY0", "ingest checkpoint partial/resume"],
+      "writes_to": ["scientific_record_store.sqlite (agris)", "agris_projected_ingest_checkpoint.v10.21.json", "agris_fts_checkpoint.v10.23.json (pending batch)"],
+      "protected_dependency": true,
+      "safe_execution_condition": "NO WRITE AUTHORIZED in Rev 11.0.14 — COMPLETE_VERIFIED; preserve only"
+    },
+    {
+      "component": "Persist",
+      "depends_on": ["BY0 present in completed_packages (gate)", "manifest projected providers", "jsonl files", "empty/consistent partial map", "no overlapping ingest writer"],
+      "writes_to": ["scientific_record_store.sqlite (agris)", "agris_projected_ingest_checkpoint.v10.21.json", "agris_fts_checkpoint.v10.23.json (new pending batches)"],
+      "protected_dependency": "BY0 must not be reprocessed",
+      "safe_execution_condition": "BY0_GATE_CLEARED_FOR_DEPENDENT_PERSIST_CONTINUATION && no writer && disk reserve OK && --activate-search omitted"
+    },
+    {
+      "component": "FTS",
+      "depends_on": ["Persist remaining_eligible=0 for activate-search", "GEN79 search pin until activation", "fts checkpoint pending batches"],
+      "writes_to": ["search FTS index / generation activation", "agris_fts_checkpoint.v10.23.json"],
+      "protected_dependency": "LocalIndex GEN76/GEN79 preservation",
+      "safe_execution_condition": "remaining_eligible==0 && BY0 complete && controlled --activate-search; until then DEFERRED (pending batches accumulate)"
+    },
+    {
+      "component": "LocalIndex",
+      "depends_on": ["ScientificRecordStore SQLite", "candidate ingest coordinator"],
+      "writes_to": ["backend/storage/app/scientific_record_store.sqlite"],
+      "protected_dependency": "unrelated schema/data/sources",
+      "safe_execution_condition": "only authorized Persist path writes; no migrate:fresh; no destructive rebuild"
+    },
+    {
+      "component": "Checkpoints",
+      "depends_on": ["actual persist outcome per package"],
+      "writes_to": ["agris_projected_ingest_checkpoint.v10.21.json", "agris_fts_checkpoint.v10.23.json"],
+      "protected_dependency": "BY0 completion entry",
+      "safe_execution_condition": "advance only after verified package persist; never reset BY0"
+    }
+  ],
+  "safe_execution_order": [
+    "1. BY0 evidence gate (COMPLETE_VERIFIED) — no write",
+    "2. Persist remaining eligible packages (bounded, no activate-search)",
+    "3. When remaining_eligible=0, controlled FTS activate-search once",
+    "4. Verify FTS/source consistency and checkpoint pending=false"
+  ],
+  "blocked_now": [
+    "FTS activate-search (remaining_eligible=19)",
+    "BY0 reprocessing"
+  ]
+}

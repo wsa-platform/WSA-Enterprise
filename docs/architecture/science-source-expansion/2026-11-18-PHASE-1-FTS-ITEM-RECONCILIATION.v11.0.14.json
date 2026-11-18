@@ -1,0 +1,73 @@
+{
+  "schema_id": "wsa.fts_item_reconciliation.v1",
+  "revision": "11.0.14",
+  "recorded_at_utc": "2026-11-18T12:05:00Z",
+  "head_at_recording": "4e354c2349124b80d3e97a851ffff66979c34191",
+  "mode": "READ_ONLY",
+  "fts_checkpoint_path": "backend/storage/app/scientific_datasets/agris/harvest_cache/agris_fts_checkpoint.v10.23.json",
+  "search_pin_generation": 79,
+  "counter_reconciliation": [
+    {
+      "label": "121",
+      "origin": "Historical mid-transition observation after Window 6 (fts_pending_batches=115) plus six of seven post-W6 packages before BY0 finalize",
+      "unit": "FTS checkpoint batches with pending=true",
+      "includes_completed": false,
+      "includes_deferred": true,
+      "includes_retries": false,
+      "duplicate_possible": false,
+      "current_value": null,
+      "status": "HISTORICAL_STALE_SNAPSHOT"
+    },
+    {
+      "label": "122",
+      "origin": "agris_fts_checkpoint.v10.23.json batches where pending=true; equals count(completed Persist packages that deferred FTS under GEN79 pin)",
+      "unit": "FTS checkpoint batches with pending=true",
+      "query_equivalent": "count(array_filter(batches, pending==true))",
+      "includes_completed": false,
+      "includes_deferred": true,
+      "includes_retries": false,
+      "duplicate_possible": false,
+      "current_value": 122,
+      "status": "DEFERRED"
+    },
+    {
+      "label": "fts_pending_batches",
+      "origin": "IngestAgrisProjectedPackagesCommand summary field",
+      "unit": "batches (one per Persist-completed package deferred for FTS activation)",
+      "not": "individual scientific_source_records",
+      "current_value": 122,
+      "fts_batches_total": 122,
+      "status": "DEFERRED"
+    }
+  ],
+  "lineage": {
+    "window_6_fts_pending_batches": 115,
+    "packages_completed_after_window_6_including_by0": 7,
+    "expected_pending_after_by0": 122,
+    "observed_pending": 122,
+    "arithmetic": "115 + 7 = 122; historical 121 is intermediate before BY0 batch registration"
+  },
+  "activation_gate": {
+    "activate_search_allowed": false,
+    "reason": "Persist remaining_eligible=19 > 0; command only activates when remaining<=0 and --activate-search set",
+    "search_pin_generation": 79,
+    "by0_dependency": "BY0_GATE_CLEARED_FOR_DEPENDENT_PERSIST_CONTINUATION; FTS activation still blocked on Persist completion"
+  },
+  "item_status_summary": {
+    "PENDING": 0,
+    "IN_PROGRESS": 0,
+    "COMPLETED_VERIFIED": 0,
+    "FAILED_RETRYABLE": 0,
+    "FAILED_TERMINAL": 0,
+    "DEFERRED": 122,
+    "DUPLICATE": 0,
+    "STALE": 0,
+    "UNKNOWN_MISSING_EVIDENCE": 0
+  },
+  "workstream_classification": "PARTIAL",
+  "remaining_work": [
+    "Complete remaining Persist packages to remaining_eligible=0",
+    "Then run controlled --activate-search once",
+    "Verify FTS/source consistency after activation"
+  ]
+}
