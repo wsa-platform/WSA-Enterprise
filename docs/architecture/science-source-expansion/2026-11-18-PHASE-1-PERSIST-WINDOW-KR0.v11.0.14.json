@@ -1,0 +1,46 @@
+{
+  "schema_id": "wsa.agris_bounded_window_completion.v1",
+  "revision": "11.0.14",
+  "window": "R1114-W1-KR0",
+  "recorded_at_utc": "2026-11-18T13:26:00Z",
+  "status": "COMPLETE",
+  "before": {
+    "completed_packages": 124,
+    "remaining_eligible": 19,
+    "generation": 1747,
+    "active_count": 1601577,
+    "by0_complete": true
+  },
+  "after": {
+    "completed_packages": 125,
+    "remaining_eligible": 18,
+    "generation": 1857,
+    "active_count": 1710406,
+    "fts_pending_batches": 123,
+    "partial": [],
+    "last_package": "AGRIS.ODS.KR0",
+    "by0_complete": true,
+    "by0_completed_at_unchanged": "2026-11-17T17:12:28+00:00"
+  },
+  "package": {
+    "package_id": "AGRIS.ODS.KR0",
+    "status": "PERSISTED_VERIFIED",
+    "records_read": 109029,
+    "chunks": 110,
+    "inserted": 108829,
+    "unchanged": 200,
+    "elapsed_ms": 3568307,
+    "fts_status": "deferred_until_activation",
+    "search_pin_generation": 79,
+    "activate_search": false
+  },
+  "evidence": {
+    "log": "backend/storage/app/scientific_datasets/agris/harvest_cache/_r1114_persist_w1.log",
+    "checkpoint": "backend/storage/app/scientific_datasets/agris/harvest_cache/agris_projected_ingest_checkpoint.v10.21.json"
+  },
+  "safety": {
+    "no_overlapping_writer": true,
+    "by0_reprocessed": false,
+    "activate_search_used": false
+  }
+}
