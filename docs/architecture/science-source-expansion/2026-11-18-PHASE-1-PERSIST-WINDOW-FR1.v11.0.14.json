@@ -1,0 +1,48 @@
+{
+  "schema_id": "wsa.agris_bounded_window_completion.v1",
+  "revision": "11.0.14",
+  "window": "R1114-W3-FR1",
+  "recorded_at_utc": "2026-11-18T15:20:00Z",
+  "status": "COMPLETE",
+  "before": {
+    "completed_packages": 126,
+    "remaining_eligible": 17,
+    "generation": 1939,
+    "active_count": 1791955,
+    "by0_complete": true
+  },
+  "after": {
+    "completed_packages": 127,
+    "remaining_eligible": 16,
+    "generation": 2050,
+    "active_count": 1902670,
+    "fts_pending_batches": 125,
+    "partial": [],
+    "last_package": "AGRIS.ODS.FR1",
+    "by0_complete": true,
+    "by0_completed_at_unchanged": "2026-11-17T17:12:28+00:00"
+  },
+  "package": {
+    "package_id": "AGRIS.ODS.FR1",
+    "status": "PERSISTED_VERIFIED",
+    "records_read": 110915,
+    "chunks": 111,
+    "inserted": 110715,
+    "unchanged": 200,
+    "elapsed_ms": 1856115,
+    "fts_status": "deferred_until_activation",
+    "search_pin_generation": 79,
+    "activate_search": false
+  },
+  "chain": {
+    "script": "_r1114_persist_chain.sh",
+    "iter": 2,
+    "exit": 0,
+    "next_iter_started": 3
+  },
+  "safety": {
+    "no_overlapping_writer": true,
+    "by0_reprocessed": false,
+    "activate_search_used": false
+  }
+}
