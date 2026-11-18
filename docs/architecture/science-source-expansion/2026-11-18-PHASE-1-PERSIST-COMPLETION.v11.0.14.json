@@ -1,0 +1,62 @@
+{
+  "schema_id": "wsa.persist_completion.v1",
+  "revision": "11.0.14",
+  "recorded_at_utc": "2026-11-18T17:10:00Z",
+  "head_at_recording": "fd5894ef2b61c27686eae9b1c9182de4711c9168",
+  "workstream_classification": "COMPLETE_VERIFIED",
+  "before": {
+    "completed_packages": 124,
+    "remaining_eligible": 19,
+    "last_package": "AGRIS.ODS.BY0",
+    "generation": 1747,
+    "active_count": 1601577,
+    "fts_pending_batches": 122
+  },
+  "after": {
+    "completed_packages": 143,
+    "remaining_eligible": 0,
+    "last_package": "AGRIS.ODS.UAI",
+    "generation": 2088,
+    "active_count": 1927156,
+    "fts_pending_batches": 141,
+    "partial": [],
+    "failures": []
+  },
+  "packages_processed_this_mission": [
+    "AGRIS.ODS.KR0",
+    "AGRIS.ODS.IN0",
+    "AGRIS.ODS.FR1",
+    "AGRIS.ODS.IN3",
+    "AGRIS.ODS.SY1",
+    "AGRIS.ODS.AU7",
+    "AGRIS.ODS.AUC",
+    "AGRIS.ODS.AUA",
+    "AGRIS.ODS.AU8",
+    "AGRIS.ODS.AL2",
+    "AGRIS.ODS.AL3",
+    "AGRIS.ODS.NG4",
+    "AGRIS.ODS.UA3",
+    "AGRIS.ODS.TRC",
+    "AGRIS.ODS.UAG",
+    "AGRIS.ODS.UAH",
+    "AGRIS.ODS.R28",
+    "AGRIS.ODS.IRJ",
+    "AGRIS.ODS.UAI"
+  ],
+  "newly_completed_count": 19,
+  "arithmetic": "124 + 19 = 143; remaining 19 → 0; fts_pending 122 + 19 = 141",
+  "by0_preservation": {
+    "present": true,
+    "completed_at_unchanged": "2026-11-17T17:12:28+00:00",
+    "records_read_unchanged": 23213
+  },
+  "activate_search": false,
+  "chain_marker": "CHAIN_COMPLETE remaining=0",
+  "evidence_logs": [
+    "backend/storage/app/scientific_datasets/agris/harvest_cache/_r1114_persist_w1.log",
+    "backend/storage/app/scientific_datasets/agris/harvest_cache/_r1114_persist_chain.log"
+  ],
+  "tests": {
+    "IngestAgrisProjectedDryRunSafetyTest": "PASS (6 assertions)"
+  }
+}
