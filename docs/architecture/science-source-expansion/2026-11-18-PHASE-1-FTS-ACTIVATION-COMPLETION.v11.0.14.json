@@ -1,0 +1,41 @@
+{
+  "schema_id": "wsa.fts_activation_completion.v1",
+  "revision": "11.0.14",
+  "recorded_at_utc": "2026-11-18T20:05:00Z",
+  "workstream_classification": "COMPLETE_VERIFIED",
+  "log": "backend/storage/app/scientific_datasets/agris/harvest_cache/_r1114_fts_activate.log",
+  "summary": {
+    "newly_completed": 0,
+    "total_completed": 143,
+    "remaining_eligible": 0,
+    "generation": 2088,
+    "active_count": 1927156,
+    "fts_pending_batches_before_clear": 141,
+    "activation": {
+      "status": "completed",
+      "store_generation": 2088,
+      "index_generation": 2088,
+      "index_docs": 1927156,
+      "failure": null,
+      "search_pin_released": true,
+      "gen76_preserved": true
+    }
+  },
+  "fts_checkpoint_after": {
+    "activated_at": "2026-11-18T20:02:12+00:00",
+    "activated_store_generation": 2088,
+    "pending_batches": 0,
+    "batches_total": 141
+  },
+  "integrity": {
+    "index_docs_equals_active_count": true,
+    "index_generation_equals_store_generation": true,
+    "by0_preserved": true
+  },
+  "counter_lineage": {
+    "historical_121": "stale mid-transition snapshot",
+    "pre_persist_122": "115 (W6) + 7 post-W6 including BY0",
+    "post_persist_141": "122 + 19 newly persisted packages",
+    "post_activation_pending": 0
+  }
+}
