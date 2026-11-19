@@ -1095,6 +1095,15 @@ final class AgriculturalEntityCatalog
                 'seed_germination' => ['temperature', 'germination temperature', 'thermal'],
                 'drying_processing' => ['drying temperature', 'temperature', 'thermal'],
                 'storage' => ['storage temperature', 'temperature'],
+                // Prefer agronomic temperature language for plant growth; bare "thermal"
+                // alone pulls processing/extraction chemistry noise into Stage-3 retrieval.
+                'plant_growth' => [
+                    'temperature',
+                    'optimum temperature',
+                    'growing temperature',
+                    'temperature requirement',
+                    'heat stress',
+                ],
                 default => ['temperature', 'thermal', 'heat stress', 'thermal stress'],
             },
             'water' => match ($sense) {

@@ -1,0 +1,44 @@
+{
+  "schema_id": "wsa.five_source_fifteen_conditions.v1",
+  "revision": "11.0.20",
+  "recorded_at_utc": "2026-11-19T17:10:00Z",
+  "supersedes_for_gbif": "docs/architecture/science-source-expansion/2026-11-19-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.19.json",
+  "claim_guard": [
+    "No source reaches SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "AGRIS/OE/Duke carried; GBIF updated.",
+    "PHASE_1_GAP_CLOSURE_PARTIAL unchanged."
+  ],
+  "mission_completion_classification": "BLOCKED",
+  "fully_verified_count": 0,
+  "scientific_integration_verified": false,
+  "seats": [
+    {"adr_id": "G1-01", "source_key": "agris", "note": "Carried from 11.0.17", "scientific_integration_verified": false},
+    {"adr_id": "G1-02", "source_key": "organic_eprints", "note": "Carried from 11.0.18", "scientific_integration_verified": false},
+    {"adr_id": "G1-17", "source_key": "dr_duke", "note": "Carried from 11.0.19", "scientific_integration_verified": false},
+    {
+      "adr_id": "G5-04",
+      "source_key": "gbif",
+      "update_revision": "11.0.20",
+      "scientific_integration_verified": false,
+      "evidence_artifact": "docs/architecture/science-source-expansion/2026-11-19-GBIF-G5-04-ACCEPTANCE-EVIDENCE.v11.0.20.json",
+      "conditions": {
+        "C1": {"status": "PASS"},
+        "C2": {"status": "PASS"},
+        "C3": {"status": "PASS"},
+        "C4": {"status": "PASS"},
+        "C5": {"status": "PASS"},
+        "C6": {"status": "PASS"},
+        "C7": {"status": "NOT_APPLICABLE_WITH_RATIONALE"},
+        "C8": {"status": "PASS"},
+        "C9": {"status": "PASS"},
+        "C10": {"status": "PASS"},
+        "C11": {"status": "PASS"},
+        "C12": {"status": "PASS"},
+        "C13": {"status": "PASS"},
+        "C14": {"status": "PASS"},
+        "C15": {"status": "PASS"}
+      }
+    },
+    {"adr_id": "G6-20", "source_key": "bhl", "note": "Unchanged / not started this mission", "scientific_integration_verified": false}
+  ]
+}

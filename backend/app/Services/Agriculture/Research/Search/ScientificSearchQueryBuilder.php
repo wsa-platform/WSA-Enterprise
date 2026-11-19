@@ -335,6 +335,13 @@ class ScientificSearchQueryBuilder
             $variants = [...$rolePrimaries, ...$variants];
         }
 
+        // Plant-growth × temperature: lead with cultivation/physiology queries so the
+        // MAX_VARIANTS budget does not keep chemistry-attracting "thermal growth" tails.
+        if ($entity !== null && $this->isPlantGrowthTemperaturePlan($plan)) {
+            $temperaturePrimaries = $this->buildPlantGrowthTemperatureVariants($entity, $primaryCommon);
+            $variants = [...$temperaturePrimaries, ...$variants];
+        }
+
         $unique = [];
         foreach ($variants as $variant) {
             $trimmed = trim($variant);
@@ -1178,6 +1185,53 @@ class ScientificSearchQueryBuilder
         return array_values($labels);
     }
 
+    private function isPlantGrowthTemperaturePlan(KnowledgeQueryPlan $plan): bool
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if ($sense !== 'plant_growth' && $plan->researchIntent !== 'environmental_requirements') {
+            return false;
+        }
+
+        $factors = $plan->normalizedQuery->constraints['scientific_factors'] ?? [];
+        $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
+        $needles = array_merge(
+            is_array($factors) ? $factors : [],
+            is_array($topics) ? $topics : [],
+        );
+        foreach ($needles as $needle) {
+            if (in_array(mb_strtolower(trim((string) $needle)), ['temperature', 'heat', 'thermal'], true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * High-precision retrieval tails for crop temperature × plant-growth physiology.
+     *
+     * @return list<string>
+     */
+    private function buildPlantGrowthTemperatureVariants(string $entity, ?string $primaryCommon): array
+    {
+        $out = [];
+        $tails = [
+            ['optimum', 'temperature', 'cultivation'],
+            ['growing', 'temperature', 'physiology'],
+            ['temperature', 'requirement', 'growth'],
+            ['heat', 'stress', 'growth'],
+            ['air', 'temperature', 'yield'],
+        ];
+        foreach ($tails as $tail) {
+            $out[] = $this->joinTerms([$entity, ...$tail]);
+            if ($primaryCommon !== null && strcasecmp($primaryCommon, $entity) !== 0) {
+                $out[] = $this->joinTerms([$primaryCommon, ...$tail]);
+            }
+        }
+
+        return $out;
+    }
+
     private function wantsCultivationProductionVariants(KnowledgeQueryPlan $plan): bool
     {
         $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
@@ -1398,6 +1452,19 @@ class ScientificSearchQueryBuilder
 
         $variants = $this->compileCanonicalRoleCombinations($spec);
         $variants = $this->prependCanonicalConstraintCombinations($plan, $spec, $variants);
+
+        // CSQ path: same plant-growth × temperature leading tails as legacy path.
+        if ($this->isPlantGrowthTemperaturePlan($plan)) {
+            $entity = $this->specExecutableEntityTerm($spec) ?? $this->resolveEntityTerm($plan);
+            if ($entity !== null) {
+                $common = $this->resolveCommonEntityLabels($plan)[0] ?? null;
+                $variants = [
+                    ...$this->buildPlantGrowthTemperatureVariants($entity, $common),
+                    ...$variants,
+                ];
+            }
+        }
+
         $unique = $this->uniqueBoundedVariantsPreservingLocation($variants, $location);
 
         return $unique !== [] ? $unique : ['agriculture'];

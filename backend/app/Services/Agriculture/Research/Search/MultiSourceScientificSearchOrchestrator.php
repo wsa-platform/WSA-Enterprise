@@ -21,6 +21,7 @@ use App\Services\Agriculture\Research\Search\LocalIndex\AgrisLocalIndexQuerySpec
 use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\LocalIndex\DrDukeLocalIndexQuerySpecializer;
 use App\Services\Agriculture\Research\Search\LocalIndex\OrganicEprintsLocalIndexQuerySpecializer;
+use App\Services\Agriculture\Research\Search\GbifSpeciesQuerySpecializer;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCapabilityPolicy;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceExecutionGroup;
@@ -702,12 +703,9 @@ class MultiSourceScientificSearchOrchestrator
         if ($researchPlan->intent !== 'generic_research') {
             return false;
         }
-        if (app()->runningUnitTests()
-            && ! (bool) config('agricultural_intelligence.stage3_home_scholarly_concurrency', false)) {
-            return false;
-        }
-
-        return true;
+        // Process-pool overlap is opt-in. Default sequential retrieval avoids fabricating
+        // all_sources_failed when the process driver is unavailable or burns the budget.
+        return (bool) config('agricultural_intelligence.stage3_home_scholarly_concurrency', false);
     }
 
     private function isIndependentScholarlySource(string $sourceKey): bool
@@ -797,6 +795,12 @@ class MultiSourceScientificSearchOrchestrator
         }
         if ($adapter->sourceKey() === DrDukeLocalIndexQuerySpecializer::SOURCE_KEY) {
             $preferred = (new DrDukeLocalIndexQuerySpecializer())->retrievalQueries($plan);
+            if ($preferred !== []) {
+                return ScientificSearchVariantBudget::apply($preferred)['variants'];
+            }
+        }
+        if ($adapter->sourceKey() === GbifSpeciesQuerySpecializer::SOURCE_KEY) {
+            $preferred = (new GbifSpeciesQuerySpecializer())->retrievalQueries($plan);
             if ($preferred !== []) {
                 return ScientificSearchVariantBudget::apply($preferred)['variants'];
             }
@@ -927,7 +931,9 @@ class MultiSourceScientificSearchOrchestrator
             if (! ScientificSourceFailureClassifier::isConcurrencyInfrastructureFailure($exception)) {
                 throw $exception;
             }
-            Log::warning('Stage 3 scholarly concurrency process pool failed; not replaying provider searches', [
+            // Process-pool failure must not fabricate request_exception with zero attempts.
+            // Fall back to sequential retrieval so product search remains available.
+            Log::warning('Stage 3 scholarly concurrency process pool failed; falling back to sequential', [
                 'exception' => $exception::class,
                 'providers' => array_map(
                     static fn (ScientificSourceAdapterInterface $adapter): string => $adapter->sourceKey(),
@@ -935,26 +941,48 @@ class MultiSourceScientificSearchOrchestrator
                 ),
             ]);
 
-            $collections = [];
-            foreach ($adapters as $adapter) {
-                $collections[$adapter->sourceKey()] = self::unavailableWaveCollection($adapter->sourceKey());
-            }
-
-            return $collections;
+            return $this->collectAdaptersSequentially(
+                $adapters,
+                $variants,
+                $limit,
+                $plan,
+                $budget,
+                $priorResultCount,
+            );
         }
 
         $collections = [];
+        $missingKeys = [];
         foreach ($adapters as $adapter) {
             $key = $adapter->sourceKey();
             if (! isset($wave[$key]) || ! is_array($wave[$key])) {
-                Log::warning('Stage 3 scholarly concurrency missing wave result; not replaying provider search', [
-                    'provider' => $key,
-                ]);
-                $collections[$key] = self::unavailableWaveCollection($key);
+                $missingKeys[] = $key;
 
                 continue;
             }
             $collections[$key] = $wave[$key];
+        }
+
+        if ($missingKeys !== []) {
+            Log::warning('Stage 3 scholarly concurrency missing wave results; sequential fallback for gaps', [
+                'providers' => $missingKeys,
+            ]);
+            $missingAdapters = array_values(array_filter(
+                $adapters,
+                static fn (ScientificSourceAdapterInterface $adapter): bool => in_array($adapter->sourceKey(), $missingKeys, true),
+            ));
+            $fallback = $this->collectAdaptersSequentially(
+                $missingAdapters,
+                $variants,
+                $limit,
+                $plan,
+                $budget,
+                $priorResultCount + array_sum(array_map(
+                    static fn (array $c): int => count($c['results'] ?? []),
+                    $collections,
+                )),
+            );
+            $collections = $collections + $fallback;
         }
 
         return $collections;

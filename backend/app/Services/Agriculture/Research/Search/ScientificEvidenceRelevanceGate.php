@@ -600,21 +600,24 @@ class ScientificEvidenceRelevanceGate
                         continue;
                     }
                     if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim($term)))) {
-                        return 'strong';
+                        $best = 'strong';
+                        break;
                     }
                 }
             }
-            if ($best !== 'none') {
-                return $this->upgradeTopicStrengthWithMeasurementSense($plan, $haystack, $best);
-            }
-            foreach (AgriculturalEntityCatalog::englishTermsForIntent($plan->researchIntent) as $term) {
-                if (in_array($term, ['agriculture', 'farming'], true)) {
-                    continue;
+            if ($best === 'none') {
+                foreach (AgriculturalEntityCatalog::englishTermsForIntent($plan->researchIntent) as $term) {
+                    if (in_array($term, ['agriculture', 'farming'], true)) {
+                        continue;
+                    }
+                    if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim($term)))) {
+                        $best = 'strong';
+                        break;
+                    }
                 }
-                if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim($term)))) {
-                    return 'strong';
-                }
             }
+
+            $best = $this->demoteProcessingTemperatureFalsePositive($plan, $haystack, $best);
 
             return $this->upgradeTopicStrengthWithMeasurementSense($plan, $haystack, $best);
         }
@@ -623,7 +626,8 @@ class ScientificEvidenceRelevanceGate
             $strongSignals = AgriculturalEntityCatalog::strongTopicFactorSignals()[$factor] ?? [];
             foreach ($strongSignals as $signal) {
                 if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim($signal)))) {
-                    return 'strong';
+                    $best = 'strong';
+                    break 2;
                 }
             }
 
@@ -640,7 +644,71 @@ class ScientificEvidenceRelevanceGate
             }
         }
 
+        $best = $this->demoteProcessingTemperatureFalsePositive($plan, $haystack, $best);
+
         return $this->upgradeTopicStrengthWithMeasurementSense($plan, $haystack, $best);
+    }
+
+    /**
+     * Plant-growth temperature questions must not treat chemistry/extraction
+     * "thermal processing" mentions as a temperature-physiology topic hit.
+     *
+     * @param  'none'|'weak'|'strong'  $best
+     * @return 'none'|'weak'|'strong'
+     */
+    private function demoteProcessingTemperatureFalsePositive(
+        KnowledgeQueryPlan $plan,
+        string $haystack,
+        string $best,
+    ): string {
+        if ($best === 'none' || $haystack === '') {
+            return $best;
+        }
+
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        if ($sense !== 'plant_growth' && $plan->researchIntent !== 'environmental_requirements') {
+            return $best;
+        }
+
+        $factors = $plan->normalizedQuery->constraints['scientific_factors'] ?? [];
+        $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
+        $needles = array_merge(is_array($factors) ? $factors : [], is_array($topics) ? $topics : []);
+        $asksTemperature = false;
+        foreach ($needles as $needle) {
+            if (in_array(mb_strtolower(trim((string) $needle)), ['temperature', 'heat', 'thermal'], true)) {
+                $asksTemperature = true;
+                break;
+            }
+        }
+        if (! $asksTemperature) {
+            return $best;
+        }
+
+        $agronomic = [
+            'growing temperature', 'optimum temperature', 'optimal temperature',
+            'temperature requirement', 'temperature regime', 'heat stress',
+            'plant growth', 'rhizome growth', 'crop growth', 'cultivation',
+            'field cultivation', 'air temperature', 'soil temperature',
+        ];
+        foreach ($agronomic as $marker) {
+            if (AgriculturalEntityCatalog::containsTerm($haystack, $marker)) {
+                return $best;
+            }
+        }
+
+        $processing = [
+            'essential oil', 'oleoresin', 'extraction', 'microwave', 'antioxidant',
+            'antimicrobial', 'antibacterial', 'anti-cancer', 'anticancer', 'anti-inflammatory',
+            'gingerol', 'shogaol', 'bioactivity', 'broiler', 'poultry', 'neurodegenerative',
+            'food processing', 'thermal processing', 'thermally unstable', 'thermally labile',
+        ];
+        foreach ($processing as $marker) {
+            if (AgriculturalEntityCatalog::containsTerm($haystack, $marker)) {
+                return 'none';
+            }
+        }
+
+        return $best;
     }
 
     /**

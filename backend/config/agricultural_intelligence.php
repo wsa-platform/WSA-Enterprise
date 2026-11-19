@@ -10,7 +10,14 @@ return [
     'orchestrator_enabled' => filter_var(env('UNIVERSAL_ANSWER_ORCHESTRATOR_ENABLED', true), FILTER_VALIDATE_BOOL),
     'enrich_legacy_synthesis' => filter_var(env('UNIVERSAL_ANSWER_ENRICH_LEGACY', true), FILTER_VALIDATE_BOOL),
     // Stage 3 wall-clock budget. Must stay below the gateway FastCGI read timeout.
-    'search_time_budget_seconds' => max(8, min(90, (int) env('SCIENTIFIC_SEARCH_TIME_BUDGET_SECONDS', 45))),
+    'search_time_budget_seconds' => max(8, min(90, (int) env('SCIENTIFIC_SEARCH_TIME_BUDGET_SECONDS', 75))),
+
+    // Opt-in process-pool overlap for independent scholarly providers on home generic_research.
+    // Default false: sequential retrieval (avoids all_sources_failed when process driver fails).
+    'stage3_home_scholarly_concurrency' => filter_var(
+        env('STAGE3_HOME_SCHOLARLY_CONCURRENCY', false),
+        FILTER_VALIDATE_BOOL
+    ),
 
     'web_search' => [
         'enabled' => filter_var(env('WEB_SEARCH_ENABLED', false), FILTER_VALIDATE_BOOL),

@@ -1,0 +1,70 @@
+{
+  "schema_id": "wsa.gbif_g504_acceptance_evidence.v1",
+  "revision": "11.0.20",
+  "recorded_at_utc": "2026-11-19T17:10:00Z",
+  "adr_id": "G5-04",
+  "source_key": "gbif",
+  "baseline_head": "6b97b3b1a26283027622d2a6cd10af97f65647fd",
+  "claim_guard": [
+    "SCIENTIFIC_INTEGRATION_VERIFIED remains false.",
+    "Occurrence/taxonomy record ≠ causation or therapeutic claim.",
+    "No Live API key required (public species/search).",
+    "PHASE_1_GAP_CLOSURE_PARTIAL unchanged.",
+    "BHL not started."
+  ],
+  "scientific_integration_verified": false,
+  "classification": "ACCEPTED_WITH_LIMITATIONS",
+  "path_level_proven": "REAL_APPLICATION_PATH",
+  "evidence_classes": [
+    "FIXTURE_HTTP_SPECIES_SEARCH",
+    "LIVE_REST_SPECIES_SEARCH"
+  ],
+  "contract_recovery": {
+    "endpoint": "https://api.gbif.org/v1/species/search",
+    "query_parameter": "q",
+    "projection": "species-search taxonomy identity",
+    "owner_seat": "NextGateEligibleSeatCatalog G5-04 ACTIVE",
+    "live_note": "Bare scientificName queries succeed; appending 'species classification' often returns empty on live API"
+  },
+  "components": {
+    "query_specializer": "backend/app/Services/Agriculture/Research/Search/GbifSpeciesQuerySpecializer.php",
+    "acceptance_harness": "backend/app/Services/Agriculture/Research/Search/GbifG504AcceptanceHarness.php",
+    "tests": "backend/tests/Unit/Agriculture/Research/Onboarding/GbifG504AcceptanceHarnessTest.php",
+    "prior_e2e": "backend/tests/Unit/Agriculture/Research/Onboarding/GbifOrchestratorEndToEndTest.php"
+  },
+  "live_run": {
+    "ok": true,
+    "sample_identifier": "144100778",
+    "gbif_raw_count": 3,
+    "validation_status": "validation_completed_with_rejections",
+    "validated_count": 0,
+    "composer_invoked": true,
+    "note": "Taxonomy identity retrieval proven; composer may honestly lack experimental claims"
+  },
+  "test_results": {
+    "GbifG504AcceptanceHarnessTest": "3 passed (including live)",
+    "GbifOrchestratorEndToEndTest": "4 passed regression"
+  },
+  "conditions_c1_c15": {
+    "C1": {"title": "Authoritative Identity and Scope", "previous": "PASS", "final": "PASS", "evidence": "G5-04 taxonomy/occurrence seat ACTIVE"},
+    "C2": {"title": "Capability and Access Contract", "previous": "PASS", "final": "PASS", "evidence": "REST species/search public API"},
+    "C3": {"title": "Scientific Query Relevance", "previous": "PASS", "final": "PASS", "evidence": "GbifSpeciesQuerySpecializer binomial queries"},
+    "C4": {"title": "Production Routing", "previous": "PASS", "final": "PASS", "evidence": "eligibility + orchestrator variantsForAdapter"},
+    "C5": {"title": "Retrieval and Evidence Provenance", "previous": "PARTIAL", "final": "PASS", "evidence": "Live species/search + RestJson provenance"},
+    "C6": {"title": "Scientific Validation and Answer Composition", "previous": "PARTIAL", "final": "PASS", "evidence": "validate→compose harness; honest insufficient allowed for non-claim taxonomy"},
+    "C7": {"title": "Runtime Configuration and Authentication", "previous": "NOT_APPLICABLE_WITH_RATIONALE", "final": "NOT_APPLICABLE_WITH_RATIONALE", "evidence": "Public GBIF API; no key"},
+    "C8": {"title": "Retrieval Behavior and Error Handling", "previous": "PARTIAL", "final": "PASS", "evidence": "empty query / provider isolation retained; live empty-suffix documented"},
+    "C9": {"title": "Evidence Normalization", "previous": "PARTIAL", "final": "PASS", "evidence": "key/scientificName/rank mapping + provenance"},
+    "C10": {"title": "Scientific Identity Integrity", "previous": "PARTIAL", "final": "PASS", "evidence": "Triticum aestivum preserved; occurrence≠causation"},
+    "C11": {"title": "Negative and Boundary Testing", "previous": "PARTIAL", "final": "PASS", "evidence": "eligibility taxonomy scope; prior negatives retained"},
+    "C12": {"title": "Reproducible Production-Path Evidence", "previous": "PARTIAL", "final": "PASS", "evidence": "REAL_APPLICATION_PATH live harness"},
+    "C13": {"title": "Source-Specific Limitations and Governance", "previous": "PASS", "final": "PASS", "evidence": "no causation inflation"},
+    "C14": {"title": "Regression and Architectural Integrity", "previous": "PASS", "final": "PASS", "evidence": "GbifOrchestratorEndToEndTest green"},
+    "C15": {"title": "Evidence Completeness and Traceability", "previous": "PARTIAL", "final": "PASS", "evidence": "This artifact + Arabic report"}
+  },
+  "remaining_gaps": [
+    "Taxonomy hits often fail scholarly Stage-4 claim extraction (expected for identity records).",
+    "Cumulative five-source VERIFIED still false.",
+    "BHL G6-20 not started."
+  ]
+}

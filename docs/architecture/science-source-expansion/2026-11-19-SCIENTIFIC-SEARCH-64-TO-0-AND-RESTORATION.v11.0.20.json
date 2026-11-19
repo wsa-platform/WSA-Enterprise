@@ -1,0 +1,80 @@
+{
+  "schema_id": "wsa.scientific_search_restoration.v1",
+  "revision": "11.0.20",
+  "recorded_at_utc": "2026-11-19T17:10:00Z",
+  "workstream": "B",
+  "baseline_head": "6b97b3b1a26283027622d2a6cd10af97f65647fd",
+  "documented_user_question": "ما هو تأثير درجة الحرارة على نبات الزنجبيل؟",
+  "source_dump": "backend/e2e-tmp/acc-q1-validate.json",
+  "prior_rev_11_0_19": {
+    "raw": 64,
+    "survivors": 0,
+    "classification_fix": "all_results_rejected_by_relevance"
+  },
+  "64_to_0_investigation": {
+    "root_cause_class": "SCIENTIFICALLY_CORRECT_REJECTION_PLUS_RETRIEVAL_DEFECT",
+    "raw_content": "OpenAlex/Crossref hits were overwhelmingly ginger chemistry/medicinal/broiler/essential-oil papers, not plant-growth temperature physiology.",
+    "relevance_gate": "Correctly rejected chemistry/thermal-processing false positives for plant_growth×temperature.",
+    "retrieval_defect": "Query variants led with 'thermal growth' style tails that attract chemistry noise; MAX_VARIANTS=5 kept weak tails.",
+    "product_blocker_independent": "Home generic_research used process-pool concurrency; on pool failure/missing wave results the orchestrator fabricated request_exception with variantsAttempted=0 for all scholarly sources → all_sources_failed / no_search_results in UI."
+  },
+  "repairs": [
+    {
+      "area": "query_engineering",
+      "files": [
+        "ScientificSearchQueryBuilder.php",
+        "AgriculturalEntityCatalog.php"
+      ],
+      "change": "Lead plant_growth×temperature with optimum/growing temperature cultivation tails; prefer agronomic synonyms over bare thermal."
+    },
+    {
+      "area": "relevance",
+      "files": ["ScientificEvidenceRelevanceGate.php"],
+      "change": "Demote processing/essential-oil/thermal-processing abstracts for plant_growth temperature questions."
+    },
+    {
+      "area": "orchestrator_concurrency",
+      "files": [
+        "MultiSourceScientificSearchOrchestrator.php",
+        "config/agricultural_intelligence.php"
+      ],
+      "change": "Sequential fallback on process-pool failure; default stage3_home_scholarly_concurrency=false; budget default 75s."
+    }
+  ],
+  "verification": {
+    "ginger_scholarly_only": {
+      "raw": 66,
+      "survivors": 2,
+      "validated": 2,
+      "valid_answer": false,
+      "note": "Retrieval restored; composer still no_validated_evidence for answer-eligible claims on this run"
+    },
+    "wheat_scholarly_only": {
+      "raw": 58,
+      "survivors": 20,
+      "validated": 20,
+      "composer_status": "synthesis_completed_with_partial_conflicts",
+      "answer_present": true
+    },
+    "ui_verification": {
+      "url": "http://127.0.0.1:8079/",
+      "question": "ما هو تأثير درجة الحرارة على نمو القمح؟",
+      "observed_status": "no_search_results",
+      "note": "UI run occurred while process-pool failure mode still active / before sequential default + backend restart fully effective. NOT claimed as RESTORED_AND_VERIFIED."
+    },
+    "gates": {
+      "B1": "PASS (scholarly-only / harness)",
+      "B2": "PASS (wheat/ginger survivors > 0 scholarly-only)",
+      "B3": "PASS (wheat validated 20; ginger validated 2)",
+      "B4": "PARTIAL (wheat sufficient; ginger insufficient honest)",
+      "B5": "PASS on wheat scholarly-only; FAIL on ginger this run",
+      "B6": "PASS when answer produced",
+      "B7": "PARTIAL (agent path; public API not separately pinned after restart)",
+      "B8": "NOT_VERIFIED_AFTER_FIX (UI still showed no_search_results on pre-fix wave)",
+      "B9": "PASS (distinct failure classes retained)",
+      "B10": "PASS targeted unit/regression set"
+    }
+  },
+  "classification": "PARTIALLY_REPAIRED",
+  "report_level_status": "BACKEND_RESTORED_PARTIAL_UI_PENDING"
+}

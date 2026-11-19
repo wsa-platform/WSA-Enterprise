@@ -1,0 +1,28 @@
+{
+  "schema_id": "wsa.phase1_110_source_option_b_update.v1",
+  "revision": "11.0.20",
+  "recorded_at_utc": "2026-11-19T17:10:00Z",
+  "prior_option_b": "docs/architecture/science-source-expansion/2026-11-19-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.19.json",
+  "claim_guard": [
+    "No seat SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "GBIF accepted with taxonomy-projection limitations.",
+    "Search restoration partial; UI not RESTORED_AND_VERIFIED."
+  ],
+  "scientific_integration_verified_count": 0,
+  "seat_deltas": [
+    {
+      "adr_id": "G5-04",
+      "source_key": "gbif",
+      "scientific_integration_verified": false,
+      "current_integration_status": "ACCEPTED_WITH_LIMITATIONS",
+      "c5_status": "PASS",
+      "c6_status": "PASS",
+      "c12_status": "PASS",
+      "evidence_artifact": "docs/architecture/science-source-expansion/2026-11-19-GBIF-G5-04-ACCEPTANCE-EVIDENCE.v11.0.20.json"
+    }
+  ],
+  "workstream_b": {
+    "artifact": "docs/architecture/science-source-expansion/2026-11-19-SCIENTIFIC-SEARCH-64-TO-0-AND-RESTORATION.v11.0.20.json",
+    "status": "PARTIALLY_REPAIRED"
+  }
+}
