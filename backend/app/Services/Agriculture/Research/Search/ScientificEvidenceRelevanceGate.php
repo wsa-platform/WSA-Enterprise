@@ -23,6 +23,7 @@ class ScientificEvidenceRelevanceGate
 {
     public function __construct(
         private AnswerExpressionAccuracyGate $expressionAccuracyGate = new AnswerExpressionAccuracyGate,
+        private ScientificKnowledgeTypeRelevancePolicy $knowledgeTypePolicy = new ScientificKnowledgeTypeRelevancePolicy,
     ) {}
 
     private const MIN_SCORE_CROP_TOPIC = 70.0;
@@ -58,6 +59,8 @@ class ScientificEvidenceRelevanceGate
         ?string $abstract = null,
         ?string $doi = null,
         ?string $extraText = null,
+        ?string $sourceKey = null,
+        ?array $existingRelevanceMetadata = null,
     ): array {
         $primaryHaystack = $this->buildHaystack([$title, $abstract]);
         $fullHaystack = $this->buildHaystack([$title, $abstract, $extraText]);
@@ -67,6 +70,19 @@ class ScientificEvidenceRelevanceGate
         $requiresEntity = $this->requiresEntity($plan);
         $requiresTopic = $this->requiresTopic($plan);
         $entityMatched = $this->matchesEntity($plan, $fullHaystack !== '' ? $fullHaystack : $senseHaystack);
+        $requiredKnowledgeTypes = $this->knowledgeTypePolicy->requiredTypes($plan);
+        $recordKnowledgeType = $sourceKey !== null && trim($sourceKey) !== ''
+            ? $this->knowledgeTypePolicy->recordType(trim($sourceKey), $existingRelevanceMetadata)
+            : ScientificKnowledgeType::UNKNOWN;
+        $identityOriented = $this->knowledgeTypePolicy->allowsIdentityOrientedRelevance(
+            $plan,
+            $recordKnowledgeType,
+            $entityMatched,
+        );
+        // Identity / heritage / chemical association records: do not force scholarly topic rules.
+        if ($identityOriented) {
+            $requiresTopic = false;
+        }
         $topicStrength = $this->topicMatchStrength($plan, $senseHaystack);
         if ($topicStrength === 'none' && $extraText !== null && trim($extraText) !== '') {
             $topicStrength = $this->topicMatchStrength($plan, $fullHaystack);
@@ -155,6 +171,30 @@ class ScientificEvidenceRelevanceGate
             || ($requiresEntity && $requiresTopic && ! $contextAdequate)
             || ($requiresEntity && $requiresTopic && $score < self::MIN_SCORE_CROP_TOPIC);
 
+        // Knowledge-type identity path: entity-matched taxonomic/heritage/chemical records
+        // remain candidates when compatible with required knowledge types. Still not Stage-4 truth.
+        if ($identityOriented && $entityMatched) {
+            $hardReject = ($requiresEntity && ! $entityMatched)
+                || $crossDomainBlocked !== [];
+            $rejectionReasons = array_values(array_filter(
+                $rejectionReasons,
+                static fn (string $reason): bool => ! in_array($reason, [
+                    'missing_topic_or_factor',
+                    'insufficient_topic_sense',
+                    'below_minimum_relevance_score',
+                    'irrelevant_domain',
+                    'negative_context_sense',
+                ], true),
+            ));
+            if ($score < 50.0) {
+                $score = 55.0;
+            }
+        }
+
+        // Incompatible knowledge type (e.g. traditional-use row for efficacy-only question): soft demote only when entity matched but type mismatch — leave hard reject to scholarly rules above.
+        $knowledgeCompatible = $sourceKey === null || $sourceKey === ''
+            || $this->knowledgeTypePolicy->isCompatible($requiredKnowledgeTypes, $recordKnowledgeType);
+
         $factors = [
             'doi_alone_insufficient' => true,
             'crop_id' => $plan->normalizedQuery->cropId,
@@ -170,6 +210,11 @@ class ScientificEvidenceRelevanceGate
             'domain_class' => $domainAssessment['domain_class'],
             'domain_penalty' => $domainAssessment['penalty'],
             'domain_hard_reject' => $offDomain,
+            'required_knowledge_types' => $requiredKnowledgeTypes,
+            'record_knowledge_type' => $recordKnowledgeType,
+            'knowledge_type_compatible' => $knowledgeCompatible,
+            'identity_oriented_relevance' => $identityOriented,
+            'source_key' => $sourceKey,
         ];
 
         $species = $this->classifySpeciesRelation(

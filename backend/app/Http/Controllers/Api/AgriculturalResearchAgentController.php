@@ -71,6 +71,49 @@ class AgriculturalResearchAgentController extends Controller
     }
 
     /**
+     * Paginate a StableAnswerResultSet without re-running search, validation, or composition.
+     */
+    public function pageResults(Request $request): JsonResponse
+    {
+        if (! config('wsa.research_agent.enabled', true)) {
+            return response()->json([
+                'status' => 'disabled',
+                'message' => 'Agricultural research agent is disabled.',
+            ], 503);
+        }
+
+        $validated = $request->validate([
+            'result_set_id' => ['required', 'string', 'max:128'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:1000'],
+        ]);
+
+        try {
+            $publicTenant = $this->publicTenantResolver->bindPublicTenant();
+        } catch (PublicTenantResolutionException) {
+            return response()->json([
+                'status' => 'public_organization_unavailable',
+                'message' => 'Public organization is unavailable.',
+                'error' => [
+                    'code' => 'public_organization_unavailable',
+                    'http_status' => 503,
+                    'message' => 'Public organization is unavailable.',
+                    'details' => null,
+                ],
+            ], 503);
+        }
+
+        $result = $this->researchAgent->pageStableResultSet(
+            $publicTenant->organizationId,
+            (string) $validated['result_set_id'],
+            (int) ($validated['page'] ?? 1),
+        );
+
+        $statusCode = ($result['status'] ?? null) === 'result_set_unavailable' ? 404 : 200;
+
+        return response()->json($result, $statusCode);
+    }
+
+    /**
      * Phase 6 U6.3: incomplete Crop selectors must not silently become Home research;
      * complete pairs must pass authoritative taxonomy identity.
      *

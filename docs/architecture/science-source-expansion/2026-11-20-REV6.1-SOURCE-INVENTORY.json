@@ -1,0 +1,144 @@
+{
+  "revision": "6.1",
+  "inventory_date": "2026-11-20",
+  "authority": "ScientificSourceCatalog::productionRegistrations",
+  "stage3_runtime_source_count": 10,
+  "sources": [
+    {
+      "source_key": "openalex",
+      "name": "OpenAlex",
+      "group": "independent_scholarly",
+      "knowledge_type": "scholarly_evidence",
+      "adapter": "OpenAlexScientificSourceAdapter",
+      "specializer": null,
+      "selection_role": "INTERNET_FIRST_DEFAULT",
+      "membership": "registered",
+      "capability": "search",
+      "activation": "enabled_by_config",
+      "integration": "rest"
+    },
+    {
+      "source_key": "crossref",
+      "name": "Crossref",
+      "group": "independent_scholarly",
+      "knowledge_type": "scholarly_evidence",
+      "adapter": "CrossRefScientificSourceAdapter",
+      "specializer": null,
+      "selection_role": "INTERNET_FIRST_DEFAULT",
+      "membership": "registered",
+      "capability": "search",
+      "activation": "enabled_by_config",
+      "integration": "rest"
+    },
+    {
+      "source_key": "semantic_scholar",
+      "name": "Semantic Scholar",
+      "group": "independent_scholarly",
+      "knowledge_type": "scholarly_evidence",
+      "adapter": "SemanticScholarScientificSourceAdapter",
+      "specializer": null,
+      "selection_role": "INTERNET_FIRST_DEFAULT",
+      "membership": "registered",
+      "capability": "search",
+      "activation": "enabled_by_config",
+      "integration": "rest"
+    },
+    {
+      "source_key": "consensus",
+      "name": "Consensus",
+      "group": "optional_explicit",
+      "knowledge_type": "review_evidence",
+      "adapter": "ConsensusScientificSourceAdapter",
+      "specializer": null,
+      "selection_role": "OPTIONAL_EXPLICIT_ONLY",
+      "membership": "registered",
+      "capability": "search",
+      "activation": "enabled_by_config",
+      "notes": "Never auto-selected; appears as optional_not_selected in selectionTrace"
+    },
+    {
+      "source_key": "fao_stat",
+      "name": "FAOSTAT",
+      "group": "statistical",
+      "knowledge_type": "statistical_observation",
+      "adapter": "FaoStatDeveloperPortalAdapter",
+      "specializer": null,
+      "selection_role": "STATISTICAL_CONSIDERATION",
+      "membership": "registered",
+      "capability": "search",
+      "activation": "enabled_by_config",
+      "integration": "developer_portal"
+    },
+    {
+      "source_key": "agris",
+      "name": "AGRIS",
+      "group": "governed_expansion",
+      "knowledge_type": "scholarly_evidence",
+      "adapter": "LocalIndexScientificSourceAdapter",
+      "specializer": "AgrisLocalIndexQuerySpecializer",
+      "selection_role": "GOVERNED_EXPANSION",
+      "adr": "G1-01",
+      "membership": "registered_active",
+      "integration": "local_index_bulk"
+    },
+    {
+      "source_key": "organic_eprints",
+      "name": "Organic Eprints",
+      "group": "governed_expansion",
+      "knowledge_type": "scholarly_evidence",
+      "adapter": "LocalIndexScientificSourceAdapter",
+      "specializer": "OrganicEprintsLocalIndexQuerySpecializer",
+      "selection_role": "GOVERNED_EXPANSION",
+      "adr": "G1-02",
+      "membership": "registered_active",
+      "integration": "local_index_oai"
+    },
+    {
+      "source_key": "dr_duke",
+      "name": "Dr. Duke",
+      "group": "governed_expansion",
+      "knowledge_type": "chemical_association",
+      "adapter": "LocalIndexScientificSourceAdapter",
+      "specializer": "DrDukeLocalIndexQuerySpecializer",
+      "selection_role": "GOVERNED_EXPANSION",
+      "adr": "G1-17",
+      "membership": "registered_active",
+      "owner_decision": "OD-G1-17-SCOPE-LIMITED-PROJECTION",
+      "integration": "local_index_bulk_limited"
+    },
+    {
+      "source_key": "gbif",
+      "name": "GBIF",
+      "group": "governed_expansion",
+      "knowledge_type": "taxonomic_identity",
+      "adapter": "RestJsonScientificSourceAdapter",
+      "specializer": "GbifSpeciesQuerySpecializer",
+      "selection_role": "GOVERNED_EXPANSION",
+      "adr": "G5-04",
+      "membership": "registered_active",
+      "integration": "rest_public_search",
+      "notes": "Species search does not require API key"
+    },
+    {
+      "source_key": "bhl",
+      "name": "Biodiversity Heritage Library",
+      "group": "governed_expansion",
+      "knowledge_type": "bibliographic_heritage",
+      "adapter": "RestJsonScientificSourceAdapter",
+      "specializer": "BhlPublicationQuerySpecializer",
+      "selection_role": "GOVERNED_EXPANSION",
+      "adr": "G6-20",
+      "membership": "registered_active",
+      "integration": "rest_api_key_local",
+      "notes": "BHL_API_KEY must not be exposed"
+    }
+  ],
+  "non_runtime_inventory_seats_examples": [
+    "hortdb", "scentindb", "fncd", "pubmed", "europe_pmc", "agricola"
+  ],
+  "extensibility": {
+    "add_source_without_pipeline_rewrite": true,
+    "hard_source_count_limit_in_code": false,
+    "path": "Register in ScientificSourceCatalog / NextGate or CurrentMembership catalogs + AdapterRegistry + optional Specializer + Eligibility + tests"
+  }
+}

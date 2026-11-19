@@ -2,6 +2,9 @@
 
 namespace App\Services\Agriculture\Research\Synthesis;
 
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceUsage;
+use App\Services\Agriculture\Research\Search\Contract\ScientificSourceUsageStatus;
+use App\Services\Agriculture\Research\Search\ScientificSearchExecutionReport;
 use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
 
 /**
@@ -50,6 +53,7 @@ final class ScientificUserPresentation
      *   candidates: list<array{result_id: string, answer: string}>,
      *   sources: list<array<string, mixed>>,
      *   results: list<array<string, mixed>>,
+     *   source_coverage: array<string, mixed>|null,
      *   answer_language: string,
      *   candidate_selection: array<string, mixed>
      * }
@@ -58,8 +62,15 @@ final class ScientificUserPresentation
         AnswerSynthesisExecutionReport $synthesis,
         bool $sufficient,
         array $validatedEvidence = [],
+        ?ScientificSearchExecutionReport $searchReport = null,
     ): array {
         $sufficient = self::isEligibleForFinalDisplay($synthesis);
+        $evidenceById = [];
+        foreach ($validatedEvidence as $item) {
+            if ($item instanceof ScientificEvidenceItem) {
+                $evidenceById[$item->evidenceId] ??= $item;
+            }
+        }
         $selection = ScientificAnswerCandidatePresenter::fromSynthesis($synthesis);
         $primary = $sufficient ? trim((string) $synthesis->answer) : '';
         $primary = $primary !== '' ? $primary : null;
@@ -93,6 +104,27 @@ final class ScientificUserPresentation
                 $resultId = 'src-'.$index;
             }
 
+            $provenance = self::provenanceDisclosure($evidenceById[(string) ($row['evidence_id'] ?? '')] ?? null);
+            $sourceKey = is_string($row['source_key'] ?? null) ? trim((string) $row['source_key']) : '';
+            if ($sourceKey === '' && is_string($provenance['source'] ?? null)) {
+                $sourceKey = trim((string) $provenance['source']);
+            }
+            $contributing = is_array($row['contributing_providers'] ?? null)
+                ? array_values(array_filter(array_map(
+                    static fn (mixed $p): string => is_string($p) ? trim($p) : '',
+                    $row['contributing_providers'],
+                )))
+                : [];
+            if ($contributing === [] && is_array($provenance['found_by_sources'] ?? null)) {
+                $contributing = array_values(array_filter(array_map(
+                    static fn (mixed $p): string => is_string($p) ? trim($p) : '',
+                    $provenance['found_by_sources'],
+                )));
+            }
+            if ($contributing === [] && $sourceKey !== '') {
+                $contributing = [$sourceKey];
+            }
+
             $sources[] = [
                 'result_id' => $resultId,
                 'title' => trim((string) ($row['title'] ?? '')) ?: 'Research source',
@@ -100,10 +132,14 @@ final class ScientificUserPresentation
                 'organization' => $row['organization'] ?? null,
                 'journal' => $row['journal'] ?? null,
                 'publication_year' => $row['publication_year'] ?? null,
+                'provider' => $sourceKey !== '' ? $sourceKey : ($row['source_type'] ?? null),
+                'source_key' => $sourceKey !== '' ? $sourceKey : null,
+                'contributing_providers' => $contributing,
                 'original_url' => self::originalUrl(
                     is_string($row['url'] ?? null) ? $row['url'] : null,
                     is_string($row['doi'] ?? null) ? $row['doi'] : null,
                 ),
+                'provenance' => $provenance,
             ];
         }
 
@@ -121,6 +157,7 @@ final class ScientificUserPresentation
             'candidates' => $candidates,
             'sources' => $sources,
             'results' => self::researchResultsFromValidatedEvidence($validatedEvidence),
+            'source_coverage' => $searchReport !== null ? self::sourceCoverage($searchReport) : null,
             'answer_language' => $synthesis->language,
             'candidate_selection' => [
                 'threshold' => ScientificAnswerCandidatePresenter::PRESENTATION_THRESHOLD,
@@ -134,6 +171,8 @@ final class ScientificUserPresentation
     /**
      * Eligible Stage 4 scientific research results for the Results List.
      * Uses evidence-item confidence, never synthesis overallConfidence.
+     * An abstract is shown only when every contributing source permits excerpt display
+     * (owner decision, ADR-023 §8.38); otherwise it is withheld and the reason is given.
      *
      * @param  list<ScientificEvidenceItem|array<string, mixed>>  $validatedEvidence
      * @return list<array<string, mixed>>
@@ -159,6 +198,10 @@ final class ScientificUserPresentation
                 continue;
             }
             $seen[$resultId] = true;
+            $provenance = self::provenanceDisclosure($item);
+            $abstract = self::abstractFromEvidence($item);
+            $excerptDisplay = $provenance['usage'][ScientificSourceUsage::EXCERPT_DISPLAY->value];
+            $abstractWithheld = $abstract !== null && $excerptDisplay !== ScientificSourceUsageStatus::PERMITTED->value;
 
             $rows[] = [
                 'result_id' => $resultId,
@@ -169,13 +212,140 @@ final class ScientificUserPresentation
                 'publication_year' => $item->publicationYear,
                 'doi' => $item->doi,
                 'original_url' => self::originalUrl($item->url, $item->doi),
-                'abstract' => self::abstractFromEvidence($item),
+                'abstract' => $abstractWithheld ? null : $abstract,
+                'abstract_withheld_reason' => $abstractWithheld ? 'excerpt_display_'.$excerptDisplay : null,
                 'pdf_url' => self::pdfUrlFromEvidence($item),
                 'confidence' => $item->confidence,
+                'provenance' => $provenance,
             ];
         }
 
         return $rows;
+    }
+
+    /**
+     * Where a displayed result came from and what its sources permit. Licensing is reported
+     * as declared by the adapters; a missing declaration is unresolved, never permitted, and
+     * the most restrictive status across contributing records is the result's status.
+     *
+     * @return array<string, mixed>
+     */
+    public static function provenanceDisclosure(?ScientificEvidenceItem $item): array
+    {
+        $provenance = is_array($item?->sourceAttribution['provenance'] ?? null)
+            ? $item->sourceAttribution['provenance']
+            : [];
+        $records = [];
+        $usage = [];
+        foreach (ScientificSourceUsage::cases() as $case) {
+            $usage[$case->value] = null;
+        }
+        $fullyUnresolved = false;
+        $sourceRecords = is_array($provenance['records'] ?? null) ? $provenance['records'] : [];
+
+        foreach ($sourceRecords as $record) {
+            if (! is_array($record)) {
+                continue;
+            }
+            $licensing = is_array($record['licensing'] ?? null) ? $record['licensing'] : [];
+            $declared = is_array($licensing['usages'] ?? null) ? $licensing['usages'] : [];
+            $recordUsage = [];
+            foreach ($usage as $key => $current) {
+                $status = ScientificSourceUsageStatus::tryFrom((string) ($declared[$key] ?? ''))
+                    ?? ScientificSourceUsageStatus::UNRESOLVED;
+                $recordUsage[$key] = $status->value;
+                $usage[$key] = self::moreRestrictive($current, $status);
+            }
+            $licence = is_string($licensing['licence_identifier'] ?? null) ? $licensing['licence_identifier'] : null;
+            if ($licence === null && array_unique(array_values($recordUsage)) === [ScientificSourceUsageStatus::UNRESOLVED->value]) {
+                $fullyUnresolved = true;
+            }
+
+            $records[] = [
+                'source' => $record['source_key'] ?? null,
+                'original_identifier' => $record['original_identifier'] ?? null,
+                'identifier_basis' => $record['identifier_basis'] ?? null,
+                'record_url' => self::originalUrl(is_string($record['record_url'] ?? null) ? $record['record_url'] : null, null),
+                'canonical_url_basis' => $record['canonical_url_basis'] ?? null,
+                'published_at' => $record['published_at'] ?? null,
+                'retrieved_at' => $record['retrieved_at'] ?? null,
+                'transformations' => is_array($record['transformations'] ?? null) ? $record['transformations'] : [],
+                'licence' => $licence,
+                'usage' => $recordUsage,
+            ];
+        }
+
+        return [
+            'source' => $item?->sourceKey,
+            'found_by_sources' => is_array($provenance['found_by_sources'] ?? null) ? $provenance['found_by_sources'] : [],
+            'retrieved_at' => $item?->retrievedAt,
+            'retrieved_at_basis' => is_string($provenance['retrieved_at_basis'] ?? null)
+                ? $provenance['retrieved_at_basis']
+                : 'unknown',
+            'licensing_status' => $records === [] || $fullyUnresolved ? 'unresolved' : 'declared',
+            'usage' => array_map(
+                static fn (?ScientificSourceUsageStatus $status): string => ($status ?? ScientificSourceUsageStatus::UNRESOLVED)->value,
+                $usage,
+            ),
+            'records' => $records,
+        ];
+    }
+
+    /**
+     * Which selected sources answered. A failed or unreached source makes the coverage
+     * partial even when other sources produced results.
+     *
+     * @return array<string, mixed>
+     */
+    public static function sourceCoverage(ScientificSearchExecutionReport $report): array
+    {
+        $responded = array_values(array_unique([...$report->successfulSources, ...$report->emptySources]));
+        $failed = array_values($report->failedSources);
+        $unreached = array_values(array_diff($report->selectedSources, $responded, $failed));
+        $failures = $report->planSummary['search_observability']['source_failures'] ?? [];
+
+        $categories = [];
+        foreach (is_array($failures) ? $failures : [] as $failure) {
+            $source = is_array($failure) ? (string) ($failure['source'] ?? '') : '';
+            if ($source === '' || in_array($source, $responded, true)) {
+                continue;
+            }
+            $categories[$source][] = (string) ($failure['failure_category'] ?? '');
+        }
+        $categories = array_map(
+            static fn (array $list): array => array_values(array_unique(array_filter($list))),
+            $categories,
+        );
+
+        $complete = $report->selectedSources !== [] && $failed === [] && $unreached === [];
+
+        return [
+            'complete' => $complete,
+            'search_status' => $report->status,
+            'responded_sources' => $responded,
+            'failed_sources' => $failed,
+            'unreached_sources' => $unreached,
+            'failure_categories' => $categories,
+            'notice_code' => match (true) {
+                $complete => null,
+                $report->selectedSources === [] => 'no_sources_searched',
+                default => 'partial_source_coverage',
+            },
+        ];
+    }
+
+    private static function moreRestrictive(
+        ?ScientificSourceUsageStatus $current,
+        ScientificSourceUsageStatus $candidate,
+    ): ScientificSourceUsageStatus {
+        $rank = static fn (ScientificSourceUsageStatus $status): int => match ($status) {
+            ScientificSourceUsageStatus::PROHIBITED => 3,
+            ScientificSourceUsageStatus::UNRESOLVED => 2,
+            ScientificSourceUsageStatus::CONDITIONAL => 1,
+            ScientificSourceUsageStatus::PERMITTED => 0,
+        };
+
+        return $current === null || $rank($candidate) > $rank($current) ? $candidate : $current;
     }
 
     /**

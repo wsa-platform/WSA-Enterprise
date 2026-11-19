@@ -72,7 +72,11 @@ class MultiSourceScientificSearchOrchestrator
     public function execute(KnowledgeQueryPlan $plan, int $limit = 10, ?array $sourceKeys = null): ScientificSearchExecutionReport
     {
         $stage3StartedNs = hrtime(true);
-        $variantBudget = ScientificSearchVariantBudget::apply($this->queryBuilder->buildVariantsFromPlan($plan));
+        $adaptive = new AdaptiveQueryEngineering;
+        $baseVariants = $this->queryBuilder->buildVariantsFromPlan($plan);
+        $mergedVariants = $adaptive->mergeVariants($baseVariants, $plan);
+        $variantBudget = ScientificSearchVariantBudget::apply($mergedVariants);
+        $variantBudget['adaptive_expansion_candidates'] = $adaptive->expansionCandidates($plan, $baseVariants);
         $variants = $variantBudget['variants'];
         $searchQuery = $variants[0] ?? $this->queryBuilder->buildFromPlan($plan);
         $selectionTrace = $this->sourceSelector->selectionTrace($plan);
@@ -213,6 +217,7 @@ class MultiSourceScientificSearchOrchestrator
         $ranked = $this->ranker->rank($searchQuery, $deduplicated, $plan);
         $ranked = $this->ranker->filterRelevant($ranked);
         $ranked = $this->ranker->diversifyByProviderJournalInstitution($ranked);
+        $coverage = $adaptive->evaluateCoverage($plan, $ranked, count($allResults), 0);
 
         $status = match (true) {
             $successful !== [] && $ranked !== [] => 'search_completed',
@@ -235,6 +240,14 @@ class MultiSourceScientificSearchOrchestrator
             finalCount: count($ranked),
             concurrencyMode: $concurrencyMode,
             coexistencePlan: $coexistencePlan,
+        );
+        $searchObservability['adaptive_retrieval'] = $coverage;
+        $searchObservability['source_contribution'] = $this->buildSourceContributionLadder(
+            $selectionTrace,
+            $selectedSources,
+            $adapterStatus,
+            $allResults,
+            $ranked,
         );
 
         return new ScientificSearchExecutionReport(
@@ -753,11 +766,20 @@ class MultiSourceScientificSearchOrchestrator
             // already has an adequate raw hit set — keeps sequential home path inside the
             // gateway FastCGI window.
             $isScholarly = $this->isIndependentScholarlySource($key);
-            $shouldEarlyStop = $scholarlyAttempted >= 2
+            $knowledgeProtected = in_array(
+                $key,
+                (new ScientificKnowledgeTypeRelevancePolicy())->protectedSourceKeys($plan),
+                true,
+            );
+            // Adaptive stop: scholarly adequacy may skip remaining adapters, but never
+            // skip knowledge-type-protected sources (e.g. GBIF for taxonomy questions).
+            $shouldEarlyStop = ! $knowledgeProtected
+                && $scholarlyAttempted >= 2
                 && $priorResultCount >= self::ADEQUATE_RESULT_COUNT
                 && $scholarlyHits >= self::ADEQUATE_RESULT_COUNT;
             if ($shouldEarlyStop
-                || ($priorResultCount >= self::ADEQUATE_RESULT_COUNT
+                || (! $knowledgeProtected
+                    && $priorResultCount >= self::ADEQUATE_RESULT_COUNT
                     && $budget->remainingSeconds() < 20.0
                     && $scholarlyAttempted >= 2)) {
                 $collections[$key] = [
@@ -1411,6 +1433,65 @@ class MultiSourceScientificSearchOrchestrator
         }
 
         return $payload;
+    }
+
+    /**
+     * Lightweight contribution ladder over existing selectionTrace / outcomes (no separate ledger).
+     *
+     * @param  array<string, mixed>  $selectionTrace
+     * @param  list<string>  $selectedSources
+     * @param  array<string, string>  $adapterStatus
+     * @param  list<ScientificSearchResult>  $rawResults
+     * @param  list<ScientificSearchResult>  $survivors
+     * @return array<string, mixed>
+     */
+    private function buildSourceContributionLadder(
+        array $selectionTrace,
+        array $selectedSources,
+        array $adapterStatus,
+        array $rawResults,
+        array $survivors,
+    ): array {
+        $retrieved = [];
+        foreach ($rawResults as $result) {
+            $retrieved[$result->sourceKey] = ($retrieved[$result->sourceKey] ?? 0) + 1;
+        }
+        $survived = [];
+        foreach ($survivors as $result) {
+            $survived[$result->sourceKey] = ($survived[$result->sourceKey] ?? 0) + 1;
+        }
+
+        $catalogKeys = $this->catalog->sourceKeys();
+        $rows = [];
+        foreach ($catalogKeys as $key) {
+            $status = $adapterStatus[$key] ?? null;
+            $state = match (true) {
+                isset($survived[$key]) => 'contributed_to_survivors',
+                isset($retrieved[$key]) => 'retrieved',
+                $status === 'success' => 'executed_empty',
+                $status === 'failed' => 'execution_failed',
+                $status === 'skipped' => 'selected_not_executed',
+                in_array($key, $selectedSources, true) => 'selected',
+                in_array($key, $selectionTrace['optional_not_selected'] ?? [], true) => 'optional_not_selected',
+                in_array($key, $selectionTrace['skipped_inactive'] ?? [], true) => 'registered_inactive',
+                default => 'registered',
+            };
+            $rows[$key] = [
+                'source_key' => $key,
+                'state' => $state,
+                'selected' => in_array($key, $selectedSources, true),
+                'executed' => in_array($status, ['success', 'failed', 'empty'], true),
+                'retrieved_count' => $retrieved[$key] ?? 0,
+                'survivor_count' => $survived[$key] ?? 0,
+                'contributed' => isset($survived[$key]),
+            ];
+        }
+
+        return [
+            'ladder' => array_values($rows),
+            'contributed_sources' => array_values(array_keys($survived)),
+            'optional_not_selected' => $selectionTrace['optional_not_selected'] ?? [],
+        ];
     }
 
     /**

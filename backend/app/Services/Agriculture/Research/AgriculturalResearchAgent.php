@@ -12,8 +12,13 @@ use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService
 use App\Services\Agriculture\Research\Search\ScientificSearchExecutionReport;
 use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
 use App\Services\Agriculture\Research\Synthesis\AnswerSynthesisExecutionReport;
+use App\Services\Agriculture\Research\Synthesis\ClaimBoundIndependentAnswerDeriver;
 use App\Services\Agriculture\Research\Synthesis\ScientificAnswerCandidatePresenter;
+use App\Services\Agriculture\Research\Synthesis\ScientificMultiAnswer;
+use App\Services\Agriculture\Research\Synthesis\ScientificMultiAnswerProducer;
 use App\Services\Agriculture\Research\Synthesis\ScientificUserPresentation;
+use App\Services\Agriculture\Research\Synthesis\StableAnswerResultSet;
+use App\Services\Agriculture\Research\Synthesis\StableAnswerResultSetStore;
 use App\Services\Agriculture\Research\Validation\AgriculturalScientificValidationService;
 use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionReport;
 use Illuminate\Validation\ValidationException;
@@ -34,7 +39,37 @@ class AgriculturalResearchAgent
         private ScientificKnowledgePersistenceService $knowledgePersistenceService,
         private HomeEvidenceLifecycleDisposition $homeEvidenceLifecycleDisposition = new HomeEvidenceLifecycleDisposition,
         private ?UniversalAnswerOrchestrator $universalAnswerOrchestrator = null,
+        private ?ScientificMultiAnswerProducer $multiAnswerProducer = null,
+        private ?ClaimBoundIndependentAnswerDeriver $independentAnswerDeriver = null,
+        private ?StableAnswerResultSetStore $stableResultSetStore = null,
     ) {}
+
+    /**
+     * Paginate a previously created StableAnswerResultSet without re-running search/composer.
+     *
+     * @return array<string, mixed>
+     */
+    public function pageStableResultSet(int $organizationId, string $resultSetId, int $page = 1): array
+    {
+        $store = $this->stableResultSetStore ?? new StableAnswerResultSetStore;
+        $set = $store->get($organizationId, $resultSetId);
+        if ($set === null) {
+            return [
+                'status' => 'result_set_unavailable',
+                'failure_class' => 'RESULT_SET_FAILURE',
+                'failure_code' => 'stable_result_set_missing_or_expired',
+                'message' => 'Stable answer result set is missing, expired, or not accessible.',
+                'result_set_id' => $resultSetId,
+                'page' => max(1, $page),
+                'rerun_performed' => false,
+            ];
+        }
+
+        return array_merge($set->page($page), [
+            'failure_class' => null,
+            'failure_code' => null,
+        ]);
+    }
 
     /**
      * Stage 2 planning only — no external search or evidence execution.
@@ -186,12 +221,20 @@ class AgriculturalResearchAgent
             $synthesisReport,
             $sufficient,
             $validationReport->validatedEvidence,
+            $searchReport,
+        );
+        $multiAnswerEnvelope = $this->buildMultiAnswerAndStableEnvelope(
+            $organizationId,
+            $knowledgePlan,
+            $synthesisReport,
+            $sufficient,
         );
 
         $payload = array_merge(
             $synthesisReport->toArray(),
             $persistenceReport->toArray(),
             $candidates,
+            $multiAnswerEnvelope,
             ['user_presentation' => $userPresentation],
             [
                 'status' => $synthesisReport->status,
@@ -372,6 +415,7 @@ class AgriculturalResearchAgent
                 $synthesisReport,
                 $persistenceReport,
                 $timings,
+                $organizationId,
             );
         }
 
@@ -383,6 +427,7 @@ class AgriculturalResearchAgent
             $synthesisReport,
             $persistenceReport,
             $timings,
+            $organizationId,
         );
     }
 
@@ -452,6 +497,7 @@ class AgriculturalResearchAgent
         AnswerSynthesisExecutionReport $synthesisReport,
         KnowledgePersistenceExecutionReport $persistenceReport,
         array $timings = [],
+        int $organizationId = 0,
     ): array {
         $sufficient = $this->hasSufficientScientificSynthesis($synthesisReport);
         $synthesis = $synthesisReport->toArray();
@@ -462,14 +508,29 @@ class AgriculturalResearchAgent
             $synthesisReport,
             $sufficient,
             $scientificValidation->validatedEvidence,
+            $scientificSearch,
+        );
+        $multiAnswerEnvelope = $this->buildMultiAnswerAndStableEnvelope(
+            $organizationId,
+            $knowledgePlan,
+            $synthesisReport,
+            $sufficient,
         );
         $status = $sufficient ? 'scientific_generated' : $synthesisReport->status;
         $loadState = $sufficient ? 'scientific_generated' : $synthesisReport->status;
+        $failure = $this->classifyResearchFailure(
+            $scientificSearch,
+            $scientificValidation,
+            $synthesisReport,
+            $sufficient,
+        );
 
-        return array_merge($synthesis, $persistence, $candidates, [
+        return array_merge($synthesis, $persistence, $candidates, $multiAnswerEnvelope, [
             'user_presentation' => $userPresentation,
             'status' => $status,
             'load_state' => $loadState,
+            'failure_class' => $failure['failure_class'],
+            'failure_code' => $failure['failure_code'],
             'stage' => 5,
             'plan' => $plan->toArray(),
             'research' => [
@@ -509,6 +570,7 @@ class AgriculturalResearchAgent
                     'legacy_post_processing' => 'removed',
                     'legacy_post_processing_reason' => 'library_search_separated',
                     'synthesis_status' => $synthesisReport->status,
+                    'multi_answer_producer_wired' => true,
                 ],
             ),
         ]);
@@ -528,6 +590,7 @@ class AgriculturalResearchAgent
         AnswerSynthesisExecutionReport $synthesisReport,
         KnowledgePersistenceExecutionReport $persistenceReport,
         array $timings,
+        int $organizationId = 0,
     ): array {
         $candidates = ScientificAnswerCandidatePresenter::fromSynthesis($synthesisReport);
         $sufficient = $this->hasSufficientScientificSynthesis($synthesisReport);
@@ -535,14 +598,29 @@ class AgriculturalResearchAgent
             $synthesisReport,
             $sufficient,
             $scientificValidation->validatedEvidence,
+            $scientificSearch,
+        );
+        $multiAnswerEnvelope = $this->buildMultiAnswerAndStableEnvelope(
+            $organizationId,
+            $knowledgePlan,
+            $synthesisReport,
+            $sufficient,
+        );
+        $failure = $this->classifyResearchFailure(
+            $scientificSearch,
+            $scientificValidation,
+            $synthesisReport,
+            $sufficient,
         );
 
         $status = $sufficient ? 'scientific_generated' : $synthesisReport->status;
 
-        return array_merge($response, $candidates, [
+        return array_merge($response, $candidates, $multiAnswerEnvelope, [
             'user_presentation' => $userPresentation,
             'status' => $status,
             'load_state' => $status,
+            'failure_class' => $failure['failure_class'],
+            'failure_code' => $failure['failure_code'],
             'stage' => 5,
             'scientific_search' => $scientificSearch->toArray(),
             'scientific_validation' => $scientificValidation->toArray(),
@@ -564,9 +642,189 @@ class AgriculturalResearchAgent
                     'legacy_post_processing' => 'removed',
                     'legacy_post_processing_reason' => 'library_search_separated',
                     'synthesis_status' => $synthesisReport->status,
+                    'multi_answer_producer_wired' => true,
                 ],
             ),
         ]);
+    }
+
+    /**
+     * Wire ScientificMultiAnswerProducer into the live path and persist a StableAnswerResultSet.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildMultiAnswerAndStableEnvelope(
+        int $organizationId,
+        KnowledgeQueryPlan $knowledgePlan,
+        AnswerSynthesisExecutionReport $synthesisReport,
+        bool $sufficient,
+    ): array {
+        $deriver = $this->independentAnswerDeriver ?? new ClaimBoundIndependentAnswerDeriver;
+        $producer = $this->multiAnswerProducer ?? new ScientificMultiAnswerProducer;
+        $store = $this->stableResultSetStore ?? new StableAnswerResultSetStore;
+
+        $independent = $deriver->derive($synthesisReport);
+        $csq = $knowledgePlan->normalizedQuery->canonicalQuestion;
+        $produced = [];
+        $producerStatus = 'skipped_no_csq';
+        if ($csq instanceof CanonicalScientificQuestion && $independent !== []) {
+            try {
+                $produced = $producer->produce($csq, $independent);
+                $producerStatus = 'produced';
+            } catch (\Throwable $e) {
+                $producerStatus = 'multi_answer_production_failure';
+                $produced = [];
+            }
+        } elseif ($independent === []) {
+            $producerStatus = 'skipped_no_independent_answers';
+        }
+
+        /** @var list<array<string, mixed>> $answerRows */
+        $answerRows = array_map(
+            static function (ScientificMultiAnswer|array $row): array {
+                return $row instanceof ScientificMultiAnswer ? $row->toArray() : $row;
+            },
+            $produced,
+        );
+
+        // Confidence gate remains internal: only eligible answers enter the stable set.
+        if ($sufficient && $answerRows === [] && trim((string) ($synthesisReport->answer ?? '')) !== '') {
+            // Presenter path still has a primary answer; keep stable set empty rather than invent IDs.
+            $producerStatus = $producerStatus === 'produced' ? $producerStatus : 'primary_without_multi_answer_rows';
+        }
+
+        $references = array_map(
+            static fn ($c): array => is_object($c) && method_exists($c, 'toArray') ? $c->toArray() : (array) $c,
+            $synthesisReport->citations,
+        );
+
+        $stable = null;
+        $stableStatus = 'not_created';
+        if ($organizationId > 0 && ($answerRows !== [] || ($sufficient && trim((string) ($synthesisReport->answer ?? '')) !== ''))) {
+            if ($answerRows === [] && $sufficient) {
+                $answerRows = [[
+                    'answer_id' => null,
+                    'answer' => trim((string) $synthesisReport->answer),
+                    'result_id' => 'synthesis-primary',
+                    'evidence_ids' => [],
+                    'source_ids' => [],
+                    'position' => 0,
+                    'provenance' => ['source' => 'synthesis_primary_fallback'],
+                ]];
+            }
+            $fingerprint = $csq instanceof CanonicalScientificQuestion
+                ? hash('sha256', implode('|', [
+                    $csq->originalQuestion,
+                    $csq->normalizedForm ?? '',
+                    $csq->language ?? '',
+                    $csq->researchContext ?? '',
+                ]))
+                : null;
+            try {
+                $stable = $store->create(
+                    organizationId: $organizationId,
+                    originalQuestion: $knowledgePlan->normalizedQuery->originalQuestion,
+                    csqFingerprint: $fingerprint,
+                    answers: $answerRows,
+                    references: $references,
+                    observability: [
+                        'multi_answer_producer_status' => $producerStatus,
+                        'independent_answer_count' => count($independent),
+                        'page_size' => StableAnswerResultSet::PAGE_SIZE,
+                    ],
+                    status: $sufficient ? 'ready' : 'insufficient',
+                );
+                $stableStatus = 'created';
+            } catch (\Throwable $e) {
+                $stableStatus = 'result_set_failure';
+            }
+        }
+
+        return [
+            'independent_answers' => array_map(
+                static fn ($a): array => $a->toArray(),
+                $independent,
+            ),
+            'multi_answers' => $answerRows,
+            'multi_answer_production' => [
+                'performed' => $producerStatus === 'produced',
+                'status' => $producerStatus,
+                'count' => count($answerRows),
+                'producer' => ScientificMultiAnswerProducer::class,
+            ],
+            'stable_result_set' => [
+                'created' => $stableStatus === 'created',
+                'status' => $stableStatus,
+                'result_set_id' => $stable?->resultSetId,
+                'page_size' => StableAnswerResultSet::PAGE_SIZE,
+                'total_answers' => $stable?->totalAnswers() ?? count($answerRows),
+                'total_pages' => $stable?->totalPages() ?? (
+                    $answerRows === [] ? 0 : (int) ceil(count($answerRows) / StableAnswerResultSet::PAGE_SIZE)
+                ),
+                'expires_at' => $stable?->expiresAt,
+                'page' => $stable !== null ? $stable->page(1) : null,
+            ],
+        ];
+    }
+
+    /**
+     * Distinguish failure modes instead of collapsing everything to no_search_result.
+     *
+     * @return array{failure_class: ?string, failure_code: ?string}
+     */
+    private function classifyResearchFailure(
+        ScientificSearchExecutionReport $search,
+        EvidenceValidationExecutionReport $validation,
+        AnswerSynthesisExecutionReport $synthesis,
+        bool $sufficient,
+    ): array {
+        if ($sufficient) {
+            return ['failure_class' => null, 'failure_code' => null];
+        }
+
+        $validationStatus = $validation->status;
+        $synthesisStatus = $synthesis->status;
+        $searchStatus = $search->status;
+
+        if ($validationStatus === 'all_results_rejected_by_relevance'
+            || $synthesisStatus === 'all_results_rejected_by_relevance') {
+            return [
+                'failure_class' => 'ALL_RESULTS_REJECTED',
+                'failure_code' => 'all_results_rejected_by_relevance',
+            ];
+        }
+        if (in_array($synthesisStatus, ['insufficient_evidence', 'no_validated_evidence'], true)
+            || in_array($validationStatus, ['insufficient_evidence', 'no_validated_evidence'], true)) {
+            return [
+                'failure_class' => 'INSUFFICIENT_EVIDENCE',
+                'failure_code' => $synthesisStatus !== '' ? $synthesisStatus : $validationStatus,
+            ];
+        }
+        if ($search->failedSources !== [] && $search->successfulSources === [] && $search->results === []) {
+            return [
+                'failure_class' => 'SOURCE_UNAVAILABLE',
+                'failure_code' => 'all_selected_sources_failed',
+            ];
+        }
+        if (in_array($searchStatus, ['no_results', 'no_search_results'], true)
+            || in_array($validationStatus, ['no_search_results'], true)
+            || in_array($synthesisStatus, ['no_search_results'], true)) {
+            return [
+                'failure_class' => 'NO_SCIENTIFIC_MATCH',
+                'failure_code' => 'no_search_results',
+            ];
+        }
+        if (in_array($synthesisStatus, ['composer_failure', 'synthesis_failed'], true)) {
+            return [
+                'failure_class' => 'COMPOSER_FAILURE',
+                'failure_code' => $synthesisStatus,
+            ];
+        }
+
+        return [
+            'failure_class' => 'INSUFFICIENT_EVIDENCE',
+            'failure_code' => $synthesisStatus !== '' ? $synthesisStatus : 'insufficient_or_empty_answer',
+        ];
     }
 
     /**

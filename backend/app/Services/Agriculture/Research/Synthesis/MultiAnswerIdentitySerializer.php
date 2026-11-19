@@ -145,7 +145,12 @@ final class MultiAnswerIdentitySerializer
             ];
         }
 
-        throw new InvalidArgumentException('Identity role must provide canonical, normalized, or surface identity.');
+        // Descriptive CSQs often leave target/process intentionally empty.
+        // Represent absence explicitly so Multi-Answer identity remains deterministic
+        // without inventing a scientific role.
+        return [
+            'mode' => 'none',
+        ];
     }
 
     /**

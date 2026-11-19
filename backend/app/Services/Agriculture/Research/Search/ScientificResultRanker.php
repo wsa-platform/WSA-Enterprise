@@ -90,6 +90,8 @@ class ScientificResultRanker
                         $result->abstract,
                         $result->doi,
                         $this->extraTextFromResult($result),
+                        $result->sourceKey,
+                        is_array($result->relevanceMetadata) ? $result->relevanceMetadata : null,
                     );
                     $directness = $this->directnessAssessor->assess(
                         $plan,
