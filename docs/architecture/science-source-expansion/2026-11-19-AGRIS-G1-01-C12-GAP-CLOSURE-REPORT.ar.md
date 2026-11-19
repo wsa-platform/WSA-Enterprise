@@ -130,11 +130,13 @@ Tests: 9 passed (70 assertions)
 - mtime الملف التشغيلي لم يتغير أثناء الجلسة الحية
 
 ## Q. Commit & Push
-يُستكمل في نهاية التسليم بعد مراجعة Diff المرحلية (ملفات C12 فقط؛ WIP خارج الـ staging).
+- **Commit:** `8fe5564` — `feat(agris): close G1-01 C12 with operational LocalIndex RO live path`
+- **الملفات:** 13 (مسار C12 فقط؛ WIP السابق غير ملتزم)
+- **Deploy risk:** `deploy-production.yml` = `workflow_dispatch` فقط → الدفع إلى الفرع لا ينشر إنتاجًا تلقائيًا
 
 ## R. CI and Deployment Status
-- **CI:** `CI_STATUS_UNAVAILABLE` عند كتابة التقرير (سيُحدَّث بعد الدفع إن أمكن)
-- **Deployment:** لم يُنفَّذ؛ لا push إن وُجد نشر إنتاجي تلقائي غير محكوم
+- **CI:** يُشغَّل على `push` لفروع `phase-*`؛ الحالة عند التسليم تُسجَّل بعد الدفع (`CI_STATUS_UNAVAILABLE` إن تعذر التحقق الفوري)
+- **Deployment:** لم يُنفَّذ؛ لا workflow_dispatch إنتاجي من هذه الجلسة
 
 ## S. Final Classification
 | بند | قيمة |
