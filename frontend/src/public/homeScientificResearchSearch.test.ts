@@ -13,6 +13,11 @@ import {
   resolveResearchSearchError,
 } from './HomeScientificResearchSearch'
 import { ScientificResearchResultsList } from './ScientificResearchResultsList'
+import {
+  buildHomeResearchDisplayModel,
+  extractInitialStablePage,
+  researchFailureTranslationKey,
+} from './stableResearchPresentation'
 
 beforeAll(() => {
   const store = new Map<string, string>()
@@ -50,13 +55,30 @@ function renderView(props: {
   episodeId?: string | null
   feedbackState?: Parameters<typeof HomeScientificResearchSearchView>[0]['feedbackState']
   onPositiveFeedback?: () => void
+  answers?: Parameters<typeof HomeScientificResearchSearchView>[0]['answers']
+  pagination?: Parameters<typeof HomeScientificResearchSearchView>[0]['pagination']
+  pageLoading?: boolean
+  pageError?: string | null
+  failureMessage?: string | null
+  onPageChange?: (page: number) => void
 }) {
+  const display = buildHomeResearchDisplayModel({
+    queryResponse: props.result,
+    stablePage: props.result ? extractInitialStablePage(props.result) : null,
+  })
   return renderToStaticMarkup(
     createElement(
       I18nextProvider,
       { i18n },
       createElement(HomeScientificResearchSearchView, {
         ...props,
+        answers: props.answers ?? display.answers,
+        pagination: props.pagination ?? display.pagination,
+        failureMessage:
+          props.failureMessage
+          ?? (researchFailureTranslationKey(display.failureClass, display.failureCode)
+            ? i18n.t(researchFailureTranslationKey(display.failureClass, display.failureCode)!)
+            : null),
         onQueryChange: () => undefined,
         onSubmit: () => undefined,
       }),
@@ -497,5 +519,118 @@ describe('homepage scientific research search', () => {
     expect(frHtml).toContain('Recherche scientifique agricole')
     expect(frHtml).toContain('Recherche scientifique')
     expect(frHtml).not.toContain('البحث العلمي الزراعي')
+  })
+
+  it('renders independent multi-answers from stable result set without duplicating primary', async () => {
+    await i18n.changeLanguage('ar')
+    const html = renderView({
+      query: 'قمح',
+      loading: false,
+      error: null,
+      result: {
+        status: 'scientific_generated',
+        failure_class: null,
+        user_presentation: {
+          primary_answer: 'الإجابة الأولى',
+          human_status: 'answered',
+          candidates: [{ result_id: 'dup', answer: 'الإجابة الأولى' }],
+          sources: [{ result_id: 's1', title: 'Source' }],
+        },
+        multi_answers: [
+          { answer_id: 'sha256:aaa', answer: 'الإجابة الأولى', result_id: 'r1', position: 0 },
+          { answer_id: 'sha256:bbb', answer: 'الإجابة الثانية المستقلة', result_id: 'r2', position: 1 },
+        ],
+        stable_result_set: {
+          created: true,
+          result_set_id: 'srs_test1',
+          page_size: 10,
+          total_answers: 2,
+          total_pages: 1,
+          page: {
+            result_set_id: 'srs_test1',
+            page: 1,
+            page_size: 10,
+            total_answers: 2,
+            total_pages: 1,
+            answers: [
+              { answer_id: 'sha256:aaa', answer: 'الإجابة الأولى', result_id: 'r1', position: 0 },
+              { answer_id: 'sha256:bbb', answer: 'الإجابة الثانية المستقلة', result_id: 'r2', position: 1 },
+            ],
+            rerun_performed: false,
+          },
+        },
+      },
+    })
+    expect(html).toContain('الإجابة الأولى')
+    expect(html).toContain('الإجابة الثانية المستقلة')
+    expect(html).toContain('إجابات علمية مستقلة')
+    expect(html).not.toContain('درجة الثقة')
+    expect(html).not.toContain('Confidence')
+  })
+
+  it('renders pagination controls when stable set has multiple pages', async () => {
+    await i18n.changeLanguage('ar')
+    const html = renderView({
+      query: 'قمح',
+      loading: false,
+      error: null,
+      onPageChange: () => undefined,
+      result: {
+        status: 'scientific_generated',
+        user_presentation: {
+          primary_answer: 'A1',
+          human_status: 'answered',
+          candidates: [],
+          sources: [],
+        },
+        stable_result_set: {
+          created: true,
+          result_set_id: 'srs_pages',
+          page_size: 10,
+          total_answers: 12,
+          total_pages: 2,
+          page: {
+            result_set_id: 'srs_pages',
+            page: 1,
+            page_size: 10,
+            total_answers: 12,
+            total_pages: 2,
+            answers: Array.from({ length: 10 }, (_, i) => ({
+              answer: `Answer ${i}`,
+              result_id: `r${i}`,
+              position: i,
+            })),
+            rerun_performed: false,
+          },
+        },
+      },
+    })
+    expect(html).toContain('data-testid="home-research-pagination"')
+    expect(html).toContain('الصفحة 1 من 2')
+    expect(html).toContain('data-testid="home-research-page-next"')
+    expect(html.match(/Answer \d+/g)?.length).toBeLessThanOrEqual(10)
+  })
+
+  it('shows distinct failure messaging for all-results-rejected', async () => {
+    await i18n.changeLanguage('ar')
+    const html = renderView({
+      query: 'سؤال',
+      loading: false,
+      error: null,
+      result: {
+        status: 'all_results_rejected_by_relevance',
+        failure_class: 'ALL_RESULTS_REJECTED',
+        failure_code: 'all_results_rejected_by_relevance',
+        user_presentation: {
+          primary_answer: null,
+          human_status: 'insufficient',
+          candidates: [],
+          sources: [],
+        },
+      },
+    })
+    expect(html).toContain('data-testid="home-research-failure"')
+    expect(html).toContain('تم استرجاع نتائج، لكنها رُفضت')
+    expect(html).not.toContain('ALL_RESULTS_REJECTED')
   })
 })

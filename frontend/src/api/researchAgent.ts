@@ -72,6 +72,51 @@ export type ResearchUserPresentationPayload = {
   }
 }
 
+/** Independent scientific answer row from Multi-Answer / Stable Result Set (Rev 6.1). */
+export type ResearchMultiAnswer = {
+  answer_id?: string | null
+  answer: string
+  result_id?: string
+  evidence_ids?: string[]
+  source_ids?: string[]
+  position?: number
+  provenance?: Record<string, unknown>
+}
+
+export type StableResultSetPage = {
+  result_set_id: string
+  page: number
+  page_size: number
+  total_answers: number
+  total_pages: number
+  answers: ResearchMultiAnswer[]
+  references?: ResearchAgentCitation[]
+  status?: string
+  expires_at?: string
+  original_question?: string
+  rerun_performed?: boolean
+  observability?: {
+    pagination_mode?: string
+    composer_rerun?: boolean
+    search_rerun?: boolean
+    validation_rerun?: boolean
+    [key: string]: unknown
+  }
+  failure_class?: string | null
+  failure_code?: string | null
+}
+
+export type StableResultSetEnvelope = {
+  created?: boolean
+  status?: string
+  result_set_id?: string | null
+  page_size?: number
+  total_answers?: number
+  total_pages?: number
+  expires_at?: string | null
+  page?: StableResultSetPage | null
+}
+
 export type ResearchAgentQueryResponse = {
   status?: string
   answer?: string | null
@@ -80,6 +125,11 @@ export type ResearchAgentQueryResponse = {
   citations?: ResearchAgentCitation[]
   answer_candidates?: ResearchAnswerCandidate[]
   user_presentation?: ResearchUserPresentationPayload
+  multi_answers?: ResearchMultiAnswer[]
+  independent_answers?: ResearchMultiAnswer[]
+  stable_result_set?: StableResultSetEnvelope | null
+  failure_class?: string | null
+  failure_code?: string | null
   confidence?: number
   limitations?: string[]
   uncertainty?: string | null
@@ -156,6 +206,23 @@ export function queryPublicResearchAgent(query: string): Promise<ResearchAgentQu
       organization: publicOrganizationSlug(),
       query: query.trim(),
     }),
+  })
+}
+
+/**
+ * GET /public/research-agent/results — read a page from an existing StableAnswerResultSet.
+ * Must not re-run search / composer / validation (server contract).
+ */
+export function fetchStableResearchResultsPage(
+  resultSetId: string,
+  page = 1,
+): Promise<StableResultSetPage> {
+  const params = new URLSearchParams({
+    result_set_id: resultSetId.trim(),
+    page: String(Math.max(1, page)),
+  })
+  return request<StableResultSetPage>(`/public/research-agent/results?${params.toString()}`, {
+    method: 'GET',
   })
 }
 
