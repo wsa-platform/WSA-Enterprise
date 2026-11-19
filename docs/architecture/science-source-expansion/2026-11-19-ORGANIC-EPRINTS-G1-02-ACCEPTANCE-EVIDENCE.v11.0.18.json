@@ -1,0 +1,150 @@
+{
+  "schema_id": "wsa.organic_eprints_g102_acceptance_evidence.v1",
+  "revision": "11.0.18",
+  "recorded_at_utc": "2026-11-19T13:20:00Z",
+  "adr_id": "G1-02",
+  "source_key": "organic_eprints",
+  "baseline_head": "65cfc1b5ea70b92514efba3cd4806f2b80a34e88",
+  "authority": {
+    "condition_titles": "Master Prompt five-source cumulative acceptance §6.1–§6.2 / AGRIS evidence title set",
+    "prior_oe_matrix": "docs/architecture/science-source-expansion/2026-11-18-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.13.json#G1-02",
+    "c12_original": "The integration is demonstrated through the actual application path or an equivalent reproducible production-path integration test, not merely isolated unit tests."
+  },
+  "claim_guard": [
+    "SCIENTIFIC_INTEGRATION_VERIFIED remains false (cumulative five-source).",
+    "LIVE_OAI_EPHEMERAL_LOCALINDEX ≠ Real Model Inference.",
+    "Operational sqlite was not written (db_unchanged); no harvest persist into operational store.",
+    "Composer may return no_validated_evidence honestly; path still proven.",
+    "Membership/ADR-022/ADR-023 untouched."
+  ],
+  "scientific_integration_verified": false,
+  "classification": "PARTIALLY_COMPLETED",
+  "c5_status": "PASS",
+  "c6_status": "PASS",
+  "c12_status": "PASS",
+  "path_level_proven": "REAL_APPLICATION_PATH",
+  "evidence_class": "LIVE_OAI_EPHEMERAL_LOCALINDEX",
+  "live_run": {
+    "trace_id": "oe-g102-c12-64a2544136a0a9a2",
+    "oai_base_url": "https://orgprints.org/cgi/oai2",
+    "identify_http_status": 200,
+    "list_records_count": 96,
+    "retrieval_survivor_count": 1,
+    "example_original_identifier": "oai:orgprints.org:116",
+    "validation_status": "validation_completed_with_rejections",
+    "validated_count": 0,
+    "composer_status": "no_validated_evidence",
+    "db_unchanged": true,
+    "primary_query": "organic farming wheat yield"
+  },
+  "components": {
+    "query_specializer": "backend/app/Services/Agriculture/Research/Search/LocalIndex/OrganicEprintsLocalIndexQuerySpecializer.php",
+    "acceptance_harness": "backend/app/Services/Agriculture/Research/Search/LocalIndex/OrganicEprintsG102AcceptanceHarness.php",
+    "readonly_bootstrap": "backend/app/Services/Agriculture/Research/Search/LocalIndex/OrganicEprintsG102OperationalReadonlyBootstrap.php",
+    "orchestrator_wiring": "MultiSourceScientificSearchOrchestrator::variantsForAdapter (organic_eprints specialized)",
+    "tests": "backend/tests/Unit/Agriculture/Research/Onboarding/OrganicEprintsG102AcceptanceHarnessTest.php"
+  },
+  "test_results": {
+    "OrganicEprintsG102AcceptanceHarnessTest": "3 passed",
+    "OrganicEprintsOaiLocalIndexPathTest": "regression green",
+    "AgrisG101C12LiveApplicationPathTest": "regression green",
+    "combined": "10 passed / 99 assertions"
+  },
+  "conditions_c1_c15": {
+    "C1": {
+      "title": "Authoritative Identity and Scope",
+      "previous": "PASS",
+      "final": "PASS",
+      "evidence": "G1-02 organic agriculture literature; harness OE-only"
+    },
+    "C2": {
+      "title": "Capability and Access Contract",
+      "previous": "PARTIAL",
+      "final": "PASS",
+      "evidence": "OAI-PMH ListRecords/Identify live 200; LocalIndex search contract; no false Boolean claims"
+    },
+    "C3": {
+      "title": "Scientific Query Relevance",
+      "previous": "PASS",
+      "final": "PASS",
+      "evidence": "OrganicEprintsLocalIndexQuerySpecializer CSQ-derived FTS-safe organic-scoped queries"
+    },
+    "C4": {
+      "title": "Production Routing",
+      "previous": "PASS",
+      "final": "PASS",
+      "evidence": "eligibility organic cues; prior null-sourceKeys OE selection retained"
+    },
+    "C5": {
+      "title": "Retrieval and Evidence Provenance",
+      "previous": "PARTIAL",
+      "final": "PASS",
+      "evidence": "Live OAI ListRecords 96 records + ephemeral LocalIndex adapter retrieval; oai:orgprints.org:* identifiers; provenance present"
+    },
+    "C6": {
+      "title": "Scientific Validation and Answer Composition",
+      "previous": "PARTIAL",
+      "final": "PASS",
+      "evidence": "validate→compose on live path; identity preserved; honest no_validated_evidence"
+    },
+    "C7": {
+      "title": "Runtime Configuration and Authentication",
+      "previous": "NOT_APPLICABLE_WITH_RATIONALE",
+      "final": "NOT_APPLICABLE",
+      "evidence": "Public OAI-PMH; no API key"
+    },
+    "C8": {
+      "title": "Retrieval Behavior and Error Handling",
+      "previous": "PARTIAL",
+      "final": "PASS",
+      "evidence": "specializer negative probe; EXTERNAL_SERVICE_FAILURE path; fixture empty-query regressions via existing OE tests"
+    },
+    "C9": {
+      "title": "Evidence Normalization",
+      "previous": "PARTIAL",
+      "final": "PASS",
+      "evidence": "original_identifier/source_key/provenance on live chain"
+    },
+    "C10": {
+      "title": "Scientific Identity Integrity",
+      "previous": "PARTIAL",
+      "final": "PASS",
+      "evidence": "CSQ snapshots equal; organic scope preserved; no crop substitution in specializer"
+    },
+    "C11": {
+      "title": "Negative and Boundary Testing",
+      "previous": "PARTIAL",
+      "final": "PASS",
+      "evidence": "negative token version; organic eligibility boundary retained"
+    },
+    "C12": {
+      "title": "Reproducible Production-Path Evidence",
+      "previous": "PARTIAL",
+      "final": "PASS",
+      "evidence": "REAL_APPLICATION_PATH Live OAI → ephemeral LocalIndex → Validation → AnswerComposer; OrganicEprintsG102AcceptanceHarnessTest"
+    },
+    "C13": {
+      "title": "Source-Specific Limitations and Governance",
+      "previous": "PASS",
+      "final": "PASS",
+      "evidence": "organic scope; redistribution prohibited; no ODS claim; operational DB unchanged"
+    },
+    "C14": {
+      "title": "Regression and Architectural Integrity",
+      "previous": "PASS",
+      "final": "PASS",
+      "evidence": "OE path + AGRIS C12 regression 10/99; WIP unstaged"
+    },
+    "C15": {
+      "title": "Evidence Completeness and Traceability",
+      "previous": "PARTIAL",
+      "final": "PASS",
+      "evidence": "This artifact + Arabic report + live dump linked by adr_id G1-02 / trace_id"
+    }
+  },
+  "remaining_gaps": [
+    "Operational LocalIndex FTS search for organic_eprints remains unreliable/slow on the multi-source sqlite; Stage-3 production search quality against operational OE FTS not claimed green.",
+    "SCIENTIFIC_INTEGRATION_VERIFIED withheld until five-source cumulative package complete.",
+    "Composer synthesizability vs retrieved OE abstracts remains quality residual."
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema_id": "wsa.phase1_110_source_option_b_update.v1",
+  "revision": "11.0.18",
+  "recorded_at_utc": "2026-11-19T13:20:00Z",
+  "prior_option_b": "docs/architecture/science-source-expansion/2026-11-19-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.17.json",
+  "claim_guard": [
+    "No seat is assigned SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "Organic Eprints C5/C6/C12 closed via LIVE_OAI_EPHEMERAL_LOCALINDEX path.",
+    "Membership register untouched."
+  ],
+  "scientific_integration_verified_count": 0,
+  "seat_deltas": [
+    {
+      "adr_id": "G1-02",
+      "source_key": "organic_eprints",
+      "scientific_integration_verified": false,
+      "current_integration_status": "PARTIALLY_VERIFIED",
+      "production_path_participation": "YES_LIVE_OAI_EPHEMERAL_LOCALINDEX_VALIDATION_COMPOSER",
+      "retrieval_status": "RETRIEVAL_VERIFIED_LIVE_OAI",
+      "c5_status": "PASS",
+      "c6_status": "PASS",
+      "c12_status": "PASS",
+      "remaining_acceptance_conditions": [
+        "Cumulative five-source SCIENTIFIC_INTEGRATION_VERIFIED still blocked",
+        "Operational OE FTS search quality on shared sqlite not claimed green"
+      ],
+      "evidence_artifact": "docs/architecture/science-source-expansion/2026-11-19-ORGANIC-EPRINTS-G1-02-ACCEPTANCE-EVIDENCE.v11.0.18.json"
+    }
+  ],
+  "other_seats": "agris_carried_from_v11.0.17; duke_gbif_bhl_unchanged"
+}

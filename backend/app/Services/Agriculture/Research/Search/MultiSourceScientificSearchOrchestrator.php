@@ -19,6 +19,7 @@ use App\Services\Agriculture\Research\Search\Contract\ScientificSourceLicensingD
 use App\Services\Agriculture\Research\Search\Contract\ScientificSourceSearchRequest;
 use App\Services\Agriculture\Research\Search\LocalIndex\AgrisLocalIndexQuerySpecializer;
 use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexScientificSourceAdapter;
+use App\Services\Agriculture\Research\Search\LocalIndex\OrganicEprintsLocalIndexQuerySpecializer;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCapabilityPolicy;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceExecutionGroup;
@@ -778,11 +779,17 @@ class MultiSourceScientificSearchOrchestrator
 
         $preferred = [];
 
-        // AGRIS G1-01: FTS-safe retrieval queries derived from CSQ/plan (does not mutate CSQ).
-        // Keep specialized queries first and do not append long scholarly NL variants that
+        // AGRIS G1-01 / Organic Eprints G1-02: FTS-safe retrieval queries derived from CSQ/plan
+        // (does not mutate CSQ). Prefer specialized queries; avoid long scholarly NL that
         // over-constrain FTS AND matching within MAX_VARIANTS_PER_PROVIDER.
         if ($adapter->sourceKey() === AgrisLocalIndexQuerySpecializer::SOURCE_KEY) {
             $preferred = (new AgrisLocalIndexQuerySpecializer())->retrievalQueries($plan);
+            if ($preferred !== []) {
+                return ScientificSearchVariantBudget::apply($preferred)['variants'];
+            }
+        }
+        if ($adapter->sourceKey() === OrganicEprintsLocalIndexQuerySpecializer::SOURCE_KEY) {
+            $preferred = (new OrganicEprintsLocalIndexQuerySpecializer())->retrievalQueries($plan);
             if ($preferred !== []) {
                 return ScientificSearchVariantBudget::apply($preferred)['variants'];
             }

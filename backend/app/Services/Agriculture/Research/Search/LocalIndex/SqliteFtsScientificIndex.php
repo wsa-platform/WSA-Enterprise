@@ -119,15 +119,10 @@ final class SqliteFtsScientificIndex implements LocalIndexSearchEngine
     {
         $this->ensureSchema();
 
-        // Full COUNT on multi-million AGRIS FTS rows is too expensive for pin/presence checks.
-        // Read-only / operational search only needs a non-zero presence signal.
+        // Full COUNT / FTS scans on multi-million corpora are too expensive for pin/presence checks.
+        // Read-only operational search trusts FTS meta generation (same signal as hasSource).
         if ((bool) config('agricultural_intelligence.local_index.read_only_search', false)) {
-            $row = $this->connection()->selectOne(
-                'SELECT 1 AS ok FROM '.self::FTS_TABLE.' WHERE source_key = ? LIMIT 1',
-                [$sourceKey],
-            );
-
-            return $row === null ? 0 : 1;
+            return $this->generation($sourceKey) > 0 ? 1 : 0;
         }
 
         return (int) $this->connection()->table(self::FTS_TABLE)->where('source_key', $sourceKey)->count();

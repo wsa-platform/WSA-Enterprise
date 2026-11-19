@@ -1,0 +1,65 @@
+{
+  "schema_id": "wsa.five_source_fifteen_conditions.v1",
+  "revision": "11.0.18",
+  "recorded_at_utc": "2026-11-19T13:20:00Z",
+  "supersedes_for_organic_eprints_and_carries_agris": "docs/architecture/science-source-expansion/2026-11-19-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.17.json",
+  "claim_guard": [
+    "No source reaches SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "AGRIS row carried from 11.0.17; Organic Eprints updated from 11.0.18 acceptance.",
+    "Other seats unchanged this revision."
+  ],
+  "mission_completion_classification": "BLOCKED",
+  "fully_verified_count": 0,
+  "conditions": ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", "C13", "C14", "C15"],
+  "seats": [
+    {
+      "adr_id": "G1-01",
+      "source_key": "agris",
+      "note": "Carried from 11.0.17",
+      "scientific_integration_verified": false,
+      "conditions_ref": "2026-11-19-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.17.json#G1-01"
+    },
+    {
+      "adr_id": "G1-02",
+      "source_key": "organic_eprints",
+      "scientific_integration_verified": false,
+      "update_revision": "11.0.18",
+      "evidence_artifact": "docs/architecture/science-source-expansion/2026-11-19-ORGANIC-EPRINTS-G1-02-ACCEPTANCE-EVIDENCE.v11.0.18.json",
+      "conditions": {
+        "C1": {"status": "PASS", "evidence": "G1-02 organic literature scope"},
+        "C2": {"status": "PASS", "evidence": "Live OAI Identify/ListRecords + LocalIndex contract"},
+        "C3": {"status": "PASS", "evidence": "OrganicEprintsLocalIndexQuerySpecializer"},
+        "C4": {"status": "PASS", "evidence": "organic cue eligibility + prior routing"},
+        "C5": {"status": "PASS", "evidence": "Live OAI retrieval + ephemeral LocalIndex identifiers/provenance"},
+        "C6": {"status": "PASS", "evidence": "validate→compose on live path"},
+        "C7": {"status": "NOT_APPLICABLE_WITH_RATIONALE", "evidence": "Public OAI; no API key"},
+        "C8": {"status": "PASS", "evidence": "negative probe + EXTERNAL_SERVICE_FAILURE handling"},
+        "C9": {"status": "PASS", "evidence": "normalization/provenance on live chain"},
+        "C10": {"status": "PASS", "evidence": "CSQ identity preserved"},
+        "C11": {"status": "PASS", "evidence": "negatives + eligibility boundary"},
+        "C12": {"status": "PASS", "evidence": "REAL_APPLICATION_PATH live OAI→ephemeral LocalIndex→Validation→Composer"},
+        "C13": {"status": "PASS", "evidence": "organic scope + no operational write"},
+        "C14": {"status": "PASS", "evidence": "OE+AGRIS regression green"},
+        "C15": {"status": "PASS", "evidence": "11.0.18 evidence artifact linked"}
+      }
+    },
+    {
+      "adr_id": "G1-17",
+      "source_key": "dr_duke",
+      "note": "Unchanged from 11.0.17",
+      "conditions_ref": "2026-11-19-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.17.json#G1-17"
+    },
+    {
+      "adr_id": "G5-04",
+      "source_key": "gbif",
+      "note": "Unchanged from 11.0.17",
+      "conditions_ref": "2026-11-19-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.17.json#G5-04"
+    },
+    {
+      "adr_id": "G6-20",
+      "source_key": "bhl",
+      "note": "Unchanged from 11.0.17",
+      "conditions_ref": "2026-11-19-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.17.json#G6-20"
+    }
+  ]
+}
