@@ -1,0 +1,62 @@
+{
+  "schema_id": "wsa.gbif_api_key_env_verification.v1",
+  "revision": "11.0.21",
+  "recorded_at_utc": "2026-11-19T18:15:00Z",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "baseline_head": "e6b073f31fb916330dc3b9867e2edb9a1bf84c73",
+  "adr_id": "G5-04",
+  "source_key": "gbif",
+  "secret_redaction": "No secret values are recorded in this artifact.",
+  "env_inspection": {
+    "project_root_env_path": ".env",
+    "project_root_env_present": true,
+    "gbif_related_keys_in_root_env": [],
+    "backend_env_path": "backend/.env",
+    "backend_env_present": true,
+    "gbif_related_keys_in_backend_env": [],
+    "gbif_api_key_present": false,
+    "gbif_username_present": false,
+    "gbif_password_present": false,
+    "gbif_enabled_explicit": false,
+    "notes": [
+      "backend/.env.example documents only optional GBIF_ENABLED (commented).",
+      "Unrelated keys may exist for other sources; values are not disclosed."
+    ]
+  },
+  "laravel_binding": {
+    "config_path": "backend/config/agricultural_intelligence.php",
+    "gbif_config_keys": ["enabled"],
+    "gbif_api_key_config_key": null,
+    "default_enabled": true,
+    "adapter_profile": "NextGateEligibleSeatCatalog::gbifRestProfile → RestJsonSourceProfile",
+    "endpoint": "https://api.gbif.org/v1/species/search",
+    "query_parameter": "q",
+    "credential_object": null,
+    "contrast_with_bhl": "BHL uses api_key via BHL_API_KEY; GBIF profile has no credential placement."
+  },
+  "official_auth_requirement": {
+    "source": "https://techdocs.gbif.org/en/openapi/",
+    "finding": "Most GBIF API use does not require authentication. POST/PUT/DELETE and some GET require HTTP Basic with a GBIF account — not an API key.",
+    "species_search_requires_key": false,
+    "occurrence_download_requires_account": true,
+    "integration_path_used": "public GET species/search",
+    "key_required_for_current_path": false,
+    "action_taken": "No credential invented; no third-party key used; no paid service started."
+  },
+  "connectivity_probe": {
+    "url_pattern": "https://api.gbif.org/v1/species/search?q=<scientific_name>&limit=1",
+    "auth_header_sent": false,
+    "http_status": 200,
+    "results_present": true,
+    "identifier_field_present": true,
+    "classification": "PUBLIC_ENDPOINT_REACHABLE_WITHOUT_KEY"
+  },
+  "decision": {
+    "use_existing_key": false,
+    "reason_no_existing_key": "No GBIF credential variables present in inspected env files.",
+    "seek_replacement_key": false,
+    "create_fake_requirement": false,
+    "owner_action_required": false,
+    "rationale": "G5-04 acceptance path is public species/search; C7 remains NOT_APPLICABLE_WITH_RATIONALE."
+  }
+}

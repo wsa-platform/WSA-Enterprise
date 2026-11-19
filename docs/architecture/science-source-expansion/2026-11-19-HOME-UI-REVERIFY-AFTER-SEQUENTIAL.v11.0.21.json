@@ -1,0 +1,57 @@
+{
+  "schema_id": "wsa.home_ui_reverify_after_sequential.v1",
+  "revision": "11.0.21",
+  "recorded_at_utc": "2026-11-19T18:15:00Z",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "continues": "docs/architecture/science-source-expansion/2026-11-19-GBIF-G5-04-AND-SEARCH-RESTORATION-REPORT.ar.md#P",
+  "prior_gap": "UI showed no_search_results before sequential orchestrator default fully verified on Home.",
+  "scenario": {
+    "ui_question_ar": "ما هو تأثير درجة الحرارة على نمو القمح؟",
+    "api_question_en": "What is the effect of temperature on wheat growth?",
+    "endpoint": "POST /api/v1/public/research-agent/query",
+    "ui_url": "http://127.0.0.1:8079/"
+  },
+  "backend_ledger": {
+    "status": "scientific_generated",
+    "search_status": "search_completed",
+    "raw_count": 60,
+    "deduplicated_count": 22,
+    "selected_sources": ["fao_stat", "openalex", "crossref", "semantic_scholar", "agris", "gbif"],
+    "successful_sources": ["openalex", "crossref"],
+    "failed_sources": [],
+    "validation_status": "validation_completed",
+    "validated_count": 22,
+    "rejected_count": 0,
+    "claims_count": 2,
+    "citations_count": 4,
+    "human_status": "answered",
+    "user_notice_code": "review_sources"
+  },
+  "ui_verification": {
+    "executed": true,
+    "loading_state_observed": "جاري البحث في المصادر العلمية...",
+    "final_heading": "الإجابة",
+    "status_shown": "scientific_generated",
+    "answer_shown": true,
+    "sources_section_shown": true,
+    "doi_link_shown": "https://doi.org/10.15835/nsb437879",
+    "no_search_results_shown": false,
+    "classification": "UI_ANSWER_RENDERED"
+  },
+  "tests_rerun": {
+    "filter": "GbifG504AcceptanceHarnessTest|NoSearchResultsRelevanceRejectionClassificationTest|PlantGrowthTemperatureQueryAndRelevanceTest",
+    "result": "7 passed (37 assertions)"
+  },
+  "classification": {
+    "workstream_a_gbif": "ACCEPTED_WITH_LIMITATIONS_UNCHANGED",
+    "workstream_b_search_restoration": "BACKEND_AND_UI_RESTORED_FOR_WHEAT_SCENARIO",
+    "scientific_integration_verified": false,
+    "phase_1": "PHASE_1_GAP_CLOSURE_PARTIAL"
+  },
+  "limitations": [
+    "Ginger scenario not re-run in this continuation wave.",
+    "Process-pool remains opt-in/disabled by default.",
+    "BHL not started.",
+    "Cumulative five-source VERIFIED remains false."
+  ]
+}
