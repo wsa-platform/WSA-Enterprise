@@ -1,0 +1,66 @@
+{
+  "schema_id": "wsa.five_source_fifteen_conditions.v1",
+  "revision": "11.0.19",
+  "recorded_at_utc": "2026-11-19T16:00:00Z",
+  "supersedes_for_dr_duke": "docs/architecture/science-source-expansion/2026-11-19-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.18.json",
+  "claim_guard": [
+    "No source reaches SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "AGRIS and Organic Eprints carried forward; Dr. Duke updated.",
+    "PHASE_1_GAP_CLOSURE_PARTIAL unchanged."
+  ],
+  "mission_completion_classification": "BLOCKED",
+  "fully_verified_count": 0,
+  "conditions": ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", "C13", "C14", "C15"],
+  "seats": [
+    {
+      "adr_id": "G1-01",
+      "source_key": "agris",
+      "note": "Carried from 11.0.17/11.0.18",
+      "scientific_integration_verified": false,
+      "conditions_ref": "2026-11-19-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.17.json#G1-01"
+    },
+    {
+      "adr_id": "G1-02",
+      "source_key": "organic_eprints",
+      "note": "Carried from 11.0.18",
+      "scientific_integration_verified": false,
+      "conditions_ref": "2026-11-19-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.18.json#G1-02"
+    },
+    {
+      "adr_id": "G1-17",
+      "source_key": "dr_duke",
+      "scientific_integration_verified": false,
+      "update_revision": "11.0.19",
+      "evidence_artifact": "docs/architecture/science-source-expansion/2026-11-19-DR-DUKE-G1-17-ACCEPTANCE-EVIDENCE.v11.0.19.json",
+      "conditions": {
+        "C1": {"status": "PASS", "evidence": "OD-G1-17 scope"},
+        "C2": {"status": "PASS", "evidence": "STATIC_DATASET LocalIndex"},
+        "C3": {"status": "PASS", "evidence": "Duke query specializer"},
+        "C4": {"status": "PASS", "evidence": "phytochem eligibility"},
+        "C5": {"status": "PASS", "evidence": "fixture + operational RO retrieval"},
+        "C6": {"status": "PASS", "evidence": "validate→compose harness"},
+        "C7": {"status": "NOT_APPLICABLE_WITH_RATIONALE", "evidence": "No Live API"},
+        "C8": {"status": "PASS", "evidence": "negatives + RO refuse rebuild"},
+        "C9": {"status": "PASS", "evidence": "provenance/identifiers"},
+        "C10": {"status": "PASS", "evidence": "Mentha identity + no efficacy invention"},
+        "C11": {"status": "PASS", "evidence": "negatives + irrigation block"},
+        "C12": {"status": "PASS", "evidence": "REAL_APPLICATION_PATH harness"},
+        "C13": {"status": "PASS", "evidence": "OD limits + 16-table reconcile"},
+        "C14": {"status": "PASS", "evidence": "tests green"},
+        "C15": {"status": "PASS", "evidence": "11.0.19 evidence linked"}
+      }
+    },
+    {
+      "adr_id": "G5-04",
+      "source_key": "gbif",
+      "note": "Unchanged",
+      "conditions_ref": "2026-11-18-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.13.json#G5-04"
+    },
+    {
+      "adr_id": "G6-20",
+      "source_key": "bhl",
+      "note": "Unchanged",
+      "conditions_ref": "2026-11-18-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.13.json#G6-20"
+    }
+  ]
+}

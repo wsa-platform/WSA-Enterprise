@@ -56,6 +56,22 @@ class AgriculturalScientificValidationService
         }
 
         if ($searchReport->deduplicatedResults === []) {
+            // Distinguish true empty retrieval from Stage-3 relevance wipe of non-empty raw hits.
+            // Do not weaken relevance gates — only stop conflating the two failure classes.
+            if ($searchReport->results !== []) {
+                return $this->emptyReport(
+                    'all_results_rejected_by_relevance',
+                    $searchReport,
+                    [
+                        'failure_class' => 'ALL_RESULTS_REJECTED',
+                        'raw_result_count' => count($searchReport->results),
+                        'survivor_count' => 0,
+                        'sources_received_basis' => 'raw_results_before_relevance_filter',
+                    ],
+                    sourcesReceived: count($searchReport->results),
+                );
+            }
+
             return $this->emptyReport('no_search_results', $searchReport);
         }
 
@@ -522,13 +538,20 @@ class AgriculturalScientificValidationService
         return EvidenceValidationStatus::DISCOVERED;
     }
 
-    private function emptyReport(string $status, ScientificSearchExecutionReport $searchReport): EvidenceValidationExecutionReport
-    {
+    /**
+     * @param  array<string, mixed>  $observabilityExtra
+     */
+    private function emptyReport(
+        string $status,
+        ScientificSearchExecutionReport $searchReport,
+        array $observabilityExtra = [],
+        ?int $sourcesReceived = null,
+    ): EvidenceValidationExecutionReport {
         return new EvidenceValidationExecutionReport(
             status: $status,
             validatedEvidence: [],
             rejectedEvidence: [],
-            sourcesReceived: count($searchReport->deduplicatedResults),
+            sourcesReceived: $sourcesReceived ?? count($searchReport->deduplicatedResults),
             validatedCount: 0,
             rejectedCount: 0,
             duplicateCount: 0,
@@ -540,8 +563,10 @@ class AgriculturalScientificValidationService
                 'direct_evidence_count' => 0,
                 'supporting_evidence_count' => 0,
                 'answer_eligible_supporting_count' => 0,
+                'raw_result_count' => count($searchReport->results),
+                'survivor_count' => count($searchReport->deduplicatedResults),
             ]),
-            observability: [
+            observability: array_merge([
                 'failure_reasons' => [$status],
                 'source_types_used' => [],
                 'validation_status_counts' => [],
@@ -553,7 +578,7 @@ class AgriculturalScientificValidationService
                 ],
                 'evidence_capability' => false,
                 'item_dispositions' => [],
-            ],
+            ], $observabilityExtra),
         );
     }
 
@@ -767,6 +792,13 @@ class AgriculturalScientificValidationService
             'found_by_sources' => $result->foundBySources,
             'source_key' => $result->sourceKey,
             'source_identifier' => $result->sourceIdentifier,
+            'retrieved_at_basis' => $result->primaryProvenance()?->retrievedAt !== null
+                ? 'source_retrieval'
+                : 'validation_time',
+            'records' => array_map(
+                static fn (\App\Services\Agriculture\Research\Search\Provenance\ScientificSourceRecordProvenance $record): array => $record->toArray(),
+                $result->provenance,
+            ),
         ]);
         $pdfUrl = trim((string) ($meta['open_access_pdf_url'] ?? $meta['pdf_url'] ?? $merged['open_access_pdf_url'] ?? ''));
         if ($pdfUrl !== '') {

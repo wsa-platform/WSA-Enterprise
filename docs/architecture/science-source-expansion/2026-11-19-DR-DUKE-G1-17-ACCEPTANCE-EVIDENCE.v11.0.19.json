@@ -1,0 +1,67 @@
+{
+  "schema_id": "wsa.dr_duke_g117_acceptance_evidence.v1",
+  "revision": "11.0.19",
+  "recorded_at_utc": "2026-11-19T16:00:00Z",
+  "adr_id": "G1-17",
+  "source_key": "dr_duke",
+  "baseline_head": "31287a1d12b40aebfd5dee5deddaedb3bb39bccd",
+  "owner_decision": "OD-G1-17-SCOPE-LIMITED-PROJECTION",
+  "owner_decision_path": "docs/architecture/science-source-expansion/2026-10-17-SOURCE-EXPANSION-MISSION/2026-10-18-OWNER-DECISION-RECORDED-G1-01-G1-17-SCOPE.v1.json",
+  "claim_guard": [
+    "SCIENTIFIC_INTEGRATION_VERIFIED remains false (cumulative five-source).",
+    "No Live API claimed under OD-G1-17.",
+    "Historical SCIENTIFIC_SEARCH_INTEGRATION_VERIFIED_LIMITED_LOCAL_PROJECTION ≠ mission VERIFIED.",
+    "Traditional use ≠ clinical efficacy.",
+    "FARMACY and FARMACY_NEW remain distinct.",
+    "PHASE_1_GAP_CLOSURE_PARTIAL unchanged."
+  ],
+  "scientific_integration_verified": false,
+  "classification": "ACCEPTED_WITH_LIMITATIONS",
+  "path_level_proven": "REAL_APPLICATION_PATH",
+  "evidence_classes": [
+    "FIXTURE_LOCALINDEX_LIMITED_PROJECTION",
+    "OPERATIONAL_LOCALINDEX_READONLY",
+    "RECONCILIATION_READONLY"
+  ],
+  "reconciliation": {
+    "artifact": "docs/architecture/science-source-expansion/2026-11-19-DR-DUKE-RECONCILIATION.v11.0.19.json",
+    "tables_present": 16,
+    "fnftax_keys": 2376,
+    "farmacy_vs_farmacy_new": "DISTINCT_NOT_BLIND_MERGED",
+    "ethnobot_taxon": "name_match_only_not_numeric_fk"
+  },
+  "od_gen_2_1500_note": "OD search_projection_generation=2 / search_rows=1500 is the acceptance baseline notation; operational LocalIndex may hold a larger later generation — not treated as Full Corpus Coverage.",
+  "components": {
+    "query_specializer": "backend/app/Services/Agriculture/Research/Search/LocalIndex/DrDukeLocalIndexQuerySpecializer.php",
+    "acceptance_harness": "backend/app/Services/Agriculture/Research/Search/LocalIndex/DrDukeG117AcceptanceHarness.php",
+    "readonly_bootstrap": "backend/app/Services/Agriculture/Research/Search/LocalIndex/DrDukeG117OperationalReadonlyBootstrap.php",
+    "tests": "backend/tests/Unit/Agriculture/Research/Onboarding/DrDukeG117AcceptanceHarnessTest.php"
+  },
+  "test_results": {
+    "DrDukeG117AcceptanceHarnessTest": "3 passed",
+    "NoSearchResultsRelevanceRejectionClassificationTest": "2 passed (Workstream B; separate)",
+    "combined_filter_run": "5 passed / 28 assertions"
+  },
+  "conditions_c1_c15": {
+    "C1": {"title": "Authoritative Identity and Scope", "previous": "PASS", "final": "PASS", "evidence": "OD-G1-17 recovered; G1-17 scope limited projection"},
+    "C2": {"title": "Capability and Access Contract", "previous": "PASS", "final": "PASS", "evidence": "STATIC_DATASET LocalIndex; no Live API"},
+    "C3": {"title": "Scientific Query Relevance", "previous": "PASS", "final": "PASS", "evidence": "DrDukeLocalIndexQuerySpecializer Mentha/phytochem; CSQ not mutated"},
+    "C4": {"title": "Production Routing", "previous": "PASS", "final": "PASS", "evidence": "eligibility phytochem; irrigation blocks Duke"},
+    "C5": {"title": "Retrieval and Evidence Provenance", "previous": "PARTIAL", "final": "PASS", "evidence": "Fixture + operational RO LocalIndex retrieval with identifiers; not Live API"},
+    "C6": {"title": "Scientific Validation and Answer Composition", "previous": "PARTIAL", "final": "PASS", "evidence": "validate→compose on harness paths; honest insufficient allowed"},
+    "C7": {"title": "Runtime Configuration and Authentication", "previous": "NOT_APPLICABLE_WITH_RATIONALE", "final": "NOT_APPLICABLE", "evidence": "No Live API under OD-G1-17"},
+    "C8": {"title": "Retrieval Behavior and Error Handling", "previous": "PARTIAL", "final": "PASS", "evidence": "negative probe; empty/RO rebuild refusal via read_only_search"},
+    "C9": {"title": "Evidence Normalization", "previous": "PARTIAL", "final": "PASS", "evidence": "source_key/identifiers/provenance on Duke results"},
+    "C10": {"title": "Scientific Identity Integrity", "previous": "PARTIAL", "final": "PASS", "evidence": "Mentha piperita preserved; no clinical efficacy invention"},
+    "C11": {"title": "Negative and Boundary Testing", "previous": "PARTIAL", "final": "PASS", "evidence": "negative token; irrigation eligibility negative retained"},
+    "C12": {"title": "Reproducible Production-Path Evidence", "previous": "PARTIAL", "final": "PASS", "evidence": "REAL_APPLICATION_PATH harness fixture + operational RO; DrDukeG117AcceptanceHarnessTest"},
+    "C13": {"title": "Source-Specific Limitations and Governance", "previous": "PASS", "final": "PASS", "evidence": "OD limits; FARMACY≠FARMACY_NEW; ETHNOBOT traditional-use"},
+    "C14": {"title": "Regression and Architectural Integrity", "previous": "PASS", "final": "PASS", "evidence": "acceptance tests green; WIP unstaged"},
+    "C15": {"title": "Evidence Completeness and Traceability", "previous": "PARTIAL", "final": "PASS", "evidence": "This artifact + reconciliation + Arabic report linked"}
+  },
+  "remaining_gaps": [
+    "Mission-level SCIENTIFIC_INTEGRATION_VERIFIED still false pending five-source cumulative package.",
+    "OD GEN=2/1500 baseline ≠ claim of full Duke corpus coverage.",
+    "ETHNOBOT name-match unresolved rows remain per reconciliation."
+  ]
+}

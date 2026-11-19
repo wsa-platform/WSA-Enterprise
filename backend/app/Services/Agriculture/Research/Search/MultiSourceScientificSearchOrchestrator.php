@@ -19,6 +19,7 @@ use App\Services\Agriculture\Research\Search\Contract\ScientificSourceLicensingD
 use App\Services\Agriculture\Research\Search\Contract\ScientificSourceSearchRequest;
 use App\Services\Agriculture\Research\Search\LocalIndex\AgrisLocalIndexQuerySpecializer;
 use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexScientificSourceAdapter;
+use App\Services\Agriculture\Research\Search\LocalIndex\DrDukeLocalIndexQuerySpecializer;
 use App\Services\Agriculture\Research\Search\LocalIndex\OrganicEprintsLocalIndexQuerySpecializer;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCapabilityPolicy;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
@@ -790,6 +791,12 @@ class MultiSourceScientificSearchOrchestrator
         }
         if ($adapter->sourceKey() === OrganicEprintsLocalIndexQuerySpecializer::SOURCE_KEY) {
             $preferred = (new OrganicEprintsLocalIndexQuerySpecializer())->retrievalQueries($plan);
+            if ($preferred !== []) {
+                return ScientificSearchVariantBudget::apply($preferred)['variants'];
+            }
+        }
+        if ($adapter->sourceKey() === DrDukeLocalIndexQuerySpecializer::SOURCE_KEY) {
+            $preferred = (new DrDukeLocalIndexQuerySpecializer())->retrievalQueries($plan);
             if ($preferred !== []) {
                 return ScientificSearchVariantBudget::apply($preferred)['variants'];
             }

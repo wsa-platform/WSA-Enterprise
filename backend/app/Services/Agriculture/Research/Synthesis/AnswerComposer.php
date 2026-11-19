@@ -49,7 +49,11 @@ class AnswerComposer
         $language = $this->resolveComposeAnswerLanguage($plan);
         $query = $plan->normalizedQuery->originalQuestion;
 
-        if (in_array($validationReport->status, ['needs_clarification', 'no_search_results'], true)) {
+        if (in_array($validationReport->status, [
+            'needs_clarification',
+            'no_search_results',
+            'all_results_rejected_by_relevance',
+        ], true)) {
             return $this->insufficientReport(
                 status: $validationReport->status,
                 reason: $validationReport->status,
@@ -2932,7 +2936,9 @@ class AnswerComposer
         int $rejectedCount = 0,
         ?EvidenceValidationExecutionReport $validationReport = null,
     ): AnswerSynthesisExecutionReport {
-        $message = ($reason === 'no_relevant_validated_evidence' || $reason === 'background_or_weak_evidence_only')
+        $message = ($reason === 'no_relevant_validated_evidence'
+            || $reason === 'background_or_weak_evidence_only'
+            || $reason === 'all_results_rejected_by_relevance')
             ? AnswerComposerPhrases::get($language, 'insufficient_irrelevant')
             : AnswerComposerPhrases::get($language, 'uncertainty_insufficient');
 
@@ -2940,12 +2946,21 @@ class AnswerComposer
             $plan,
             $validationReport,
             composerEligibleCount: 0,
-            disposition: $status === 'no_search_results' || $status === 'needs_clarification'
-                ? ($status === 'needs_clarification' ? 'needs_clarification' : null)
-                : null,
+            disposition: $status === 'needs_clarification'
+                ? 'needs_clarification'
+                : ($status === 'all_results_rejected_by_relevance'
+                    ? HomeEvidenceLifecycleDisposition::RETRIEVED_BUT_REJECTED
+                    : null),
         );
         if ($status === 'no_search_results' && $lifecycle !== []) {
             $lifecycle['evidence_lifecycle_disposition'] = 'no_results_retrieved';
+        }
+        if ($status === 'all_results_rejected_by_relevance' && $lifecycle !== []) {
+            $lifecycle['evidence_lifecycle_disposition'] = HomeEvidenceLifecycleDisposition::RETRIEVED_BUT_REJECTED;
+            $lifecycle['failure_class'] = 'ALL_RESULTS_REJECTED';
+            $lifecycle['raw_result_count'] = (int) ($validationReport?->searchSummary['raw_result_count']
+                ?? $validationReport?->sourcesReceived
+                ?? 0);
         }
 
         $evidenceReferences = $validationReport !== null

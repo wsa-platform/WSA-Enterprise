@@ -1,0 +1,45 @@
+{
+  "schema_id": "wsa.no_search_result_root_cause.v1",
+  "revision": "11.0.19",
+  "recorded_at_utc": "2026-11-19T16:00:00Z",
+  "workstream": "B",
+  "user_visible_status_historical": "no_search_results",
+  "independent_of_dr_duke": true,
+  "root_cause": {
+    "stage": "Stage 4 AgriculturalScientificValidationService::validate",
+    "mechanism": "When Stage-3 relevance filter emptied deduplicatedResults while raw results[] remained non-empty, validation emitted no_search_results — conflating ALL_RESULTS_REJECTED with true empty retrieval.",
+    "evidence": [
+      "backend/e2e-tmp/acc-q1-validate.json (result_count 64, deduplicated_result_count 0)",
+      "MultiSourceScientificSearchOrchestrator deduplicatedResults = post-rank survivors",
+      "HomeEmptyProviderFirstLossTest covers true empty path"
+    ]
+  },
+  "repair": {
+    "files": [
+      "backend/app/Services/Agriculture/Research/Validation/AgriculturalScientificValidationService.php",
+      "backend/app/Services/Agriculture/Research/Synthesis/AnswerComposer.php"
+    ],
+    "behavior": {
+      "raw_empty_survivors_empty": "no_search_results",
+      "raw_nonempty_survivors_empty": "all_results_rejected_by_relevance",
+      "composer": "insufficient_irrelevant phrase; disposition retrieved_but_rejected; no invented claims"
+    },
+    "gates_not_weakened": true
+  },
+  "tests": {
+    "NoSearchResultsRelevanceRejectionClassificationTest": "2 passed",
+    "HomeEmptyProviderFirstLossTest": "regression retained for true empty"
+  },
+  "classification": {
+    "root_cause_identified": true,
+    "root_cause_reproduced": true,
+    "root_cause_repaired": true,
+    "regression_tests_passed": true,
+    "real_application_path_verified": "PARTIAL_UNIT_AND_PRIOR_E2E_DUMP",
+    "ui_verified": false,
+    "remaining_limitations": [
+      "Does not force answers when evidence fails relevance.",
+      "UI still shows insufficient presentation; status string now distinguishable in API."
+    ]
+  }
+}

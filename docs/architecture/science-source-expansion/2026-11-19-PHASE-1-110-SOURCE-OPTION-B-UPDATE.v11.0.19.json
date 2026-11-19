@@ -1,0 +1,29 @@
+{
+  "schema_id": "wsa.phase1_110_source_option_b_update.v1",
+  "revision": "11.0.19",
+  "recorded_at_utc": "2026-11-19T16:00:00Z",
+  "prior_option_b": "docs/architecture/science-source-expansion/2026-11-19-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.18.json",
+  "claim_guard": [
+    "No seat SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "Dr. Duke accepted with OD-G1-17 limitations only.",
+    "Workstream B NSR classification fix is independent of Duke seat."
+  ],
+  "scientific_integration_verified_count": 0,
+  "seat_deltas": [
+    {
+      "adr_id": "G1-17",
+      "source_key": "dr_duke",
+      "scientific_integration_verified": false,
+      "current_integration_status": "ACCEPTED_WITH_LIMITATIONS",
+      "c5_status": "PASS",
+      "c6_status": "PASS",
+      "c12_status": "PASS",
+      "evidence_artifact": "docs/architecture/science-source-expansion/2026-11-19-DR-DUKE-G1-17-ACCEPTANCE-EVIDENCE.v11.0.19.json"
+    }
+  ],
+  "other_seats": "agris_and_organic_eprints_carried; gbif_bhl_unchanged",
+  "workstream_b": {
+    "artifact": "docs/architecture/science-source-expansion/2026-11-19-NO-SEARCH-RESULT-ROOT-CAUSE.v11.0.19.json",
+    "status": "REPAIRED_CLASSIFICATION"
+  }
+}

@@ -1,0 +1,140 @@
+{
+    "schema_id": "wsa.dr_duke_reconciliation.v1",
+    "contract_version": "dr_duke_dataset_reconciler.v1",
+    "tables_present": [
+        "FNFTAX",
+        "CHEMICALS",
+        "ETHNOBOT",
+        "FARMACY",
+        "FARMACY_NEW",
+        "COMMON_NAMES",
+        "ACTIVITIES",
+        "AGGREGAC",
+        "ASSAY",
+        "CHEM_MEANS",
+        "CODES",
+        "DOSAGE",
+        "PARTS",
+        "REFERENCES",
+        "SUPERACT",
+        "YIELDS"
+    ],
+    "row_counts": {
+        "FNFTAX": 2376,
+        "CHEMICALS": 29585,
+        "ETHNOBOT": 82873,
+        "FARMACY": 68844,
+        "FARMACY_NEW": 104388,
+        "COMMON_NAMES": 2920,
+        "ACTIVITIES": 2432,
+        "AGGREGAC": 28929,
+        "ASSAY": 2630,
+        "CHEM_MEANS": 3832,
+        "CODES": 8926,
+        "DOSAGE": 1627,
+        "PARTS": 115,
+        "REFERENCES": 2056,
+        "SUPERACT": 5358,
+        "YIELDS": 2824
+    },
+    "fnftax_keys": 2376,
+    "chemicals_by_chem": 29585,
+    "chemicals_by_chemid": 29572,
+    "samples_read_cap": 50000,
+    "relationships": {
+        "FARMACY.FNFNUM->FNFTAX": {
+            "matched": 50000,
+            "unmatched": 0,
+            "sampled": 50000
+        },
+        "FARMACY.CHEM->CHEMICALS.CHEM": {
+            "matched": 50000,
+            "unmatched": 0,
+            "sampled": 50000
+        },
+        "FARMACY_NEW.FNFNUM->FNFTAX": {
+            "matched": 50000,
+            "unmatched": 0,
+            "sampled": 50000
+        },
+        "FARMACY_NEW.CHEMID->CHEMICALS.CHEMID": {
+            "matched": 48248,
+            "unmatched": 1752,
+            "sampled": 50000
+        },
+        "ETHNOBOT.TAXON<->FNFTAX.TAXON_name": {
+            "matched_name": 18666,
+            "unmatched_name": 31334,
+            "ambiguous_name": 0,
+            "sampled": 50000
+        },
+        "COMMON_NAMES.FNFNUM->FNFTAX": {
+            "matched": 2920,
+            "unmatched": 0,
+            "sampled": 2920
+        }
+    },
+    "farmacy_vs_farmacy_new": {
+        "interpretation": "Distinct overlapping schemas: FARMACY keys chemicals by CHEM name; FARMACY_NEW prefers CHEMID and adds CHEMICLASS/PLCO/quantity fields. Do not blind-merge.",
+        "shared_headers": [
+            "FNFNUM",
+            "CHEM",
+            "PPCO",
+            "INDIVIDUAL",
+            "REFERENCE",
+            "AMT_LO",
+            "AMT_OR_HI",
+            "TRACE",
+            "EOPCT_LO",
+            "EOPCT_OR_HI",
+            "REFYR",
+            "NAPREF",
+            "USERID",
+            "CREATED",
+            "MODIFIED"
+        ],
+        "only_farmacy": [
+            "ASSAY",
+            "AMT_PLUS",
+            "WEIGHTED",
+            "COMPARISON",
+            "LESSTHAN"
+        ],
+        "only_farmacy_new": [
+            "CHEMCLASS",
+            "PLCO",
+            "AMT_OR_LO",
+            "AMT_HI",
+            "AMT_ULHI",
+            "EOPCT_OR_LO",
+            "EOPCT_HI",
+            "LT",
+            "QUANT_UNIT",
+            "CHEMID"
+        ]
+    },
+    "projection_policy": {
+        "fully_projected_for_search": [
+            "FNFTAX",
+            "CHEMICALS",
+            "ETHNOBOT"
+        ],
+        "relationship_validated_not_row_projected": [
+            "FARMACY",
+            "FARMACY_NEW",
+            "COMMON_NAMES"
+        ],
+        "inspected_not_projected": [
+            "ACTIVITIES",
+            "AGGREGAC",
+            "ASSAY",
+            "CHEM_MEANS",
+            "CODES",
+            "DOSAGE",
+            "PARTS",
+            "REFERENCES",
+            "SUPERACT",
+            "YIELDS"
+        ]
+    }
+}
