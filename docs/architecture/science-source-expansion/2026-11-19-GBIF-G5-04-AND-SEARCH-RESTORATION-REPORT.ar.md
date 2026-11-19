@@ -16,7 +16,8 @@
 |---|---|
 | Branch | `phase-18-m18-ai-marketing-communications` |
 | Initial HEAD | `6b97b3b1a26283027622d2a6cd10af97f65647fd` |
-| Final HEAD | *(بعد Commit)* |
+| Final HEAD | `97045a6c0bc2f655d5c2ab6db5e341ed53e13651` |
+| Remote HEAD | `97045a6c0bc2f655d5c2ab6db5e341ed53e13651` (`REMOTE_SYNC_VERIFIED`) |
 | WIP | محمي خارج Staging |
 
 ---
@@ -68,7 +69,11 @@ AGRIS/OE/Duke: لم تُعاد؛ تعديل Orchestrator مشترك مع fallbac
 لا migrations؛ لا rebuild تخريبي؛ SQLite محمية.
 
 ## M. Git
-يُحدَّث بعد Commit/Push/Fetch.
+| الحالة | القيمة |
+|---|---|
+| COMMITTED_LOCALLY | `97045a6` |
+| PUSHED | نعم — `6b97b3b..97045a6` |
+| REMOTE_SYNC_VERIFIED | نعم |
 
 ## N. Remaining Gaps
 | فجوة | شدة |
