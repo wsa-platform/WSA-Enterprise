@@ -16,7 +16,8 @@
 |---|---|
 | Branch | `phase-18-m18-ai-marketing-communications` |
 | Initial HEAD | `b473803780493c3da6bd6ca8effa624715f36efa` |
-| Final HEAD | *(بعد Commit)* |
+| Final HEAD | `b2dc7e87dc64c4afdbd5f52d458842830c80c4b0` |
+| Remote HEAD | `b2dc7e87dc64c4afdbd5f52d458842830c80c4b0` (`REMOTE_SYNC_VERIFIED`) |
 | WIP | محمي خارج Staging (QUS/CapVer/Feature tests غير المرتبطة) |
 
 إعادة تحقق 11.0.21: GBIF بلا مفتاح؛ قمح UI/API ناجح؛ BHL كان NEXT.
@@ -121,9 +122,9 @@ ADR-022/023 محفوظان. عضوية 110 دون إعادة فتح. فصل Trad
 ## 17. Git Commit and Push
 | الحالة | القيمة |
 |---|---|
-| COMMITTED_LOCALLY | *(بعد Commit)* |
-| PUSHED | *(بعد Push)* |
-| REMOTE_SYNC_VERIFIED | *(بعد fetch)* |
+| COMMITTED_LOCALLY | `b2dc7e8` — `feat(bhl,search): G6-20 live acceptance and general scientific search matrix` |
+| PUSHED | نعم — `b473803..b2dc7e8` |
+| REMOTE_SYNC_VERIFIED | نعم — Local = origin = `b2dc7e87dc64c4afdbd5f52d458842830c80c4b0` |
 
 ---
 

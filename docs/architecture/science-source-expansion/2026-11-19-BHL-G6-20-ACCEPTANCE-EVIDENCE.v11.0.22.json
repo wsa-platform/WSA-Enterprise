@@ -5,6 +5,8 @@
   "adr_id": "G6-20",
   "source_key": "bhl",
   "baseline_head": "b473803780493c3da6bd6ca8effa624715f36efa",
+  "delivery_head": "b2dc7e87dc64c4afdbd5f52d458842830c80c4b0",
+  "remote_sync": "REMOTE_SYNC_VERIFIED",
   "secret_policy": "BHL_API_KEY value never logged, committed, or archived",
   "claim_guard": [
     "SCIENTIFIC_INTEGRATION_VERIFIED remains false (cumulative five-source).",
