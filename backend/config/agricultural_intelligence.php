@@ -103,6 +103,11 @@ return [
          */
         'agris_candidate_mode' => filter_var(env('AGRIS_CANDIDATE_MODE', true), FILTER_VALIDATE_BOOL),
         'agris_search_pin_generation' => max(0, (int) env('AGRIS_SEARCH_PIN_GENERATION', 79)),
+        /*
+         | AGRIS C12 / operational RO search: skip FTS CREATE/rebuild paths.
+         | Activated by AgrisG101OperationalReadonlyBootstrap for live acceptance.
+         */
+        'read_only_search' => filter_var(env('AGRIS_LOCAL_INDEX_READ_ONLY_SEARCH', false), FILTER_VALIDATE_BOOL),
     ],
 
     /*

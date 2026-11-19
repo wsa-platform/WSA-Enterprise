@@ -90,6 +90,13 @@ final class LocalIndexScientificSourceAdapter implements ScientificSourceAdapter
                 // Keep serving the pinned search generation while candidate ingest advances the store.
                 $committed = $pin;
             } elseif ($committed !== 0 && (! $this->index->hasSource($key) || $this->index->generation($key) !== $committed || $this->index->documentCount($key) === 0)) {
+                if ((bool) config('agricultural_intelligence.local_index.read_only_search', false)) {
+                    return $this->outcome(
+                        ScientificSourceSearchOutcome::STATUS_FAILED,
+                        error: 'local_index_readonly_rebuild_refused',
+                        startedNs: $startedNs,
+                    );
+                }
                 // Stream ACTIVE rows — never materialize the full corpus for rebuild.
                 $this->index->rebuild($key, $this->store->iterateActive($key), $committed);
             }

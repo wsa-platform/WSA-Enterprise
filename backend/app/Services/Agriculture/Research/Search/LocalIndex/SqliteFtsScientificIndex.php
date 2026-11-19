@@ -41,6 +41,11 @@ final class SqliteFtsScientificIndex implements LocalIndexSearchEngine
     /** @param  iterable<StoredScientificRecord>  $records */
     public function rebuild(string $sourceKey, iterable $records, int $generation): void
     {
+        if ((bool) config('agricultural_intelligence.local_index.read_only_search', false)) {
+            throw new LocalIndexInvariantViolation(
+                "Read-only LocalIndex refuses rebuild for '{$sourceKey}'."
+            );
+        }
         $this->ensureSchema();
         $conn = $this->connection();
         $conn->table(self::FTS_TABLE)->where('source_key', $sourceKey)->delete();
@@ -113,6 +118,17 @@ final class SqliteFtsScientificIndex implements LocalIndexSearchEngine
     public function documentCount(string $sourceKey): int
     {
         $this->ensureSchema();
+
+        // Full COUNT on multi-million AGRIS FTS rows is too expensive for pin/presence checks.
+        // Read-only / operational search only needs a non-zero presence signal.
+        if ((bool) config('agricultural_intelligence.local_index.read_only_search', false)) {
+            $row = $this->connection()->selectOne(
+                'SELECT 1 AS ok FROM '.self::FTS_TABLE.' WHERE source_key = ? LIMIT 1',
+                [$sourceKey],
+            );
+
+            return $row === null ? 0 : 1;
+        }
 
         return (int) $this->connection()->table(self::FTS_TABLE)->where('source_key', $sourceKey)->count();
     }
@@ -203,6 +219,27 @@ final class SqliteFtsScientificIndex implements LocalIndexSearchEngine
         if ($conn->getDriverName() !== 'sqlite') {
             throw new LocalIndexInvariantViolation('SqliteFtsScientificIndex requires a sqlite scientific_records connection.');
         }
+
+        // Operational RO search (AGRIS C12): never CREATE/ALTER — schema must already exist.
+        if ((bool) config('agricultural_intelligence.local_index.read_only_search', false)) {
+            $ftsExists = $conn->selectOne(
+                "SELECT 1 AS ok FROM sqlite_master WHERE type IN ('table','view') AND name = ?",
+                [self::FTS_TABLE],
+            );
+            $metaExists = $conn->selectOne(
+                "SELECT 1 AS ok FROM sqlite_master WHERE type='table' AND name = ?",
+                [self::META_TABLE],
+            );
+            if ($ftsExists === null || $metaExists === null) {
+                throw new LocalIndexInvariantViolation(
+                    'Read-only LocalIndex search requires existing FTS schema; rebuild/create is refused.'
+                );
+            }
+            $this->schemaReady = true;
+
+            return;
+        }
+
         $conn->statement(
             'CREATE VIRTUAL TABLE IF NOT EXISTS '.self::FTS_TABLE.' USING fts5(
                 source_key UNINDEXED,

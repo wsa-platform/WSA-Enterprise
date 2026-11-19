@@ -1,0 +1,172 @@
+{
+  "schema_id": "wsa.agris_g101_acceptance_evidence.v1",
+  "revision": "11.0.17",
+  "recorded_at_utc": "2026-11-19T12:15:00Z",
+  "adr_id": "G1-01",
+  "source_key": "agris",
+  "supersedes": "docs/architecture/science-source-expansion/2026-11-19-AGRIS-G1-01-ACCEPTANCE-EVIDENCE.v11.0.16.json",
+  "companion_c12_live": "docs/architecture/science-source-expansion/2026-11-19-AGRIS-G1-01-C12-LIVE-EVIDENCE.v11.0.17.json",
+  "authority": {
+    "adr_023": "docs/architecture/ADR-023-scientific-source-expansion.md",
+    "option_b_prior": "docs/architecture/science-source-expansion/2026-11-19-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.16.json",
+    "fifteen_conditions_prior": "docs/architecture/science-source-expansion/2026-11-19-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.16.json",
+    "condition_definitions_source": "Master Prompt five-source cumulative acceptance §6.1–§6.2 (C1–C15 titles)",
+    "c12_original_definition": "The integration is demonstrated through the actual application path or an equivalent reproducible production-path integration test, not merely isolated unit tests."
+  },
+  "claim_guard": [
+    "SCIENTIFIC_INTEGRATION_VERIFIED remains false for AGRIS.",
+    "C12 PASS = REAL_APPLICATION_PATH against OPERATIONAL_LOCALINDEX_READONLY; not Real Model Inference.",
+    "Composer may return no_validated_evidence / insufficient synthesis when items are not synthesizable; path and identity still proven.",
+    "No ingest/persist/FTS rebuild/activation performed in this revision.",
+    "Membership register and Phase-1 source matrix untouched.",
+    "C1–C11 and C13–C15 unchanged from 11.0.16 except C12 and C15 evidence pointers."
+  ],
+  "scientific_integration_verified": false,
+  "classification": "PARTIALLY_COMPLETED",
+  "c12_status": "PASS",
+  "environment": {
+    "acceptance_corpus_prior": "LOCALINDEX_SAMPLED_ISOLATED",
+    "c12_corpus_this_revision": "OPERATIONAL_LOCALINDEX_READONLY",
+    "operational_store": "backend/storage/app/scientific_record_store.sqlite",
+    "store_generation": 2088,
+    "fts_generation": 2088,
+    "pin_generation": 2088,
+    "db_size_bytes": 9804414976,
+    "db_unchanged_during_live_run": true,
+    "not_production_live_http_agent": true,
+    "not_real_model_inference": true
+  },
+  "components": {
+    "query_specializer": "backend/app/Services/Agriculture/Research/Search/LocalIndex/AgrisLocalIndexQuerySpecializer.php",
+    "acceptance_harness": "backend/app/Services/Agriculture/Research/Search/LocalIndex/AgrisG101AcceptanceHarness.php",
+    "readonly_bootstrap": "backend/app/Services/Agriculture/Research/Search/LocalIndex/AgrisG101OperationalReadonlyBootstrap.php",
+    "readonly_guard": "backend/app/Services/Agriculture/Research/Search/LocalIndex/AgrisG101ReadOnlyGuard.php",
+    "adapter_ro_refuse_rebuild": "LocalIndexScientificSourceAdapter + SqliteFtsScientificIndex read_only_search",
+    "orchestrator_wiring": "MultiSourceScientificSearchOrchestrator::variantsForAdapter (AGRIS specialized-only return)",
+    "tests": [
+      "backend/tests/Unit/Agriculture/Research/Onboarding/AgrisG101AcceptanceHarnessTest.php",
+      "backend/tests/Unit/Agriculture/Research/Onboarding/AgrisG101C12LiveApplicationPathTest.php"
+    ]
+  },
+  "test_results": {
+    "AgrisG101AcceptanceHarnessTest_and_C12Live": "9 passed / 70 assertions",
+    "runtime": "docker compose exec backend php artisan test --filter='AgrisG101C12LiveApplicationPathTest|AgrisG101AcceptanceHarnessTest'"
+  },
+  "live_run_trace_id": "agris-g101-c12-00e11ca77256e297",
+  "pass_gates_observed": {
+    "readonly_bootstrap": true,
+    "database_unchanged": true,
+    "eligibility": true,
+    "csq_preserved": true,
+    "retrieval_non_empty": true,
+    "identifiers_present": true,
+    "source_key_agris": true,
+    "question_aligned_retrieval": true,
+    "validation_invoked": true,
+    "composer_invoked": true,
+    "answer_scope_preserved": true,
+    "evidence_chain_linked": true
+  },
+  "example_question": {
+    "original": "What are deficit irrigation effects on wheat yield?",
+    "csq_surface": "what are deficit irrigation effects on wheat yield",
+    "primary_agris_query": "wheat irrigation yield",
+    "scientific_sense_mapped": "crop_water_requirement → irrigation (FTS token)"
+  },
+  "retrieval_summary": {
+    "raw_count": 10,
+    "survivor_count": 10,
+    "question_aligned_count": 10,
+    "validated_count": 6,
+    "composer_status": "no_validated_evidence",
+    "example_original_identifiers": [
+      "10.22077/escs.2019.1679.1377",
+      "10.56093/jsswq.v16i1.152187",
+      "10.1016/j.agwat.2012.01.014",
+      "10.14719/pst.12127"
+    ]
+  },
+  "conditions_c1_c15": {
+    "C1": {
+      "title": "Authoritative Identity and Scope",
+      "status": "PASS",
+      "evidence": "Unchanged from 11.0.16; G1-01 membership/scope; AGRIS-only live path"
+    },
+    "C2": {
+      "title": "Capability and Access Contract",
+      "status": "PASS",
+      "evidence": "Unchanged from 11.0.16; LocalIndex FTS token AND; no false Boolean/wildcard claims; C2 explicit"
+    },
+    "C3": {
+      "title": "Scientific Query Relevance",
+      "status": "PASS",
+      "evidence": "Specializer prefers common crop label; maps crop_water_requirement→irrigation; CSQ not mutated"
+    },
+    "C4": {
+      "title": "Production Routing",
+      "status": "PASS",
+      "evidence": "Unchanged from 11.0.16; eligibility + selector; AGRIS forced on live path"
+    },
+    "C5": {
+      "title": "Retrieval and Evidence Provenance",
+      "status": "PASS",
+      "evidence": "Operational LocalIndex RO retrieval; original_identifier preserved on live dump"
+    },
+    "C6": {
+      "title": "Scientific Validation and Answer Composition",
+      "status": "PASS",
+      "evidence": "validate→compose on live path; identity snapshots equal; honest insufficient composer status"
+    },
+    "C7": {
+      "title": "Runtime Configuration and Authentication",
+      "status": "NOT_APPLICABLE",
+      "evidence": "No API key required for AGRIS LocalIndex catalog path"
+    },
+    "C8": {
+      "title": "Retrieval Behavior and Error Handling",
+      "status": "PASS",
+      "evidence": "Unchanged from 11.0.16; empty/nonsense probes; RO rebuild refused"
+    },
+    "C9": {
+      "title": "Evidence Normalization",
+      "status": "PASS",
+      "evidence": "original_identifier/source_key/provenance on operational records"
+    },
+    "C10": {
+      "title": "Scientific Identity Integrity",
+      "status": "PASS",
+      "evidence": "CSQ identity preserved across search/validation/compose; negative crop-substitution test"
+    },
+    "C11": {
+      "title": "Negative and Boundary Testing",
+      "status": "PASS",
+      "evidence": "Unchanged from 11.0.16 + C12 negative identity assertions"
+    },
+    "C12": {
+      "title": "Reproducible Production-Path Evidence",
+      "status": "PASS",
+      "evidence": "REAL_APPLICATION_PATH via AgrisG101AcceptanceHarness::runLiveApplicationPath against operational sqlite READ-ONLY; AgrisG101C12LiveApplicationPathTest green; all pass_gates true; db_unchanged"
+    },
+    "C13": {
+      "title": "Source-Specific Limitations and Governance",
+      "status": "PASS",
+      "evidence": "No full ODS claim; not Real Model Inference; RO operational guard; no membership mutation"
+    },
+    "C14": {
+      "title": "Regression and Architectural Integrity",
+      "status": "PASS",
+      "evidence": "Acceptance harness regression green; ADR-022/023/membership untouched; WIP unstaged"
+    },
+    "C15": {
+      "title": "Evidence Completeness and Traceability",
+      "status": "PASS",
+      "evidence": "This artifact + C12 live evidence + Arabic gap-closure report linked by adr_id G1-01 / trace_id"
+    }
+  },
+  "remaining_gaps": [
+    "SCIENTIFIC_INTEGRATION_VERIFIED withheld until cumulative five-source C1–C15 package complete.",
+    "Real Model Inference / live HTTP agent entry not claimed (not required by original C12 text).",
+    "Composer synthesizability vs validation usable count remains an observability/quality residual, not a C12 path gap.",
+    "Other four five-source seats unchanged this revision."
+  ]
+}

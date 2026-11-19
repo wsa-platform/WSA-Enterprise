@@ -779,8 +779,13 @@ class MultiSourceScientificSearchOrchestrator
         $preferred = [];
 
         // AGRIS G1-01: FTS-safe retrieval queries derived from CSQ/plan (does not mutate CSQ).
+        // Keep specialized queries first and do not append long scholarly NL variants that
+        // over-constrain FTS AND matching within MAX_VARIANTS_PER_PROVIDER.
         if ($adapter->sourceKey() === AgrisLocalIndexQuerySpecializer::SOURCE_KEY) {
             $preferred = (new AgrisLocalIndexQuerySpecializer())->retrievalQueries($plan);
+            if ($preferred !== []) {
+                return ScientificSearchVariantBudget::apply($preferred)['variants'];
+            }
         }
 
         $scientific = trim((string) ($plan->normalizedQuery->scientificName ?? ''));

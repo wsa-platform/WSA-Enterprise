@@ -205,11 +205,13 @@ final class AgrisLocalIndexQuerySpecializer
     private function resolveEntity(KnowledgeQueryPlan $plan): ?string
     {
         $query = $plan->normalizedQuery;
+        // Prefer common crop label for LocalIndex FTS (AGRIS titles often use common names).
+        // Scientific name remains available as a controlled synonym variant.
         foreach ([
-            $query->scientificName,
             $query->crop,
             is_array($query->subject) ? ($query->subject['label'] ?? $query->subject['value'] ?? null) : null,
             is_array($plan->subjectEntity) ? ($plan->subjectEntity['label'] ?? $plan->subjectEntity['value'] ?? null) : null,
+            $query->scientificName,
         ] as $candidate) {
             $term = trim((string) $candidate);
             if ($term !== '') {
@@ -228,12 +230,19 @@ final class AgrisLocalIndexQuerySpecializer
      */
     private function factorTerm(string $sense, array $factors): ?string
     {
-        $sense = mb_strtolower($sense);
-        if (str_contains($sense, 'irrig')) {
-            return 'irrigation';
-        }
-        if (str_contains($sense, 'phytochem')) {
-            return 'phytochemistry';
+        $sense = mb_strtolower(str_replace('_', ' ', $sense));
+        // Map QUS scientific_sense codes to AGRIS literature tokens.
+        $senseMap = [
+            'crop water requirement' => 'irrigation',
+            'irrigation' => 'irrigation',
+            'water' => 'irrigation',
+            'phytochemistry' => 'phytochemistry',
+            'phytochem' => 'phytochemistry',
+        ];
+        foreach ($senseMap as $needle => $mapped) {
+            if ($sense === $needle || str_contains($sense, $needle) || str_contains($sense, 'irrig')) {
+                return $mapped;
+            }
         }
         foreach ($factors as $factor) {
             $t = trim($factor);
@@ -252,7 +261,12 @@ final class AgrisLocalIndexQuerySpecializer
             }
         }
 
-        return $sense !== '' ? $sense : null;
+        // Never emit raw underscore sense codes into FTS AND queries.
+        if ($sense !== '' && ! str_contains($sense, ' ')) {
+            return null;
+        }
+
+        return null;
     }
 
     private function outcomeTerm(string $topic, string $sense, string $original, string $csqSurface): ?string

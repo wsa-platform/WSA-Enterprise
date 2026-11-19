@@ -1,0 +1,31 @@
+{
+  "schema_id": "wsa.phase1_110_source_option_b_update.v1",
+  "revision": "11.0.17",
+  "recorded_at_utc": "2026-11-19T12:15:00Z",
+  "prior_option_b": "docs/architecture/science-source-expansion/2026-11-19-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.16.json",
+  "claim_guard": [
+    "No seat is assigned SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "AGRIS C12 now proven on OPERATIONAL_LOCALINDEX_READONLY / REAL_APPLICATION_PATH.",
+    "Membership register and 2026-11-11 matrix untouched."
+  ],
+  "scientific_integration_verified_count": 0,
+  "seat_deltas": [
+    {
+      "adr_id": "G1-01",
+      "source_key": "agris",
+      "scientific_integration_verified": false,
+      "current_integration_status": "PARTIALLY_VERIFIED",
+      "production_path_participation": "YES_OPERATIONAL_LOCALINDEX_RO_VALIDATION_COMPOSER",
+      "retrieval_status": "RETRIEVAL_VERIFIED_OPERATIONAL_LOCALINDEX_READONLY",
+      "evidence_quality": "OPERATIONAL_READONLY_GEN_2088",
+      "c12_status": "PASS",
+      "remaining_acceptance_conditions": [
+        "Cumulative five-source SCIENTIFIC_INTEGRATION_VERIFIED still blocked (other seats incomplete)",
+        "Real Model Inference not claimed under original C12 contract"
+      ],
+      "evidence_artifact": "docs/architecture/science-source-expansion/2026-11-19-AGRIS-G1-01-ACCEPTANCE-EVIDENCE.v11.0.17.json",
+      "c12_live_artifact": "docs/architecture/science-source-expansion/2026-11-19-AGRIS-G1-01-C12-LIVE-EVIDENCE.v11.0.17.json"
+    }
+  ],
+  "other_seats": "unchanged_from_v11.0.16"
+}

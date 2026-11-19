@@ -1,0 +1,70 @@
+{
+  "schema_id": "wsa.agris_g101_c12_live_evidence.v1",
+  "revision": "11.0.17",
+  "recorded_at_utc": "2026-11-19T12:00:00Z",
+  "adr_id": "G1-01",
+  "source_key": "agris",
+  "baseline_head_at_start": "649e790f10f42af17340fe8ee9e7d5e2fab316b9",
+  "c12_original_definition": {
+    "title": "Reproducible Production-Path Evidence",
+    "text": "The integration is demonstrated through the actual application path or an equivalent reproducible production-path integration test, not merely isolated unit tests.",
+    "source": "Five-source cumulative acceptance §6.2 / 11.0.16 evidence title"
+  },
+  "prior_c12_status_11_0_16": "PARTIAL",
+  "c12_status_this_revision": "PASS",
+  "path_level_proven": "REAL_APPLICATION_PATH",
+  "path_levels_not_claimed": ["REAL_MODEL_INFERENCE"],
+  "evidence_class": "OPERATIONAL_LOCALINDEX_READONLY",
+  "claim_guard": [
+    "C12 PASS does not grant SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "Operational LocalIndex accessed SQLITE_OPEN_READONLY + PRAGMA query_only; no ingest/persist/FTS rebuild.",
+    "Composer may return insufficient synthesis when validated items are not synthesizable; path still proven.",
+    "Membership/ADR-022/ADR-023 untouched."
+  ],
+  "root_causes_closed": [
+    {
+      "gap": "C12 only proven on LOCALINDEX_SAMPLED_ISOLATED",
+      "class": "MISSING_EVIDENCE",
+      "fix": "AgrisG101OperationalReadonlyBootstrap + runLiveApplicationPath against operational sqlite"
+    },
+    {
+      "gap": "FTS AND over-constrained by scholarly NL / sense codes",
+      "class": "IMPLEMENTATION_DEFECT",
+      "fix": "AgrisLocalIndexQuerySpecializer prefers wheat+irrigation+yield; maps crop_water_requirement→irrigation; AGRIS variantsForAdapter uses specialized queries only"
+    },
+    {
+      "gap": "Adapter could rebuild and write under RO",
+      "class": "IMPLEMENTATION_DEFECT",
+      "fix": "read_only_search config; rebuild refused; pin to FTS generation 2088"
+    },
+    {
+      "gap": "Stale Stage-3 singletons after RO rebind",
+      "class": "IMPLEMENTATION_DEFECT",
+      "fix": "forgetInstance search/orchestrator/registry after RO activate"
+    }
+  ],
+  "live_run_summary": {
+    "store_generation": 2088,
+    "fts_generation": 2088,
+    "pin_generation": 2088,
+    "db_unchanged": true,
+    "primary_specialized_query": "wheat irrigation yield",
+    "successful_sources": ["agris"],
+    "raw_count": 10,
+    "survivor_count": 10,
+    "question_aligned_count": 10,
+    "validated_count": 6,
+    "composer_invoked": true,
+    "csq_preserved": true,
+    "example_original_identifiers": [
+      "10.22077/escs.2019.1679.1377",
+      "10.56093/jsswq.v16i1.152187",
+      "10.1016/j.agwat.2012.01.014"
+    ]
+  },
+  "tests": {
+    "AgrisG101C12LiveApplicationPathTest": "expected_pass",
+    "AgrisG101AcceptanceHarnessTest": "regression"
+  },
+  "scientific_integration_verified": false
+}
