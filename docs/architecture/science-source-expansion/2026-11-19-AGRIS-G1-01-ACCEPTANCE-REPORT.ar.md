@@ -11,9 +11,11 @@
 ## B. Baseline & Git
 - **الفرع:** `phase-18-m18-ai-marketing-communications`
 - **HEAD الابتدائي:** `36c4b7e` (متزامن مع origin)
+- **HEAD النهائي:** `6ad8a3c4bae55e2f3c191277581c755eb4cacb22`
 - **Working Tree:** WIP سابق كثيف — لم يُمس ولم يُدرج في Commit
 - **قاعدة LocalIndex:** `backend/storage/app/scientific_record_store.sqlite` (~9.8GB)، جيل AGRIS عند العيّنة = **2088**
-- **Commits / Push:** تُسجَّل في قسم K بعد التسليم
+- **Push:** نجح إلى `origin/phase-18-m18-ai-marketing-communications` (`36c4b7e..6ad8a3c`)
+- **CI:** `CI_STATUS_UNAVAILABLE` (لم يُتحقق من نجاح CI في هذه الجلسة)
 
 ## C. Architecture Trace
 ```
@@ -69,9 +71,11 @@ Original Question → KnowledgeQueryPlan (CSQ surface)
 - البيئة: Docker `backend`
 
 ## K. Git Delivery
-- Path-specific staging فقط لملفات المهمة
-- لا WIP سابق، لا قواعد بيانات تشغيلية في Commit
-- Push بعد تحقق السلامة؛ CI إن وُجد يُسجَّل وإلا `CI_STATUS_UNAVAILABLE`
+- **Commit:** `6ad8a3c` — `feat(agris): G1-01 LocalIndex acceptance harness with CSQ-safe query specialization`
+- 11 ملف مهمة فقط؛ WIP السابق غير ملتزم
+- **Remote HEAD بعد الدفع:** `6ad8a3c4bae55e2f3c191277581c755eb4cacb22`
+- **CI:** `CI_STATUS_UNAVAILABLE`
+- **Deployment:** لم يُنفَّذ
 
 ## L. Final Classification
 **`PARTIALLY_COMPLETED`**
