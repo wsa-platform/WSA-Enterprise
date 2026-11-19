@@ -66,7 +66,11 @@ Tests: 10 passed (99 assertions)
 - أدلة/تقارير 11.0.18
 
 ## 11. Commit وPush وRemote HEAD
-يُستكمل عند التسليم بعد Path-specific staging.
+- **Commit:** `8587ba5` — `feat(organic-eprints): G1-02 live acceptance path with C5/C6/C12 evidence`
+- **Remote HEAD:** `8587ba53831c081ca36ac5ebc103cc2d5af263ae` (متزامن)
+- **Branch:** `phase-18-m18-ai-marketing-communications`
+- **CI:** يُشغَّل على push؛ لا يُدعى نجاحه هنا دون تحقق (`CI_STATUS_UNAVAILABLE` إن تعذر)
+- **Deployment:** لم يُنفَّذ (`workflow_dispatch` فقط)
 
 ## 12. العوائق المتبقية
 1. جودة بحث FTS التشغيلي لـ `organic_eprints` على sqlite المشترك غير مُدّعاة خضراء.
