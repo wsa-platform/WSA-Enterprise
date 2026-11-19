@@ -1,0 +1,28 @@
+{
+  "schema_id": "wsa.phase1_110_source_option_b_update.v1",
+  "revision": "11.0.16",
+  "recorded_at_utc": "2026-11-19T11:30:00Z",
+  "prior_option_b": "docs/architecture/science-source-expansion/2026-11-18-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.13.json",
+  "claim_guard": [
+    "No seat is assigned SCIENTIFIC_INTEGRATION_VERIFIED.",
+    "AGRIS acceptance uses LOCALINDEX_SAMPLED_ISOLATED evidence, not fixture stubs for positive claims.",
+    "Membership register and 2026-11-11 matrix untouched."
+  ],
+  "scientific_integration_verified_count": 0,
+  "seat_deltas": [
+    {
+      "adr_id": "G1-01",
+      "source_key": "agris",
+      "scientific_integration_verified": false,
+      "current_integration_status": "PARTIALLY_VERIFIED",
+      "production_path_participation": "YES_LOCALINDEX_SAMPLED_VALIDATION_COMPOSER",
+      "retrieval_status": "RETRIEVAL_VERIFIED_LOCALINDEX_SAMPLED_ISOLATED",
+      "evidence_quality": "LOCALINDEX_SAMPLED_READONLY_GEN_2088",
+      "remaining_acceptance_conditions": [
+        "Full live agent E2E against operational LocalIndex under approved RO isolation policy (C12 residual)"
+      ],
+      "evidence_artifact": "docs/architecture/science-source-expansion/2026-11-19-AGRIS-G1-01-ACCEPTANCE-EVIDENCE.v11.0.16.json"
+    }
+  ],
+  "other_seats": "unchanged_from_v11.0.13"
+}

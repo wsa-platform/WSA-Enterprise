@@ -1,0 +1,141 @@
+{
+  "schema_id": "wsa.agris_g101_acceptance_evidence.v1",
+  "revision": "11.0.16",
+  "recorded_at_utc": "2026-11-19T11:30:00Z",
+  "adr_id": "G1-01",
+  "source_key": "agris",
+  "authority": {
+    "adr_023": "docs/architecture/ADR-023-scientific-source-expansion.md",
+    "option_b_prior": "docs/architecture/science-source-expansion/2026-11-18-PHASE-1-110-SOURCE-OPTION-B-UPDATE.v11.0.13.json",
+    "fifteen_conditions_prior": "docs/architecture/science-source-expansion/2026-11-18-PHASE-1-FIVE-SOURCE-FIFTEEN-CONDITIONS.v11.0.13.json",
+    "condition_definitions_source": "Master Prompt five-source cumulative acceptance §6.1–§6.2 (C1–C15 titles)"
+  },
+  "claim_guard": [
+    "SCIENTIFIC_INTEGRATION_VERIFIED remains false for AGRIS.",
+    "LOCALINDEX_SAMPLED_ISOLATED ≠ Production Live agent E2E.",
+    "Engineering fixture stubs (next_gate_agris_fixture_v1.jsonl) are not used as positive acceptance evidence.",
+    "No ingest/persist/FTS rebuild/activation performed in this revision.",
+    "Membership register and Phase-1 source matrix untouched."
+  ],
+  "scientific_integration_verified": false,
+  "classification": "PARTIALLY_COMPLETED",
+  "environment": {
+    "acceptance_corpus": "LOCALINDEX_SAMPLED_ISOLATED",
+    "sample_meta": "backend/tests/Fixtures/ScientificSourceFamilies/agris_g101_acceptance_localindex_sample_v1.meta.json",
+    "sample_jsonl": "backend/tests/Fixtures/ScientificSourceFamilies/agris_g101_acceptance_localindex_sample_v1.jsonl",
+    "operational_store_generation_at_sample": 2088,
+    "operational_fts_generation_at_sample": 2088,
+    "operational_db_unchanged_during_sample": true,
+    "not_production_live": true
+  },
+  "components": {
+    "query_specializer": "backend/app/Services/Agriculture/Research/Search/LocalIndex/AgrisLocalIndexQuerySpecializer.php",
+    "acceptance_harness": "backend/app/Services/Agriculture/Research/Search/LocalIndex/AgrisG101AcceptanceHarness.php",
+    "readonly_guard": "backend/app/Services/Agriculture/Research/Search/LocalIndex/AgrisG101ReadOnlyGuard.php",
+    "orchestrator_wiring": "MultiSourceScientificSearchOrchestrator::variantsForAdapter (AGRIS prepend)",
+    "tests": "backend/tests/Unit/Agriculture/Research/Onboarding/AgrisG101AcceptanceHarnessTest.php"
+  },
+  "test_results": {
+    "AgrisG101AcceptanceHarnessTest": "6 passed / 44 assertions",
+    "GovernedActiveSourceProductionPathIntegrityTest": "3 passed / 26 assertions",
+    "runtime": "docker compose exec backend php artisan test"
+  },
+  "pass_gates_observed": {
+    "eligibility": true,
+    "csq_preserved": true,
+    "retrieval_non_empty": true,
+    "identifiers_present": true,
+    "source_key_agris": true,
+    "validation_invoked": true,
+    "composer_invoked": true,
+    "evidence_chain_linked": true,
+    "readonly_operational_unchanged": true
+  },
+  "example_question": {
+    "original": "What are deficit irrigation effects on wheat yield?",
+    "csq_surface": "Deficit irrigation effects on wheat yield",
+    "primary_agris_query": "wheat irrigation yield"
+  },
+  "conditions_c1_c15": {
+    "C1": {
+      "title": "Authoritative Identity and Scope",
+      "status": "PASS",
+      "evidence": "G1-01 membership/scope respected; AGRIS agricultural literature; harness forces agris only"
+    },
+    "C2": {
+      "title": "Capability and Access Contract",
+      "status": "PASS",
+      "evidence": "BULK_DATASET/LocalIndex search capability VERIFIED_SUPPORTED on registration; FTS token AND matching documented; no false Boolean/wildcard claims"
+    },
+    "C3": {
+      "title": "Scientific Query Relevance",
+      "status": "PASS",
+      "evidence": "AgrisLocalIndexQuerySpecializer derives FTS-safe queries from CSQ/plan; CSQ not mutated; deficit qualifier isolated as refinement version"
+    },
+    "C4": {
+      "title": "Production Routing",
+      "status": "PASS",
+      "evidence": "GovernedScientificSourceEligibility + selector path; AGRIS eligible; Dr. Duke blocked for irrigation plan"
+    },
+    "C5": {
+      "title": "Retrieval and Evidence Provenance",
+      "status": "PASS",
+      "evidence": "LocalIndexScientificSourceAdapter retrieval on LOCALINDEX_SAMPLED_ISOLATED corpus; original_identifier preserved; sample from gen 2088 RO extract"
+    },
+    "C6": {
+      "title": "Scientific Validation and Answer Composition",
+      "status": "PASS",
+      "evidence": "AgriculturalScientificValidationService.validate → AnswerComposer.compose; identity preserved; evidence_chain_linked"
+    },
+    "C7": {
+      "title": "Runtime Configuration and Authentication",
+      "status": "NOT_APPLICABLE",
+      "evidence": "No API key required for AGRIS LocalIndex catalog path"
+    },
+    "C8": {
+      "title": "Retrieval Behavior and Error Handling",
+      "status": "PASS",
+      "evidence": "Empty query and nonsense token probes return zero hits (AgrisG101AcceptanceHarnessTest)"
+    },
+    "C9": {
+      "title": "Evidence Normalization",
+      "status": "PASS",
+      "evidence": "original_identifier/source_key/provenance survive adapter→validation chain on sampled records"
+    },
+    "C10": {
+      "title": "Scientific Identity Integrity",
+      "status": "PASS",
+      "evidence": "CSQ/plan identity snapshot equal before/after search/validation/compose; species-substitution guard on query"
+    },
+    "C11": {
+      "title": "Negative and Boundary Testing",
+      "status": "PASS",
+      "evidence": "Empty/nonsense probes; negative aquaculture boundary record; Dr. Duke eligibility negative"
+    },
+    "C12": {
+      "title": "Reproducible Production-Path Evidence",
+      "status": "PARTIAL",
+      "evidence": "Reproducible application-path harness on LocalIndex-sampled isolated corpus + orchestrator wiring; not full live agent E2E against operational store in PHPUnit"
+    },
+    "C13": {
+      "title": "Source-Specific Limitations and Governance",
+      "status": "PASS",
+      "evidence": "No full ODS claim; sample not labeled Production Live; no membership/matrix mutation; RO operational guard"
+    },
+    "C14": {
+      "title": "Regression and Architectural Integrity",
+      "status": "PASS",
+      "evidence": "GovernedActiveSourceProductionPathIntegrityTest green; WIP unrelated files unstaged"
+    },
+    "C15": {
+      "title": "Evidence Completeness and Traceability",
+      "status": "PASS",
+      "evidence": "This artifact + sample meta + Arabic report linked by adr_id G1-01"
+    }
+  },
+  "remaining_gaps": [
+    "Full live agent E2E against operational LocalIndex under PHPUnit isolation policy still open (C12 PARTIAL).",
+    "SCIENTIFIC_INTEGRATION_VERIFIED withheld until owner accepts cumulative package including live-path policy.",
+    "Other four five-source seats unchanged this revision."
+  ]
+}

@@ -17,6 +17,7 @@ use App\Services\Agriculture\Research\Projection\ProjectionSearchOptionsBinder;
 use App\Services\Agriculture\Research\Search\Contract\ScientificSourceFailureClassifier;
 use App\Services\Agriculture\Research\Search\Contract\ScientificSourceLicensingDeclaration;
 use App\Services\Agriculture\Research\Search\Contract\ScientificSourceSearchRequest;
+use App\Services\Agriculture\Research\Search\LocalIndex\AgrisLocalIndexQuerySpecializer;
 use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCapabilityPolicy;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
@@ -776,6 +777,12 @@ class MultiSourceScientificSearchOrchestrator
         }
 
         $preferred = [];
+
+        // AGRIS G1-01: FTS-safe retrieval queries derived from CSQ/plan (does not mutate CSQ).
+        if ($adapter->sourceKey() === AgrisLocalIndexQuerySpecializer::SOURCE_KEY) {
+            $preferred = (new AgrisLocalIndexQuerySpecializer())->retrievalQueries($plan);
+        }
+
         $scientific = trim((string) ($plan->normalizedQuery->scientificName ?? ''));
         if ($scientific !== '') {
             $preferred[] = $scientific;
