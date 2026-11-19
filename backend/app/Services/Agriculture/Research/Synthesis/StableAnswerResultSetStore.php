@@ -74,12 +74,18 @@ final class StableAnswerResultSetStore
     {
         $dir = $this->dirFor($set->organizationId);
         if (! is_dir($dir)) {
-            mkdir($dir, 0755, true);
+            if (! mkdir($dir, 0775, true) && ! is_dir($dir)) {
+                throw new \RuntimeException('Unable to create stable result set directory.');
+            }
         }
-        file_put_contents(
-            $this->pathFor($set->organizationId, $set->resultSetId),
-            json_encode($set->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
-        );
+        $path = $this->pathFor($set->organizationId, $set->resultSetId);
+        $payload = json_encode($set->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        if ($payload === false) {
+            throw new \RuntimeException('Unable to encode stable result set payload.');
+        }
+        if (file_put_contents($path, $payload) === false) {
+            throw new \RuntimeException('Unable to persist stable result set file.');
+        }
     }
 
     private function root(): string

@@ -1,0 +1,14 @@
+{
+  "name": "wsa-e2e-rev65",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Isolated Playwright browser E2E for Rev 6.5 stable research pagination",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  }
+}

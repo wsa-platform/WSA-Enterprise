@@ -737,6 +737,12 @@ class AgriculturalResearchAgent
                 $stableStatus = 'created';
             } catch (\Throwable $e) {
                 $stableStatus = 'result_set_failure';
+                if (function_exists('logger')) {
+                    logger()->warning('stable_result_set_create_failed', [
+                        'organization_id' => $organizationId,
+                        'message' => $e->getMessage(),
+                    ]);
+                }
             }
         }
 
