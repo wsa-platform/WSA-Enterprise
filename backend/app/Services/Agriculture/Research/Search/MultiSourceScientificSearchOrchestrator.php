@@ -21,6 +21,7 @@ use App\Services\Agriculture\Research\Search\LocalIndex\AgrisLocalIndexQuerySpec
 use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\LocalIndex\DrDukeLocalIndexQuerySpecializer;
 use App\Services\Agriculture\Research\Search\LocalIndex\OrganicEprintsLocalIndexQuerySpecializer;
+use App\Services\Agriculture\Research\Search\BhlPublicationQuerySpecializer;
 use App\Services\Agriculture\Research\Search\GbifSpeciesQuerySpecializer;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCapabilityPolicy;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
@@ -742,8 +743,49 @@ class MultiSourceScientificSearchOrchestrator
         int $priorResultCount,
     ): array {
         $collections = [];
+        $scholarlyHits = 0;
+        $scholarlyAttempted = 0;
         foreach ($adapters as $adapter) {
             $key = $adapter->sourceKey();
+            // Require ≥2 scholarly providers (typically openalex + crossref) before early-stop
+            // so a chemistry-heavy first page cannot suppress the second index. After that,
+            // skip remaining adapters (semantic_scholar / governed / local) once Stage 3
+            // already has an adequate raw hit set — keeps sequential home path inside the
+            // gateway FastCGI window.
+            $isScholarly = $this->isIndependentScholarlySource($key);
+            $shouldEarlyStop = $scholarlyAttempted >= 2
+                && $priorResultCount >= self::ADEQUATE_RESULT_COUNT
+                && $scholarlyHits >= self::ADEQUATE_RESULT_COUNT;
+            if ($shouldEarlyStop
+                || ($priorResultCount >= self::ADEQUATE_RESULT_COUNT
+                    && $budget->remainingSeconds() < 20.0
+                    && $scholarlyAttempted >= 2)) {
+                $collections[$key] = [
+                    'attempted' => false,
+                    'adapterStatus' => 'skipped',
+                    'outcomes' => [
+                        new ScientificSourceSearchOutcome(
+                            sourceKey: $key,
+                            status: ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
+                            error: 'adequate_results_early_stop',
+                            observability: [
+                                'reason' => 'adequate_result_count',
+                                'adequate_result_count' => self::ADEQUATE_RESULT_COUNT,
+                                'prior_result_count' => $priorResultCount,
+                                'scholarly_hit_count' => $scholarlyHits,
+                                'scholarly_attempted' => $scholarlyAttempted,
+                                'budget_remaining_seconds' => $budget->remainingSeconds(),
+                            ],
+                        ),
+                    ],
+                    'results' => [],
+                    'skippedBudget' => false,
+                    'variantsAttempted' => 0,
+                    'equivalentVariantsSuppressed' => 0,
+                ];
+
+                continue;
+            }
             $collections[$key] = self::collectAdapterSearch(
                 $adapter,
                 $this->variantsForAdapter($adapter, $plan, $variants),
@@ -753,16 +795,22 @@ class MultiSourceScientificSearchOrchestrator
                 $priorResultCount,
                 $this->accessFamilyOf($key),
             );
-            $priorResultCount += count($collections[$key]['results']);
+            $hitCount = count($collections[$key]['results']);
+            $priorResultCount += $hitCount;
+            if ($isScholarly) {
+                $scholarlyAttempted++;
+                $scholarlyHits += $hitCount;
+            }
         }
 
         return $collections;
     }
 
     /**
-     * LocalIndex FTS is lexical and sensitive to scholarly NL expansions (e.g. "mint",
-     * "Mentha taxonomy"). Prefer bare scientific identity tokens so CSQ entity identity
-     * is attempted within MAX_VARIANTS_PER_PROVIDER before topic-suffixed scholarly variants.
+     * Prefer source-specific retrieval queries without mutating CSQ.
+     *
+     * REST specializers (GBIF/BHL) must run for RestJson adapters. LocalIndex
+     * specializers remain FTS-safe for AGRIS / Organic Eprints / Dr. Duke.
      *
      * @param  list<string>  $variants
      * @return list<string>
@@ -772,15 +820,29 @@ class MultiSourceScientificSearchOrchestrator
         KnowledgeQueryPlan $plan,
         array $variants,
     ): array {
+        // REST family specializers (not LocalIndex).
+        if ($adapter->sourceKey() === GbifSpeciesQuerySpecializer::SOURCE_KEY) {
+            $preferred = (new GbifSpeciesQuerySpecializer())->retrievalQueries($plan);
+            if ($preferred !== []) {
+                return ScientificSearchVariantBudget::apply($preferred)['variants'];
+            }
+        }
+        if ($adapter->sourceKey() === BhlPublicationQuerySpecializer::SOURCE_KEY) {
+            $preferred = (new BhlPublicationQuerySpecializer())->retrievalQueries($plan);
+            if ($preferred !== []) {
+                return ScientificSearchVariantBudget::apply($preferred)['variants'];
+            }
+        }
+
         if (! $adapter instanceof LocalIndexScientificSourceAdapter) {
             return $variants;
         }
 
         $preferred = [];
 
-        // AGRIS G1-01 / Organic Eprints G1-02: FTS-safe retrieval queries derived from CSQ/plan
-        // (does not mutate CSQ). Prefer specialized queries; avoid long scholarly NL that
-        // over-constrain FTS AND matching within MAX_VARIANTS_PER_PROVIDER.
+        // AGRIS G1-01 / Organic Eprints G1-02 / Dr. Duke: FTS-safe retrieval queries
+        // derived from CSQ/plan (does not mutate CSQ). Prefer specialized queries;
+        // avoid long scholarly NL that over-constrain FTS AND matching.
         if ($adapter->sourceKey() === AgrisLocalIndexQuerySpecializer::SOURCE_KEY) {
             $preferred = (new AgrisLocalIndexQuerySpecializer())->retrievalQueries($plan);
             if ($preferred !== []) {
@@ -795,12 +857,6 @@ class MultiSourceScientificSearchOrchestrator
         }
         if ($adapter->sourceKey() === DrDukeLocalIndexQuerySpecializer::SOURCE_KEY) {
             $preferred = (new DrDukeLocalIndexQuerySpecializer())->retrievalQueries($plan);
-            if ($preferred !== []) {
-                return ScientificSearchVariantBudget::apply($preferred)['variants'];
-            }
-        }
-        if ($adapter->sourceKey() === GbifSpeciesQuerySpecializer::SOURCE_KEY) {
-            $preferred = (new GbifSpeciesQuerySpecializer())->retrievalQueries($plan);
             if ($preferred !== []) {
                 return ScientificSearchVariantBudget::apply($preferred)['variants'];
             }

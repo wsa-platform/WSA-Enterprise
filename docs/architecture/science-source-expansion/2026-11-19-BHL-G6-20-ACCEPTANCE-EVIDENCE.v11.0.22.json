@@ -1,0 +1,67 @@
+{
+  "schema_id": "wsa.bhl_g620_acceptance_evidence.v1",
+  "revision": "11.0.22",
+  "recorded_at_utc": "2026-11-19T18:45:00Z",
+  "adr_id": "G6-20",
+  "source_key": "bhl",
+  "baseline_head": "b473803780493c3da6bd6ca8effa624715f36efa",
+  "secret_policy": "BHL_API_KEY value never logged, committed, or archived",
+  "claim_guard": [
+    "SCIENTIFIC_INTEGRATION_VERIFIED remains false (cumulative five-source).",
+    "Historical BHL literature ≠ modern experimental causation.",
+    "PHASE_1_GAP_CLOSURE_PARTIAL unchanged.",
+    "Seat catalog: CurrentMembershipNearReadySeatCatalog (not R7 NextGate-17 list)."
+  ],
+  "scientific_integration_verified": false,
+  "classification": "ACCEPTED_WITH_LIMITATIONS",
+  "path_level_proven": "REAL_APPLICATION_PATH",
+  "credential_audit": {
+    "env_file": "backend/.env",
+    "env_var": "BHL_API_KEY",
+    "present": true,
+    "config_key": "agricultural_intelligence.bhl.api_key",
+    "adapter_query_param": "apikey",
+    "placement": "query",
+    "internet_key_search": false,
+    "live_provider_status": "ok",
+    "live_http_status": 200
+  },
+  "components": {
+    "query_specializer": "backend/app/Services/Agriculture/Research/Search/BhlPublicationQuerySpecializer.php",
+    "acceptance_harness": "backend/app/Services/Agriculture/Research/Search/BhlG620AcceptanceHarness.php",
+    "tests": "backend/tests/Unit/Agriculture/Research/Onboarding/BhlG620AcceptanceHarnessTest.php",
+    "prior_credential_tests": "backend/tests/Unit/Agriculture/Research/Onboarding/BhlApiEnvelopeAndCredentialTest.php"
+  },
+  "shared_fix": {
+    "description": "variantsForAdapter now applies GBIF/BHL REST specializers outside LocalIndex-only gate",
+    "test": "RestSourceQuerySpecializerWiringTest"
+  },
+  "test_results": {
+    "BhlG620AcceptanceHarnessTest": "3 passed (including live)",
+    "BhlApiEnvelopeAndCredentialTest": "5 passed",
+    "RestSourceQuerySpecializerWiringTest": "1 passed",
+    "combined_with_matrix_early_stop": "13 passed / 109 assertions"
+  },
+  "conditions_c1_c15": {
+    "C1": {"title": "Authoritative Identity and Scope", "previous": "PASS", "final": "PASS", "evidence": "G6-20 ACTIVE seat; heritage literature scope"},
+    "C2": {"title": "Capability and Access Contract", "previous": "PASS", "final": "PASS", "evidence": "REST api3 PublicationSearch + apikey query"},
+    "C3": {"title": "Scientific Query Relevance", "previous": "PASS", "final": "PASS", "evidence": "BhlPublicationQuerySpecializer + eligibility"},
+    "C4": {"title": "Production Routing", "previous": "PASS", "final": "PASS", "evidence": "catalog + orchestrator variantsForAdapter REST fix"},
+    "C5": {"title": "Retrieval and Evidence Provenance", "previous": "PARTIAL", "final": "PASS", "evidence": "Fixture + live PublicationSearch identifiers/provenance"},
+    "C6": {"title": "Scientific Validation and Answer Composition", "previous": "PARTIAL", "final": "PASS", "evidence": "validate→compose harness; honest insufficient allowed"},
+    "C7": {"title": "Runtime Configuration and Authentication", "previous": "PASS", "final": "PASS", "evidence": "Local BHL_API_KEY present; live Status=ok; missing key → UNAVAILABLE"},
+    "C8": {"title": "Retrieval Behavior and Error Handling", "previous": "PARTIAL", "final": "PASS", "evidence": "envelope unauthorized/401 + missing key tests"},
+    "C9": {"title": "Evidence Normalization", "previous": "PARTIAL", "final": "PASS", "evidence": "PartID/TitleID mapping + provenance"},
+    "C10": {"title": "Scientific Identity Integrity", "previous": "PARTIAL", "final": "PASS", "evidence": "Triticum aestivum preserved; no modern causation inflation"},
+    "C11": {"title": "Negative and Boundary Testing", "previous": "PARTIAL", "final": "PASS", "evidence": "irrigation not BHL-eligible; missing credential"},
+    "C12": {"title": "Reproducible Production-Path Evidence", "previous": "PARTIAL", "final": "PASS", "evidence": "REAL_APPLICATION_PATH harness fixture+live"},
+    "C13": {"title": "Source-Specific Limitations and Governance", "previous": "PASS", "final": "PASS", "evidence": "secret not echoed; no new key requested"},
+    "C14": {"title": "Regression and Architectural Integrity", "previous": "PASS", "final": "PASS", "evidence": "GBIF/NSR/plant-growth regression green"},
+    "C15": {"title": "Evidence Completeness and Traceability", "previous": "PARTIAL", "final": "PASS", "evidence": "This artifact + Arabic report"}
+  },
+  "remaining_gaps": [
+    "Cumulative five-source VERIFIED still false.",
+    "Full-agent taxonomy questions may still relevance-reject bibliographic hits outside BHL-forced path.",
+    "OCR page-level comprehension not claimed."
+  ]
+}
