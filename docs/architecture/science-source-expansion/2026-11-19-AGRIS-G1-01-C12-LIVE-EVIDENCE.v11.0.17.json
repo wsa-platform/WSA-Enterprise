@@ -5,6 +5,9 @@
   "adr_id": "G1-01",
   "source_key": "agris",
   "baseline_head_at_start": "649e790f10f42af17340fe8ee9e7d5e2fab316b9",
+  "final_local_remote_head": "217265a30823e5331d243dcb1489e7ff1991b52d",
+  "feat_commit": "8fe5564",
+  "docs_pin_commit": "217265a",
   "c12_original_definition": {
     "title": "Reproducible Production-Path Evidence",
     "text": "The integration is demonstrated through the actual application path or an equivalent reproducible production-path integration test, not merely isolated unit tests.",
