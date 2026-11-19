@@ -1,0 +1,92 @@
+{
+  "revision": "6.4",
+  "date": "2026-11-20",
+  "baseline_head": "fb53865a75e585ef201a0fb2a4754bc32b0c9646",
+  "branch": "phase-18-m18-ai-marketing-communications",
+  "routes_verified": {
+    "query": "POST /api/v1/public/research-agent/query",
+    "results": "GET /api/v1/public/research-agent/results"
+  },
+  "environment": {
+    "docker_backend": "healthy",
+    "docker_frontend": "healthy",
+    "nginx_port": 8079,
+    "browser_in_frontend_container": false
+  },
+  "mission_b_live_search": {
+    "path": "AgriculturalResearchAgentController::query via Laravel container (real Agent pipeline)",
+    "question": "What is the effect of temperature on wheat growth?",
+    "http_status": 200,
+    "response_status": "scientific_generated",
+    "failure_class": null,
+    "result_set_id": "srs_01m7ty9xe6pg0cywxry5zc1tr4",
+    "stable_created": true,
+    "total_answers": 1,
+    "total_pages": 1,
+    "first_page_answer_count": 1,
+    "multi_answers_count": 1,
+    "primary_answer_present": true,
+    "confidence_exposed_in_presentation": false,
+    "elapsed_s": 20.09,
+    "multi_page_from_live_search": false,
+    "note": "Live search returned <=10 answers; multi-page pagination proven via controlled Scenario 2"
+  },
+  "mission_b_live_results_http": {
+    "page1": {
+      "result_set_id": "srs_01m7ty9xe6pg0cywxry5zc1tr4",
+      "page": 1,
+      "answer_count": 1,
+      "rerun_performed": false,
+      "search_rerun": false,
+      "composer_rerun": false
+    },
+    "page2": {
+      "result_set_id": "srs_01m7ty9xe6pg0cywxry5zc1tr4",
+      "page": 2,
+      "answer_count": 0,
+      "total_pages": 1,
+      "rerun_performed": false,
+      "note": "Empty page slice for page>total_pages; same result_set_id retained"
+    }
+  },
+  "mission_c_controlled_pagination": {
+    "label": "CONTROLLED TEST DATA — not scientific findings",
+    "answer_records": 21,
+    "page_counts": { "page1": 10, "page2": 10, "page3": 1 },
+    "unique_answer_ids": 21,
+    "duplicates": false,
+    "ordering_ok": true,
+    "public_organization_id": 8,
+    "result_set_id_example": "srs_01m7ty9aah6d8nefbkb24rhcxt",
+    "implementation_exercised": "StableAnswerResultSetStore + AgriculturalResearchAgentController::pageResults",
+    "rerun_flags": {
+      "page1_rerun": false,
+      "page2_rerun": false,
+      "page3_rerun": false,
+      "page2_search_rerun": false,
+      "page2_composer_rerun": false,
+      "page2_validation_rerun": false
+    },
+    "missing_http_status": 404,
+    "expired_http_status": 404,
+    "failure_code": "stable_result_set_missing_or_expired"
+  },
+  "mission_d_no_rerun": {
+    "frontend": "HomeScientificResearchSearch handlePageChange calls fetchStableResearchResultsPage only; unit test rev64PaginationNoQuery",
+    "backend_source_inspection": "pageStableResultSet body does not reference scientificSearchService, answerComposer, scientificValidationService, or conductResearch",
+    "backend_counters_test": "Rev64StablePaginationNoRerunVerificationTest — query=1, results=3, orchestrator/composer/validation=0",
+    "response_flag": "rerun_performed=false is supporting evidence only; counters + source inspection + Results-only controller path are primary"
+  },
+  "mission_e_security_lifecycle": {
+    "access_model": "PublicTenantResolver binds public organization; result sets scoped by organization_id directory",
+    "valid_access": "PASS — org 8 retrieved own controlled and live sets",
+    "cross_org_denied": "PASS — pageStableResultSet(otherOrg) => result_set_unavailable",
+    "missing": "PASS — 404 stable_result_set_missing_or_expired",
+    "expired": "PASS — 404 same failure_code",
+    "corrupted": "NOT_RUN — no safe corruption of production data; store returns null on invalid JSON"
+  },
+  "mission_g_browser_e2e": {
+    "status": "NOT_RUN",
+    "blocker": "No Chromium/Playwright/browser binary in frontend container; no existing Playwright project in repo"
+  }
+}
