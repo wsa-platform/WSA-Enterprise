@@ -5,6 +5,8 @@
   "adr_id": "G1-17",
   "source_key": "dr_duke",
   "baseline_head": "31287a1d12b40aebfd5dee5deddaedb3bb39bccd",
+  "delivery_head": "5f9bc36df89cf249f1ab73fa0cca618492c97bb0",
+  "remote_sync": "REMOTE_SYNC_VERIFIED",
   "owner_decision": "OD-G1-17-SCOPE-LIMITED-PROJECTION",
   "owner_decision_path": "docs/architecture/science-source-expansion/2026-10-17-SOURCE-EXPANSION-MISSION/2026-10-18-OWNER-DECISION-RECORDED-G1-01-G1-17-SCOPE.v1.json",
   "claim_guard": [

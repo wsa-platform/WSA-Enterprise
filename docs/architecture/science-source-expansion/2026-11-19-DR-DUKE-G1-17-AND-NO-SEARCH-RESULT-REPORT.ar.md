@@ -23,7 +23,8 @@
 |---|---|
 | Branch | `phase-18-m18-ai-marketing-communications` |
 | Initial HEAD | `31287a1d12b40aebfd5dee5deddaedb3bb39bccd` |
-| Final HEAD | *(يُحدَّث بعد Commit)* |
+| Final HEAD | `5f9bc36df89cf249f1ab73fa0cca618492c97bb0` |
+| Remote HEAD | `5f9bc36df89cf249f1ab73fa0cca618492c97bb0` (`REMOTE_SYNC_VERIFIED`) |
 | Remote tracking | `origin/phase-18-m18-ai-marketing-communications` |
 | WIP Protection | ملفات غير مرتبطة (QUS، CapVer، ScientificUserPresentation، اختبارات Feature واسعة، `_tmp-*`) بقيت خارج Staging |
 | Staging | Path-specific فقط — ممنوع `git add .` / `-A` |
@@ -193,11 +194,11 @@ Tests: 5 passed (28 assertions)
 ## K. Commits and Remote Verification
 | الحالة | القيمة |
 |---|---|
-| COMMITTED_LOCALLY | *(بعد Commit)* |
-| PUSHED | *(بعد Push)* |
-| REMOTE_SYNC_VERIFIED | *(بعد fetch ومطابقة SHA)* |
+| COMMITTED_LOCALLY | `5f9bc36` — `feat(dr-duke): G1-17 limited-projection acceptance and NSR relevance classification` |
+| PUSHED | نعم — `31287a1..5f9bc36` |
+| REMOTE_SYNC_VERIFIED | نعم — Local HEAD = `origin/phase-18-m18-ai-marketing-communications` = `5f9bc36df89cf249f1ab73fa0cca618492c97bb0` |
 | Force push | ممنوع / غير مستخدم |
-| CI | يُشغَّل على push؛ لا ادّعاء نجاح دون تحقق |
+| CI | يُشغَّل على push؛ لا ادّعاء نجاح دون تحقق (`CI_STATUS_UNAVAILABLE` إن تعذر) |
 
 ---
 
