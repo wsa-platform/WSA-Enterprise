@@ -74,4 +74,27 @@ final class StableAnswerResultSetStoreTest extends TestCase
 
         $this->assertNull($store->get(8, $set->resultSetId));
     }
+
+    public function test_atomic_write_leaves_no_tmp_and_persists_readable_json(): void
+    {
+        $store = new StableAnswerResultSetStore($this->root);
+        $set = $store->create(7, 'TEST Q', null, [
+            [
+                'answer' => 'TEST-DATA atomic',
+                'result_id' => 'r-atomic',
+                'evidence_ids' => ['e1'],
+                'source_ids' => ['t'],
+                'position' => 0,
+                'provenance' => ['test_fixture' => true],
+            ],
+        ]);
+
+        $path = $this->root.DIRECTORY_SEPARATOR.'7'.DIRECTORY_SEPARATOR.$set->resultSetId.'.json';
+        $this->assertFileExists($path);
+        $tmpGlob = glob($this->root.DIRECTORY_SEPARATOR.'7'.DIRECTORY_SEPARATOR.'*.tmp.*') ?: [];
+        $this->assertSame([], $tmpGlob, 'temporary write files must not remain');
+        $decoded = json_decode((string) file_get_contents($path), true);
+        $this->assertIsArray($decoded);
+        $this->assertSame($set->resultSetId, $decoded['result_set_id'] ?? null);
+    }
 }

@@ -72,6 +72,16 @@ The `queue` service runs `php artisan queue:work redis` against the Redis connec
 
 The queue entrypoint waits for Redis readiness before starting workers (prevents crash-loops when Redis is unavailable).
 
+### StableAnswerResultSet storage (Rev 6.6)
+
+Scientific multi-answer pagination persists under:
+
+`backend/storage/app/scientific_stable_results/{organization_id}/{result_set_id}.json`
+
+On backend container start, `docker-entrypoint.sh` idempotently ensures that directory exists and is owned by `www-data` (mode `2775`) before `php-fpm` accepts requests. PHP-FPM workers remain non-root. Do not use world-writable (`777`) permissions and do not rely on manual `chown` after deploy.
+
+With the Compose bind mount `./backend:/var/www/html`, ownership is re-applied at every backend start so host/root-created directories do not leave PHP-FPM unable to write.
+
 Inspect worker logs:
 
 ```bash

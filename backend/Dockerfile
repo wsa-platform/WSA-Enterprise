@@ -37,9 +37,14 @@ RUN mkdir -p /var/cache/uv /opt/uv-tools /opt/uv-python \
 COPY --from=dependencies /app/vendor ./vendor
 COPY . .
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Rev 6.6: provision StableAnswerResultSet storage path in the image layer.
+# Bind mounts override this at runtime; docker-entrypoint.sh re-applies ownership
+# before php-fpm starts so workers (www-data) can write without manual chown.
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
     && chmod +x /usr/local/bin/docker-entrypoint.sh \
-    && chown -R www-data:www-data storage bootstrap/cache
+    && mkdir -p storage/app/scientific_stable_results \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod 2775 storage/app/scientific_stable_results
 EXPOSE 9000
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]

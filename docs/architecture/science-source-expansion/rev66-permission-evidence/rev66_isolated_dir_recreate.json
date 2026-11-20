@@ -1,0 +1,20 @@
+{
+    "revision": "6.6",
+    "created_at": "2026-11-20T20:14:48+00:00",
+    "runtime": {
+        "geteuid": 33,
+        "username": "www-data",
+        "is_root": false
+    },
+    "isolated_root": "/var/www/html/storage/framework/cache/rev66_iso_117_9cbb35",
+    "live_root_untouched": true,
+    "steps": [
+        "recreated_isolated_root_0775",
+        "store_create",
+        "store_get",
+        "cleaned_isolated_root"
+    ],
+    "ok": true,
+    "error": null,
+    "result_set_id": "srs_01m7x9hty23xjj3mb8m8cqth48"
+}

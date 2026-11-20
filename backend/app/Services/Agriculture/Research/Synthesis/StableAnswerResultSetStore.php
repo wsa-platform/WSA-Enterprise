@@ -77,15 +77,26 @@ final class StableAnswerResultSetStore
             if (! mkdir($dir, 0775, true) && ! is_dir($dir)) {
                 throw new \RuntimeException('Unable to create stable result set directory.');
             }
+            @chmod($dir, 0775);
         }
         $path = $this->pathFor($set->organizationId, $set->resultSetId);
         $payload = json_encode($set->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
         if ($payload === false) {
             throw new \RuntimeException('Unable to encode stable result set payload.');
         }
-        if (file_put_contents($path, $payload) === false) {
-            throw new \RuntimeException('Unable to persist stable result set file.');
+
+        // Atomic write: temp file in the same directory, then rename. Avoids
+        // leaving a truncated JSON file that could be mistaken for a valid set.
+        $tmp = $path.'.tmp.'.getmypid().'.'.bin2hex(random_bytes(4));
+        if (file_put_contents($tmp, $payload) === false) {
+            throw new \RuntimeException('Unable to persist stable result set temporary file.');
         }
+        @chmod($tmp, 0664);
+        if (! @rename($tmp, $path)) {
+            @unlink($tmp);
+            throw new \RuntimeException('Unable to finalize stable result set file.');
+        }
+        @chmod($path, 0664);
     }
 
     private function root(): string

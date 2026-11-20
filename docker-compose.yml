@@ -14,6 +14,9 @@ services:
       - ./backend:/var/www/html
       - ./docs:/var/www/html/docs:ro
       - backend_vendor:/var/www/html/vendor
+      # Rev 6.6: entrypoint is also baked into the image; bind-mount keeps local
+      # permission-hardening changes effective without a full image rebuild.
+      - ./backend/docker-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "php artisan about --no-ansi | grep -q Application"]
