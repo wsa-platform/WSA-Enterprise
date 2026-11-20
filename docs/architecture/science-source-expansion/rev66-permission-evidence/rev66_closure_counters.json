@@ -1,0 +1,36 @@
+{
+    "revision": "6.5",
+    "result_set_id": "srs_01m7xb5cqec3y1mfr0p399tzk0",
+    "organization_id": 8,
+    "counters": {
+        "query": 0,
+        "results": 3,
+        "orchestrator": 0,
+        "validation": 0,
+        "answer_derivation": 0,
+        "composer": 0
+    },
+    "page_answer_counts": {
+        "page1": 10,
+        "page2": 10,
+        "page3": 1
+    },
+    "rerun_performed": {
+        "page1": false,
+        "page2": false,
+        "page3": false
+    },
+    "observability": {
+        "page2_search_rerun": false,
+        "page2_composer_rerun": false,
+        "page2_validation_rerun": false
+    },
+    "pageStableResultSet_pipeline_absent": {
+        "scientificSearchService": true,
+        "answerComposer": true,
+        "scientificValidationService": true,
+        "conductResearch": true,
+        "ClaimBoundIndependentAnswerDeriver": true
+    },
+    "created_at": "2026-11-20T20:43:45+00:00"
+}

@@ -44,7 +44,7 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
     && chmod +x /usr/local/bin/docker-entrypoint.sh \
     && mkdir -p storage/app/scientific_stable_results \
     && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod 2775 storage/app/scientific_stable_results
+    && chmod 2770 storage/app/scientific_stable_results
 EXPOSE 9000
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]

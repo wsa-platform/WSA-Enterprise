@@ -1,0 +1,42 @@
+{
+    "revision": "6.6-closure",
+    "created_at": "2026-11-20T20:44:17+00:00",
+    "runtime": {
+        "geteuid": 33,
+        "username": "www-data",
+        "is_root": false
+    },
+    "historical": {
+        "path": "/tmp/rev66_closure_173_2d9f8c/8/srs_rev66_closure_hist.json",
+        "chown_attempted": true,
+        "chown_to_root_ok": false,
+        "stat_before": {
+            "mode_octal": "0644",
+            "uid": 33,
+            "gid": 33
+        },
+        "read_ok": true,
+        "replace_ok": true,
+        "no_tmp_left": true,
+        "stat_after": {
+            "mode_octal": "0660",
+            "uid": 33,
+            "gid": 33
+        }
+    },
+    "org_isolation": {
+        "store_cross_org_null": true,
+        "agent_missing_or_denied": true,
+        "missing_result_set": true,
+        "no_path_leak": true
+    },
+    "atomic_failed_write": {
+        "message": "Unable to finalize stable result set file.",
+        "threw": true,
+        "tmp_cleaned": true
+    },
+    "ok": true,
+    "error": null,
+    "cleanup_ok": false,
+    "cleanup_error": "RecursiveDirectoryIterator::__construct(/tmp/rev66_closure_173_2d9f8c/8): Failed to open directory: Permission denied"
+}

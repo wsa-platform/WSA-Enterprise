@@ -78,7 +78,7 @@ Scientific multi-answer pagination persists under:
 
 `backend/storage/app/scientific_stable_results/{organization_id}/{result_set_id}.json`
 
-On backend container start, `docker-entrypoint.sh` idempotently ensures that directory exists and is owned by `www-data` (mode `2775`) before `php-fpm` accepts requests. PHP-FPM workers remain non-root. Do not use world-writable (`777`) permissions and do not rely on manual `chown` after deploy.
+On backend container start, `docker-entrypoint.sh` idempotently ensures that directory exists and is owned by `www-data` (mode `2770`/`0770`, files `0660`) before `php-fpm` accepts requests. PHP-FPM workers remain non-root. Do not use world-writable (`777`) or other-readable (`0644`/`0664`) modes, and do not rely on manual `chown` after deploy.
 
 With the Compose bind mount `./backend:/var/www/html`, ownership is re-applied at every backend start so host/root-created directories do not leave PHP-FPM unable to write.
 

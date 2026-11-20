@@ -27,19 +27,23 @@ ensure_scientific_stable_results_storage() {
         chmod 0775 "$parent" 2>/dev/null || true
 
         chown www-data:www-data "$target"
-        # setgid (2xxx): new org subdirs inherit www-data group on Linux filesystems.
-        chmod 2775 "$target"
+        # Owner/group rwx only (no other). Prefer setgid (2770) so new org subdirs
+        # inherit www-data group on filesystems that honor Unix mode bits; 9p bind
+        # mounts may drop the setgid bit while retaining 0770 owner/group semantics.
+        chmod 2770 "$target" 2>/dev/null || chmod 0770 "$target"
 
-        # Repair existing organization directories only (depth 1). Do not touch file payloads.
+        # Repair existing organization directories and files (depth 1). Never world-writable.
         if [ -d "$target" ]; then
             find "$target" -mindepth 1 -maxdepth 1 -type d -exec chown www-data:www-data {} \;
-            find "$target" -mindepth 1 -maxdepth 1 -type d -exec chmod 2775 {} \;
+            find "$target" -mindepth 1 -maxdepth 1 -type d -exec chmod 2770 {} \;
             find "$target" -mindepth 1 -maxdepth 1 -type f -exec chown www-data:www-data {} \;
-            find "$target" -mindepth 1 -maxdepth 1 -type f -exec chmod 0664 {} \;
+            find "$target" -mindepth 1 -maxdepth 1 -type f -exec chmod 0660 {} \;
+            # Org payload files: owner/group rw only (closes "other" read under 0664).
+            find "$target" -mindepth 2 -maxdepth 2 -type f -name '*.json' -exec chmod 0660 {} \;
         fi
     else
         mkdir -p "$target" || true
-        chmod 2775 "$target" 2>/dev/null || true
+        chmod 2770 "$target" 2>/dev/null || chmod 0770 "$target" 2>/dev/null || true
     fi
 }
 

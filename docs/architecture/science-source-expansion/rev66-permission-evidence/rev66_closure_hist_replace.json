@@ -1,0 +1,26 @@
+{
+    "revision": "6.6-closure-hist",
+    "created_at": "2026-11-20T20:42:37+00:00",
+    "runtime": {
+        "geteuid": 33,
+        "username": "www-data",
+        "is_root": false
+    },
+    "ok": true,
+    "error": null,
+    "stat_before": {
+        "mode_octal": "0644",
+        "uid": 0,
+        "gid": 0
+    },
+    "was_root_owned": true,
+    "read_ok": true,
+    "replace_ok": true,
+    "stat_after": {
+        "mode_octal": "0660",
+        "uid": 33,
+        "gid": 33
+    },
+    "no_tmp_left": true,
+    "unlink_cleanup_ok": true
+}

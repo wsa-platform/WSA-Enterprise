@@ -1,0 +1,44 @@
+{
+    "revision": "6.6",
+    "created_at": "2026-11-20T20:42:39+00:00",
+    "runtime": {
+        "geteuid": 33,
+        "username": "www-data",
+        "php_sapi": "cli",
+        "is_root": false
+    },
+    "paths": {
+        "root": "/var/www/html/storage/app/scientific_stable_results",
+        "org_dir": "/var/www/html/storage/app/scientific_stable_results/8",
+        "root_exists": true,
+        "org_dir_exists": true,
+        "root_writable": true,
+        "org_dir_writable": true
+    },
+    "stat": {
+        "root": {
+            "mode_octal": "2770",
+            "uid": 33,
+            "gid": 33
+        },
+        "org_8": {
+            "mode_octal": "2770",
+            "uid": 33,
+            "gid": 33
+        },
+        "probe_file": {
+            "mode_octal": "0660",
+            "uid": 33,
+            "gid": 33,
+            "size": 1122
+        }
+    },
+    "store": {
+        "create_ok": true,
+        "get_ok": true,
+        "result_set_id": "srs_01m7xb4v9rb4kawf7k3k7acvd5",
+        "cleanup_ok": true
+    },
+    "ok": true,
+    "error": null
+}

@@ -1,0 +1,17 @@
+{
+  "http_implied": 200,
+  "status": "ready",
+  "result_set_id": "srs_01m7x9kkbgca1cg1mczzy0m3rh",
+  "page": 1,
+  "answer_count": 1,
+  "rerun_performed": false,
+  "observability": {
+    "multi_answer_producer_status": "produced",
+    "independent_answer_count": 1,
+    "page_size": 10,
+    "pagination_mode": "stable_result_set_slice",
+    "composer_rerun": false,
+    "search_rerun": false,
+    "validation_rerun": false
+  }
+}

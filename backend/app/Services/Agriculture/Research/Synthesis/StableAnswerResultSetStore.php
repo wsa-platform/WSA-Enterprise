@@ -74,10 +74,10 @@ final class StableAnswerResultSetStore
     {
         $dir = $this->dirFor($set->organizationId);
         if (! is_dir($dir)) {
-            if (! mkdir($dir, 0775, true) && ! is_dir($dir)) {
+            if (! mkdir($dir, 0770, true) && ! is_dir($dir)) {
                 throw new \RuntimeException('Unable to create stable result set directory.');
             }
-            @chmod($dir, 0775);
+            @chmod($dir, 0770);
         }
         $path = $this->pathFor($set->organizationId, $set->resultSetId);
         $payload = json_encode($set->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
@@ -91,12 +91,12 @@ final class StableAnswerResultSetStore
         if (file_put_contents($tmp, $payload) === false) {
             throw new \RuntimeException('Unable to persist stable result set temporary file.');
         }
-        @chmod($tmp, 0664);
+        @chmod($tmp, 0660);
         if (! @rename($tmp, $path)) {
             @unlink($tmp);
             throw new \RuntimeException('Unable to finalize stable result set file.');
         }
-        @chmod($path, 0664);
+        @chmod($path, 0660);
     }
 
     private function root(): string
