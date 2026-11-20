@@ -1,23 +1,74 @@
+# Secrets / credentials — never enter build context
 .env
 .env.*
-vendor
-node_modules
-storage/logs
-storage/logs/**
-storage/app/**
-!storage/app/.gitignore
-!storage/app/public/
-!storage/app/public/**
-!storage/app/scientific_stable_results/
-!storage/app/scientific_stable_results/.gitignore
-e2e-tmp
-e2e-tmp/**
+!.env.example
 *.pem
 *.key
 id_rsa
 id_rsa.pub
 auth.json
+
+# Host dependency trees (installed inside image stages)
+vendor
+node_modules
+
+# Host package discovery caches list dev providers (pail/sail); regenerate in image
+bootstrap/cache/**
+!bootstrap/cache/.gitignore
+
+# Runtime logs and local app data (~15GB+ on host; must stay out)
+storage/logs
+storage/logs/**
+storage/app/**
+!storage/app/.gitignore
+!storage/app/public/.gitignore
+!storage/app/scientific_stable_results/.gitignore
+
+# Framework runtime / test / recovery artifacts (nested DBs bypassed bare *.sqlite)
+storage/framework/cache/**
+!storage/framework/cache/.gitignore
+!storage/framework/cache/data/.gitignore
+storage/framework/sessions/**
+!storage/framework/sessions/.gitignore
+storage/framework/views/**
+!storage/framework/views/.gitignore
+storage/framework/testing
+storage/framework/testing/**
+storage/framework/recovery
+storage/framework/recovery/**
+
+# Local databases anywhere in the tree
+**/*.sqlite
+**/*.sqlite-*
+**/*.db
+
+# Tests and coverage (not required for runtime image; host bind covers local test runs)
+tests
+tests/**
+phpunit.xml
+phpunit.pgsql.xml
 .phpunit.result.cache
 coverage
-*.sqlite
-*.sqlite-*
+coverage/**
+
+# Local / ephemeral workspaces
+e2e-tmp
+e2e-tmp/**
+**/.phpunit.cache
+**/.phpunit.result.cache
+
+# IDE / OS noise
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+
+# Docs and markdown (not required at runtime)
+docs
+docs/**
+*.md
+!README.md
+
+# Docker build meta (avoid recursive context noise)
+Dockerfile*
+.dockerignore

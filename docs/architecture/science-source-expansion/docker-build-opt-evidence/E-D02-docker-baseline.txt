@@ -1,0 +1,9 @@
+﻿# E-D02 Docker Environment Baseline
+Docker: 29.6.2
+Compose: 5.3.1
+Buildx: github.com/docker/buildx v0.35.0-desktop.2 b554ce1decd8b509893b1e7c6227eabfb923d094
+Images total/size: see docker system df
+Build cache: large (~19GB) - will NOT prune
+Running: backend,frontend,nginx,postgres,redis healthy
+Backend image: wsa-enterprise-backend:latest ad262ad10672 1.59GB
+Disk C free ~65GB, G free ~48GB

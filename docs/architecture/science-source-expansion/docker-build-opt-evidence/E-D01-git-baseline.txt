@@ -1,0 +1,7 @@
+﻿# E-D01 Git Baseline
+Date: 2026-11-20T23:59:28.9736085+03:00
+Branch: phase-18-m18-ai-marketing-communications
+HEAD: cd8851eabdc06fe4f4d616012bc8749de449125e
+Remote: https://github.com/wsa-platform/WSA-Enterprise.git
+WIP porcelain lines: 225
+Status: WIP_PROTECTED (CapVer/docs/tests unmodified by this mission)

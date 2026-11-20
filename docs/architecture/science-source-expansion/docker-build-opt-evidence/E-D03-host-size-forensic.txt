@@ -1,0 +1,13 @@
+﻿# E-D03 Backend Host Size Forensic (NOT docker context)
+storage total MB: 16532.1
+storage/app MB: 15771.8
+  scientific_record_store.sqlite MB: 9350.2
+  scientific_datasets MB: 6395.8
+  mission_artifact_archive MB: 23.6
+  scientific_stable_results MB: 0.1
+storage/logs MB: 758.9
+storage/framework MB: 1.5
+vendor MB: 45.2
+e2e-tmp MB: 33.5
+tests MB: 4
+Note: Host size != Build Context. Context uses backend/.dockerignore.
