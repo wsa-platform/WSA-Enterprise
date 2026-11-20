@@ -1,0 +1,7 @@
+﻿Commit SHA: b72886a2bc6dbfba08282b053830b555281421b5
+Message: fix(science): restore taxonomic relevance survivors for Mentha GS-06
+Branch: phase-18-m18-ai-marketing-communications
+Starting HEAD: 3f16a6c12795d2934a42f5a5d21f22f59c325a54
+Remote: origin/phase-18-m18-ai-marketing-communications
+Local=Remote: VERIFIED (both b72886a2bc6dbfba08282b053830b555281421b5)
+Push: non-force after fetch; success
