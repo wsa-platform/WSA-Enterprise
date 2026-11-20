@@ -193,6 +193,13 @@ final class RestJsonScientificSourceAdapter implements ScientificSourceAdapterV2
             return data_get($item, $path);
         };
 
+        $rawAbstract = ScientificSourceFamilyRecord::scalar($abstract);
+        // GBIF species/checklist payloads carry hierarchy fields; do not treat rank alone as
+        // a scholarly abstract — compose a taxonomic identity summary from returned fields only.
+        if ($this->profile->sourceKey() === 'gbif') {
+            $rawAbstract = $this->composeGbifTaxonomicAbstract($item, $rawAbstract);
+        }
+
         return ScientificSourceFamilyRecord::toResult(
             profile: $this->profile,
             rawTitle: ScientificSourceFamilyRecord::scalar($title),
@@ -200,13 +207,46 @@ final class RestJsonScientificSourceAdapter implements ScientificSourceAdapterV2
             originalIdentifierField: $identifierField,
             rawDoi: ScientificSourceFamilyRecord::scalar($doi),
             rawUrl: ScientificSourceFamilyRecord::scalar($url),
-            rawAbstract: ScientificSourceFamilyRecord::scalar($abstract),
+            rawAbstract: $rawAbstract,
             publishedAt: ScientificSourceFamilyRecord::scalar($published),
             year: is_int($year) || (is_string($year) && preg_match('/^\d{4}$/', $year) === 1) ? (int) $year : null,
             authors: $this->authors($value('authors')),
             journal: ScientificSourceFamilyRecord::scalar($value('journal')),
             raw: $item,
         );
+    }
+
+    /**
+     * Build taxonomic evidence text from GBIF species-search fields that are actually present.
+     * Does not invent missing ranks or accepted-name status.
+     *
+     * @param  array<string, mixed>  $item
+     */
+    private function composeGbifTaxonomicAbstract(array $item, ?string $rankFallback): ?string
+    {
+        $parts = [];
+        foreach ([
+            'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species',
+            'scientificName', 'canonicalName', 'rank', 'taxonomicStatus',
+            'accepted', 'authorship',
+        ] as $field) {
+            $value = data_get($item, $field);
+            if (is_bool($value)) {
+                $parts[] = $field.': '.($value ? 'true' : 'false');
+
+                continue;
+            }
+            $scalar = ScientificSourceFamilyRecord::scalar($value);
+            if ($scalar !== null) {
+                $parts[] = $field.': '.$scalar;
+            }
+        }
+
+        if ($parts !== []) {
+            return 'Taxonomic classification. '.implode('; ', $parts);
+        }
+
+        return $rankFallback;
     }
 
     /**

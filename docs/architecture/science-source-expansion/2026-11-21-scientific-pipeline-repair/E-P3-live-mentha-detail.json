@@ -1,0 +1,38 @@
+{
+    "status":  "synthesis_completed_partial",
+    "failure_class":  "INSUFFICIENT_EVIDENCE",
+    "answer_len":  251,
+    "answer":  "### Plant family members\n\nValidated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the citations.\n1. **Rhizobacteria inoculation**\n2. **the treatment with SA**\n3. **MeJA**",
+    "citation_count":  11,
+    "citation_titles":  [
+                            "Improving Phenolic Total Content and Monoterpene in Mentha x piperita by Using Salicylic Acid or Methyl Jasmonate Combined with Rhizobacteria Inoculation",
+                            "Mentha piperita L.",
+                            "Mentha piperita L.",
+                            "Mentha piperita L.",
+                            "Mentha piperita L.",
+                            "Mentha piperita L.",
+                            "Mentha piperita L.",
+                            "Mentha piperita L.",
+                            "Mentha piperita",
+                            "Mentha ×piperita"
+                        ],
+    "citation_source_keys":  [
+                                 "openalex",
+                                 "gbif",
+                                 "gbif",
+                                 "gbif",
+                                 "gbif",
+                                 "gbif",
+                                 "gbif",
+                                 "gbif",
+                                 "gbif",
+                                 "gbif",
+                                 "gbif"
+                             ],
+    "successful_sources":  [
+                               "openalex",
+                               "crossref",
+                               "gbif"
+                           ],
+    "survivors":  20
+}

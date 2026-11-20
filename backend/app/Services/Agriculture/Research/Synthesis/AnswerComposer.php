@@ -497,12 +497,20 @@ class AnswerComposer
             return false;
         }
 
+        $composerSourceKey = trim($item->sourceKey) !== '' ? $item->sourceKey : null;
+        $composerRelevanceMeta = is_array($item->sourceAttribution['relevance_metadata'] ?? null)
+            ? $item->sourceAttribution['relevance_metadata']
+            : (is_array($item->qualityFactors['relevance_metadata'] ?? null)
+                ? $item->qualityFactors['relevance_metadata']
+                : null);
         if (! $this->relevanceGate->isRelevant(
             $plan,
             $item->publicationTitle,
             $item->evidenceText,
             $item->doi,
             $item->claimTopic !== '' ? $item->claimTopic : null,
+            $composerSourceKey,
+            $composerRelevanceMeta,
         )) {
             return false;
         }
@@ -839,6 +847,11 @@ class AnswerComposer
                 $item->publicationTitle,
                 $item->evidenceText,
                 $item->doi,
+                null,
+                trim($item->sourceKey) !== '' ? $item->sourceKey : null,
+                is_array($item->qualityFactors['relevance_metadata'] ?? null)
+                    ? $item->qualityFactors['relevance_metadata']
+                    : null,
             );
             $relation = (string) ($assessed['species_relation'] ?? '');
         }
@@ -931,6 +944,11 @@ class AnswerComposer
             $item->publicationTitle,
             $item->evidenceText,
             $item->doi,
+            null,
+            trim($item->sourceKey) !== '' ? $item->sourceKey : null,
+            is_array($item->qualityFactors['relevance_metadata'] ?? null)
+                ? $item->qualityFactors['relevance_metadata']
+                : null,
         )['directness'];
     }
 

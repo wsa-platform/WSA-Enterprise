@@ -174,11 +174,15 @@ class ClaimEvidenceMatcher
             ];
         }
 
+        $existingRelevanceMetadata = is_array($result->relevanceMetadata) ? $result->relevanceMetadata : null;
         $assessment = $this->relevanceGate->assess(
             $plan,
             $result->title,
             $evidenceText,
             $result->doi,
+            null,
+            $result->sourceKey,
+            $existingRelevanceMetadata,
         );
         $directness = $this->verificationLayer->assess(
             $plan,

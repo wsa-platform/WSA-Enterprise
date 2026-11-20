@@ -79,6 +79,14 @@ class ScientificEvidenceRelevanceGate
             $recordKnowledgeType,
             $entityMatched,
         );
+        $taxonomyAnswerabilityHaystack = $fullHaystack !== '' ? $fullHaystack : $senseHaystack;
+        // Scholarly mentions of a species are not taxonomic classification evidence.
+        if ($identityOriented
+            && $recordKnowledgeType === ScientificKnowledgeType::SCHOLARLY_EVIDENCE
+            && in_array(ScientificKnowledgeType::TAXONOMIC_IDENTITY, $requiredKnowledgeTypes, true)
+            && ! $this->hasTaxonomicAnswerabilityCues($taxonomyAnswerabilityHaystack)) {
+            $identityOriented = false;
+        }
         // Identity / heritage / chemical association records: do not force scholarly topic rules.
         if ($identityOriented) {
             $requiresTopic = false;
@@ -89,6 +97,15 @@ class ScientificEvidenceRelevanceGate
         }
         $topicMatched = $topicStrength !== 'none';
         $senseMatched = $topicStrength === 'strong';
+        // Taxonomy identity path: entity + taxonomic answerability satisfies topic for Stage-4 eligibility.
+        if ($identityOriented
+            && in_array(ScientificKnowledgeType::TAXONOMIC_IDENTITY, $requiredKnowledgeTypes, true)
+            && $this->hasTaxonomicAnswerabilityCues($taxonomyAnswerabilityHaystack)) {
+            $topicMatched = true;
+            if ($topicStrength === 'none') {
+                $topicStrength = 'weak';
+            }
+        }
         $contextMatched = $this->matchesAgriculturalContext($senseHaystack)
             || ($extraText !== null && $this->matchesAgriculturalContext(mb_strtolower(trim($extraText))));
         $domainHaystack = $senseHaystack !== '' ? $senseHaystack : $fullHaystack;
@@ -270,8 +287,44 @@ class ScientificEvidenceRelevanceGate
         ?string $abstract = null,
         ?string $doi = null,
         ?string $extraText = null,
+        ?string $sourceKey = null,
+        ?array $existingRelevanceMetadata = null,
     ): bool {
-        return $this->assess($plan, $title, $abstract, $doi, $extraText)['relevant'];
+        return $this->assess(
+            $plan,
+            $title,
+            $abstract,
+            $doi,
+            $extraText,
+            $sourceKey,
+            $existingRelevanceMetadata,
+        )['relevant'];
+    }
+
+    /**
+     * Lexical cues that a record actually supplies taxonomic classification content
+     * (not merely mentions a species in an agronomic/chemical study).
+     */
+    public function hasTaxonomicAnswerabilityCues(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+
+        // Do NOT treat a bare "species" mention as taxonomic answerability — agronomic
+        // Mentha papers often say "species" without supplying classification hierarchy.
+        return preg_match(
+            '/\b(?:taxonomy|taxonomic\s+classification|taxonomic|phylogen(?:y|etic)|binomial|nomenclature|'
+            .'scientific\s+name|accepted\s+name|taxonomic\s+status|taxon(?:omic)?\s+rank|'
+            .'kingdom\s*:|phylum\s*:|class\s*:|order\s*:|family\s*:|genus\s*:|species\s*:|'
+            .'belongs\s+to\s+(?:the\s+)?(?:family|genus|order)|'
+            .'family\s+[A-Z][a-z]+aceae|lamiaceae|poaceae|fabaceae|asteraceae|'
+            .'تصنيف|الاسم\s+العلمي|فصيلة|رتبة)\b/u',
+            $hay,
+        ) === 1
+            || preg_match('/\b(?:kingdom|phylum|order|family|genus)\s*:\s*\S+/u', $hay) === 1
+            || preg_match('/\btaxonomic\s+classification\b/u', $hay) === 1;
     }
 
     /**

@@ -1,0 +1,32 @@
+{
+    "ts":  "2026-11-21T02:06:13.9900050+03:00",
+    "query":  "What is the taxonomic classification of Mentha piperita?",
+    "status":  "synthesis_completed_partial",
+    "failure_code":  "synthesis_completed_partial",
+    "failure_class":  "INSUFFICIENT_EVIDENCE",
+    "raw":  70,
+    "survivors":  20,
+    "sources":  [
+                    "openalex",
+                    "crossref",
+                    "gbif"
+                ],
+    "val_status":  "validation_completed",
+    "validated_count":  null,
+    "rejected_count":  null,
+    "sci":  "Mentha piperita",
+    "qtype":  "species",
+    "req":  "species_list_or_taxonomy",
+    "topics":  [
+                   "taxonomy",
+                   "taxonomic classification",
+                   "scientific name",
+                   "genus",
+                   "species",
+                   "family",
+                   "binomial",
+                   "phylogeny"
+               ],
+    "answer_prefix":  "### Plant family members\n\nValidated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the citations.\n1. **Rhizobacteria inoculation**\n2. **the ",
+    "citation_count":  11
+}

@@ -120,6 +120,18 @@ final class ScientificQuestionSemantics
                 'cultivation practices',
                 'crop management',
             ],
+            // Prefer taxonomy-specific phrases — bare "species"/"genus" match agronomic papers
+            // that mention a crop species without supplying classification evidence.
+            'species_taxonomy' => [
+                'taxonomy',
+                'taxonomic classification',
+                'scientific name',
+                'binomial nomenclature',
+                'phylogeny',
+                'taxonomic rank',
+                'accepted name',
+                'species delimitation',
+            ],
             default => [],
         };
     }
@@ -443,6 +455,14 @@ final class ScientificQuestionSemantics
 
         if (self::isRequirementSpecification($questionType, $requiredEvidenceType, $intentQualifier)) {
             return 'agronomic_requirements';
+        }
+
+        if ($questionType === 'species'
+            || $requiredEvidenceType === 'species_list_or_taxonomy'
+            || $property === 'species'
+            || $scientificSense === 'plant_family_members'
+            || preg_match('/\b(?:taxonomy|taxonomic|scientific\s+name|binomial|classification)\b|تصنيف|الاسم\s+العلمي/u', $hay) === 1) {
+            return 'species_taxonomy';
         }
 
         return '';

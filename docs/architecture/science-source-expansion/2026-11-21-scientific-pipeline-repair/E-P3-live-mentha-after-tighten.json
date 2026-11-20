@@ -1,0 +1,17 @@
+{
+    "status":  "scientific_generated",
+    "failure_class":  null,
+    "raw":  70,
+    "survivors":  21,
+    "cites":  11,
+    "keys":  [
+                 "openalex=1",
+                 "gbif=10"
+             ],
+    "answer":  "### Plant family members\n\nValidated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the citations.\n1. **Rhizobacteria inoculation**\n2. **the treatment with SA**\n3. **MeJA**",
+    "sources":  [
+                    "openalex",
+                    "crossref",
+                    "gbif"
+                ]
+}

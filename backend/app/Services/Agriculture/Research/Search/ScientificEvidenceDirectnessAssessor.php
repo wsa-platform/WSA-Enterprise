@@ -354,6 +354,23 @@ class ScientificEvidenceDirectnessAssessor
             ];
         }
 
+        // Taxonomic identity: entity + taxonomy answerability is DIRECT even when scholarly
+        // sense labels (e.g. general_knowledge) are absent from the haystack.
+        if ($relevance['relevant']
+            && $entityMatched
+            && $this->isTaxonomicIdentityQuestion($plan)
+            && $this->hasRequiredEvidenceAnswerability($plan, $haystack)) {
+            return [
+                'directness' => self::DIRECT,
+                'score' => 38.0 + (12.0 * $factorCoverage),
+                'reasons' => ['taxonomic_identity_answerable'],
+                'factor_coverage' => round($factorCoverage, 3),
+                'sense_coverage' => true,
+                'entity_matched' => true,
+                'topic_matched' => true,
+            ];
+        }
+
         if ($entityMatched && $topicMatched && ! $requiredSenseFactorMissing) {
             if ($oilDemotion === 'background') {
                 return [
@@ -926,6 +943,19 @@ class ScientificEvidenceDirectnessAssessor
         return CatalogSafeLandSignals::haystackMentionsLocation($haystack, $location);
     }
 
+    private function isTaxonomicIdentityQuestion(KnowledgeQueryPlan $plan): bool
+    {
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        $required = trim((string) ($plan->normalizedQuery->constraints['required_evidence_type'] ?? ''));
+        $intent = (string) $plan->researchIntent;
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+
+        return $questionType === 'species'
+            || $required === 'species_list_or_taxonomy'
+            || in_array($intent, ['species_list_or_taxonomy', 'plant_family_members'], true)
+            || $sense === 'plant_family_members';
+    }
+
     /**
      * Typed factual questions need concrete required-evidence shapes for DIRECT.
      * Generic effect/growth claims keep qualifier-based answerability only.
@@ -996,8 +1026,10 @@ class ScientificEvidenceDirectnessAssessor
                 $haystack,
             ) === 1,
             'species_list_or_taxonomy' => preg_match(
-                '/\b(?:species|taxonomy|genus|genera|family\s+members?|botanical\s+family|'
-                .'members?\s+of\s+the|plants?\s+of\s+the|tilapia|carp|catfish|trout)\b/u',
+                '/\b(?:species|taxonomy|taxonomic|classification|phylogen(?:y|etic)|genus|genera|'
+                .'family\s+members?|botanical\s+family|kingdom|phylum|order|family|binomial|'
+                .'scientific\s+name|taxonomic\s+status|members?\s+of\s+the|plants?\s+of\s+the|'
+                .'tilapia|carp|catfish|trout)\b/u',
                 $haystack,
             ) === 1,
             'definitional_statement' => preg_match(

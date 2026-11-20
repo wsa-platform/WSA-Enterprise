@@ -1,0 +1,27 @@
+{
+    "status":  "synthesis_completed_partial",
+    "failure_class":  "INSUFFICIENT_EVIDENCE",
+    "raw":  70,
+    "survivors":  18,
+    "cites":  10,
+    "key_counts":  "gbif=10",
+    "answer":  "### Plant family members\n\nValidated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the citations.\n1. **Taxonomic classification.**",
+    "titles":  [
+                   "Mentha piperita L.",
+                   "Mentha piperita",
+                   "Mentha piperita L.",
+                   "Mentha piperita L.",
+                   "Mentha piperita L.",
+                   "Mentha piperita L."
+               ],
+    "topics":  [
+                   "taxonomy",
+                   "taxonomic classification",
+                   "scientific name",
+                   "binomial nomenclature",
+                   "phylogeny",
+                   "taxonomic rank",
+                   "accepted name",
+                   "species delimitation"
+               ]
+}

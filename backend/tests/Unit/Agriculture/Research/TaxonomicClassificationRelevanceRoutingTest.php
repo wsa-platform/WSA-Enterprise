@@ -106,6 +106,126 @@ class TaxonomicClassificationRelevanceRoutingTest extends TestCase
             $directness['directness'],
             json_encode($directness, JSON_UNESCAPED_UNICODE),
         );
+        $this->assertSame(
+            \App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor::DIRECT,
+            $directness['directness'],
+            json_encode($directness, JSON_UNESCAPED_UNICODE),
+        );
+
+        $topics = $understood->constraints['scientific_topics'] ?? [];
+        $this->assertIsArray($topics);
+        $this->assertNotSame([], $topics, 'taxonomy knowledgeTargetTopics must not be empty');
+    }
+
+    public function test_mentha_essential_oil_paper_is_not_taxonomic_identity_evidence(): void
+    {
+        $qus = new QueryUnderstandingService();
+        $understood = $qus->understand([
+            'query' => 'What is the taxonomic classification of Mentha piperita?',
+        ]);
+        $plan = new KnowledgeQueryPlan(
+            normalizedQuery: $understood,
+            researchIntent: (string) $understood->researchIntent,
+            agriculturalDomain: (string) $understood->agriculturalDomain,
+            subjectEntity: is_array($understood->subject) ? $understood->subject : null,
+            topics: array_values(array_filter([
+                $understood->topic,
+                ...((array) ($understood->constraints['scientific_topics'] ?? [])),
+            ], static fn ($v): bool => is_string($v) && trim($v) !== '')),
+            subtopics: [],
+            requestedInformation: $understood->requestedInformation,
+            evidenceRequirements: ['peer_reviewed'],
+            sourcePriorities: ['openalex'],
+            primaryResearchStrategy: KnowledgeQueryPlan::STRATEGY_INTERNET_FIRST,
+            researchSequence: KnowledgeQueryPlan::STAGE_EXECUTION_SEQUENCE,
+            ambiguityState: AgriculturalKnowledgeQuery::AMBIGUITY_CLEAR,
+            clarificationRequirements: [],
+            readyForStage3: true,
+        );
+
+        $gate = new ScientificEvidenceRelevanceGate();
+        $oil = $gate->assess(
+            $plan,
+            'Essential oil composition of Mentha piperita under drought stress',
+            'Peppermint Mentha piperita essential oil yield increased under moderated drought.',
+            '10.1000/example.oil',
+            null,
+            'openalex',
+            null,
+        );
+        $this->assertFalse(
+            $oil['relevant'],
+            'species mention in an oil study must not pass as taxonomic classification evidence: '
+            .json_encode($oil, JSON_UNESCAPED_UNICODE),
+        );
+
+        $phenolic = $gate->assess(
+            $plan,
+            'Improving Phenolic Total Content and Monoterpene in Mentha x piperita by Using Salicylic Acid',
+            'Rhizobacteria inoculation improved phenolic content of Mentha x piperita under SA and MeJA treatments.',
+            '10.1000/example.phenolic',
+            null,
+            'openalex',
+            null,
+        );
+        $this->assertFalse(
+            $phenolic['relevant'],
+            'phenolic/treatment papers must not pass as taxonomic classification evidence: '
+            .json_encode($phenolic, JSON_UNESCAPED_UNICODE),
+        );
+    }
+
+    public function test_gbif_hierarchy_summary_is_taxonomic_direct_evidence(): void
+    {
+        $qus = new QueryUnderstandingService();
+        $understood = $qus->understand([
+            'query' => 'What is the taxonomic classification of Mentha piperita?',
+        ]);
+        $plan = new KnowledgeQueryPlan(
+            normalizedQuery: $understood,
+            researchIntent: 'species_list_or_taxonomy',
+            agriculturalDomain: (string) $understood->agriculturalDomain,
+            subjectEntity: is_array($understood->subject) ? $understood->subject : null,
+            topics: ['taxonomy', 'species'],
+            subtopics: [],
+            requestedInformation: $understood->requestedInformation,
+            evidenceRequirements: ['peer_reviewed'],
+            sourcePriorities: ['gbif'],
+            primaryResearchStrategy: KnowledgeQueryPlan::STRATEGY_INTERNET_FIRST,
+            researchSequence: KnowledgeQueryPlan::STAGE_EXECUTION_SEQUENCE,
+            ambiguityState: AgriculturalKnowledgeQuery::AMBIGUITY_CLEAR,
+            clarificationRequirements: [],
+            readyForStage3: true,
+        );
+
+        $gate = new ScientificEvidenceRelevanceGate();
+        $abstract = 'Taxonomic classification. kingdom: Plantae; family: Lamiaceae; genus: Mentha; '
+            .'species: piperita; scientificName: Mentha piperita L.; rank: SPECIES; taxonomicStatus: ACCEPTED';
+        $assessment = $gate->assess(
+            $plan,
+            'Mentha piperita L.',
+            $abstract,
+            null,
+            null,
+            'gbif',
+            ['knowledge_type' => 'taxonomic_identity'],
+        );
+        $this->assertTrue($assessment['relevant'], json_encode($assessment, JSON_UNESCAPED_UNICODE));
+
+        $directness = (new \App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor($gate))->assess(
+            $plan,
+            'Mentha piperita L.',
+            $abstract,
+            null,
+            null,
+            'gbif',
+            ['knowledge_type' => 'taxonomic_identity'],
+        );
+        $this->assertSame(
+            \App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor::DIRECT,
+            $directness['directness'],
+            json_encode($directness, JSON_UNESCAPED_UNICODE),
+        );
     }
 
     public function test_land_soil_classification_is_not_rerouted_to_species(): void

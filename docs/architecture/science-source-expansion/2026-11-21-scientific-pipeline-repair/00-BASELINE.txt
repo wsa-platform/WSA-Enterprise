@@ -1,0 +1,5 @@
+Starting HEAD: 1fb03c3b960f34b5d53a9f85f9370299bbe9bc67
+Branch: phase-18-m18-ai-marketing-communications
+WIP: protected (~225 dirty/untracked entries outside mission scope)
+Runtime: Docker Compose :8079 healthy; DB compose=pgsql/wsa_enterprise; SQLite remains original project DB
+Prior audit: ../2026-11-21-scientific-pipeline-forensic-audit/

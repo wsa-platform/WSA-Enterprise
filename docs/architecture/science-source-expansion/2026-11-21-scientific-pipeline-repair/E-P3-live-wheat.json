@@ -1,0 +1,25 @@
+{
+    "ts":  "2026-11-21T02:06:22.2266942+03:00",
+    "query":  "What is the effect of temperature on wheat growth?",
+    "status":  "scientific_generated",
+    "failure_code":  null,
+    "failure_class":  null,
+    "raw":  60,
+    "survivors":  22,
+    "sources":  [
+                    "openalex",
+                    "crossref"
+                ],
+    "val_status":  "validation_completed",
+    "validated_count":  null,
+    "rejected_count":  null,
+    "sci":  "Triticum aestivum",
+    "qtype":  "causes",
+    "req":  "causal_relationship",
+    "topics":  [
+                   "effect",
+                   "temperature"
+               ],
+    "answer_prefix":  "Validated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the citations.",
+    "citation_count":  5
+}
