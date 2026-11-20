@@ -1,0 +1,28 @@
+{
+    "status":  "no_validated_evidence",
+    "failure_code":  "no_validated_evidence",
+    "failure_class":  "INSUFFICIENT_EVIDENCE",
+    "search_status":  "search_completed",
+    "raw":  70,
+    "dedup":  69,
+    "successful_sources":  [
+                               "openalex",
+                               "crossref",
+                               "gbif"
+                           ],
+    "failed_sources":  [
+
+                       ],
+    "validation_status":  "validation_completed_with_rejections",
+    "validated_count":  null,
+    "rejected_count":  null,
+    "answer_prefix":  "Available scientific evidence is not sufficiently relevant for a definitive conclusion.",
+    "scientific_name":  "Mentha piperita",
+    "crop":  "mentha piperita",
+    "question_type":  "species",
+    "required_evidence_type":  "species_list_or_taxonomy",
+    "observability_failure_reasons":  null,
+    "observability_survivor":  null,
+    "observability_raw":  null,
+    "evidence_directness_counts":  null
+}

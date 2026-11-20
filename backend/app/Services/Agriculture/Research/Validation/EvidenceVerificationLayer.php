@@ -98,7 +98,17 @@ class EvidenceVerificationLayer
             $title = $titleOrResult;
         }
 
-        $base = $this->directnessAssessor->assess($plan, $title, $abstract, $doi, $extraText);
+        $sourceKey = $result?->sourceKey;
+        $existingRelevanceMetadata = is_array($result?->relevanceMetadata) ? $result->relevanceMetadata : null;
+        $base = $this->directnessAssessor->assess(
+            $plan,
+            $title,
+            $abstract,
+            $doi,
+            $extraText,
+            $sourceKey,
+            $existingRelevanceMetadata,
+        );
         $refined = $this->refine($plan, $base, $title, $abstract, $extraText, $result);
         $refined['verification_label'] = $this->toVerificationLabel($refined['directness']);
 

@@ -1,0 +1,9 @@
+Invoke-RestMethod : The remote server returned an error: (422) Unprocessable Content.
+At line:8 char:9
++   $r1 = Invoke-RestMethod -Uri 'http://127.0.0.1:8079/api/v1/public/r ...
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (System.Net.HttpWebRequest:HttpWebRequest) [Invoke-RestMethod], WebExc 
+   eption
+    + FullyQualifiedErrorId : WebCmdletWebResponseException,Invoke-RestMethod
+ 
+

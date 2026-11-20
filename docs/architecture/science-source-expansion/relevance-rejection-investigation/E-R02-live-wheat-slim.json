@@ -1,0 +1,376 @@
+{
+    "status":  "scientific_generated",
+    "failure_code":  null,
+    "failure_class":  null,
+    "search_status":  "search_completed",
+    "raw":  60,
+    "dedup":  22,
+    "successful_sources":  [
+                               "openalex",
+                               "crossref"
+                           ],
+    "failed_sources":  [
+
+                       ],
+    "validation_status":  "validation_completed",
+    "validated_count":  null,
+    "rejected_count":  null,
+    "observability":  {
+                          "failure_reasons":  {
+                                                  "conflicting_scientific_evidence":  6,
+                                                  "missing_author_metadata":  2,
+                                                  "incomplete_metadata":  1
+                                              },
+                          "source_types_used":  [
+                                                    "university_research",
+                                                    "research_institute",
+                                                    "peer_reviewed_journal"
+                                                ],
+                          "validation_status_counts":  {
+                                                           "evidence_usable":  22
+                                                       },
+                          "evidence_directness_counts":  {
+                                                             "direct":  5,
+                                                             "supporting":  17,
+                                                             "answer_eligible_supporting":  5
+                                                         },
+                          "evidence_capability":  true,
+                          "item_dispositions":  [
+                                                    {
+                                                        "evidence_id":  "cd9abf74bffeed7ab83157fc291064a7",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "direct",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "15a5d74ab4cffab576a47ddc001e014f",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "direct",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "432865ee9d89224b3e4b6eec75b81519",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "direct",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "ff3e442a3c1558d4cc70d144bf9a90a5",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "direct",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "02c020e0b2e6062b25b00c9acde8dae0",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "direct",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "3f51a5790e087915f4c56cbb66dc931a",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "3aa1dd58457cbcfd1954f3bce1edb811",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "75243a386dc37ead8d58fe234aa907ac",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "2ae36151a41c6b1f736c1a8971d58bac",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "conflicting",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "353070088b4ac84400b088cfb221dcb9",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "conflicting",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "53a4a583343e11b012fe7c2676885034",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "5dccb9a2a7e1034b37ba9f370019c367",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "572768806dec1c570382cf8cb86fd9a4",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "conflicting",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "dfc4ae2c22b6656ca68a8b8b6e72067a",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "31b13678a0cad458e74e16f972bca258",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "a6f2b8a0cd4d7e57a80b577309d946d3",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "a3b28d7fc0df2a86141489f67ecea8f0",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "conflicting",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "0582c27b97e7386cc834dfc885bff466",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "conflicting",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "ba827a69823708469a1dad2e53e4ccaf",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "c02697c765cc6623a7fd368224da7c1f",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "0c06fa977744df73a639b2af1549ae4f",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "conflicting",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "0237fdb136de7c294fd27aec8bbb8a2e",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    }
+                                                ],
+                          "faostat_pipeline_outcome":  {
+                                                           "stage":  "PROVIDER_ERROR",
+                                                           "dimensions":  {
+                                                                              "area":  null,
+                                                                              "item":  "15",
+                                                                              "element":  null,
+                                                                              "year":  null,
+                                                                              "domain":  "QCL",
+                                                                              "element_resolution_status":  "not_statistical",
+                                                                              "requested_measures":  null
+                                                                          },
+                                                           "query_identity":  null,
+                                                           "retrieved_count":  0,
+                                                           "passed_fao_gate":  0,
+                                                           "rejected_fao_gate":  0,
+                                                           "passed_aligner":  0,
+                                                           "rejected_aligner":  0,
+                                                           "survived_final":  0,
+                                                           "provider_error":  "adequate_results_early_stop",
+                                                           "provider_status":  "unavailable"
+                                                       }
+                      },
+    "answer_prefix":  "Validated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the citations.",
+    "query_understanding":  {
+                                "original_question":  "What is the effect of temperature on wheat growth?",
+                                "normalized_question":  "what is the effect of temperature on wheat growth",
+                                "language":  "en",
+                                "agricultural_domain":  "field_crops",
+                                "subject":  {
+                                                "type":  "crop",
+                                                "value":  "wheat",
+                                                "label":  "wheat",
+                                                "category":  "field_crop",
+                                                "resolution":  "resolved"
+                                            },
+                                "crop":  "wheat",
+                                "crop_id":  "wheat",
+                                "scientific_name":  "Triticum aestivum",
+                                "topic":  "temperature",
+                                "subtopic":  "wheat",
+                                "requested_information":  [
+                                                              "environmental_requirements",
+                                                              "evidence_backed_guidance",
+                                                              "temperature",
+                                                              "causes"
+                                                          ],
+                                "constraints":  {
+                                                    "scientific_factors":  [
+                                                                               "temperature"
+                                                                           ],
+                                                    "scientific_factor_roles":  {
+                                                                                    "temperature":  "requested"
+                                                                                },
+                                                    "scientific_topics":  [
+                                                                              "effect",
+                                                                              "temperature"
+                                                                          ],
+                                                    "scientific_intent_qualifier":  "effect",
+                                                    "scientific_sense":  "plant_growth",
+                                                    "scientific_domain_branch":  "plant_physiology",
+                                                    "requested_property":  "effect",
+                                                    "requested_property_surface":  "effect",
+                                                    "semantic_target":  {
+                                                                            "entity_surface":  "wheat",
+                                                                            "entity_normalized":  "wheat",
+                                                                            "entity_resolution":  "resolved",
+                                                                            "target_surface":  "wheat growth",
+                                                                            "target_kind":  "affected_object",
+                                                                            "target_resolution":  "unresolved",
+                                                                            "process_surface":  "temperature",
+                                                                            "process_resolution":  "unresolved",
+                                                                            "property_surface":  "effect",
+                                                                            "property_key":  "effect",
+                                                                            "property_of_role":  "target",
+                                                                            "relation_type":  "causal",
+                                                                            "relation_from":  "process",
+                                                                            "relation_to":  "target",
+                                                                            "relation_state":  "resolved",
+                                                                            "comparison_operands":  [
+
+                                                                                                    ]
+                                                                        },
+                                                    "semantic_role_graph":  {
+                                                                                "entity_surface":  "wheat",
+                                                                                "entity_normalized":  "wheat",
+                                                                                "entity_resolution":  "resolved",
+                                                                                "target_surface":  "wheat growth",
+                                                                                "target_kind":  "affected_object",
+                                                                                "target_resolution":  "unresolved",
+                                                                                "process_surface":  "temperature",
+                                                                                "process_resolution":  "unresolved",
+                                                                                "property_surface":  "effect",
+                                                                                "property_key":  "effect",
+                                                                                "property_of_role":  "target",
+                                                                                "relation_type":  "causal",
+                                                                                "relation_from":  "process",
+                                                                                "relation_to":  "target",
+                                                                                "relation_state":  "resolved",
+                                                                                "comparison_operands":  [
+
+                                                                                                        ]
+                                                                            },
+                                                    "target_surface":  "wheat growth",
+                                                    "target_kind":  "affected_object",
+                                                    "target_resolution":  "unresolved",
+                                                    "process_surface":  "temperature",
+                                                    "process_resolution":  "unresolved",
+                                                    "property_of_role":  "target",
+                                                    "relation_type":  "causal",
+                                                    "relation_from":  "process",
+                                                    "relation_to":  "target",
+                                                    "relation_state":  "resolved",
+                                                    "entity_resolution":  "resolved",
+                                                    "comparison_operands":  [
+
+                                                                            ],
+                                                    "causal_affector":  "temperature",
+                                                    "causal_target":  "wheat growth",
+                                                    "is_causal":  true,
+                                                    "requested_property_query_terms":  [
+                                                                                           "effect"
+                                                                                       ],
+                                                    "requested_property_key":  "effect",
+                                                    "question_type":  "causes",
+                                                    "requested_information":  [
+                                                                                  "environmental_requirements",
+                                                                                  "evidence_backed_guidance",
+                                                                                  "temperature",
+                                                                                  "causes"
+                                                                              ],
+                                                    "required_evidence_type":  "causal_relationship",
+                                                    "required_evidence_characteristics":  [
+                                                                                              "stated_cause_or_mechanism"
+                                                                                          ],
+                                                    "negative_constraints":  [
+
+                                                                             ],
+                                                    "exclusions":  [
+
+                                                                   ],
+                                                    "question_language":  "en",
+                                                    "answer_language":  "en",
+                                                    "time_context":  null,
+                                                    "understanding_confidence":  0.9,
+                                                    "primary_user_act":  "environmental_requirements",
+                                                    "entity_dependent":  true,
+                                                    "named_entity_state":  "resolved",
+                                                    "named_entity_surface":  "wheat",
+                                                    "entity_category":  "field_crop",
+                                                    "requested_entity_surface":  "wheat",
+                                                    "resolved_entity_id":  "wheat"
+                                                },
+                                "location":  null,
+                                "research_required":  true,
+                                "ambiguity_state":  "clear",
+                                "clarification_requirements":  [
+
+                                                               ],
+                                "research_intent":  "environmental_requirements"
+                            }
+}

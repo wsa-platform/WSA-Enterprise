@@ -3261,6 +3261,10 @@ final class AgriculturalEntityCatalog
             'the', 'and', 'for', 'with', 'from',
             'freshwater', 'marine', 'العذبة', 'عذبة',
             'fish', 'fishes', 'أسماك', 'اسماك', 'الأسماك', 'الاسماك',
+            // Taxonomy qualifiers must not glue onto binomial entity surfaces
+            // (e.g. residual "taxonomic mentha piperita" → Mentha piperita).
+            'taxonomic', 'taxonomy', 'binomial', 'nomenclature', 'classification',
+            'scientific', 'biological', 'تصنيفي', 'التصنيفي',
         ];
 
         return in_array($normalized, $stops, true);

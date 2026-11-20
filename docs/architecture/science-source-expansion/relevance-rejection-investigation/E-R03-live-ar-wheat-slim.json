@@ -1,0 +1,274 @@
+{
+    "status":  "insufficient_evidence",
+    "failure_code":  "insufficient_evidence",
+    "failure_class":  "INSUFFICIENT_EVIDENCE",
+    "search_status":  "search_completed",
+    "raw":  60,
+    "dedup":  9,
+    "successful_sources":  [
+                               "openalex",
+                               "crossref"
+                           ],
+    "failed_sources":  [
+
+                       ],
+    "validation_status":  "validation_completed",
+    "validated_count":  null,
+    "rejected_count":  null,
+    "observability":  {
+                          "failure_reasons":  {
+                                                  "conflicting_scientific_evidence":  3,
+                                                  "missing_author_metadata":  1,
+                                                  "insufficient_evidence":  1
+                                              },
+                          "source_types_used":  [
+                                                    "peer_reviewed_journal",
+                                                    "university_research",
+                                                    "research_institute"
+                                                ],
+                          "validation_status_counts":  {
+                                                           "evidence_usable":  8,
+                                                           "metadata_valid":  1
+                                                       },
+                          "evidence_directness_counts":  {
+                                                             "direct":  0,
+                                                             "supporting":  8,
+                                                             "answer_eligible_supporting":  3
+                                                         },
+                          "evidence_capability":  true,
+                          "item_dispositions":  [
+                                                    {
+                                                        "evidence_id":  "ce94617ff605ca956b5f3c18dcdf070b",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "832e3c2fb903a5e877a2d684c86a63de",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "conflicting",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "46e04a46c4e43b35594f067bfd27bd16",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "31b13678a0cad458e74e16f972bca258",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "fa890612c18cc5cbfc5248281e6b99c6",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "80706fc2da343a9ed67800a9d509e01b",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "fa6904c7b219b309267b48b4c30dc45b",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "usable",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "0582c27b97e7386cc834dfc885bff466",
+                                                        "source_key":  "crossref",
+                                                        "validation_status":  "evidence_usable",
+                                                        "disposition":  "conflicting",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    },
+                                                    {
+                                                        "evidence_id":  "0e2b88d14babe8dd0ad8f39885765759",
+                                                        "source_key":  "openalex",
+                                                        "validation_status":  "metadata_valid",
+                                                        "disposition":  "conflicting",
+                                                        "evidence_directness":  "supporting",
+                                                        "evidence_modality":  "SCHOLARLY_EVIDENCE"
+                                                    }
+                                                ],
+                          "faostat_pipeline_outcome":  {
+                                                           "stage":  "PROVIDER_ERROR",
+                                                           "dimensions":  {
+                                                                              "area":  null,
+                                                                              "item":  "15",
+                                                                              "element":  null,
+                                                                              "year":  null,
+                                                                              "domain":  "QCL",
+                                                                              "element_resolution_status":  "not_statistical",
+                                                                              "requested_measures":  null
+                                                                          },
+                                                           "query_identity":  null,
+                                                           "retrieved_count":  0,
+                                                           "passed_fao_gate":  0,
+                                                           "rejected_fao_gate":  0,
+                                                           "passed_aligner":  0,
+                                                           "rejected_aligner":  0,
+                                                           "survived_final":  0,
+                                                           "provider_error":  "adequate_results_early_stop",
+                                                           "provider_status":  "unavailable"
+                                                       }
+                      },
+    "answer_prefix":  "لم يتم العثور على دليل علمي مباشر كافٍ للإجابة بشكل مؤكد.",
+    "query_understanding":  {
+                                "original_question":  "ما تأثير درجة الحرارة على نمو القمح؟",
+                                "normalized_question":  "ما تأثير درجة الحرارة على نمو القمح",
+                                "language":  "ar",
+                                "agricultural_domain":  "field_crops",
+                                "subject":  {
+                                                "type":  "crop",
+                                                "value":  "wheat",
+                                                "label":  "القمح",
+                                                "category":  "field_crop",
+                                                "resolution":  "resolved"
+                                            },
+                                "crop":  "القمح",
+                                "crop_id":  "wheat",
+                                "scientific_name":  "Triticum aestivum",
+                                "topic":  "temperature",
+                                "subtopic":  "wheat",
+                                "requested_information":  [
+                                                              "environmental_requirements",
+                                                              "evidence_backed_guidance",
+                                                              "temperature",
+                                                              "causes"
+                                                          ],
+                                "constraints":  {
+                                                    "scientific_factors":  [
+                                                                               "temperature"
+                                                                           ],
+                                                    "scientific_factor_roles":  {
+                                                                                    "temperature":  "requested"
+                                                                                },
+                                                    "scientific_topics":  [
+                                                                              "temperature",
+                                                                              "range"
+                                                                          ],
+                                                    "scientific_intent_qualifier":  "effect",
+                                                    "scientific_sense":  "plant_growth",
+                                                    "scientific_domain_branch":  "plant_physiology",
+                                                    "requested_property":  "temperature",
+                                                    "requested_property_surface":  "temperature",
+                                                    "semantic_target":  {
+                                                                            "entity_surface":  "القمح",
+                                                                            "entity_normalized":  "wheat",
+                                                                            "entity_resolution":  "resolved",
+                                                                            "target_surface":  "نمو القمح",
+                                                                            "target_kind":  "affected_object",
+                                                                            "target_resolution":  "unresolved",
+                                                                            "process_surface":  "درجة الحرارة",
+                                                                            "process_resolution":  "unresolved",
+                                                                            "property_surface":  "temperature",
+                                                                            "property_key":  "temperature",
+                                                                            "property_of_role":  "target",
+                                                                            "relation_type":  "causal",
+                                                                            "relation_from":  "process",
+                                                                            "relation_to":  "target",
+                                                                            "relation_state":  "resolved",
+                                                                            "comparison_operands":  [
+
+                                                                                                    ]
+                                                                        },
+                                                    "semantic_role_graph":  {
+                                                                                "entity_surface":  "القمح",
+                                                                                "entity_normalized":  "wheat",
+                                                                                "entity_resolution":  "resolved",
+                                                                                "target_surface":  "نمو القمح",
+                                                                                "target_kind":  "affected_object",
+                                                                                "target_resolution":  "unresolved",
+                                                                                "process_surface":  "درجة الحرارة",
+                                                                                "process_resolution":  "unresolved",
+                                                                                "property_surface":  "temperature",
+                                                                                "property_key":  "temperature",
+                                                                                "property_of_role":  "target",
+                                                                                "relation_type":  "causal",
+                                                                                "relation_from":  "process",
+                                                                                "relation_to":  "target",
+                                                                                "relation_state":  "resolved",
+                                                                                "comparison_operands":  [
+
+                                                                                                        ]
+                                                                            },
+                                                    "target_surface":  "نمو القمح",
+                                                    "target_kind":  "affected_object",
+                                                    "target_resolution":  "unresolved",
+                                                    "process_surface":  "درجة الحرارة",
+                                                    "process_resolution":  "unresolved",
+                                                    "property_of_role":  "target",
+                                                    "relation_type":  "causal",
+                                                    "relation_from":  "process",
+                                                    "relation_to":  "target",
+                                                    "relation_state":  "resolved",
+                                                    "entity_resolution":  "resolved",
+                                                    "comparison_operands":  [
+
+                                                                            ],
+                                                    "causal_affector":  "درجة الحرارة",
+                                                    "causal_target":  "نمو القمح",
+                                                    "is_causal":  true,
+                                                    "requested_property_query_terms":  [
+                                                                                           "temperature",
+                                                                                           "range"
+                                                                                       ],
+                                                    "requested_property_key":  "temperature",
+                                                    "question_type":  "causes",
+                                                    "requested_information":  [
+                                                                                  "environmental_requirements",
+                                                                                  "evidence_backed_guidance",
+                                                                                  "temperature",
+                                                                                  "causes"
+                                                                              ],
+                                                    "required_evidence_type":  "causal_relationship",
+                                                    "required_evidence_characteristics":  [
+                                                                                              "stated_cause_or_mechanism"
+                                                                                          ],
+                                                    "negative_constraints":  [
+
+                                                                             ],
+                                                    "exclusions":  [
+
+                                                                   ],
+                                                    "question_language":  "ar",
+                                                    "answer_language":  "ar",
+                                                    "time_context":  null,
+                                                    "understanding_confidence":  0.9,
+                                                    "primary_user_act":  "environmental_requirements",
+                                                    "entity_dependent":  true,
+                                                    "named_entity_state":  "resolved",
+                                                    "named_entity_surface":  "القمح",
+                                                    "entity_category":  "field_crop",
+                                                    "requested_entity_surface":  "القمح",
+                                                    "resolved_entity_id":  "wheat"
+                                                },
+                                "location":  null,
+                                "research_required":  true,
+                                "ambiguity_state":  "clear",
+                                "clarification_requirements":  [
+
+                                                               ],
+                                "research_intent":  "environmental_requirements"
+                            }
+}

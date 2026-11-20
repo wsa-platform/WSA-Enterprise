@@ -137,14 +137,23 @@ final class ScientificKnowledgeTypeRelevancePolicy
             return false;
         }
 
-        return in_array($recordType, [
+        if (in_array($recordType, [
             ScientificKnowledgeType::TAXONOMIC_IDENTITY,
             ScientificKnowledgeType::BIODIVERSITY_OCCURRENCE,
             ScientificKnowledgeType::BIBLIOGRAPHIC_HERITAGE,
             ScientificKnowledgeType::CHEMICAL_ASSOCIATION,
             ScientificKnowledgeType::TRADITIONAL_USE,
             ScientificKnowledgeType::STATISTICAL_OBSERVATION,
-        ], true);
+        ], true)) {
+            return true;
+        }
+
+        // Taxonomy questions often retrieve OpenAlex/Crossref scholarly articles that
+        // discuss the taxon. When the entity matches and TAXONOMIC_IDENTITY is required,
+        // allow identity-oriented relevance so Stage-3 does not demand land/variety
+        // topic inventories that emptied survivors (GS-06 Mentha).
+        return $recordType === ScientificKnowledgeType::SCHOLARLY_EVIDENCE
+            && in_array(ScientificKnowledgeType::TAXONOMIC_IDENTITY, $required, true);
     }
 
     /**

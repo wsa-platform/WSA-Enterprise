@@ -1,0 +1,215 @@
+{
+    "status":  "all_results_rejected_by_relevance",
+    "failure_code":  "all_results_rejected_by_relevance",
+    "failure_class":  "ALL_RESULTS_REJECTED",
+    "search_status":  "no_results",
+    "raw":  60,
+    "dedup":  0,
+    "successful_sources":  [
+                               "openalex",
+                               "crossref"
+                           ],
+    "failed_sources":  [
+
+                       ],
+    "validation_status":  "all_results_rejected_by_relevance",
+    "validated_count":  null,
+    "rejected_count":  null,
+    "observability":  {
+                          "failure_reasons":  [
+                                                  "all_results_rejected_by_relevance"
+                                              ],
+                          "source_types_used":  [
+
+                                                ],
+                          "validation_status_counts":  [
+
+                                                       ],
+                          "faostat_pipeline_outcome":  {
+                                                           "stage":  "PROVIDER_ERROR",
+                                                           "dimensions":  {
+                                                                              "area":  null,
+                                                                              "item":  null,
+                                                                              "element":  null,
+                                                                              "year":  null,
+                                                                              "domain":  "QCL",
+                                                                              "element_resolution_status":  "not_statistical",
+                                                                              "requested_measures":  null
+                                                                          },
+                                                           "query_identity":  null,
+                                                           "retrieved_count":  0,
+                                                           "passed_fao_gate":  0,
+                                                           "rejected_fao_gate":  0,
+                                                           "passed_aligner":  0,
+                                                           "rejected_aligner":  0,
+                                                           "survived_final":  0,
+                                                           "provider_error":  "adequate_results_early_stop",
+                                                           "provider_status":  "unavailable"
+                                                       },
+                          "evidence_directness_counts":  {
+                                                             "direct":  0,
+                                                             "supporting":  0,
+                                                             "answer_eligible_supporting":  0
+                                                         },
+                          "evidence_capability":  false,
+                          "item_dispositions":  [
+
+                                                ],
+                          "failure_class":  "ALL_RESULTS_REJECTED",
+                          "raw_result_count":  60,
+                          "survivor_count":  0,
+                          "sources_received_basis":  "raw_results_before_relevance_filter"
+                      },
+    "answer_prefix":  "Available scientific evidence is not sufficiently relevant for a definitive conclusion.",
+    "query_understanding":  {
+                                "original_question":  "What is the taxonomic classification of Mentha piperita?",
+                                "normalized_question":  "what is the taxonomic classification of mentha piperita",
+                                "language":  "en",
+                                "agricultural_domain":  "general_agriculture",
+                                "subject":  {
+                                                "type":  "named_entity",
+                                                "value":  "taxonomic mentha piperita",
+                                                "label":  "taxonomic mentha piperita",
+                                                "resolution":  "unresolved"
+                                            },
+                                "crop":  "taxonomic mentha piperita",
+                                "crop_id":  null,
+                                "scientific_name":  null,
+                                "topic":  "types",
+                                "subtopic":  null,
+                                "requested_information":  [
+                                                              "general_knowledge",
+                                                              "evidence_backed_guidance",
+                                                              "types_or_classification"
+                                                          ],
+                                "constraints":  {
+                                                    "scientific_intent_qualifier":  "general",
+                                                    "scientific_sense":  "general_knowledge",
+                                                    "scientific_domain_branch":  "general_agriculture",
+                                                    "requested_property":  "classification",
+                                                    "semantic_target":  {
+                                                                            "entity_surface":  "taxonomic mentha piperita",
+                                                                            "entity_normalized":  "taxonomic mentha piperita",
+                                                                            "entity_resolution":  "unresolved",
+                                                                            "target_surface":  null,
+                                                                            "target_kind":  "none",
+                                                                            "target_resolution":  "none",
+                                                                            "process_surface":  null,
+                                                                            "process_resolution":  "none",
+                                                                            "property_surface":  null,
+                                                                            "property_key":  null,
+                                                                            "property_of_role":  null,
+                                                                            "relation_type":  "descriptive",
+                                                                            "relation_from":  "entity",
+                                                                            "relation_to":  null,
+                                                                            "relation_state":  "resolved",
+                                                                            "comparison_operands":  [
+
+                                                                                                    ]
+                                                                        },
+                                                    "semantic_role_graph":  {
+                                                                                "entity_surface":  "taxonomic mentha piperita",
+                                                                                "entity_normalized":  "taxonomic mentha piperita",
+                                                                                "entity_resolution":  "unresolved",
+                                                                                "target_surface":  null,
+                                                                                "target_kind":  "none",
+                                                                                "target_resolution":  "none",
+                                                                                "process_surface":  null,
+                                                                                "process_resolution":  "none",
+                                                                                "property_surface":  null,
+                                                                                "property_key":  null,
+                                                                                "property_of_role":  null,
+                                                                                "relation_type":  "descriptive",
+                                                                                "relation_from":  "entity",
+                                                                                "relation_to":  null,
+                                                                                "relation_state":  "resolved",
+                                                                                "comparison_operands":  [
+
+                                                                                                        ]
+                                                                            },
+                                                    "target_surface":  null,
+                                                    "target_kind":  "none",
+                                                    "target_resolution":  "none",
+                                                    "process_surface":  null,
+                                                    "process_resolution":  "none",
+                                                    "property_of_role":  null,
+                                                    "relation_type":  "descriptive",
+                                                    "relation_from":  "entity",
+                                                    "relation_to":  null,
+                                                    "relation_state":  "resolved",
+                                                    "entity_resolution":  "unresolved",
+                                                    "comparison_operands":  [
+
+                                                                            ],
+                                                    "requested_property_query_terms":  [
+                                                                                           "types",
+                                                                                           "classification",
+                                                                                           "inventory",
+                                                                                           "varieties",
+                                                                                           "breeds",
+                                                                                           "strains"
+                                                                                       ],
+                                                    "scientific_topics":  [
+                                                                              "types",
+                                                                              "classification",
+                                                                              "inventory",
+                                                                              "varieties",
+                                                                              "breeds",
+                                                                              "strains"
+                                                                          ],
+                                                    "requested_property_key":  "classification",
+                                                    "question_type":  "classification",
+                                                    "requested_information":  [
+                                                                                  "general_knowledge",
+                                                                                  "evidence_backed_guidance",
+                                                                                  "types_or_classification"
+                                                                              ],
+                                                    "required_evidence_type":  "classification_or_types_inventory",
+                                                    "required_evidence_characteristics":  [
+                                                                                              "explicit_types_or_classes_inventory",
+                                                                                              "named_soil_or_land_classes",
+                                                                                              "classification_system_with_listed_types"
+                                                                                          ],
+                                                    "negative_constraints":  [
+                                                                                 "methodology_only",
+                                                                                 "machine_learning_model_only",
+                                                                                 "gis_mapping_only",
+                                                                                 "remote_sensing_only",
+                                                                                 "land_evaluation_without_types",
+                                                                                 "cultivation_without_inventory",
+                                                                                 "greenhouse_or_protected_culture",
+                                                                                 "groundwater_or_microbial_focus",
+                                                                                 "crop_production_without_types"
+                                                                             ],
+                                                    "exclusions":  [
+                                                                       "methodology_only",
+                                                                       "machine_learning_model_only",
+                                                                       "gis_mapping_only",
+                                                                       "remote_sensing_only",
+                                                                       "land_evaluation_without_types",
+                                                                       "cultivation_without_inventory",
+                                                                       "greenhouse_or_protected_culture",
+                                                                       "groundwater_or_microbial_focus",
+                                                                       "crop_production_without_types"
+                                                                   ],
+                                                    "question_language":  "en",
+                                                    "answer_language":  "en",
+                                                    "time_context":  null,
+                                                    "understanding_confidence":  0.9,
+                                                    "primary_user_act":  "varieties",
+                                                    "entity_dependent":  true,
+                                                    "named_entity_state":  "unresolved",
+                                                    "named_entity_surface":  "taxonomic mentha piperita",
+                                                    "entity_category":  null,
+                                                    "requested_entity_surface":  "taxonomic mentha piperita",
+                                                    "resolved_entity_id":  "taxonomic mentha piperita"
+                                                },
+                                "location":  null,
+                                "research_required":  true,
+                                "ambiguity_state":  "clear",
+                                "clarification_requirements":  [
+
+                                                               ],
+                                "research_intent":  "varieties"
+                            }
+}

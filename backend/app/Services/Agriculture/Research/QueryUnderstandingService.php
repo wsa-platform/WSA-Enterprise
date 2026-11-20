@@ -816,6 +816,110 @@ class QueryUnderstandingService
     }
 
     /**
+     * Consume cropBinding when the frozen entity slot is empty or is a non-entity
+     * token (process / knowledge option). Does not invent an entity and does not
+     * replace an independent resolved non-crop entity (e.g. livestock on a crop page).
+     *
+     * @param  array<string, mixed>  $graph
+     * @return array<string, mixed>
+     */
+    private function bindProvidedCropIdentityWhenEntityIsNonEntity(array $graph, CsqCropBinding $cropBinding): array
+    {
+        $cropId = trim((string) $cropBinding->cropId);
+        if ($cropId === '' || FieldCropTaxonomyCatalog::entryFor($cropId) === null) {
+            return $graph;
+        }
+
+        $surface = isset($graph['entity_surface']) ? trim((string) $graph['entity_surface']) : '';
+        $normalized = isset($graph['entity_normalized']) ? trim((string) $graph['entity_normalized']) : '';
+        $canonicalId = isset($graph['entity_canonical_id']) ? trim((string) $graph['entity_canonical_id']) : '';
+
+        $identityToken = $canonicalId !== '' ? $canonicalId : ($normalized !== '' ? $normalized : $surface);
+        [$verifiedId] = $this->verifiedEntityIdentity($identityToken !== '' ? $identityToken : null, $cropId);
+        if ($verifiedId !== null && $verifiedId !== $cropId) {
+            return $graph;
+        }
+
+        $resolvedId = $canonicalId !== '' ? $canonicalId : $normalized;
+        $surfaceIsNonEntity = $surface === ''
+            || CanonicalScientificQuestion::isGenericProcessSurface($surface)
+            || AgriculturalEntityCatalog::isGenericScientificProcessToken($surface)
+            || CropKnowledgeOptionCatalog::isOptionKey($surface)
+            || AgriculturalEntityCatalog::isIntentRetrievalSurface($surface)
+            || $this->surfaceIsProcessWrapperAroundIdentity($surface, $cropId, $resolvedId);
+        $refersToBoundCrop = $this->surfaceRefersToBoundCropIdentity($surface, $normalized, $cropBinding);
+        $shouldBind = $surfaceIsNonEntity
+            || $refersToBoundCrop
+            || $verifiedId === $cropId
+            || ($verifiedId === null && ($resolvedId === '' || $resolvedId === $cropId));
+        if (! $shouldBind) {
+            return $graph;
+        }
+
+        $graph['entity_canonical_id'] = $cropId;
+        $graph['entity_canonical_namespace'] = CanonicalScientificQuestion::NAMESPACE_TAXONOMY_CROP;
+        $graph['entity_normalized'] = $cropId;
+        $graph['entity_resolution'] = CanonicalScientificQuestion::RESOLUTION_RESOLVED;
+        $label = trim((string) $cropBinding->cropLabel);
+        if ($surface === '' || $surfaceIsNonEntity) {
+            $graph['entity_surface'] = $label !== '' ? $label : $cropId;
+        }
+
+        return $graph;
+    }
+
+    private function surfaceRefersToBoundCropIdentity(
+        string $surface,
+        string $normalized,
+        CsqCropBinding $cropBinding,
+    ): bool {
+        $cropId = trim((string) $cropBinding->cropId);
+        $needles = array_filter([
+            $cropId,
+            str_replace('-', ' ', $cropId),
+            trim((string) $cropBinding->cropLabel),
+            trim((string) $cropBinding->scientificName),
+        ], static fn (string $value): bool => $value !== '');
+        foreach ([$surface, $normalized] as $token) {
+            $folded = mb_strtolower(trim($token));
+            if ($folded === '') {
+                continue;
+            }
+            foreach ($needles as $needle) {
+                if ($folded === mb_strtolower($needle)) {
+                    return true;
+                }
+            }
+            if (AgriculturalEntityCatalog::resolveCanonicalCropIdFromLabel($token) === $cropId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function surfaceIsProcessWrapperAroundIdentity(string $surface, string $cropId, string $resolvedId): bool
+    {
+        $tokens = preg_split('/\s+/u', mb_strtolower(trim($surface))) ?: [];
+        if (count($tokens) < 2) {
+            return false;
+        }
+        $first = CanonicalScientificQuestion::stripProcessProclitics((string) $tokens[0]);
+        if (! AgriculturalEntityCatalog::isGenericScientificProcessToken($first)
+            && ! CanonicalScientificQuestion::isGenericProcessSurface($first)) {
+            return false;
+        }
+        $rest = trim(implode(' ', array_slice($tokens, 1)));
+        if ($rest === '') {
+            return false;
+        }
+
+        return $rest === mb_strtolower($cropId)
+            || $rest === mb_strtolower($resolvedId)
+            || FieldCropTaxonomyCatalog::entryFor($rest) !== null;
+    }
+
+    /**
      * Drop process/property surfaces that only echo the Crop knowledge-option key
      * (e.g. "farming" from farming-needs). Preserves genuine independent roles.
      *
@@ -913,6 +1017,7 @@ class QueryUnderstandingService
         }
 
         $graph = $this->canonicalizeRoleGraphForFreeze($graph, $cropBinding);
+        $graph = $this->bindProvidedCropIdentityWhenEntityIsNonEntity($graph, $cropBinding);
         $this->unifyRequestedPropertyKey($constraints, $graph);
 
         $year = isset($constraints['year']) ? (int) $constraints['year'] : null;
@@ -1337,7 +1442,12 @@ class QueryUnderstandingService
             && $scientificSense !== 'land_classification'
             && $scientificSense !== 'animal_production'
             && $scientificSense !== 'poultry_production') {
-            $researchIntent = 'varieties';
+            // Taxonomic species classification is not a cultivar/varieties inventory act.
+            if ($this->asksTaxonomicSpeciesClassification($normalizedQuestion)) {
+                $researchIntent = 'species_list_or_taxonomy';
+            } else {
+                $researchIntent = 'varieties';
+            }
         }
 
         return $researchIntent;
@@ -1561,11 +1671,47 @@ class QueryUnderstandingService
         }
 
         // Scientific names are lowercased by normalizeQuestion — recover binomial patterns.
-        if (preg_match('/\b([a-z]+)\s+(officinale|aestivum|mays|sativum|annuum|lycopersicum|vulgare)\b/u', $normalizedQuestion, $matches) === 1) {
+        if (preg_match('/\b([a-z]+)\s+(officinale|aestivum|mays|sativum|annuum|lycopersicum|vulgare|piperita)\b/u', $normalizedQuestion, $matches) === 1) {
             return ucfirst($matches[1]).' '.$matches[2];
         }
 
+        // Taxonomic / binomial questions: recover lowercase Latin binomials that are not
+        // in the epithet whitelist (e.g. Mentha piperita after normalizeQuestion).
+        $binomial = $this->recoverLowercaseBinomialNearTaxonomyCue($normalizedQuestion);
+        if ($binomial !== null) {
+            return $binomial;
+        }
+
         return null;
+    }
+
+    /**
+     * Recover a lowercase genus+epithet near taxonomy cues without inventing crops.
+     */
+    private function recoverLowercaseBinomialNearTaxonomyCue(string $normalizedQuestion): ?string
+    {
+        $hay = mb_strtolower(trim($normalizedQuestion));
+        if ($hay === '' || ! $this->asksTaxonomicSpeciesClassification($hay)) {
+            return null;
+        }
+
+        if (preg_match('/\b([a-z]{3,})\s+([a-z]{4,})\b/u', $hay, $matches) !== 1) {
+            return null;
+        }
+
+        $genus = $matches[1];
+        $epithet = $matches[2];
+        foreach ([$genus, $epithet] as $token) {
+            if (AgriculturalEntityCatalog::isNamedEntityStopToken($token)
+                || AgriculturalEntityCatalog::isGenericScientificProcessToken($token)
+                || in_array(AgriculturalEntityCatalog::propertyKeyFromSurface($token), [
+                    'temperature', 'irrigation', 'quantity', 'classification', 'concentration', 'soil',
+                ], true)) {
+                return null;
+            }
+        }
+
+        return ucfirst($genus).' '.$epithet;
     }
 
     /**
@@ -1642,6 +1788,13 @@ class QueryUnderstandingService
         string $researchIntent,
     ): string {
         $haystack = mb_strtolower(trim($normalizedQuestion.' '.$originalQuestion));
+
+        // Taxonomic species/binomial classification is a species question, not land/variety inventory.
+        // Misrouting to "classification" forces classification_or_types_inventory (soil/land) and
+        // collapses Stage-3 survivors to zero for Mentha/Triticum taxonomy questions (GS-06).
+        if ($this->asksTaxonomicSpeciesClassification($haystack)) {
+            return 'species';
+        }
 
         // Entity-family inventory first (separable from land WIP below).
         if ($scientificSense === 'plant_family_members'
@@ -1802,6 +1955,46 @@ class QueryUnderstandingService
             $researchIntent === 'disease' => 'symptoms',
             default => 'general',
         };
+    }
+
+    /**
+     * True for taxonomic / binomial species-classification questions (not land/soil inventory).
+     */
+    private function asksTaxonomicSpeciesClassification(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+
+        if (AgriculturalEntityCatalog::asksLandOrSoilTypesInventory($hay)
+            || AgriculturalEntityCatalog::isLandOrSoilClassificationMethodQuestion($hay)
+            || $this->questionTypeKeywordHits($hay, 'soil types')
+            || $this->questionTypeKeywordHits($hay, 'land types')) {
+            return false;
+        }
+
+        if (preg_match(
+            '/\b(taxonomic\s+classification|scientific\s+classification|biological\s+classification|'
+            .'taxonomy\s+of|taxonomic\s+rank|nomenclature\s+of|binomial\s+nomenclature)\b/u',
+            $hay,
+        ) === 1) {
+            return true;
+        }
+
+        // Arabic scientific taxonomy phrasing (exclude bare land/soil تصنيف handled above).
+        if (preg_match('/التصنيف\s+العلمي|التصنيف\s+التصنيفي|الاسم\s+العلمي/u', $hay) === 1) {
+            return true;
+        }
+
+        // Binomial + taxonomy/classification cues without cultivar inventory framing.
+        if (preg_match('/\b([a-z]{3,})\s+([a-z]{4,})\b/u', $hay) === 1
+            && preg_match('/\b(taxonomy|taxonomic|genus|family|species|classification)\b/u', $hay) === 1
+            && preg_match('/\b(varieties|cultivars|breeds|strains|اصناف|أصناف|سلالات)\b/u', $hay) !== 1) {
+            return true;
+        }
+
+        return false;
     }
 
     private function questionTypeKeywordHits(string $haystack, string $keyword): bool

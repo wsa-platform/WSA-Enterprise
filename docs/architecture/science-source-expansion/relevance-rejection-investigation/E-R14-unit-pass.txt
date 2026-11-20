@@ -1,0 +1,11 @@
+Command:
+  docker compose exec -T backend php artisan test --filter=TaxonomicClassificationRelevanceRoutingTest
+
+Result (2026-11-21):
+  PASS  Tests\Unit\Agriculture\Research\TaxonomicClassificationRelevanceRoutingTest
+  ✓ mentha taxonomic classification routes to species evidence contract
+  ✓ mentha taxonomy paper passes stage3 relevance gate
+  ✓ land soil classification is not rerouted to species
+  ✓ residual entity strips taxonomic qualifier
+
+  Tests:    4 passed (16 assertions)

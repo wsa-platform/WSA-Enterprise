@@ -84,6 +84,9 @@ class ScientificResultRanker
                         $score *= 0.05;
                     }
                 } else {
+                    $existingRelevanceMetadata = is_array($result->relevanceMetadata)
+                        ? $result->relevanceMetadata
+                        : null;
                     $assessment = $this->relevanceGate->assess(
                         $plan,
                         $result->title,
@@ -91,7 +94,7 @@ class ScientificResultRanker
                         $result->doi,
                         $this->extraTextFromResult($result),
                         $result->sourceKey,
-                        is_array($result->relevanceMetadata) ? $result->relevanceMetadata : null,
+                        $existingRelevanceMetadata,
                     );
                     $directness = $this->directnessAssessor->assess(
                         $plan,
@@ -99,6 +102,8 @@ class ScientificResultRanker
                         $result->abstract,
                         $result->doi,
                         $this->extraTextFromResult($result),
+                        $result->sourceKey,
+                        $existingRelevanceMetadata,
                     );
 
                     $score += $assessment['score'];

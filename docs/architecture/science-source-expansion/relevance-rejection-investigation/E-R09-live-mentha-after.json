@@ -1,0 +1,144 @@
+{
+    "status":  "all_results_rejected_by_relevance",
+    "failure_code":  "all_results_rejected_by_relevance",
+    "failure_class":  "ALL_RESULTS_REJECTED",
+    "search_status":  "no_results",
+    "raw":  70,
+    "dedup":  0,
+    "successful_sources":  [
+                               "openalex",
+                               "crossref",
+                               "gbif"
+                           ],
+    "failed_sources":  [
+
+                       ],
+    "validation_status":  "all_results_rejected_by_relevance",
+    "validated_count":  null,
+    "rejected_count":  null,
+    "answer_prefix":  "Available scientific evidence is not sufficiently relevant for a definitive conclusion.",
+    "query_understanding":  {
+                                "original_question":  "What is the taxonomic classification of Mentha piperita?",
+                                "normalized_question":  "what is the taxonomic classification of mentha piperita",
+                                "language":  "en",
+                                "agricultural_domain":  "general_agriculture",
+                                "subject":  {
+                                                "type":  "named_entity",
+                                                "value":  "mentha piperita",
+                                                "label":  "mentha piperita",
+                                                "resolution":  "unresolved"
+                                            },
+                                "crop":  "mentha piperita",
+                                "crop_id":  null,
+                                "scientific_name":  "Mentha piperita",
+                                "topic":  "general_knowledge",
+                                "subtopic":  null,
+                                "requested_information":  [
+                                                              "general_knowledge",
+                                                              "evidence_backed_guidance",
+                                                              "species_list"
+                                                          ],
+                                "constraints":  {
+                                                    "scientific_intent_qualifier":  "general",
+                                                    "scientific_sense":  "general_knowledge",
+                                                    "scientific_domain_branch":  "general_agriculture",
+                                                    "requested_property":  "species",
+                                                    "semantic_target":  {
+                                                                            "entity_surface":  "mentha piperita",
+                                                                            "entity_normalized":  "mentha piperita",
+                                                                            "entity_resolution":  "unresolved",
+                                                                            "target_surface":  null,
+                                                                            "target_kind":  "none",
+                                                                            "target_resolution":  "none",
+                                                                            "process_surface":  null,
+                                                                            "process_resolution":  "none",
+                                                                            "property_surface":  null,
+                                                                            "property_key":  null,
+                                                                            "property_of_role":  null,
+                                                                            "relation_type":  "descriptive",
+                                                                            "relation_from":  "entity",
+                                                                            "relation_to":  null,
+                                                                            "relation_state":  "resolved",
+                                                                            "comparison_operands":  [
+
+                                                                                                    ]
+                                                                        },
+                                                    "semantic_role_graph":  {
+                                                                                "entity_surface":  "mentha piperita",
+                                                                                "entity_normalized":  "mentha piperita",
+                                                                                "entity_resolution":  "unresolved",
+                                                                                "target_surface":  null,
+                                                                                "target_kind":  "none",
+                                                                                "target_resolution":  "none",
+                                                                                "process_surface":  null,
+                                                                                "process_resolution":  "none",
+                                                                                "property_surface":  null,
+                                                                                "property_key":  null,
+                                                                                "property_of_role":  null,
+                                                                                "relation_type":  "descriptive",
+                                                                                "relation_from":  "entity",
+                                                                                "relation_to":  null,
+                                                                                "relation_state":  "resolved",
+                                                                                "comparison_operands":  [
+
+                                                                                                        ]
+                                                                            },
+                                                    "target_surface":  null,
+                                                    "target_kind":  "none",
+                                                    "target_resolution":  "none",
+                                                    "process_surface":  null,
+                                                    "process_resolution":  "none",
+                                                    "property_of_role":  null,
+                                                    "relation_type":  "descriptive",
+                                                    "relation_from":  "entity",
+                                                    "relation_to":  null,
+                                                    "relation_state":  "resolved",
+                                                    "entity_resolution":  "unresolved",
+                                                    "comparison_operands":  [
+
+                                                                            ],
+                                                    "requested_property_key":  "species",
+                                                    "question_type":  "species",
+                                                    "requested_information":  [
+                                                                                  "general_knowledge",
+                                                                                  "evidence_backed_guidance",
+                                                                                  "species_list"
+                                                                              ],
+                                                    "required_evidence_type":  "species_list_or_taxonomy",
+                                                    "required_evidence_characteristics":  [
+                                                                                              "species_or_taxa_list"
+                                                                                          ],
+                                                    "negative_constraints":  [
+                                                                                 "methodology_only",
+                                                                                 "cultivation_without_inventory",
+                                                                                 "greenhouse_or_protected_culture"
+                                                                             ],
+                                                    "exclusions":  [
+                                                                       "methodology_only",
+                                                                       "cultivation_without_inventory",
+                                                                       "greenhouse_or_protected_culture"
+                                                                   ],
+                                                    "question_language":  "en",
+                                                    "answer_language":  "en",
+                                                    "time_context":  null,
+                                                    "understanding_confidence":  0.9,
+                                                    "primary_user_act":  "general_knowledge",
+                                                    "entity_dependent":  true,
+                                                    "named_entity_state":  "unresolved",
+                                                    "named_entity_surface":  "mentha piperita",
+                                                    "entity_category":  null,
+                                                    "requested_entity_surface":  "mentha piperita",
+                                                    "resolved_entity_id":  "mentha piperita"
+                                                },
+                                "location":  null,
+                                "research_required":  true,
+                                "ambiguity_state":  "clear",
+                                "clarification_requirements":  [
+
+                                                               ],
+                                "research_intent":  "general_knowledge"
+                            },
+    "observability_failure_reasons":  null,
+    "observability_survivor":  null,
+    "observability_raw":  70
+}

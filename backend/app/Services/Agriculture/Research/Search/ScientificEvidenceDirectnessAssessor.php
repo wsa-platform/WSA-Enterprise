@@ -82,8 +82,21 @@ class ScientificEvidenceDirectnessAssessor
         ?string $abstract = null,
         ?string $doi = null,
         ?string $extraText = null,
+        ?string $sourceKey = null,
+        ?array $existingRelevanceMetadata = null,
     ): array {
-        $relevance = $this->relevanceGate->assess($plan, $title, $abstract, $doi, $extraText);
+        // Source key must reach the relevance gate so knowledge-type / identity-oriented
+        // paths (e.g. taxonomic scholarly OpenAlex hits) are not misclassified as
+        // IRRELEVANT when Stage-3 ranking already holds a source-aware assessment.
+        $relevance = $this->relevanceGate->assess(
+            $plan,
+            $title,
+            $abstract,
+            $doi,
+            $extraText,
+            $sourceKey,
+            $existingRelevanceMetadata,
+        );
         if (! $relevance['relevant']) {
             return [
                 'directness' => self::IRRELEVANT,

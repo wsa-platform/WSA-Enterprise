@@ -1,0 +1,27 @@
+{
+    "status":  "scientific_generated",
+    "failure_code":  null,
+    "failure_class":  null,
+    "search_status":  "search_completed",
+    "raw":  60,
+    "dedup":  22,
+    "successful_sources":  [
+                               "openalex",
+                               "crossref"
+                           ],
+    "failed_sources":  [
+
+                       ],
+    "validation_status":  "validation_completed",
+    "validated_count":  null,
+    "rejected_count":  null,
+    "answer_prefix":  "Validated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the citations.",
+    "scientific_name":  "Triticum aestivum",
+    "crop":  "wheat",
+    "question_type":  "causes",
+    "required_evidence_type":  "causal_relationship",
+    "observability_failure_reasons":  null,
+    "observability_survivor":  null,
+    "observability_raw":  null,
+    "evidence_directness_counts":  null
+}

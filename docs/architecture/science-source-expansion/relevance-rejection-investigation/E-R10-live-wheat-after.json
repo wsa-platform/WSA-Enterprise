@@ -1,0 +1,159 @@
+{
+    "status":  "scientific_generated",
+    "failure_code":  null,
+    "failure_class":  null,
+    "search_status":  "search_completed",
+    "raw":  60,
+    "dedup":  22,
+    "successful_sources":  [
+                               "openalex",
+                               "crossref"
+                           ],
+    "failed_sources":  [
+
+                       ],
+    "validation_status":  "validation_completed",
+    "validated_count":  null,
+    "rejected_count":  null,
+    "answer_prefix":  "Validated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the citations.",
+    "query_understanding":  {
+                                "original_question":  "What is the effect of temperature on wheat growth?",
+                                "normalized_question":  "what is the effect of temperature on wheat growth",
+                                "language":  "en",
+                                "agricultural_domain":  "field_crops",
+                                "subject":  {
+                                                "type":  "crop",
+                                                "value":  "wheat",
+                                                "label":  "wheat",
+                                                "category":  "field_crop",
+                                                "resolution":  "resolved"
+                                            },
+                                "crop":  "wheat",
+                                "crop_id":  "wheat",
+                                "scientific_name":  "Triticum aestivum",
+                                "topic":  "temperature",
+                                "subtopic":  "wheat",
+                                "requested_information":  [
+                                                              "environmental_requirements",
+                                                              "evidence_backed_guidance",
+                                                              "temperature",
+                                                              "causes"
+                                                          ],
+                                "constraints":  {
+                                                    "scientific_factors":  [
+                                                                               "temperature"
+                                                                           ],
+                                                    "scientific_factor_roles":  {
+                                                                                    "temperature":  "requested"
+                                                                                },
+                                                    "scientific_topics":  [
+                                                                              "effect",
+                                                                              "temperature"
+                                                                          ],
+                                                    "scientific_intent_qualifier":  "effect",
+                                                    "scientific_sense":  "plant_growth",
+                                                    "scientific_domain_branch":  "plant_physiology",
+                                                    "requested_property":  "effect",
+                                                    "requested_property_surface":  "effect",
+                                                    "semantic_target":  {
+                                                                            "entity_surface":  "wheat",
+                                                                            "entity_normalized":  "wheat",
+                                                                            "entity_resolution":  "resolved",
+                                                                            "target_surface":  "wheat growth",
+                                                                            "target_kind":  "affected_object",
+                                                                            "target_resolution":  "unresolved",
+                                                                            "process_surface":  "temperature",
+                                                                            "process_resolution":  "unresolved",
+                                                                            "property_surface":  "effect",
+                                                                            "property_key":  "effect",
+                                                                            "property_of_role":  "target",
+                                                                            "relation_type":  "causal",
+                                                                            "relation_from":  "process",
+                                                                            "relation_to":  "target",
+                                                                            "relation_state":  "resolved",
+                                                                            "comparison_operands":  [
+
+                                                                                                    ]
+                                                                        },
+                                                    "semantic_role_graph":  {
+                                                                                "entity_surface":  "wheat",
+                                                                                "entity_normalized":  "wheat",
+                                                                                "entity_resolution":  "resolved",
+                                                                                "target_surface":  "wheat growth",
+                                                                                "target_kind":  "affected_object",
+                                                                                "target_resolution":  "unresolved",
+                                                                                "process_surface":  "temperature",
+                                                                                "process_resolution":  "unresolved",
+                                                                                "property_surface":  "effect",
+                                                                                "property_key":  "effect",
+                                                                                "property_of_role":  "target",
+                                                                                "relation_type":  "causal",
+                                                                                "relation_from":  "process",
+                                                                                "relation_to":  "target",
+                                                                                "relation_state":  "resolved",
+                                                                                "comparison_operands":  [
+
+                                                                                                        ]
+                                                                            },
+                                                    "target_surface":  "wheat growth",
+                                                    "target_kind":  "affected_object",
+                                                    "target_resolution":  "unresolved",
+                                                    "process_surface":  "temperature",
+                                                    "process_resolution":  "unresolved",
+                                                    "property_of_role":  "target",
+                                                    "relation_type":  "causal",
+                                                    "relation_from":  "process",
+                                                    "relation_to":  "target",
+                                                    "relation_state":  "resolved",
+                                                    "entity_resolution":  "resolved",
+                                                    "comparison_operands":  [
+
+                                                                            ],
+                                                    "causal_affector":  "temperature",
+                                                    "causal_target":  "wheat growth",
+                                                    "is_causal":  true,
+                                                    "requested_property_query_terms":  [
+                                                                                           "effect"
+                                                                                       ],
+                                                    "requested_property_key":  "effect",
+                                                    "question_type":  "causes",
+                                                    "requested_information":  [
+                                                                                  "environmental_requirements",
+                                                                                  "evidence_backed_guidance",
+                                                                                  "temperature",
+                                                                                  "causes"
+                                                                              ],
+                                                    "required_evidence_type":  "causal_relationship",
+                                                    "required_evidence_characteristics":  [
+                                                                                              "stated_cause_or_mechanism"
+                                                                                          ],
+                                                    "negative_constraints":  [
+
+                                                                             ],
+                                                    "exclusions":  [
+
+                                                                   ],
+                                                    "question_language":  "en",
+                                                    "answer_language":  "en",
+                                                    "time_context":  null,
+                                                    "understanding_confidence":  0.9,
+                                                    "primary_user_act":  "environmental_requirements",
+                                                    "entity_dependent":  true,
+                                                    "named_entity_state":  "resolved",
+                                                    "named_entity_surface":  "wheat",
+                                                    "entity_category":  "field_crop",
+                                                    "requested_entity_surface":  "wheat",
+                                                    "resolved_entity_id":  "wheat"
+                                                },
+                                "location":  null,
+                                "research_required":  true,
+                                "ambiguity_state":  "clear",
+                                "clarification_requirements":  [
+
+                                                               ],
+                                "research_intent":  "environmental_requirements"
+                            },
+    "observability_failure_reasons":  null,
+    "observability_survivor":  null,
+    "observability_raw":  null
+}
