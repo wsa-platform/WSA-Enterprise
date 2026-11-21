@@ -1,0 +1,1088 @@
+{
+    "runtime_catalog_count": 10,
+    "runtime_keys": [
+        "openalex",
+        "crossref",
+        "semantic_scholar",
+        "consensus",
+        "fao_stat",
+        "agris",
+        "dr_duke",
+        "gbif",
+        "organic_eprints",
+        "bhl"
+    ],
+    "runtime_registrations": [
+        {
+            "source_key": "openalex",
+            "adapter": "App\\Services\\Agriculture\\Research\\Search\\Adapters\\OpenAlexScientificSourceAdapter",
+            "lifecycle": "legacy_stage3",
+            "selection_role": "internet_first_default",
+            "execution_group": "independent_scholarly",
+            "access_family": "rest_api",
+            "enabled": true,
+            "adr_id": null,
+            "path_family": "P12"
+        },
+        {
+            "source_key": "crossref",
+            "adapter": "App\\Services\\Agriculture\\Research\\Search\\Adapters\\CrossRefScientificSourceAdapter",
+            "lifecycle": "legacy_stage3",
+            "selection_role": "internet_first_default",
+            "execution_group": "independent_scholarly",
+            "access_family": "rest_api",
+            "enabled": true,
+            "adr_id": null,
+            "path_family": "P11"
+        },
+        {
+            "source_key": "semantic_scholar",
+            "adapter": "App\\Services\\Agriculture\\Research\\Search\\Adapters\\SemanticScholarScientificSourceAdapter",
+            "lifecycle": "legacy_stage3",
+            "selection_role": "internet_first_default",
+            "execution_group": "independent_scholarly",
+            "access_family": "rest_api",
+            "enabled": true,
+            "adr_id": null,
+            "path_family": "P13"
+        },
+        {
+            "source_key": "consensus",
+            "adapter": "App\\Services\\Agriculture\\Research\\Search\\Adapters\\ConsensusScientificSourceAdapter",
+            "lifecycle": "legacy_stage3",
+            "selection_role": "optional_explicit_only",
+            "execution_group": "sequential",
+            "access_family": "rest_api",
+            "enabled": true,
+            "adr_id": null,
+            "path_family": "P12"
+        },
+        {
+            "source_key": "fao_stat",
+            "adapter": "App\\Services\\Agriculture\\Intelligence\\Adapters\\Scientific\\FaoStat\\FaoStatDeveloperPortalAdapter",
+            "lifecycle": "legacy_stage3",
+            "selection_role": "statistical_consideration",
+            "execution_group": "statistical",
+            "access_family": "rest_api",
+            "enabled": true,
+            "adr_id": null,
+            "path_family": "P01"
+        },
+        {
+            "source_key": "agris",
+            "adapter": "App\\Services\\Agriculture\\Research\\Search\\LocalIndex\\LocalIndexScientificSourceAdapter",
+            "lifecycle": "governed_onboarded",
+            "selection_role": "governed_expansion",
+            "execution_group": "independent_scholarly",
+            "access_family": "bulk_dataset",
+            "enabled": true,
+            "adr_id": "G1-01",
+            "path_family": "P12"
+        },
+        {
+            "source_key": "dr_duke",
+            "adapter": "App\\Services\\Agriculture\\Research\\Search\\LocalIndex\\LocalIndexScientificSourceAdapter",
+            "lifecycle": "governed_onboarded",
+            "selection_role": "governed_expansion",
+            "execution_group": "independent_scholarly",
+            "access_family": "static_dataset",
+            "enabled": true,
+            "adr_id": "G1-17",
+            "path_family": "P12"
+        },
+        {
+            "source_key": "gbif",
+            "adapter": "App\\Services\\Agriculture\\Research\\Search\\Family\\Rest\\RestJsonScientificSourceAdapter",
+            "lifecycle": "governed_onboarded",
+            "selection_role": "governed_expansion",
+            "execution_group": "independent_scholarly",
+            "access_family": "rest_api",
+            "enabled": true,
+            "adr_id": "G5-04",
+            "path_family": "P12"
+        },
+        {
+            "source_key": "organic_eprints",
+            "adapter": "App\\Services\\Agriculture\\Research\\Search\\LocalIndex\\LocalIndexScientificSourceAdapter",
+            "lifecycle": "governed_onboarded",
+            "selection_role": "governed_expansion",
+            "execution_group": "independent_scholarly",
+            "access_family": "oai_pmh",
+            "enabled": true,
+            "adr_id": "G1-02",
+            "path_family": "P12"
+        },
+        {
+            "source_key": "bhl",
+            "adapter": "App\\Services\\Agriculture\\Research\\Search\\Family\\Rest\\RestJsonScientificSourceAdapter",
+            "lifecycle": "governed_onboarded",
+            "selection_role": "governed_expansion",
+            "execution_group": "independent_scholarly",
+            "access_family": "rest_api",
+            "enabled": true,
+            "adr_id": "G6-20",
+            "path_family": "P12"
+        }
+    ],
+    "next_gate_seats": {
+        "G1-01": {
+            "adr_id": "G1-01",
+            "display_name": "FAO AGRIS",
+            "source_key": "agris",
+            "primary_family": "bulk_dataset",
+            "candidate_families": [
+                "bulk_dataset"
+            ],
+            "dual_peer_adr_id": null,
+            "intended_activation": "ACTIVE",
+            "blockers": [],
+            "is_runtime_active": true,
+            "access_notes": "BOUNDED ACTIVATION: LocalIndex generation 76 incremental, 96612 active rows (isolated copy verified 2026-10-22 after v6 ingest; was 87984 at generation 29; 3 withdrawn). Delta +8628 from 46 CC-BY-4.0 providers capped at 200 records each. Checkpoint completed 143/1244. Full corpus not claimed. DCAT root https://agris.fao.org/ods/AGRIS.ODS.xml.",
+            "licence_notes": "Per-provider CC-BY-4.0 on ingested ODS artifacts only; no cross-provider license generalization. Legacy zip pages citing CC BY 3.0 IGO are stale relative to ingested DCAT artifacts.",
+            "endpoint_evidence_url": "https://agris.fao.org/ods/AGRIS.ODS.xml",
+            "family_profile": {
+                "source_key": "agris",
+                "display_name": "FAO AGRIS",
+                "access_family": "bulk_dataset",
+                "format": "jsonl",
+                "field_paths": {
+                    "identifier": "id",
+                    "title": "title",
+                    "abstract": "abstract",
+                    "doi": "doi",
+                    "url": "url",
+                    "published": "published",
+                    "year": "year",
+                    "authors": "authors"
+                },
+                "author_separator": null,
+                "max_records": 500000,
+                "max_line_bytes": 65536,
+                "licensing": {
+                    "licence_identifier": "CC-BY-4.0 (AGRIS.ODS.xml / provider subsets; legacy zip pages may still cite CC BY 3.0 IGO)",
+                    "terms_reference": "https://creativecommons.org/licenses/by/4.0/",
+                    "evidence_reference": "AGRIS.ODS.BG3.xml dc:license CC-BY-4.0 + data.apps.fao.org/catalog/dataset/agris (2026-10-18)",
+                    "usages": {
+                        "retrieval": "permitted",
+                        "metadata_storage": "permitted",
+                        "full_text_storage": "conditional",
+                        "excerpt_display": "permitted",
+                        "redistribution": "conditional",
+                        "citation_linking": "permitted"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r12-20261018-G1-01",
+            "onboarding_activation_state": "ACTIVE"
+        },
+        "G1-13": {
+            "adr_id": "G1-13",
+            "display_name": "HortDB V1.0",
+            "source_key": "hortdb",
+            "primary_family": "bulk_dataset",
+            "candidate_families": [
+                "bulk_dataset"
+            ],
+            "dual_peer_adr_id": "G6-03",
+            "intended_activation": "NOT_READY",
+            "blockers": [
+                "identity_not_verified",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified",
+                "licence_commercial_contact_required"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "Genomics bulk resource; no formal API documented in IC review.",
+            "licence_notes": "Research use unrestricted; commercial use requires maintainer contact (HortDB FAQ).",
+            "endpoint_evidence_url": "https://bioinformatics.hainanu.edu.cn/hortdb/faq_allList.action",
+            "family_profile": {
+                "source_key": "hortdb",
+                "display_name": "HortDB V1.0",
+                "access_family": "bulk_dataset",
+                "format": "jsonl",
+                "field_paths": {
+                    "identifier": "id",
+                    "title": "title",
+                    "abstract": "abstract",
+                    "doi": "doi",
+                    "url": "url",
+                    "published": "published",
+                    "year": "year",
+                    "authors": "authors"
+                },
+                "author_separator": null,
+                "max_records": 500000,
+                "max_line_bytes": 65536,
+                "licensing": {
+                    "licence_identifier": "HortDB FAQ: research unrestricted; commercial contact required",
+                    "terms_reference": "https://bioinformatics.hainanu.edu.cn/hortdb/faq_allList.action",
+                    "evidence_reference": "IC-ER 2026-10-13 G1-13 license_and_reuse",
+                    "usages": {
+                        "retrieval": "conditional",
+                        "metadata_storage": "conditional",
+                        "full_text_storage": "conditional",
+                        "excerpt_display": "conditional",
+                        "redistribution": "conditional",
+                        "citation_linking": "permitted"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r9-20261016-G1-13",
+            "onboarding_activation_state": "NOT_READY"
+        },
+        "G1-15": {
+            "adr_id": "G1-15",
+            "display_name": "sCentInDB",
+            "source_key": "scentindb",
+            "primary_family": "static_dataset",
+            "candidate_families": [
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": "G6-04",
+            "intended_activation": "NOT_READY",
+            "blockers": [
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "Web UI only; no API or bulk terms on fetched pages.",
+            "licence_notes": "Licence unresolved.",
+            "endpoint_evidence_url": null,
+            "family_profile": {
+                "source_key": "scentindb",
+                "display_name": "sCentInDB",
+                "access_family": "static_dataset",
+                "format": "jsonl",
+                "field_paths": {
+                    "identifier": "id",
+                    "title": "title",
+                    "abstract": "abstract",
+                    "doi": "doi",
+                    "url": "url",
+                    "published": "published",
+                    "year": "year",
+                    "authors": "authors"
+                },
+                "author_separator": null,
+                "max_records": 500000,
+                "max_line_bytes": 65536,
+                "licensing": {
+                    "licence_identifier": null,
+                    "terms_reference": null,
+                    "evidence_reference": null,
+                    "usages": {
+                        "retrieval": "unresolved",
+                        "metadata_storage": "unresolved",
+                        "full_text_storage": "unresolved",
+                        "excerpt_display": "unresolved",
+                        "redistribution": "unresolved",
+                        "citation_linking": "unresolved"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r9-20261016-G1-15",
+            "onboarding_activation_state": "NOT_READY"
+        },
+        "G1-17": {
+            "adr_id": "G1-17",
+            "display_name": "Dr. Duke's Databases",
+            "source_key": "dr_duke",
+            "primary_family": "static_dataset",
+            "candidate_families": [
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": "G6-06",
+            "intended_activation": "ACTIVE",
+            "blockers": [],
+            "is_runtime_active": true,
+            "access_notes": "LIMITED PROJECTION ACTIVATION: LocalIndex generation 19, 211948 active rows (isolated copy verified 2026-10-22; 500 withdrawn). Active identifier prefixes: FNFTAX 2376, CHEMICALS 29572, ETHNOBOT 60000, FARMACY 60000, FARMACY_NEW 60000. FARMACY\u2260FARMACY_NEW. ETHNOBOT=traditional-use only. Full multi-table projection not claimed.",
+            "licence_notes": "CC0 public domain dedication (phytochem.nal.usda.gov/about).",
+            "endpoint_evidence_url": "https://phytochem.nal.usda.gov/about",
+            "family_profile": {
+                "source_key": "dr_duke",
+                "display_name": "Dr. Duke's Databases",
+                "access_family": "static_dataset",
+                "format": "jsonl",
+                "field_paths": {
+                    "identifier": "id",
+                    "title": "title",
+                    "abstract": "abstract",
+                    "doi": "doi",
+                    "url": "url",
+                    "published": "published",
+                    "year": "year",
+                    "authors": "authors"
+                },
+                "author_separator": null,
+                "max_records": 500000,
+                "max_line_bytes": 65536,
+                "licensing": {
+                    "licence_identifier": "CC0 1.0",
+                    "terms_reference": "https://phytochem.nal.usda.gov/about",
+                    "evidence_reference": "IC-ER 2026-10-13 G1-17 license_and_reuse",
+                    "usages": {
+                        "retrieval": "permitted",
+                        "metadata_storage": "permitted",
+                        "full_text_storage": "permitted",
+                        "excerpt_display": "permitted",
+                        "redistribution": "permitted",
+                        "citation_linking": "permitted"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r12-20261018-G1-17",
+            "onboarding_activation_state": "ACTIVE"
+        },
+        "G1-19": {
+            "adr_id": "G1-19",
+            "display_name": "Fruit and Nut Cultivars Database",
+            "source_key": "fncd",
+            "primary_family": "static_dataset",
+            "candidate_families": [
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": "G6-08",
+            "intended_activation": "NOT_READY",
+            "blockers": [
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "No API; About page may be stale.",
+            "licence_notes": "Licence unresolved.",
+            "endpoint_evidence_url": null,
+            "family_profile": {
+                "source_key": "fncd",
+                "display_name": "Fruit and Nut Cultivars Database",
+                "access_family": "static_dataset",
+                "format": "jsonl",
+                "field_paths": {
+                    "identifier": "id",
+                    "title": "title",
+                    "abstract": "abstract",
+                    "doi": "doi",
+                    "url": "url",
+                    "published": "published",
+                    "year": "year",
+                    "authors": "authors"
+                },
+                "author_separator": null,
+                "max_records": 500000,
+                "max_line_bytes": 65536,
+                "licensing": {
+                    "licence_identifier": null,
+                    "terms_reference": null,
+                    "evidence_reference": null,
+                    "usages": {
+                        "retrieval": "unresolved",
+                        "metadata_storage": "unresolved",
+                        "full_text_storage": "unresolved",
+                        "excerpt_display": "unresolved",
+                        "redistribution": "unresolved",
+                        "citation_linking": "unresolved"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r9-20261016-G1-19",
+            "onboarding_activation_state": "NOT_READY"
+        },
+        "G2-15": {
+            "adr_id": "G2-15",
+            "display_name": "Andalasian Livestock",
+            "source_key": "andalasian_livestock",
+            "primary_family": "oai_pmh",
+            "candidate_families": [
+                "oai_pmh"
+            ],
+            "dual_peer_adr_id": null,
+            "intended_activation": "NOT_READY",
+            "blockers": [
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "OAI-PMH link labelled on journal site; base URL candidates require Identify probe.",
+            "licence_notes": "Open-access journal claim; machine-readable reuse licence not fetched.",
+            "endpoint_evidence_url": "https://alive.lppm.unand.ac.id/index.php/alive/prp",
+            "family_profile": {
+                "source_key": "andalasian_livestock",
+                "display_name": "Andalasian Livestock",
+                "access_family": "oai_pmh",
+                "base_url": "https://alive.lppm.unand.ac.id/index.php/alive/oai",
+                "metadata_prefix": "oai_dc",
+                "set_spec": null,
+                "datestamp_granularity": "YYYY-MM-DD",
+                "requests_per_minute": null,
+                "record_url_template": null,
+                "licensing": {
+                    "licence_identifier": null,
+                    "terms_reference": null,
+                    "evidence_reference": null,
+                    "usages": {
+                        "retrieval": "unresolved",
+                        "metadata_storage": "unresolved",
+                        "full_text_storage": "unresolved",
+                        "excerpt_display": "unresolved",
+                        "redistribution": "unresolved",
+                        "citation_linking": "unresolved"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r9-20261016-G2-15",
+            "onboarding_activation_state": "NOT_READY"
+        },
+        "G2-23": {
+            "adr_id": "G2-23",
+            "display_name": "LivestockDev",
+            "source_key": "livestockdev",
+            "primary_family": "static_dataset",
+            "candidate_families": [
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": null,
+            "intended_activation": "NOT_READY",
+            "blockers": [
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "No API or licence documented; download pages not fetched in IC review.",
+            "licence_notes": "Licence unresolved.",
+            "endpoint_evidence_url": null,
+            "family_profile": {
+                "source_key": "livestockdev",
+                "display_name": "LivestockDev",
+                "access_family": "static_dataset",
+                "format": "jsonl",
+                "field_paths": {
+                    "identifier": "id",
+                    "title": "title",
+                    "abstract": "abstract",
+                    "doi": "doi",
+                    "url": "url",
+                    "published": "published",
+                    "year": "year",
+                    "authors": "authors"
+                },
+                "author_separator": null,
+                "max_records": 500000,
+                "max_line_bytes": 65536,
+                "licensing": {
+                    "licence_identifier": null,
+                    "terms_reference": null,
+                    "evidence_reference": null,
+                    "usages": {
+                        "retrieval": "unresolved",
+                        "metadata_storage": "unresolved",
+                        "full_text_storage": "unresolved",
+                        "excerpt_display": "unresolved",
+                        "redistribution": "unresolved",
+                        "citation_linking": "unresolved"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r9-20261016-G2-23",
+            "onboarding_activation_state": "NOT_READY"
+        },
+        "G3-05": {
+            "adr_id": "G3-05",
+            "display_name": "OSMIA",
+            "source_key": "osmia",
+            "primary_family": "static_dataset",
+            "candidate_families": [
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": null,
+            "intended_activation": "NOT_READY",
+            "blockers": [
+                "identity_not_verified",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified",
+                "no_machine_search_api"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "Journal site; CC BY 4.0 declared. No documented machine search API; LocalIndex only after authorized ingest.",
+            "licence_notes": "CC BY 4.0 (OSMIA about page).",
+            "endpoint_evidence_url": "https://www.osmia-journal-hymenoptera.com/about.html",
+            "family_profile": {
+                "source_key": "osmia",
+                "display_name": "OSMIA",
+                "access_family": "static_dataset",
+                "format": "jsonl",
+                "field_paths": {
+                    "identifier": "id",
+                    "title": "title",
+                    "abstract": "abstract",
+                    "doi": "doi",
+                    "url": "url",
+                    "published": "published",
+                    "year": "year",
+                    "authors": "authors"
+                },
+                "author_separator": null,
+                "max_records": 500000,
+                "max_line_bytes": 65536,
+                "licensing": {
+                    "licence_identifier": "CC BY 4.0",
+                    "terms_reference": "https://www.osmia-journal-hymenoptera.com/about.html",
+                    "evidence_reference": "IC-ER 2026-10-13 G3-05 license_and_reuse",
+                    "usages": {
+                        "retrieval": "permitted",
+                        "metadata_storage": "permitted",
+                        "full_text_storage": "conditional",
+                        "excerpt_display": "permitted",
+                        "redistribution": "conditional",
+                        "citation_linking": "permitted"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r9-20261016-G3-05",
+            "onboarding_activation_state": "NOT_READY"
+        },
+        "G4-01": {
+            "adr_id": "G4-01",
+            "display_name": "SilkBase",
+            "source_key": "silkbase",
+            "primary_family": "static_dataset",
+            "candidate_families": [
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": null,
+            "intended_activation": "NOT_READY",
+            "blockers": [
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "No API or licence on fetched pages.",
+            "licence_notes": "Licence unresolved.",
+            "endpoint_evidence_url": null,
+            "family_profile": {
+                "source_key": "silkbase",
+                "display_name": "SilkBase",
+                "access_family": "static_dataset",
+                "format": "jsonl",
+                "field_paths": {
+                    "identifier": "id",
+                    "title": "title",
+                    "abstract": "abstract",
+                    "doi": "doi",
+                    "url": "url",
+                    "published": "published",
+                    "year": "year",
+                    "authors": "authors"
+                },
+                "author_separator": null,
+                "max_records": 500000,
+                "max_line_bytes": 65536,
+                "licensing": {
+                    "licence_identifier": null,
+                    "terms_reference": null,
+                    "evidence_reference": null,
+                    "usages": {
+                        "retrieval": "unresolved",
+                        "metadata_storage": "unresolved",
+                        "full_text_storage": "unresolved",
+                        "excerpt_display": "unresolved",
+                        "redistribution": "unresolved",
+                        "citation_linking": "unresolved"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r9-20261016-G4-01",
+            "onboarding_activation_state": "NOT_READY"
+        },
+        "G4-02": {
+            "adr_id": "G4-02",
+            "display_name": "KAIKObase",
+            "source_key": "kaikobase",
+            "primary_family": "bulk_dataset",
+            "candidate_families": [
+                "bulk_dataset"
+            ],
+            "dual_peer_adr_id": null,
+            "intended_activation": "NOT_READY",
+            "blockers": [
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "Bulk gene-model downloads documented; no API.",
+            "licence_notes": "Licence unresolved.",
+            "endpoint_evidence_url": "https://kaikobase.dna.naro.go.jp/KAIKObase_download.html",
+            "family_profile": {
+                "source_key": "kaikobase",
+                "display_name": "KAIKObase",
+                "access_family": "bulk_dataset",
+                "format": "jsonl",
+                "field_paths": {
+                    "identifier": "id",
+                    "title": "title",
+                    "abstract": "abstract",
+                    "doi": "doi",
+                    "url": "url",
+                    "published": "published",
+                    "year": "year",
+                    "authors": "authors"
+                },
+                "author_separator": null,
+                "max_records": 500000,
+                "max_line_bytes": 65536,
+                "licensing": {
+                    "licence_identifier": null,
+                    "terms_reference": null,
+                    "evidence_reference": null,
+                    "usages": {
+                        "retrieval": "unresolved",
+                        "metadata_storage": "unresolved",
+                        "full_text_storage": "unresolved",
+                        "excerpt_display": "unresolved",
+                        "redistribution": "unresolved",
+                        "citation_linking": "unresolved"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r9-20261016-G4-02",
+            "onboarding_activation_state": "NOT_READY"
+        },
+        "G5-04": {
+            "adr_id": "G5-04",
+            "display_name": "GBIF",
+            "source_key": "gbif",
+            "primary_family": "rest_api",
+            "candidate_families": [
+                "rest_api",
+                "bulk_dataset",
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": null,
+            "intended_activation": "ACTIVE",
+            "blockers": [],
+            "is_runtime_active": true,
+            "access_notes": "Documented REST JSON API at api.gbif.org; species search used for CSQ query text.",
+            "licence_notes": "GBIF Terms of Use; per-dataset CC0/CC-BY/CC-BY-NC. Retrieval of API search results permitted; redistribution conditional.",
+            "endpoint_evidence_url": "https://api.gbif.org/v1/species/search",
+            "family_profile": {
+                "source_key": "gbif",
+                "display_name": "GBIF",
+                "access_family": "rest_api",
+                "endpoint": "https://api.gbif.org/v1/species/search",
+                "query_parameter": "q",
+                "limit_parameter": "limit",
+                "max_results_per_request": 50,
+                "items_path": "results",
+                "field_paths": {
+                    "identifier": "key",
+                    "title": "scientificName",
+                    "abstract": "rank",
+                    "published": "publishedIn"
+                },
+                "author_name_path": null,
+                "fixed_parameters": [],
+                "credential": null,
+                "requests_per_minute": 60,
+                "response_status_path": null,
+                "response_status_ok_value": "ok",
+                "response_error_message_path": null,
+                "licensing": {
+                    "licence_identifier": "GBIF Terms of Use; per-dataset CC0|CC-BY|CC-BY-NC",
+                    "terms_reference": "https://www.gbif.org/terms",
+                    "evidence_reference": "IC evidence G5-04 license_and_reuse + techdocs.gbif.org/en/openapi/",
+                    "usages": {
+                        "retrieval": "permitted",
+                        "metadata_storage": "conditional",
+                        "full_text_storage": "prohibited",
+                        "excerpt_display": "conditional",
+                        "redistribution": "conditional",
+                        "citation_linking": "permitted"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r9-20261016-G5-04",
+            "onboarding_activation_state": "ACTIVE"
+        },
+        "G6-03": {
+            "adr_id": "G6-03",
+            "display_name": "HortDB V1.0",
+            "source_key": "hortdb_g6",
+            "primary_family": "bulk_dataset",
+            "candidate_families": [
+                "bulk_dataset"
+            ],
+            "dual_peer_adr_id": "G1-13",
+            "intended_activation": "DEFERRED",
+            "blockers": [
+                "dual_peer_runtime_deferred",
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "Dual peer of G1-13; runtime deferred to avoid duplicate evidence.",
+            "licence_notes": "Same unresolved licence as G1-13.",
+            "endpoint_evidence_url": null,
+            "family_profile": null,
+            "onboarding_decision_id": "onb-r9-20261016-G6-03",
+            "onboarding_activation_state": "DEFERRED"
+        },
+        "G6-04": {
+            "adr_id": "G6-04",
+            "display_name": "sCentInDB",
+            "source_key": "scentindb_g6",
+            "primary_family": "static_dataset",
+            "candidate_families": [
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": "G1-15",
+            "intended_activation": "DEFERRED",
+            "blockers": [
+                "dual_peer_runtime_deferred",
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "Dual peer of G1-15; runtime deferred.",
+            "licence_notes": "Licence unresolved.",
+            "endpoint_evidence_url": null,
+            "family_profile": null,
+            "onboarding_decision_id": "onb-r9-20261016-G6-04",
+            "onboarding_activation_state": "DEFERRED"
+        },
+        "G6-06": {
+            "adr_id": "G6-06",
+            "display_name": "Dr. Duke's Phytochemical and Ethnobotanical Databases",
+            "source_key": "dr_duke_g6",
+            "primary_family": "static_dataset",
+            "candidate_families": [
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": "G1-17",
+            "intended_activation": "DEFERRED",
+            "blockers": [
+                "dual_peer_runtime_deferred",
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "Dual peer of G1-17; runtime deferred.",
+            "licence_notes": "CC0 on G1-17 primary; dual not activated.",
+            "endpoint_evidence_url": null,
+            "family_profile": null,
+            "onboarding_decision_id": "onb-r9-20261016-G6-06",
+            "onboarding_activation_state": "DEFERRED"
+        },
+        "G6-08": {
+            "adr_id": "G6-08",
+            "display_name": "Fruit and Nut Cultivars Database (FNCD)",
+            "source_key": "fncd_g6",
+            "primary_family": "static_dataset",
+            "candidate_families": [
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": "G1-19",
+            "intended_activation": "DEFERRED",
+            "blockers": [
+                "dual_peer_runtime_deferred",
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "Dual peer of G1-19; runtime deferred.",
+            "licence_notes": "Licence unresolved.",
+            "endpoint_evidence_url": null,
+            "family_profile": null,
+            "onboarding_decision_id": "onb-r9-20261016-G6-08",
+            "onboarding_activation_state": "DEFERRED"
+        },
+        "G6-12": {
+            "adr_id": "G6-12",
+            "display_name": "OfIR \u2013 Osmanthus fragrans Information Resource",
+            "source_key": "ofir",
+            "primary_family": "static_dataset",
+            "candidate_families": [
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": null,
+            "intended_activation": "NOT_READY",
+            "blockers": [
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "Web-tool queries only; no API/bulk documentation.",
+            "licence_notes": "Licence unresolved.",
+            "endpoint_evidence_url": null,
+            "family_profile": {
+                "source_key": "ofir",
+                "display_name": "OfIR \u2013 Osmanthus fragrans Information Resource",
+                "access_family": "static_dataset",
+                "format": "jsonl",
+                "field_paths": {
+                    "identifier": "id",
+                    "title": "title",
+                    "abstract": "abstract",
+                    "doi": "doi",
+                    "url": "url",
+                    "published": "published",
+                    "year": "year",
+                    "authors": "authors"
+                },
+                "author_separator": null,
+                "max_records": 500000,
+                "max_line_bytes": 65536,
+                "licensing": {
+                    "licence_identifier": null,
+                    "terms_reference": null,
+                    "evidence_reference": null,
+                    "usages": {
+                        "retrieval": "unresolved",
+                        "metadata_storage": "unresolved",
+                        "full_text_storage": "unresolved",
+                        "excerpt_display": "unresolved",
+                        "redistribution": "unresolved",
+                        "citation_linking": "unresolved"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r9-20261016-G6-12",
+            "onboarding_activation_state": "NOT_READY"
+        },
+        "G6-16": {
+            "adr_id": "G6-16",
+            "display_name": "Citrus Genome Database (CGD)",
+            "source_key": "citrus_genome_db",
+            "primary_family": "static_dataset",
+            "candidate_families": [
+                "static_dataset"
+            ],
+            "dual_peer_adr_id": null,
+            "intended_activation": "NOT_READY",
+            "blockers": [
+                "identity_not_verified",
+                "licence_unresolved",
+                "endpoint_not_tested",
+                "local_index_store_not_deployed",
+                "local_index_not_built",
+                "onboarding_decision_not_accepted",
+                "capability_unverified"
+            ],
+            "is_runtime_active": false,
+            "access_notes": "Downloads and web search documented; no API.",
+            "licence_notes": "Licence unresolved.",
+            "endpoint_evidence_url": null,
+            "family_profile": {
+                "source_key": "citrus_genome_db",
+                "display_name": "Citrus Genome Database (CGD)",
+                "access_family": "static_dataset",
+                "format": "jsonl",
+                "field_paths": {
+                    "identifier": "id",
+                    "title": "title",
+                    "abstract": "abstract",
+                    "doi": "doi",
+                    "url": "url",
+                    "published": "published",
+                    "year": "year",
+                    "authors": "authors"
+                },
+                "author_separator": null,
+                "max_records": 500000,
+                "max_line_bytes": 65536,
+                "licensing": {
+                    "licence_identifier": null,
+                    "terms_reference": null,
+                    "evidence_reference": null,
+                    "usages": {
+                        "retrieval": "unresolved",
+                        "metadata_storage": "unresolved",
+                        "full_text_storage": "unresolved",
+                        "excerpt_display": "unresolved",
+                        "redistribution": "unresolved",
+                        "citation_linking": "unresolved"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r9-20261016-G6-16",
+            "onboarding_activation_state": "NOT_READY"
+        }
+    },
+    "near_ready_seats": {
+        "G1-02": {
+            "adr_id": "G1-02",
+            "display_name": "Organic Eprints",
+            "source_key": "organic_eprints",
+            "primary_family": "oai_pmh",
+            "candidate_families": [
+                "oai_pmh"
+            ],
+            "dual_peer_adr_id": null,
+            "intended_activation": "ACTIVE",
+            "blockers": [],
+            "is_runtime_active": true,
+            "access_notes": "Official OAI-PMH base https://orgprints.org/cgi/oai2 (policy: metadata reusable with summary URL). Harvest\u2192LocalIndex via scientific:harvest-oai; dedicated scientific_records connection.",
+            "licence_notes": "Metadata freely re-usable with stable summary URL linkage (orgprints.org/about_policy.html). Documents: fair use download; public re-hosting prohibited.",
+            "endpoint_evidence_url": "https://www.orgprints.org/about_policy.html#oai",
+            "family_profile": {
+                "source_key": "organic_eprints",
+                "display_name": "Organic Eprints",
+                "access_family": "oai_pmh",
+                "base_url": "https://orgprints.org/cgi/oai2",
+                "metadata_prefix": "oai_dc",
+                "set_spec": null,
+                "datestamp_granularity": "YYYY-MM-DDThh:mm:ssZ",
+                "requests_per_minute": 30,
+                "record_url_template": "https://orgprints.org/{local_id}",
+                "licensing": {
+                    "licence_identifier": "Organic Eprints policy: metadata reusable with summary URL linkage; documents fair use / no public re-host",
+                    "terms_reference": "https://www.orgprints.org/about_policy.html",
+                    "evidence_reference": "IC-ER 2026-10-13 G1-02 + about_policy.html OAI quote (access date 2026-10-17)",
+                    "usages": {
+                        "retrieval": "permitted",
+                        "metadata_storage": "permitted",
+                        "full_text_storage": "conditional",
+                        "excerpt_display": "conditional",
+                        "redistribution": "prohibited",
+                        "citation_linking": "permitted"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r11-20261018-G1-02",
+            "onboarding_activation_state": "ACTIVE"
+        },
+        "G6-20": {
+            "adr_id": "G6-20",
+            "display_name": "Biodiversity Heritage Library (BHL)",
+            "source_key": "bhl",
+            "primary_family": "rest_api",
+            "candidate_families": [
+                "rest_api",
+                "oai_pmh",
+                "bulk_dataset"
+            ],
+            "dual_peer_adr_id": null,
+            "intended_activation": "ACTIVE",
+            "blockers": [],
+            "is_runtime_active": true,
+            "access_notes": "REST API v3 https://www.biodiversitylibrary.org/api3?op=PublicationSearch; apikey via BHL_API_KEY. PublicationSearch items commonly expose PartID/PartUrl (Item/Title fallbacks supported).",
+            "licence_notes": "BHL metadata CC0 1.0; content PD or rights-holder CC. Retrieval of search metadata permitted.",
+            "endpoint_evidence_url": "https://www.biodiversitylibrary.org/docs/api3.html",
+            "family_profile": {
+                "source_key": "bhl",
+                "display_name": "Biodiversity Heritage Library",
+                "access_family": "rest_api",
+                "endpoint": "https://www.biodiversitylibrary.org/api3",
+                "query_parameter": "searchterm",
+                "limit_parameter": "pageSize",
+                "max_results_per_request": 100,
+                "items_path": "Result",
+                "field_paths": {
+                    "identifier": [
+                        "PartID",
+                        "TitleID",
+                        "ItemID"
+                    ],
+                    "title": "Title",
+                    "url": [
+                        "PartUrl",
+                        "TitleUrl",
+                        "ItemUrl"
+                    ],
+                    "published": "Date",
+                    "authors": "Authors",
+                    "journal": "ContainerTitle"
+                },
+                "author_name_path": "Name",
+                "fixed_parameters": {
+                    "op": "PublicationSearch",
+                    "format": "json"
+                },
+                "credential": {
+                    "config_key": "agricultural_intelligence.bhl.api_key",
+                    "placement": "query",
+                    "name": "apikey"
+                },
+                "requests_per_minute": 30,
+                "response_status_path": "Status",
+                "response_status_ok_value": "ok",
+                "response_error_message_path": "ErrorMessage",
+                "licensing": {
+                    "licence_identifier": "BHL metadata CC0 1.0; content PD or rights-holder permission",
+                    "terms_reference": "https://about.biodiversitylibrary.org/tools-and-services/developer-and-data-tools/",
+                    "evidence_reference": "IC-ER 2026-10-13 G6-20 license_and_reuse",
+                    "usages": {
+                        "retrieval": "permitted",
+                        "metadata_storage": "permitted",
+                        "full_text_storage": "conditional",
+                        "excerpt_display": "permitted",
+                        "redistribution": "conditional",
+                        "citation_linking": "permitted"
+                    }
+                }
+            },
+            "onboarding_decision_id": "onb-r11-20261018-G6-20",
+            "onboarding_activation_state": "ACTIVE"
+        }
+    },
+    "db_default": "pgsql",
+    "db_driver": "pgsql"
+}

@@ -241,6 +241,29 @@ class UniversalAnswerOrchestratorFeatureTest extends TestCase
         $this->assertFalse((new \ReflectionClass($agent))->hasMethod('maybeEnrichWithUniversalOrchestrator'));
     }
 
+    public function test_mentha_taxonomy_stage3_includes_governed_gbif_not_capability_subset_only(): void
+    {
+        config([
+            'agricultural_intelligence.web_search.enabled' => false,
+            'agricultural_intelligence.fao.enabled' => false,
+        ]);
+
+        Http::fake([
+            '*' => Http::response(['results' => [], 'message' => []], 200),
+        ]);
+
+        $result = app(UniversalAnswerOrchestrator::class)->answer([
+            'query' => 'What is the taxonomic classification of Mentha piperita?',
+            'force_execute' => true,
+            'language' => 'en',
+        ])->toArray();
+
+        $selected = $result['scientific_search']['selected_sources'] ?? [];
+        $this->assertContains('gbif', $selected, 'Universal must not strip GBIF from Stage-3 taxonomy selection');
+        $this->assertContains('bhl', $selected, 'Universal must not strip BHL from Stage-3 taxonomy selection');
+        $this->assertContains('openalex', $selected);
+    }
+
     private function mockEmptyScholarlyAdapters(): void
     {
         foreach ([
@@ -251,7 +274,7 @@ class UniversalAnswerOrchestratorFeatureTest extends TestCase
             $mock = Mockery::mock($class);
             $mock->shouldReceive('sourceKey')->andReturn($key);
             $mock->shouldReceive('displayName')->andReturn($key);
-            $mock->shouldReceive('search')->andReturn(new ScientificSourceSearchOutcome(
+            $mock->shouldReceive('search', 'searchRequest')->andReturn(new ScientificSourceSearchOutcome(
                 sourceKey: $key,
                 status: ScientificSourceSearchOutcome::STATUS_EMPTY,
                 error: 'empty_results',

@@ -1,0 +1,32 @@
+{
+    "status":  "synthesis_completed_partial",
+    "raw":  70,
+    "survivors":  17,
+    "selected":  [
+                     "fao_stat",
+                     "openalex",
+                     "crossref",
+                     "semantic_scholar",
+                     "agris",
+                     "dr_duke",
+                     "gbif",
+                     "bhl"
+                 ],
+    "attempted":  [
+                      "openalex",
+                      "crossref",
+                      "gbif"
+                  ],
+    "successful":  [
+                       "openalex",
+                       "crossref",
+                       "gbif"
+                   ],
+    "failed":  [
+
+               ],
+    "citation_keys":  {
+                          "gbif":  10
+                      },
+    "answer_prefix":  "### Plant family members\n\nValidated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the citations.\n1. **Taxonomic classification.**"
+}

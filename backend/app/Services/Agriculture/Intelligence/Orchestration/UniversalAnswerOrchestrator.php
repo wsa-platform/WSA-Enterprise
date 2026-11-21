@@ -16,6 +16,7 @@ use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 use App\Services\Agriculture\Research\QueryUnderstandingService;
 use App\Services\Agriculture\Research\ResearchPlanner;
 use App\Services\Agriculture\Research\Search\AgriculturalScientificSearchService;
+use App\Services\Agriculture\Research\Search\ScientificSourceSelector;
 use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
 use App\Services\Agriculture\Research\Validation\AgriculturalScientificValidationService;
 use Illuminate\Support\Facades\Log;
@@ -113,13 +114,17 @@ final class UniversalAnswerOrchestrator
             $selection->requiredCapabilities,
             ['scientific_search', 'scholarly_evidence', 'citation_metadata', 'official_agricultural_data', 'agricultural_statistics'],
         ) !== [];
-        $searchReport = $wantsScientific
-            ? $this->scientificSearchService->search(
-                $plan,
-                (int) ($input['limit'] ?? 10),
-                $scientificSourceKeys,
-            )
-            : $this->scientificSearchService->search($plan, (int) ($input['limit'] ?? 10), []);
+        // Stage-3 ScientificSourceSelector is authoritative for governed seats (GBIF, BHL, …).
+        // Capability-driven provider IDs alone omit GOVERNED_EXPANSION and made Mentha
+        // taxonomy answers scholarly-only — never pass that incomplete subset as sourceKeys.
+        $stage3SourceKeys = $wantsScientific
+            ? $this->mergeStage3SourceKeys($plan, $scientificSourceKeys)
+            : null;
+        $searchReport = $this->scientificSearchService->search(
+            $plan,
+            (int) ($input['limit'] ?? 10),
+            $stage3SourceKeys,
+        );
         $validationReport = $this->scientificValidationService->validate($plan, $searchReport);
         $synthesisReport = $this->answerComposer->compose($plan, $validationReport);
         // Home-only lifecycle authority (S1). Crop profile plans are a no-op identity return.
@@ -487,5 +492,27 @@ final class UniversalAnswerOrchestrator
         return str_starts_with(strtolower($language), 'ar')
             ? 'الأدلة غير كافية لتقديم إجابة موثوقة.'
             : 'Insufficient evidence to provide a reliable answer.';
+    }
+
+    /**
+     * Merge capability-selected scientific provider IDs with Stage-3 selector keys.
+     * Passing null lets MultiSourceScientificSearchOrchestrator use the selector alone;
+     * an explicit merged list preserves any Universal-layer scientific IDs while restoring
+     * governed seats that CapabilityDrivenSourceSelector never surfaces.
+     *
+     * @param  list<string>  $capabilityScientificKeys
+     * @return list<string>
+     */
+    private function mergeStage3SourceKeys(KnowledgeQueryPlan $plan, array $capabilityScientificKeys): array
+    {
+        $selectorKeys = (new ScientificSourceSelector())->selectSources($plan);
+
+        return array_values(array_unique([
+            ...array_values(array_filter(
+                $capabilityScientificKeys,
+                static fn (mixed $k): bool => is_string($k) && trim($k) !== '',
+            )),
+            ...$selectorKeys,
+        ]));
     }
 }

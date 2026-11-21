@@ -25,11 +25,20 @@ final class GbifSpeciesQuerySpecializer
         $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
         $topicBag = mb_strtolower(implode(' ', is_array($topics) ? $topics : []));
 
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        $requiredEvidence = trim((string) ($plan->normalizedQuery->constraints['required_evidence_type'] ?? ''));
         $wantsTaxonomy = $sense === 'taxonomy'
+            || $sense === 'plant_family_members'
             || str_contains($topicBag, 'taxonom')
-            || str_contains($topicBag, 'species')
-            || $plan->researchIntent === 'taxonomy'
-            || $plan->researchIntent === 'species_lookup';
+            || str_contains($topicBag, 'species delimitation')
+            || $questionType === 'species'
+            || $requiredEvidence === 'species_list_or_taxonomy'
+            || in_array($plan->researchIntent, [
+                'taxonomy',
+                'species_lookup',
+                'species_list_or_taxonomy',
+                'plant_family_members',
+            ], true);
 
         // GBIF species/search matches binomial identity; appending "species classification"
         // often yields an empty result set on the live API (verified 2026-11-19).

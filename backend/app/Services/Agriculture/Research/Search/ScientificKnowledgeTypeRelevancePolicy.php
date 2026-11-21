@@ -169,7 +169,12 @@ final class ScientificKnowledgeTypeRelevancePolicy
         $protected = [];
         foreach ([
             'gbif' => [ScientificKnowledgeType::TAXONOMIC_IDENTITY, ScientificKnowledgeType::BIODIVERSITY_OCCURRENCE],
-            'bhl' => [ScientificKnowledgeType::BIBLIOGRAPHIC_HERITAGE],
+            // Heritage literature often carries taxonomic descriptions; do not early-stop BHL
+            // away when the question needs taxonomic identity (Mentha multi-source restoration).
+            'bhl' => [
+                ScientificKnowledgeType::BIBLIOGRAPHIC_HERITAGE,
+                ScientificKnowledgeType::TAXONOMIC_IDENTITY,
+            ],
             'dr_duke' => [ScientificKnowledgeType::CHEMICAL_ASSOCIATION, ScientificKnowledgeType::TRADITIONAL_USE],
             'fao_stat' => [ScientificKnowledgeType::STATISTICAL_OBSERVATION],
         ] as $key => $types) {

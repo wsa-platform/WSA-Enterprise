@@ -120,6 +120,12 @@ class ScientificSearchQueryBuilder
             foreach ($this->buildLandSoilInventoryVariants($plan, $location) as $inventoryVariant) {
                 $variants[] = $inventoryVariant;
             }
+        } elseif ($this->isSpeciesTaxonomyQuestion($plan) && $entity !== null) {
+            // Prefer taxonomy/phylogeny scholarly retrieval — not oil/cultivation Mentha hits.
+            foreach ($this->buildSpeciesTaxonomyVariants($plan, $entity) as $taxonomyVariant) {
+                $variants[] = $taxonomyVariant;
+            }
+            $wantsCultivationProduction = false;
         } elseif ($entity !== null) {
             $propertyTerms = $this->resolveRequestedPropertyTerms($plan);
 
@@ -727,6 +733,48 @@ class ScientificSearchQueryBuilder
     private function isCountryLocation(string $location): bool
     {
         return AgriculturalEntityCatalog::locationToIsoCountryCode($location) !== null;
+    }
+
+    private function isSpeciesTaxonomyQuestion(KnowledgeQueryPlan $plan): bool
+    {
+        $query = $plan->normalizedQuery;
+        $questionType = trim((string) ($query->constraints['question_type'] ?? ''));
+        $required = trim((string) ($query->constraints['required_evidence_type'] ?? ''));
+        $sense = trim((string) ($query->constraints['scientific_sense'] ?? ''));
+
+        return $questionType === 'species'
+            || $required === 'species_list_or_taxonomy'
+            || $sense === 'plant_family_members'
+            || in_array($plan->researchIntent, [
+                'species_list_or_taxonomy',
+                'plant_family_members',
+                'taxonomy',
+                'species_lookup',
+            ], true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function buildSpeciesTaxonomyVariants(KnowledgeQueryPlan $plan, string $entity): array
+    {
+        $scientific = trim((string) ($plan->normalizedQuery->scientificName ?? ''));
+        $lead = $scientific !== '' ? $scientific : $entity;
+        $variants = [
+            $this->joinTerms([$lead, 'taxonomy']),
+            $this->joinTerms([$lead, 'taxonomic classification']),
+            $this->joinTerms([$lead, 'phylogeny']),
+            $this->joinTerms(['taxonomy of', $lead]),
+            $this->joinTerms([$lead, 'scientific name', 'classification']),
+        ];
+        if ($scientific !== '' && strcasecmp($scientific, $entity) !== 0) {
+            $variants[] = $this->joinTerms([$entity, 'taxonomy']);
+        }
+
+        return array_values(array_unique(array_filter(
+            $variants,
+            static fn (string $variant): bool => trim($variant) !== '',
+        )));
     }
 
     /**
@@ -1447,6 +1495,18 @@ class ScientificSearchQueryBuilder
             $bounded = $this->uniqueBoundedVariantsPreservingLocation($familyVariants, $location);
             if ($bounded !== []) {
                 return $bounded;
+            }
+        }
+
+        // Species taxonomy / binomial classification — prefer taxonomy scholarly queries.
+        if ($this->isSpeciesTaxonomyQuestion($plan)) {
+            $entity = $this->specExecutableEntityTerm($spec) ?? $this->resolveEntityTerm($plan);
+            if ($entity !== null) {
+                $taxonomyVariants = $this->buildSpeciesTaxonomyVariants($plan, $entity);
+                $bounded = $this->uniqueBoundedVariantsPreservingLocation($taxonomyVariants, $location);
+                if ($bounded !== []) {
+                    return $bounded;
+                }
             }
         }
 

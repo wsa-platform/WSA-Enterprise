@@ -1,0 +1,86 @@
+{
+    "label": "mentha",
+    "query": "What is the taxonomic classification of Mentha piperita?",
+    "elapsed_s": 20.16,
+    "status": "synthesis_completed_with_partial_conflicts",
+    "answer_status": "SCIENTIFIC_VERIFIED",
+    "providers_used": [
+        "free_search_mcp",
+        "scientific_pipeline",
+        "openalex",
+        "crossref",
+        "semantic_scholar",
+        "fao_stat",
+        "gbif",
+        "bhl"
+    ],
+    "selected": [
+        "openalex",
+        "crossref",
+        "semantic_scholar",
+        "agris",
+        "dr_duke",
+        "gbif",
+        "bhl",
+        "fao_stat"
+    ],
+    "attempted": [
+        "openalex",
+        "crossref",
+        "gbif",
+        "bhl"
+    ],
+    "successful": [
+        "openalex",
+        "crossref",
+        "gbif",
+        "bhl"
+    ],
+    "failed": [],
+    "skipped": null,
+    "raw": 80,
+    "survivors": null,
+    "citation_keys": {
+        "openalex": 6,
+        "gbif": 10
+    },
+    "citation_provider_contribution": {
+        "independent_provider_count": 2,
+        "providers": [
+            "gbif",
+            "openalex"
+        ],
+        "by_provider": {
+            "gbif": 10,
+            "openalex": 6
+        }
+    },
+    "sources_received": 29,
+    "independent_search": false,
+    "search_status": "search_completed",
+    "validated_evidence_count": 22,
+    "rejected_evidence_count": 0,
+    "composer_eligible_count": 22,
+    "lifecycle_status": "composer_used",
+    "answer_prefix": "### Plant family members\n\nValidated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the citations.\n1. **Podina Historica**",
+    "scientific_search_keys": [
+        "status",
+        "stage",
+        "internet_first",
+        "search_query",
+        "search_queries",
+        "selected_sources",
+        "attempted_sources",
+        "successful_sources",
+        "failed_sources",
+        "empty_sources",
+        "result_count",
+        "deduplicated_result_count",
+        "source_outcomes",
+        "results",
+        "plan",
+        "timings",
+        "validation"
+    ],
+    "validation_status": "validation_completed"
+}
