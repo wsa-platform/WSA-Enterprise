@@ -47,7 +47,9 @@ class SequentialAdequateResultsEarlyStopTest extends TestCase
 
         $this->assertSame('success', $collections['openalex']['adapterStatus']);
         $this->assertSame('success', $collections['crossref']['adapterStatus']);
-        $this->assertSame('skipped', $collections['semantic_scholar']['adapterStatus']);
+        // R3.1: third independent scholarly corpus is attempted before early-stop.
+        $this->assertSame('success', $collections['semantic_scholar']['adapterStatus']);
+        // Wheat physiology does not require AGRICULTURAL_PRACTICE → AGRIS may early-stop.
         $this->assertSame('skipped', $collections['agris']['adapterStatus']);
         $this->assertSame('skipped', $collections['gbif']['adapterStatus']);
         $this->assertSame(
@@ -56,9 +58,71 @@ class SequentialAdequateResultsEarlyStopTest extends TestCase
         );
         $this->assertTrue($openAlex->called);
         $this->assertTrue($crossref->called);
-        $this->assertFalse($semantic->called);
+        $this->assertTrue($semantic->called);
         $this->assertFalse($agris->called);
         $this->assertFalse($gbif->called);
+    }
+
+    public function test_agris_is_not_early_stopped_when_agricultural_practice_is_required(): void
+    {
+        $orchestrator = app(MultiSourceScientificSearchOrchestrator::class);
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'What are recommended irrigation practices for maize cultivation according to agricultural research?',
+        ]);
+
+        $openAlex = $this->fakeAdapter('openalex', 8);
+        $crossref = $this->fakeAdapter('crossref', 4);
+        $semantic = $this->fakeAdapter('semantic_scholar', 3);
+        $agris = $this->fakeAdapter('agris', 3);
+
+        $budget = ScientificSearchTimeBudget::start();
+        $method = new ReflectionMethod($orchestrator, 'collectAdaptersSequentially');
+        $method->setAccessible(true);
+
+        /** @var array<string, array<string, mixed>> $collections */
+        $collections = $method->invoke(
+            $orchestrator,
+            [$openAlex, $crossref, $semantic, $agris],
+            ['maize irrigation cultivation'],
+            8,
+            $plan,
+            $budget,
+            0,
+        );
+
+        $this->assertSame('success', $collections['semantic_scholar']['adapterStatus']);
+        $this->assertSame('success', $collections['agris']['adapterStatus']);
+        $this->assertTrue($agris->called);
+    }
+
+    public function test_dr_duke_remains_protected_for_phytochemical_questions(): void
+    {
+        $orchestrator = app(MultiSourceScientificSearchOrchestrator::class);
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'What chemical constituents are reported in Mentha piperita according to ethnobotanical phytochemical data?',
+        ]);
+
+        $openAlex = $this->fakeAdapter('openalex', 8);
+        $crossref = $this->fakeAdapter('crossref', 4);
+        $duke = $this->fakeAdapter('dr_duke', 3);
+
+        $budget = ScientificSearchTimeBudget::start();
+        $method = new ReflectionMethod($orchestrator, 'collectAdaptersSequentially');
+        $method->setAccessible(true);
+
+        /** @var array<string, array<string, mixed>> $collections */
+        $collections = $method->invoke(
+            $orchestrator,
+            [$openAlex, $crossref, $duke],
+            ['mentha piperita chemical constituents'],
+            8,
+            $plan,
+            $budget,
+            0,
+        );
+
+        $this->assertSame('success', $collections['dr_duke']['adapterStatus']);
+        $this->assertTrue($duke->called);
     }
 
     private function fakeAdapter(string $key, int $resultCount): ScientificSourceAdapterInterface

@@ -1,0 +1,13 @@
+{
+    "query":  "What are recommended irrigation practices for maize cultivation according to agricultural research?",
+    "status":  null,
+    "failure_code":  null,
+    "raw":  null,
+    "survivors":  null,
+    "successful":  null,
+    "failed":  null,
+    "attempted":  null,
+    "skipped":  null,
+    "answer_prefix":  null,
+    "citation_count":  0
+}

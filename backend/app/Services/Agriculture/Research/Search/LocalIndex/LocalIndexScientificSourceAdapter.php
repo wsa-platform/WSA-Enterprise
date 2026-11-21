@@ -97,8 +97,14 @@ final class LocalIndexScientificSourceAdapter implements ScientificSourceAdapter
                         startedNs: $startedNs,
                     );
                 }
-                // Stream ACTIVE rows — never materialize the full corpus for rebuild.
-                $this->index->rebuild($key, $this->store->iterateActive($key), $committed);
+                // R3.1: never block the Stage-3 FastCGI window on a synchronous cold/stale
+                // rebuild. Ingest/rebuild remains an explicit offline/command path; search
+                // must fail closed as UNAVAILABLE so sibling sources can still answer.
+                return $this->outcome(
+                    ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
+                    error: 'local_index_cold_or_stale_rebuild_deferred',
+                    startedNs: $startedNs,
+                );
             }
         } catch (LocalStoreFailure $failure) {
             return $this->outcome(ScientificSourceSearchOutcome::STATUS_FAILED, error: $failure->reason, startedNs: $startedNs);

@@ -1,0 +1,15 @@
+{
+    "query":  "What peer-reviewed papers discuss drought stress physiology in tomato?",
+    "status":  "scientific_generated",
+    "raw":  69,
+    "survivors":  46,
+    "successful":  [
+                       "openalex",
+                       "crossref",
+                       "semantic_scholar"
+                   ],
+    "failed":  [
+
+               ],
+    "citation_count":  2
+}

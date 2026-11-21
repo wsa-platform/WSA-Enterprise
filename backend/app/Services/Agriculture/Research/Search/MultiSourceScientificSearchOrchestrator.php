@@ -773,12 +773,18 @@ class MultiSourceScientificSearchOrchestrator
             );
             // Adaptive stop: scholarly adequacy may skip remaining adapters, but never
             // skip knowledge-type-protected sources (e.g. GBIF for taxonomy questions).
+            // Allow a third independent scholarly corpus (typically semantic_scholar) before
+            // early-stopping other scholarly INTERNET_FIRST_DEFAULT adapters — OA+CR alone
+            // must not erase Semantic Scholar effectiveness (R3.1).
+            $allowAdditionalScholarly = $isScholarly && $scholarlyAttempted < 3;
             $shouldEarlyStop = ! $knowledgeProtected
+                && ! $allowAdditionalScholarly
                 && $scholarlyAttempted >= 2
                 && $priorResultCount >= self::ADEQUATE_RESULT_COUNT
                 && $scholarlyHits >= self::ADEQUATE_RESULT_COUNT;
             if ($shouldEarlyStop
                 || (! $knowledgeProtected
+                    && ! $allowAdditionalScholarly
                     && $priorResultCount >= self::ADEQUATE_RESULT_COUNT
                     && $budget->remainingSeconds() < 20.0
                     && $scholarlyAttempted >= 2)) {

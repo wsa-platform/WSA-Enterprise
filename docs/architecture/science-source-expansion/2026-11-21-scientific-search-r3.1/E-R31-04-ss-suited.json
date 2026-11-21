@@ -1,0 +1,23 @@
+{
+    "query":  "What peer-reviewed papers discuss drought stress physiology in tomato?",
+    "status":  "scientific_generated",
+    "failure_code":  null,
+    "raw":  69,
+    "survivors":  46,
+    "successful":  [
+                       "openalex",
+                       "crossref",
+                       "semantic_scholar"
+                   ],
+    "failed":  [
+
+               ],
+    "attempted":  [
+                      "openalex",
+                      "crossref",
+                      "semantic_scholar"
+                  ],
+    "skipped":  null,
+    "answer_prefix":  "Validated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the",
+    "citation_count":  2
+}

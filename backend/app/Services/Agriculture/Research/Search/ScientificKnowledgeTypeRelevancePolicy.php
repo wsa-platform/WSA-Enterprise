@@ -56,11 +56,17 @@ final class ScientificKnowledgeTypeRelevancePolicy
             $types[] = ScientificKnowledgeType::STATISTICAL_OBSERVATION;
         }
 
+        // Agronomy / cultivation practice questions need AGRIS-class corpora.
+        // Do not attach AGRICULTURAL_PRACTICE to every empty scholarly default —
+        // that would early-stop-protect AGRIS on pure physiology Q&A.
+        if ($this->questionSignalsAgriculturalPractice($question, $intent)) {
+            $types[] = ScientificKnowledgeType::AGRICULTURAL_PRACTICE;
+        }
+
         if ($types === []) {
             $types[] = ScientificKnowledgeType::SCHOLARLY_EVIDENCE;
             $types[] = ScientificKnowledgeType::EXPERIMENTAL_EVIDENCE;
             $types[] = ScientificKnowledgeType::REVIEW_EVIDENCE;
-            $types[] = ScientificKnowledgeType::AGRICULTURAL_PRACTICE;
         }
 
         return array_values(array_unique($types));
@@ -177,6 +183,10 @@ final class ScientificKnowledgeTypeRelevancePolicy
             ],
             'dr_duke' => [ScientificKnowledgeType::CHEMICAL_ASSOCIATION, ScientificKnowledgeType::TRADITIONAL_USE],
             'fao_stat' => [ScientificKnowledgeType::STATISTICAL_OBSERVATION],
+            // FAO/AGRIS-class agricultural literature must not be skipped once OA+CR fill
+            // the raw hit budget when the plan explicitly needs agricultural practice.
+            'agris' => [ScientificKnowledgeType::AGRICULTURAL_PRACTICE],
+            'organic_eprints' => [ScientificKnowledgeType::AGRICULTURAL_PRACTICE],
         ] as $key => $types) {
             if (array_intersect($required, $types) !== []) {
                 $protected[] = $key;
@@ -229,6 +239,23 @@ final class ScientificKnowledgeTypeRelevancePolicy
     private function questionSignalsHeritage(string $question): bool
     {
         return preg_match('/\b(historical|heritage|biodiversity heritage|bhl|19th century)\b|تراث|تاريخي/', $question) === 1;
+    }
+
+    private function questionSignalsAgriculturalPractice(string $question, string $intent): bool
+    {
+        if (in_array($intent, [
+            'cultivation', 'irrigation', 'fertilization', 'soil_management',
+            'plant_nutrition', 'pest', 'disease',
+        ], true)) {
+            return true;
+        }
+
+        return preg_match(
+            '/\b(cultivation|agronom(?:y|ic)|irrigation|fertiliz|farming practice|crop management|'
+            .'agricultural research|recommended practices?|best practices?)\b|'
+            .'زراعة|ري|تسميد|إدارة المحصول|ممارسات زراعية/',
+            $question
+        ) === 1;
     }
 
     private function hasQuantitativeStatisticalNeed(KnowledgeQueryPlan $plan): bool

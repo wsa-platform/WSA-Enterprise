@@ -1,0 +1,14 @@
+{
+    "query":  "What is the effect of temperature on wheat growth?",
+    "status":  "scientific_generated",
+    "raw":  60,
+    "survivors":  22,
+    "successful":  [
+                       "openalex",
+                       "crossref"
+                   ],
+    "failed":  [
+                   "semantic_scholar"
+               ],
+    "citation_count":  5
+}
