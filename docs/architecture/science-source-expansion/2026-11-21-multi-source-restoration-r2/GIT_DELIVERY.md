@@ -8,23 +8,22 @@
 | Starting HEAD | `052305b02efebee5ef27b35d8d89a0301e11a735` |
 | Remote | `origin/phase-18-m18-ai-marketing-communications` |
 
-## Commit scope
-
-In-scope only:
-
-- Universal Stage-3 source-key merge (governed seats restored)
-- Taxonomy query variants + BHL early-stop protection
-- GBIF species specializer taxonomy cues
-- Multi-source taxonomy unit/feature tests
-- Mission evidence under `2026-11-21-multi-source-restoration-r2/`
-
-Unrelated WIP **not** staged.
-
-## Post-push (filled after push)
+## Implementation commit
 
 | Field | Value |
 |---|---|
-| Commit SHA | _(pending)_ |
-| Remote SHA | _(pending)_ |
-| Local=Remote | _(pending)_ |
+| Commit | `1af45144625c56c49de740f3b03a654217e7bbd5` |
+| Message | `fix(science): restore multi-source Stage-3 selection for taxonomy queries` |
 | Force push | **never** |
+
+## Verification after push
+
+| Field | Value |
+|---|---|
+| `git rev-parse HEAD` | `1af45144625c56c49de740f3b03a654217e7bbd5` |
+| `git rev-parse origin/phase-18-m18-ai-marketing-communications` | `1af45144625c56c49de740f3b03a654217e7bbd5` |
+| Local=Remote | **YES** |
+
+## Scope
+
+In-scope only: Universal Stage-3 merge, taxonomy variants, BHL protection, GBIF specializer cues, multi-source tests, mission docs under this directory. Unrelated WIP not staged.

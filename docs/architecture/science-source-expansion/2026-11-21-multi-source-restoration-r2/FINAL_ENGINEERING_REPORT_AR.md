@@ -14,7 +14,7 @@
 | فرع البداية | `phase-18-m18-ai-marketing-communications` |
 | HEAD البداية | `052305b02efebee5ef27b35d8d89a0301e11a735` |
 | الفرع النهائي | نفس الفرع |
-| HEAD النهائي | يُحدَّث في `GIT_DELIVERY.md` بعد الدفع |
+| HEAD النهائي | `1af45144625c56c49de740f3b03a654217e7bbd5` (Local=Remote) |
 
 ## 4. حماية WIP
 
@@ -82,7 +82,10 @@ Selector + Registry يبقيان سلطة Stage-3. Universal لا يجوز أن 
 
 ## 34–36. Git
 
-انظر `GIT_DELIVERY.md` (SHA كاملة، الدفع، Local=Remote).
+- التنفيذ: `1af45144625c56c49de740f3b03a654217e7bbd5`
+- الدفع: ناجح بدون force
+- Local=Remote: نعم على `origin/phase-18-m18-ai-marketing-communications`
+- تفاصيل: `GIT_DELIVERY.md`
 
 ## 37. مخاطر متبقية
 
@@ -104,7 +107,7 @@ Selector + Registry يبقيان سلطة Stage-3. Universal لا يجوز أن 
 | 6 Other domains / Wheat | PASS |
 | 7 Observability | PASS |
 | 8 E2E | PARTIAL (API حي؛ UI NOT_RUN) |
-| 9 Git delivery | يُحدَّث بعد الدفع |
+| 9 Git delivery | PASS (`1af4514…` Local=Remote) |
 
 ## 39. التصنيف
 
