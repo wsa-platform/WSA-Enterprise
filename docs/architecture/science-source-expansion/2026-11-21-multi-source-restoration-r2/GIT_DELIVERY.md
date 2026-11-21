@@ -16,13 +16,21 @@
 | Message | `fix(science): restore multi-source Stage-3 selection for taxonomy queries` |
 | Force push | **never** |
 
+## Docs delivery commit
+
+| Field | Value |
+|---|---|
+| Commit | `7aa039183f3b31f7b24f38763589c6a0a9b223ad` |
+| Message | `docs(science): record multi-source restoration R2 git delivery SHA` |
+
 ## Verification after push
 
 | Field | Value |
 |---|---|
-| `git rev-parse HEAD` | `1af45144625c56c49de740f3b03a654217e7bbd5` |
-| `git rev-parse origin/phase-18-m18-ai-marketing-communications` | `1af45144625c56c49de740f3b03a654217e7bbd5` |
+| Final `HEAD` | `7aa039183f3b31f7b24f38763589c6a0a9b223ad` |
+| `origin/phase-18-m18-ai-marketing-communications` | `7aa039183f3b31f7b24f38763589c6a0a9b223ad` |
 | Local=Remote | **YES** |
+| Implementation SHA | `1af45144625c56c49de740f3b03a654217e7bbd5` |
 
 ## Scope
 
