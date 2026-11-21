@@ -27,10 +27,10 @@
 
 | Field | Value |
 |---|---|
-| Final `HEAD` | `7aa039183f3b31f7b24f38763589c6a0a9b223ad` |
-| `origin/phase-18-m18-ai-marketing-communications` | `7aa039183f3b31f7b24f38763589c6a0a9b223ad` |
-| Local=Remote | **YES** |
+| Final `HEAD` (branch tip after delivery docs) | `7acb6cfe599e098e6ff2914645e7ef47477b5978` |
+| Local=Remote | **YES** (verified after push) |
 | Implementation SHA | `1af45144625c56c49de740f3b03a654217e7bbd5` |
+| Delivery-doc SHAs | `7aa0391…`, `7acb6cf…` |
 
 ## Scope
 
