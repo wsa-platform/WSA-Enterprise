@@ -150,6 +150,8 @@ class AnswerComposer
                 validationReport: $validationReport,
             );
         }
+        // Rebind claim attributions after citations exist so L7 edges carry citation_id.
+        $claims = (new ClaimAttributionLedger())->rebindClaimsWithCitations($claims, $usable, $citations);
 
         $conflicts = $this->buildConflicts($usable, $language, $plan);
         $supportingOnly = $this->isSupportingOnlySufficiency($sufficiency);

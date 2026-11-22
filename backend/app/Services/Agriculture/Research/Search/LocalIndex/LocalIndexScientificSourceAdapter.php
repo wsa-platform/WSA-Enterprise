@@ -146,11 +146,21 @@ final class LocalIndexScientificSourceAdapter implements ScientificSourceAdapter
         ?int $startedNs = null,
         ?string $readiness = null,
     ): ScientificSourceSearchOutcome {
+        $sourceKey = $this->profile->sourceKey();
+        $storeGeneration = null;
+        try {
+            $storeGeneration = $this->store->generation($sourceKey);
+        } catch (LocalStoreFailure) {
+            $storeGeneration = null;
+        }
+        $indexGeneration = $this->index->generation($sourceKey);
         $observability = [
-            'provider' => $this->profile->sourceKey(),
+            'provider' => $sourceKey,
             'access_family' => $this->profile->accessFamily()->value,
             'index_version' => $this->index->version(),
-            'index_generation' => $this->index->generation($this->profile->sourceKey()),
+            'index_generation' => $indexGeneration,
+            'store_generation' => $storeGeneration,
+            'generations_match' => $storeGeneration !== null && $storeGeneration === $indexGeneration,
             // Lifecycle states: READY | COLD | STALE | EMPTY | FAILED | UNAVAILABLE
             'local_index_readiness' => $readiness ?? match ($status) {
                 ScientificSourceSearchOutcome::STATUS_SUCCESS => 'READY',

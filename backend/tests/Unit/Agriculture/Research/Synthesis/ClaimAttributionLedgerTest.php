@@ -85,6 +85,84 @@ class ClaimAttributionLedgerTest extends TestCase
         $this->assertSame(['openalex', 'crossref'], $keys);
     }
 
+    public function test_rebind_claims_attaches_citation_ids(): void
+    {
+        $item = $this->evidence('ev-1', 'openalex', 'W123', '10.1000/test');
+        $claim = new ResearchAnswerClaim(
+            claimId: 'claim-J1',
+            claimText: 'Temperature affects wheat growth rate.',
+            evidenceIds: ['ev-1'],
+            sourceIds: ['W123'],
+            validationStatus: EvidenceValidationStatus::EVIDENCE_USABLE,
+            claimRelationship: ClaimEvidenceRelationship::SUPPORTED,
+            confidence: 0.8,
+            attributions: [[
+                'evidence_id' => 'ev-1',
+                'source_key' => 'openalex',
+                'provider_record_id' => '10.1000/test',
+                'citation_id' => null,
+                'citation_resolves_to_evidence' => false,
+            ]],
+        );
+        $citation = new ResearchAnswerCitation(
+            citationId: 'cite-ev-1',
+            sourceId: 'W123',
+            evidenceId: 'ev-1',
+            title: 'Temperature effects on wheat',
+            authors: ['A'],
+            organization: null,
+            journal: 'Journal',
+            doi: '10.1000/test',
+            url: 'https://example.test/paper',
+            publicationYear: 2020,
+            sourceType: 'scholarly',
+            sourceKey: 'openalex',
+        );
+
+        $rebound = (new ClaimAttributionLedger())->rebindClaimsWithCitations([$claim], [$item], [$citation]);
+
+        $this->assertSame('cite-ev-1', $rebound[0]->attributions[0]['citation_id']);
+        $this->assertTrue($rebound[0]->attributions[0]['citation_resolves_to_evidence']);
+    }
+
+    public function test_provider_record_id_reads_nested_provenance(): void
+    {
+        $item = new ScientificEvidenceItem(
+            evidenceId: 'ev-p',
+            sourceId: 'fallback-source',
+            sourceKey: 'gbif',
+            sourceType: 'taxonomy',
+            publicationTitle: 'Mentha piperita',
+            authors: [],
+            institution: null,
+            journal: null,
+            doi: null,
+            url: 'https://www.gbif.org/species/1',
+            publicationYear: null,
+            retrievedAt: '2026-11-22T00:00:00Z',
+            agriculturalDomain: null,
+            claimTopic: null,
+            evidenceText: 'Taxonomic classification.',
+            validationStatus: EvidenceValidationStatus::EVIDENCE_USABLE,
+            validationFailures: [],
+            claimRelationship: ClaimEvidenceRelationship::SUPPORTED,
+            confidence: 0.7,
+            qualityScore: 0.7,
+            qualityFactors: [],
+            sourceAttribution: [
+                'provenance' => [
+                    'records' => [
+                        ['original_identifier' => 'gbif:2705099'],
+                    ],
+                ],
+            ],
+        );
+
+        $row = (new ClaimAttributionLedger())->attributionRow($item, null);
+
+        $this->assertSame('gbif:2705099', $row['provider_record_id']);
+    }
+
     private function evidence(string $id, string $sourceKey, string $sourceId, ?string $doi): ScientificEvidenceItem
     {
         return new ScientificEvidenceItem(

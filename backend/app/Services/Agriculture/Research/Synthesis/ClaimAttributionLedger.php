@@ -148,6 +148,51 @@ final class ClaimAttributionLedger
         return array_values(array_unique($keys));
     }
 
+    /**
+     * @param  list<ResearchAnswerClaim>  $claims
+     * @param  list<ScientificEvidenceItem>  $usableEvidence
+     * @param  list<ResearchAnswerCitation>  $citations
+     * @return list<ResearchAnswerClaim>
+     */
+    public function rebindClaimsWithCitations(array $claims, array $usableEvidence, array $citations): array
+    {
+        $evidenceById = [];
+        foreach ($usableEvidence as $item) {
+            $evidenceById[$item->evidenceId] = $item;
+        }
+        $citationByEvidenceId = [];
+        foreach ($citations as $citation) {
+            $citationByEvidenceId[$citation->evidenceId] = $citation;
+        }
+
+        $rebound = [];
+        foreach ($claims as $claim) {
+            if (! $claim instanceof ResearchAnswerClaim) {
+                continue;
+            }
+            $attributions = $this->attributionsForClaim($claim, $evidenceById, $citationByEvidenceId);
+            $rebound[] = new ResearchAnswerClaim(
+                claimId: $claim->claimId,
+                claimText: $claim->claimText,
+                evidenceIds: $claim->evidenceIds,
+                sourceIds: $claim->sourceIds,
+                validationStatus: $claim->validationStatus,
+                claimRelationship: $claim->claimRelationship,
+                confidence: $claim->confidence,
+                numericalValues: $claim->numericalValues,
+                limitations: $claim->limitations,
+                conditions: $claim->conditions,
+                questionClaimId: $claim->questionClaimId,
+                sourceKeys: $claim->sourceKeys !== []
+                    ? $claim->sourceKeys
+                    : $this->sourceKeysFromEvidenceIds($claim->evidenceIds, $usableEvidence),
+                attributions: $attributions,
+            );
+        }
+
+        return $rebound;
+    }
+
     private function resolveProviderRecordId(ScientificEvidenceItem $item): string
     {
         $attr = $item->sourceAttribution;
@@ -158,10 +203,34 @@ final class ClaimAttributionLedger
             'record_id',
             'gbif_id',
             'doi',
+            'source_identifier',
         ] as $field) {
             $value = $attr[$field] ?? null;
             if (is_string($value) && trim($value) !== '') {
                 return trim($value);
+            }
+        }
+
+        // Nested provenance from Stage-4 attribution (records[].original_identifier).
+        $provenance = $attr['provenance'] ?? null;
+        if (is_array($provenance)) {
+            $nestedId = $provenance['source_identifier'] ?? null;
+            if (is_string($nestedId) && trim($nestedId) !== '') {
+                return trim($nestedId);
+            }
+            $records = $provenance['records'] ?? null;
+            if (is_array($records)) {
+                foreach ($records as $record) {
+                    if (! is_array($record)) {
+                        continue;
+                    }
+                    foreach (['original_identifier', 'provider_record_id', 'source_identifier'] as $field) {
+                        $value = $record[$field] ?? null;
+                        if (is_string($value) && trim($value) !== '') {
+                            return trim($value);
+                        }
+                    }
+                }
             }
         }
 
