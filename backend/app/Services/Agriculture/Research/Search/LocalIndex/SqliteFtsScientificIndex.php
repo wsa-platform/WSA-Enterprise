@@ -128,6 +128,14 @@ final class SqliteFtsScientificIndex implements LocalIndexSearchEngine
         return (int) $this->connection()->table(self::FTS_TABLE)->where('source_key', $sourceKey)->count();
     }
 
+    public function hasIndexedDocuments(string $sourceKey): bool
+    {
+        // Trust FTS meta generation for Stage-3 presence. Full FTS COUNT/EXISTS probes on
+        // multi-GB Windows-mounted corpora block nginx/FastCGI (observed multi-minute hangs).
+        // Empty-index-with-matching-generation is an offline diagnose concern, not a hot path.
+        return $this->generation($sourceKey) > 0;
+    }
+
     /**
      * @return list<array{record: StoredScientificRecord, score: int}>
      */

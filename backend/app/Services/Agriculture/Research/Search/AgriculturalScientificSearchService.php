@@ -19,7 +19,9 @@ class AgriculturalScientificSearchService
 
     public function search(KnowledgeQueryPlan $plan, int $limit = 10, ?array $sourceKeys = null): ScientificSearchExecutionReport
     {
-        if ($plan->needsClarification() || ! $plan->readyForStage3) {
+        // Align with AgriculturalResearchAgent: force_execute continues Stage-3 despite QUS clarification.
+        $forceExecute = filter_var($plan->contextInput['force_execute'] ?? false, FILTER_VALIDATE_BOOL);
+        if (($plan->needsClarification() || ! $plan->readyForStage3) && ! $forceExecute) {
             return new ScientificSearchExecutionReport(
                 status: 'needs_clarification',
                 searchQuery: '',

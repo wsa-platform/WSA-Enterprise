@@ -23,6 +23,11 @@ interface LocalIndexSearchEngine
     public function documentCount(string $sourceKey): int;
 
     /**
+     * Cheap presence check for Stage-3 readiness (must not full-scan multi-GB FTS).
+     */
+    public function hasIndexedDocuments(string $sourceKey): bool;
+
+    /**
      * @return list<array{record: StoredScientificRecord, score: int}>
      */
     public function search(string $sourceKey, string $query, int $limit): array;

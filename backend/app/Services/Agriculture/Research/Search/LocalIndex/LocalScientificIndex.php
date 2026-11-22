@@ -108,6 +108,11 @@ final class LocalScientificIndex implements LocalIndexSearchEngine
         return count($this->documents[$sourceKey] ?? []);
     }
 
+    public function hasIndexedDocuments(string $sourceKey): bool
+    {
+        return $this->documentCount($sourceKey) > 0;
+    }
+
     /**
      * @return list<array{record: StoredScientificRecord, score: int}>
      */

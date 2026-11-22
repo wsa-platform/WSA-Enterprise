@@ -337,11 +337,15 @@ final class AnswerExpressionAccuracyGate
     public function propertyAddressTerms(string $property): array
     {
         $aliases = [
-            'quantity' => ['quantity', 'production', 'produced', 'output', 'tonnage', 'tons', 'tonnes'],
+            // quantity is the frozen CSQ family for yield/productivity surfaces — keep yield terms.
+            'quantity' => [
+                'quantity', 'production', 'produced', 'output', 'tonnage', 'tons', 'tonnes',
+                'yield', 'productivity', 'productive', 't/ha', 'kg/ha',
+            ],
             'yield' => ['yield', 'productivity', 'productive', 't/ha', 'kg/ha'],
             'area' => ['area', 'harvested', 'hectare', 'hectares', 'ha'],
             'rate' => ['rate', 'dosage', 'seed rate', 'seeding'],
-            'irrigation' => ['irrigation', 'water requirement', 'watering'],
+            'irrigation' => ['irrigation', 'water requirement', 'watering', 'deficit irrigation'],
             'temperature' => ['temperature', 'celsius', '°c', 'deg c'],
             'production' => ['production', 'quantity', 'produced', 'output', 'tons', 'tonnes'],
             'concentration' => ['concentration', 'ppm', 'mg/l', 'salinity'],

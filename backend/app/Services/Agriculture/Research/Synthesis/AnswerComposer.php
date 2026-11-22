@@ -552,6 +552,25 @@ class AnswerComposer
         $propertyTerms = $propertyKey !== ''
             ? $this->expressionAccuracyGate->propertyAddressTerms($propertyKey)
             : [];
+        // CSQ may freeze family=quantity while surface/sense speak yield or irrigation water.
+        $csqSurface = mb_strtolower(trim((string) (
+            $plan->normalizedQuery->canonicalQuestion?->property->surface
+            ?? $plan->normalizedQuery->constraints['requested_property_surface']
+            ?? ''
+        )));
+        if ($csqSurface !== '' && $csqSurface !== $propertyKey) {
+            $propertyTerms = array_values(array_unique(array_merge(
+                $propertyTerms,
+                $this->expressionAccuracyGate->propertyAddressTerms($csqSurface),
+            )));
+        }
+        $sense = mb_strtolower(trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? '')));
+        if ($sense === 'crop_water_requirement') {
+            $propertyTerms = array_values(array_unique(array_merge(
+                $propertyTerms,
+                $this->expressionAccuracyGate->propertyAddressTerms('irrigation'),
+            )));
+        }
         $directnessIsPrimary = in_array($directness, [
             ScientificEvidenceDirectnessAssessor::DIRECT,
             ScientificEvidenceDirectnessAssessor::SUPPORTED,

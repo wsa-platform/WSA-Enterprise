@@ -86,10 +86,12 @@ final class LocalIndexScientificSourceAdapter implements ScientificSourceAdapter
             $candidateMode = $key === 'agris'
                 && (bool) config('agricultural_intelligence.local_index.agris_candidate_mode', false);
             $pin = (int) config('agricultural_intelligence.local_index.agris_search_pin_generation', 0);
-            if ($candidateMode && $pin > 0 && $this->index->hasSource($key) && $this->index->documentCount($key) > 0) {
+            if ($candidateMode && $pin > 0 && $this->index->hasSource($key) && $this->index->hasIndexedDocuments($key)) {
                 // Keep serving the pinned search generation while candidate ingest advances the store.
                 $committed = $pin;
-            } elseif ($committed !== 0 && (! $this->index->hasSource($key) || $this->index->generation($key) !== $committed || $this->index->documentCount($key) === 0)) {
+            } elseif ($committed !== 0 && (! $this->index->hasSource($key) || $this->index->generation($key) !== $committed)) {
+                // Intentionally omit documentCount/EXISTS here: multi-GB FTS presence scans
+                // hang Stage-3 on bind-mounted SQLite. Meta generation match is authoritative.
                 if ((bool) config('agricultural_intelligence.local_index.read_only_search', false)) {
                     return $this->outcome(
                         ScientificSourceSearchOutcome::STATUS_FAILED,

@@ -1,0 +1,22 @@
+Mission: 75193 Multi-Source Scientific Search Restoration
+Date: 2026-11-22
+
+Git:
+  branch: phase-18-m18-ai-marketing-communications
+  HEAD_local:  df9fb45d564f17b4651cf7071ca0c81153806eae
+  HEAD_remote: df9fb45d564f17b4651cf7071ca0c81153806eae
+  ahead: 0 behind: 0
+  edd1193_in_history: yes
+  WIP: preserved (unrelated modified/untracked left untouched)
+
+LocalIndex diagnose-persistence:
+  reachable: true
+  table_present: true
+  failure_class: successful_connection
+  db: scientific_record_store.sqlite (SQLite)
+
+Playwright:
+  expected path playwright-tests/... : ABSENT
+  actual path frontend/e2e-rev65/tests/claim-attribution-ledger.spec.ts : PRESENT
+
+Pre-Flight decision: CONTINUE (Git OK, LocalIndex reachable, Playwright discoverable)
