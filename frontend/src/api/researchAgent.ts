@@ -117,12 +117,31 @@ export type StableResultSetEnvelope = {
   page?: StableResultSetPage | null
 }
 
+/** Claim → Evidence → Source → Citation ledger row (backend ClaimAttributionLedger). */
+export type ClaimAttributionLedgerRow = {
+  claim_id?: string
+  claim_text?: string
+  evidence_ids?: string[]
+  source_keys?: string[]
+  l7_final_claim_attribution_proven?: boolean
+  attributions?: Array<{
+    evidence_id?: string
+    source_key?: string
+    provider_record_id?: string
+    citation_id?: string | null
+    citation_resolves_to_evidence?: boolean
+    [key: string]: unknown
+  }>
+  [key: string]: unknown
+}
+
 export type ResearchAgentQueryResponse = {
   status?: string
   answer?: string | null
   concise_summary?: string | null
   additional_information?: string | null
   citations?: ResearchAgentCitation[]
+  claim_attribution_ledger?: ClaimAttributionLedgerRow[]
   answer_candidates?: ResearchAnswerCandidate[]
   user_presentation?: ResearchUserPresentationPayload
   multi_answers?: ResearchMultiAnswer[]
@@ -141,6 +160,11 @@ export type ResearchAgentQueryResponse = {
     sufficiency_mode?: string
     [key: string]: unknown
   }
+  observability?: {
+    claim_attribution_ledger?: ClaimAttributionLedgerRow[]
+    claim_attribution_ledger_present?: boolean
+    [key: string]: unknown
+  }
   message?: string
   error?: {
     code?: string
@@ -148,6 +172,18 @@ export type ResearchAgentQueryResponse = {
     message?: string
     details?: unknown
   }
+}
+
+/** Prefer root ledger; fall back to observability when present. */
+export function resolveClaimAttributionLedger(
+  result: ResearchAgentQueryResponse | null | undefined,
+): ClaimAttributionLedgerRow[] {
+  if (!result) return []
+  if (Array.isArray(result.claim_attribution_ledger)) {
+    return result.claim_attribution_ledger
+  }
+  const nested = result.observability?.claim_attribution_ledger
+  return Array.isArray(nested) ? nested : []
 }
 
 /** Present backend conflict payloads without scientific reinterpretation. */

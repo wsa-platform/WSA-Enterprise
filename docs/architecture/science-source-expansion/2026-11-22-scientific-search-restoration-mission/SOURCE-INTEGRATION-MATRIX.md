@@ -1,22 +1,23 @@
-# Scientific Source Integration Matrix (Mission Update)
+# Scientific Source Integration Matrix (Updated)
 
 ## Purpose
-Ten-source L0–L7 status after Workstreams B/G/A/C implementation at mission HEAD (pending commit).
+Highest proven L0–L7 levels for the ten production sources after this mission wave.
 
-**Catalog:** `openalex`, `crossref`, `semantic_scholar`, `consensus`, `fao_stat`, `agris`, `dr_duke`, `gbif`, `organic_eprints`, `bhl`
+HEAD baseline for this wave: `cbc6a4d` → post-commit SHA recorded in final report.
 
 | key | role | Highest proven | Evidence | Limitation |
 |-----|------|----------------|----------|------------|
-| openalex | INTERNET_FIRST | L7 (unit ledger + prior live) | ClaimAttributionLedgerTest; prior E-AUDIT-01 | Live re-smoke pending |
-| crossref | INTERNET_FIRST | L7 (paired) | same | — |
-| semantic_scholar | INTERNET_FIRST | L4–L6 typical | prior live | Rate limits |
-| consensus | OPTIONAL_EXPLICIT | L1 | policy | Not auto; NOT_RUN explicit |
-| fao_stat | STATISTICAL | L1 | default false | Enabled path NOT_RUN |
-| agris | GOVERNED | L2 unit protect; L3+ BLOCKED | CapabilityAwareEarlyStopTest; diagnose I/O | LocalIndex disk I/O |
-| dr_duke | GOVERNED | L2 unit; L3+ BLOCKED | early-stop chem protect | LocalIndex |
-| gbif | GOVERNED | L4+ prior live; structured contract VERIFIED | GbifStructuredEvidenceContractTest; E-AUDIT-02 | Live L7 PARTIAL |
-| organic_eprints | GOVERNED | L2 unit; L3+ BLOCKED | early-stop practice | LocalIndex |
-| bhl | GOVERNED | L4+ prior live | E-AUDIT-02 | Live L7 PARTIAL |
+| openalex | INTERNET_FIRST | L7 | Live prior + ledger API + Browser E2E mock path | — |
+| crossref | INTERNET_FIRST | L7 | paired scholarly | — |
+| semantic_scholar | INTERNET_FIRST | L4–L6+ | live successful_sources | rate limits |
+| consensus | OPTIONAL_EXPLICIT | L1 catalog; policy VERIFIED | `FaoStatAndConsensusPolicyContractTest` | Explicit live NOT_RUN (key/cost) |
+| fao_stat | STATISTICAL | L1; default-disabled VERIFIED | policy test; enabled toggle isolated | Enabled live NOT_RUN |
+| agris | GOVERNED | L0–L3 READY index; L4 PARTIAL | store=FTS=2088; FTS rows sampled | Full agent L4–L7 timeout risk on large DB |
+| dr_duke | GOVERNED | L0–L3 READY | store=FTS=19 | Live L4–L7 PARTIAL |
+| gbif | GOVERNED | L4+ live prior; structured contract | prior Mentha + unit | L7 PARTIAL |
+| organic_eprints | GOVERNED | L0–L3 READY | store=FTS=5 | Live L4–L7 PARTIAL |
+| bhl | GOVERNED | L4+ live prior | Mentha smoke | L7 PARTIAL |
 
-## Status legend
-VERIFIED / PARTIAL / BLOCKED / NOT_RUN / NOT_APPLICABLE as defined in mission prompt §23.
+## Notes
+- READY LocalIndex ≠ L7.
+- Policy-disabled / optional sources are NOT_APPLICABLE for default auto-run, not integration failures.

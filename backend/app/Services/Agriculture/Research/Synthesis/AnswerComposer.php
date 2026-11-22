@@ -13,6 +13,7 @@ use App\Services\Agriculture\Research\Search\ScientificEvidenceRelevanceGate;
 use App\Services\Agriculture\Research\Search\ScientificStatisticalClaimAligner;
 use App\Services\Agriculture\Research\Search\ScientificStructuredObservation;
 use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
+use App\Services\Agriculture\Research\Validation\EvidenceIndependenceAssessor;
 use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionReport;
 use App\Services\Agriculture\Research\Validation\EvidenceVerificationLayer;
 use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
@@ -1151,32 +1152,16 @@ class AnswerComposer
     }
 
     /**
-     * Outcome B metric: unique independent providers contributing to final citations.
+     * Citation contribution metrics: discovery providers vs independent documents.
+     * independent_provider_count remains Outcome-B discovery multiplicity; it is NOT
+     * scientific document independence (see independent_document_count).
      *
      * @param  list<ResearchAnswerCitation>  $citations
-     * @return array{independent_provider_count: int, providers: list<string>, by_provider: array<string, int>}
+     * @return array<string, mixed>
      */
     private function citationProviderContribution(array $citations): array
     {
-        $byProvider = [];
-        foreach ($citations as $citation) {
-            $providers = $citation->contributingProviders !== []
-                ? $citation->contributingProviders
-                : array_values(array_filter([(string) ($citation->sourceKey ?? $citation->sourceType ?? '')]));
-            foreach ($providers as $provider) {
-                if ($provider === '') {
-                    continue;
-                }
-                $byProvider[$provider] = ($byProvider[$provider] ?? 0) + 1;
-            }
-        }
-        ksort($byProvider);
-
-        return [
-            'independent_provider_count' => count($byProvider),
-            'providers' => array_keys($byProvider),
-            'by_provider' => $byProvider,
-        ];
+        return (new EvidenceIndependenceAssessor())->assessCitations($citations);
     }
 
     /**

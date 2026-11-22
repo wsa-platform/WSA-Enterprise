@@ -8,6 +8,7 @@ import {
   buildHomePositiveFeedbackPayload,
   fetchStableResearchResultsPage,
   queryPublicResearchAgent,
+  resolveClaimAttributionLedger,
   submitResearchFeedback,
   type ResearchAgentCitation,
   type ResearchAgentQueryResponse,
@@ -106,6 +107,7 @@ export function HomeScientificResearchSearchView({
   const presentation = toScientificUserPresentation(result)
   const sources = presentation?.sources ?? []
   const results = presentation?.results ?? []
+  const claimLedger = resolveClaimAttributionLedger(result)
   const noticeKey = userNoticeTranslationKey(presentation?.user_notice_code)
   const showFeedback = Boolean(result) && typeof onPositiveFeedback === 'function'
   const feedbackBusy = feedbackState === 'submitting'
@@ -115,6 +117,9 @@ export function HomeScientificResearchSearchView({
   const primary = answers[0] ?? null
   const alternatives = answers.slice(1)
   const hasStablePagination = Boolean(pagination && pagination.totalPages > 1 && onPageChange)
+  const apiStatus = result?.status ?? null
+  const failureClass = result?.failure_class ?? null
+  const failureCode = result?.failure_code ?? null
 
   return (
     <section
@@ -277,13 +282,25 @@ export function HomeScientificResearchSearchView({
             </nav>
           ) : null}
 
+          {apiStatus || failureClass ? (
+            <p
+              className="hp-research-status"
+              data-testid="home-research-api-status"
+              data-status={apiStatus ?? ''}
+              data-failure-class={failureClass ?? ''}
+              data-failure-code={failureCode ?? ''}
+            >
+              {apiStatus ?? failureClass}
+            </p>
+          ) : null}
+
           {sources.length === 0 ? (
             <div className="hp-research-citations" data-testid="home-research-sources-empty">
               <h3>{t('website.research.sourcesHeading')}</h3>
               <p>{t('website.research.noEligibleDirectCitations')}</p>
             </div>
           ) : (
-            <div className="hp-research-citations">
+            <div className="hp-research-citations" data-testid="home-research-citations">
               <h3>{t('website.research.sourcesHeading')}</h3>
               <ul>
                 {sources.map((source, index) => {
@@ -306,7 +323,7 @@ export function HomeScientificResearchSearchView({
                     answer: a.answer,
                   }))
                   return (
-                    <li key={`${source.result_id}-${index}`}>
+                    <li key={`${source.result_id}-${index}`} data-testid="home-research-citation-item">
                       <ResearchSourceLink
                         citation={citation}
                         label={label}
@@ -325,6 +342,48 @@ export function HomeScientificResearchSearchView({
               </ul>
             </div>
           )}
+
+          {claimLedger.length > 0 ? (
+            <div
+              className="hp-research-claim-ledger"
+              data-testid="home-research-claim-attribution-ledger"
+            >
+              <h3>{t('website.research.claimAttributionHeading', { defaultValue: 'Claim attribution' })}</h3>
+              <ul>
+                {claimLedger.map((row, index) => (
+                  <li
+                    key={`${row.claim_id ?? 'claim'}-${index}`}
+                    data-testid="home-research-claim-attribution-row"
+                    data-claim-id={row.claim_id ?? ''}
+                    data-l7={row.l7_final_claim_attribution_proven ? 'true' : 'false'}
+                    data-source-keys={(row.source_keys ?? []).join(',')}
+                  >
+                    <span data-testid="home-research-claim-text">
+                      {row.claim_text?.trim() || row.claim_id || `claim-${index + 1}`}
+                    </span>
+                    {(row.attributions ?? []).length > 0 ? (
+                      <ul data-testid="home-research-claim-evidence-links">
+                        {(row.attributions ?? []).map((edge, edgeIndex) => (
+                          <li
+                            key={`${edge.evidence_id ?? 'ev'}-${edgeIndex}`}
+                            data-testid="home-research-claim-evidence-edge"
+                            data-evidence-id={edge.evidence_id ?? ''}
+                            data-source-key={edge.source_key ?? ''}
+                            data-provider-record-id={edge.provider_record_id ?? ''}
+                            data-citation-id={edge.citation_id ?? ''}
+                          >
+                            {[edge.source_key, edge.evidence_id, edge.citation_id]
+                              .filter((part) => typeof part === 'string' && part.trim() !== '')
+                              .join(' · ')}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           {showFeedback ? (
             <div className="hp-research-feedback" data-testid="home-research-feedback">

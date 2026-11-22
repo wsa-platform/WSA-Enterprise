@@ -5,6 +5,7 @@ import {
   buildHomePositiveFeedbackPayload,
   formatResearchConflictText,
   queryPublicResearchAgent,
+  resolveClaimAttributionLedger,
   submitResearchFeedback,
 } from './researchAgent'
 import { queryPublicResearchAgent as queryFromBarrel } from './index'
@@ -70,6 +71,22 @@ describe('researchAgent API', () => {
     expect(formatResearchConflictText({ detail: 'irrigation amounts differ' })).toBe(
       'irrigation amounts differ',
     )
+  })
+
+  it('resolves claim attribution ledger from root or observability', () => {
+    expect(
+      resolveClaimAttributionLedger({
+        claim_attribution_ledger: [{ claim_id: 'claim-1', source_keys: ['openalex'] }],
+      }),
+    ).toEqual([{ claim_id: 'claim-1', source_keys: ['openalex'] }])
+    expect(
+      resolveClaimAttributionLedger({
+        observability: {
+          claim_attribution_ledger: [{ claim_id: 'claim-2', source_keys: ['gbif'] }],
+        },
+      }),
+    ).toEqual([{ claim_id: 'claim-2', source_keys: ['gbif'] }])
+    expect(resolveClaimAttributionLedger(null)).toEqual([])
   })
 
   it('builds Home positive-only feedback payload for the existing R7 API', () => {
