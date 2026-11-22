@@ -114,6 +114,31 @@ final class ScientificSearchResult
     }
 
     /**
+     * Merge relevance metadata without inventing a relevance score.
+     *
+     * @param  array<string, mixed>  $metadata
+     */
+    public function withRelevanceMetadata(array $metadata): self
+    {
+        return new self(
+            sourceKey: $this->sourceKey,
+            sourceIdentifier: $this->sourceIdentifier,
+            title: $this->title,
+            authors: $this->authors,
+            publicationYear: $this->publicationYear,
+            doi: $this->doi,
+            canonicalUrl: $this->canonicalUrl,
+            abstract: $this->abstract,
+            journal: $this->journal,
+            foundBySources: $this->foundBySources,
+            relevanceMetadata: array_merge($this->relevanceMetadata ?? [], $metadata),
+            rawMetadata: $this->rawMetadata,
+            relevanceScore: $this->relevanceScore,
+            provenance: $this->provenance,
+        );
+    }
+
+    /**
      * Stamps the retrieval of $sourceKey's records; a result without one gains a record whose
      * provider fields stay unknown.
      */

@@ -200,7 +200,7 @@ final class RestJsonScientificSourceAdapter implements ScientificSourceAdapterV2
             $rawAbstract = $this->composeGbifTaxonomicAbstract($item, $rawAbstract);
         }
 
-        return ScientificSourceFamilyRecord::toResult(
+        $result = ScientificSourceFamilyRecord::toResult(
             profile: $this->profile,
             rawTitle: ScientificSourceFamilyRecord::scalar($title),
             originalIdentifier: ScientificSourceFamilyRecord::scalar($identifier),
@@ -214,6 +214,43 @@ final class RestJsonScientificSourceAdapter implements ScientificSourceAdapterV2
             journal: ScientificSourceFamilyRecord::scalar($value('journal')),
             raw: $item,
         );
+        if ($result === null) {
+            return null;
+        }
+
+        // GBIF: stamp structured taxonomic evidence contract — not paper-shaped metadata.
+        if ($this->profile->sourceKey() === 'gbif') {
+            $structured = $this->gbifStructuredTaxonomicFields($item);
+
+            return $result->withRelevanceMetadata([
+                'knowledge_type' => 'taxonomic_identity',
+                'evidence_modality' => 'structured_taxonomic',
+                'evidence_shape' => 'structured_taxonomy_hierarchy',
+                'structured_taxonomic_fields' => $structured,
+            ]);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return array<string, string>
+     */
+    private function gbifStructuredTaxonomicFields(array $item): array
+    {
+        $out = [];
+        foreach ([
+            'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species',
+            'scientificName', 'canonicalName', 'rank', 'taxonomicStatus', 'key', 'nubKey',
+        ] as $field) {
+            $scalar = ScientificSourceFamilyRecord::scalar(data_get($item, $field));
+            if ($scalar !== null) {
+                $out[$field] = $scalar;
+            }
+        }
+
+        return $out;
     }
 
     /**

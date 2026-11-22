@@ -203,17 +203,22 @@ class AnswerComposer
             $keyFindings,
         );
         $confidence = $this->overallConfidence($claims, $validationReport, $sufficiency);
+        $ledger = new ClaimAttributionLedger();
         $evidenceReferences = array_map(
-            static fn (ScientificEvidenceItem $item): array => [
-                'evidence_id' => $item->evidenceId,
-                'source_id' => $item->sourceId,
-                'publication_title' => $item->publicationTitle,
-                'claim_relationship' => $item->claimRelationship,
-                'validation_status' => $item->validationStatus,
-                'has_conflict' => $item->hasConflict,
-                'evidence_directness' => $item->qualityFactors['evidence_directness']
-                    ?? ($item->sourceAttribution['evidence_directness'] ?? null),
-            ],
+            static function (ScientificEvidenceItem $item) use ($ledger): array {
+                return [
+                    'evidence_id' => $item->evidenceId,
+                    'source_id' => $item->sourceId,
+                    'source_key' => $item->sourceKey,
+                    'provider_record_id' => $ledger->attributionRow($item, null)['provider_record_id'],
+                    'publication_title' => $item->publicationTitle,
+                    'claim_relationship' => $item->claimRelationship,
+                    'validation_status' => $item->validationStatus,
+                    'has_conflict' => $item->hasConflict,
+                    'evidence_directness' => $item->qualityFactors['evidence_directness']
+                        ?? ($item->sourceAttribution['evidence_directness'] ?? null),
+                ];
+            },
             $usable,
         );
 
@@ -332,6 +337,7 @@ class AnswerComposer
                 'validation_bypassed' => false,
                 'evidence_directness_filter' => true,
                 'citation_provider_contribution' => $this->citationProviderContribution($citations),
+                'claim_attribution_ledger' => $ledger->build($claims, $usable, $citations),
             ] + $this->phase5QuestionClaimMatrix($plan, $validationReport, $usable, $claims)
               + $this->homeEvidenceLifecycleMetadata(
                 $plan,
@@ -1352,6 +1358,17 @@ class AnswerComposer
                 }
             }
 
+            $ledger = new ClaimAttributionLedger();
+            $sourceKeys = $ledger->sourceKeysFromEvidenceIds($evidenceIds, array_values($itemsById));
+            $attributions = [];
+            foreach ($evidenceIds as $evidenceId) {
+                $item = $itemsById[$evidenceId] ?? null;
+                if ($item === null) {
+                    continue;
+                }
+                $attributions[] = $ledger->attributionRow($item, null);
+            }
+
             $claims[] = new ResearchAnswerClaim(
                 claimId: 'claim-'.$questionClaimId,
                 claimText: $claimText,
@@ -1364,6 +1381,8 @@ class AnswerComposer
                 limitations: array_values(array_unique($limitations)),
                 conditions: $conditions,
                 questionClaimId: $questionClaimId,
+                sourceKeys: $sourceKeys,
+                attributions: $attributions,
             );
         }
 

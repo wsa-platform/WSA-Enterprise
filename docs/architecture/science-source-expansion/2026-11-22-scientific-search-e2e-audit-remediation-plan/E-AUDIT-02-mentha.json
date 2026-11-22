@@ -1,0 +1,17 @@
+{
+    "q":  "What is the taxonomic classification of Mentha piperita?",
+    "status":  "synthesis_completed_with_partial_conflicts",
+    "raw":  90,
+    "surv":  31,
+    "ok":  [
+               "openalex",
+               "crossref",
+               "semantic_scholar",
+               "gbif",
+               "bhl"
+           ],
+    "fail":  [
+
+             ],
+    "cites":  16
+}

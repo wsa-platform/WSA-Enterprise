@@ -1,0 +1,23 @@
+{
+  "captured_at": "2026-11-22T16:04:00Z",
+  "endpoint": "POST /api/v1/public/research-agent/query",
+  "wheat": {
+    "q": "What is the effect of temperature on wheat growth?",
+    "status": "scientific_generated",
+    "successful_sources": ["openalex", "crossref", "semantic_scholar"],
+    "claim_attribution_ledger_count": 2,
+    "citations": 8
+  },
+  "mentha": {
+    "q": "What is the taxonomic classification of Mentha piperita?",
+    "status": "synthesis_completed_partial",
+    "successful_sources": ["crossref", "semantic_scholar", "gbif", "bhl"],
+    "claim_attribution_ledger_count": 1,
+    "citations": 10
+  },
+  "notes": [
+    "claim_attribution_ledger present on public response (Workstream G)",
+    "GBIF+BHL present on Mentha (Workstream C path)",
+    "LocalIndex AGRIS/Duke/OE not in successful_sources — disk I/O blocker"
+  ]
+}

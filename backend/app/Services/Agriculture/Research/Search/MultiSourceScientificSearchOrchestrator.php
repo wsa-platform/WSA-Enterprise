@@ -766,24 +766,23 @@ class MultiSourceScientificSearchOrchestrator
             // already has an adequate raw hit set — keeps sequential home path inside the
             // gateway FastCGI window.
             $isScholarly = $this->isIndependentScholarlySource($key);
-            $knowledgeProtected = in_array(
-                $key,
-                (new ScientificKnowledgeTypeRelevancePolicy())->protectedSourceKeys($plan),
-                true,
-            );
+            $knowledgePolicy = new ScientificKnowledgeTypeRelevancePolicy();
+            // Capability-aware gate: raw hit count must not skip a source that still
+            // supplies a distinctive required knowledge type (REM-C1 / Workstream B).
+            $mayEarlyStop = $knowledgePolicy->mayEarlyStopSource($key, $plan);
             // Adaptive stop: scholarly adequacy may skip remaining adapters, but never
-            // skip knowledge-type-protected sources (e.g. GBIF for taxonomy questions).
+            // skip capability-required sources (e.g. GBIF for taxonomy questions).
             // Allow a third independent scholarly corpus (typically semantic_scholar) before
             // early-stopping other scholarly INTERNET_FIRST_DEFAULT adapters — OA+CR alone
             // must not erase Semantic Scholar effectiveness (R3.1).
             $allowAdditionalScholarly = $isScholarly && $scholarlyAttempted < 3;
-            $shouldEarlyStop = ! $knowledgeProtected
+            $shouldEarlyStop = $mayEarlyStop
                 && ! $allowAdditionalScholarly
                 && $scholarlyAttempted >= 2
                 && $priorResultCount >= self::ADEQUATE_RESULT_COUNT
                 && $scholarlyHits >= self::ADEQUATE_RESULT_COUNT;
             if ($shouldEarlyStop
-                || (! $knowledgeProtected
+                || ($mayEarlyStop
                     && ! $allowAdditionalScholarly
                     && $priorResultCount >= self::ADEQUATE_RESULT_COUNT
                     && $budget->remainingSeconds() < 20.0
@@ -803,6 +802,9 @@ class MultiSourceScientificSearchOrchestrator
                                 'scholarly_hit_count' => $scholarlyHits,
                                 'scholarly_attempted' => $scholarlyAttempted,
                                 'budget_remaining_seconds' => $budget->remainingSeconds(),
+                                'capability_early_stop_allowed' => true,
+                                'distinctive_required_types' => $knowledgePolicy->distinctiveRequiredTypes($plan),
+                                'protected_source_keys' => $knowledgePolicy->protectedSourceKeys($plan),
                             ],
                         ),
                     ],

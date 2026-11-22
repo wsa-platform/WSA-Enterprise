@@ -1,0 +1,19 @@
+Mission: Scientific Search End-to-End Root-Cause Resolution
+Started: 2026-11-22
+Mode: Autonomous implementation + verification + eligible Git release
+
+Branch: phase-18-m18-ai-marketing-communications
+HEAD_START: 5c3e2a17b6e63f5745ec18223ca9afdc4e6fc4a8
+Remote: origin/phase-18-m18-ai-marketing-communications @ same SHA (Local=Remote)
+Working tree: dirty WIP preserved (not staged into mission commits)
+Authority docs: 2026-11-22-scientific-search-e2e-audit-remediation-plan/*
+
+Priorities:
+1 Workstream B — capability-aware early-stop
+2 Workstream G — claim-level L7 attribution
+3 Workstream A — LocalIndex lifecycle
+4 Workstream C — GBIF/BHL
+5 Workstream J — ten-source matrix
+6 Workstream H — FAOSTAT/Consensus policy
+7 Workstreams D/E/F
+8 Workstream I — API/Frontend/E2E

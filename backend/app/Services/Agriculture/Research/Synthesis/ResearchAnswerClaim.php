@@ -12,6 +12,8 @@ final class ResearchAnswerClaim
      * @param  list<string>  $sourceIds
      * @param  list<string>  $numericalValues
      * @param  list<string>  $limitations
+     * @param  list<string>  $sourceKeys  Runtime source_key values that actually support this claim
+     * @param  list<array<string, mixed>>  $attributions  Claim→Evidence→Source→Citation rows
      */
     public function __construct(
         public readonly string $claimId,
@@ -25,6 +27,8 @@ final class ResearchAnswerClaim
         public readonly array $limitations = [],
         public readonly ?string $conditions = null,
         public readonly ?string $questionClaimId = null,
+        public readonly array $sourceKeys = [],
+        public readonly array $attributions = [],
     ) {}
 
     /** @return array<string, mixed> */
@@ -35,6 +39,8 @@ final class ResearchAnswerClaim
             'claim_text' => $this->claimText,
             'evidence_ids' => $this->evidenceIds,
             'source_ids' => $this->sourceIds,
+            'source_keys' => $this->sourceKeys,
+            'attributions' => $this->attributions,
             'validation_status' => $this->validationStatus,
             'claim_relationship' => $this->claimRelationship,
             'confidence' => $this->confidence,

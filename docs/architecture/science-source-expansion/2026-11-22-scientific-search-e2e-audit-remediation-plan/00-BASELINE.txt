@@ -1,0 +1,24 @@
+Audit mission: WSA-SCIENTIFIC-SEARCH-ROOT-CAUSE-AUDIT-AND-REMEDIATION-PLAN
+Mode: READ-ONLY (no app code/config/DB/commit/push)
+Date: 2026-11-22
+
+Repository: G:\WSA-Enterprise
+Branch: phase-18-m18-ai-marketing-communications
+HEAD (start=end): 5c3e2a17b6e63f5745ec18223ca9afdc4e6fc4a8
+Remote HEAD: 5c3e2a17b6e63f5745ec18223ca9afdc4e6fc4a8 (Local=Remote)
+Working tree: dirty WIP (~225 porcelain) — untouched
+Docker: nginx/backend/frontend/postgres/redis healthy :8079
+API health: {"status":"ok"}
+Compose DB: pgsql/wsa_enterprise (runtime)
+Project original DB invariant: SQLite (not converted)
+
+Prior missions preserved (not overwritten):
+- relevance-rejection-investigation/
+- 2026-11-21-scientific-pipeline-forensic-audit/
+- 2026-11-21-scientific-pipeline-repair/
+- 2026-11-21-multi-source-restoration-r2/
+- 2026-11-21-scientific-search-r3.1/
+
+Live smoke (this audit):
+- E-AUDIT-01-wheat.json → scientific_generated; sources openalex,crossref,semantic_scholar
+- E-AUDIT-02-mentha.json → synthesis_completed_with_partial_conflicts; sources openalex,crossref,semantic_scholar,gbif,bhl

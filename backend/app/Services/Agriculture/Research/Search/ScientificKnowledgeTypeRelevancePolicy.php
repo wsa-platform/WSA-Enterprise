@@ -252,10 +252,48 @@ final class ScientificKnowledgeTypeRelevancePolicy
 
         return preg_match(
             '/\b(cultivation|agronom(?:y|ic)|irrigation|fertiliz|farming practice|crop management|'
-            .'agricultural research|recommended practices?|best practices?)\b|'
-            .'زراعة|ري|تسميد|إدارة المحصول|ممارسات زراعية/',
+            .'agricultural research|recommended practices?|best practices?|'
+            .'organic(?:\s+farming|\s+agriculture|\s+pest)?|agroecolog(?:y|ical)|'
+            .'pest control|integrated pest|deficit irrigation|yield management)\b|'
+            .'زراعة|ري|تسميد|إدارة المحصول|ممارسات زراعية|زراعة عضوية|مكافحة آفات/',
             $question
         ) === 1;
+    }
+
+    /**
+     * Distinctive (non-generic-scholarly) knowledge types required by the plan.
+     *
+     * @return list<string>
+     */
+    public function distinctiveRequiredTypes(KnowledgeQueryPlan $plan): array
+    {
+        $generic = [
+            ScientificKnowledgeType::SCHOLARLY_EVIDENCE,
+            ScientificKnowledgeType::EXPERIMENTAL_EVIDENCE,
+            ScientificKnowledgeType::REVIEW_EVIDENCE,
+        ];
+
+        return array_values(array_diff($this->requiredTypes($plan), $generic));
+    }
+
+    /**
+     * Whether early-stop may skip this selected source without leaving a required
+     * distinctive capability unconsidered. Capability-driven — not plant-name lists.
+     */
+    public function mayEarlyStopSource(string $sourceKey, KnowledgeQueryPlan $plan): bool
+    {
+        if (in_array($sourceKey, $this->protectedSourceKeys($plan), true)) {
+            return false;
+        }
+
+        $distinctive = $this->distinctiveRequiredTypes($plan);
+        if ($distinctive === []) {
+            return true;
+        }
+
+        $sourceType = ScientificKnowledgeType::forSourceKey($sourceKey);
+
+        return ! in_array($sourceType, $distinctive, true);
     }
 
     private function hasQuantitativeStatisticalNeed(KnowledgeQueryPlan $plan): bool

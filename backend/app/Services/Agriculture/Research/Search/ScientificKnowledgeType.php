@@ -58,7 +58,10 @@ final class ScientificKnowledgeType
             'gbif' => self::TAXONOMIC_IDENTITY,
             'bhl' => self::BIBLIOGRAPHIC_HERITAGE,
             'dr_duke' => self::CHEMICAL_ASSOCIATION,
-            'agris', 'organic_eprints', 'openalex', 'crossref', 'semantic_scholar' => self::SCHOLARLY_EVIDENCE,
+            // Governed agronomy corpora are practice-capable by default; scholarly
+            // INTERNET_FIRST keys remain scholarly_evidence.
+            'agris', 'organic_eprints' => self::AGRICULTURAL_PRACTICE,
+            'openalex', 'crossref', 'semantic_scholar' => self::SCHOLARLY_EVIDENCE,
             'fao_stat' => self::STATISTICAL_OBSERVATION,
             'consensus' => self::REVIEW_EVIDENCE,
             default => self::UNKNOWN,

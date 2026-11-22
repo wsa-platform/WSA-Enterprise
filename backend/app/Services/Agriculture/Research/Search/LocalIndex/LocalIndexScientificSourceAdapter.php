@@ -95,6 +95,7 @@ final class LocalIndexScientificSourceAdapter implements ScientificSourceAdapter
                         ScientificSourceSearchOutcome::STATUS_FAILED,
                         error: 'local_index_readonly_rebuild_refused',
                         startedNs: $startedNs,
+                        readiness: 'STALE',
                     );
                 }
                 // R3.1: never block the Stage-3 FastCGI window on a synchronous cold/stale
@@ -104,13 +105,23 @@ final class LocalIndexScientificSourceAdapter implements ScientificSourceAdapter
                     ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
                     error: 'local_index_cold_or_stale_rebuild_deferred',
                     startedNs: $startedNs,
+                    readiness: 'STALE',
                 );
             }
         } catch (LocalStoreFailure $failure) {
-            return $this->outcome(ScientificSourceSearchOutcome::STATUS_FAILED, error: $failure->reason, startedNs: $startedNs);
+            return $this->outcome(
+                ScientificSourceSearchOutcome::STATUS_FAILED,
+                error: $failure->reason,
+                startedNs: $startedNs,
+                readiness: 'FAILED',
+            );
         }
         if ($committed === 0) {
-            return $this->outcome(ScientificSourceSearchOutcome::STATUS_UNAVAILABLE, error: 'local_index_not_built');
+            return $this->outcome(
+                ScientificSourceSearchOutcome::STATUS_UNAVAILABLE,
+                error: 'local_index_not_built',
+                readiness: 'COLD',
+            );
         }
 
         $hits = $this->index->search($key, $query, max(1, $limit));
@@ -123,17 +134,31 @@ final class LocalIndexScientificSourceAdapter implements ScientificSourceAdapter
             $results === [] ? ScientificSourceSearchOutcome::STATUS_EMPTY : ScientificSourceSearchOutcome::STATUS_SUCCESS,
             $results,
             startedNs: $startedNs,
+            readiness: $results === [] ? 'EMPTY' : 'READY',
         );
     }
 
     /** @param  list<ScientificSearchResult>  $results */
-    private function outcome(string $status, array $results = [], ?string $error = null, ?int $startedNs = null): ScientificSourceSearchOutcome
-    {
+    private function outcome(
+        string $status,
+        array $results = [],
+        ?string $error = null,
+        ?int $startedNs = null,
+        ?string $readiness = null,
+    ): ScientificSourceSearchOutcome {
         $observability = [
             'provider' => $this->profile->sourceKey(),
             'access_family' => $this->profile->accessFamily()->value,
             'index_version' => $this->index->version(),
             'index_generation' => $this->index->generation($this->profile->sourceKey()),
+            // Lifecycle states: READY | COLD | STALE | EMPTY | FAILED | UNAVAILABLE
+            'local_index_readiness' => $readiness ?? match ($status) {
+                ScientificSourceSearchOutcome::STATUS_SUCCESS => 'READY',
+                ScientificSourceSearchOutcome::STATUS_EMPTY => 'EMPTY',
+                ScientificSourceSearchOutcome::STATUS_UNAVAILABLE => 'UNAVAILABLE',
+                ScientificSourceSearchOutcome::STATUS_FAILED => 'FAILED',
+                default => 'UNAVAILABLE',
+            },
         ];
         if ($startedNs !== null) {
             $observability['latency_ms'] = max(0, (int) ((hrtime(true) - $startedNs) / 1_000_000));

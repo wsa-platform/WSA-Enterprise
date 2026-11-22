@@ -563,6 +563,9 @@ class AgriculturalResearchAgent
             'persistence_status' => $persistenceReport->status,
             'internet_first' => $scientificSearch->internetFirst,
             'stage_timings' => $timings,
+            'claim_attribution_ledger' => is_array($synthesisReport->observability['claim_attribution_ledger'] ?? null)
+                ? $synthesisReport->observability['claim_attribution_ledger']
+                : [],
             'observability' => array_merge(
                 $synthesisReport->observability,
                 $persistenceReport->observability,
@@ -571,6 +574,7 @@ class AgriculturalResearchAgent
                     'legacy_post_processing_reason' => 'library_search_separated',
                     'synthesis_status' => $synthesisReport->status,
                     'multi_answer_producer_wired' => true,
+                    'claim_attribution_ledger_present' => isset($synthesisReport->observability['claim_attribution_ledger']),
                 ],
             ),
         ]);
