@@ -24,8 +24,9 @@
 |--|--|
 | الفرع | `phase-18-m18-ai-marketing-communications` |
 | HEAD البداية | `5c3e2a17b6e63f5745ec18223ca9afdc4e6fc4a8` |
+| HEAD النهاية (محلي) | `a6a66acdc920ee965174b94e19e241e5017ee13f` |
 | Working tree | WIP سابق محفوظ — لم يُضمَّن في commits المهمة |
-| Commits المهمة | تُسجَّل بعد البوابة (انظر قسم ك) |
+| Commit المهمة | `a6a66ac` — capability-aware early-stop, claim L7 ledger, GBIF structured evidence |
 
 ---
 
@@ -110,4 +111,6 @@ Frontend عرض الدفتر: **NOT_RUN** (Browser). الحالات الفاشل
 
 ## ك. حالة الإصدار
 
-تُحدَّث بعد commit/push المؤهل مع إثبات مزامنة Remote.
+- Commit محلي: `a6a66acdc920ee965174b94e19e241e5017ee13f`
+- Push: يُثبت في سطر الحالة بعد `git push` (انظر تقرير المالك الحي)
+- WIP غير المتعلق بالمهمة: لم يُضمَّن ولم يُحذف
