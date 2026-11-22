@@ -10,7 +10,8 @@
 |--|--|
 | البداية | `cbc6a4d19f313d0d88d7e670be7504d62a1d143e` |
 | الفرع | `phase-18-m18-ai-marketing-communications` |
-| النهاية | تُحدَّث بعد Push |
+| النهاية | `edd1193e8326889aa69804531bdff6afbd317377` |
+| Commit | `edd1193` LocalIndex + independence + ledger E2E |
 | WIP السابق | محفوظ خارج commits المهمة |
 
 ## 3. Workstream A — LocalIndex
