@@ -704,12 +704,26 @@ final readonly class RetrievalSpecification
      */
     public function compileTerm(array $concept): string
     {
+        // Executable retrieval term (ADR-022 §15): English/Latin compilation only.
+        // Frozen CSQ surfaces stay on frozenSurface(); never leak Arabic into FTS/HTTP variants.
         $normalized = trim((string) ($concept['normalized'] ?? ''));
         if ($normalized !== '' && preg_match('/\p{Arabic}/u', $normalized) !== 1) {
             return str_replace('_', ' ', $normalized);
         }
 
-        return trim((string) ($concept['surface'] ?? ''));
+        foreach (['key', 'normalized_key', 'property_key', 'canonical_id', 'canonicalId'] as $keyField) {
+            $key = trim((string) ($concept[$keyField] ?? ''));
+            if ($key !== '' && preg_match('/\p{Arabic}/u', $key) !== 1) {
+                return str_replace('_', ' ', $key);
+            }
+        }
+
+        $surface = trim((string) ($concept['surface'] ?? ''));
+        if ($surface !== '' && preg_match('/\p{Arabic}/u', $surface) !== 1) {
+            return $surface;
+        }
+
+        return '';
     }
 
     /**

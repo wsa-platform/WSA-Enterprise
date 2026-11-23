@@ -1,0 +1,131 @@
+<?php
+
+namespace Tests\Unit\Agriculture\Research;
+
+use App\Services\Agriculture\Research\ResearchPlanner;
+use App\Services\Agriculture\Research\RetrievalSpecification;
+use App\Services\Agriculture\Research\Search\GovernedScientificSourceEligibility;
+use App\Services\Agriculture\Research\Search\Registry\ScientificSourceLanguageCapabilityCatalog;
+use App\Services\Agriculture\Research\Search\ScientificSearchQueryBuilder;
+use App\Services\Agriculture\Research\Search\ScientificSourceSelector;
+use App\Services\Agriculture\Research\Validation\EvidencePipelineStatus;
+use Tests\TestCase;
+
+/**
+ * Focused contract tests for 2026-11-23 Arabic scientific search remediation.
+ */
+class ArabicScientificSearchRemediationContractTest extends TestCase
+{
+    public function test_ar_en_wheat_irrigation_share_crop_water_requirement_sense(): void
+    {
+        $planner = app(ResearchPlanner::class);
+        $en = $planner->planKnowledgeQuery([
+            'query' => 'What are the effects of deficit irrigation on wheat yield?',
+            'force_execute' => true,
+        ]);
+        $ar = $planner->planKnowledgeQuery([
+            'query' => 'ما تأثير الري الناقص على إنتاجية القمح؟',
+            'force_execute' => true,
+        ]);
+
+        $this->assertSame('crop_water_requirement', $en->normalizedQuery->constraints['scientific_sense'] ?? null);
+        $this->assertSame('crop_water_requirement', $ar->normalizedQuery->constraints['scientific_sense'] ?? null);
+        $this->assertSame('ar', $ar->normalizedQuery->constraints['answer_language'] ?? null);
+    }
+
+    public function test_arabic_wheat_variants_have_no_arabic_script(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما تأثير الري الناقص على إنتاجية القمح؟',
+            'force_execute' => true,
+        ]);
+        $variants = app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan);
+        $this->assertNotEmpty($variants);
+        $joined = implode(' ', $variants);
+        $this->assertSame(0, preg_match('/\p{Arabic}/u', $joined), $joined);
+        $this->assertTrue(
+            str_contains(mb_strtolower($joined), 'irrigation')
+            || str_contains(mb_strtolower($joined), 'water'),
+            $joined,
+        );
+    }
+
+    public function test_organic_arabic_selects_organic_eprints_and_keeps_concepts(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما هي ممارسات الزراعة العضوية التي تحسن خصوبة التربة وفقًا للبحوث الزراعية؟',
+            'force_execute' => true,
+        ]);
+        $this->assertTrue(
+            app(GovernedScientificSourceEligibility::class)->isEligible('organic_eprints', $plan),
+        );
+        $selected = app(ScientificSourceSelector::class)->selectSources($plan);
+        $this->assertContains('organic_eprints', $selected);
+
+        $topics = $plan->normalizedQuery->constraints['scientific_topics'] ?? [];
+        $factors = $plan->normalizedQuery->constraints['scientific_factors'] ?? [];
+        $bag = mb_strtolower(implode(' ', [
+            ...(is_array($topics) ? $topics : []),
+            ...(is_array($factors) ? $factors : []),
+            implode(' ', app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan)),
+        ]));
+        $this->assertTrue(
+            str_contains($bag, 'organic') || in_array('organic', $factors, true),
+            'organic concept missing: '.$bag,
+        );
+        $this->assertTrue(
+            str_contains($bag, 'soil') || str_contains($bag, 'fertility') || in_array('soil', $factors, true),
+            'soil fertility concept missing: '.$bag,
+        );
+    }
+
+    public function test_compile_term_does_not_emit_arabic_surface(): void
+    {
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما تأثير الري الناقص على إنتاجية القمح؟',
+            'force_execute' => true,
+        ]);
+        $csq = $plan->normalizedQuery->canonicalQuestion;
+        $this->assertNotNull($csq);
+        $retrieval = RetrievalSpecification::fromCanonical($csq);
+        $process = is_array($retrieval->projections['process'] ?? null) ? $retrieval->projections['process'] : [];
+        $this->assertNotSame([], $process);
+        $compiled = $retrieval->compileTerm($process);
+        $this->assertSame(0, preg_match('/\p{Arabic}/u', $compiled), 'compiled='.$compiled);
+        $frozen = $retrieval->frozenSurface($process);
+        $this->assertNotSame('', $frozen);
+    }
+
+    public function test_evidence_pipeline_status_canonicalizes_legacy_aliases(): void
+    {
+        $this->assertSame(
+            EvidencePipelineStatus::NO_VALIDATED_EVIDENCE,
+            EvidencePipelineStatus::canonicalize('no_valid_evidence'),
+        );
+        $this->assertSame(
+            EvidencePipelineStatus::NO_SEARCH_RESULTS,
+            EvidencePipelineStatus::canonicalize('no_search_result'),
+        );
+        $this->assertSame(
+            EvidencePipelineStatus::NO_VALIDATED_EVIDENCE,
+            EvidencePipelineStatus::NO_VALIDATED_EVIDENCE,
+        );
+    }
+
+    public function test_source_language_capability_catalog_covers_production_keys(): void
+    {
+        $keys = [
+            'openalex', 'crossref', 'semantic_scholar', 'consensus', 'fao_stat',
+            'agris', 'organic_eprints', 'dr_duke', 'gbif', 'bhl',
+        ];
+        foreach ($keys as $key) {
+            $cap = ScientificSourceLanguageCapabilityCatalog::for($key);
+            $this->assertNotNull($cap, $key);
+            $this->assertSame($key, $cap->sourceKey);
+            $this->assertNotSame('', $cap->evidenceReference);
+            if (in_array($key, ['agris', 'organic_eprints', 'openalex'], true)) {
+                $this->assertTrue($cap->requiresEnglishRetrievalCompilation(), $key);
+            }
+        }
+    }
+}

@@ -14,6 +14,7 @@ use App\Services\Agriculture\Research\Search\ScientificStatisticalClaimAligner;
 use App\Services\Agriculture\Research\Search\ScientificStructuredObservation;
 use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
 use App\Services\Agriculture\Research\Validation\EvidenceIndependenceAssessor;
+use App\Services\Agriculture\Research\Validation\EvidencePipelineStatus;
 use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionReport;
 use App\Services\Agriculture\Research\Validation\EvidenceVerificationLayer;
 use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
@@ -368,7 +369,7 @@ class AnswerComposer
         array $claims = [],
     ): array {
         $report = $validationReport ?? new EvidenceValidationExecutionReport(
-            status: 'no_valid_evidence',
+            status: EvidencePipelineStatus::NO_VALIDATED_EVIDENCE,
             validatedEvidence: [],
             rejectedEvidence: [],
             sourcesReceived: 0,
@@ -1196,7 +1197,7 @@ class AnswerComposer
         ?EvidenceValidationExecutionReport $validationReport = null,
     ): array {
         $report = $validationReport ?? new EvidenceValidationExecutionReport(
-            status: 'no_valid_evidence',
+            status: EvidencePipelineStatus::NO_VALIDATED_EVIDENCE,
             validatedEvidence: [],
             rejectedEvidence: [],
             sourcesReceived: 0,
@@ -1967,7 +1968,10 @@ class AnswerComposer
             if ($hasDirect && ! $this->claimIsDirect($claim, $directnessByEvidenceId)) {
                 continue;
             }
-            $sentence = $this->firstSentence($claim->claimText);
+            $sentence = $this->localizeFindingForAnswerLanguage(
+                $this->firstSentence($claim->claimText),
+                $language,
+            );
             if ($sentence !== '' && ! in_array($sentence, $findings, true)) {
                 $findings[] = $sentence;
             }
@@ -1985,7 +1989,10 @@ class AnswerComposer
                 if (! $this->claimIsDirect($claim, $directnessByEvidenceId)) {
                     continue;
                 }
-                $sentence = $this->firstSentence($claim->claimText);
+                $sentence = $this->localizeFindingForAnswerLanguage(
+                    $this->firstSentence($claim->claimText),
+                    $language,
+                );
                 if ($sentence !== '' && ! in_array($sentence, $findings, true)) {
                     $findings[] = $sentence;
                 }
@@ -2005,7 +2012,10 @@ class AnswerComposer
                 if (trim($claim->claimText) === '') {
                     continue;
                 }
-                $sentence = $this->firstSentence($claim->claimText);
+                $sentence = $this->localizeFindingForAnswerLanguage(
+                    $this->firstSentence($claim->claimText),
+                    $language,
+                );
                 if ($sentence !== '' && ! in_array($sentence, $findings, true)) {
                     $findings[] = $sentence;
                 }
@@ -2351,7 +2361,7 @@ class AnswerComposer
      */
     private function formatAsNumberedList(array $keyFindings, string $heading, string $language): string
     {
-        $items = $this->factItemsFromFindings($keyFindings);
+        $items = $this->factItemsFromFindings($keyFindings, $language);
         $lines = ['### '.$heading, AnswerComposerPhrases::get($language, 'list_evidence')];
         if ($items === []) {
             return implode("\n", $lines);
@@ -2368,7 +2378,7 @@ class AnswerComposer
      */
     private function formatAsNumberedSteps(array $keyFindings, string $heading, string $language): string
     {
-        $items = $this->factItemsFromFindings($keyFindings);
+        $items = $this->factItemsFromFindings($keyFindings, $language);
         $stepLabel = AnswerComposerPhrases::get($language, 'step');
         $lines = ['### '.$heading, AnswerComposerPhrases::get($language, 'process_evidence')];
         foreach ($items as $index => $item) {
@@ -2411,7 +2421,7 @@ class AnswerComposer
      */
     private function formatAsComparison(array $keyFindings, string $heading, string $language): string
     {
-        $items = $this->factItemsFromFindings($keyFindings);
+        $items = $this->factItemsFromFindings($keyFindings, $language);
         $lines = ['### '.$heading, AnswerComposerPhrases::get($language, 'comparison_evidence')];
         $prefix = AnswerComposerPhrases::get($language, 'aspect');
         foreach ($items as $index => $finding) {
@@ -2427,7 +2437,7 @@ class AnswerComposer
     private function formatAsExplanatory(array $keyFindings, string $heading, string $language, ?KnowledgeQueryPlan $plan = null): string
     {
         $values = $this->collectedNumericalValues($keyFindings, $plan);
-        $items = $this->factItemsFromFindings($keyFindings);
+        $items = $this->factItemsFromFindings($keyFindings, $language);
         $lines = [];
         if ($heading !== '' && $heading !== AnswerComposerPhrases::get($language, 'heading_answer')) {
             $lines[] = '### '.$heading;
@@ -2551,14 +2561,15 @@ class AnswerComposer
      * @param  list<string>  $keyFindings
      * @return list<string>
      */
-    private function factItemsFromFindings(array $keyFindings): array
+    private function factItemsFromFindings(array $keyFindings, string $language = 'en'): array
     {
         $items = [];
         foreach ($this->extractListItems($keyFindings) as $item) {
             if ($this->isSourceProseSentence($item)) {
                 continue;
             }
-            if (! in_array($item, $items, true)) {
+            $item = $this->localizeFindingForAnswerLanguage($item, $language);
+            if ($item !== '' && ! in_array($item, $items, true)) {
                 $items[] = $item;
             }
         }
@@ -2945,6 +2956,28 @@ class AnswerComposer
             )),
             additionalInformation: trim($additionalSection) !== '' ? $additionalSection : null,
         );
+    }
+
+    /**
+     * ISS-AR-005: keep answer chrome in answer_language; label foreign-language
+     * evidence excerpts instead of silently mixing unmarked English prose.
+     */
+    private function localizeFindingForAnswerLanguage(string $sentence, string $language): string
+    {
+        $sentence = trim($sentence);
+        if ($sentence === '' || $language === 'en') {
+            return $sentence;
+        }
+        if (preg_match('/\p{Arabic}/u', $sentence) === 1 && $language === 'ar') {
+            return $sentence;
+        }
+        // Latin-dominant excerpt while answer language is ar|tr|fr.
+        if (preg_match('/[A-Za-z]{3,}/', $sentence) === 1
+            && ($language !== 'ar' || preg_match('/\p{Arabic}/u', $sentence) !== 1)) {
+            return AnswerComposerPhrases::get($language, 'source_language_excerpt', [':text' => $sentence]);
+        }
+
+        return $sentence;
     }
 
     private function firstSentence(string $text): string

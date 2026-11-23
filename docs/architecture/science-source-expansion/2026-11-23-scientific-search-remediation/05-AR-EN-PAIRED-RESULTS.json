@@ -1,0 +1,164 @@
+{
+    "schema_id": "wsa.mission.preflight_qus.v1",
+    "pairs": [
+        {
+            "id": "wheat_irrigation",
+            "en": {
+                "query": "What are the effects of deficit irrigation on wheat yield?",
+                "language": "en",
+                "answer_language": "en",
+                "sense": "crop_water_requirement",
+                "question_type": "causes",
+                "crop": "wheat",
+                "scientific_name": "Triticum aestivum",
+                "factors": [
+                    "water"
+                ],
+                "topics": [
+                    "water requirements",
+                    "irrigation requirement",
+                    "crop water requirement",
+                    "quantity",
+                    "rate",
+                    "water"
+                ],
+                "property": "quantity",
+                "ready": true,
+                "selected": [
+                    "fao_stat",
+                    "openalex",
+                    "crossref",
+                    "semantic_scholar",
+                    "agris",
+                    "gbif"
+                ],
+                "organic_eprints_eligible": false,
+                "variant_count": 5,
+                "variant_sample": [
+                    "Triticum aestivum wheat deficit irrigation wheat yield quantity crop water requirement",
+                    "Triticum aestivum wheat irrigation deficit irrigation water requirement evapotranspiration",
+                    "Triticum aestivum wheat deficit irrigation wheat yield quantity",
+                    "Triticum aestivum wheat wheat yield quantity",
+                    "Triticum aestivum wheat deficit irrigation wheat yield"
+                ],
+                "variants_contain_arabic": false
+            },
+            "ar": {
+                "query": "ما تأثير الري الناقص على إنتاجية القمح؟",
+                "language": "ar",
+                "answer_language": "ar",
+                "sense": "crop_water_requirement",
+                "question_type": "causes",
+                "crop": "القمح",
+                "scientific_name": "Triticum aestivum",
+                "factors": [
+                    "water"
+                ],
+                "topics": [
+                    "water requirements",
+                    "irrigation requirement",
+                    "crop water requirement",
+                    "quantity",
+                    "rate",
+                    "water"
+                ],
+                "property": "quantity",
+                "ready": true,
+                "selected": [
+                    "fao_stat",
+                    "openalex",
+                    "crossref",
+                    "semantic_scholar",
+                    "agris",
+                    "gbif"
+                ],
+                "organic_eprints_eligible": false,
+                "variant_count": 5,
+                "variant_sample": [
+                    "Triticum aestivum wheat deficit irrigation yield quantity crop water requirement",
+                    "Triticum aestivum wheat irrigation water requirement evapotranspiration",
+                    "Triticum aestivum wheat deficit irrigation yield quantity",
+                    "Triticum aestivum wheat yield quantity",
+                    "Triticum aestivum wheat deficit irrigation yield"
+                ],
+                "variants_contain_arabic": false
+            }
+        },
+        {
+            "id": "organic_soil",
+            "en": {
+                "query": "What organic farming practices improve soil fertility according to agricultural research?",
+                "language": "en",
+                "answer_language": "en",
+                "sense": "plant_growth",
+                "question_type": "general",
+                "crop": null,
+                "scientific_name": null,
+                "factors": [
+                    "organic",
+                    "soil"
+                ],
+                "topics": [
+                    "cultivation practices",
+                    "crop management",
+                    "agronomic practices",
+                    "organic",
+                    "soil fertility"
+                ],
+                "property": null,
+                "ready": true,
+                "selected": [
+                    "fao_stat",
+                    "openalex",
+                    "crossref",
+                    "semantic_scholar",
+                    "agris",
+                    "organic_eprints"
+                ],
+                "organic_eprints_eligible": true,
+                "variant_count": 1,
+                "variant_sample": [
+                    "farming plant growth"
+                ],
+                "variants_contain_arabic": false
+            },
+            "ar": {
+                "query": "ما هي ممارسات الزراعة العضوية التي تحسن خصوبة التربة وفقًا للبحوث الزراعية؟",
+                "language": "ar",
+                "answer_language": "ar",
+                "sense": "plant_growth",
+                "question_type": "definition",
+                "crop": null,
+                "scientific_name": null,
+                "factors": [
+                    "organic",
+                    "soil"
+                ],
+                "topics": [
+                    "cultivation practices",
+                    "crop management",
+                    "agronomic practices",
+                    "organic",
+                    "soil fertility",
+                    "greenhouse"
+                ],
+                "property": null,
+                "ready": true,
+                "selected": [
+                    "fao_stat",
+                    "openalex",
+                    "crossref",
+                    "semantic_scholar",
+                    "agris",
+                    "organic_eprints"
+                ],
+                "organic_eprints_eligible": true,
+                "variant_count": 1,
+                "variant_sample": [
+                    "cultivation plant growth"
+                ],
+                "variants_contain_arabic": false
+            }
+        }
+    ]
+}

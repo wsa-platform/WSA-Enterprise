@@ -1808,6 +1808,7 @@ class ScientificSearchQueryBuilder
             $sameIdentitySurface = '';
             if ($surface !== ''
                 && ! $surfaceConfused
+                && preg_match('/\p{Arabic}/u', $surface) !== 1
                 && $identityId !== ''
                 && AgriculturalEntityCatalog::resolveExactCanonicalCropIdFromLabel($surface) === $identityId
                 && ! str_contains(mb_strtolower($scientific.' '.$common), mb_strtolower($surface))) {
@@ -1962,6 +1963,14 @@ class ScientificSearchQueryBuilder
 
     private function specExecutableNonEntityRole(RetrievalSpecification $spec, string $role): ?string
     {
+        $concept = $this->specRoleConcept($spec, $role);
+        if ($concept !== null) {
+            $compiled = trim($spec->compileTerm($concept));
+            if ($compiled !== '') {
+                return $compiled;
+            }
+        }
+
         $surface = $this->specFrozenRoleSurface($spec, $role);
         if ($surface === null) {
             return null;
@@ -1969,18 +1978,89 @@ class ScientificSearchQueryBuilder
         if (CropKnowledgeOptionCatalog::isOptionKey($surface)) {
             return $this->specIntentRetrievalTerm($spec);
         }
+        if (preg_match('/\p{Arabic}/u', $surface) === 1) {
+            return $this->englishRetrievalFallbackForRole($spec, $role, $surface);
+        }
 
         return $surface;
     }
 
     private function specExecutablePropertyTerm(RetrievalSpecification $spec): ?string
     {
+        $property = is_array($spec->projections['property'] ?? null) ? $spec->projections['property'] : [];
+        if ($property !== []) {
+            $compiled = trim($spec->compileTerm($property));
+            if ($compiled !== '') {
+                return $compiled;
+            }
+        }
+
         $surface = $this->specFrozenPropertySurface($spec);
         if ($surface !== null && CropKnowledgeOptionCatalog::isOptionKey($surface)) {
             return $this->specIntentRetrievalTerm($spec);
         }
+        if ($surface !== null && preg_match('/\p{Arabic}/u', $surface) === 1) {
+            $key = trim((string) ($property['key'] ?? $property['normalized'] ?? ''));
+            if ($key !== '' && preg_match('/\p{Arabic}/u', $key) !== 1) {
+                return str_replace('_', ' ', $key);
+            }
+
+            return $this->specIntentRetrievalTerm($spec);
+        }
 
         return $surface;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function specRoleConcept(RetrievalSpecification $spec, string $role): ?array
+    {
+        $map = [
+            CanonicalScientificQuestion::ROLE_PROCESS => 'process',
+            CanonicalScientificQuestion::ROLE_TARGET => 'target',
+            CanonicalScientificQuestion::ROLE_PROPERTY => 'property',
+            CanonicalScientificQuestion::ROLE_ENTITY => 'entity',
+        ];
+        $key = $map[$role] ?? null;
+        if ($key === null) {
+            return null;
+        }
+        $concept = $spec->projections[$key] ?? null;
+
+        return is_array($concept) ? $concept : null;
+    }
+
+    private function englishRetrievalFallbackForRole(RetrievalSpecification $spec, string $role, string $surface): ?string
+    {
+        $context = is_array($spec->projections['context'] ?? null) ? $spec->projections['context'] : [];
+        $sense = trim((string) ($context['scientific_sense'] ?? $context['scientificSense'] ?? ''));
+        if ($role === CanonicalScientificQuestion::ROLE_PROCESS) {
+            if ($sense === 'crop_water_requirement'
+                || AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($surface)) {
+                return 'deficit irrigation';
+            }
+            if (AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'عضوي')
+                || AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'عضوية')) {
+                return 'organic farming';
+            }
+            $intent = $this->specIntentRetrievalTerm($spec);
+            if ($intent !== null) {
+                return $intent;
+            }
+        }
+        if ($role === CanonicalScientificQuestion::ROLE_TARGET) {
+            if (AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'خصوبة')
+                || AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'تربة')) {
+                return 'soil fertility';
+            }
+            if (AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'إنتاج')
+                || AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'إنتاجية')) {
+                return 'yield';
+            }
+        }
+
+        return $this->specIntentRetrievalTerm($spec);
     }
 
     private function specIntentRetrievalTerm(RetrievalSpecification $spec): ?string
@@ -2513,7 +2593,8 @@ class ScientificSearchQueryBuilder
                 continue;
             }
             $term = trim($part);
-            if ($term === '' || in_array($term, $filtered, true)) {
+            // ADR-022 §15: executable scholarly/LocalIndex variants are English compilation only.
+            if ($term === '' || preg_match('/\p{Arabic}/u', $term) === 1 || in_array($term, $filtered, true)) {
                 continue;
             }
             $filtered[] = $term;

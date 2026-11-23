@@ -66,6 +66,12 @@ final class AnswerComposerPhrases
             'heading_answer' => [
                 'en' => 'Answer', 'ar' => 'الإجابة', 'tr' => 'Yanıt', 'fr' => 'Réponse',
             ],
+            'source_language_excerpt' => [
+                'en' => 'Source excerpt (original language): :text',
+                'ar' => 'مقتطف من المصدر (باللغة الأصلية): :text',
+                'tr' => 'Kaynak alıntısı (özgün dil): :text',
+                'fr' => 'Extrait de la source (langue d\'origine) : :text',
+            ],
             'heading_family_members' => [
                 'en' => 'Plant family members', 'ar' => 'أفراد العائلة النباتية', 'tr' => 'Bitki familyası üyeleri', 'fr' => 'Membres de la famille botanique',
             ],

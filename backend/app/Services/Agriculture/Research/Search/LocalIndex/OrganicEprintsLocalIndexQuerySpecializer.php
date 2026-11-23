@@ -140,19 +140,33 @@ final class OrganicEprintsLocalIndexQuerySpecializer
     private function resolveEntity(KnowledgeQueryPlan $plan): ?string
     {
         $query = $plan->normalizedQuery;
+        $scientific = trim((string) ($query->scientificName ?? ''));
+        if ($scientific !== '' && preg_match('/\p{Arabic}/u', $scientific) !== 1) {
+            return $scientific;
+        }
+        $cropId = trim((string) ($query->cropId ?? ''));
+        if ($cropId !== '' && preg_match('/\p{Arabic}/u', $cropId) !== 1) {
+            return str_replace('-', ' ', $cropId);
+        }
         foreach ([
             $query->crop,
             is_array($query->subject) ? ($query->subject['label'] ?? $query->subject['value'] ?? null) : null,
             is_array($plan->subjectEntity) ? ($plan->subjectEntity['label'] ?? $plan->subjectEntity['value'] ?? null) : null,
-            $query->scientificName,
         ] as $candidate) {
             $term = trim((string) $candidate);
-            if ($term !== '') {
-                return $term;
+            if ($term === '' || preg_match('/\p{Arabic}/u', $term) === 1) {
+                continue;
             }
+            $resolved = \App\Services\Agriculture\Research\AgriculturalEntityCatalog::resolveExactCanonicalCropIdFromLabel($term)
+                ?? \App\Services\Agriculture\Research\AgriculturalEntityCatalog::resolveCanonicalCropIdFromLabel($term);
+            if (is_string($resolved) && $resolved !== '') {
+                return str_replace('-', ' ', $resolved);
+            }
+
+            return $term;
         }
 
-        return null;
+        return $scientific !== '' ? $scientific : null;
     }
 
     private function organicScopeTerm(string $original, string $csqSurface, KnowledgeQueryPlan $plan): string
@@ -166,6 +180,11 @@ final class OrganicEprintsLocalIndexQuerySpecializer
             'organic agriculture' => 'organic agriculture',
             'organic production' => 'organic production',
             'organic' => 'organic',
+            'عضوي' => 'organic',
+            'عضوية' => 'organic',
+            'الزراعة العضوية' => 'organic farming',
+            'organik' => 'organic',
+            'biologique' => 'organic',
         ] as $needle => $term) {
             if (str_contains($hay, $needle)) {
                 return $term;

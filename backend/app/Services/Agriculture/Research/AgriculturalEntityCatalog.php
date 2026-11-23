@@ -145,6 +145,18 @@ final class AgriculturalEntityCatalog
             ],
             'water' => [
                 'water requirement', 'water use', 'moisture', 'drought', 'الماء', 'مياه', 'irrigation water',
+                'irrigation', 'deficit irrigation', 'ري', 'الري', 'ري ناقص', 'الري الناقص',
+                'sulama', "eau d'irrigation", 'eau d irrigation',
+            ],
+            'organic' => [
+                'organic', 'organics', 'organic farming', 'organic agriculture', 'organic production',
+                'agroecology', 'agroecological', 'biodynamic', 'regenerative',
+                'عضوي', 'عضوية', 'العضوية', 'الزراعة العضوية', 'زراعة عضوية',
+                'organik', 'organik tarım', 'agriculture biologique', 'biologique',
+            ],
+            'soil' => [
+                'soil fertility', 'soil health', 'soil quality', 'خصوبة التربة', 'خصوبة',
+                'تربة خصبة', 'fertilité des sols', 'toprak verimliliği',
             ],
             'potassium' => [
                 'potassium', 'k deficiency', 'potassium deficiency', 'بوتاسيوم', 'نقص البوتاسيوم',
@@ -176,6 +188,8 @@ final class AgriculturalEntityCatalog
             'temperature' => 'temperature',
             'salinity' => 'salinity',
             'water' => 'water',
+            'organic' => 'organic',
+            'soil' => 'soil fertility',
             'potassium' => 'potassium',
             'germination' => 'germination',
             'nitrogen' => 'nitrogen',
@@ -203,6 +217,13 @@ final class AgriculturalEntityCatalog
             ],
             'water' => [
                 'water requirement', 'water use', 'irrigation water', 'water stress', 'drought stress', 'احتياج',
+                'deficit irrigation', 'الري الناقص', 'ري ناقص',
+            ],
+            'organic' => [
+                'organic farming', 'organic agriculture', 'الزراعة العضوية', 'زراعة عضوية',
+            ],
+            'soil' => [
+                'soil fertility', 'soil health', 'خصوبة التربة', 'خصوبة',
             ],
             'potassium' => [
                 'potassium deficiency', 'k deficiency', 'نقص البوتاسيوم',
@@ -417,6 +438,7 @@ final class AgriculturalEntityCatalog
         return match ($factor) {
             'temperature', 'salinity' => 'environmental_requirements',
             'water' => 'irrigation',
+            'organic', 'soil' => 'soil_management',
             'potassium', 'nitrogen', 'phosphorus' => 'plant_nutrition',
             'germination' => 'cultivation',
             'drying', 'storage' => 'agricultural_industry',

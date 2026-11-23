@@ -1381,6 +1381,13 @@ class QueryUnderstandingService
         $explicitIrrigation = AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)
             || ($hasNamedCrop && ($factorRoles['water'] ?? null) === 'requested' && in_array('water', $topicFactors, true));
 
+        // Yield/productivity phrasing must not outrank an explicit irrigation/water-requirement act
+        // (AR: إنتاجية + الري الناقص; EN: yield + deficit irrigation).
+        if ($explicitIrrigation
+            && in_array($bestIntent, ['productivity', 'general_knowledge', 'cultivation'], true)) {
+            $bestIntent = 'irrigation';
+        }
+
         // Constraint-role water/salinity/temperature must not replace a crop-selection/cultivation act.
         if (! $explicitIrrigation
             && $categoryRecommendation
@@ -1433,7 +1440,7 @@ class QueryUnderstandingService
             $researchIntent = 'environmental_requirements';
         }
         if ($requestedProperty === 'irrigation'
-            && in_array($researchIntent, ['cultivation', 'general_knowledge'], true)
+            && in_array($researchIntent, ['cultivation', 'general_knowledge', 'productivity'], true)
             && AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)) {
             $researchIntent = 'irrigation';
         }
@@ -2456,7 +2463,8 @@ class QueryUnderstandingService
             return 'salinity_physiology';
         }
         if ($this->isRequestedTopicFactor('water', $topicFactors, $factorRoles)
-            || $researchIntent === 'irrigation') {
+            || $researchIntent === 'irrigation'
+            || AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)) {
             return 'crop_water_requirement';
         }
         if (in_array($researchIntent, ['plant_nutrition'], true)

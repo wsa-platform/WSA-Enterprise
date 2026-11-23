@@ -1,0 +1,55 @@
+{
+    "schema_id": "wsa.mission.post_agris_probe.v1",
+    "runs": {
+        "en": {
+            "sense": "crop_water_requirement",
+            "variants": [
+                "Triticum aestivum wheat deficit irrigation wheat yield quantity crop water requirement",
+                "Triticum aestivum wheat irrigation deficit irrigation water requirement evapotranspiration",
+                "Triticum aestivum wheat deficit irrigation wheat yield quantity"
+            ],
+            "arabic_in_variants": false,
+            "selected_forced": [
+                "agris",
+                "openalex"
+            ],
+            "attempted": [
+                "agris",
+                "openalex"
+            ],
+            "successful": [
+                "agris",
+                "openalex"
+            ],
+            "empty": [],
+            "raw": 16,
+            "survivors": 16,
+            "ms": 11824
+        },
+        "ar": {
+            "sense": "crop_water_requirement",
+            "variants": [
+                "Triticum aestivum wheat deficit irrigation yield quantity crop water requirement",
+                "Triticum aestivum wheat irrigation water requirement evapotranspiration",
+                "Triticum aestivum wheat deficit irrigation yield quantity"
+            ],
+            "arabic_in_variants": false,
+            "selected_forced": [
+                "agris",
+                "openalex"
+            ],
+            "attempted": [
+                "agris",
+                "openalex"
+            ],
+            "successful": [
+                "agris",
+                "openalex"
+            ],
+            "empty": [],
+            "raw": 16,
+            "survivors": 16,
+            "ms": 1088
+        }
+    }
+}

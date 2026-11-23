@@ -161,7 +161,7 @@ class AgriculturalScientificValidationService
         $status = match (true) {
             $validated !== [] => 'validation_completed',
             $items !== [] => 'validation_completed_with_rejections',
-            default => 'no_valid_evidence',
+            default => EvidencePipelineStatus::NO_VALIDATED_EVIDENCE,
         };
 
         $qualityDistribution = $this->qualityDistribution($items);

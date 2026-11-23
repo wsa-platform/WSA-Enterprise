@@ -107,6 +107,10 @@ final class GovernedScientificSourceEligibility
             'organic', 'organics', 'agroecology', 'agroecological', 'regenerative',
             'biodynamic', 'orgprints', 'organic farming', 'organic agriculture',
             'organic production', 'compost', 'cover crop', 'green manure',
+            // Multilingual organic cues (ISS-AR-002) — cue bag is lowercased; keep AR/TR/FR surfaces.
+            'عضوي', 'عضوية', 'العضوية', 'الزراعة العضوية', 'زراعة عضوية',
+            'organik', 'organik tarım', 'organik tarim',
+            'agriculture biologique', 'biologique',
         ]);
     }
 

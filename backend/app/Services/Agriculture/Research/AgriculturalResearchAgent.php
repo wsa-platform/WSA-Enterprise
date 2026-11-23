@@ -792,9 +792,9 @@ class AgriculturalResearchAgent
             return ['failure_class' => null, 'failure_code' => null];
         }
 
-        $validationStatus = $validation->status;
-        $synthesisStatus = $synthesis->status;
-        $searchStatus = $search->status;
+        $validationStatus = \App\Services\Agriculture\Research\Validation\EvidencePipelineStatus::canonicalize($validation->status) ?? $validation->status;
+        $synthesisStatus = \App\Services\Agriculture\Research\Validation\EvidencePipelineStatus::canonicalize($synthesis->status) ?? $synthesis->status;
+        $searchStatus = \App\Services\Agriculture\Research\Validation\EvidencePipelineStatus::canonicalize($search->status) ?? $search->status;
 
         if ($validationStatus === 'all_results_rejected_by_relevance'
             || $synthesisStatus === 'all_results_rejected_by_relevance') {
@@ -803,6 +803,7 @@ class AgriculturalResearchAgent
                 'failure_code' => 'all_results_rejected_by_relevance',
             ];
         }
+
         if (in_array($synthesisStatus, ['insufficient_evidence', 'no_validated_evidence'], true)
             || in_array($validationStatus, ['insufficient_evidence', 'no_validated_evidence'], true)) {
             return [

@@ -78,7 +78,8 @@ final class AgrisLocalIndexQuerySpecializer
         );
 
         $hay = mb_strtolower($original.' '.$csqSurface);
-        if (str_contains($hay, 'deficit') && $entity !== null) {
+        if ((str_contains($hay, 'deficit') || str_contains($hay, 'ناقص') || str_contains($hay, 'نقص'))
+            && $entity !== null) {
             $deficitTerms = $this->uniqueNonEmpty([
                 $entity,
                 'deficit',
@@ -205,21 +206,38 @@ final class AgrisLocalIndexQuerySpecializer
     private function resolveEntity(KnowledgeQueryPlan $plan): ?string
     {
         $query = $plan->normalizedQuery;
-        // Prefer common crop label for LocalIndex FTS (AGRIS titles often use common names).
-        // Scientific name remains available as a controlled synonym variant.
+        // Prefer Latin scientific / English catalog identity for LocalIndex FTS.
+        // Arabic crop surfaces (e.g. القمح) must not enter conjunctive AGRIS queries (ISS-AR-001/FTS-001).
+        $scientific = trim((string) ($query->scientificName ?? ''));
+        if ($scientific !== '' && preg_match('/\p{Arabic}/u', $scientific) !== 1) {
+            return $scientific;
+        }
+
+        $cropId = trim((string) ($query->cropId ?? ''));
+        if ($cropId !== '' && preg_match('/\p{Arabic}/u', $cropId) !== 1) {
+            return str_replace('-', ' ', $cropId);
+        }
+
         foreach ([
             $query->crop,
             is_array($query->subject) ? ($query->subject['label'] ?? $query->subject['value'] ?? null) : null,
             is_array($plan->subjectEntity) ? ($plan->subjectEntity['label'] ?? $plan->subjectEntity['value'] ?? null) : null,
-            $query->scientificName,
         ] as $candidate) {
             $term = trim((string) $candidate);
-            if ($term !== '') {
-                return $term;
+            if ($term === '' || preg_match('/\p{Arabic}/u', $term) === 1) {
+                continue;
             }
+            // Map common multilingual labels to catalog crop ids when possible.
+            $resolved = \App\Services\Agriculture\Research\AgriculturalEntityCatalog::resolveExactCanonicalCropIdFromLabel($term)
+                ?? \App\Services\Agriculture\Research\AgriculturalEntityCatalog::resolveCanonicalCropIdFromLabel($term);
+            if (is_string($resolved) && $resolved !== '') {
+                return str_replace('-', ' ', $resolved);
+            }
+
+            return $term;
         }
 
-        return null;
+        return $scientific !== '' ? $scientific : null;
     }
 
     /**
@@ -278,10 +296,18 @@ final class AgrisLocalIndexQuerySpecializer
                 return $token;
             }
         }
+        // Multilingual yield/productivity cues → English FTS token.
+        if (str_contains($hay, 'إنتاجية') || str_contains($hay, 'انتاجية') || str_contains($hay, 'إنتاج')
+            || str_contains($hay, 'verim') || str_contains($hay, 'rendement')) {
+            return 'yield';
+        }
         // "deficit" is a treatment qualifier — keep it for a dedicated refinement version, not primary AND.
         $topic = trim($topic);
+        if ($topic === '' || preg_match('/\p{Arabic}/u', $topic) === 1) {
+            return null;
+        }
 
-        return $topic !== '' && ! in_array(mb_strtolower($topic), ['irrigation', 'taxonomy'], true)
+        return ! in_array(mb_strtolower($topic), ['irrigation', 'taxonomy'], true)
             ? $topic
             : null;
     }
@@ -316,7 +342,7 @@ final class AgrisLocalIndexQuerySpecializer
         $seen = [];
         foreach ($terms as $term) {
             $t = trim((string) $term);
-            if ($t === '') {
+            if ($t === '' || preg_match('/\p{Arabic}/u', $t) === 1) {
                 continue;
             }
             $k = mb_strtolower($t);

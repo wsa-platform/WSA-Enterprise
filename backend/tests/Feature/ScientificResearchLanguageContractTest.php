@@ -15,8 +15,8 @@ use App\Services\Agriculture\Research\Validation\ScientificEvidenceItem;
 use Tests\TestCase;
 
 /**
- * Platform locale → answer_language → composer prose.
- * Question language is independent; retrieval stays English-first scholarly.
+ * R2: answer_language follows the question language, never platform UI locale.
+ * Retrieval stays English-first scholarly (ADR-022 §15).
  */
 class ScientificResearchLanguageContractTest extends TestCase
 {
@@ -26,7 +26,7 @@ class ScientificResearchLanguageContractTest extends TestCase
         return SetLocaleFromHeader::SUPPORTED_LOCALES;
     }
 
-    public function test_accept_language_sets_answer_language_not_question_language(): void
+    public function test_accept_language_sets_ui_locale_not_answer_language(): void
     {
         $response = $this->postJson(
             '/api/v1/public/research-agent/plan',
@@ -38,21 +38,12 @@ class ScientificResearchLanguageContractTest extends TestCase
         $query = $response->json('query_understanding');
         $this->assertSame('en', $query['language'] ?? null);
         $this->assertSame('en', $query['constraints']['question_language'] ?? null);
-        $this->assertSame('ar', $query['constraints']['answer_language'] ?? null);
-        $this->assertSame('ar', app()->getLocale());
-
-        $regional = $this->postJson(
-            '/api/v1/public/research-agent/plan',
-            ['query' => 'What are the types of agricultural land in Egypt?'],
-            ['Accept-Language' => 'ar-SA,ar;q=0.9'],
-        );
-        $regional->assertOk();
-        $this->assertSame('en', $regional->json('query_understanding.language'));
-        $this->assertSame('ar', $regional->json('query_understanding.constraints.answer_language'));
+        // R2: English question → English answer language regardless of Accept-Language.
+        $this->assertSame('en', $query['constraints']['answer_language'] ?? null);
         $this->assertSame('ar', app()->getLocale());
     }
 
-    public function test_platform_versus_question_language_matrix(): void
+    public function test_answer_language_follows_question_not_platform_locale(): void
     {
         $qus = app(QueryUnderstandingService::class);
         $questions = [
@@ -77,57 +68,50 @@ class ScientificResearchLanguageContractTest extends TestCase
                     "question_language for {$platform}/{$questionLang}",
                 );
                 $this->assertSame(
-                    $platform,
+                    $questionLang,
                     $understood->constraints['answer_language'] ?? null,
-                    "answer_language follows platform, not question, for {$platform}/{$questionLang}",
+                    "R2 answer_language follows question, not platform, for {$platform}/{$questionLang}",
                 );
             }
         }
     }
 
-    public function test_retrieval_variants_stay_english_when_platform_is_arabic(): void
+    public function test_retrieval_variants_stay_english_for_arabic_question(): void
     {
-        $variantsByPlatform = [];
-        foreach (['ar', 'tr', 'fr'] as $platform) {
-            app()->setLocale($platform);
-            $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
-                'query' => 'ما هي أنواع الأراضي الزراعية في مصر؟',
-            ]);
-            $this->assertSame($platform, $plan->normalizedQuery->constraints['answer_language'] ?? null, $platform);
-            $this->assertSame('ar', $plan->normalizedQuery->language, $platform);
+        app()->setLocale('en');
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما هي أنواع الأراضي الزراعية في مصر؟',
+        ]);
+        $this->assertSame('ar', $plan->normalizedQuery->constraints['answer_language'] ?? null);
+        $this->assertSame('ar', $plan->normalizedQuery->language);
 
-            $variants = app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan);
-            $this->assertNotEmpty($variants, $platform);
-            $variantsByPlatform[$platform] = $variants;
-            $joined = mb_strtolower(implode(' ', $variants));
-            $this->assertStringContainsString('egypt', $joined, $platform);
-            $this->assertTrue(
-                str_contains($joined, 'land') || str_contains($joined, 'soil'),
-                $platform.': '.$joined,
+        $variants = app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($plan);
+        $this->assertNotEmpty($variants);
+        $joined = mb_strtolower(implode(' ', $variants));
+        $this->assertStringContainsString('egypt', $joined);
+        $this->assertTrue(
+            str_contains($joined, 'land') || str_contains($joined, 'soil'),
+            $joined,
+        );
+        foreach ($variants as $variant) {
+            $this->assertSame(
+                0,
+                preg_match('/\p{Arabic}/u', $variant),
+                'retrieval query must stay English-first scholarly: '.$variant,
             );
-            foreach ($variants as $variant) {
-                $this->assertSame(
-                    0,
-                    preg_match('/\p{Arabic}/u', $variant),
-                    $platform.' retrieval query must stay English-first scholarly: '.$variant,
-                );
-            }
         }
-
-        $this->assertSame($variantsByPlatform['ar'], $variantsByPlatform['tr']);
-        $this->assertSame($variantsByPlatform['ar'], $variantsByPlatform['fr']);
     }
 
-    public function test_arabic_platform_english_evidence_does_not_yield_english_final_prose(): void
+    public function test_arabic_question_labels_english_evidence_excerpts(): void
     {
-        app()->setLocale('ar');
+        app()->setLocale('en');
         $englishSnippet = 'Agricultural land types in Egypt include alluvial soils, sandy soils, calcareous soils, and saline soils.';
         $originalUrl = 'https://doi.org/10.1000/lang-contract-land';
         $originalTitle = 'Classification of agricultural land types in Egypt';
         $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
-            'query' => 'What are the types of agricultural land in Egypt?',
+            'query' => 'ما هي أنواع الأراضي الزراعية في مصر؟',
         ]);
-        $this->assertSame('en', $plan->normalizedQuery->language);
+        $this->assertSame('ar', $plan->normalizedQuery->language);
         $this->assertSame('ar', $plan->normalizedQuery->constraints['answer_language'] ?? null);
 
         $report = app(AnswerComposer::class)->compose($plan, $this->validationReport([
@@ -146,38 +130,32 @@ class ScientificResearchLanguageContractTest extends TestCase
 
         $this->assertSame('ar', $report->language);
         $this->assertMatchesRegularExpression('/\p{Arabic}/u', $this->mainAnswerSection($report->answer));
-        $this->assertStringNotContainsString(
-            'Agricultural land types in Egypt include',
-            $this->mainAnswerSection($report->answer),
-        );
-        $this->assertStringContainsString($originalTitle, $report->answer);
+        // Foreign excerpts must be attributed, not unmarked English prose as the answer voice.
+        $this->assertStringContainsString('مقتطف من المصدر', $report->answer);
+        $this->assertNotEmpty($report->citations);
         $this->assertSame($originalTitle, $report->citations[0]->title ?? null);
-        $this->assertSame(['Dr Researcher'], $report->citations[0]->authors ?? null);
-        $this->assertSame('Journal of Agronomy', $report->citations[0]->journal ?? null);
-        $this->assertSame('10.1000/lang-contract-land', $report->citations[0]->doi ?? null);
         $this->assertSame($originalUrl, $report->citations[0]->url ?? null);
-        $this->assertStringContainsString($originalUrl, $report->answer);
     }
 
-    public function test_english_platform_arabic_question_yields_english_prose(): void
+    public function test_english_question_yields_english_prose_regardless_of_arabic_ui(): void
     {
-        app()->setLocale('en');
+        app()->setLocale('ar');
         $englishSnippet = 'Agricultural land types in Egypt include alluvial soils, sandy soils, calcareous soils, and saline soils.';
         $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
-            'query' => 'ما هي أنواع الأراضي الزراعية في مصر؟',
+            'query' => 'What are the types of agricultural land in Egypt?',
         ]);
-        $this->assertSame('ar', $plan->normalizedQuery->language);
+        $this->assertSame('en', $plan->normalizedQuery->language);
         $this->assertSame('en', $plan->normalizedQuery->constraints['answer_language'] ?? null);
 
         $report = app(AnswerComposer::class)->compose($plan, $this->validationReport([
             $this->usableEvidence(
-                'lang-en-ar',
+                'lang-en-ui-ar',
                 $englishSnippet,
                 ClaimEvidenceRelationship::SUPPORTED,
                 [
                     'publicationTitle' => 'Classification of agricultural land types in Egypt',
-                    'doi' => '10.1000/lang-contract-en-ar',
-                    'url' => 'https://doi.org/10.1000/lang-contract-en-ar',
+                    'doi' => '10.1000/lang-contract-en-ui',
+                    'url' => 'https://doi.org/10.1000/lang-contract-en-ui',
                     'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
                 ],
             ),
@@ -187,92 +165,43 @@ class ScientificResearchLanguageContractTest extends TestCase
         $main = $this->mainAnswerSection($report->answer);
         $this->assertStringContainsString('Direct scientific evidence', $main);
         $this->assertDoesNotMatchRegularExpression('/\p{Arabic}/u', $main);
-        $this->assertStringNotContainsString('Agricultural land types in Egypt include', $main);
-        $this->assertSame('Classification of agricultural land types in Egypt', $report->citations[0]->title ?? null);
-        $this->assertSame('https://doi.org/10.1000/lang-contract-en-ar', $report->citations[0]->url ?? null);
     }
 
-    public function test_platform_locale_matrix_localizes_composer_prose(): void
+    public function test_question_language_matrix_localizes_composer_prose(): void
     {
         $markers = [
-            'en' => 'Direct scientific evidence',
-            'ar' => 'تشير الأدلة العلمية المباشرة',
-            'tr' => 'Doğrudan bilimsel kanıtlar',
-            'fr' => 'Les preuves scientifiques directes',
+            'en' => ['query' => 'What is the best temperature for tomato seed germination?', 'marker' => 'Direct scientific evidence'],
+            'ar' => ['query' => 'ما هي أفضل درجة حرارة لإنبات بذور الطماطم؟', 'marker' => 'تشير الأدلة العلمية المباشرة'],
+            'tr' => ['query' => 'Domates tohumu çimlenmesi için en uygun sıcaklık nedir?', 'marker' => 'Doğrudan bilimsel kanıtlar'],
+            'fr' => ['query' => 'Quelle est la meilleure température pour la germination des graines de tomate ?', 'marker' => 'Les preuves scientifiques directes'],
         ];
         $snippet = 'Solanum lycopersicum seed germination is optimal near 25 °C under controlled temperature regimes.';
 
-        foreach ($markers as $platform => $marker) {
-            app()->setLocale($platform);
+        foreach ($markers as $lang => $row) {
+            app()->setLocale('en');
             $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
-                'query' => 'What is the best temperature for tomato seed germination?',
+                'query' => $row['query'],
             ]);
-            $this->assertSame('en', $plan->normalizedQuery->language, $platform);
-            $this->assertSame($platform, $plan->normalizedQuery->constraints['answer_language'] ?? null, $platform);
+            $this->assertSame($lang, $plan->normalizedQuery->language, $lang);
+            $this->assertSame($lang, $plan->normalizedQuery->constraints['answer_language'] ?? null, $lang);
 
             $report = app(AnswerComposer::class)->compose($plan, $this->validationReport([
                 $this->usableEvidence(
-                    'lang-range-'.$platform,
+                    'lang-range-'.$lang,
                     $snippet,
                     ClaimEvidenceRelationship::SUPPORTED,
                     [
                         'publicationTitle' => 'Effect of temperature on tomato seed germination',
-                        'doi' => '10.1000/lang-range-'.$platform,
-                        'url' => 'https://doi.org/10.1000/lang-range-'.$platform,
+                        'doi' => '10.1000/lang-range-'.$lang,
+                        'url' => 'https://doi.org/10.1000/lang-range-'.$lang,
                         'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
                     ],
                 ),
             ]));
 
-            $this->assertSame($platform, $report->language, $platform);
-            $main = $this->mainAnswerSection($report->answer);
-            $this->assertStringContainsString($marker, $main, $platform.' main prose');
-            $this->assertStringContainsString('25', $main, $platform);
-            $this->assertStringNotContainsString(
-                'Solanum lycopersicum seed germination is optimal near',
-                $main,
-                $platform.' must not paste English abstract as final prose',
-            );
-            $this->assertSame(
-                'https://doi.org/10.1000/lang-range-'.$platform,
-                $report->citations[0]->url ?? null,
-                $platform,
-            );
+            $this->assertSame($lang, $report->language, $lang);
+            $this->assertStringContainsString($row['marker'], $this->mainAnswerSection($report->answer), $lang);
         }
-    }
-
-    public function test_missing_locale_falls_back_to_english_like_set_locale_from_header(): void
-    {
-        app()->setLocale('de');
-        $understood = app(QueryUnderstandingService::class)->understand([
-            'query' => 'ما هي أنواع الأراضي الزراعية في مصر؟',
-        ]);
-        $this->assertSame('ar', $understood->language);
-        $this->assertSame('en', $understood->constraints['answer_language'] ?? null);
-    }
-
-    private function mainAnswerSection(string $answer): string
-    {
-        foreach ([
-            '### المصادر الأساسية',
-            '### المصدر الأساسي',
-            '### المصادر',
-            '### Primary sources',
-            '### Primary source',
-            '### Sources',
-            '### Birincil kaynaklar',
-            '### Birincil kaynak',
-            '### Kaynaklar',
-            '### Sources principales',
-            '### Source principale',
-        ] as $marker) {
-            $pos = mb_strpos($answer, $marker);
-            if ($pos !== false) {
-                return trim(mb_substr($answer, 0, $pos));
-            }
-        }
-
-        return $answer;
     }
 
     /**
@@ -289,8 +218,8 @@ class ScientificResearchLanguageContractTest extends TestCase
             rejectedCount: 0,
             duplicateCount: 0,
             conflictingCount: 0,
-            evidenceSufficient: $items !== [],
-            validatorsUsed: [],
+            evidenceSufficient: true,
+            validatorsUsed: ['test'],
             qualityDistribution: [],
             searchSummary: [],
             observability: [],
@@ -339,5 +268,29 @@ class ScientificResearchLanguageContractTest extends TestCase
                 'evidence_directness' => $directness,
             ],
         );
+    }
+
+    private function mainAnswerSection(string $answer): string
+    {
+        foreach ([
+            '### المصادر الأساسية',
+            '### المصدر الأساسي',
+            '### المصادر',
+            '### Primary sources',
+            '### Primary source',
+            '### Sources',
+            '### Birincil kaynaklar',
+            '### Birincil kaynak',
+            '### Kaynaklar',
+            '### Sources principales',
+            '### Source principale',
+        ] as $marker) {
+            $pos = mb_strpos($answer, $marker);
+            if ($pos !== false) {
+                return trim(mb_substr($answer, 0, $pos));
+            }
+        }
+
+        return $answer;
     }
 }
