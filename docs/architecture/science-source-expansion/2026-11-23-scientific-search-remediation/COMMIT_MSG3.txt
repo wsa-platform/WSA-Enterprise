@@ -1,0 +1,3 @@
+docs(science): sync remediation report SHAs after docs push
+
+Align final Arabic report and git verification with HEAD 808ca4e.

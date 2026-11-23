@@ -6,10 +6,13 @@
 | Pre-mission HEAD | `d655c40e523e5245721f177cdd73f7a136ba65fe` |
 | Mission commit | `d8f4749aa7738374d1c5574b5cf13c6e31bf7729` |
 | Message | `fix(science): remediate Arabic scientific search parity and contracts` |
+| Docs commit | `808ca4e04c81ee4579f440860da7393e230f750b` |
+| Docs message | `docs(science): add Arabic remediation final report and git verification` |
 | Remote | `origin` → `https://github.com/wsa-platform/WSA-Enterprise.git` |
-| Push | `d655c40..d8f4749  HEAD -> phase-18-m18-ai-marketing-communications` |
-| Local HEAD after push | `d8f4749aa7738374d1c5574b5cf13c6e31bf7729` |
-| Remote tracking HEAD | `d8f4749aa7738374d1c5574b5cf13c6e31bf7729` |
+| Push (code) | `d655c40..d8f4749  HEAD -> phase-18-m18-ai-marketing-communications` |
+| Push (docs) | `d8f4749..808ca4e  HEAD -> phase-18-m18-ai-marketing-communications` |
+| Local HEAD after push | `808ca4e04c81ee4579f440860da7393e230f750b` |
+| Remote tracking HEAD | `808ca4e04c81ee4579f440860da7393e230f750b` |
 | Sync | **Matched** (not ahead/behind) |
 | Force push | Not used |
 | WIP | Pre-existing dirty/untracked files **preserved** and **excluded** from commit |
