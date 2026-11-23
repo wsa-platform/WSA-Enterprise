@@ -17,7 +17,7 @@
 | 7 Status | PASS |
 | 8 Regression | PARTIALLY_VERIFIED (Upstream UNDETERMINED/WIP) |
 | 9 Repository | PASS |
-| 10 Release | *(after push)* |
+| 10 Release | PASS (`8d6e338` local=remote) |
 | 11 Frontend | PASS (React live); Flutter live NOT_RUN |
 
 ## Limits
