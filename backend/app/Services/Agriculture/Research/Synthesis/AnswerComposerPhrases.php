@@ -180,6 +180,27 @@ final class AnswerComposerPhrases
                 'tr' => 'Bu konuda çelişkili bilimsel kanıtlar vardır; değerler veya sonuçlar kaynağa ve koşullara göre değişebilir.',
                 'fr' => 'Des preuves scientifiques contradictoires existent pour ce sujet ; les valeurs ou conclusions peuvent varier selon la source et les conditions.',
             ],
+            'context_note' => [
+                'en' => 'Context note: ', 'ar' => 'ملاحظة سياقية: ', 'tr' => 'Bağlam notu: ', 'fr' => 'Note de contexte : ',
+            ],
+            'context_difference_message' => [
+                'en' => 'Findings differ under distinct experimental conditions and should not be treated as a direct contradiction.',
+                'ar' => 'تختلف النتائج باختلاف الظروف التجريبية ولا ينبغي اعتبارها تناقضاً مباشراً.',
+                'tr' => 'Bulgular farklı deneysel koşullarda değişir ve doğrudan çelişki olarak ele alınmamalıdır.',
+                'fr' => 'Les résultats diffèrent selon des conditions expérimentales distinctes et ne doivent pas être traités comme une contradiction directe.',
+            ],
+            'not_comparable_message' => [
+                'en' => 'These findings are not reliably comparable (different entities or measurement contexts).',
+                'ar' => 'هذه النتائج غير قابلة للمقارنة بشكل موثوق (كيانات أو سياقات قياس مختلفة).',
+                'tr' => 'Bu bulgular güvenilir biçimde karşılaştırılamaz (farklı varlıklar veya ölçüm bağlamları).',
+                'fr' => 'Ces résultats ne sont pas comparables de façon fiable (entités ou contextes de mesure différents).',
+            ],
+            'insufficient_conflict_context_message' => [
+                'en' => 'Opposing findings lack sufficient experimental context to determine whether they are genuine contradictions.',
+                'ar' => 'النتائج المتعارضة تفتقر إلى سياق تجريبي كافٍ لتحديد ما إذا كانت تناقضاً حقيقياً.',
+                'tr' => 'Karşıt bulguların gerçek çelişki olup olmadığını belirlemek için yeterli deneysel bağlam yoktur.',
+                'fr' => 'Les résultats opposés manquent de contexte expérimental suffisant pour déterminer s’il s’agit d’une contradiction réelle.',
+            ],
             'limited_conflicting' => [
                 'en' => 'Limited or conflicting scientific evidence is available; review details and sources.',
                 'ar' => 'تتوفر أدلة علمية محدودة أو متعارضة؛ راجع التفاصيل والمصادر.',

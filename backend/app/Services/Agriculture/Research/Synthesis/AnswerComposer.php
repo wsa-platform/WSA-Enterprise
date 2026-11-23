@@ -13,6 +13,7 @@ use App\Services\Agriculture\Research\Search\ScientificEvidenceRelevanceGate;
 use App\Services\Agriculture\Research\Search\ScientificStatisticalClaimAligner;
 use App\Services\Agriculture\Research\Search\ScientificStructuredObservation;
 use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
+use App\Services\Agriculture\Research\Validation\EvidenceConflictAssessmentOutcome;
 use App\Services\Agriculture\Research\Validation\EvidenceIndependenceAssessor;
 use App\Services\Agriculture\Research\Validation\EvidencePipelineStatus;
 use App\Services\Agriculture\Research\Validation\EvidenceValidationExecutionReport;
@@ -156,6 +157,12 @@ class AnswerComposer
         $claims = (new ClaimAttributionLedger())->rebindClaimsWithCitations($claims, $usable, $citations);
 
         $conflicts = $this->buildConflicts($usable, $language, $plan);
+        $synthesisPacket = (new ScientificSynthesisIntegrator())->integrate(
+            $claims,
+            $usable,
+            $conflicts,
+            $language,
+        );
         $supportingOnly = $this->isSupportingOnlySufficiency($sufficiency);
         // Findings may include supporting for metadata/additional; main answer body gates DIRECT-only.
         $keyFindings = $this->buildKeyFindings($claims, $usable, $plan, $language);
@@ -246,6 +253,7 @@ class AnswerComposer
             $additionalSection,
             $conflicts,
             $language,
+            $synthesisPacket,
         );
         $answer = $this->buildAnswer(
             $mainAnswerBody,
@@ -326,6 +334,7 @@ class AnswerComposer
                     $citations,
                 ),
                 'citation_provider_contribution' => $this->citationProviderContribution($citations),
+                'scientific_synthesis' => $synthesisPacket,
             ] + $this->homeEvidenceLifecycleMetadata(
                 $plan,
                 $validationReport,
@@ -1841,9 +1850,23 @@ class AnswerComposer
     {
         $conflicts = [];
         foreach ($items as $item) {
+            // Only genuine / insufficient-context polarity conflicts enter this list.
+            // Contextual differences stay on evidence quality_factors + synthesis packet.
             if (! $item->hasConflict && $item->claimRelationship !== ClaimEvidenceRelationship::CONFLICTING) {
                 continue;
             }
+
+            $assessment = (string) ($item->qualityFactors['conflict_assessment'] ?? '');
+            $outcome = $assessment !== ''
+                ? $assessment
+                : EvidenceConflictAssessmentOutcome::GENUINE_CONFLICT;
+
+            $messageKey = match ($outcome) {
+                EvidenceConflictAssessmentOutcome::INSUFFICIENT_INFORMATION => 'insufficient_conflict_context_message',
+                EvidenceConflictAssessmentOutcome::RESOLVED_BY_CONTEXT => 'context_difference_message',
+                EvidenceConflictAssessmentOutcome::NOT_COMPARABLE => 'not_comparable_message',
+                default => 'conflict_message',
+            };
 
             $conflicts[] = [
                 'evidence_id' => $item->evidenceId,
@@ -1853,7 +1876,11 @@ class AnswerComposer
                 'publication_year' => $item->publicationYear,
                 'conditions' => $item->conditions,
                 'numerical_values' => $this->extractSupportedPropertyValues((string) $item->evidenceText, $plan),
-                'message' => AnswerComposerPhrases::get($language, 'conflict_message'),
+                'conflict_assessment' => $outcome,
+                'differing_keys' => is_array($item->qualityFactors['conflict_differing_keys'] ?? null)
+                    ? $item->qualityFactors['conflict_differing_keys']
+                    : [],
+                'message' => AnswerComposerPhrases::get($language, $messageKey),
             ];
         }
 
@@ -2899,11 +2926,16 @@ class AnswerComposer
     /**
      * @param  list<array<string, mixed>>  $conflicts
      */
+    /**
+     * @param  list<array<string, mixed>>  $conflicts
+     * @param  array<string, mixed>  $synthesisPacket
+     */
     private function buildDetailedExplanation(
         string $primarySourcesSection,
         string $additionalSection,
         array $conflicts,
         string $language,
+        array $synthesisPacket = [],
     ): string {
         $parts = array_values(array_filter([
             $primarySourcesSection,
@@ -2912,6 +2944,19 @@ class AnswerComposer
 
         if ($conflicts !== []) {
             $parts[] = AnswerComposerPhrases::get($language, 'conflict_note').($conflicts[0]['message'] ?? '');
+        }
+
+        $contextual = is_array($synthesisPacket['contextual_differences'] ?? null)
+            ? $synthesisPacket['contextual_differences']
+            : [];
+        if ($contextual !== []) {
+            $parts[] = AnswerComposerPhrases::get($language, 'context_note')
+                .AnswerComposerPhrases::get($language, 'context_difference_message');
+        }
+
+        $appendix = (new ScientificSynthesisIntegrator())->formatAppendix($synthesisPacket, $language);
+        if (trim($appendix) !== '') {
+            $parts[] = $appendix;
         }
 
         return implode("\n\n", $parts);

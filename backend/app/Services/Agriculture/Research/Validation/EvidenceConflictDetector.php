@@ -15,6 +15,10 @@ class EvidenceConflictDetector
 {
     private const MIN_STRENGTH = 2;
 
+    public function __construct(
+        private EvidenceConflictContextAssessor $contextAssessor = new EvidenceConflictContextAssessor,
+    ) {}
+
     /**
      * @param  list<ScientificEvidenceItem>  $items
      * @return list<ScientificEvidenceItem>
@@ -34,7 +38,11 @@ class EvidenceConflictDetector
             $topicGroups[$topicKey][] = $index;
         }
 
-        $conflictIndices = [];
+        /** @var array<int, array{outcome: string, differing_keys: list<string>, reason: string}> $pairAssessments */
+        $pairAssessments = [];
+        $genuineConflictIndices = [];
+        $contextResolvedIndices = [];
+
         foreach ($topicGroups as $indices) {
             if (count($indices) < 2) {
                 continue;
@@ -45,53 +53,118 @@ class EvidenceConflictDetector
                 $polarities[$index] = $this->polarity($items[$index]->evidenceText ?? '');
             }
 
-            foreach ($this->conflictingPairs($indices, $polarities, $items) as $index) {
-                $conflictIndices[$index] = true;
+            foreach ($this->opposingPairs($indices, $polarities, $items) as $pair) {
+                $a = $pair['a'];
+                $b = $pair['b'];
+                $assessment = $this->contextAssessor->assessPair($items[$a], $items[$b]);
+                $pairAssessments[$a] = $assessment;
+                $pairAssessments[$b] = $assessment;
+
+                if ($assessment['outcome'] === EvidenceConflictAssessmentOutcome::RESOLVED_BY_CONTEXT
+                    || $assessment['outcome'] === EvidenceConflictAssessmentOutcome::NOT_COMPARABLE) {
+                    // Contextual / non-comparable differences are not genuine contradictions.
+                    $contextResolvedIndices[$a] = true;
+                    $contextResolvedIndices[$b] = true;
+
+                    continue;
+                }
+
+                // GENUINE_CONFLICT or INSUFFICIENT_INFORMATION (conservative: do not merge).
+                foreach ($pair['mark'] as $index) {
+                    $genuineConflictIndices[$index] = true;
+                }
             }
         }
 
-        if ($conflictIndices === []) {
+        if ($genuineConflictIndices === [] && $contextResolvedIndices === []) {
             return $items;
         }
 
         $updated = [];
         foreach ($items as $index => $item) {
-            if (! isset($conflictIndices[$index])) {
-                $updated[] = $item;
+            $assessment = $pairAssessments[$index] ?? null;
+
+            if (isset($genuineConflictIndices[$index])) {
+                $updated[] = new ScientificEvidenceItem(
+                    evidenceId: $item->evidenceId,
+                    sourceId: $item->sourceId,
+                    sourceKey: $item->sourceKey,
+                    sourceType: $item->sourceType,
+                    publicationTitle: $item->publicationTitle,
+                    authors: $item->authors,
+                    institution: $item->institution,
+                    journal: $item->journal,
+                    doi: $item->doi,
+                    url: $item->url,
+                    publicationYear: $item->publicationYear,
+                    retrievedAt: $item->retrievedAt,
+                    agriculturalDomain: $item->agriculturalDomain,
+                    claimTopic: $item->claimTopic,
+                    evidenceText: $item->evidenceText,
+                    validationStatus: $item->validationStatus,
+                    validationFailures: array_values(array_unique(array_merge(
+                        $item->validationFailures,
+                        ['conflicting_scientific_evidence'],
+                    ))),
+                    claimRelationship: ClaimEvidenceRelationship::CONFLICTING,
+                    confidence: max(0.1, $item->confidence * 0.5),
+                    qualityScore: $item->qualityScore,
+                    qualityFactors: array_merge($item->qualityFactors, [
+                        'conflict_detected' => true,
+                        'conflict_assessment' => $assessment['outcome']
+                            ?? EvidenceConflictAssessmentOutcome::GENUINE_CONFLICT,
+                        'conflict_assessment_reason' => $assessment['reason'] ?? 'opposing_polarity',
+                        'conflict_differing_keys' => $assessment['differing_keys'] ?? [],
+                    ]),
+                    sourceAttribution: $item->sourceAttribution,
+                    hasConflict: true,
+                    conditions: $item->conditions,
+                    cropOrEntity: $item->cropOrEntity,
+                );
 
                 continue;
             }
 
-            $updated[] = new ScientificEvidenceItem(
-                evidenceId: $item->evidenceId,
-                sourceId: $item->sourceId,
-                sourceKey: $item->sourceKey,
-                sourceType: $item->sourceType,
-                publicationTitle: $item->publicationTitle,
-                authors: $item->authors,
-                institution: $item->institution,
-                journal: $item->journal,
-                doi: $item->doi,
-                url: $item->url,
-                publicationYear: $item->publicationYear,
-                retrievedAt: $item->retrievedAt,
-                agriculturalDomain: $item->agriculturalDomain,
-                claimTopic: $item->claimTopic,
-                evidenceText: $item->evidenceText,
-                validationStatus: $item->validationStatus,
-                validationFailures: array_values(array_unique(array_merge(
-                    $item->validationFailures,
-                    ['conflicting_scientific_evidence'],
-                ))),
-                claimRelationship: ClaimEvidenceRelationship::CONFLICTING,
-                confidence: max(0.1, $item->confidence * 0.5),
-                qualityScore: $item->qualityScore,
-                qualityFactors: array_merge($item->qualityFactors, ['conflict_detected' => true]),
-                sourceAttribution: $item->sourceAttribution,
-                hasConflict: true,
-                conditions: $item->conditions,
-                cropOrEntity: $item->cropOrEntity,
-            );
+            if (isset($contextResolvedIndices[$index]) && $assessment !== null) {
+                // Preserve original support relationship; annotate contextual difference.
+                $updated[] = new ScientificEvidenceItem(
+                    evidenceId: $item->evidenceId,
+                    sourceId: $item->sourceId,
+                    sourceKey: $item->sourceKey,
+                    sourceType: $item->sourceType,
+                    publicationTitle: $item->publicationTitle,
+                    authors: $item->authors,
+                    institution: $item->institution,
+                    journal: $item->journal,
+                    doi: $item->doi,
+                    url: $item->url,
+                    publicationYear: $item->publicationYear,
+                    retrievedAt: $item->retrievedAt,
+                    agriculturalDomain: $item->agriculturalDomain,
+                    claimTopic: $item->claimTopic,
+                    evidenceText: $item->evidenceText,
+                    validationStatus: $item->validationStatus,
+                    validationFailures: $item->validationFailures,
+                    claimRelationship: $item->claimRelationship,
+                    confidence: $item->confidence,
+                    qualityScore: $item->qualityScore,
+                    qualityFactors: array_merge($item->qualityFactors, [
+                        'conflict_detected' => false,
+                        'conflict_assessment' => $assessment['outcome'],
+                        'conflict_assessment_reason' => $assessment['reason'],
+                        'conflict_differing_keys' => $assessment['differing_keys'],
+                        'contextual_difference' => true,
+                    ]),
+                    sourceAttribution: $item->sourceAttribution,
+                    hasConflict: false,
+                    conditions: $item->conditions,
+                    cropOrEntity: $item->cropOrEntity,
+                );
+
+                continue;
+            }
+
+            $updated[] = $item;
         }
 
         return $updated;
@@ -101,11 +174,11 @@ class EvidenceConflictDetector
      * @param  list<int>  $indices
      * @param  array<int, array{label: string, strength: int, pos: int, neg: int}>  $polarities
      * @param  list<ScientificEvidenceItem>  $items
-     * @return list<int>
+     * @return list<array{a: int, b: int, mark: list<int>}>
      */
-    private function conflictingPairs(array $indices, array $polarities, array $items): array
+    private function opposingPairs(array $indices, array $polarities, array $items): array
     {
-        $marked = [];
+        $pairs = [];
 
         for ($i = 0; $i < count($indices); $i++) {
             for ($j = $i + 1; $j < count($indices); $j++) {
@@ -120,35 +193,28 @@ class EvidenceConflictDetector
                 $aStrong = $polarities[$a]['strength'] >= self::MIN_STRENGTH;
                 $bStrong = $polarities[$b]['strength'] >= self::MIN_STRENGTH;
 
-                // Both DIRECT with strong opposing polarity → genuine conflict pair.
+                $mark = [];
+                // Both DIRECT with strong opposing polarity → candidate conflict pair.
                 if ($aDirect && $bDirect && $aStrong && $bStrong) {
-                    $marked[$a] = true;
-                    $marked[$b] = true;
+                    $mark = [$a, $b];
+                } elseif ($aDirect && ! $bDirect) {
+                    // Preserve DIRECT when only a secondary/weaker claim contradicts it.
+                    $mark = [$b];
+                } elseif ($bDirect && ! $aDirect) {
+                    $mark = [$a];
+                } elseif ($aStrong && $bStrong) {
+                    $mark = [$a, $b];
+                }
 
+                if ($mark === []) {
                     continue;
                 }
 
-                // Preserve DIRECT when only a secondary/weaker claim contradicts it.
-                if ($aDirect && ! $bDirect) {
-                    $marked[$b] = true;
-
-                    continue;
-                }
-                if ($bDirect && ! $aDirect) {
-                    $marked[$a] = true;
-
-                    continue;
-                }
-
-                // Non-direct pair: mark only items with strong polarity on both sides.
-                if ($aStrong && $bStrong) {
-                    $marked[$a] = true;
-                    $marked[$b] = true;
-                }
+                $pairs[] = ['a' => $a, 'b' => $b, 'mark' => $mark];
             }
         }
 
-        return array_map('intval', array_keys($marked));
+        return $pairs;
     }
 
     /**
