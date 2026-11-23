@@ -2,17 +2,27 @@
 
 ## Staged scope (mission-only)
 
-- `backend/app/Services/Agriculture/Research/Validation/EvidenceConflictAssessmentOutcome.php`
-- `backend/app/Services/Agriculture/Research/Validation/EvidenceConflictContextAssessor.php`
-- `backend/app/Services/Agriculture/Research/Validation/EvidenceConflictDetector.php`
-- `backend/app/Services/Agriculture/Research/Synthesis/ScientificSynthesisIntegrator.php`
-- `backend/app/Services/Agriculture/Research/Synthesis/AnswerComposer.php`
-- `backend/app/Services/Agriculture/Research/Synthesis/AnswerComposerPhrases.php`
-- New unit/contract tests under Validation/ and Synthesis/
-- `docs/architecture/science-source-expansion/2026-11-23-scientific-synthesis-evidence-integration/`
+Implementation + tests + mission docs under synthesis/evidence-integration. Unrelated WIP excluded.
 
-Unrelated WIP excluded.
+## Commit
 
-## Release
+| Field | Value |
+|---|---|
+| SHA | `11abf769df8b39ce0066f8063dd5c9655457f932` |
+| Short | `11abf76` |
+| Message | `fix(science): integrate contextual conflict assessment into scientific synthesis` |
+| Branch | `phase-18-m18-ai-marketing-communications` |
+| Parent | `d3bbb44a57e49ae6e7251a990c77c1b99d2f5e1a` |
 
-Filled after commit/push in this mission turn.
+## Push
+
+| Field | Value |
+|---|---|
+| Result | `d3bbb44..11abf76  HEAD -> phase-18-m18-ai-marketing-communications` |
+| Force push | **No** |
+| Local HEAD | `11abf769df8b39ce0066f8063dd5c9655457f932` |
+| Remote HEAD | `11abf769df8b39ce0066f8063dd5c9655457f932` |
+
+## Secrets
+
+None committed.

@@ -100,7 +100,12 @@
 
 ## 23–25. Git / Push / الحالة النهائية
 
-تُحدَّث في `09-GIT-AND-RELEASE-EVIDENCE.md` بعد الالتزام والدفع.
+| البند | القيمة |
+|---|---|
+| Commit | `11abf769df8b39ce0066f8063dd5c9655457f932` |
+| الرسالة | `fix(science): integrate contextual conflict assessment into scientific synthesis` |
+| الدفع | `d3bbb44..11abf76` (بدون force) |
+| Local/Remote HEAD | متطابقان على `11abf76…` |
 
 ---
 
