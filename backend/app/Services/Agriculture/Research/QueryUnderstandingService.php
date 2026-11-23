@@ -1388,11 +1388,32 @@ class QueryUnderstandingService
                 && AgriculturalEntityCatalog::factorAskedAsAttribute($normalizedQuestion, 'water')
             );
 
+        // Disease / systems / technology inventory must not be promoted to irrigation intent
+        // merely because irrigation lexicon appears.
+        $blockIrrigationPromotion = AgriculturalEntityCatalog::hasPlantDiseaseOrPathogenSignal($normalizedQuestion)
+            || AgriculturalEntityCatalog::asksIrrigationSystemsOrTechnologyInventory($normalizedQuestion)
+            || in_array($bestIntent, ['disease', 'varieties', 'agricultural_extension'], true);
+
         // Yield/productivity phrasing must not outrank an explicit irrigation/water-requirement act
         // (AR: إنتاجية + الري الناقص; EN: yield + deficit irrigation).
         if ($explicitIrrigation
+            && ! $blockIrrigationPromotion
             && in_array($bestIntent, ['productivity', 'general_knowledge', 'cultivation'], true)) {
             $bestIntent = 'irrigation';
+        }
+
+        // Keep disease intent when pathogen framing dominates incidental irrigation words.
+        if (AgriculturalEntityCatalog::hasPlantDiseaseOrPathogenSignal($normalizedQuestion)
+            && in_array($bestIntent, ['irrigation', 'productivity', 'general_knowledge'], true)
+            && ! AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)) {
+            $bestIntent = 'disease';
+        }
+
+        // Keep systems/technology inventory out of irrigation-requirement intent.
+        if (AgriculturalEntityCatalog::asksIrrigationSystemsOrTechnologyInventory($normalizedQuestion)
+            && ! AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)
+            && in_array($bestIntent, ['irrigation', 'general_knowledge'], true)) {
+            $bestIntent = 'agricultural_industry';
         }
 
         // Constraint-role water/salinity/temperature must not replace a crop-selection/cultivation act.
@@ -2263,12 +2284,15 @@ class QueryUnderstandingService
             }
         }
 
-        if ($scientificSense === 'crop_water_requirement' || $researchIntent === 'irrigation') {
-            $constraints['requested_property'] = 'irrigation';
-        }
-        if (preg_match('/(?:irrigat|sulama|sulan|irriguer)/u', $normalizedQuestion) === 1
-            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'ري')
-            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'الري')) {
+        // Only genuine irrigation/requirement acts set the irrigation requested property.
+        // Systems inventory, disease, and incidental irrigation lexicon must not.
+        if ($scientificSense === 'crop_water_requirement'
+            || (
+                $researchIntent === 'irrigation'
+                && AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)
+            )
+            || AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)
+        ) {
             $constraints['requested_property'] = 'irrigation';
         }
 
@@ -2461,6 +2485,40 @@ class QueryUnderstandingService
             || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'اقتصادية')) {
             return 'agricultural_economics';
         }
+        // Disease/pathogen framing outranks incidental irrigation lexicon.
+        if ($researchIntent === 'disease'
+            || (
+                AgriculturalEntityCatalog::hasPlantDiseaseOrPathogenSignal($normalizedQuestion)
+                && ! AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)
+            )
+        ) {
+            return 'disease';
+        }
+        // Cultivar/variety suitability must not collapse to crop water requirement.
+        if ($researchIntent === 'varieties') {
+            return 'varieties';
+        }
+        // Organic / soil-fertility framing is not a water-requirement act.
+        if ($researchIntent === 'soil_management'
+            || in_array('organic', $topicFactors, true)
+            || (
+                in_array('soil', $topicFactors, true)
+                && (
+                    AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'عضوي')
+                    || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'عضوية')
+                    || AgriculturalEntityCatalog::matchesSemanticToken($normalizedQuestion, 'organic')
+                )
+            )
+        ) {
+            return 'soil_management';
+        }
+        // Irrigation systems/technology inventory is not crop_water_requirement.
+        if (AgriculturalEntityCatalog::asksIrrigationSystemsOrTechnologyInventory($normalizedQuestion)
+            && ! AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)) {
+            return $researchIntent === 'agricultural_extension'
+                ? 'agricultural_extension'
+                : 'agricultural_industry';
+        }
         if ($this->isRequestedTopicFactor('salinity', $topicFactors, $factorRoles)
             || (
                 in_array('salinity', $topicFactors, true)
@@ -2469,8 +2527,10 @@ class QueryUnderstandingService
         ) {
             return 'salinity_physiology';
         }
-        if ($this->isRequestedTopicFactor('water', $topicFactors, $factorRoles)
-            || $researchIntent === 'irrigation'
+        // Broad researchIntent=irrigation alone is insufficient; require genuine water act evidence.
+        $waterRequestedAsAttribute = $this->isRequestedTopicFactor('water', $topicFactors, $factorRoles)
+            && AgriculturalEntityCatalog::factorAskedAsAttribute($normalizedQuestion, 'water');
+        if ($waterRequestedAsAttribute
             || AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)) {
             return 'crop_water_requirement';
         }

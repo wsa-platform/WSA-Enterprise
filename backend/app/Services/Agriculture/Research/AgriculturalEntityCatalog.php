@@ -97,7 +97,10 @@ final class AgriculturalEntityCatalog
                 'plant nutrition', 'nutrient deficiency', 'potassium', 'بوتاسيوم',
                 'نقص البوتاسيوم', 'تغذية النبات', 'نقص عناصر',
             ],
-            'disease' => ['disease', 'pathogen', 'blight', 'مرض', 'أمراض', 'فطري'],
+            'disease' => [
+                'disease', 'pathogen', 'blight', 'rust', 'mildew', 'wilt', 'severity',
+                'مرض', 'أمراض', 'فطري', 'صدأ', 'الصدأ',
+            ],
             'pest' => ['pest', 'insect pest', 'آفة', 'آفات', 'حشر'],
             'diagnosis_scientific' => ['diagnosis', 'symptom identification', 'تشخيص'],
             'productivity' => ['yield', 'productivity', 'harvest', 'إنتاجية', 'محصول'],
@@ -2821,22 +2824,31 @@ final class AgriculturalEntityCatalog
         return self::tokenMatchesCultivationProcessFamily($normalized);
     }
 
+    /**
+     * Explicit irrigation intervention / crop-water requirement / quantity / scheduling /
+     * causal irrigation-effect act. Crop-agnostic and multilingual (EN/AR/TR/FR).
+     *
+     * Does NOT treat irrigation systems/technology inventory, environmental water
+     * constraints, or disease questions with incidental irrigation as positive.
+     */
     public static function asksExplicitIrrigationOrWaterRequirement(string $haystack): bool
     {
-        foreach ([
-            'irrigation scheduling', 'drip irrigation', 'irrigation system',
-            'water scheduling', 'crop water requirement', 'water requirement',
-            'evapotranspiration', 'كمية الري', 'جدولة الري', 'ري بالتنقيط',
-            'sulama suyu', 'sulama suyu ihtiyacı', 'sulama suyu gereksinimi',
-            'besoin en eau', "eau d'irrigation", 'eau d irrigation',
-            "quantité d'eau d'irrigation", 'irrigation water requirement',
-            'irrigation water needs',
-            // Explicit irrigation intervention / deficit acts (not crop-specific).
-            'deficit irrigation', 'regulated deficit irrigation', 'incomplete irrigation',
-            'الري الناقص', 'ري ناقص', 'تأثير الري', 'اثر الري', 'أثر الري',
-            'irrigation water use', 'effects of irrigation', 'effect of irrigation',
-            'effects of deficit irrigation', 'effect of deficit irrigation',
-        ] as $signal) {
+        // Systems/technology inventory is a different scientific act.
+        if (self::asksIrrigationSystemsOrTechnologyInventory($haystack)
+            && ! self::hasIrrigationRequirementOrQuantityCue($haystack)
+            && ! self::hasDeficitOrRegulatedIrrigationCue($haystack)
+            && ! self::hasCausalIrrigationEffectCue($haystack, allowDiseaseContext: false)) {
+            return false;
+        }
+
+        // Disease/pathogen primary subject with incidental irrigation lexicon.
+        if (self::hasPlantDiseaseOrPathogenSignal($haystack)
+            && ! self::hasIrrigationRequirementOrQuantityCue($haystack)
+            && ! self::hasDeficitOrRegulatedIrrigationCue($haystack)) {
+            return false;
+        }
+
+        foreach (self::explicitIrrigationActSignals() as $signal) {
             if (self::matchesSemanticToken($haystack, $signal)) {
                 return true;
             }
@@ -2846,28 +2858,285 @@ final class AgriculturalEntityCatalog
             || self::matchesSemanticToken($haystack, 'irrigation')
             || self::matchesSemanticToken($haystack, 'sulama')
             || self::matchesSemanticToken($haystack, "eau d'irrigation")
-            || self::matchesSemanticToken($haystack, 'eau d irrigation');
-        $hasQuantityOrSchedule = self::matchesSemanticToken($haystack, 'كمية')
+            || self::matchesSemanticToken($haystack, 'eau d irrigation')
+            || self::matchesSemanticToken($haystack, 'irriguer');
+
+        if ($hasIrrigationWord && self::hasIrrigationRequirementOrQuantityCue($haystack)) {
+            return true;
+        }
+
+        return self::hasCausalIrrigationEffectCue($haystack, allowDiseaseContext: false);
+    }
+
+    /**
+     * Irrigation systems / technology inventory (comparison, types, adoption of systems).
+     * Distinct from crop water requirement or deficit-irrigation intervention.
+     */
+    public static function asksIrrigationSystemsOrTechnologyInventory(string $haystack): bool
+    {
+        foreach ([
+            'irrigation system', 'irrigation systems', 'types of irrigation',
+            'irrigation technology', 'irrigation technologies', 'drip irrigation system',
+            'available irrigation systems', 'comparison of irrigation',
+            'أنظمة الري', 'انظمة الري', 'نظام الري', 'تقنية الري', 'تقنيات الري',
+            'أنواع الري', 'انواع الري', 'مقارنة أنظمة الري',
+            'sulama sistemleri', 'sulama teknolojisi', 'sulama yöntemleri',
+            "systèmes d'irrigation", 'systemes d irrigation', "technologie d'irrigation",
+            "types d'irrigation", 'types d irrigation',
+        ] as $signal) {
+            if (self::matchesSemanticToken($haystack, $signal)) {
+                return true;
+            }
+        }
+
+        $hasSystemLexicon = self::matchesSemanticToken($haystack, 'system')
+            || self::matchesSemanticToken($haystack, 'systems')
+            || self::matchesSemanticToken($haystack, 'technology')
+            || self::matchesSemanticToken($haystack, 'technologies')
+            || self::containsTerm($haystack, 'نظام')
+            || self::containsTerm($haystack, 'أنظمة')
+            || self::containsTerm($haystack, 'تقنية')
+            || self::matchesSemanticToken($haystack, 'sistem')
+            || self::matchesSemanticToken($haystack, 'sistemleri')
+            || self::matchesSemanticToken($haystack, 'technologie');
+        $hasIrrigationLexicon = self::matchesSemanticToken($haystack, 'irrigation')
+            || self::containsTerm($haystack, 'ري')
+            || self::matchesSemanticToken($haystack, 'sulama');
+
+        return $hasSystemLexicon && $hasIrrigationLexicon;
+    }
+
+    /**
+     * Dominant plant-disease / pathogen framing (overrides incidental irrigation lexicon).
+     */
+    public static function hasPlantDiseaseOrPathogenSignal(string $haystack): bool
+    {
+        foreach ([
+            'disease', 'diseases', 'pathogen', 'pathogens', 'blight', 'rust', 'mildew', 'wilt',
+            'severity', 'infection', 'fungal', 'مرض', 'أمراض', 'امراض', 'فطري', 'صدأ', 'الصدأ',
+            'اصابة', 'إصابة', 'hastalık', 'pas', 'rouille', 'maladie', 'maladies',
+        ] as $signal) {
+            if (self::matchesSemanticToken($haystack, $signal) || self::containsTerm($haystack, $signal)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Map an irrigation/water process surface to an English retrieval concept.
+     * Preserves the asked scientific meaning; never forces deficit irrigation by default.
+     */
+    public static function irrigationRetrievalEnglishConcept(string $surface): string
+    {
+        $lower = mb_strtolower(trim($surface));
+        if ($lower === '') {
+            return 'irrigation';
+        }
+
+        if (self::hasDeficitOrRegulatedIrrigationCue($lower)) {
+            if (self::containsTerm($lower, 'منظم')
+                || self::matchesSemanticToken($lower, 'regulated')
+                || self::matchesSemanticToken($lower, 'regulated deficit')
+                || self::matchesSemanticToken($lower, 'kısıntılı')
+                || self::matchesSemanticToken($lower, 'kisintili')) {
+                return 'regulated deficit irrigation';
+            }
+
+            return 'deficit irrigation';
+        }
+
+        if (self::matchesSemanticToken($lower, 'partial root-zone drying')
+            || self::matchesSemanticToken($lower, 'partial root zone drying')
+            || self::containsTerm($lower, 'الري الجزئي')
+            || self::matchesSemanticToken($lower, 'ري جزئي')) {
+            return 'partial root-zone drying';
+        }
+
+        if (self::matchesSemanticToken($lower, 'scheduling')
+            || self::containsTerm($lower, 'جدولة')
+            || self::matchesSemanticToken($lower, 'programı')
+            || self::matchesSemanticToken($lower, 'programi')
+            || self::matchesSemanticToken($lower, 'programmation')
+            || self::matchesSemanticToken($lower, 'irrigation schedule')) {
+            return 'irrigation scheduling';
+        }
+
+        if (self::matchesSemanticToken($lower, 'efficiency')
+            || self::matchesSemanticToken($lower, 'water-use efficiency')
+            || self::matchesSemanticToken($lower, 'water use efficiency')
+            || self::containsTerm($lower, 'كفاءة')
+            || self::matchesSemanticToken($lower, 'verimliliği')
+            || self::matchesSemanticToken($lower, 'efficacité')) {
+            return 'irrigation water-use efficiency';
+        }
+
+        $hasQuantity = self::matchesSemanticToken($lower, 'كمية')
+            || self::matchesSemanticToken($lower, 'quantity')
+            || self::matchesSemanticToken($lower, 'how much')
+            || self::matchesSemanticToken($lower, 'miktarı')
+            || self::matchesSemanticToken($lower, 'miktari')
+            || self::matchesSemanticToken($lower, 'quantité')
+            || self::matchesSemanticToken($lower, 'ne kadar');
+        if ($hasQuantity && (
+            self::containsTerm($lower, 'ري')
+            || self::matchesSemanticToken($lower, 'irrigation')
+            || self::matchesSemanticToken($lower, 'sulama')
+            || self::matchesSemanticToken($lower, 'eau')
+        )) {
+            return 'irrigation quantity';
+        }
+
+        if (self::matchesSemanticToken($lower, 'crop water requirement')
+            || self::matchesSemanticToken($lower, 'water requirement')
+            || self::matchesSemanticToken($lower, 'irrigation water requirement')
+            || self::containsTerm($lower, 'الاحتياج المائي')
+            || self::containsTerm($lower, 'الاحتياجات المائية')
+            || self::containsTerm($lower, 'احتياجات')
+            || self::containsTerm($lower, 'احتياج')
+            || self::matchesSemanticToken($lower, 'ihtiyacı')
+            || self::matchesSemanticToken($lower, 'ihtiyaç')
+            || self::matchesSemanticToken($lower, 'gereksinimi')
+            || self::matchesSemanticToken($lower, 'besoin en eau')
+            || self::matchesSemanticToken($lower, 'besoin')) {
+            return 'crop water requirement';
+        }
+
+        if (self::hasCausalIrrigationEffectCue($lower, allowDiseaseContext: true)) {
+            if (self::matchesSemanticToken($lower, 'yield')
+                || self::containsTerm($lower, 'إنتاج')
+                || self::containsTerm($lower, 'إنتاجية')
+                || self::matchesSemanticToken($lower, 'verim')
+                || self::matchesSemanticToken($lower, 'rendement')) {
+                return 'effects of irrigation on yield';
+            }
+            if (self::matchesSemanticToken($lower, 'quality')
+                || self::containsTerm($lower, 'جودة')
+                || self::matchesSemanticToken($lower, 'kalite')
+                || self::matchesSemanticToken($lower, 'qualité')) {
+                return 'effects of irrigation on quality';
+            }
+            if (self::matchesSemanticToken($lower, 'growth')
+                || self::containsTerm($lower, 'نمو')
+                || self::matchesSemanticToken($lower, 'büyüme')
+                || self::matchesSemanticToken($lower, 'croissance')) {
+                return 'effects of water availability on growth';
+            }
+
+            return 'effects of irrigation';
+        }
+
+        return 'irrigation';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function explicitIrrigationActSignals(): array
+    {
+        return [
+            // EN — requirement / quantity / scheduling / deficit / causal
+            'irrigation scheduling', 'water scheduling', 'crop water requirement',
+            'water requirement', 'irrigation water requirement', 'irrigation water needs',
+            'irrigation quantity', 'irrigation water quantity', 'irrigation water amount',
+            'evapotranspiration', 'deficit irrigation', 'regulated deficit irrigation',
+            'incomplete irrigation', 'partial root-zone drying', 'partial root zone drying',
+            'effects of irrigation', 'effect of irrigation',
+            'effects of deficit irrigation', 'effect of deficit irrigation',
+            'effects of water availability', 'effect of water availability',
+            'irrigation water use',
+            // AR
+            'كمية الري', 'جدولة الري', 'الاحتياج المائي', 'الاحتياجات المائية',
+            'احتياجات مياه الري', 'احتياجات الري', 'الري الناقص', 'ري ناقص',
+            'الري غير الكامل', 'الري المنظم', 'الري الجزئي', 'ري جزئي',
+            'تأثير الري', 'اثر الري', 'أثر الري', 'تأثير المياه',
+            // TR
+            'sulama suyu', 'sulama suyu ihtiyacı', 'sulama suyu gereksinimi',
+            'bitkinin su ihtiyacı', 'sulama miktarı', 'sulama programı',
+            'eksik sulama', 'kısıntılı sulama', 'kisintili sulama',
+            // FR
+            'besoin en eau', 'besoin en eau des cultures', "eau d'irrigation",
+            'eau d irrigation', "quantité d'eau d'irrigation", 'quantite d eau d irrigation',
+            'irrigation déficitaire', 'irrigation deficitaire',
+            "programmation de l'irrigation", 'programmation de l irrigation',
+        ];
+    }
+
+    private static function hasDeficitOrRegulatedIrrigationCue(string $haystack): bool
+    {
+        foreach ([
+            'deficit irrigation', 'regulated deficit irrigation', 'incomplete irrigation',
+            'partial root-zone drying', 'partial root zone drying',
+            'الري الناقص', 'ري ناقص', 'الري غير الكامل', 'الري المنظم', 'الري الجزئي', 'ري جزئي',
+            'eksik sulama', 'kısıntılı sulama', 'kisintili sulama',
+            'irrigation déficitaire', 'irrigation deficitaire',
+        ] as $signal) {
+            if (self::matchesSemanticToken($haystack, $signal) || self::containsTerm($haystack, $signal)) {
+                return true;
+            }
+        }
+
+        return self::containsTerm($haystack, 'ناقص')
+            && (self::containsTerm($haystack, 'ري') || self::matchesSemanticToken($haystack, 'irrigation'));
+    }
+
+    private static function hasIrrigationRequirementOrQuantityCue(string $haystack): bool
+    {
+        return self::matchesSemanticToken($haystack, 'كمية')
             || self::matchesSemanticToken($haystack, 'scheduling')
             || self::matchesSemanticToken($haystack, 'جدولة')
             || self::matchesSemanticToken($haystack, 'ihtiyacı')
             || self::matchesSemanticToken($haystack, 'ihtiyaç')
+            || self::matchesSemanticToken($haystack, 'gereksinim')
+            || self::matchesSemanticToken($haystack, 'gereksinimi')
             || self::matchesSemanticToken($haystack, 'besoin')
             || self::matchesSemanticToken($haystack, 'quantité')
+            || self::matchesSemanticToken($haystack, 'quantity')
             || self::matchesSemanticToken($haystack, 'how much')
-            || self::matchesSemanticToken($haystack, 'ne kadar');
-        // Causal "effect/impact of … irrigation/water" without a separate quantity cue.
-        $hasCausalIrrigationAct = $hasIrrigationWord && (
-            self::matchesSemanticToken($haystack, 'تأثير')
+            || self::matchesSemanticToken($haystack, 'ne kadar')
+            || self::matchesSemanticToken($haystack, 'miktarı')
+            || self::matchesSemanticToken($haystack, 'miktari')
+            || self::matchesSemanticToken($haystack, 'programı')
+            || self::matchesSemanticToken($haystack, 'programi')
+            || self::matchesSemanticToken($haystack, 'programmation')
+            || self::matchesSemanticToken($haystack, 'requirement')
+            || self::matchesSemanticToken($haystack, 'requirements')
+            || self::matchesSemanticToken($haystack, 'احتياج')
+            || self::matchesSemanticToken($haystack, 'احتياجات')
+            || self::containsTerm($haystack, 'الاحتياج المائي')
+            || self::containsTerm($haystack, 'الاحتياجات المائية');
+    }
+
+    private static function hasCausalIrrigationEffectCue(string $haystack, bool $allowDiseaseContext): bool
+    {
+        if (! $allowDiseaseContext && self::hasPlantDiseaseOrPathogenSignal($haystack)) {
+            return false;
+        }
+
+        $hasIrrigationWord = self::containsTerm($haystack, 'ري')
+            || self::matchesSemanticToken($haystack, 'irrigation')
+            || self::matchesSemanticToken($haystack, 'sulama')
+            || self::matchesSemanticToken($haystack, "eau d'irrigation")
+            || self::matchesSemanticToken($haystack, 'eau d irrigation')
+            || self::matchesSemanticToken($haystack, 'water availability')
+            || self::matchesSemanticToken($haystack, 'المياه');
+
+        if (! $hasIrrigationWord) {
+            return false;
+        }
+
+        return self::matchesSemanticToken($haystack, 'تأثير')
             || self::matchesSemanticToken($haystack, 'اثر')
             || self::matchesSemanticToken($haystack, 'أثر')
             || self::matchesSemanticToken($haystack, 'effect')
             || self::matchesSemanticToken($haystack, 'effects')
             || self::matchesSemanticToken($haystack, 'impact')
             || self::matchesSemanticToken($haystack, 'affect')
-        );
-
-        return ($hasIrrigationWord && $hasQuantityOrSchedule) || $hasCausalIrrigationAct;
+            || self::matchesSemanticToken($haystack, 'affects')
+            || self::matchesSemanticToken($haystack, 'etki')
+            || self::matchesSemanticToken($haystack, 'effet')
+            || self::matchesSemanticToken($haystack, 'effets');
     }
 
     /**
