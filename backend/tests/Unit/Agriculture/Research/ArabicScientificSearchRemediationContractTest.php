@@ -154,4 +154,47 @@ class ArabicScientificSearchRemediationContractTest extends TestCase
         ]);
         $this->assertSame('salinity_physiology', $salinity->normalizedQuery->constraints['scientific_sense'] ?? null);
     }
+
+    public function test_helper_recognizes_deficit_irrigation_without_named_crop_side_channel(): void
+    {
+        $this->assertTrue(
+            \App\Services\Agriculture\Research\AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement(
+                'ما تأثير الري الناقص على إنتاجية القمح؟'
+            )
+        );
+        $this->assertTrue(
+            \App\Services\Agriculture\Research\AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement(
+                'What are the effects of deficit irrigation on wheat yield?'
+            )
+        );
+        $this->assertFalse(
+            \App\Services\Agriculture\Research\AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement(
+                'Which tomato varieties are recommended for Egypt near the Nile water system?'
+            )
+        );
+    }
+
+    public function test_arabic_cwr_process_fallback_is_not_always_deficit_irrigation(): void
+    {
+        $planner = app(ResearchPlanner::class);
+        $qty = $planner->planKnowledgeQuery([
+            'query' => 'ما كمية الري المناسبة للقمح؟',
+            'force_execute' => true,
+        ]);
+        $variants = implode(' ', app(ScientificSearchQueryBuilder::class)->buildVariantsFromPlan($qty));
+        $this->assertSame(0, preg_match('/\p{Arabic}/u', $variants), $variants);
+        $this->assertTrue(
+            str_contains(mb_strtolower($variants), 'crop water requirement')
+            || str_contains(mb_strtolower($variants), 'irrigation'),
+            $variants
+        );
+        // Quantity questions must not collapse every CWR process to deficit irrigation only.
+        if (str_contains(mb_strtolower($variants), 'deficit irrigation')) {
+            $this->assertTrue(
+                str_contains(mb_strtolower($variants), 'crop water requirement')
+                || str_contains(mb_strtolower($variants), 'water requirement'),
+                'quantity CWR should retain requirement terms: '.$variants
+            );
+        }
+    }
 }

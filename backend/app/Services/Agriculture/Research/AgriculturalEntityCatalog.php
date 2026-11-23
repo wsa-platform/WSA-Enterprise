@@ -2831,6 +2831,11 @@ final class AgriculturalEntityCatalog
             'besoin en eau', "eau d'irrigation", 'eau d irrigation',
             "quantité d'eau d'irrigation", 'irrigation water requirement',
             'irrigation water needs',
+            // Explicit irrigation intervention / deficit acts (not crop-specific).
+            'deficit irrigation', 'regulated deficit irrigation', 'incomplete irrigation',
+            'الري الناقص', 'ري ناقص', 'تأثير الري', 'اثر الري', 'أثر الري',
+            'irrigation water use', 'effects of irrigation', 'effect of irrigation',
+            'effects of deficit irrigation', 'effect of deficit irrigation',
         ] as $signal) {
             if (self::matchesSemanticToken($haystack, $signal)) {
                 return true;
@@ -2851,8 +2856,18 @@ final class AgriculturalEntityCatalog
             || self::matchesSemanticToken($haystack, 'quantité')
             || self::matchesSemanticToken($haystack, 'how much')
             || self::matchesSemanticToken($haystack, 'ne kadar');
+        // Causal "effect/impact of … irrigation/water" without a separate quantity cue.
+        $hasCausalIrrigationAct = $hasIrrigationWord && (
+            self::matchesSemanticToken($haystack, 'تأثير')
+            || self::matchesSemanticToken($haystack, 'اثر')
+            || self::matchesSemanticToken($haystack, 'أثر')
+            || self::matchesSemanticToken($haystack, 'effect')
+            || self::matchesSemanticToken($haystack, 'effects')
+            || self::matchesSemanticToken($haystack, 'impact')
+            || self::matchesSemanticToken($haystack, 'affect')
+        );
 
-        return $hasIrrigationWord && $hasQuantityOrSchedule;
+        return ($hasIrrigationWord && $hasQuantityOrSchedule) || $hasCausalIrrigationAct;
     }
 
     /**

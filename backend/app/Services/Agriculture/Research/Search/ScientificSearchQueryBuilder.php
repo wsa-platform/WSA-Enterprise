@@ -2038,7 +2038,21 @@ class ScientificSearchQueryBuilder
         if ($role === CanonicalScientificQuestion::ROLE_PROCESS) {
             if ($sense === 'crop_water_requirement'
                 || AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($surface)) {
-                return 'deficit irrigation';
+                $lower = mb_strtolower($surface);
+                if (AgriculturalEntityCatalog::containsTerm($lower, 'ناقص')
+                    || AgriculturalEntityCatalog::matchesSemanticToken($lower, 'deficit')
+                    || AgriculturalEntityCatalog::matchesSemanticToken($lower, 'deficit irrigation')
+                    || AgriculturalEntityCatalog::matchesSemanticToken($lower, 'الري الناقص')) {
+                    return 'deficit irrigation';
+                }
+                if (AgriculturalEntityCatalog::containsTerm($lower, 'كمية')
+                    || AgriculturalEntityCatalog::matchesSemanticToken($lower, 'requirement')
+                    || AgriculturalEntityCatalog::matchesSemanticToken($lower, 'scheduling')
+                    || AgriculturalEntityCatalog::matchesSemanticToken($lower, 'جدولة')) {
+                    return 'crop water requirement';
+                }
+
+                return 'irrigation';
             }
             if (AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'عضوي')
                 || AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'عضوية')) {

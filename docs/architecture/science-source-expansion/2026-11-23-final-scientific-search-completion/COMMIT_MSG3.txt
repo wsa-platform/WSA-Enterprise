@@ -1,0 +1,5 @@
+fix(science): tighten irrigation act detection and CWR retrieval fallback
+
+Recognize deficit/causal irrigation in the shared helper, require an asked
+water attribute for named-crop promotion, and stop mapping every Arabic CWR
+process surface to deficit irrigation.

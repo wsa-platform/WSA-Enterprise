@@ -1378,8 +1378,15 @@ class QueryUnderstandingService
         $suitabilityFraming = AgriculturalEntityCatalog::hasSuitabilityOrSelectionFraming($normalizedQuestion)
             || $intentQualifier === 'optimal_range';
         $categoryRecommendation = $hasCategory && ! $hasNamedCrop && $suitabilityFraming;
+        // Named-crop + water alone is not enough: require an asked-attribute / requirement
+        // act so incidental irrigation lexicon does not force crop_water_requirement.
         $explicitIrrigation = AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)
-            || ($hasNamedCrop && ($factorRoles['water'] ?? null) === 'requested' && in_array('water', $topicFactors, true));
+            || (
+                $hasNamedCrop
+                && ($factorRoles['water'] ?? null) === 'requested'
+                && in_array('water', $topicFactors, true)
+                && AgriculturalEntityCatalog::factorAskedAsAttribute($normalizedQuestion, 'water')
+            );
 
         // Yield/productivity phrasing must not outrank an explicit irrigation/water-requirement act
         // (AR: إنتاجية + الري الناقص; EN: yield + deficit irrigation).
