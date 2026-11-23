@@ -146,7 +146,15 @@
 
 ## 16–18. Git / Push / HEAD
 
-تُحدَّث في `10-GIT-AND-RELEASE-EVIDENCE.md` بعد الالتزام والدفع. يُستبدل هذا القسم بالقيم النهائية في التقرير عند اكتمال الإطلاق.
+| البند | القيمة |
+|---|---|
+| Commit SHA | `8d0062cdba272d120c7de7c00fec0b93fc346bc1` |
+| الرسالة | `fix(science): generalize multilingual irrigation intent, sense, and retrieval` |
+| الدفع | `63d693f..8d0062c` → `origin/phase-18-m18-ai-marketing-communications` (بدون force) |
+| Local HEAD | `8d0062cdba272d120c7de7c00fec0b93fc346bc1` |
+| Remote HEAD | `8d0062cdba272d120c7de7c00fec0b93fc346bc1` |
+
+التفاصيل: `10-GIT-AND-RELEASE-EVIDENCE.md`.
 
 ---
 
@@ -164,7 +172,7 @@
 | 8 المعمارية | PASS |
 | 9 الموثوقية | PASS |
 | 10 المستودع | PASS |
-| 11 الإطلاق | بعد الدفع |
+| 11 الإطلاق | PASS |
 | 12 الأدلة | PASS |
 
 ---
