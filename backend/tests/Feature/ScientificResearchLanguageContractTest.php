@@ -137,6 +137,38 @@ class ScientificResearchLanguageContractTest extends TestCase
         $this->assertSame($originalUrl, $report->citations[0]->url ?? null);
     }
 
+    public function test_arabic_causal_irrigation_answer_includes_attributed_excerpts_not_chrome_only(): void
+    {
+        $prose = 'Deficit irrigation at 70% of crop evapotranspiration reduced wheat grain yield by approximately 12% compared with full irrigation while improving water productivity under arid conditions.';
+        $plan = app(ResearchPlanner::class)->planKnowledgeQuery([
+            'query' => 'ما تأثير الري الناقص على إنتاجية القمح؟',
+            'force_execute' => true,
+        ]);
+        $this->assertSame('crop_water_requirement', $plan->normalizedQuery->constraints['scientific_sense'] ?? null);
+        $this->assertSame('ar', $plan->normalizedQuery->constraints['answer_language'] ?? null);
+
+        $report = app(AnswerComposer::class)->compose($plan, $this->validationReport([
+            $this->usableEvidence(
+                'irrig-ar-1',
+                $prose,
+                ClaimEvidenceRelationship::SUPPORTED,
+                [
+                    'publicationTitle' => 'Deficit irrigation effects on wheat yield',
+                    'doi' => '10.1000/deficit-wheat-1',
+                    'url' => 'https://doi.org/10.1000/deficit-wheat-1',
+                    'directness' => ScientificEvidenceDirectnessAssessor::DIRECT,
+                    'claimTopic' => 'crop water requirement',
+                ],
+            ),
+        ]));
+
+        $this->assertSame('ar', $report->language);
+        $this->assertGreaterThan(200, mb_strlen($report->answer), $report->answer);
+        $this->assertStringContainsString('مقتطف من المصدر', $report->answer);
+        $this->assertStringContainsString('Deficit irrigation', $report->answer);
+        $this->assertStringContainsString('تشير الأدلة العلمية', $this->mainAnswerSection($report->answer));
+    }
+
     public function test_english_question_yields_english_prose_regardless_of_arabic_ui(): void
     {
         app()->setLocale('ar');

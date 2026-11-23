@@ -2290,10 +2290,18 @@ class AnswerComposer
             return 'comparison';
         }
 
-        if (in_array($qualifier, ['optimal_range', 'requirement'], true)
+        // Quantity/range presentation is for measurement/requirement acts — not causal
+        // "effects of deficit irrigation" questions (those need explanatory synthesis).
+        $questionType = trim((string) ($plan->normalizedQuery->constraints['question_type'] ?? ''));
+        $asksCausalOrEffects = in_array($questionType, ['causes', 'symptoms'], true)
+            || preg_match('/\b(?:effect|effects|impact|impacts|influence|influences)\b/u', $question) === 1
+            || preg_match('/(?:تأثير|اثر|أثر|آثار)/u', $question) === 1;
+        if (! $asksCausalOrEffects && (
+            in_array($qualifier, ['optimal_range', 'requirement'], true)
             || in_array($sense, ['seed_germination', 'crop_water_requirement'], true)
             || preg_match('/\b(?:rate|range|temperature|optimum|optimal)\b/u', $question) === 1
-            || preg_match('/(?:درجة حرارة|معدل|احتياج|نطاق|مثلى|مثالي)/u', $question) === 1) {
+            || preg_match('/(?:درجة حرارة|معدل|احتياج|نطاق|مثلى|مثالي)/u', $question) === 1
+        )) {
             return 'range';
         }
 
@@ -2410,7 +2418,11 @@ class AnswerComposer
                 ':values' => $valueText,
             ]);
         } else {
+            // No numeric range available — still surface attributed findings (never chrome-only).
             $lines[] = AnswerComposerPhrases::get($language, 'explanatory_evidence');
+            foreach ($this->factItemsFromFindings($keyFindings, $language) as $index => $item) {
+                $lines[] = ($index + 1).'. **'.$item.'**';
+            }
         }
 
         return implode("\n", $lines);
@@ -2564,17 +2576,62 @@ class AnswerComposer
     private function factItemsFromFindings(array $keyFindings, string $language = 'en'): array
     {
         $items = [];
-        foreach ($this->extractListItems($keyFindings) as $item) {
-            if ($this->isSourceProseSentence($item)) {
+        foreach ($keyFindings as $finding) {
+            $finding = trim($this->stripListPrefix((string) $finding));
+            if ($finding === '') {
                 continue;
             }
-            $item = $this->localizeFindingForAnswerLanguage($item, $language);
-            if ($item !== '' && ! in_array($item, $items, true)) {
-                $items[] = $item;
+            // Already-attributed excerpts must stay whole (never comma-split).
+            if ($this->isAttributedSourceExcerpt($finding)) {
+                if (! in_array($finding, $items, true)) {
+                    $items[] = $finding;
+                }
+                continue;
+            }
+            foreach ($this->extractListItems([$finding]) as $item) {
+                if ($this->isSourceProseSentence($item)) {
+                    continue;
+                }
+                $item = $this->localizeFindingForAnswerLanguage($item, $language);
+                if ($item !== '' && ! in_array($item, $items, true)) {
+                    $items[] = $item;
+                }
+            }
+        }
+
+        // When findings are long source prose (typical abstracts), still present
+        // attributed first-sentence excerpts so the user-visible answer is not chrome-only.
+        if ($items === [] && $keyFindings !== []) {
+            foreach (array_slice($keyFindings, 0, 6) as $finding) {
+                $excerpt = $this->firstSentence(trim($this->stripListPrefix((string) $finding)));
+                if ($excerpt === '' || $this->isAttributedSourceExcerpt($excerpt)) {
+                    if ($excerpt !== '' && ! in_array($excerpt, $items, true)) {
+                        $items[] = $excerpt;
+                    }
+                    continue;
+                }
+                if (mb_strlen($excerpt) > 320) {
+                    $excerpt = mb_substr($excerpt, 0, 317).'...';
+                    if (preg_match('/^(.*\S)\s+\S*$/u', $excerpt, $wordBreak) === 1 && mb_strlen($wordBreak[1]) >= 80) {
+                        $excerpt = rtrim($wordBreak[1]).'...';
+                    }
+                }
+                $labeled = $this->localizeFindingForAnswerLanguage($excerpt, $language);
+                if ($labeled !== '' && ! in_array($labeled, $items, true)) {
+                    $items[] = $labeled;
+                }
             }
         }
 
         return array_slice($items, 0, 12);
+    }
+
+    private function isAttributedSourceExcerpt(string $text): bool
+    {
+        return str_contains($text, 'مقتطف من المصدر')
+            || str_contains($text, 'source language excerpt')
+            || str_contains($text, 'Kaynak dilinden alıntı')
+            || str_contains($text, 'Extrait en langue source');
     }
 
     private function isSourceProseSentence(string $text): bool
@@ -2991,7 +3048,16 @@ class AnswerComposer
             return trim($matches[1]);
         }
 
-        return mb_strlen($text) > 240 ? mb_substr($text, 0, 237).'...' : $text;
+        if (mb_strlen($text) <= 240) {
+            return $text;
+        }
+
+        $slice = mb_substr($text, 0, 237);
+        if (preg_match('/^(.*\S)\s+\S*$/u', $slice, $wordBreak) === 1 && mb_strlen($wordBreak[1]) >= 80) {
+            return rtrim($wordBreak[1]).'...';
+        }
+
+        return $slice.'...';
     }
 
     /** @return list<string> */

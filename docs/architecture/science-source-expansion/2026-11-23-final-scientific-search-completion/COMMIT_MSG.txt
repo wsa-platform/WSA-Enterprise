@@ -1,0 +1,5 @@
+fix(science): restore user-visible scientific answer synthesis for causal irrigation
+
+Causal crop-water questions no longer render chrome-only answers; attributed
+source excerpts are listed, AR/EN document overlap is evidenced, and focused
+contracts cover sense generality plus React-visible answer quality.

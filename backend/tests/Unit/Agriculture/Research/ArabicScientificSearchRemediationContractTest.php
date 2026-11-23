@@ -128,4 +128,30 @@ class ArabicScientificSearchRemediationContractTest extends TestCase
             }
         }
     }
+
+    public function test_irrigation_sense_not_applied_to_incidental_water_or_disease(): void
+    {
+        $planner = app(ResearchPlanner::class);
+        $disease = $planner->planKnowledgeQuery([
+            'query' => 'ما أمراض صدأ القمح الشائعة؟',
+            'force_execute' => true,
+        ]);
+        $this->assertSame('disease', $disease->normalizedQuery->constraints['scientific_sense'] ?? null);
+
+        $varieties = $planner->planKnowledgeQuery([
+            'query' => 'Which tomato varieties are recommended for Egypt near the Nile water system?',
+            'force_execute' => true,
+        ]);
+        $this->assertNotSame(
+            'crop_water_requirement',
+            $varieties->normalizedQuery->constraints['scientific_sense'] ?? null,
+        );
+        $this->assertSame('varieties', $varieties->normalizedQuery->constraints['scientific_sense'] ?? null);
+
+        $salinity = $planner->planKnowledgeQuery([
+            'query' => 'How does soil salinity affect wheat growth?',
+            'force_execute' => true,
+        ]);
+        $this->assertSame('salinity_physiology', $salinity->normalizedQuery->constraints['scientific_sense'] ?? null);
+    }
 }
