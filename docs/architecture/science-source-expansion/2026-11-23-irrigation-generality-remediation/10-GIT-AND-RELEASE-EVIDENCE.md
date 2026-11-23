@@ -33,6 +33,14 @@ Unrelated WIP explicitly excluded.
 | Remote HEAD | `8d0062cdba272d120c7de7c00fec0b93fc346bc1` |
 | Divergence | none after push |
 
+## Docs sync commit (evidence SHA fill)
+
+| Field | Value |
+|---|---|
+| SHA | `3166b3dcd3f17f9581c53b65016019e4cf39d6c6` |
+| Message | `docs(science): record irrigation generality remediation release SHA` |
+| Local/Remote HEAD after | `3166b3dcd3f17f9581c53b65016019e4cf39d6c6` |
+
 ## Secrets review
 
 No secrets staged. No `.env` committed.
