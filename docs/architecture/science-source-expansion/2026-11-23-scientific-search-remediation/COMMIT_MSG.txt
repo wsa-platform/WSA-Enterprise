@@ -1,0 +1,3 @@
+fix(science): remediate Arabic scientific search parity and contracts
+
+Restore AR/EN sense and English retrieval compilation for LocalIndex/FTS, multilingual OE eligibility, R2 answer_language tests, evidence status canonicalization, and per-source language capability catalog without weakening validation.

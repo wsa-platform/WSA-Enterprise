@@ -1,0 +1,3 @@
+docs(science): add Arabic remediation final report and git verification
+
+Record push verification for d8f4749 and the Arabic engineering final report.
