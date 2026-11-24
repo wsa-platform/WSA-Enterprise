@@ -87,6 +87,105 @@ class AnswerComposerLiveQualityGateTest extends TestCase
         $this->assertStringContainsStringIgnoringCase('insufficient', $report->answer);
     }
 
+    public function test_cwr_question_rejects_treatment_inventory_only_finding(): void
+    {
+        $method = new ReflectionMethod(AnswerComposer::class, 'findingAddressesAskedAct');
+        $method->setAccessible(true);
+        $composer = $this->composer();
+        $plan = $this->phase5Plan(
+            question: 'Buğday sulama suyu ihtiyacı nedir?',
+            requested: ['quantity'],
+            constraints: [
+                'answer_language' => 'tr',
+                'scientific_sense' => 'crop_water_requirement',
+            ],
+            language: 'tr',
+            intent: 'irrigation',
+        );
+
+        $this->assertFalse($method->invoke(
+            $composer,
+            'The irrigation treatments included 50% MAD (DI), 55% MAD (DI), 60% MAD (DI), and local farmer\'s field replication (FI).',
+            $plan,
+        ));
+        $this->assertTrue($method->invoke(
+            $composer,
+            'Seasonal crop water requirement of wheat was 412 mm under full irrigation, with ETc peaking at flowering.',
+            $plan,
+        ));
+    }
+
+    public function test_preferred_sentence_favors_quantitative_cwr_over_treatment_list(): void
+    {
+        $method = new ReflectionMethod(AnswerComposer::class, 'preferredFindingSentence');
+        $method->setAccessible(true);
+        $composer = $this->composer();
+        $plan = $this->phase5Plan(
+            question: 'Quel est le besoin en eau du blé?',
+            requested: ['quantity'],
+            constraints: [
+                'answer_language' => 'fr',
+                'scientific_sense' => 'crop_water_requirement',
+            ],
+            language: 'fr',
+            intent: 'irrigation',
+        );
+
+        $text = 'The irrigation treatments included 50% MAD (DI) and well-watered treatment (FI). '
+            .'Seasonal crop water requirement of wheat averaged 450 mm with peak ETc at heading.';
+
+        $chosen = $method->invoke($composer, $text, $plan);
+        $this->assertStringContainsString('450 mm', $chosen);
+        $this->assertStringNotContainsString('treatments included', mb_strtolower($chosen));
+    }
+
+    public function test_cwr_range_answer_rejects_yield_kg_as_water_requirement(): void
+    {
+        $method = new ReflectionMethod(AnswerComposer::class, 'extractMeasurementAssertions');
+        $method->setAccessible(true);
+        $composer = $this->composer();
+        $plan = $this->phase5Plan(
+            question: 'Quel est le besoin en eau du blé?',
+            requested: ['quantity'],
+            constraints: [
+                'answer_language' => 'fr',
+                'scientific_sense' => 'crop_water_requirement',
+            ],
+            language: 'fr',
+            intent: 'irrigation',
+        );
+
+        $yieldOnly = $method->invoke(
+            $composer,
+            'The highest grain yield (5,085 kg ha−1) was obtained from 100% ETc irrigation application.',
+            $plan,
+        );
+        $this->assertSame([], $yieldOnly);
+
+        $water = $method->invoke(
+            $composer,
+            'Seasonal crop water requirement of wheat was 412 mm under full irrigation.',
+            $plan,
+        );
+        $this->assertNotEmpty($water);
+        $this->assertTrue(
+            (bool) preg_match('/412\s*mm/iu', implode(' ', $water)),
+            'Expected water-depth measurement, got: '.implode(', ', $water),
+        );
+    }
+
+    public function test_cwr_motivation_sentence_is_low_quality_fragment(): void
+    {
+        $method = new ReflectionMethod(AnswerComposer::class, 'isLowQualityFindingFragment');
+        $method->setAccessible(true);
+        $composer = $this->composer();
+
+        $this->assertTrue($method->invoke(
+            $composer,
+            'Efficient water management of crop requires accurate irrigation scheduling which, in turn, requires the accurate measurement of crop water requirement.',
+        ));
+    }
+
     private function composer(): AnswerComposer
     {
         $relevance = Mockery::mock(ScientificEvidenceRelevanceGate::class);

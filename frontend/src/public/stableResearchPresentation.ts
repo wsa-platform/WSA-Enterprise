@@ -162,8 +162,54 @@ export function paginationFromPage(page: StableResultSetPage): StablePaginationS
 }
 
 /**
+ * Prefer the composed scientific answer (user_presentation / answer) as the
+ * primary card when Stable Result Set multi-answers reorder or surface a
+ * weaker adjacent candidate first.
+ */
+export function promoteComposedPrimaryAnswer(
+  answers: DisplayedScientificAnswer[],
+  queryResponse: ResearchAgentQueryResponse | null,
+  presentation: ScientificUserPresentation | null,
+): DisplayedScientificAnswer[] {
+  const primaryText = (
+    presentation?.primary_answer
+    || (typeof queryResponse?.answer === 'string' ? queryResponse.answer : '')
+    || ''
+  ).trim()
+  if (primaryText === '') {
+    return answers
+  }
+
+  const norm = normalizeAnswerText(primaryText)
+  const existingIdx = answers.findIndex((row) => normalizeAnswerText(row.answer) === norm)
+  if (existingIdx === 0) {
+    return answers
+  }
+  if (existingIdx > 0) {
+    const promoted = answers[existingIdx]
+    return [promoted, ...answers.filter((_, index) => index !== existingIdx)].map((row, index) => ({
+      ...row,
+      position: index,
+    }))
+  }
+
+  return [
+    {
+      key: 'composed-primary',
+      answer: primaryText,
+      result_id: 'composed-primary',
+      evidence_ids: [],
+      source_ids: [],
+      position: 0,
+    },
+    ...answers.map((row, index) => ({ ...row, position: index + 1 })),
+  ]
+}
+
+/**
  * Build display model: Stable Result Set page is authority when present;
  * otherwise fall back to user_presentation / candidates without claiming stable pagination.
+ * Composed primary answer remains the first visible scientific answer.
  */
 export function buildHomeResearchDisplayModel(input: {
   queryResponse: ResearchAgentQueryResponse | null
@@ -178,7 +224,11 @@ export function buildHomeResearchDisplayModel(input: {
     ?? null
 
   if (input.stablePage && input.stablePage.result_set_id) {
-    const answers = fromMultiAnswerRows(input.stablePage.answers)
+    const pageAnswers = fromMultiAnswerRows(input.stablePage.answers)
+    // Only promote on page 1 — later pages must keep Stable Result Set order.
+    const answers = (input.stablePage.page ?? 1) <= 1
+      ? promoteComposedPrimaryAnswer(pageAnswers, input.queryResponse, presentation)
+      : pageAnswers
     return {
       presentation,
       answers,
@@ -190,11 +240,11 @@ export function buildHomeResearchDisplayModel(input: {
   }
 
   // Prefer multi_answers from query when stable set missing but multi_answers present.
-  const multi = fromMultiAnswerRows(input.queryResponse?.multi_answers)
-  if (multi.length > 0) {
+  const multiRaw = fromMultiAnswerRows(input.queryResponse?.multi_answers)
+  if (multiRaw.length > 0) {
     return {
       presentation,
-      answers: multi,
+      answers: promoteComposedPrimaryAnswer(multiRaw, input.queryResponse, presentation),
       pagination: null,
       failureClass: typeof failureClass === 'string' ? failureClass : null,
       failureCode: typeof failureCode === 'string' ? failureCode : null,

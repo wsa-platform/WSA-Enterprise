@@ -1,0 +1,251 @@
+{
+    "schema_id": "wsa.substance_parity_probe.v1",
+    "generated_at": "2026-11-24T15:31:45+00:00",
+    "organization_id": 8,
+    "cases": [
+        {
+            "id": "EN_CWR",
+            "lang": "en",
+            "family": "cwr",
+            "query": "What is the crop water requirement of wheat?",
+            "status": "scientific_generated",
+            "elapsed_ms": 18581,
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "en",
+            "answer_excerpt": "Based on validated direct scientific evidence for this question:\n1. **To meet the increasing demand for the growing population the issue of low soil fertility needs to be addressed moreover, excessive pumping of groundwater over the years to meet the high irrigation water requirement of rice-wheat system has resulted in over exploitation of groundwater in the Indo-Gangetic plains (IGP) of India.**",
+            "key_findings_sample": [
+                "To meet the increasing demand for the growing population the issue of low soil fertility needs to be addressed moreover, excessive pumping o"
+            ],
+            "signals_present": {
+                "water_req": true,
+                "quantity_or_etc": false
+            },
+            "treatment_inventory_only": false,
+            "completeness": "PARTIALLY_COMPLETE",
+            "has_synthesis_packet": true,
+            "citations_count": 10,
+            "ledger_rows": 1,
+            "confidence": 0.75
+        },
+        {
+            "id": "AR_CWR",
+            "lang": "ar",
+            "family": "cwr",
+            "query": "ما هو الاحتياج المائي للقمح؟",
+            "status": "scientific_generated",
+            "elapsed_ms": 9843,
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "ar",
+            "answer_excerpt": "استنادًا إلى أدلة علمية مباشرة معتمدة لهذا السؤال:\n1. **مقتطف من المصدر (باللغة الأصلية): Reference evapotranspiration plays an important role for the determination of water requirements for crops and irrigation scheduling.**\n2. **مقتطف من المصدر (باللغة الأصلية): Textile wastewater can be a good source of nutrients in addition to meet the crop water requirements in areas facing water shortage problem.The use of untreated industrial wastewater can be hazardous for end users and soil environment ",
+            "key_findings_sample": [
+                "مقتطف من المصدر (باللغة الأصلية): Reference evapotranspiration plays an important role for the determination of water requirements for crops",
+                "مقتطف من المصدر (باللغة الأصلية): Textile wastewater can be a good source of nutrients in addition to meet the crop water requirements in ar",
+                "مقتطف من المصدر (باللغة الأصلية): Wastewater significantly improved grain and biomass production, with the largest value obtained in I4 (4.6"
+            ],
+            "signals_present": {
+                "water_req": true,
+                "quantity_or_etc": true
+            },
+            "treatment_inventory_only": false,
+            "completeness": "SUBSTANTIVELY_COMPLETE",
+            "has_synthesis_packet": true,
+            "citations_count": 7,
+            "ledger_rows": 1,
+            "confidence": 0.717
+        },
+        {
+            "id": "TR_CWR",
+            "lang": "tr",
+            "family": "cwr",
+            "query": "Buğday sulama suyu ihtiyacı nedir?",
+            "status": "scientific_generated",
+            "elapsed_ms": 7824,
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "tr",
+            "answer_excerpt": "Bu soru için doğrulanmış doğrudan bilimsel kanıtlara dayanarak:\n1. **Kaynak alıntısı (özgün dil): The 50% MAD (DI) treatment produced the highest grain yield and water use efficiency in both seasons.**\n2. **Kaynak alıntısı (özgün dil): The highest grain yield (5,085 kg ha−1) was obtained from 100% ETc irrigation application (i.e.**\n3. **Kaynak alıntısı (özgün dil): Test weight, spike length, and productive tillers were all considerably enhanced in treatment T5, with the treatment’s statistical s",
+            "key_findings_sample": [
+                "Kaynak alıntısı (özgün dil): The 50% MAD (DI) treatment produced the highest grain yield and water use efficiency in both seasons.",
+                "Kaynak alıntısı (özgün dil): The highest grain yield (5,085 kg ha−1) was obtained from 100% ETc irrigation application (i.e.",
+                "Kaynak alıntısı (özgün dil): Test weight, spike length, and productive tillers were all considerably enhanced in treatment T5, with the trea"
+            ],
+            "signals_present": {
+                "water_req": true,
+                "quantity_or_etc": true
+            },
+            "treatment_inventory_only": false,
+            "completeness": "SUBSTANTIVELY_COMPLETE",
+            "has_synthesis_packet": true,
+            "citations_count": 4,
+            "ledger_rows": 2,
+            "confidence": 0.704
+        },
+        {
+            "id": "FR_CWR",
+            "lang": "fr",
+            "family": "cwr",
+            "query": "Quel est le besoin en eau du blé?",
+            "status": "scientific_generated",
+            "elapsed_ms": 6602,
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "fr",
+            "answer_excerpt": "Sur la base de preuves scientifiques directes validées pour cette question :\n1. **Extrait de la source (langue d'origine) : The 50% MAD (DI) treatment produced the highest grain yield and water use efficiency in both seasons.**\n2. **Extrait de la source (langue d'origine) : The highest grain yield (5,085 kg ha−1) was obtained from 100% ETc irrigation application (i.e.**\n3. **Extrait de la source (langue d'origine) : Test weight, spike length, and productive tillers were all considerably enhanced",
+            "key_findings_sample": [
+                "Extrait de la source (langue d'origine) : The 50% MAD (DI) treatment produced the highest grain yield and water use efficiency in both seaso",
+                "Extrait de la source (langue d'origine) : The highest grain yield (5,085 kg ha−1) was obtained from 100% ETc irrigation application (i.e.",
+                "Extrait de la source (langue d'origine) : Test weight, spike length, and productive tillers were all considerably enhanced in treatment T5, "
+            ],
+            "signals_present": {
+                "water_req": true,
+                "quantity_or_etc": true
+            },
+            "treatment_inventory_only": false,
+            "completeness": "SUBSTANTIVELY_COMPLETE",
+            "has_synthesis_packet": true,
+            "citations_count": 6,
+            "ledger_rows": 1,
+            "confidence": 0.717
+        },
+        {
+            "id": "EN_DEFICIT",
+            "lang": "en",
+            "family": "deficit",
+            "query": "What are the effects of deficit irrigation on wheat yield?",
+            "status": "scientific_generated",
+            "elapsed_ms": 14097,
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "en",
+            "answer_excerpt": "Based on validated direct scientific evidence for this question:\n1. **The 50% MAD (DI) treatment produced the highest grain yield and water use efficiency in both seasons.**\n2. **In both years, deficit irrigation resulted in a considerable reduction in yield, yield components, leaf area index (LAI) and leaf water potential (Ψw).**",
+            "key_findings_sample": [
+                "The 50% MAD (DI) treatment produced the highest grain yield and water use efficiency in both seasons.",
+                "In both years, deficit irrigation resulted in a considerable reduction in yield, yield components, leaf area index (LAI) and leaf water pote"
+            ],
+            "signals_present": {
+                "deficit": true,
+                "yield_effect": true
+            },
+            "treatment_inventory_only": false,
+            "completeness": "SUBSTANTIVELY_COMPLETE",
+            "has_synthesis_packet": true,
+            "citations_count": 15,
+            "ledger_rows": 2,
+            "confidence": 0.717
+        },
+        {
+            "id": "AR_DEFICIT",
+            "lang": "ar",
+            "family": "deficit",
+            "query": "ما تأثير الري الناقص على إنتاجية القمح؟",
+            "status": "scientific_generated",
+            "elapsed_ms": 9209,
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "ar",
+            "answer_excerpt": "استنادًا إلى أدلة علمية مباشرة معتمدة لهذا السؤال:\n1. **مقتطف من المصدر (باللغة الأصلية): The 50% MAD (DI) treatment produced the highest grain yield and water use efficiency in both seasons.**\n2. **مقتطف من المصدر (باللغة الأصلية): Results revealed that among all regulated water deficit schemes the low deficit LLL scheme of 90% ETC application at CRI and jointing, flowering and dough stage resulted in higher plant height (105.4 cm), higher dry matter accumulation (763.1 gm-2), more no.**\n3. **م",
+            "key_findings_sample": [
+                "مقتطف من المصدر (باللغة الأصلية): The 50% MAD (DI) treatment produced the highest grain yield and water use efficiency in both seasons.",
+                "مقتطف من المصدر (باللغة الأصلية): Results revealed that among all regulated water deficit schemes the low deficit LLL scheme of 90% ETC appl",
+                "مقتطف من المصدر (باللغة الأصلية): In both years, deficit irrigation resulted in a considerable reduction in yield, yield components, leaf ar"
+            ],
+            "signals_present": {
+                "deficit": true,
+                "yield_effect": true
+            },
+            "treatment_inventory_only": false,
+            "completeness": "SUBSTANTIVELY_COMPLETE",
+            "has_synthesis_packet": true,
+            "citations_count": 17,
+            "ledger_rows": 2,
+            "confidence": 0.704
+        },
+        {
+            "id": "TR_DEFICIT",
+            "lang": "tr",
+            "family": "deficit",
+            "query": "Eksik sulamanın buğday verimine etkisi nedir?",
+            "status": "scientific_generated",
+            "elapsed_ms": 6314,
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "tr",
+            "answer_excerpt": "Bu soru için doğrulanmış doğrudan bilimsel kanıtlara dayanarak:\n1. **Kaynak alıntısı (özgün dil): Sınırlı veya çelişkili bilimsel kanıtlar mevcuttur; ayrıntıları ve kaynakları inceleyin.**",
+            "key_findings_sample": [
+                "Sınırlı veya çelişkili bilimsel kanıtlar mevcuttur; ayrıntıları ve kaynakları inceleyin."
+            ],
+            "signals_present": {
+                "deficit": false,
+                "yield_effect": false
+            },
+            "treatment_inventory_only": false,
+            "completeness": "NOT_RESPONSIVE",
+            "has_synthesis_packet": true,
+            "citations_count": 12,
+            "ledger_rows": 2,
+            "confidence": 0.704
+        },
+        {
+            "id": "FR_DEFICIT",
+            "lang": "fr",
+            "family": "deficit",
+            "query": "Quel est l'effet de l'irrigation déficitaire sur le rendement du blé?",
+            "status": "scientific_generated",
+            "elapsed_ms": 8281,
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "fr",
+            "answer_excerpt": "Sur la base de preuves scientifiques directes validées pour cette question :\n1. **Extrait de la source (langue d'origine) : Des preuves scientifiques limitées ou contradictoires sont disponibles ; consultez les détails et les sources.**",
+            "key_findings_sample": [
+                "Des preuves scientifiques limitées ou contradictoires sont disponibles ; consultez les détails et les sources."
+            ],
+            "signals_present": {
+                "deficit": false,
+                "yield_effect": false
+            },
+            "treatment_inventory_only": false,
+            "completeness": "NOT_RESPONSIVE",
+            "has_synthesis_packet": true,
+            "citations_count": 13,
+            "ledger_rows": 2,
+            "confidence": 0.673
+        },
+        {
+            "id": "EN_SALINITY",
+            "lang": "en",
+            "family": "salinity",
+            "query": "How does soil salinity affect tomato growth?",
+            "status": "insufficient_evidence",
+            "elapsed_ms": 11079,
+            "scientific_sense": "salinity_physiology",
+            "answer_language": "en",
+            "answer_excerpt": "Insufficient direct scientific evidence was found for a definitive answer.",
+            "key_findings_sample": [],
+            "signals_present": {
+                "salinity": false,
+                "growth_or_yield": false
+            },
+            "treatment_inventory_only": false,
+            "completeness": "INSUFFICIENT_EVIDENCE",
+            "has_synthesis_packet": false,
+            "citations_count": 0,
+            "ledger_rows": 0,
+            "confidence": 0
+        },
+        {
+            "id": "EN_INSUFFICIENT",
+            "lang": "en",
+            "family": "insufficient",
+            "query": "What is the exact molecular mechanism of deficit irrigation in Martian soil?",
+            "status": "insufficient_evidence",
+            "elapsed_ms": 13172,
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "en",
+            "answer_excerpt": "Available scientific evidence is insufficient for a definitive conclusion.",
+            "key_findings_sample": [],
+            "signals_present": {
+                "honest_insufficient": true
+            },
+            "treatment_inventory_only": false,
+            "completeness": "INSUFFICIENT_EVIDENCE",
+            "has_synthesis_packet": false,
+            "citations_count": 0,
+            "ledger_rows": 0,
+            "confidence": 0
+        }
+    ]
+}

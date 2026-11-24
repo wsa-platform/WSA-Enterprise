@@ -1,0 +1,21 @@
+{
+  "schema_id": "wsa.react_live_ui_evidence.v1",
+  "generated_at": "2026-11-24T15:35:48.752Z",
+  "query": "ما تأثير الري الناقص على إنتاجية القمح؟",
+  "page_url": "http://127.0.0.1:8079/?episode=0a1b5b34-0888-4022-9605-024a209c6b01",
+  "api_status_text": "scientific_generated",
+  "primary_visible": true,
+  "no_answer_visible": false,
+  "failure_visible": false,
+  "answer_text_preview": "Answerاستنادًا إلى أدلة علمية مباشرة معتمدة لهذا السؤال:1. **مقتطف من المصدر (باللغة الأصلية): The 50% MAD (DI) treatment produced the highest grain yield and water use efficiency in both seasons.**2. **مقتطف من المصدر (باللغة الأصلية): Results revealed that among all regulated water deficit schemes the low deficit LLL scheme of 90% ETC application at CRI and jointing, flowering and dough stage resulted in higher plant height (105.4 cm), higher dry matter accumulation (763.1 gm-2), more no.**3. **مقتطف من المصدر (باللغة الأصلية): In both years, deficit irrigation resulted in a considerable red",
+  "answer_length": 689,
+  "api_responses": [
+    {
+      "url": "http://127.0.0.1:8079/api/v1/public/research-agent/query",
+      "status": 200,
+      "bodyPreview": "{\"status\":\"scientific_generated\",\"language\":\"ar\",\"answer_preview\":\"استنادًا إلى أدلة علمية مباشرة معتمدة لهذا السؤال:\\n1. **مقتطف من المصدر (باللغة الأصلية): The 50% MAD (DI) treatment produced the highest grain yield and water use efficiency in both seasons.**\\n2. **مقتطف من المصدر (باللغة الأصلية): Results\",\"citations\":17,\"has_ledger\":2}"
+    }
+  ],
+  "citations_visible": true,
+  "ledger_visible": true
+}

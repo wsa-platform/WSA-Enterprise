@@ -76,4 +76,41 @@ describe('stableResearchPresentation', () => {
     )
     expect(researchFailureTranslationKey(null)).toBeNull()
   })
+
+  it('promotes composed primary over weaker page-1 multi-answer candidate', () => {
+    const composed =
+      'In both years, deficit irrigation resulted in a considerable reduction in wheat yield.'
+    const weak =
+      'Raw wastewater irrigation substantially reduced fertilizer requirement of wheat.'
+    const model = buildHomeResearchDisplayModel({
+      queryResponse: {
+        answer: composed,
+        user_presentation: {
+          primary_answer: composed,
+          human_status: 'answered',
+          candidates: [],
+          sources: [],
+        },
+        stable_result_set: {
+          created: true,
+          result_set_id: 'srs_prom',
+        },
+      },
+      stablePage: {
+        result_set_id: 'srs_prom',
+        page: 1,
+        page_size: 10,
+        total_answers: 2,
+        total_pages: 1,
+        answers: [
+          { answer: weak, result_id: 'weak', position: 0 },
+          { answer: composed, result_id: 'strong', position: 1 },
+        ],
+        rerun_performed: false,
+      },
+    })
+
+    expect(model.answers[0]?.answer).toBe(composed)
+    expect(model.answers[1]?.answer).toBe(weak)
+  })
 })

@@ -1808,6 +1808,32 @@ class AnswerComposer
             return false;
         }
 
+        // Crop water requirement quantity answers must not promote yield mass (kg/ha)
+        // as the requirement value — prefer depth/volume water units in water context.
+        // Deficit / effects questions may still surface yield measurements.
+        $questionLower = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion,
+        ));
+        $asksDeficit = preg_match(
+            '/\bdeficit irrigation\b|الري الناقص|ري ناقص|eksik sulama|kısıntılı sulama|kisintili sulama|irrigation déficitaire|irrigation deficitaire/u',
+            $questionLower,
+        ) === 1;
+        if (! $asksDeficit && $this->questionAsksCropWaterRequirement($plan, $questionLower)) {
+            $unitNorm = mb_strtolower(trim($unit));
+            $waterUnits = ['mm', 'mm/day', 'm3/ha', 'm3', 'l/day', 'l'];
+            if (! in_array($unitNorm, $waterUnits, true)) {
+                return false;
+            }
+            $hay = mb_strtolower($text);
+            if (preg_match(
+                '/\b(?:crop water|water (?:requirement|need|demand|use)|etc\b|evapotranspir|irrigation (?:requirement|depth|need)|consumptive|mm)\b|besoin en eau|su ihtiyac|احتياج/u',
+                $hay,
+            ) !== 1
+                && preg_match('/\b(?:yield|grain yield|kg\s*ha|biomass|fertilizer)\b/u', $hay) === 1) {
+                return false;
+            }
+        }
+
         if ($structuredStatistical) {
             return $number !== '';
         }
@@ -2009,7 +2035,7 @@ class AnswerComposer
                 continue;
             }
             $sentence = $this->localizeFindingForAnswerLanguage(
-                $this->preferredFindingSentence($claim->claimText),
+                $this->preferredFindingSentence($claim->claimText, $plan),
                 $language,
             );
             if ($sentence !== ''
@@ -2033,7 +2059,7 @@ class AnswerComposer
                     continue;
                 }
                 $sentence = $this->localizeFindingForAnswerLanguage(
-                    $this->preferredFindingSentence($claim->claimText),
+                    $this->preferredFindingSentence($claim->claimText, $plan),
                     $language,
                 );
                 if ($sentence !== ''
@@ -2059,7 +2085,7 @@ class AnswerComposer
                     continue;
                 }
                 $sentence = $this->localizeFindingForAnswerLanguage(
-                    $this->preferredFindingSentence($claim->claimText),
+                    $this->preferredFindingSentence($claim->claimText, $plan),
                     $language,
                 );
                 if ($sentence !== ''
@@ -2082,7 +2108,7 @@ class AnswerComposer
                     continue;
                 }
                 $sentence = $this->localizeFindingForAnswerLanguage(
-                    $this->preferredFindingSentence($item->evidenceText),
+                    $this->preferredFindingSentence($item->evidenceText, $plan),
                     $language,
                 );
                 if ($sentence !== ''
@@ -2830,6 +2856,14 @@ class AnswerComposer
             && preg_match('/\b(?:showed|shown|observed|increased|decreased|reduced|yielded|resulted)\b/iu', $bare) !== 1) {
             return true;
         }
+        // Motivation about needing to measure CWR is not itself a CWR result.
+        if (preg_match(
+            '/\b(?:requires? (?:the )?accurate (?:measurement|estimation) of crop water|efficient water management of crop requires|accurate irrigation scheduling which,? in turn,? requires)\b/iu',
+            $bare,
+        ) === 1
+            && preg_match('/\b(?:\d+(?:[.,]\d+)?)\s*(?:mm|m3|m³)\b/iu', $bare) !== 1) {
+            return true;
+        }
 
         return false;
     }
@@ -2871,8 +2905,9 @@ class AnswerComposer
     }
 
     /**
-     * When the question names a specific irrigation act (e.g. deficit irrigation),
-     * do not surface unrelated irrigation-adjacent findings (e.g. wastewater trials).
+     * When the question names a specific scientific act or informational need,
+     * reject adjacent-but-non-answering findings (wastewater vs deficit; treatment
+     * inventories vs crop water requirement quantities).
      */
     private function findingAddressesAskedAct(string $finding, KnowledgeQueryPlan $plan): bool
     {
@@ -2890,18 +2925,69 @@ class AnswerComposer
         ) === 1;
         if ($asksDeficit) {
             return preg_match(
-                '/\bdeficit\b|ناقص|eksik|kısıntılı|kisintili|déficitaire|deficitaire|regulated deficit|partial root|water (?:stress|deficit)|نقص المياه/u',
+                '/\bdeficit\b|\(di\)|%\s*etc|ناقص|eksik|kısıntılı|kisintili|déficitaire|deficitaire|regulated deficit|partial root|water (?:stress|deficit)|نقص المياه|kısıtl|kisitl/u',
                 $findingLower,
             ) === 1;
+        }
+
+        // Crop water requirement / water-need questions must not be answered by
+        // bare treatment-list or scheduling-method chrome without requirement substance.
+        if ($this->questionAsksCropWaterRequirement($plan, $question)) {
+            if ($this->isIrrigationTreatmentInventoryOnly($findingLower)
+                && ! $this->findingHasWaterRequirementSubstance($findingLower)) {
+                return false;
+            }
+
+            return $this->findingHasWaterRequirementSubstance($findingLower)
+                || $this->sentenceHasEmpiricalResultSignal($findingLower);
         }
 
         return true;
     }
 
+    private function questionAsksCropWaterRequirement(KnowledgeQueryPlan $plan, string $questionLower): bool
+    {
+        $sense = mb_strtolower(trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? '')));
+        if ($sense === 'crop_water_requirement') {
+            return true;
+        }
+
+        return preg_match(
+            '/\b(?:crop water (?:requirement|need|demand)|water (?:requirement|need|demand)|etc\b|evapotranspiration)\b|احتياج(?:ات)?\s*(?:المياه|المائي)|متطلب(?:ات)?\s*(?:المياه|المائي)|sulama suyu ihtiyac|su ihtiyac|besoin en eau|besoins? en eau|eau du blé|eau du ble/u',
+            $questionLower,
+        ) === 1;
+    }
+
+    private function findingHasWaterRequirementSubstance(string $findingLower): bool
+    {
+        return preg_match(
+            '/\b(?:crop water (?:requirement|need|demand)|water (?:requirement|need|demand|use)|consumptive use|etc\b|evapotranspiration|mm(?:\/|\s*(?:ha|season|day|d\b))?|m3(?:\/|\s*ha)?|irrigation (?:requirement|need|depth)|net irrigation)\b|احتياج(?:ات)?\s*(?:المياه|المائي)|متطلب(?:ات)?\s*المياه|su ihtiyac|besoin(?:s)? en eau|évapotranspiration|evapotranspiration/u',
+            $findingLower,
+        ) === 1
+            || (
+                preg_match('/\b(?:\d+(?:[.,]\d+)?)\s*(?:mm|m3|m³|l\/ha|liters?\/ha)\b/iu', $findingLower) === 1
+                && preg_match('/\b(?:water|irrigation|etc|evapotranspir|ihtiyac|besoin|احتياج|ري|ماء)\b/iu', $findingLower) === 1
+            );
+    }
+
+    private function isIrrigationTreatmentInventoryOnly(string $findingLower): bool
+    {
+        if (preg_match(
+            '/\b(?:irrigation treatments? (?:included|were|consisted)|treatments? included|farmer\'?s field replication|maximum allowable depletion|\bmad\b|\(di\)|\(fi\))\b/u',
+            $findingLower,
+        ) !== 1) {
+            return false;
+        }
+
+        // Explicit requirement quantities override treatment-list chrome.
+        return ! $this->findingHasWaterRequirementSubstance($findingLower);
+    }
+
     /**
-     * Prefer an empirical result sentence over abstract lead-ins / gap statements.
+     * Prefer an empirical / quantitative result sentence over abstract lead-ins,
+     * gap statements, or treatment inventories when stronger substance exists.
      */
-    private function preferredFindingSentence(string $text): string
+    private function preferredFindingSentence(string $text, ?KnowledgeQueryPlan $plan = null): string
     {
         $text = trim($text);
         if ($text === '') {
@@ -2909,18 +2995,30 @@ class AnswerComposer
         }
 
         $parts = preg_split('/(?<=[.!?؟])\s+/u', $text) ?: [$text];
+        $best = '';
+        $bestScore = -1;
         $fallback = '';
         foreach ($parts as $part) {
             $sentence = trim((string) $part);
             if ($sentence === '' || $this->isLowQualityFindingFragment($sentence)) {
                 continue;
             }
-            if ($this->sentenceHasEmpiricalResultSignal($sentence)) {
-                return $this->firstSentence($sentence);
-            }
             if ($fallback === '') {
                 $fallback = $sentence;
             }
+            $score = $this->findingSubstanceScore($sentence, $plan);
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $best = $sentence;
+            }
+        }
+
+        if ($best !== '' && $bestScore >= 2) {
+            return $this->firstSentence($best);
+        }
+
+        if ($best !== '' && $this->sentenceHasEmpiricalResultSignal($best)) {
+            return $this->firstSentence($best);
         }
 
         if ($fallback !== '') {
@@ -2930,13 +3028,37 @@ class AnswerComposer
         return $this->firstSentence($text);
     }
 
+    private function findingSubstanceScore(string $sentence, ?KnowledgeQueryPlan $plan): int
+    {
+        $lower = mb_strtolower($sentence);
+        $score = 0;
+        if ($this->sentenceHasEmpiricalResultSignal($sentence)) {
+            $score += 2;
+        }
+        if ($this->findingHasWaterRequirementSubstance($lower)) {
+            $score += 3;
+        }
+        if (preg_match('/\b(?:\d+(?:[.,]\d+)?)\s*(?:%|mm|m3|m³|kg\/ha|t\/ha|q acre|ds m)/iu', $sentence) === 1) {
+            $score += 2;
+        }
+        if ($plan !== null && $this->isIrrigationTreatmentInventoryOnly($lower)
+            && ! $this->findingHasWaterRequirementSubstance($lower)) {
+            $score -= 4;
+        }
+        if ($this->isLowQualityFindingFragment($sentence)) {
+            $score -= 5;
+        }
+
+        return $score;
+    }
+
     private function sentenceHasEmpiricalResultSignal(string $text): bool
     {
         return preg_match(
-            '/\b(?:increas\w*|decreas\w*|reduc\w*|improv\w*|enhanc\w*|affect\w*|yield\w*|productiv\w*|biomass|significan\w*|higher|lower|greater|less than|more than|showed|shown|observed|resulted|compared with|compared to)\b/iu',
+            '/\b(?:increas\w*|decreas\w*|reduc\w*|improv\w*|enhanc\w*|affect\w*|yield\w*|productiv\w*|biomass|significan\w*|higher|lower|greater|less than|more than|showed|shown|observed|resulted|compared with|compared to|requir\w*|consumptive|evapotranspir\w*)\b/iu',
             $text,
         ) === 1
-            || preg_match('/(?:زيادة|انخفاض|قلل|تحسن|إنتاجية|محصول|أظهر|لوحظ|مقارنة)/u', $text) === 1;
+            || preg_match('/(?:زيادة|انخفاض|قلل|تحسن|إنتاجية|محصول|أظهر|لوحظ|مقارنة|احتياج|متطلب)/u', $text) === 1;
     }
 
     private function isSourceProseSentence(string $text): bool
