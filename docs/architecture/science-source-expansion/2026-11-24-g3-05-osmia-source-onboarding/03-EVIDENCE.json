@@ -3,6 +3,8 @@
   "classification": "READY_FOR_ONBOARDING",
   "source_addition_verified": false,
   "starting_head": "879df1fa6b8516b5cc08a5ca41b772f8825623aa",
+  "feature_commit": "df82d31d4bfc410bb06da2588c0a2bf189bb7bda",
+  "remote_head_after_feature": "df82d31d4bfc410bb06da2588c0a2bf189bb7bda",
   "localindex_store": {
     "generation": 1,
     "active_count": 80,
