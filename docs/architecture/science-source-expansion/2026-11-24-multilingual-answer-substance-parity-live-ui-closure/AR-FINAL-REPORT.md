@@ -21,7 +21,8 @@
 | | SHA |
 |---|---|
 | البداية | `648a4b4f791aec90fea997cd4cc5768c75fba254` |
-| النهاية / Remote | `5db80ab73f5f7d26d1d1b58580bd5bec6d6a7c66` |
+| نهاية الإصلاح | `5db80ab73f5f7d26d1d1b58580bd5bec6d6a7c66` |
+| رأس الفرع / Remote | `bb18e0c59b4f1a705024d1174263a4285a446fb4` |
 
 Local = Remote عند البداية. WIP غير مرتبط محمي.
 
