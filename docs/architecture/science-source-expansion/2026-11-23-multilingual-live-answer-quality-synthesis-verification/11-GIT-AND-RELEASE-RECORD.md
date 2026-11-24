@@ -21,8 +21,8 @@ Excluded: all unrelated WIP (CGHIA, CapVer, phpunit.xml, nginx, other docs/tools
 
 | Field | Value |
 |---|---|
-| Commit SHA | `4469868265ca4a555555f29ccd0b2435103c54ff` |
-| Remote SHA after push | _(filled after fetch)_ |
-| Local == Remote | _(verify after push)_ |
+| Commit SHA | `813e361b7396426d9bbf1da0ab85e94ce7fbdbd5` |
+| Remote SHA after push | `813e361b7396426d9bbf1da0ab85e94ce7fbdbd5` |
+| Local == Remote | Yes (verified after `git fetch`) |
 
 No force-push. No secrets in commit.

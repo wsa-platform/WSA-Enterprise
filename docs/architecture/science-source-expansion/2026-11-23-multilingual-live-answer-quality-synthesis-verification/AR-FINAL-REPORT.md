@@ -21,7 +21,7 @@
 | | SHA |
 |---|---|
 | البداية (HEAD) | `9e733514b1650e3019bde120d6ded515353b4d5d` |
-| نهاية الالتزام | `4469868265ca4a555555f29ccd0b2435103c54ff` |
+| نهاية الالتزام / Remote | `813e361b7396426d9bbf1da0ab85e94ce7fbdbd5` |
 
 المزامنة عند البداية: Local = Remote. WIP غير مرتبط محمي ومستثنى من الالتزام.
 
@@ -135,8 +135,8 @@
 | 19 | Regression | PASS | 55 passed |
 | 20 | Performance | PARTIAL | latencies فقط |
 | 21 | Documentation | PASS | 00–12 + هذا التقرير |
-| 22 | Commit Verification | PASS | `4469868265ca4a555555f29ccd0b2435103c54ff` |
-| 23 | Remote Push Verification | يُحدَّث بعد الدفع | §18 |
+| 22 | Commit Verification | PASS | `813e361b7396426d9bbf1da0ab85e94ce7fbdbd5` |
+| 23 | Remote Push Verification | PASS | Local HEAD = origin HEAD = `813e361…` |
 
 ## 16. أوامر الاختبارات والنتائج
 
@@ -156,8 +156,9 @@ docker compose exec -T backend php artisan test --filter="ScientificSynthesisEvi
 
 ## 18. إثبات Push وLocal/Remote SHA
 
-- Commit المحلي: `4469868265ca4a555555f29ccd0b2435103c54ff`
-- بعد Push/Fetch يجب تطابق `origin/phase-18-m18-ai-marketing-communications` مع Local HEAD (يُثبت في تحديث وثائقي لاحق إن لزم).
+- Commit / Remote بعد الدفع والـ fetch: `813e361b7396426d9bbf1da0ab85e94ce7fbdbd5`
+- الفرع: `phase-18-m18-ai-marketing-communications`
+- Local HEAD = `origin/phase-18-m18-ai-marketing-communications` (متطابق)
 
 ## 19. القيود والمناطق غير المتحقق منها
 
