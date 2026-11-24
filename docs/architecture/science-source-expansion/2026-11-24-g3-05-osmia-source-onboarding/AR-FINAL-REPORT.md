@@ -16,8 +16,8 @@
 |---|---|
 | البداية | `879df1fa6b8516b5cc08a5ca41b772f8825623aa` |
 | Feature | `df82d31d4bfc410bb06da2588c0a2bf189bb7bda` |
-| Docs tip (هذا التقرير) | يُسجَّل بعد دفع مزامنة الوثائق |
-| Remote HEAD (بعد feature) | `df82d31d4bfc410bb06da2588c0a2bf189bb7bda` |
+| Docs tip | `04b10b37cba7a27096b07320a71c7d1f754762ec` |
+| Remote HEAD | `04b10b37cba7a27096b07320a71c7d1f754762ec` |
 | WIP | محمي ومستبعد من هذا الإصدار |
 
 ## C. الاختيار والخطة (§6.1–6.5)
