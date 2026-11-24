@@ -5,7 +5,8 @@
   "starting_head": "879df1fa6b8516b5cc08a5ca41b772f8825623aa",
   "feature_commit": "df82d31d4bfc410bb06da2588c0a2bf189bb7bda",
   "docs_tip": "04b10b37cba7a27096b07320a71c7d1f754762ec",
-  "remote_head": "04b10b37cba7a27096b07320a71c7d1f754762ec",
+  "tip_head_note": "c2884f02fdc718bf1a6a28948a50d09b5447283c",
+  "remote_head": "c2884f02fdc718bf1a6a28948a50d09b5447283c",
   "localindex_store": {
     "generation": 1,
     "active_count": 80,
