@@ -187,6 +187,7 @@ final class ScientificKnowledgeTypeRelevancePolicy
             // the raw hit budget when the plan explicitly needs agricultural practice.
             'agris' => [ScientificKnowledgeType::AGRICULTURAL_PRACTICE],
             'organic_eprints' => [ScientificKnowledgeType::AGRICULTURAL_PRACTICE],
+            'osmia' => [ScientificKnowledgeType::AGRICULTURAL_PRACTICE],
         ] as $key => $types) {
             if (array_intersect($required, $types) !== []) {
                 $protected[] = $key;

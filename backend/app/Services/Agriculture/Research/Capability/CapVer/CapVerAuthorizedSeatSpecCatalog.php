@@ -94,6 +94,19 @@ final class CapVerAuthorizedSeatSpecCatalog
                 'snapshot_version' => 'gbif.rest_api.species_search.v1',
                 'observed_at' => '2026-10-22T06:33:36+00:00',
             ],
+            'G3-05' => [
+                'access_method' => CapabilityAccessMethod::STATIC_DOWNLOAD,
+                'capability_decision_identity' => 'cap-r24-20261124-G3-05-search',
+                'capability_record_id' => 'cap-rec-r24-20261124-G3-05-static',
+                'evidence_refs' => [
+                    CurrentMembershipNearReadySeatCatalog::ENDPOINT_EVIDENCE_OSMIA,
+                    CurrentMembershipNearReadySeatCatalog::ENDPOINT_EVIDENCE_OSMIA_CROSSREF,
+                    'IC-ER 2026-10-13 G3-05',
+                    'Crossref ISSN 2727-3806 CC BY 4.0 filter + LocalIndex ingest 2026-11-24',
+                ],
+                'snapshot_version' => 'osmia.crossref_static.localindex.search.v1',
+                'observed_at' => '2026-11-24T18:00:00+00:00',
+            ],
             default => null,
         };
     }

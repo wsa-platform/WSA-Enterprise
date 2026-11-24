@@ -20,7 +20,7 @@ use App\Services\Agriculture\Research\KnowledgeQueryPlan;
 final class GovernedScientificSourceEligibility
 {
     /** @var list<string> */
-    public const PROFILED_KEYS = ['agris', 'organic_eprints', 'dr_duke', 'gbif', 'bhl'];
+    public const PROFILED_KEYS = ['agris', 'organic_eprints', 'dr_duke', 'gbif', 'bhl', 'osmia'];
 
     public function isEligible(string $sourceKey, KnowledgeQueryPlan $plan): bool
     {
@@ -30,6 +30,7 @@ final class GovernedScientificSourceEligibility
             'dr_duke' => $this->drDukeEligible($plan),
             'gbif' => $this->gbifEligible($plan),
             'bhl' => $this->bhlEligible($plan),
+            'osmia' => $this->osmiaEligible($plan),
             default => true,
         };
     }
@@ -49,8 +50,34 @@ final class GovernedScientificSourceEligibility
             'dr_duke' => 'dr_duke_requires_phytochemical_or_ethnobotany_scope',
             'gbif' => 'gbif_requires_taxonomy_occurrence_or_biodiversity_scope',
             'bhl' => 'bhl_requires_biodiversity_heritage_or_taxonomic_literature_scope',
+            'osmia' => 'osmia_requires_bee_pollinator_or_hymenoptera_scope',
             default => 'governed_source_not_relevant',
         };
+    }
+
+    private function osmiaEligible(KnowledgeQueryPlan $plan): bool
+    {
+        $bag = $this->cueBag($plan);
+
+        if ($this->hasAny($bag, [
+            'bee', 'bees', 'honeybee', 'honey bee', 'bumblebee', 'pollinator', 'pollinators',
+            'pollination', 'hymenoptera', 'apoidea', 'apidae', 'apidolog', 'mellitolog',
+            'wild bee', 'solitary bee', 'osmia', 'megachile', 'andrena', 'nomada',
+            'halictus', 'lasioglossum', 'beekeeping', 'apiculture',
+            'نحل', 'تلقيح', 'ملقحات', 'arı', 'arıcılık', 'polinisateur', 'abeille', 'abeilles',
+        ])) {
+            return true;
+        }
+
+        if ($this->domainIn($plan, [
+            AgriculturalDomainCatalog::BEEKEEPING,
+        ])) {
+            return true;
+        }
+
+        return $this->intentIn($plan, [
+            'beekeeping', 'pollination', 'pollinator', 'apiculture',
+        ]);
     }
 
     private function agrisEligible(KnowledgeQueryPlan $plan): bool

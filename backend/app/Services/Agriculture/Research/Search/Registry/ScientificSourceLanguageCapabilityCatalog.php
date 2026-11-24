@@ -71,6 +71,7 @@ final class ScientificSourceLanguageCapabilityCatalog
             $localIndex('agris'),
             $localIndex('organic_eprints'),
             $localIndex('dr_duke'),
+            $localIndex('osmia'),
             new ScientificSourceLanguageCapability(
                 sourceKey: 'gbif',
                 queryInterfaceLanguages: ['en', 'la'],

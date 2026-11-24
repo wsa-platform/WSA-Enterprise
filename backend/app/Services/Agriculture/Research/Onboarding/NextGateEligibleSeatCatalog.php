@@ -696,6 +696,8 @@ final class NextGateEligibleSeatCatalog
                 'build_profile' => true,
             ],
             [
+                // Runtime ACTIVE registration is owned by CurrentMembershipNearReadySeatCatalog.
+                // This NextGate row stays NOT_READY so activatedRegistrations() does not duplicate osmia.
                 'adr_id' => 'G3-05',
                 'display_name' => 'OSMIA',
                 'source_key' => 'osmia',
@@ -703,15 +705,9 @@ final class NextGateEligibleSeatCatalog
                 'candidate_families' => ['static_dataset'],
                 'intended_activation' => 'NOT_READY',
                 'blockers' => [
-                    'identity_not_verified',
-                    'endpoint_not_tested',
-                    'local_index_store_not_deployed',
-                    'local_index_not_built',
-                    'onboarding_decision_not_accepted',
-                    'capability_unverified',
-                    'no_machine_search_api',
+                    'superseded_by_near_ready_g3_05',
                 ],
-                'access_notes' => 'Journal site; CC BY 4.0 declared. No documented machine search API; LocalIndex only after authorized ingest.',
+                'access_notes' => 'NearReady G3-05 owns runtime activation (Crossref→LocalIndex). NextGate scaffold retained for inventory only.',
                 'licence_notes' => 'CC BY 4.0 (OSMIA about page).',
                 'endpoint_evidence_url' => 'https://www.osmia-journal-hymenoptera.com/about.html',
                 'licensing' => [

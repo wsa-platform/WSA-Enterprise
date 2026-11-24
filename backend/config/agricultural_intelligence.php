@@ -92,6 +92,10 @@ return [
         'enabled' => filter_var(env('DR_DUKE_ENABLED', true), FILTER_VALIDATE_BOOL),
     ],
 
+    'osmia' => [
+        'enabled' => filter_var(env('OSMIA_ENABLED', true), FILTER_VALIDATE_BOOL),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | LocalIndex durable store connection (ADR-023 §8.41)

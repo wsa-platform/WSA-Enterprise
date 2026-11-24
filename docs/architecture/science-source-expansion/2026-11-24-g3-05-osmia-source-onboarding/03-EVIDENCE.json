@@ -1,0 +1,54 @@
+{
+  "mission": "G3-05 OSMIA source onboarding",
+  "classification": "READY_FOR_ONBOARDING",
+  "source_addition_verified": false,
+  "starting_head": "879df1fa6b8516b5cc08a5ca41b772f8825623aa",
+  "localindex_store": {
+    "generation": 1,
+    "active_count": 80,
+    "sample_ids": [
+      "10.47446/osmia10.7",
+      "10.47446/osmia1.4",
+      "10.47446/osmia12.4",
+      "10.47446/osmia1.edito",
+      "10.47446/osmia6.3"
+    ]
+  },
+  "memory_index_probe": {
+    "store_generation": 2,
+    "loaded_records": 80,
+    "nomada": {
+      "status": "success",
+      "count": 5,
+      "first_source": "osmia",
+      "first_title": "Découverte de Nomada pulchra Arnold, 1888 en Maine-et-Loire (49), recherche de son hôte et comparaison avec les données d’Indre-et-Loire (37) (Hymenoptera : Apoidea : Apidae)"
+    },
+    "abeille": {
+      "status": "success",
+      "count": 5
+    }
+  },
+  "durable_fts_probe": {
+    "status": "fail",
+    "error": "SQLSTATE[HY000] on SqliteFts rebuild (Docker Desktop bind-mount)",
+    "local_probes_status": "unavailable"
+  },
+  "compose_attribution_probe": {
+    "retrieval_query": "classification abeilles",
+    "hit_count": 1,
+    "first_source": "osmia",
+    "first_id": "10.47446/osmia1.7",
+    "validated_count": 0,
+    "composer_status": "no_validated_evidence",
+    "osmia_attribution_signal": false
+  },
+  "live_stage3_default": {
+    "successful_sources": ["openalex", "crossref", "semantic_scholar"],
+    "osmia_in_successful": false,
+    "reason": "durable FTS cold → LocalIndex adapter UNAVAILABLE; OA/CR/S2 early-stop"
+  },
+  "unit_tests": {
+    "filter": "OsmiaG305OnboardingTest",
+    "expected": "4 passed"
+  }
+}
