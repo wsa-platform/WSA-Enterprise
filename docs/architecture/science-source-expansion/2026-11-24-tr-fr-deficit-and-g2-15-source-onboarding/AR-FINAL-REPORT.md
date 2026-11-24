@@ -29,8 +29,8 @@
 | Starting SHA | `f09e2b8b56e484dcb05e8d635deaf318f69134f5` |
 | WIP | محمي؛ ملفات غير مرتبطة مستبعدة من الـ commits |
 | Feature Commit (Mission A) | `09b5764de4b5f8a59ad1ac807bfbb56c4802fe27` |
-| Docs Commit | يُسجَّل بعد commit الوثائق والدفع |
-| Final Local / Remote | يُثبت بعد `git fetch` |
+| Docs Commit | `d06d1f7e1347e1e332ca66ffa40a855a21c3d64f` |
+| Final Local / Remote | `d06d1f7e1347e1e332ca66ffa40a855a21c3d64f` (Local = Remote بعد fetch) |
 
 ---
 
@@ -108,7 +108,14 @@ Flutter: NOT_RUN · React Playwright: NOT_RUN (لا تغيّر شكل payload ي
 
 ## H. Git والإصدار
 
-يُستكمل بعد الـ commit/push بأوامر Git الفعلية وSHA الكاملة في `10-GIT-AND-RELEASE-RECORD.md`.
+| Commit | SHA |
+|---|---|
+| Start | `f09e2b8b56e484dcb05e8d635deaf318f69134f5` |
+| Mission A feature | `09b5764de4b5f8a59ad1ac807bfbb56c4802fe27` |
+| Documentation | `d06d1f7e1347e1e332ca66ffa40a855a21c3d64f` |
+| Remote HEAD (post-push) | `d06d1f7e1347e1e332ca66ffa40a855a21c3d64f` |
+
+`git push` عادي إلى `phase-18-m18-ai-marketing-communications`؛ `LOCAL_EQ_REMOTE=YES` بعد `git fetch`. لا Force Push.
 
 ---
 
