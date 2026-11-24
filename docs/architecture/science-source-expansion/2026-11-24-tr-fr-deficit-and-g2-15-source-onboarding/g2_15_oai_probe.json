@@ -1,0 +1,28 @@
+{
+    "generated_at":  "2026-11-24T19:52:37.7279986+03:00",
+    "endpoint":  "https://alive.lppm.unand.ac.id/index.php/alive/oai",
+    "schema_id":  "wsa.g2_15_oai_probe.v1",
+    "probes":  [
+                   {
+                       "status":  0,
+                       "error":  null,
+                       "snippet":  "",
+                       "bytes":  0,
+                       "verb":  "Identify"
+                   },
+                   {
+                       "status":  0,
+                       "error":  null,
+                       "snippet":  "",
+                       "bytes":  0,
+                       "verb":  "ListMetadataFormats"
+                   },
+                   {
+                       "status":  0,
+                       "error":  null,
+                       "snippet":  "",
+                       "bytes":  0,
+                       "verb":  "ListRecords"
+                   }
+               ]
+}

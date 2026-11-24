@@ -1,0 +1,54 @@
+{
+    "en": {
+        "question": "What are the effects of deficit irrigation on wheat yield?",
+        "causal_affector": "deficit irrigation",
+        "role_process_surface": "deficit irrigation",
+        "csq_process_surface": null,
+        "concept_from_question": "deficit irrigation",
+        "concept_from_process": "deficit irrigation",
+        "fallback_probe": "deficit irrigation",
+        "fallback_concept": "deficit irrigation",
+        "spec_has_original": false,
+        "scientific_sense": null,
+        "question_type": null
+    },
+    "ar": {
+        "question": "ما تأثير الري الناقص على إنتاجية القمح؟",
+        "causal_affector": "الري الناقص",
+        "role_process_surface": "الري الناقص",
+        "csq_process_surface": null,
+        "concept_from_question": "deficit irrigation",
+        "concept_from_process": "deficit irrigation",
+        "fallback_probe": "الري الناقص",
+        "fallback_concept": "deficit irrigation",
+        "spec_has_original": false,
+        "scientific_sense": null,
+        "question_type": null
+    },
+    "tr": {
+        "question": "Eksik sulamanın buğday verimine etkisi nedir?",
+        "causal_affector": "eksik sulama",
+        "role_process_surface": "eksik sulama",
+        "csq_process_surface": null,
+        "concept_from_question": "deficit irrigation",
+        "concept_from_process": "deficit irrigation",
+        "fallback_probe": "eksik sulama",
+        "fallback_concept": "deficit irrigation",
+        "spec_has_original": false,
+        "scientific_sense": null,
+        "question_type": null
+    },
+    "fr": {
+        "question": "Quel est l'effet de l'irrigation déficitaire sur le rendement du blé?",
+        "causal_affector": "l'irrigation déficitaire",
+        "role_process_surface": "l'irrigation déficitaire",
+        "csq_process_surface": null,
+        "concept_from_question": "deficit irrigation",
+        "concept_from_process": "deficit irrigation",
+        "fallback_probe": "l'irrigation déficitaire",
+        "fallback_concept": "deficit irrigation",
+        "spec_has_original": false,
+        "scientific_sense": null,
+        "question_type": null
+    }
+}
