@@ -34,10 +34,10 @@ final class AnswerComposerPhrases
                 'fr' => "Aucune preuve scientifique directe suffisante n'a été trouvée pour une réponse certaine.",
             ],
             'explanatory_evidence' => [
-                'en' => 'Validated direct scientific evidence supports a conclusion for this question. Extracted facts are listed below; source details remain in the citations.',
-                'ar' => 'تشير الأدلة العلمية المباشرة المعتمدة إلى استنتاج مدعوم لهذا السؤال. تُعرض الحقائق المستخرجة أدناه، وتبقى تفاصيل المصادر في الاستشهادات.',
-                'tr' => 'Doğrulanmış doğrudan bilimsel kanıtlar bu soru için desteklenen bir sonuca işaret eder. Çıkarılan olgular aşağıdadır; kaynak ayrıntıları atıflarda kalır.',
-                'fr' => 'Des preuves scientifiques directes validées étayent une conclusion pour cette question. Les faits extraits figurent ci-dessous ; les détails des sources restent dans les citations.',
+                'en' => 'Based on validated direct scientific evidence for this question:',
+                'ar' => 'استنادًا إلى أدلة علمية مباشرة معتمدة لهذا السؤال:',
+                'tr' => 'Bu soru için doğrulanmış doğrudan bilimsel kanıtlara dayanarak:',
+                'fr' => 'Sur la base de preuves scientifiques directes validées pour cette question :',
             ],
             'range_evidence' => [
                 'en' => 'Direct scientific evidence indicates that the :label is :values.',

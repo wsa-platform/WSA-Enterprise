@@ -1,0 +1,65 @@
+{
+    "generated_at": "2026-11-23T18:58:18+00:00",
+    "cases": [
+        {
+            "id": "EN-IRR-DEFICIT",
+            "query": "What are the effects of deficit irrigation on wheat yield?",
+            "status": "scientific_generated",
+            "scientific_sense": "crop_water_requirement",
+            "has_however_bullet": false,
+            "has_thus_bullet": false,
+            "mentions_deficit_or_irrigation": true,
+            "answer_preview": "### water requirements\n\nBased on validated direct scientific evidence for this question:\n1. **Raw wastewater in combination with recommended fertilizer doses caused over-fertilization that contributed only in biomass production but not in grain production of wheat and irrigation by wastewater substantially reduced fertilizer...**",
+            "answer_length": 331,
+            "synthesis_packet": true
+        },
+        {
+            "id": "AR-IRR-DEFICIT",
+            "query": "ما تأثير الري الناقص على إنتاجية القمح؟",
+            "status": "scientific_generated",
+            "scientific_sense": "crop_water_requirement",
+            "has_however_bullet": false,
+            "has_thus_bullet": false,
+            "mentions_deficit_or_irrigation": true,
+            "answer_preview": "### الاحتياج المائي\n\nاستنادًا إلى أدلة علمية مباشرة معتمدة لهذا السؤال:\n1. **مقتطف من المصدر (باللغة الأصلية): However, its evaluation across different irrigation methods and its stage‐specific response to crop yield is rarely evaluated.**",
+            "answer_length": 239,
+            "synthesis_packet": true
+        },
+        {
+            "id": "TR-IRR-CWR",
+            "query": "Buğday sulama suyu ihtiyacı.",
+            "status": "scientific_generated",
+            "scientific_sense": "crop_water_requirement",
+            "has_however_bullet": false,
+            "has_thus_bullet": false,
+            "mentions_deficit_or_irrigation": true,
+            "answer_preview": "Bu soru için doğrulanmış doğrudan bilimsel kanıtlara dayanarak:\n1. **Kaynak alıntısı (özgün dil): The irrigation treatments included 50% MAD (maximum allowable depletion) (DI), 55% MAD (DI), 60% MAD (DI), 50% MAD (FI), local farmer's field replication (FI), rain‐fed, and well‐watered treatment (DI).**",
+            "answer_length": 302,
+            "synthesis_packet": true
+        },
+        {
+            "id": "FR-IRR-CWR",
+            "query": "Besoin en eau du blé.",
+            "status": "scientific_generated",
+            "scientific_sense": "crop_water_requirement",
+            "has_however_bullet": false,
+            "has_thus_bullet": false,
+            "mentions_deficit_or_irrigation": true,
+            "answer_preview": "Sur la base de preuves scientifiques directes validées pour cette question :\n1. **Extrait de la source (langue d'origine) : For this purpose, a field experiment was carried out at the Agricultural Research Farm of Sakha Agricultural Research Station, Kafr-Elsheikh Governorate during the successive winter seasons 2013\/2014 and 2014\/2015 to investigate the impact of deficit water irrigation and sowing dates on wheat crop productivity(Triticum aesti",
+            "answer_length": 460,
+            "synthesis_packet": true
+        },
+        {
+            "id": "EN-SCARCITY",
+            "query": "What crops can be grown where water is scarce?",
+            "status": "synthesis_completed_partial",
+            "scientific_sense": "plant_growth",
+            "has_however_bullet": false,
+            "has_thus_bullet": false,
+            "mentions_deficit_or_irrigation": true,
+            "answer_preview": "### Crop growth\n\nBased on validated direct scientific evidence for this question:\n1. **WP by increasing yield and\/or reducing ET always results in net savings, thus reducing agricultural water requirements.This is a key point in assessing the opportunities for true water savings in horticultural crop cultivation and will be addressed in detail later in this paper.Water productivity in irrigated agriculture varies widely and depends on many biophy",
+            "answer_length": 1693,
+            "synthesis_packet": true
+        }
+    ]
+}

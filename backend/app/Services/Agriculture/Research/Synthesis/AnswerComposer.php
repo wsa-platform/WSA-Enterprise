@@ -72,6 +72,19 @@ class AnswerComposer
             fn (ScientificEvidenceItem $item): bool => $this->isSynthesizable($item, $plan),
         ));
 
+        // Speculative / non-terrestrial domains cannot be answered by terrestrial evidence alone.
+        if ($this->questionRequiresUnavailableDomainEvidence($plan, $usable)) {
+            return $this->insufficientReport(
+                status: 'insufficient_evidence',
+                reason: 'no_domain_matching_validated_evidence',
+                language: $language,
+                query: $query,
+                plan: $plan,
+                rejectedCount: $validationReport->rejectedCount,
+                validationReport: $validationReport,
+            );
+        }
+
         if ($usable === []) {
             $supportingLabeled = array_values(array_filter(
                 $validationReport->validatedEvidence,
@@ -1996,10 +2009,13 @@ class AnswerComposer
                 continue;
             }
             $sentence = $this->localizeFindingForAnswerLanguage(
-                $this->firstSentence($claim->claimText),
+                $this->preferredFindingSentence($claim->claimText),
                 $language,
             );
-            if ($sentence !== '' && ! in_array($sentence, $findings, true)) {
+            if ($sentence !== ''
+                && ! $this->isLowQualityFindingFragment($sentence)
+                && $this->findingAddressesAskedAct($sentence, $plan)
+                && ! in_array($sentence, $findings, true)) {
                 $findings[] = $sentence;
             }
         }
@@ -2017,10 +2033,13 @@ class AnswerComposer
                     continue;
                 }
                 $sentence = $this->localizeFindingForAnswerLanguage(
-                    $this->firstSentence($claim->claimText),
+                    $this->preferredFindingSentence($claim->claimText),
                     $language,
                 );
-                if ($sentence !== '' && ! in_array($sentence, $findings, true)) {
+                if ($sentence !== ''
+                    && ! $this->isLowQualityFindingFragment($sentence)
+                    && $this->findingAddressesAskedAct($sentence, $plan)
+                    && ! in_array($sentence, $findings, true)) {
                     $findings[] = $sentence;
                 }
             }
@@ -2040,11 +2059,40 @@ class AnswerComposer
                     continue;
                 }
                 $sentence = $this->localizeFindingForAnswerLanguage(
-                    $this->firstSentence($claim->claimText),
+                    $this->preferredFindingSentence($claim->claimText),
                     $language,
                 );
-                if ($sentence !== '' && ! in_array($sentence, $findings, true)) {
+                if ($sentence !== ''
+                    && ! $this->isLowQualityFindingFragment($sentence)
+                    && $this->findingAddressesAskedAct($sentence, $plan)
+                    && ! in_array($sentence, $findings, true)) {
                     $findings[] = $sentence;
+                }
+            }
+        }
+
+        // Pass 4: claimText may be a meta/gap lead-in while full evidenceText still
+        // contains empirical result sentences — recover those before conflict chrome.
+        if ($findings === [] && $hasDirect) {
+            foreach ($usable as $item) {
+                if (($directnessByEvidenceId[$item->evidenceId] ?? null) !== ScientificEvidenceDirectnessAssessor::DIRECT) {
+                    continue;
+                }
+                if ($item->evidenceText === null || trim($item->evidenceText) === '') {
+                    continue;
+                }
+                $sentence = $this->localizeFindingForAnswerLanguage(
+                    $this->preferredFindingSentence($item->evidenceText),
+                    $language,
+                );
+                if ($sentence !== ''
+                    && ! $this->isLowQualityFindingFragment($sentence)
+                    && $this->findingAddressesAskedAct($sentence, $plan)
+                    && ! in_array($sentence, $findings, true)) {
+                    $findings[] = $sentence;
+                }
+                if (count($findings) >= 5) {
+                    break;
                 }
             }
         }
@@ -2367,6 +2415,18 @@ class AnswerComposer
             return AnswerComposerPhrases::get($language, 'heading_varieties');
         }
 
+        // Causal / effects questions must not inherit a requirement-style heading
+        // (e.g. "water requirements" for deficit-irrigation yield impact).
+        $question = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion
+        ));
+        $asksCausalOrEffects = in_array($questionType, ['causes', 'symptoms'], true)
+            || preg_match('/\b(?:effect|effects|impact|impacts|influence|influences)\b/u', $question) === 1
+            || preg_match('/(?:تأثير|اثر|أثر|آثار|etki|effet)/u', $question) === 1;
+        if ($asksCausalOrEffects) {
+            return AnswerComposerPhrases::get($language, 'heading_answer');
+        }
+
         // Prefer a localized generic heading over leaking internal sense keys
         // (e.g. "plant growth", "scientific_generated") into the user answer.
         $blockedTopicLeak = in_array(mb_strtolower($topic), [
@@ -2605,22 +2665,40 @@ class AnswerComposer
         $items = [];
         foreach ($keyFindings as $finding) {
             $finding = trim($this->stripListPrefix((string) $finding));
-            if ($finding === '') {
+            if ($finding === '' || $this->isLowQualityFindingFragment($finding)) {
                 continue;
             }
-            // Already-attributed excerpts must stay whole (never comma-split).
+            // Already-attributed excerpts must stay whole (never comma-split),
+            // but meta/gap / chrome fragments are still rejected.
             if ($this->isAttributedSourceExcerpt($finding)) {
-                if (! in_array($finding, $items, true)) {
+                if (! $this->isLowQualityFindingFragment($finding)
+                    && ! in_array($finding, $items, true)) {
                     $items[] = $finding;
                 }
                 continue;
             }
+            // Scientific prose / causal findings: keep a complete sentence.
+            // Comma-splitting abstracts produced chrome-only fragments ("However", "thus").
+            if ($this->looksLikeScientificProseFinding($finding)) {
+                $sentence = $this->localizeFindingForAnswerLanguage(
+                    $this->firstSentence($finding),
+                    $language,
+                );
+                if ($sentence !== ''
+                    && ! $this->isLowQualityFindingFragment($sentence)
+                    && ! in_array($sentence, $items, true)) {
+                    $items[] = $sentence;
+                }
+                continue;
+            }
             foreach ($this->extractListItems([$finding]) as $item) {
-                if ($this->isSourceProseSentence($item)) {
+                if ($this->isLowQualityFindingFragment($item)) {
                     continue;
                 }
                 $item = $this->localizeFindingForAnswerLanguage($item, $language);
-                if ($item !== '' && ! in_array($item, $items, true)) {
+                if ($item !== ''
+                    && ! $this->isLowQualityFindingFragment($item)
+                    && ! in_array($item, $items, true)) {
                     $items[] = $item;
                 }
             }
@@ -2631,8 +2709,15 @@ class AnswerComposer
         if ($items === [] && $keyFindings !== []) {
             foreach (array_slice($keyFindings, 0, 6) as $finding) {
                 $excerpt = $this->firstSentence(trim($this->stripListPrefix((string) $finding)));
-                if ($excerpt === '' || $this->isAttributedSourceExcerpt($excerpt)) {
-                    if ($excerpt !== '' && ! in_array($excerpt, $items, true)) {
+                if ($excerpt === '' || $this->isLowQualityFindingFragment($excerpt)) {
+                    continue;
+                }
+                $excerpt = $this->localizeFindingForAnswerLanguage($excerpt, $language);
+                if ($excerpt === '' || $this->isLowQualityFindingFragment($excerpt)) {
+                    continue;
+                }
+                if ($this->isAttributedSourceExcerpt($excerpt)) {
+                    if (! in_array($excerpt, $items, true)) {
                         $items[] = $excerpt;
                     }
                     continue;
@@ -2655,25 +2740,208 @@ class AnswerComposer
 
     private function isAttributedSourceExcerpt(string $text): bool
     {
+        // Match live AnswerComposerPhrases::source_language_excerpt prefixes.
         return str_contains($text, 'مقتطف من المصدر')
-            || str_contains($text, 'source language excerpt')
-            || str_contains($text, 'Kaynak dilinden alıntı')
-            || str_contains($text, 'Extrait en langue source');
+            || str_contains($text, 'Source excerpt')
+            || str_contains($text, 'source excerpt')
+            || str_contains($text, 'Kaynak alıntısı')
+            || str_contains($text, 'Extrait de la source');
     }
 
-    private function isSourceProseSentence(string $text): bool
+    /**
+     * True for abstract-like scientific prose that must not be comma-split into fragments.
+     */
+    private function looksLikeScientificProseFinding(string $text): bool
+    {
+        $clean = trim($text);
+        if ($clean === '') {
+            return false;
+        }
+        $words = preg_split('/\s+/u', $clean) ?: [];
+        if (count($words) >= 10) {
+            return true;
+        }
+
+        return count($words) >= 6
+            && preg_match(
+                '/\b(the|this|study|irrigation|yield|salinity|crop|wheat|tomato|deficit|were|was|under|effect|impact)\b/i',
+                $clean,
+            ) === 1;
+    }
+
+    /**
+     * Reject chrome / connective debris produced by oversplitting abstracts.
+     */
+    private function isLowQualityFindingFragment(string $text): bool
     {
         $clean = trim($text);
         if ($clean === '') {
             return true;
         }
-        $words = preg_split('/\s+/u', $clean) ?: [];
-        if (count($words) >= 12) {
+        // Strip attribution chrome for length checks.
+        $bare = preg_replace(
+            '/^(?:Source excerpt \(original language\):|مقتطف من المصدر \(باللغة الأصلية\):|Kaynak alıntısı \(özgün dil\):|Extrait de la source \(langue d\'origine\)\s*:)\s*/u',
+            '',
+            $clean,
+        ) ?? $clean;
+        $bare = trim($bare);
+        if ($bare === '') {
+            return true;
+        }
+        if (mb_strlen($bare) < 18) {
+            return true;
+        }
+        $words = preg_split('/\s+/u', $bare) ?: [];
+        if (count($words) < 3) {
+            return true;
+        }
+        if (preg_match('/^(?:however|thus|therefore|moreover|furthermore|nevertheless|hence|whereas|although|while|its|their|this|these|those)\b[.:,;]?$/iu', $bare) === 1) {
+            return true;
+        }
+        if (preg_match('/^(?:however|thus|therefore|moreover|furthermore|nevertheless)\b/iu', $bare) === 1
+            && count($words) < 8) {
+            return true;
+        }
+        // Possessive / demonstrative lead-ins without a finite verb are fragment debris.
+        if (preg_match('/^(?:its|their|this|these|those)\b/iu', $bare) === 1
+            && count($words) <= 6
+            && preg_match('/\b(?:is|are|was|were|has|have|had|show(?:s|ed)?|increas\w*|decreas\w*|reduc\w*|affect\w*|improv\w*)\b/iu', $bare) !== 1) {
+            return true;
+        }
+        // Meta / research-gap sentences are not scientific results for the user question.
+        if (preg_match(
+            '/\b(?:rarely evaluated|rarely studied|little is known|poorly understood|remains unclear|not well (?:known|studied|understood)|few studies|scarce(?:ly)? (?:studied|evaluated)|limited (?:attention|research)|has not been (?:studied|evaluated|investigated)|is rarely)\b/iu',
+            $bare,
+        ) === 1) {
+            return true;
+        }
+        // Method-setup / purpose / generic motivation sentences are not findings.
+        if (preg_match('/\b(?:the (?:aim|objective|purpose) of (?:this|the) (?:study|paper)|this study (?:aims?|was conducted)|for this purpose|a field experiment was carried out|field investigation was conducted|the present (?:field )?investigation was conducted)\b/iu', $bare) === 1) {
+            return true;
+        }
+        if (preg_match('/^(?:to (?:evaluate|investigate|assess|determine|study|examine|report)\b)/iu', $bare) === 1) {
+            return true;
+        }
+        // Generic motivation / textbook framing without a measured result.
+        if (preg_match('/^understanding the (?:effects?|impact|influence|role)\b/iu', $bare) === 1) {
+            return true;
+        }
+        if (preg_match('/\bis essential for\b/iu', $bare) === 1
+            && preg_match('/\b(?:showed|shown|observed|increased|decreased|reduced|yielded|resulted)\b/iu', $bare) !== 1) {
             return true;
         }
 
-        return count($words) >= 8
-            && preg_match('/\b(the|this|study|measures|were|was|including|carried|under)\b/i', $clean) === 1;
+        return false;
+    }
+
+    /**
+     * Speculative non-terrestrial / fictional domains require matching evidence.
+     *
+     * @param  list<ScientificEvidenceItem>  $usable
+     */
+    private function questionRequiresUnavailableDomainEvidence(KnowledgeQueryPlan $plan, array $usable): bool
+    {
+        $question = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion,
+        ));
+        if ($question === '') {
+            return false;
+        }
+
+        $patterns = [];
+        if (preg_match('/\b(?:martian|mars\b|lunar|moon soil|venusian|extraterrestrial)\b/u', $question) === 1) {
+            $patterns[] = '/\b(?:martian|mars\b|lunar|moon|venusian|extraterrestrial)\b/u';
+        }
+        if ($patterns === []) {
+            return false;
+        }
+
+        foreach ($usable as $item) {
+            $hay = mb_strtolower(trim(
+                (string) ($item->evidenceText ?? '').' '.(string) ($item->publicationTitle ?? ''),
+            ));
+            foreach ($patterns as $pattern) {
+                if (preg_match($pattern, $hay) === 1) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * When the question names a specific irrigation act (e.g. deficit irrigation),
+     * do not surface unrelated irrigation-adjacent findings (e.g. wastewater trials).
+     */
+    private function findingAddressesAskedAct(string $finding, KnowledgeQueryPlan $plan): bool
+    {
+        $question = mb_strtolower(trim(
+            $plan->normalizedQuery->originalQuestion.' '.$plan->normalizedQuery->normalizedQuestion,
+        ));
+        $findingLower = mb_strtolower(trim($finding));
+        if ($question === '' || $findingLower === '') {
+            return true;
+        }
+
+        $asksDeficit = preg_match(
+            '/\bdeficit irrigation\b|الري الناقص|ري ناقص|eksik sulama|kısıntılı sulama|kisintili sulama|irrigation déficitaire|irrigation deficitaire/u',
+            $question,
+        ) === 1;
+        if ($asksDeficit) {
+            return preg_match(
+                '/\bdeficit\b|ناقص|eksik|kısıntılı|kisintili|déficitaire|deficitaire|regulated deficit|partial root|water (?:stress|deficit)|نقص المياه/u',
+                $findingLower,
+            ) === 1;
+        }
+
+        return true;
+    }
+
+    /**
+     * Prefer an empirical result sentence over abstract lead-ins / gap statements.
+     */
+    private function preferredFindingSentence(string $text): string
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return '';
+        }
+
+        $parts = preg_split('/(?<=[.!?؟])\s+/u', $text) ?: [$text];
+        $fallback = '';
+        foreach ($parts as $part) {
+            $sentence = trim((string) $part);
+            if ($sentence === '' || $this->isLowQualityFindingFragment($sentence)) {
+                continue;
+            }
+            if ($this->sentenceHasEmpiricalResultSignal($sentence)) {
+                return $this->firstSentence($sentence);
+            }
+            if ($fallback === '') {
+                $fallback = $sentence;
+            }
+        }
+
+        if ($fallback !== '') {
+            return $this->firstSentence($fallback);
+        }
+
+        return $this->firstSentence($text);
+    }
+
+    private function sentenceHasEmpiricalResultSignal(string $text): bool
+    {
+        return preg_match(
+            '/\b(?:increas\w*|decreas\w*|reduc\w*|improv\w*|enhanc\w*|affect\w*|yield\w*|productiv\w*|biomass|significan\w*|higher|lower|greater|less than|more than|showed|shown|observed|resulted|compared with|compared to)\b/iu',
+            $text,
+        ) === 1
+            || preg_match('/(?:زيادة|انخفاض|قلل|تحسن|إنتاجية|محصول|أظهر|لوحظ|مقارنة)/u', $text) === 1;
+    }
+
+    private function isSourceProseSentence(string $text): bool
+    {
+        return $this->looksLikeScientificProseFinding($text);
     }
 
     /**

@@ -1,0 +1,277 @@
+{
+    "schema_id": "wsa.live_answer_quality_probe.v2",
+    "generated_at": "2026-11-24T13:30:53+00:00",
+    "organization_id": 8,
+    "cases": [
+        {
+            "id": "EN_DEFICIT_IRRIGATION",
+            "lang": "en",
+            "query": "What are the effects of deficit irrigation on wheat yield?",
+            "status": "scientific_generated",
+            "elapsed_ms": 18094,
+            "research_intent": "irrigation",
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "en",
+            "answer_excerpt": "Based on validated direct scientific evidence for this question:\n1. **Water deficits imposed 41 days after planting reduced leaf, stalk, and ear yields, while those imposed 55 days after planting reduced only stalk and ear yields.**\n2. **In both years, deficit irrigation resulted in a considerable reduction in yield, yield components, leaf area index (LAI) and leaf water potential (Ψw).**",
+            "answer_length": 391,
+            "key_findings_count": 2,
+            "key_findings_sample": [
+                "Water deficits imposed 41 days after planting reduced leaf, stalk, and ear yields, while those imposed 55 days after planting reduced only stalk and ear yields.",
+                "In both years, deficit irrigation resulted in a considerable reduction in yield, yield components, leaf area index (LAI) and leaf water potential (Ψw)."
+            ],
+            "claims_count": 2,
+            "claim_relationships": [
+                "conflicting",
+                "insufficient_evidence"
+            ],
+            "citations_count": 13,
+            "ledger_rows": 2,
+            "conflicts_count": 2,
+            "has_synthesis_packet": true,
+            "synthesis_notes": [
+                "Some result differences are explained by distinct experimental conditions and are not necessarily direct scientific contradictions.",
+                "Some parts of the question lack sufficient evidence for validation."
+            ],
+            "contextual_differences": 5,
+            "genuine_conflicts": 0,
+            "uncertainty": "Some secondary sources disagree; the primary conclusion is supported by direct evidence.",
+            "low_quality_line_hits": [],
+            "evidence_sufficient": true,
+            "confidence": 0.783
+        },
+        {
+            "id": "AR_DEFICIT_IRRIGATION",
+            "lang": "ar",
+            "query": "ما تأثير الري الناقص على إنتاجية القمح؟",
+            "status": "scientific_generated",
+            "elapsed_ms": 8784,
+            "research_intent": "irrigation",
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "ar",
+            "answer_excerpt": "استنادًا إلى أدلة علمية مباشرة معتمدة لهذا السؤال:\n1. **مقتطف من المصدر (باللغة الأصلية): Water deficits imposed 41 days after planting reduced leaf, stalk, and ear yields, while those imposed 55 days after planting reduced only stalk and ear yields.**\n2. **مقتطف من المصدر (باللغة الأصلية): Therefore, the present field investigation was conducted in wheat crop during rabi 2021-22 at Irrigation and Water Management Farm of Department of Soil Science, CSK HPKV, Palampur to study the effect of regulated deficit irrigation on the growth and yield attributes of wheat (Triticum aestivum L.).**\n3. **مقتطف من المصدر (باللغة الأصلية): In both years, deficit irrigation resulted in a considerable reduc",
+            "answer_length": 1174,
+            "key_findings_count": 4,
+            "key_findings_sample": [
+                "مقتطف من المصدر (باللغة الأصلية): Water deficits imposed 41 days after planting reduced leaf, stalk, and ear yields, while those imposed 55 days after planting ",
+                "مقتطف من المصدر (باللغة الأصلية): Therefore, the present field investigation was conducted in wheat crop during rabi 2021-22 at Irrigation and Water Management ",
+                "مقتطف من المصدر (باللغة الأصلية): In both years, deficit irrigation resulted in a considerable reduction in yield, yield components, leaf area index (LAI) and l"
+            ],
+            "claims_count": 2,
+            "claim_relationships": [
+                "conflicting",
+                "insufficient_evidence"
+            ],
+            "citations_count": 16,
+            "ledger_rows": 2,
+            "conflicts_count": 4,
+            "has_synthesis_packet": true,
+            "synthesis_notes": [
+                "تختلف بعض النتائج باختلاف الظروف التجريبية وليست بالضرورة تناقضاً علمياً مباشراً.",
+                "توجد أدلة متعارضة في ظل ظروف قابلة للمقارنة؛ لم يُحسم التعارض تلقائياً.",
+                "بعض عناصر السؤال تفتقر إلى أدلة كافية للتحقق."
+            ],
+            "contextual_differences": 6,
+            "genuine_conflicts": 2,
+            "uncertainty": "توجد بعض التعارضات الثانوية بين المصادر؛ الاستنتاج الرئيسي مدعوم بأدلة مباشرة.",
+            "low_quality_line_hits": [],
+            "evidence_sufficient": true,
+            "confidence": 0.673
+        },
+        {
+            "id": "TR_CWR",
+            "lang": "tr",
+            "query": "Buğday sulama suyu ihtiyacı nedir?",
+            "status": "scientific_generated",
+            "elapsed_ms": 9136,
+            "research_intent": "irrigation",
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "tr",
+            "answer_excerpt": "Bu soru için doğrulanmış doğrudan bilimsel kanıtlara dayanarak:\n1. **Kaynak alıntısı (özgün dil): The irrigation treatments included 50% MAD (maximum allowable depletion) (DI), 55% MAD (DI), 60% MAD (DI), 50% MAD (FI), local farmer's field replication (FI), rain‐fed, and well‐watered treatment (DI).**",
+            "answer_length": 302,
+            "key_findings_count": 1,
+            "key_findings_sample": [
+                "Kaynak alıntısı (özgün dil): The irrigation treatments included 50% MAD (maximum allowable depletion) (DI), 55% MAD (DI), 60% MAD (DI), 50% MAD (FI), local farm"
+            ],
+            "claims_count": 2,
+            "claim_relationships": [
+                "conflicting",
+                "insufficient_evidence"
+            ],
+            "citations_count": 4,
+            "ledger_rows": 2,
+            "conflicts_count": 4,
+            "has_synthesis_packet": true,
+            "synthesis_notes": [
+                "Bazı bulgular deneysel koşullara göre değişir ve zorunlu olarak doğrudan bilimsel çelişki değildir.",
+                "Karşılaştırılabilir koşullarda çelişen kanıtlar vardır; çelişki otomatik olarak çözülmedi.",
+                "Sorunun bazı unsurları doğrulama için yeterli kanıttan yoksundur."
+            ],
+            "contextual_differences": 7,
+            "genuine_conflicts": 1,
+            "uncertainty": "Bazı ikincil kaynaklar çelişir; ana sonuç doğrudan kanıtlarla desteklenir.",
+            "low_quality_line_hits": [],
+            "evidence_sufficient": true,
+            "confidence": 0.704
+        },
+        {
+            "id": "FR_CWR",
+            "lang": "fr",
+            "query": "Quel est le besoin en eau du blé?",
+            "status": "scientific_generated",
+            "elapsed_ms": 8824,
+            "research_intent": "irrigation",
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "fr",
+            "answer_excerpt": "Sur la base de preuves scientifiques directes validées pour cette question :\n1. **Extrait de la source (langue d'origine) : The irrigation treatments included 50% MAD (maximum allowable depletion) (DI), 55% MAD (DI), 60% MAD (DI), 50% MAD (FI), local farmer's field replication (FI), rain‐fed, and well‐watered treatment (DI).**",
+            "answer_length": 328,
+            "key_findings_count": 1,
+            "key_findings_sample": [
+                "Extrait de la source (langue d'origine) : The irrigation treatments included 50% MAD (maximum allowable depletion) (DI), 55% MAD (DI), 60% MAD (DI), 50% MAD (FI"
+            ],
+            "claims_count": 1,
+            "claim_relationships": [
+                "conflicting"
+            ],
+            "citations_count": 6,
+            "ledger_rows": 1,
+            "conflicts_count": 6,
+            "has_synthesis_packet": true,
+            "synthesis_notes": [
+                "Certaines différences de résultats s’expliquent par des conditions expérimentales distinctes et ne constituent pas forcément une contradiction directe.",
+                "Des preuves contradictoires existent dans des conditions comparables ; le conflit n’a pas été résolu automatiquement."
+            ],
+            "contextual_differences": 10,
+            "genuine_conflicts": 1,
+            "uncertainty": "Certaines sources secondaires sont en désaccord ; la conclusion principale est étayée par des preuves directes.",
+            "low_quality_line_hits": [],
+            "evidence_sufficient": true,
+            "confidence": 0.717
+        },
+        {
+            "id": "EN_CONFLICT_CONTEXT",
+            "lang": "en",
+            "query": "How does irrigation method affect wheat yield under arid versus humid conditions?",
+            "status": "scientific_generated",
+            "elapsed_ms": 6114,
+            "research_intent": "irrigation",
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "en",
+            "answer_excerpt": "### Answer\nDirect scientific evidence supports the following comparison:\n1. Aspect 1: Consequently, a 70% ETc deficit irrigation application was found to be optimal for increasing wheat grain yield, water use efficiency, and economic benefits from irrigated wheat production.",
+            "answer_length": 275,
+            "key_findings_count": 1,
+            "key_findings_sample": [
+                "Consequently, a 70% ETc deficit irrigation application was found to be optimal for increasing wheat grain yield, water use efficiency, and economic benefits fro"
+            ],
+            "claims_count": 3,
+            "claim_relationships": [
+                "supported",
+                "supported",
+                "insufficient_evidence"
+            ],
+            "citations_count": 14,
+            "ledger_rows": 3,
+            "conflicts_count": 0,
+            "has_synthesis_packet": true,
+            "synthesis_notes": [
+                "Some result differences are explained by distinct experimental conditions and are not necessarily direct scientific contradictions.",
+                "Some parts of the question lack sufficient evidence for validation."
+            ],
+            "contextual_differences": 7,
+            "genuine_conflicts": 0,
+            "uncertainty": "",
+            "low_quality_line_hits": [],
+            "evidence_sufficient": true,
+            "confidence": 0.717
+        },
+        {
+            "id": "EN_SALINITY",
+            "lang": "en",
+            "query": "How does soil salinity affect tomato growth?",
+            "status": "scientific_generated",
+            "elapsed_ms": 8838,
+            "research_intent": "cultivation",
+            "scientific_sense": "salinity_physiology",
+            "answer_language": "en",
+            "answer_excerpt": "Based on validated direct scientific evidence for this question:\n1. **The total yield was reduced gradually with the salinity, and the tolerant genotypes (PTNI-203, PTNI-8, and PTNI-202) maintained higher yield (524–540 q acre−1), representing 55%–65% higher productivity than susceptible genotypes under 6 dS m−1.**",
+            "answer_length": 316,
+            "key_findings_count": 1,
+            "key_findings_sample": [
+                "The total yield was reduced gradually with the salinity, and the tolerant genotypes (PTNI-203, PTNI-8, and PTNI-202) maintained higher yield (524–540 q acre−1),"
+            ],
+            "claims_count": 3,
+            "claim_relationships": [
+                "conflicting",
+                "insufficient_evidence",
+                "insufficient_evidence"
+            ],
+            "citations_count": 2,
+            "ledger_rows": 3,
+            "conflicts_count": 4,
+            "has_synthesis_packet": true,
+            "synthesis_notes": [
+                "Some result differences are explained by distinct experimental conditions and are not necessarily direct scientific contradictions.",
+                "Some parts of the question lack sufficient evidence for validation."
+            ],
+            "contextual_differences": 6,
+            "genuine_conflicts": 0,
+            "uncertainty": "Some secondary sources disagree; the primary conclusion is supported by direct evidence.",
+            "low_quality_line_hits": [],
+            "evidence_sufficient": true,
+            "confidence": 0.732
+        },
+        {
+            "id": "AR_DISEASE",
+            "lang": "ar",
+            "query": "ما أمراض صدأ القمح الشائعة؟",
+            "status": "insufficient_evidence",
+            "elapsed_ms": 11475,
+            "research_intent": "disease",
+            "scientific_sense": "disease",
+            "answer_language": "ar",
+            "answer_excerpt": "لم يتم العثور على دليل علمي مباشر كافٍ للإجابة بشكل مؤكد.",
+            "answer_length": 57,
+            "key_findings_count": 0,
+            "key_findings_sample": [],
+            "claims_count": 0,
+            "claim_relationships": [],
+            "citations_count": 0,
+            "ledger_rows": 0,
+            "conflicts_count": 0,
+            "has_synthesis_packet": false,
+            "synthesis_notes": [],
+            "contextual_differences": 0,
+            "genuine_conflicts": 0,
+            "uncertainty": "لم يتم العثور على دليل علمي مباشر كافٍ للإجابة بشكل مؤكد.",
+            "low_quality_line_hits": [],
+            "evidence_sufficient": false,
+            "confidence": 0
+        },
+        {
+            "id": "EN_INSUFFICIENT_STYLE",
+            "lang": "en",
+            "query": "What is the exact molecular mechanism of deficit irrigation in Martian soil?",
+            "status": "insufficient_evidence",
+            "elapsed_ms": 26147,
+            "research_intent": "irrigation",
+            "scientific_sense": "crop_water_requirement",
+            "answer_language": "en",
+            "answer_excerpt": "Available scientific evidence is insufficient for a definitive conclusion.",
+            "answer_length": 74,
+            "key_findings_count": 0,
+            "key_findings_sample": [],
+            "claims_count": 0,
+            "claim_relationships": [],
+            "citations_count": 0,
+            "ledger_rows": 0,
+            "conflicts_count": 0,
+            "has_synthesis_packet": false,
+            "synthesis_notes": [],
+            "contextual_differences": 0,
+            "genuine_conflicts": 0,
+            "uncertainty": "Available scientific evidence is insufficient for a definitive conclusion.",
+            "low_quality_line_hits": [],
+            "evidence_sufficient": false,
+            "confidence": 0
+        }
+    ]
+}

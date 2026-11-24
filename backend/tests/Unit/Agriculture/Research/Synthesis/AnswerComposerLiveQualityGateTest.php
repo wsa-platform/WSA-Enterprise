@@ -1,0 +1,144 @@
+<?php
+
+namespace Tests\Unit\Agriculture\Research\Synthesis;
+
+use App\Services\Agriculture\Research\Search\ScientificEvidenceDirectnessAssessor;
+use App\Services\Agriculture\Research\Search\ScientificEvidenceRelevanceGate;
+use App\Services\Agriculture\Research\Search\ScientificStatisticalClaimAligner;
+use App\Services\Agriculture\Research\Synthesis\AnswerComposer;
+use App\Services\Agriculture\Research\Synthesis\AnswerExpressionAccuracyGate;
+use App\Services\Agriculture\Research\Validation\ClaimEvidenceRelationship;
+use App\Services\Agriculture\Research\Validation\EvidenceVerificationLayer;
+use App\Services\Agriculture\ScientificSourceValidator;
+use Mockery;
+use ReflectionMethod;
+use Tests\Feature\Phase5UnitATestFixtures;
+use Tests\TestCase;
+
+/**
+ * Live-quality gates: reject chrome findings, require deficit-act match, block exotic domains.
+ */
+class AnswerComposerLiveQualityGateTest extends TestCase
+{
+    use Phase5UnitATestFixtures;
+
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
+    }
+
+    public function test_low_quality_fragments_are_rejected(): void
+    {
+        $method = new ReflectionMethod(AnswerComposer::class, 'isLowQualityFindingFragment');
+        $method->setAccessible(true);
+        $composer = $this->composer();
+
+        $this->assertTrue($method->invoke($composer, 'However,'));
+        $this->assertTrue($method->invoke($composer, 'Understanding the effects of water stress on wheat growth is essential for good irrigation management.'));
+        $this->assertTrue($method->invoke($composer, 'The aim of this study was to evaluate irrigation.'));
+        $this->assertFalse($method->invoke(
+            $composer,
+            'Deficit irrigation reduced wheat grain yield by 18% compared with full irrigation in a two-year field trial.',
+        ));
+    }
+
+    public function test_deficit_question_rejects_wastewater_only_finding(): void
+    {
+        $method = new ReflectionMethod(AnswerComposer::class, 'findingAddressesAskedAct');
+        $method->setAccessible(true);
+        $composer = $this->composer();
+        $plan = $this->phase5Plan(
+            question: 'What are the effects of deficit irrigation on wheat yield?',
+            requested: ['quantity'],
+        );
+
+        $this->assertFalse($method->invoke(
+            $composer,
+            'Raw wastewater irrigation substantially reduced fertilizer use for wheat biomass production.',
+            $plan,
+        ));
+        $this->assertTrue($method->invoke(
+            $composer,
+            'Deficit irrigation reduced wheat grain yield by 18% compared with full irrigation.',
+            $plan,
+        ));
+    }
+
+    public function test_exotic_domain_without_matching_evidence_is_insufficient(): void
+    {
+        $composer = $this->composer();
+        $plan = $this->phase5Plan(
+            question: 'What is the exact molecular mechanism of deficit irrigation in Martian soil?',
+            requested: ['quantity'],
+        );
+        $evidence = $this->withEvidenceText(
+            $this->phase5Evidence(
+                'e-earth',
+                ClaimEvidenceRelationship::SUPPORTED,
+                ScientificEvidenceDirectnessAssessor::DIRECT,
+            ),
+            'Deficit irrigation reduced wheat grain yield by 12% under arid field conditions in Iraq.',
+        );
+
+        $report = $composer->compose($plan, $this->phase5Validation([$evidence], true));
+
+        $this->assertSame('insufficient_evidence', $report->status);
+        $this->assertStringContainsStringIgnoringCase('insufficient', $report->answer);
+    }
+
+    private function composer(): AnswerComposer
+    {
+        $relevance = Mockery::mock(ScientificEvidenceRelevanceGate::class);
+        $relevance->shouldReceive('isRelevant')->andReturn(true);
+        $relevance->shouldReceive('assess')->andReturn([
+            'species_relation' => 'same_species',
+            'entity_matched' => true,
+            'topic_matched' => true,
+            'sense_coverage' => true,
+            'factor_coverage' => 1.0,
+        ]);
+
+        return new AnswerComposer(
+            app(ScientificSourceValidator::class),
+            $relevance,
+            app(ScientificEvidenceDirectnessAssessor::class),
+            app(EvidenceVerificationLayer::class),
+            new ScientificStatisticalClaimAligner,
+            expressionAccuracyGate: new AnswerExpressionAccuracyGate,
+        );
+    }
+
+    private function withEvidenceText(
+        \App\Services\Agriculture\Research\Validation\ScientificEvidenceItem $item,
+        string $text,
+    ): \App\Services\Agriculture\Research\Validation\ScientificEvidenceItem {
+        return new \App\Services\Agriculture\Research\Validation\ScientificEvidenceItem(
+            evidenceId: $item->evidenceId,
+            sourceId: $item->sourceId,
+            sourceKey: $item->sourceKey,
+            sourceType: $item->sourceType,
+            publicationTitle: $item->publicationTitle,
+            authors: $item->authors,
+            institution: $item->institution,
+            journal: $item->journal,
+            doi: $item->doi,
+            url: $item->url,
+            publicationYear: $item->publicationYear,
+            retrievedAt: $item->retrievedAt,
+            agriculturalDomain: $item->agriculturalDomain,
+            claimTopic: $item->claimTopic,
+            evidenceText: $text,
+            validationStatus: $item->validationStatus,
+            validationFailures: $item->validationFailures,
+            claimRelationship: $item->claimRelationship,
+            confidence: $item->confidence,
+            qualityScore: $item->qualityScore,
+            qualityFactors: $item->qualityFactors,
+            sourceAttribution: $item->sourceAttribution,
+            hasConflict: $item->hasConflict,
+            conditions: $item->conditions,
+            cropOrEntity: $item->cropOrEntity,
+        );
+    }
+}
