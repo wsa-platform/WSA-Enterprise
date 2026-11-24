@@ -114,9 +114,14 @@ final readonly class RetrievalSpecification
         $context = [
             'domain' => $csq->context->domain,
             'scientificSense' => $csq->context->scientificSense,
+            'scientific_sense' => $csq->context->scientificSense,
             'researchIntent' => $csq->context->researchIntent,
             'questionType' => $csq->context->questionType,
             'requestedInformation' => $csq->context->requestedInformation,
+            // Ask-surface for Latin morphology recovery when process projection
+            // collapses (TR possessive "eksik sulamanın" → bare "sulama").
+            'original_question' => $csq->originalQuestion !== '' ? $csq->originalQuestion : null,
+            'normalized_question' => $csq->normalizedForm !== '' ? $csq->normalizedForm : null,
         ];
         $conditions = $csq->conditions->items;
         $time = [

@@ -2924,10 +2924,23 @@ class AnswerComposer
             $question,
         ) === 1;
         if ($asksDeficit) {
-            return preg_match(
-                '/\bdeficit\b|\(di\)|%\s*etc|ناقص|eksik|kısıntılı|kisintili|déficitaire|deficitaire|regulated deficit|partial root|water (?:stress|deficit)|نقص المياه|kısıtl|kisitl/u',
+            if (preg_match(
+                '/\bdeficit\b|\(di\)|%\s*etc|ناقص|eksik|kısıntılı|kisintili|déficitaire|deficitaire|déficit hydrique|deficit hydrique|regulated deficit|partial root|water (?:stress|deficit)|نقص المياه|kısıtl|kisitl|sulama aç|su kısıt|su kisit/u',
                 $findingLower,
-            ) === 1;
+            ) === 1) {
+                return true;
+            }
+
+            // Recover DI/MAD / reduced-irrigation result sentences that omit the
+            // literal word "deficit" but still answer deficit-irrigation effects.
+            return preg_match(
+                '/\b(?:mad|maximum allowable depletion|irrigation regime|regulated water|partial irrigation|%\s*etc)\b/u',
+                $findingLower,
+            ) === 1
+                && preg_match(
+                    '/\b(?:yield|grain|wue|water use efficiency|reduc\w*|increas\w*|decreas\w*|verim|rendement|إنتاج)/u',
+                    $findingLower,
+                ) === 1;
         }
 
         // Crop water requirement / water-need questions must not be answered by
@@ -3463,6 +3476,11 @@ class AnswerComposer
         if (preg_match('/\p{Arabic}/u', $sentence) === 1 && $language === 'ar') {
             return $sentence;
         }
+        // Already localized composer chrome (limited/conflict notices) must not be
+        // re-wrapped as a foreign "source excerpt" for TR/FR Latin scripts.
+        if ($this->isComposerChromeFinding($sentence, $language)) {
+            return $sentence;
+        }
         // Latin-dominant excerpt while answer language is ar|tr|fr.
         if (preg_match('/[A-Za-z]{3,}/', $sentence) === 1
             && ($language !== 'ar' || preg_match('/\p{Arabic}/u', $sentence) !== 1)) {
@@ -3470,6 +3488,19 @@ class AnswerComposer
         }
 
         return $sentence;
+    }
+
+    private function isComposerChromeFinding(string $sentence, string $language): bool
+    {
+        $limited = AnswerComposerPhrases::get($language, 'limited_conflicting');
+        if ($limited !== '' && str_contains($sentence, $limited)) {
+            return true;
+        }
+
+        return preg_match(
+            '/(?:Sınırlı veya çelişkili|Des preuves scientifiques limitées|Limited or conflicting scientific|أدلة علمية محدودة أو متعارضة)/u',
+            $sentence,
+        ) === 1;
     }
 
     private function firstSentence(string $text): string

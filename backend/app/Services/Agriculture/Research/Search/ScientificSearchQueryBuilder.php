@@ -1964,22 +1964,34 @@ class ScientificSearchQueryBuilder
     private function specExecutableNonEntityRole(RetrievalSpecification $spec, string $role): ?string
     {
         $concept = $this->specRoleConcept($spec, $role);
+        $compiledFromConcept = null;
         if ($concept !== null) {
             $compiled = trim($spec->compileTerm($concept));
             if ($compiled !== '') {
-                return $compiled;
+                // Do not return early: TR/FR Latin process surfaces such as
+                // "eksik sulama" compile to themselves and must still map to
+                // English scholarly deficit/CWR concepts for LocalIndex recall.
+                $compiledFromConcept = $compiled;
             }
         }
 
-        $surface = $this->specFrozenRoleSurface($spec, $role);
-        if ($surface === null) {
+        $surface = $compiledFromConcept ?? $this->specFrozenRoleSurface($spec, $role);
+        if ($surface === null || $surface === '') {
             return null;
         }
         if (CropKnowledgeOptionCatalog::isOptionKey($surface)) {
             return $this->specIntentRetrievalTerm($spec);
         }
+        // Arabic always needs English scholarly fallback. TR/FR Latin irrigation
+        // surfaces (eksik sulama, irrigation déficitaire) must also map to English
+        // deficit/CWR concepts — otherwise LocalIndex recall stays off-topic.
         if (preg_match('/\p{Arabic}/u', $surface) === 1) {
-            return $this->englishRetrievalFallbackForRole($spec, $role, $surface);
+            return $this->englishRetrievalFallbackForRole($spec, $role, $surface) ?? $surface;
+        }
+        $englishFallback = $this->englishRetrievalFallbackForRole($spec, $role, $surface);
+        if ($englishFallback !== null && $englishFallback !== ''
+            && mb_strtolower($englishFallback) !== mb_strtolower($surface)) {
+            return $englishFallback;
         }
 
         return $surface;
@@ -2037,9 +2049,21 @@ class ScientificSearchQueryBuilder
         $sense = trim((string) ($context['scientific_sense'] ?? $context['scientificSense'] ?? ''));
         if ($role === CanonicalScientificQuestion::ROLE_PROCESS) {
             if ($sense === 'crop_water_requirement'
-                || AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($surface)) {
+                || AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($surface)
+                || AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement(
+                    trim((string) ($context['original_question'] ?? $context['normalized_question'] ?? '')),
+                )) {
+                // Prefer the full original question so TR/FR deficit morphology
+                // (eksik sulamanın, irrigation déficitaire) is not lost when the
+                // process projection surface collapses to a generic "sulama/eau".
+                $originalQuestion = trim((string) (
+                    $context['original_question']
+                    ?? $context['normalized_question']
+                    ?? ''
+                ));
+                $probe = $originalQuestion !== '' ? $originalQuestion : $surface;
                 // Preserve the asked irrigation semantic surface (deficit ≠ quantity ≠ scheduling).
-                return AgriculturalEntityCatalog::irrigationRetrievalEnglishConcept($surface);
+                return AgriculturalEntityCatalog::irrigationRetrievalEnglishConcept($probe);
             }
             if (AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'عضوي')
                 || AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'عضوية')) {
@@ -2056,7 +2080,11 @@ class ScientificSearchQueryBuilder
                 return 'soil fertility';
             }
             if (AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'إنتاج')
-                || AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'إنتاجية')) {
+                || AgriculturalEntityCatalog::containsTerm(mb_strtolower($surface), 'إنتاجية')
+                || AgriculturalEntityCatalog::matchesSemanticToken(mb_strtolower($surface), 'verim')
+                || AgriculturalEntityCatalog::matchesSemanticToken(mb_strtolower($surface), 'verimine')
+                || AgriculturalEntityCatalog::matchesSemanticToken(mb_strtolower($surface), 'rendement')
+                || AgriculturalEntityCatalog::matchesSemanticToken(mb_strtolower($surface), 'yield')) {
                 return 'yield';
             }
         }

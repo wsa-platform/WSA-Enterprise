@@ -123,6 +123,10 @@ final class ScientificQueryCompiler
             'context' => [
                 'scientific_sense' => $this->nullableTrim($question->context->scientificSense),
                 'question_type' => $this->nullableTrim($question->context->questionType),
+                // Preserve ask-surface for Latin morphology recovery (TR/FR deficit
+                // possessives) when process projection collapses to a generic stem.
+                'original_question' => $this->nullableTrim($question->originalQuestion),
+                'normalized_question' => $this->nullableTrim($question->normalizedForm),
             ],
             'time' => [
                 'year' => $question->time->year,

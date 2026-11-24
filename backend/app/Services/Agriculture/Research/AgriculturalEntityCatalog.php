@@ -310,7 +310,9 @@ final class AgriculturalEntityCatalog
             '/\b(?:effects?|impact)\s+of\s+(.+?)\s+on\s+(.+)/u',
             '/\bwhat\s+does\s+(.+?)\s+do\s+to\s+(.+)/u',
             '/(.+?)\s+(.+?)\s+nas[ıi]l\s+etkiler/u',
-            '/(\S+?)(?:nin|nın|nun|nün)\s+(.+?)\s+(?:üzerindeki\s+)?etkisi/u',
+            // Turkish possessive attaches to the last word of a multi-word process
+            // ("eksik sulamanın" → affector must stay "eksik sulama", not bare "sulama").
+            '/((?:\S+\s+){0,3}\S+?)(?:nin|nın|nun|nün)\s+(.+?)\s+(?:üzerindeki\s+)?etkisi/u',
             '/comment\s+(.+?)\s+affecte(?:-t-elle)?\s+(.+)/u',
             '/effet\s+de\s+(.+?)\s+sur\s+(.+)/u',
             '/impact\s+de\s+(.+?)\s+sur\s+(.+)/u',
@@ -3055,10 +3057,12 @@ final class AgriculturalEntityCatalog
             'sulama suyu', 'sulama suyu ihtiyacı', 'sulama suyu gereksinimi',
             'bitkinin su ihtiyacı', 'sulama miktarı', 'sulama programı',
             'eksik sulama', 'kısıntılı sulama', 'kisintili sulama',
+            'sulama açığı', 'sulama acigi', 'su kısıtı', 'su kisiti',
             // FR
             'besoin en eau', 'besoin en eau des cultures', "eau d'irrigation",
             'eau d irrigation', "quantité d'eau d'irrigation", 'quantite d eau d irrigation',
             'irrigation déficitaire', 'irrigation deficitaire',
+            'déficit hydrique', 'deficit hydrique',
             "programmation de l'irrigation", 'programmation de l irrigation',
         ];
     }
@@ -3070,11 +3074,30 @@ final class AgriculturalEntityCatalog
             'partial root-zone drying', 'partial root zone drying',
             'الري الناقص', 'ري ناقص', 'الري غير الكامل', 'الري المنظم', 'الري الجزئي', 'ري جزئي',
             'eksik sulama', 'kısıntılı sulama', 'kisintili sulama',
+            'sulama açığı', 'sulama acigi', 'su kısıtı', 'su kisiti',
             'irrigation déficitaire', 'irrigation deficitaire',
+            'déficit hydrique', 'deficit hydrique',
         ] as $signal) {
             if (self::matchesSemanticToken($haystack, $signal) || self::containsTerm($haystack, $signal)) {
                 return true;
             }
+        }
+
+        // TR morphology: deficit qualifier + irrigation stem with possessive/case endings
+        // (eksik sulamanın, kısıntılı sulamanın) must not lose the deficit cue.
+        $hasIrrigationStem = preg_match('/\bsulam\w*/u', $haystack) === 1
+            || self::matchesSemanticToken($haystack, 'irrigation')
+            || self::containsTerm($haystack, 'ري');
+        if ($hasIrrigationStem && (
+            preg_match('/\beksik\b/u', $haystack) === 1
+            || preg_match('/\bkıs[ıi]nt[ıi]l[ıi]\b/u', $haystack) === 1
+            || preg_match('/\bkisitli\b/u', $haystack) === 1
+            || preg_match('/\ba[çc][ıi][ğg][ıi]\b/u', $haystack) === 1
+            || preg_match('/\bk[ıi]s[ıi]t[ıi]\b/u', $haystack) === 1
+            || preg_match('/\bd[eé]ficitaire\b/u', $haystack) === 1
+            || preg_match('/\bd[eé]ficit\s+hydrique\b/u', $haystack) === 1
+        )) {
+            return true;
         }
 
         return self::containsTerm($haystack, 'ناقص')
