@@ -22,6 +22,6 @@ Excluded: unrelated WIP (CGHIA, CapVer, phpunit.xml, nginx, archives, tools).
 
 | Field | Value |
 |---|---|
-| Commit SHA | _(after commit)_ |
-| Remote SHA | _(after push/fetch)_ |
-| Local == Remote | _(verify)_ |
+| Commit SHA | `5db80ab73f5f7d26d1d1b58580bd5bec6d6a7c66` |
+| Remote SHA | `5db80ab73f5f7d26d1d1b58580bd5bec6d6a7c66` |
+| Local == Remote | Yes |

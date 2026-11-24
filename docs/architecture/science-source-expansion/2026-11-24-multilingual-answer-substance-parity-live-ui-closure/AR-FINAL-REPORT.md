@@ -21,7 +21,7 @@
 | | SHA |
 |---|---|
 | البداية | `648a4b4f791aec90fea997cd4cc5768c75fba254` |
-| النهاية | تُحدَّث بعد Commit/Push |
+| النهاية / Remote | `5db80ab73f5f7d26d1d1b58580bd5bec6d6a7c66` |
 
 Local = Remote عند البداية. WIP غير مرتبط محمي.
 
@@ -104,8 +104,8 @@ CWR: رفض قوائم المعاملات؛ تفضيل الجمل الكمية؛
 | 20 | Regression | PASS |
 | 21 | Performance | PARTIAL |
 | 22 | Documentation | PASS |
-| 23 | Commit | يُحدَّث |
-| 24 | Remote Push | يُحدَّث |
+| 23 | Commit | PASS (`5db80ab…`) |
+| 24 | Remote Push | PASS (Local=Remote) |
 
 ## 20. أوامر الاختبارات
 
@@ -113,7 +113,8 @@ CWR: رفض قوائم المعاملات؛ تفضيل الجمل الكمية؛
 
 ## 21–22. Commit / Push
 
-تُسجَّل SHA بعد الإصدار في `09-GIT-AND-RELEASE-RECORD.md`.
+- Feature commit: `5db80ab73f5f7d26d1d1b58580bd5bec6d6a7c66`
+- Local HEAD = `origin/phase-18-m18-ai-marketing-communications` بعد fetch.
 
 ## 23. القيود
 
