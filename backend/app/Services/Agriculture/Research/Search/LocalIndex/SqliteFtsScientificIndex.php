@@ -68,7 +68,6 @@ final class SqliteFtsScientificIndex implements LocalIndexSearchEngine
             $this->insertBatch($batch);
         }
         $this->setGeneration($sourceKey, $generation);
-        $this->generations[$sourceKey] = $generation;
     }
 
     public function synchronize(LocalStoreCommit $commit): void
@@ -77,8 +76,12 @@ final class SqliteFtsScientificIndex implements LocalIndexSearchEngine
         foreach ($commit->changed as $record) {
             $this->apply($record);
         }
-        $this->setGeneration($commit->sourceKey, max($commit->generation, $this->generation($commit->sourceKey)));
-        $this->generations[$commit->sourceKey] = $this->generation($commit->sourceKey);
+        // Must assign the computed next generation into the in-memory cache directly.
+        // Re-reading via generation() after setGeneration() returns the stale cached value
+        // (isset short-circuit), which leaves FTS meta behind the store and Stage-3 reports
+        // local_index_cold_or_stale_rebuild_deferred for the rest of the process lifetime.
+        $next = max($commit->generation, $this->generation($commit->sourceKey));
+        $this->setGeneration($commit->sourceKey, $next);
     }
 
     public function apply(StoredScientificRecord $record): void
@@ -208,7 +211,6 @@ final class SqliteFtsScientificIndex implements LocalIndexSearchEngine
             $this->insertBatch($batch);
         }
         $this->setGeneration($sourceKey, $generation);
-        $this->generations[$sourceKey] = $generation;
 
         return $count;
     }
@@ -280,6 +282,7 @@ final class SqliteFtsScientificIndex implements LocalIndexSearchEngine
                 'updated_at' => now()->utc()->toIso8601String(),
             ],
         ], ['source_key'], ['generation', 'index_version', 'updated_at']);
+        $this->generations[$sourceKey] = $generation;
     }
 
     /** @return array<string, string> */
