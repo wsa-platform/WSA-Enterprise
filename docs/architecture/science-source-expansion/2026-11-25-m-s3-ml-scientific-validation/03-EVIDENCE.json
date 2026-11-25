@@ -4,6 +4,11 @@
   "final_status": "PARTIALLY_COMPLETED",
   "limitations": "WITH_LIMITATIONS",
   "starting_head": "39c0884dacc7115153d5b2127ed95beb272ee993",
+  "feature_commit": "e2bb272d35327863a6695b8d914e9b4552170d0f",
+  "local_head": "e2bb272d35327863a6695b8d914e9b4552170d0f",
+  "remote_head": "e2bb272d35327863a6695b8d914e9b4552170d0f",
+  "push_result": "SUCCESS",
+  "local_remote_sync": "MATCH",
   "baseline": {
     "decision": "BASELINE_READY_WITH_LIMITATIONS",
     "branch": "phase-18-m18-ai-marketing-communications",

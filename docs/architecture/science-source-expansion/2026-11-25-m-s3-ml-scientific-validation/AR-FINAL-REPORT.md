@@ -107,7 +107,15 @@ UI: NOT APPLICABLE
 
 ## K. Git و Push
 
-يُستكمل بعد الالتزام (انظر نهاية التنفيذ).
+| | SHA |
+|---|---|
+| Starting HEAD | `39c0884dacc7115153d5b2127ed95beb272ee993` |
+| Feature + docs | `e2bb272d35327863a6695b8d914e9b4552170d0f` |
+| Local HEAD | `e2bb272d35327863a6695b8d914e9b4552170d0f` |
+| Remote HEAD | `e2bb272d35327863a6695b8d914e9b4552170d0f` |
+| Push | SUCCESS |
+| Sync | **MATCH** |
+| WIP غير مرتبط | تُرك دون لمس |
 
 ## L. القيود والمخاطر المتبقية
 
