@@ -453,11 +453,12 @@ class ScientificEvidenceRelevanceGate
             }
         }
 
-        // Latin binomials present in the question (e.g. Nomada agrestis) even when QUS has not
-        // resolved cropId/scientificName — required for hymenoptera journal evidence matching.
-        foreach ($this->binomialsInText((string) $query->originalQuestion) as $binomial) {
-            $needles[] = $binomial;
-            $genus = trim(explode(' ', $binomial)[0] ?? '');
+        // Latin taxonomic forms in the question (binomial or bare genus) even when QUS has not
+        // resolved cropId/scientificName. Bare genera are required for multilingual questions
+        // where the Latin taxon is not followed by a Latin-script epithet (FR/AR word order).
+        foreach ($this->latinTaxonCandidatesInText((string) $query->originalQuestion) as $taxon) {
+            $needles[] = $taxon;
+            $genus = trim(explode(' ', $taxon)[0] ?? '');
             if ($genus !== '') {
                 $needles[] = $genus;
             }
@@ -470,6 +471,46 @@ class ScientificEvidenceRelevanceGate
         }
 
         return false;
+    }
+
+    /**
+     * Latin-script taxonomic candidates from case-preserving question text.
+     *
+     * Supports full binomials and bare genera. Bare genera matter when the question
+     * language places non-Latin tokens after the taxon (Arabic/French), which previously
+     * made entity matching depend on accidental English/Turkish "false binomials".
+     *
+     * @return list<string>
+     */
+    private function latinTaxonCandidatesInText(string $text): array
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return [];
+        }
+
+        $out = [];
+        foreach ($this->binomialsInText($text) as $binomial) {
+            if (! in_array($binomial, $out, true)) {
+                $out[] = $binomial;
+            }
+        }
+
+        if (preg_match_all('/\b([A-Z][a-z]{3,})\b/u', $text, $captures) === 0) {
+            return $out;
+        }
+
+        foreach ($captures[1] as $token) {
+            $token = trim((string) $token);
+            if ($token === '' || $this->isNonTaxonCapitalizedToken($token)) {
+                continue;
+            }
+            if (! in_array($token, $out, true)) {
+                $out[] = $token;
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -493,6 +534,43 @@ class ScientificEvidenceRelevanceGate
         }
 
         return $out;
+    }
+
+    /**
+     * Capitalized Latin-script tokens that are function words / discourse openers,
+     * not biological genera. Shared across AR/EN/FR/TR question surfaces.
+     */
+    private function isNonTaxonCapitalizedToken(string $token): bool
+    {
+        static $stop = null;
+        if ($stop === null) {
+            $stop = array_fill_keys([
+                // EN discourse / question openers
+                'What', 'Which', 'When', 'Where', 'Why', 'How', 'Who', 'Whom',
+                'The', 'This', 'That', 'These', 'Those', 'There', 'Their', 'Then',
+                'Based', 'According', 'Recent', 'First', 'After', 'Before', 'During',
+                'About', 'Under', 'Over', 'With', 'From', 'Into', 'Only', 'Also',
+                'Some', 'Many', 'Most', 'More', 'Less', 'Such', 'Each', 'Both',
+                'Does', 'Did', 'Have', 'Has', 'Had', 'Will', 'Would', 'Could', 'Should',
+                'Can', 'May', 'Might', 'Must', 'Need', 'Known', 'Effect', 'Effects',
+                'Impact', 'Impacts', 'Role', 'Roles', 'Type', 'Types', 'Level', 'Levels',
+                // FR openers
+                'Quelles', 'Quelle', 'Quels', 'Quel', 'Comment', 'Pourquoi', 'Quand',
+                'Dans', 'Pour', 'Sur', 'Avec', 'Sans', 'Chez', 'Entre', 'Après', 'Avant',
+                'Selon', 'Parmi', 'Ainsi', 'Aussi', 'Donc', 'Mais', 'Puis', 'Lors',
+                'Une', 'Des', 'Les', 'Ces', 'Cet', 'Cette', 'Ceux', 'Celles',
+                'Données', 'Donnee', 'Etude', 'Étude', 'Analyse', 'Présence', 'Presence',
+                // TR openers / common non-taxa
+                'Nedir', 'Nasıl', 'Hangi', 'Neden', 'Ne', 'Bir', 'Bu', 'Şu', 'Su',
+                'Için', 'İçin', 'Göre', 'Kadar', 'Daha', 'En', 'Ve', 'Ile', 'İle',
+                'Hakkında', 'Olarak', 'Arasında', 'Üzerinde', 'Uzerinde',
+                // Common geographic / meta (not biological genera for entity needles)
+                'Europe', 'France', 'Spain', 'Italy', 'Africa', 'Asia', 'America',
+                'Maine', 'Loire', 'Paris', 'London', 'Cairo', 'Ankara', 'Istanbul',
+            ], true);
+        }
+
+        return isset($stop[$token]);
     }
 
     /**

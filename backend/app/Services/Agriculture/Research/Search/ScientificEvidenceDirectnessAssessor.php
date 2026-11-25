@@ -984,14 +984,25 @@ class ScientificEvidenceDirectnessAssessor
             return false;
         }
 
-        return preg_match(
+        // Language-agnostic faunistic / pollinator intent: Latin taxa + EN/FR/AR/TR cues.
+        // Do not hardcode individual species beyond shared taxonomic/family vocabulary.
+        $pollinatorCue = preg_match(
             '/\b(?:wild\s+bees?|solitary\s+bees?|honey\s*bees?|bumblebees?|pollinators?|pollination|'
-            .'hymenoptera|nomada|osmia|megachile|andrena|halictus|lasioglossum|'
+            .'hymenoptera|apoidea|apidae|andrenidae|megachilidae|halictidae|'
             .'host\s+associat(?:ion|ions)?|nesting\s+habitat|first\s+(?:record|mention)|'
-            .'rediscover(?:y|ed)|occurrence|abeille(?:s)?(?:\s+sauvages?)?)\b|'
-            .'نحل|ملقحات/u',
+            .'rediscover(?:y|ed)|occurrence|abeille(?:s)?(?:\s+sauvages?)?|'
+            .'yabani\s+arı|arılar(?:ın|ı)?|konak|habitat(?:ı|i)?)\b|'
+            .'نحل|ملقحات|موئل|عائل|تلقيح|حشرات\s+مفيدة/u',
             $question
         ) === 1;
+
+        $latinTaxonWithBeeCue = preg_match('/\b([A-Z][a-z]{3,})\b/u', $plan->normalizedQuery->originalQuestion) === 1
+            && preg_match(
+                '/\b(?:bee|bees|pollinator|abeille|abeilles|hymenoptera|arı|نحل|ملقحات)\b/iu',
+                $question
+            ) === 1;
+
+        return $pollinatorCue || $latinTaxonWithBeeCue;
     }
 
     private function hasFaunisticOccurrenceAnswerability(string $haystack): bool
