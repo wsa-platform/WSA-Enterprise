@@ -97,7 +97,14 @@ UI React/Flutter: **NOT APPLICABLE** (لا تغيير عقود واجهة).
 
 ## J. Git والإصدار
 
-يُستكمل في قسم الالتزام بعد الدفع (SHAs محلية/بعيدة).
+| | SHA |
+|---|---|
+| Starting HEAD (جلسة الإكمال) | `6e60c76b74ea7273280e6f16e27bbb4182a0b1d8` |
+| Feature + docs commit | `0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647` |
+| Local HEAD | `0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647` |
+| Remote HEAD | `0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647` |
+| Push | SUCCESS (`6e60c76..0bfea3b` → `origin/phase-18-m18-ai-marketing-communications`) |
+| Local/remote sync | **MATCH** |
 
 ## K. التصنيف
 

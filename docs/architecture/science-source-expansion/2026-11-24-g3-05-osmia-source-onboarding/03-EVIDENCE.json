@@ -4,6 +4,11 @@
   "source_addition_verified": true,
   "verified_at": "2026-11-25T12:30:00Z",
   "starting_head_this_session": "6e60c76b74ea7273280e6f16e27bbb4182a0b1d8",
+  "feature_commit": "0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647",
+  "local_head": "0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647",
+  "remote_head": "0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647",
+  "push_result": "SUCCESS",
+  "local_remote_sync": "MATCH",
   "localindex_store": {
     "path": "/var/lib/wsa/scientific_records/scientific_record_store.v2.sqlite",
     "storage": "docker_named_volume_scientific_records_data",
