@@ -100,11 +100,14 @@ UI React/Flutter: **NOT APPLICABLE** (لا تغيير عقود واجهة).
 | | SHA |
 |---|---|
 | Starting HEAD (جلسة الإكمال) | `6e60c76b74ea7273280e6f16e27bbb4182a0b1d8` |
-| Feature + docs commit | `0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647` |
-| Local HEAD | `0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647` |
-| Remote HEAD | `0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647` |
-| Push | SUCCESS (`6e60c76..0bfea3b` → `origin/phase-18-m18-ai-marketing-communications`) |
+| Feature commit | `0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647` |
+| Docs commit | `de07d0ace8f8616aa3c23bbbcc0fd9ed4ac98503` |
+| FTS cache fix | `a9e60080ba274dc5275a75247f090f9db434e2d4` |
+| Local HEAD | `a9e60080ba274dc5275a75247f090f9db434e2d4` |
+| Remote HEAD | `a9e60080ba274dc5275a75247f090f9db434e2d4` |
+| Push | SUCCESS (tip includes feature + docs + FTS cache fix) |
 | Local/remote sync | **MATCH** |
+| Re-verify 2026-11-25 | FTS durable PASS · compose attribution PASS · OsmiaG305 unit PASS |
 
 ## K. التصنيف
 

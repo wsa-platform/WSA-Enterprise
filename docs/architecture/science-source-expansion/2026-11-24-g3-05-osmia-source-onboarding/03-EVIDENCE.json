@@ -5,10 +5,18 @@
   "verified_at": "2026-11-25T12:30:00Z",
   "starting_head_this_session": "6e60c76b74ea7273280e6f16e27bbb4182a0b1d8",
   "feature_commit": "0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647",
-  "local_head": "0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647",
-  "remote_head": "0bfea3be5af9e4ad8fe428cd3395d4e50e4dd647",
+  "docs_commit": "de07d0ace8f8616aa3c23bbbcc0fd9ed4ac98503",
+  "fts_cache_fix_commit": "a9e60080ba274dc5275a75247f090f9db434e2d4",
+  "local_head": "a9e60080ba274dc5275a75247f090f9db434e2d4",
+  "remote_head": "a9e60080ba274dc5275a75247f090f9db434e2d4",
   "push_result": "SUCCESS",
   "local_remote_sync": "MATCH",
+  "reverified_at": "2026-11-25T15:56:00Z",
+  "reverify": {
+    "durable_fts": "PASS",
+    "compose_attribution": "PASS",
+    "osmia_unit_tests": "PASS"
+  },
   "localindex_store": {
     "path": "/var/lib/wsa/scientific_records/scientific_record_store.v2.sqlite",
     "storage": "docker_named_volume_scientific_records_data",
