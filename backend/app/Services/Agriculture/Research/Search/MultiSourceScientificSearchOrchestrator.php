@@ -21,6 +21,7 @@ use App\Services\Agriculture\Research\Search\LocalIndex\AgrisLocalIndexQuerySpec
 use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\LocalIndex\DrDukeLocalIndexQuerySpecializer;
 use App\Services\Agriculture\Research\Search\LocalIndex\OrganicEprintsLocalIndexQuerySpecializer;
+use App\Services\Agriculture\Research\Search\LocalIndex\OsmiaLocalIndexQuerySpecializer;
 use App\Services\Agriculture\Research\Search\BhlPublicationQuerySpecializer;
 use App\Services\Agriculture\Research\Search\GbifSpeciesQuerySpecializer;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCapabilityPolicy;
@@ -870,9 +871,9 @@ class MultiSourceScientificSearchOrchestrator
 
         $preferred = [];
 
-        // AGRIS G1-01 / Organic Eprints G1-02 / Dr. Duke: FTS-safe retrieval queries
-        // derived from CSQ/plan (does not mutate CSQ). Prefer specialized queries;
-        // avoid long scholarly NL that over-constrain FTS AND matching.
+        // AGRIS G1-01 / Organic Eprints G1-02 / Dr. Duke / OSMIA G3-05: FTS-safe
+        // retrieval queries derived from CSQ/plan (does not mutate CSQ). Prefer
+        // specialized queries; avoid long scholarly NL that over-constrain FTS AND.
         if ($adapter->sourceKey() === AgrisLocalIndexQuerySpecializer::SOURCE_KEY) {
             $preferred = (new AgrisLocalIndexQuerySpecializer())->retrievalQueries($plan);
             if ($preferred !== []) {
@@ -887,6 +888,12 @@ class MultiSourceScientificSearchOrchestrator
         }
         if ($adapter->sourceKey() === DrDukeLocalIndexQuerySpecializer::SOURCE_KEY) {
             $preferred = (new DrDukeLocalIndexQuerySpecializer())->retrievalQueries($plan);
+            if ($preferred !== []) {
+                return ScientificSearchVariantBudget::apply($preferred)['variants'];
+            }
+        }
+        if ($adapter->sourceKey() === OsmiaLocalIndexQuerySpecializer::SOURCE_KEY) {
+            $preferred = (new OsmiaLocalIndexQuerySpecializer())->retrievalQueries($plan);
             if ($preferred !== []) {
                 return ScientificSearchVariantBudget::apply($preferred)['variants'];
             }

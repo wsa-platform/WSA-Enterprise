@@ -371,6 +371,24 @@ class ScientificEvidenceDirectnessAssessor
             ];
         }
 
+        // Hymenoptera / wild-bee faunistic occurrence, host, and habitat literature
+        // (OSMIA journal): entity-matched papers with faunistic answerability are DIRECT
+        // even when QUS labels the question as general_knowledge / definitional.
+        if ($relevance['relevant']
+            && $entityMatched
+            && $this->isFaunisticOccurrenceQuestion($plan)
+            && $this->hasFaunisticOccurrenceAnswerability($haystack)) {
+            return [
+                'directness' => self::DIRECT,
+                'score' => 37.0 + (12.0 * $factorCoverage),
+                'reasons' => ['faunistic_occurrence_answerable'],
+                'factor_coverage' => round($factorCoverage, 3),
+                'sense_coverage' => true,
+                'entity_matched' => true,
+                'topic_matched' => true,
+            ];
+        }
+
         if ($entityMatched && $topicMatched && ! $requiredSenseFactorMissing) {
             if ($oilDemotion === 'background') {
                 return [
@@ -954,6 +972,31 @@ class ScientificEvidenceDirectnessAssessor
             || $required === 'species_list_or_taxonomy'
             || in_array($intent, ['species_list_or_taxonomy', 'plant_family_members'], true)
             || $sense === 'plant_family_members';
+    }
+
+    private function isFaunisticOccurrenceQuestion(KnowledgeQueryPlan $plan): bool
+    {
+        $question = mb_strtolower(trim(implode(' ', array_filter([
+            $plan->normalizedQuery->originalQuestion,
+            $plan->normalizedQuery->normalizedQuestion,
+        ]))));
+        if ($question === '') {
+            return false;
+        }
+
+        return preg_match(
+            '/\b(?:wild\s+bees?|solitary\s+bees?|honey\s*bees?|bumblebees?|pollinators?|pollination|'
+            .'hymenoptera|nomada|osmia|megachile|andrena|halictus|lasioglossum|'
+            .'host\s+associat(?:ion|ions)?|nesting\s+habitat|first\s+(?:record|mention)|'
+            .'rediscover(?:y|ed)|occurrence|abeille(?:s)?(?:\s+sauvages?)?)\b|'
+            .'نحل|ملقحات/u',
+            $question
+        ) === 1;
+    }
+
+    private function hasFaunisticOccurrenceAnswerability(string $haystack): bool
+    {
+        return $this->relevanceGate->hasFaunisticOccurrenceAnswerabilityCues($haystack);
     }
 
     /**

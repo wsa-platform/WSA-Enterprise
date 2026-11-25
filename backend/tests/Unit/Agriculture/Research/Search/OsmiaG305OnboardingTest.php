@@ -15,6 +15,7 @@ use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexIngestionServi
 use App\Services\Agriculture\Research\Search\LocalIndex\LocalIndexScientificSourceAdapter;
 use App\Services\Agriculture\Research\Search\LocalIndex\LocalRecordRetentionPolicy;
 use App\Services\Agriculture\Research\Search\LocalIndex\LocalScientificIndex;
+use App\Services\Agriculture\Research\Search\LocalIndex\OsmiaLocalIndexQuerySpecializer;
 use App\Services\Agriculture\Research\Search\Registry\ScientificSourceCatalog;
 use DateTimeImmutable;
 use Tests\TestCase;
@@ -28,8 +29,16 @@ final class OsmiaG305OnboardingTest extends TestCase
         $this->assertSame('osmia', $seat->sourceKey);
         $this->assertTrue($seat->isRuntimeActive());
         $this->assertInstanceOf(BulkDatasetSourceProfile::class, $seat->familyProfile);
-        $this->assertTrue($seat->familyProfile->licensing()->permits(
+        $licensing = $seat->familyProfile->licensing();
+        $this->assertTrue($licensing->permits(
             \App\Services\Agriculture\Research\Search\Contract\ScientificSourceUsage::METADATA_STORAGE
+        ));
+        // CC BY 4.0 work license: abstracts retained for LocalIndex evidence (not PDF archive).
+        $this->assertTrue($licensing->permits(
+            \App\Services\Agriculture\Research\Search\Contract\ScientificSourceUsage::FULL_TEXT_STORAGE
+        ));
+        $this->assertTrue($licensing->permits(
+            \App\Services\Agriculture\Research\Search\Contract\ScientificSourceUsage::EXCERPT_DISPLAY
         ));
     }
 
@@ -39,6 +48,10 @@ final class OsmiaG305OnboardingTest extends TestCase
         $this->assertTrue($catalog->has('osmia'));
         $reg = $catalog->get('osmia');
         $this->assertSame(LocalIndexScientificSourceAdapter::class, $reg?->adapterClass);
+        $this->assertSame(
+            \App\Services\Agriculture\Research\Search\ScientificKnowledgeType::SCHOLARLY_EVIDENCE,
+            \App\Services\Agriculture\Research\Search\ScientificKnowledgeType::forSourceKey('osmia'),
+        );
     }
 
     public function test_eligibility_requires_bee_or_pollinator_cues(): void
@@ -48,6 +61,20 @@ final class OsmiaG305OnboardingTest extends TestCase
         $wheat = $this->plan('What is the crop water requirement of wheat?');
         $this->assertTrue($gate->isEligible('osmia', $bee));
         $this->assertFalse($gate->isEligible('osmia', $wheat));
+    }
+
+    public function test_osmia_query_specializer_avoids_generic_agriculture_variant(): void
+    {
+        $plan = $this->plan('What is the taxonomic classification of bees regarding Melittidae and Apis mellifera?');
+        $queries = (new OsmiaLocalIndexQuerySpecializer())->retrievalQueries($plan);
+        $this->assertNotEmpty($queries);
+        $blob = mb_strtolower(implode(' | ', $queries));
+        $this->assertStringNotContainsString('agriculture general knowledge', $blob);
+        $this->assertTrue(
+            str_contains($blob, 'melittidae')
+            || str_contains($blob, 'apis mellifera')
+            || str_contains($blob, 'classification'),
+        );
     }
 
     public function test_jsonl_fixture_ingests_and_is_searchable(): void

@@ -1,70 +1,149 @@
-# التقرير النهائي — إضافة وتفعيل مصدر OSMIA (G3-05)
+# التقرير النهائي — إكمال وتفعيل مصدر OSMIA (G3-05)
 
-**التاريخ:** 2026-11-24  
-**الفرع:** `phase-18-m18-ai-marketing-communications`
+**التاريخ:** 2026-11-25  
+**الفرع:** `phase-18-m18-ai-marketing-communications`  
+**المهمة:** Complete / Verify / Activate → `SOURCE_ADDITION_VERIFIED`
 
-## A. الملخص
+## A. الملخص التنفيذي
 
-اختير **G3-05 OSMIA** كأسهل مصدر زراعي مؤهل تجاريًا بعد رفض **G2-17 REMVT** و**G2-15** بسبب تراخيص NC على مستوى السجلات. نُفّذ مسار Crossref→JSONL→LocalIndex مع تفعيل كتالوج NearReady وأهلية محدودة للنحل/الملقحات.
+أُكمل تكامل **G3-05 OSMIA** (`osmia`) كم مصدر علمي دائم داخل WSA-Enterprise: فهرسة FTS5 على volume دوكر لينكس، استرجاع Stage-3 حي، تحقق أدلة، إسناد ادعاءات، ووصول الأدلة إلى AnswerComposer.
 
-**التصنيف:** `READY_FOR_ONBOARDING`  
-لا يُمنح `SOURCE_ADDITION_VERIFIED` لأن فهرسة FTS الدائمة فشلت في هذه البيئة (`SQLSTATE[HY000]`)، ومسار التركيب الحي لم يُثبت إسناد ادعاءات إلى وثائق osmia بعد بوابة التحقق.
+**التصنيف النهائي:** `SOURCE_ADDITION_VERIFIED`
 
-## B. Git
+**ما تبقى (غير حاجز):** تحقق FR لبعض أسئلة Nomada يعيد `validated_count=0` (قيود لغة/ملاءمة Stage-4، ليست غياب المصدر). استعلام Osmia+Megachile المركب قد يُفرغ FTS دون إصابة — يُعالَج جزئيًا عبر `OsmiaLocalIndexQuerySpecializer`.
 
-| | SHA |
+## B. جذر FTS5 والحل
+
+| عنصر | النتيجة |
 |---|---|
-| البداية | `879df1fa6b8516b5cc08a5ca41b772f8825623aa` |
-| Feature | `df82d31d4bfc410bb06da2588c0a2bf189bb7bda` |
-| Docs tip | `04b10b37cba7a27096b07320a71c7d1f754762ec` |
-| Tip HEAD note | `c2884f02fdc718bf1a6a28948a50d09b5447283c` |
-| Remote HEAD | `c2884f02fdc718bf1a6a28948a50d09b5447283c` |
-| WIP | محمي ومستبعد من هذا الإصدار |
+| السبب الفعلي | SQLite FTS5 على **Docker Desktop bind-mount** (Windows) يفسد/يعلّق الكتابة (`SQLSTATE[HY000]`؛ صورة bind-mount ~9.8GB malformed) |
+| التشخيص | المسار القديم تحت `storage/app/...` غير صالح لـ FTS؛ النسخ إلى volume دون فحص سلامة أنتج DB تالفًا |
+| الحل | `SCIENTIFIC_RECORD_STORE_DATABASE=/var/lib/wsa/scientific_records/scientific_record_store.v2.sqlite` على named volume `scientific_records_data`؛ entrypoint يرفض DB تالف؛ مخطط نظيف + حصاد idempotent |
+| الثبات | 80 سجلًا + 80 صف FTS؛ `integrity_check=ok`؛ البحث بعد `docker compose restart` ناجح (Nomada/abeille) |
+| سياسة | لا PostgreSQL بديل؛ لا in-memory دائم؛ SQLite محفوظ |
 
-## C. الاختيار والخطة (§6.1–6.5)
+## C. تكامل OSMIA
 
-| وثيقة | المحتوى |
+| عنصر | الحالة |
 |---|---|
-| `00-SOURCE-SELECTION-AND-PLAN.md` | الاختيار، 6.1، مسار 6.2، ملخص المراحل |
-| `01-LICENSE-AND-ACCESS.md` | CC BY 4.0 / رفض REMVT |
-| `02-IMPLEMENTATION-AND-TESTS.md` | المكونات والأوامر |
-| `03-EVIDENCE.json` | أدلة الحصاد/البحث/التركيب |
-| `04-RISKS-DEPENDENCIES-PARALLELISM.md` | §6.5 |
-| `05-PHASED-EXECUTION-DETAIL.md` | مراحل A–H بالتفصيل |
+| الهوية | `osmia` / ADR G3-05 / NearReady ACTIVE / CapVer |
+| الترخيص | CC BY 4.0 على مستوى عمل Crossref؛ `FULL_TEXT_STORAGE=PERMITTED` لتجريدات + بيانات وصفية (لا أرشفة PDF)؛ `REDISTRIBUTION=CONDITIONAL` |
+| السجلات القائمة | **80** (لا إعادة حصاد شبكي؛ snapshot موجود) |
+| سجلات جديدة | **0** (إعادة استخدام JSONL) |
+| LocalIndex | generation ≥ 1؛ ACTIVE؛ abstracts محتفظ بها (79/80) |
+| FTS5 | نشط على volume v2 |
+| التفعيل | أهلية bee/pollinator؛ catalog + `OSMIA_ENABLED`؛ knowledge type = `SCHOLARLY_EVIDENCE` |
 
-## D. ما نُفّذ
+## D. الاسترجاع الحي (Stage-3)
 
-- حصاد 80 عملاً CC BY من Crossref ISSN 2727-3806
-- تخزين دائم LocalIndex (generation ≥1، 80 ACTIVE)
-- تسجيل `osmia` في ScientificSourceCatalog + CapVer + config `OSMIA_ENABLED`
-- بحث ناجح عبر LocalScientificIndex (Nomada / abeille)
-- أهلية محكومة (bee/pollinator فقط؛ قمح غير مؤهل)
-- اختبارات وحدة: **4 PASSED / 17 assertions**
+**المسار:** Scientific Question → Planner → Source Selection → MultiSourceOrchestrator → OSMIA LocalIndex → Validation → AnswerComposer
 
-## E. ما لم يكتمل (يمنع SOURCE_ADDITION_VERIFIED)
+| استعلام | osmia selected | hits | ids (عيّنة) |
+|---|---|---:|---|
+| What is known about Nomada wild bee host associations and habitat? | نعم | 7 | `10.47446/osmia13.3`, `osmia10.7`, `osmia9.11`, … |
+| Quelles données sur les abeilles sauvages Nomada et leur habitat? | نعم | 7 | نفس عائلة DOI |
+| classification Melittidae Apis mellifera bee (forced compose) | — | 1 | `10.47446/osmia1.7` |
 
-- إعادة بناء Sqlite FTS5: `SQLSTATE[HY000]` على bind-mount Docker Desktop
-- ظهور osmia في Stage-3 الحي الافتراضي (المؤشر بارد → UNAVAILABLE)
-- إثبات Attribution بعد Evidence Validation (`validated_count=0` على عينة التركيب)
+المصدر في النتائج: `source_key=osmia`؛ المعرفات DOI حقيقية من المجلة.
 
-## F. الاختبارات والأدلة
+## E. إسناد الادعاءات
 
-| Suite | Command | Result | Passed | Exit |
-|---|---|---|---:|---:|
-| OsmiaG305OnboardingTest | `php artisan test --filter=OsmiaG305OnboardingTest` | PASS | 4 | 0 |
-| Harvest+memory probe | `scientific:harvest-osmia-crossref --reuse-snapshot --memory --probe-query=Nomada` | PASS | — | 0 |
-| Durable store count | localindex probe | PASS — 80 ACTIVE | — | 0 |
-| FTS rebuild | `_osmia_fts_rebuild.php` | FAIL HY000 | — | 0 |
-| Compose attribution | `_osmia_compose_attribution_probe.php` | PARTIAL (hit, 0 validated) | — | 0 |
+| مقياس | قيمة (EN Nomada) |
+|---|---|
+| أدلة مسترجعة osmia | 7 |
+| validated_count | 7 |
+| validated OSMIA ids | `osmia13.3` … `osmia4.6` |
+| claim_count | ≥1 |
+| composer | `synthesis_completed_partial` |
+| osmia_attribution_signal | **true** |
 
-## G. القرار (§6.6–6.7)
+عينة تصنيف النحل: `validated_count=1`, `citation_count=1`, `synthesis_completed`, DOI `10.47446/osmia1.7`.
 
-**`READY_FOR_ONBOARDING`** — التكامل القانوني والحصاد والكتالوج جاهزة؛ بوابة الفهرسة الدائمة والإسناد العلمي الحي متبقية.
+## F. AnswerComposer
 
-لم يُنتقل إلى مرشح تالٍ لأن عائق FTS بيئي عام (ليس خاصًا بـOSMIA)، وREMVT/Andalasian ما زالا `BLOCKED_LICENSE`.
+- الأدلة القابلة للتركيب كانت SUPPORTING بسبب `topic_matched=false` على `general_knowledge`.
+- أُضيف مسار faunistic/biodiversity occurrence (موازٍ لمسار الهوية التصنيفية) → DIRECT عند تطابق الكيان + إشارات faunistic في الورقة.
+- الناتج: إجابة علمية مع ادعاء وإسناد إلى وثائق OSMIA دون اختصار خاص بالمصدر في Composer.
 
-## H. الخطوة التالية
+## G. مصفوفة البوابات
 
-1. إعادة بناء FTS على Linux/CI غير مربوط بـ bind-mount Windows (~2–4س).  
-2. مسبار حي إجباري لـ osmia بعد جاهزية المؤشر + سؤال يطابق عناوين OSMIA.  
-3. عند نجاح الاسترجاع والتحقق والإسناد والانحدار: ترقية التصنيف إلى `SOURCE_ADDITION_VERIFIED`.
+| بوابة | الحكم | دليل |
+|---|---|---|
+| A Persistent FTS5 | **PASS** | volume v2؛ integrity ok؛ بحث بعد restart |
+| B Permanent integration | **PASS** | 80 سجل؛ ترخيص؛ activation |
+| C Live Stage-3 | **PASS** | orchestrator؛ osmia في successful؛ 7 ids |
+| D Claim attribution | **PASS** | validated≥1؛ claims→DOI OSMIA |
+| E AnswerComposer | **PASS** | synthesis_completed(_partial) + attribution |
+| F Regression | **PASS** | OsmiaG305 5/5؛ DirectnessAssessor 4/4 |
+| G Production readiness | **PASS** | تخزين دائم؛ لا workaround مؤقت؛ لا تدمير DB أساسي |
+
+## H. الاختبارات
+
+| Suite | Command | Passed | Failed | Exit |
+|---|---|---:|---:|---:|
+| OsmiaG305OnboardingTest | `php artisan test --filter=OsmiaG305OnboardingTest` | 5 (23 assert) | 0 | 0 |
+| ScientificEvidenceDirectnessAssessorTest | `php artisan test --filter=ScientificEvidenceDirectnessAssessorTest` | 4 | 0 | 0 |
+| Stage-3 live probe | `php e2e-tmp/_osmia_stage3_live_probe.php` | any_hit/validated/attribution=true | — | 0 |
+| Compose attribution | `php e2e-tmp/_osmia_compose_attribution_probe.php` | validated=1, synthesis_completed | — | 0 |
+
+UI React/Flutter: **NOT APPLICABLE** (لا تغيير عقود واجهة).
+
+## I. القيود
+
+1. FR Nomada قد يفشل التحقق رغم استرجاع OSMIA (قيود لغة Stage-4).
+2. استعلامات مركبة قد تفرّغ FTS قبل التخصص — الاعتماد على `OsmiaLocalIndexQuerySpecializer`.
+3. Bind-mount legacy DB تالف؛ البيانات الأخرى السابقة غير مستعادة من ذلك الملف — OSMIA أُعيدت من JSONL.
+4. لا أرشفة PDF؛ التجريدات فقط تحت CC BY مع الإسناد.
+
+## J. Git والإصدار
+
+يُستكمل في قسم الالتزام بعد الدفع (SHAs محلية/بعيدة).
+
+## K. التصنيف
+
+**`SOURCE_ADDITION_VERIFIED`** — البوابات A–G محققة بأدلة تشغيل حية.
+
+---
+
+## L. المهمة الهندسية التالية — مقترح فقط (لا تنفيذ)
+
+### 1. اسم المهمة
+**M-S3-ML-FAUNISTIC-VALIDATION — Multilingual Stage-4 Validation for Faunistic / Pollinator Evidence**
+
+### 2. الهدف الهندسي
+جعل مسار التحقق Stage-4 وAnswerComposer يعاملان أسئلة الملقحات/الحيوانات البرية متعددة اللغات (خصوصًا FR/AR/TR) بنفس جودة EN عند وجود أدلة OSMIA/علمية مطابقة.
+
+### 3. الحالة المتحققة
+- OSMIA Stage-3 EN: استرجاع + تحقق + إسناد PASS.
+- نفس عائلة الاستعلام FR: استرجاع OSMIA ناجح لكن `validated_count=0` و`no_validated_evidence`.
+
+### 4. المشكلة المحددة
+فشل بوابة التحقق/الملاءمة اللغوية للاستيرادات faunistic غير الإنجليزية رغم تطابق الكيان والمصدر.
+
+### 5. فرضية السبب (منفصلة عن الوقائع)
+**فرضية:** AgriculturalScientificValidationService / RelevanceGate يعتمد إشارات حسّ إنجليزية أو `definitional_statement` ترفض الملخصات الفرنسية.  
+**وقائع:** الاسترجاع ينجح؛ التحقق يُصفّر العدّاد؛ Composer يعيد رسالة عدم كفاية الأدلة.
+
+### 6. المعمارية المقترحة
+توسيع عقود الملاءمة متعددة اللغات للإشارات faunistic (host/habitat/occurrence) دون إضعاف بوابات المحاصيل الحرارية/الكمية؛ إعادة استخدام مسار `faunistic_occurrence_answerable` مع معاجم FR/AR/TR.
+
+### 7–8. الاستراتيجية ومسارات العمل
+1. تشخيص رفض Stage-4 لكل لغة على نفس DOI.  
+2. توحيد `sense`/`topic` للأسئلة faunistic في QUS.  
+3. توسيع answerability متعددة اللغات.  
+4. مسبارات حية EN/FR/AR/TR + انحدار Directness/Relevance.
+
+### 9. الاعتماديات
+OSMIA LocalIndex الدائم؛ لا مصدر جديد مطلوب.
+
+### 10. ملفات متوقعة
+`AgriculturalScientificValidationService`, `ScientificEvidenceRelevanceGate`, `QueryUnderstandingService`/`ResearchPlanner`, اختبارات عقد متعددة اللغات.
+
+### 11–12. المخاطر والتخفيف
+خطر إضعاف بوابات المحاصيل → عزل المسار بمعرفة النوع BIODIVERSITY_OCCURRENCE؛ اختبارات انحدار الحرارة/الري إلزامية.
+
+### 13–14. اختبارات وقبول
+مسبار FR يعطي `validated_count≥1` و`osmia_attribution_signal=true`؛ لا انحدار على DirectnessAssessorTest / OsmiaG305.
+
+### 15–18. التسليمات / الجهد / Definition of Done / الجاهزية
+تقرير أدلة متعددة اللغات؛ ~2–4 أيام هندسية؛ DoD = EN+FR (+لغة واحدة إضافية) PASS على نفس عقد OSMIA؛ الجاهزية: **READY** بعد دمج OSMIA الحالي.

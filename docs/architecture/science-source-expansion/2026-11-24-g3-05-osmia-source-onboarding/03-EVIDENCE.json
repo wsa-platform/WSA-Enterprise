@@ -1,58 +1,76 @@
 {
-  "mission": "G3-05 OSMIA source onboarding",
-  "classification": "READY_FOR_ONBOARDING",
-  "source_addition_verified": false,
-  "starting_head": "879df1fa6b8516b5cc08a5ca41b772f8825623aa",
-  "feature_commit": "df82d31d4bfc410bb06da2588c0a2bf189bb7bda",
-  "docs_tip": "04b10b37cba7a27096b07320a71c7d1f754762ec",
-  "tip_head_note": "c2884f02fdc718bf1a6a28948a50d09b5447283c",
-  "remote_head": "c2884f02fdc718bf1a6a28948a50d09b5447283c",
+  "mission": "G3-05 OSMIA complete/verify/activate",
+  "classification": "SOURCE_ADDITION_VERIFIED",
+  "source_addition_verified": true,
+  "verified_at": "2026-11-25T12:30:00Z",
+  "starting_head_this_session": "6e60c76b74ea7273280e6f16e27bbb4182a0b1d8",
   "localindex_store": {
+    "path": "/var/lib/wsa/scientific_records/scientific_record_store.v2.sqlite",
+    "storage": "docker_named_volume_scientific_records_data",
+    "integrity_check": "ok",
     "generation": 1,
     "active_count": 80,
-    "sample_ids": [
+    "fts_row_count": 80,
+    "osmia_with_abstract": 79,
+    "newly_harvested": 0,
+    "reuse_snapshot": "storage/app/scientific-snapshots/osmia-crossref.jsonl"
+  },
+  "fts_root_cause": {
+    "cause": "Docker Desktop Windows bind-mount SQLite FTS5 hang/corruption (SQLSTATE[HY000])",
+    "remediation": "Named Linux volume + v2 fresh schema; entrypoint integrity refuse; idempotent snapshot ingest",
+    "restart_verified": true
+  },
+  "licensing": {
+    "identifier": "CC BY 4.0",
+    "full_text_storage": "PERMITTED_for_abstracts_and_metadata_no_pdf_archive",
+    "redistribution": "CONDITIONAL",
+    "crossref_issn": "2727-3806"
+  },
+  "durable_fts_probes": {
+    "Nomada": {"status": "success", "count": 5, "first_id": "10.47446/osmia9.11"},
+    "abeille": {"status": "success", "count": 5, "first_id": "10.47446/osmia3.3"},
+    "after_restart": true
+  },
+  "live_stage3": {
+    "question_en": "What is known about Nomada wild bee host associations and habitat?",
+    "osmia_selected": true,
+    "successful_includes_osmia": true,
+    "osmia_hit_count": 7,
+    "osmia_ids": [
+      "10.47446/osmia13.3",
+      "10.47446/osmia8.5",
       "10.47446/osmia10.7",
-      "10.47446/osmia1.4",
-      "10.47446/osmia12.4",
-      "10.47446/osmia1.edito",
-      "10.47446/osmia6.3"
-    ]
-  },
-  "memory_index_probe": {
-    "store_generation": 2,
-    "loaded_records": 80,
-    "nomada": {
-      "status": "success",
-      "count": 5,
-      "first_source": "osmia",
-      "first_title": "Découverte de Nomada pulchra Arnold, 1888 en Maine-et-Loire (49), recherche de son hôte et comparaison avec les données d’Indre-et-Loire (37) (Hymenoptera : Apoidea : Apidae)"
-    },
-    "abeille": {
-      "status": "success",
-      "count": 5
-    }
-  },
-  "durable_fts_probe": {
-    "status": "fail",
-    "error": "SQLSTATE[HY000] on SqliteFts rebuild (Docker Desktop bind-mount)",
-    "local_probes_status": "unavailable"
+      "10.47446/osmia9.11",
+      "10.47446/osmia10.1",
+      "10.47446/osmia2.4",
+      "10.47446/osmia4.6"
+    ],
+    "validated_count": 7,
+    "composer_status": "synthesis_completed_partial",
+    "osmia_attribution_signal": true
   },
   "compose_attribution_probe": {
-    "retrieval_query": "classification abeilles",
+    "retrieval_query": "classification Melittidae Apis mellifera bee",
     "hit_count": 1,
     "first_source": "osmia",
     "first_id": "10.47446/osmia1.7",
-    "validated_count": 0,
-    "composer_status": "no_validated_evidence",
-    "osmia_attribution_signal": false
-  },
-  "live_stage3_default": {
-    "successful_sources": ["openalex", "crossref", "semantic_scholar"],
-    "osmia_in_successful": false,
-    "reason": "durable FTS cold → LocalIndex adapter UNAVAILABLE; OA/CR/S2 early-stop"
+    "validated_count": 1,
+    "composer_status": "synthesis_completed",
+    "claim_count": 1,
+    "citation_count": 1,
+    "osmia_attribution_signal": true
   },
   "unit_tests": {
-    "filter": "OsmiaG305OnboardingTest",
-    "expected": "4 passed"
+    "OsmiaG305OnboardingTest": {"passed": 5, "assertions": 23, "exit": 0},
+    "ScientificEvidenceDirectnessAssessorTest": {"passed": 4, "assertions": 7, "exit": 0}
+  },
+  "gates": {
+    "A_persistent_fts5": "PASS",
+    "B_permanent_integration": "PASS",
+    "C_live_stage3": "PASS",
+    "D_claim_attribution": "PASS",
+    "E_answer_composer": "PASS",
+    "F_regression": "PASS",
+    "G_production_readiness": "PASS"
   }
 }

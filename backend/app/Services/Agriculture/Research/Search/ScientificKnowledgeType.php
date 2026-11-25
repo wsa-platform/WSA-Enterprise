@@ -60,7 +60,10 @@ final class ScientificKnowledgeType
             'dr_duke' => self::CHEMICAL_ASSOCIATION,
             // Governed agronomy corpora are practice-capable by default; scholarly
             // INTERNET_FIRST keys remain scholarly_evidence.
-            'agris', 'organic_eprints', 'osmia' => self::AGRICULTURAL_PRACTICE,
+            // OSMIA is a peer-reviewed Hymenoptera journal (Crossref CC BY), not an
+            // AGRIS-class practice corpus — treat records as scholarly evidence.
+            'agris', 'organic_eprints' => self::AGRICULTURAL_PRACTICE,
+            'osmia' => self::SCHOLARLY_EVIDENCE,
             'openalex', 'crossref', 'semantic_scholar' => self::SCHOLARLY_EVIDENCE,
             'fao_stat' => self::STATISTICAL_OBSERVATION,
             'consensus' => self::REVIEW_EVIDENCE,

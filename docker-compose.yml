@@ -5,6 +5,10 @@ services:
     environment:
       REDIS_HOST: redis
       DB_HOST: postgres
+      # LocalIndex SQLite+FTS5 on a Linux named volume (not the Windows bind-mount).
+      # Bind-mounted SQLite FTS writes hang / raise SQLSTATE[HY000] under Docker Desktop.
+      # v2: prior volume copy of the Windows bind-mount DB was malformed; fresh schema+harvest.
+      SCIENTIFIC_RECORD_STORE_DATABASE: /var/lib/wsa/scientific_records/scientific_record_store.v2.sqlite
     depends_on:
       postgres:
         condition: service_healthy
@@ -14,6 +18,7 @@ services:
       - ./backend:/var/www/html
       - ./docs:/var/www/html/docs:ro
       - backend_vendor:/var/www/html/vendor
+      - scientific_records_data:/var/lib/wsa/scientific_records
       # Rev 6.6: entrypoint is also baked into the image; bind-mount keeps local
       # permission-hardening changes effective without a full image rebuild.
       - ./backend/docker-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh:ro
@@ -184,6 +189,7 @@ volumes:
   backend_vendor:
   postgres_data:
   redis_data:
+  scientific_records_data:
 
 networks:
   wsa:

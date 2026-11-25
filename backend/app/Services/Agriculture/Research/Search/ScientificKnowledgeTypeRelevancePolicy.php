@@ -34,6 +34,14 @@ final class ScientificKnowledgeTypeRelevancePolicy
             $types[] = ScientificKnowledgeType::BIODIVERSITY_OCCURRENCE;
         }
 
+        // Wild-bee / hymenoptera occurrence, host, and habitat questions need biodiversity
+        // + scholarly corpora (OSMIA) rather than empty general_knowledge topic matching.
+        if ($this->questionSignalsBiodiversityOccurrence($question, $topics)) {
+            $types[] = ScientificKnowledgeType::BIODIVERSITY_OCCURRENCE;
+            $types[] = ScientificKnowledgeType::SCHOLARLY_EVIDENCE;
+            $types[] = ScientificKnowledgeType::TAXONOMIC_IDENTITY;
+        }
+
         if ($intent === 'land_classification' || $sense === 'land_classification') {
             $types[] = ScientificKnowledgeType::SCHOLARLY_EVIDENCE;
             $types[] = ScientificKnowledgeType::AGRICULTURAL_PRACTICE;
@@ -154,12 +162,15 @@ final class ScientificKnowledgeTypeRelevancePolicy
             return true;
         }
 
-        // Taxonomy questions often retrieve OpenAlex/Crossref scholarly articles that
-        // discuss the taxon. When the entity matches and TAXONOMIC_IDENTITY is required,
-        // allow identity-oriented relevance so Stage-3 does not demand land/variety
-        // topic inventories that emptied survivors (GS-06 Mentha).
+        // Taxonomy / biodiversity-occurrence questions often retrieve OpenAlex/Crossref/
+        // OSMIA scholarly articles that discuss the taxon. When the entity matches and
+        // TAXONOMIC_IDENTITY or BIODIVERSITY_OCCURRENCE is required, allow identity-oriented
+        // relevance so Stage-3 does not demand land/variety topic inventories.
         return $recordType === ScientificKnowledgeType::SCHOLARLY_EVIDENCE
-            && in_array(ScientificKnowledgeType::TAXONOMIC_IDENTITY, $required, true);
+            && (
+                in_array(ScientificKnowledgeType::TAXONOMIC_IDENTITY, $required, true)
+                || in_array(ScientificKnowledgeType::BIODIVERSITY_OCCURRENCE, $required, true)
+            );
     }
 
     /**
@@ -187,7 +198,14 @@ final class ScientificKnowledgeTypeRelevancePolicy
             // the raw hit budget when the plan explicitly needs agricultural practice.
             'agris' => [ScientificKnowledgeType::AGRICULTURAL_PRACTICE],
             'organic_eprints' => [ScientificKnowledgeType::AGRICULTURAL_PRACTICE],
-            'osmia' => [ScientificKnowledgeType::AGRICULTURAL_PRACTICE],
+            // Peer-reviewed hymenoptera journal: protect on scholarly/taxonomy needs
+            // (GovernedScientificSourceEligibility still scopes osmia to bee/pollinator cues).
+            'osmia' => [
+                ScientificKnowledgeType::SCHOLARLY_EVIDENCE,
+                ScientificKnowledgeType::TAXONOMIC_IDENTITY,
+                ScientificKnowledgeType::BIODIVERSITY_OCCURRENCE,
+                ScientificKnowledgeType::AGRICULTURAL_PRACTICE,
+            ],
         ] as $key => $types) {
             if (array_intersect($required, $types) !== []) {
                 $protected[] = $key;
@@ -209,6 +227,29 @@ final class ScientificKnowledgeTypeRelevancePolicy
 
         return preg_match(
             '/\b(taxonomy|taxonomic|scientific name|binomial|species of|genus|family members|what species)\b|تصنيف|الاسم العلمي|فصيلة/',
+            $question
+        ) === 1;
+    }
+
+    /** @param list<mixed> $topics */
+    private function questionSignalsBiodiversityOccurrence(string $question, array $topics): bool
+    {
+        foreach ($topics as $topic) {
+            $t = mb_strtolower(trim((string) $topic));
+            if ($t !== '' && preg_match(
+                '/pollinat|wild\s*bee|hymenoptera|abeille|host\s*associat|habitat|occurrence|faun/',
+                $t
+            ) === 1) {
+                return true;
+            }
+        }
+
+        return preg_match(
+            '/\b(?:wild\s+bees?|solitary\s+bees?|honey\s*bees?|bumblebees?|pollinators?|pollination|'
+            .'hymenoptera|nomada|osmia|megachile|andrena|halictus|lasioglossum|'
+            .'host\s+associat(?:ion|ions)?|nesting\s+habitat|first\s+(?:record|mention)|'
+            .'rediscover(?:y|ed)|occurrence|abeille(?:s)?\s+sauvages?)\b|'
+            .'نحل|ملقحات|تعايش العائل/u',
             $question
         ) === 1;
     }

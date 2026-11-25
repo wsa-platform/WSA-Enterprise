@@ -449,16 +449,18 @@ final class CurrentMembershipNearReadySeatCatalog
 
     private static function osmiaLicensing(): ScientificSourceLicensingDeclaration
     {
+        // Crossref work-level CC BY 4.0 covers metadata + published abstracts retained for
+        // LocalIndex search/evidence (with attribution). PDF full-text files are not stored.
         return new ScientificSourceLicensingDeclaration(
             [
                 ScientificSourceUsage::RETRIEVAL->value => ScientificSourceUsageStatus::PERMITTED,
                 ScientificSourceUsage::CITATION_LINKING->value => ScientificSourceUsageStatus::PERMITTED,
                 ScientificSourceUsage::METADATA_STORAGE->value => ScientificSourceUsageStatus::PERMITTED,
-                ScientificSourceUsage::FULL_TEXT_STORAGE->value => ScientificSourceUsageStatus::CONDITIONAL,
+                ScientificSourceUsage::FULL_TEXT_STORAGE->value => ScientificSourceUsageStatus::PERMITTED,
                 ScientificSourceUsage::EXCERPT_DISPLAY->value => ScientificSourceUsageStatus::PERMITTED,
                 ScientificSourceUsage::REDISTRIBUTION->value => ScientificSourceUsageStatus::CONDITIONAL,
             ],
-            licenceIdentifier: 'CC BY 4.0',
+            licenceIdentifier: 'CC BY 4.0 (Crossref work license; abstract+metadata retention; no PDF archive)',
             termsReference: self::ENDPOINT_EVIDENCE_OSMIA,
             evidenceReference: 'IC-ER 2026-10-13 G3-05 + Crossref work license URL filter 2026-11-24',
         );

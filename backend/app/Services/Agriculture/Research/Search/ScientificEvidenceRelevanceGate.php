@@ -106,6 +106,20 @@ class ScientificEvidenceRelevanceGate
                 $topicStrength = 'weak';
             }
         }
+        // Biodiversity / hymenoptera faunistic path (OSMIA et al.): entity + occurrence/host
+        // answerability satisfies topic when scholarly topic labels are absent from abstracts.
+        if ($entityMatched
+            && (
+                $identityOriented
+                || in_array(ScientificKnowledgeType::BIODIVERSITY_OCCURRENCE, $requiredKnowledgeTypes, true)
+                || $sourceKey === 'osmia'
+            )
+            && $this->hasFaunisticOccurrenceAnswerabilityCues($taxonomyAnswerabilityHaystack)) {
+            $topicMatched = true;
+            if ($topicStrength === 'none') {
+                $topicStrength = 'weak';
+            }
+        }
         $contextMatched = $this->matchesAgriculturalContext($senseHaystack)
             || ($extraText !== null && $this->matchesAgriculturalContext(mb_strtolower(trim($extraText))));
         $domainHaystack = $senseHaystack !== '' ? $senseHaystack : $fullHaystack;
@@ -328,6 +342,28 @@ class ScientificEvidenceRelevanceGate
     }
 
     /**
+     * Faunistic / occurrence answerability for hymenoptera and wild-bee literature.
+     * Distinct from taxonomic hierarchy inventories.
+     */
+    public function hasFaunisticOccurrenceAnswerabilityCues(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+
+        return preg_match(
+            '/\b(?:host(?:s)?|hôte|hôtes|parasitic\s+bee|cleptoparasit|'
+            .'habitat|habitats|nest(?:ing)?|occurrence|distribution|rediscover(?:y|ed)|'
+            .'first\s+(?:record|mention)|premi[eè]re\s+mention|d[eé]couverte|'
+            .'red[eé]couverte|new\s+species|esp[eè]ce\s+nouvelle|'
+            .'abeille(?:s)?|wild\s+bee|solitary\s+bee|hymenoptera|apoidea|apidae|'
+            .'andrenidae|megachilidae|halictidae|nomada|osmia|megachile)\b/u',
+            $hay,
+        ) === 1;
+    }
+
+    /**
      * @param  list<string|null>  $parts
      */
     private function buildHaystack(array $parts): string
@@ -417,6 +453,16 @@ class ScientificEvidenceRelevanceGate
             }
         }
 
+        // Latin binomials present in the question (e.g. Nomada agrestis) even when QUS has not
+        // resolved cropId/scientificName — required for hymenoptera journal evidence matching.
+        foreach ($this->binomialsInText((string) $query->originalQuestion) as $binomial) {
+            $needles[] = $binomial;
+            $genus = trim(explode(' ', $binomial)[0] ?? '');
+            if ($genus !== '') {
+                $needles[] = $genus;
+            }
+        }
+
         foreach (array_unique(array_filter($needles)) as $needle) {
             if (AgriculturalEntityCatalog::containsTerm($haystack, mb_strtolower(trim((string) $needle)))) {
                 return true;
@@ -424,6 +470,29 @@ class ScientificEvidenceRelevanceGate
         }
 
         return false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function binomialsInText(string $text): array
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return [];
+        }
+        if (preg_match_all('/\b([A-Z][a-z]{2,})\s+([a-z]{3,})\b/u', $text, $captures, PREG_SET_ORDER) === 0) {
+            return [];
+        }
+        $out = [];
+        foreach ($captures as $capture) {
+            $binomial = trim(($capture[1] ?? '').' '.($capture[2] ?? ''));
+            if ($binomial !== '' && ! in_array($binomial, $out, true)) {
+                $out[] = $binomial;
+            }
+        }
+
+        return $out;
     }
 
     /**

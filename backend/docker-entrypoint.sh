@@ -49,6 +49,48 @@ ensure_scientific_stable_results_storage() {
 
 ensure_scientific_stable_results_storage
 
+# LocalIndex SQLite+FTS5: Compose points SCIENTIFIC_RECORD_STORE_DATABASE at a
+# Linux named volume. Docker Desktop bind-mounts of the legacy file hang / corrupt
+# FTS5 (SQLSTATE[HY000]); do NOT copy that multi-GB bind-mount image into the
+# volume. Fresh schema + idempotent harvest restores OSMIA and other sources.
+ensure_scientific_record_store_volume() {
+    target_db="${SCIENTIFIC_RECORD_STORE_DATABASE:-}"
+    if [ -z "$target_db" ]; then
+        return 0
+    fi
+    target_dir=$(dirname "$target_db")
+    mkdir -p "$target_dir" || true
+
+    if [ -f "$target_db" ]; then
+        if ! php -r '
+            $p = $argv[1];
+            if (!is_file($p) || filesize($p) < 100) { exit(2); }
+            try {
+                $pdo = new PDO("sqlite:".$p);
+                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $r = (string) $pdo->query("PRAGMA integrity_check")->fetchColumn();
+                exit($r === "ok" ? 0 : 2);
+            } catch (Throwable $e) {
+                exit(3);
+            }
+        ' "$target_db"; then
+            echo "WARNING: volume LocalIndex SQLite failed integrity_check; removing for clean recreate."
+            rm -f "$target_db" "${target_db}-wal" "${target_db}-shm" || true
+        fi
+    fi
+
+    if [ "$(id -u)" -eq 0 ]; then
+        chown -R www-data:www-data "$target_dir" 2>/dev/null || true
+        chmod 0775 "$target_dir" 2>/dev/null || true
+        if [ -f "$target_db" ]; then
+            chown www-data:www-data "$target_db" 2>/dev/null || true
+            chmod 0660 "$target_db" 2>/dev/null || true
+        fi
+    fi
+}
+
+ensure_scientific_record_store_volume
+
 # Queue workers require Redis; wait during startup to avoid crash-loops when
 # Redis is still starting or temporarily unavailable on the Docker network.
 wait_for_redis() {
