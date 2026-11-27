@@ -381,7 +381,7 @@ class ScientificEvidenceRelevanceGate
 
         return $plan->normalizedQuery->cropId !== null
             || $plan->normalizedQuery->scientificName !== null
-            || in_array((string) $subjectType, ['crop', 'named_entity', 'animal', 'plant_family'], true);
+            || in_array((string) $subjectType, ['crop', 'named_entity', 'animal', 'plant_family', 'crop_category'], true);
     }
 
     private function requiresTopic(KnowledgeQueryPlan $plan): bool
@@ -441,6 +441,27 @@ class ScientificEvidenceRelevanceGate
         $surface = $plan->normalizedQuery->namedEntitySurface();
         if ($surface !== null) {
             $needles[] = $surface;
+        }
+
+        // Crop-group subjects (citrus, fruit trees, vegetables): match scholarly text
+        // against the category value, surface label, and catalog aliases — not cropId alone.
+        if (is_array($plan->subjectEntity) && ($plan->subjectEntity['type'] ?? '') === 'crop_category') {
+            $categoryValue = trim((string) ($plan->subjectEntity['value'] ?? ''));
+            $categoryLabel = trim((string) ($plan->subjectEntity['label'] ?? ''));
+            if ($categoryValue !== '') {
+                $needles[] = $categoryValue;
+                $needles[] = str_replace('_', ' ', $categoryValue);
+                $signals = AgriculturalEntityCatalog::cropCategorySignals()[$categoryValue] ?? [];
+                foreach ($signals as $alias) {
+                    $alias = trim((string) $alias);
+                    if ($alias !== '') {
+                        $needles[] = $alias;
+                    }
+                }
+            }
+            if ($categoryLabel !== '') {
+                $needles[] = $categoryLabel;
+            }
         }
 
         if (is_array($plan->subjectEntity) && ($plan->subjectEntity['type'] ?? '') === 'plant_family') {

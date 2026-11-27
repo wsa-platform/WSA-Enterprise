@@ -45,6 +45,10 @@ class ScientificSearchQueryBuilder
             ? $this->buildVariantsFromCanonicalSpecification($plan)
             : $this->buildLegacyVariantsFromPlan($plan);
 
+        // Shared across CSQ + legacy: preserve non-crop scientific identity
+        // (Latin pest/pathogen taxa, pest process surfaces, named diseases, nutrients).
+        $variants = $this->prependNonCropScientificIdentityVariants($plan, $variants);
+
         // Shared across CSQ + legacy: named disease identity must lead Stage-3 variants.
         return $this->prependNamedDiseaseIdentityVariants($plan, $variants);
     }
@@ -1561,6 +1565,119 @@ class ScientificSearchQueryBuilder
     }
 
     /**
+     * Preserve non-crop scientific identity that CSQ often collapses into the crop entity:
+     * Latin pest/pathogen binomials from the original question, unresolved pest process
+     * surfaces (e.g. aphids), and nutrient+crop-group combinations.
+     *
+     * @param  list<string>  $variants
+     * @return list<string>
+     */
+    private function prependNonCropScientificIdentityVariants(KnowledgeQueryPlan $plan, array $variants): array
+    {
+        $query = $plan->normalizedQuery;
+        $original = (string) $query->originalQuestion;
+        $cropSci = trim((string) ($query->scientificName ?? ''));
+        $cropId = $query->cropId;
+        $entity = $this->resolveEntityTerm($plan);
+        $primaryCommon = $this->resolveCommonEntityLabels($plan)[0] ?? null;
+        $identityVariants = [];
+
+        $intent = mb_strtolower(trim((string) $plan->researchIntent));
+        $pestIntent = $intent === 'pest';
+        $subjectType = is_array($plan->subjectEntity) ? (string) ($plan->subjectEntity['type'] ?? '') : '';
+        // Livestock/animal subjects must not inherit crop-binding binomials as pest hosts.
+        $animalSubject = $subjectType === 'animal';
+
+        foreach ($this->latinBinomialsFromOriginalQuestion($original) as $binomial) {
+            $genus = trim(explode(' ', $binomial)[0] ?? '');
+            if ($cropSci !== '' && (
+                strcasecmp($binomial, $cropSci) === 0
+                || ($genus !== '' && stripos($cropSci, $genus) === 0)
+            )) {
+                continue;
+            }
+            $identityVariants[] = $binomial;
+            if (! $animalSubject && $entity !== null) {
+                $identityVariants[] = $this->joinTerms([$binomial, $entity]);
+            }
+            if (! $animalSubject && $primaryCommon !== null && $entity !== null
+                && strcasecmp($primaryCommon, $entity) !== 0) {
+                $identityVariants[] = $this->joinTerms([$binomial, $primaryCommon]);
+            }
+            if ($pestIntent) {
+                $identityVariants[] = $this->joinTerms([$binomial, 'pest']);
+                $identityVariants[] = $this->joinTerms([$binomial, 'life cycle']);
+            }
+        }
+
+        $process = trim((string) ($query->constraints['semantic_role_graph']['process_surface'] ?? ''));
+        $processResolution = trim((string) ($query->constraints['semantic_role_graph']['process_resolution'] ?? ''));
+        if ($pestIntent && $process !== '' && $processResolution !== 'resolved') {
+            // Never lead with a hostless pest token when a crop/host entity is known —
+            // that retrieves general pest biology and later fails entity relevance.
+            $host = ! $animalSubject ? ($entity ?? $primaryCommon) : null;
+            if ($host !== null) {
+                $identityVariants[] = $this->joinTerms([$process, $host]);
+                $identityVariants[] = $this->joinTerms([$process, $host, 'pest']);
+                $identityVariants[] = $this->joinTerms([$process, $host, 'yield']);
+            } else {
+                $identityVariants[] = $process;
+                $identityVariants[] = $this->joinTerms([$process, 'pest']);
+            }
+        }
+
+        $factors = is_array($query->constraints['scientific_factors'] ?? null)
+            ? $query->constraints['scientific_factors']
+            : [];
+        $category = AgriculturalEntityCatalog::resolveCropCategory(
+            mb_strtolower(trim($original.' '.$query->normalizedQuestion))
+        );
+        $categoryLabel = null;
+        if ($category !== null) {
+            $surface = trim((string) ($category['label'] ?? ''));
+            $taxonomy = str_replace('_', ' ', trim((string) ($category['value'] ?? '')));
+            $categoryLabel = $surface !== '' ? $surface : $taxonomy;
+        }
+        foreach ($factors as $factor) {
+            $factor = mb_strtolower(trim((string) $factor));
+            if (! in_array($factor, ['iron', 'potassium', 'nitrogen', 'phosphorus'], true)) {
+                continue;
+            }
+            // Pair nutrient identity with the crop group / entity when known.
+            if ($categoryLabel !== null) {
+                $identityVariants[] = $this->joinTerms([$factor, 'deficiency', $categoryLabel]);
+                $identityVariants[] = $this->joinTerms([$categoryLabel, $factor, 'chlorosis']);
+            } elseif ($entity !== null) {
+                $identityVariants[] = $this->joinTerms([$entity, $factor, 'deficiency']);
+            } else {
+                $identityVariants[] = $this->joinTerms([$factor, 'deficiency']);
+            }
+            if ($entity !== null && $categoryLabel !== null) {
+                $identityVariants[] = $this->joinTerms([$entity, $factor, 'deficiency']);
+            }
+        }
+
+        if ($identityVariants === []) {
+            return $variants;
+        }
+
+        $merged = [...$identityVariants, ...$variants];
+        $location = $this->resolveAskedLocation($plan);
+
+        return $this->uniqueBoundedVariantsPreservingLocation($merged, $location);
+    }
+
+    /**
+     * Case-preserving Latin binomials from the user question (not the lowercased form).
+     *
+     * @return list<string>
+     */
+    private function latinBinomialsFromOriginalQuestion(string $original): array
+    {
+        return AgriculturalEntityCatalog::extractLatinBinomialCandidates($original, true);
+    }
+
+    /**
      * Prefixed named-disease retrieval terms (rust/rouille/صدأ/pas → rust/Puccinia)
      * so CSQ and legacy paths both preserve disease identity under MAX_VARIANTS.
      *
@@ -1588,17 +1705,19 @@ class ScientificSearchQueryBuilder
             $spec = RetrievalSpecification::fromCanonical($plan->normalizedQuery->canonicalQuestion);
             $entity = $this->specExecutableEntityTerm($spec);
         }
-        if ($entity === null) {
-            return $variants;
-        }
-
         $primaryCommon = $this->resolveCommonEntityLabels($plan)[0] ?? null;
         $diseaseVariants = [];
         foreach ($diseaseTerms as $diseaseTerm) {
-            $diseaseVariants[] = $this->joinTerms([$entity, $diseaseTerm]);
-            $diseaseVariants[] = $this->joinTerms([$entity, $diseaseTerm, 'yield']);
-            if ($primaryCommon !== null && strcasecmp($primaryCommon, $entity) !== 0) {
-                $diseaseVariants[] = $this->joinTerms([$primaryCommon, $diseaseTerm, 'disease']);
+            // Disease identity alone is valid for animal/brood diseases without a crop host.
+            $diseaseVariants[] = $diseaseTerm;
+            if ($entity !== null) {
+                $diseaseVariants[] = $this->joinTerms([$entity, $diseaseTerm]);
+                $diseaseVariants[] = $this->joinTerms([$entity, $diseaseTerm, 'pathogen']);
+                if ($primaryCommon !== null && strcasecmp($primaryCommon, $entity) !== 0) {
+                    $diseaseVariants[] = $this->joinTerms([$primaryCommon, $diseaseTerm, 'disease']);
+                }
+            } elseif ($primaryCommon !== null) {
+                $diseaseVariants[] = $this->joinTerms([$primaryCommon, $diseaseTerm]);
             }
         }
 

@@ -99,6 +99,8 @@ final class AgriculturalEntityCatalog
             'plant_nutrition' => [
                 'plant nutrition', 'nutrient deficiency', 'potassium', 'بوتاسيوم',
                 'نقص البوتاسيوم', 'تغذية النبات', 'نقص عناصر',
+                'iron', 'iron deficiency', 'fe deficiency', 'حديد', 'نقص الحديد',
+                'fer', 'carence en fer', 'demir', 'demir eksikliği',
                 'engrais', 'azote', 'azoté', 'gübre', 'azot', 'azotlu',
             ],
             'disease' => [
@@ -166,17 +168,25 @@ final class AgriculturalEntityCatalog
                 'تربة خصبة', 'fertilité des sols', 'toprak verimliliği',
             ],
             'potassium' => [
-                'potassium', 'k deficiency', 'potassium deficiency', 'بوتاسيوم', 'نقص البوتاسيوم',
+                // Avoid bare "k deficiency" — substring of unrelated "…k deficiency" phrases.
+                'potassium', 'potassium deficiency', 'بوتاسيوم', 'نقص البوتاسيوم',
             ],
             'germination' => [
                 'germination', 'seed germination', 'seedling emergence', 'إنبات',
             ],
             'nitrogen' => [
-                'nitrogen', 'n deficiency', 'نيتروجين', 'نقص النيتروجين',
+                // Avoid bare "n deficiency" — it is a substring of "iron deficiency".
+                'nitrogen', 'nitrogen deficiency', 'نيتروجين', 'نقص النيتروجين',
                 'azote', 'azoté', 'engrais azoté', 'azot', 'azotlu', 'nitrojen',
             ],
             'phosphorus' => [
                 'phosphorus', 'phosphate', 'فوسفور', 'نقص الفوسفور',
+            ],
+            'iron' => [
+                'iron', 'iron deficiency', 'fe deficiency', 'fe chlorosis',
+                'حديد', 'نقص الحديد', 'الحديد',
+                'fer', 'carence en fer', 'chlorose ferrique',
+                'demir', 'demir eksikliği',
             ],
             'drying' => [
                 'drying', 'dehydration', 'dehydrated', 'oven drying', 'hot air drying', 'تجفيف',
@@ -202,6 +212,7 @@ final class AgriculturalEntityCatalog
             'germination' => 'germination',
             'nitrogen' => 'nitrogen',
             'phosphorus' => 'phosphorus',
+            'iron' => 'iron',
             'drying' => 'drying',
             'storage' => 'storage',
         ];
@@ -244,6 +255,10 @@ final class AgriculturalEntityCatalog
             ],
             'phosphorus' => [
                 'phosphorus deficiency', 'phosphate deficiency', 'نقص الفوسفور',
+            ],
+            'iron' => [
+                'iron deficiency', 'fe deficiency', 'fe chlorosis', 'نقص الحديد',
+                'carence en fer', 'demir eksikliği',
             ],
             'drying' => [
                 'oven drying', 'hot air drying', 'drying temperature', 'تجفيف',
@@ -449,7 +464,7 @@ final class AgriculturalEntityCatalog
             'temperature', 'salinity' => 'environmental_requirements',
             'water' => 'irrigation',
             'organic', 'soil' => 'soil_management',
-            'potassium', 'nitrogen', 'phosphorus' => 'plant_nutrition',
+            'potassium', 'nitrogen', 'phosphorus', 'iron' => 'plant_nutrition',
             'germination' => 'cultivation',
             'drying', 'storage' => 'agricultural_industry',
             default => null,
@@ -1155,6 +1170,7 @@ final class AgriculturalEntityCatalog
             'potassium' => ['potassium', 'potassium deficiency', 'K deficiency'],
             'nitrogen' => ['nitrogen', 'nitrogen deficiency'],
             'phosphorus' => ['phosphorus', 'phosphate'],
+            'iron' => ['iron', 'iron deficiency', 'Fe deficiency', 'Fe chlorosis'],
             'drying' => ['drying', 'dehydration', 'hot air drying'],
             'storage' => ['storage', 'postharvest storage', 'shelf life'],
             default => $factor !== '' ? [$factor] : [],
@@ -2286,7 +2302,12 @@ final class AgriculturalEntityCatalog
             }
             $quoted = preg_quote($stem, '/');
 
-            return preg_match('/(?<![\p{L}])(?:ال)?'.$quoted.'(?![\p{L}])/u', mb_strtolower($haystack)) === 1;
+            // Allow common Arabic proclitics (و|ف|ب|ل|ك) before optional ال + stem
+            // so "لمرض" / "بمرض" still match disease/pathogen cues.
+            return preg_match(
+                '/(?<![\p{L}])(?:[وفبلك])?(?:ال)?'.$quoted.'(?![\p{L}])/u',
+                mb_strtolower($haystack),
+            ) === 1;
         }
 
         if (mb_strlen($needle) <= 4 && preg_match('/\p{L}/u', $needle) === 1) {
@@ -2411,7 +2432,16 @@ final class AgriculturalEntityCatalog
                 'محصول', 'المحصول', 'محاصيل', 'المحاصيل',
             ],
             'vegetables' => ['vegetables', 'vegetable crops', 'خضروات', 'خضر'],
-            'fruit_trees' => ['fruit trees', 'orchard crops', 'أشجار الفاكهة', 'اشجار الفاكهة'],
+            'fruit_trees' => [
+                'fruit trees', 'orchard crops',
+                'أشجار الفاكهة', 'اشجار الفاكهة',
+            ],
+            // Crop group distinct from generic fruit trees — preserves citrus identity for retrieval.
+            'citrus' => [
+                'citrus', 'citrus trees', 'citrus crops',
+                'حمضيات', 'الحمضيات',
+                'agrumes', 'narenciye',
+            ],
             'livestock' => ['livestock', 'animals', 'ماشية', 'حيوانات'],
             'fish' => ['fish', 'fishes', 'freshwater fish', 'أسماك', 'اسماك', 'الأسماك'],
         ];
@@ -2432,16 +2462,49 @@ final class AgriculturalEntityCatalog
                 $length = mb_strlen($keyword);
                 if ($length > $bestLength) {
                     $bestLength = $length;
+                    // Prefer the matched surface form for retrieval (e.g. "citrus")
+                    // while keeping the taxonomy key in value (e.g. fruit_trees).
                     $best = [
                         'type' => 'crop_category',
                         'value' => $value,
-                        'label' => $value,
+                        // Prefer Latin-script label for scholarly retrieval when the
+                        // matched surface is Arabic/non-Latin (same category synonyms).
+                        'label' => self::scholarlyCategoryLabel($value, $keyword, $keywords),
                     ];
                 }
             }
         }
 
         return $best;
+    }
+
+    /**
+     * @param  list<string>  $keywords
+     */
+    private static function scholarlyCategoryLabel(string $value, string $matchedKeyword, array $keywords): string
+    {
+        $matchedKeyword = trim($matchedKeyword);
+        if ($matchedKeyword !== '' && preg_match('/^\p{Latin}[\p{Latin}\s\-]*$/u', $matchedKeyword) === 1) {
+            return $matchedKeyword;
+        }
+
+        $bestLatin = '';
+        foreach ($keywords as $synonym) {
+            $synonym = trim((string) $synonym);
+            if ($synonym === '' || preg_match('/^\p{Latin}[\p{Latin}\s\-]*$/u', $synonym) !== 1) {
+                continue;
+            }
+            // Prefer specific multi-word / longer Latin synonyms over underscored taxonomy keys.
+            if (mb_strlen($synonym) > mb_strlen($bestLatin)) {
+                $bestLatin = $synonym;
+            }
+        }
+
+        if ($bestLatin !== '') {
+            return $bestLatin;
+        }
+
+        return $matchedKeyword !== '' ? $matchedKeyword : $value;
     }
 
     /**
@@ -2464,6 +2527,13 @@ final class AgriculturalEntityCatalog
             'goats' => ['goats', 'goat', 'ماعز'],
             'poultry' => ['poultry', 'chickens', 'chicken', 'دواجن', 'دجاج'],
             'camels' => ['camels', 'camel', 'إبل', 'جمال'],
+            'bees' => [
+                'honey bees', 'honey bee', 'honeybees', 'honeybee',
+                'bees', 'bee',
+                'abeilles', 'abeille',
+                'arılar', 'arı',
+                'نحل العسل', 'النحل', 'نحل',
+            ],
             'livestock' => ['livestock', 'ماشية'],
         ];
     }
@@ -2994,7 +3064,91 @@ final class AgriculturalEntityCatalog
             $terms[] = 'wilt';
         }
 
+        // Brood / hive disease morphology (EN/FR/AR/TR) — disease-class vocabulary, not a host special-case.
+        if (preg_match(
+            '/\bfoulbrood\b|\bloque\s+(?:américaine|americaine|européenne|europeenne)\b|'
+            .'تعفن\s+الحضنة|مرض\s+الحضنة|الحضنة\s+(?:الأمريكي|الامريكي|الأوروبي|الاوروبي)|'
+            .'yavru\s+çürükl|yavru\s+curukl/ui',
+            $hay,
+        ) === 1) {
+            $terms[] = 'foulbrood';
+            $terms[] = 'brood disease';
+        }
+
         return array_values(array_unique($terms));
+    }
+
+    /**
+     * Taxonomic Latin binomial candidates from free text.
+     * Rejects English interrogatives / closed-class false positives ("What causes", "the life").
+     *
+     * @return list<string>
+     */
+    public static function extractLatinBinomialCandidates(string $text, bool $requireOriginalCase = false): array
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return [];
+        }
+
+        $pattern = $requireOriginalCase
+            ? '/\b([A-Z][a-z]{2,})\s+([a-z]{3,})\b/u'
+            : '/\b([A-Za-z][a-z]{2,})\s+([a-z]{3,})\b/u';
+
+        if (preg_match_all($pattern, $text, $matches, PREG_SET_ORDER) === 0) {
+            return [];
+        }
+
+        $junkGenus = [
+            'what', 'which', 'when', 'where', 'whose', 'whom', 'how', 'why', 'this', 'that',
+            'these', 'those', 'with', 'from', 'into', 'onto', 'upon', 'over', 'under',
+            'after', 'before', 'about', 'between', 'among', 'during', 'without', 'within',
+            'through', 'across', 'against', 'toward', 'towards', 'their', 'there', 'here',
+            'some', 'each', 'every', 'other', 'another', 'such', 'than', 'then', 'them',
+            'they', 'have', 'has', 'had', 'does', 'did', 'done', 'make', 'made', 'like',
+            'also', 'only', 'just', 'very', 'more', 'most', 'many', 'much', 'both',
+            'american', 'european', 'african', 'asian', 'northern', 'southern', 'eastern',
+            'western', 'common', 'general', 'important', 'major', 'minor',
+            // FR/TR interrogatives and closed-class false genera
+            'quel', 'quelle', 'quels', 'quelles', 'comment', 'pourquoi', 'combien',
+            'quand', 'où', 'ou', 'dont', 'pour', 'dans', 'chez', 'vers', 'selon',
+            'hangi', 'neden', 'nasıl', 'nasil', 'ne', 'kaç', 'kac', 'nedir',
+        ];
+        $junkEpithet = [
+            'host', 'hosts', 'wild', 'bee', 'bees', 'disease', 'diseases', 'yield',
+            'control', 'damage', 'damages', 'cycle', 'life', 'tomato', 'wheat', 'citrus',
+            'causes', 'cause', 'caused', 'appear', 'appears', 'effect', 'effects',
+            'affect', 'affects', 'bacteria', 'virus', 'fungus', 'pathogen', 'symptoms',
+            'symptom', 'management', 'insect', 'insects', 'pest', 'pests', 'plant',
+            'plants', 'crop', 'crops', 'soil', 'water', 'growth', 'range', 'type',
+            'types', 'kind', 'kinds', 'rate', 'rates', 'role', 'roles',
+            'cultures', 'culture', 'température', 'temperature', 'blanche', 'salée', 'salee',
+            'peuvent', 'être', 'etre', 'pour', 'dans', 'avec', 'sans',
+        ];
+
+        $out = [];
+        foreach ($matches as $capture) {
+            $genus = trim((string) ($capture[1] ?? ''));
+            $epithet = trim((string) ($capture[2] ?? ''));
+            if ($genus === '' || $epithet === '') {
+                continue;
+            }
+            $genusFold = mb_strtolower($genus);
+            $epithetFold = mb_strtolower($epithet);
+            if (in_array($genusFold, $junkGenus, true)
+                || in_array($epithetFold, $junkEpithet, true)
+                || self::isNamedEntityStopToken($genusFold)) {
+                continue;
+            }
+            $binomial = $requireOriginalCase
+                ? ($genus.' '.$epithet)
+                : (mb_strtoupper(mb_substr($genusFold, 0, 1)).mb_substr($genusFold, 1).' '.$epithetFold);
+            if (! in_array($binomial, $out, true)) {
+                $out[] = $binomial;
+            }
+        }
+
+        return $out;
     }
 
     /**

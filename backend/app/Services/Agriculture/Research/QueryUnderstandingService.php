@@ -373,6 +373,7 @@ class QueryUnderstandingService
             $clarificationRequirements[] = 'specific_agricultural_question';
         } elseif ($cropIdResolved === null
             && ! AgriculturalEntityCatalog::asksCausalAffectQuestion($normalizedQuestion)
+            && ! $this->hasSpecificDiseaseOrPathogenIdentity($normalizedQuestion)
             && $this->intentRequiresNamedEntity($researchIntent, $subject)) {
             $ambiguityState = AgriculturalKnowledgeQuery::AMBIGUITY_PARTIALLY_AMBIGUOUS;
             $clarificationRequirements[] = 'subject_or_entity';
@@ -392,7 +393,7 @@ class QueryUnderstandingService
             $namedEntityState = 'resolved';
             $namedEntitySurface = is_string($cropLabel) && $cropLabel !== '' ? $cropLabel : $cropIdResolved;
             $entityCategory = $entityCategory ?: FieldCropTaxonomyCatalog::categoryFor($cropIdResolved);
-        } elseif (in_array($subjectType, ['crop', 'named_entity', 'animal', 'plant_family'], true)) {
+        } elseif (in_array($subjectType, ['crop', 'named_entity', 'animal', 'plant_family', 'crop_category'], true)) {
             $namedEntityState = (($subject['resolution'] ?? '') === 'unresolved') ? 'unresolved' : 'resolved';
             $namedEntitySurface = trim((string) ($subject['label'] ?? $subject['value'] ?? ''));
             $namedEntitySurface = $namedEntitySurface !== '' ? $namedEntitySurface : null;
@@ -1406,6 +1407,18 @@ class QueryUnderstandingService
         if (AgriculturalEntityCatalog::hasPlantDiseaseOrPathogenSignal($normalizedQuestion)
             && in_array($bestIntent, ['irrigation', 'productivity', 'general_knowledge'], true)
             && ! AgriculturalEntityCatalog::asksExplicitIrrigationOrWaterRequirement($normalizedQuestion)) {
+            $bestIntent = 'disease';
+        }
+
+        // Pest/organism framing (Latin pest binomial + damage/control/life-cycle, or
+        // insect-pest class terms) must not collapse to crop general_knowledge / yield.
+        if ($this->hasPestOrganismFraming($normalizedQuestion)
+            && in_array($bestIntent, ['general_knowledge', 'productivity', 'cultivation'], true)) {
+            $bestIntent = 'pest';
+        }
+
+        if ($this->hasSpecificDiseaseOrPathogenIdentity($normalizedQuestion)
+            && in_array($bestIntent, ['general_knowledge', 'productivity', 'cultivation'], true)) {
             $bestIntent = 'disease';
         }
 
@@ -2445,6 +2458,8 @@ class QueryUnderstandingService
     {
         $hasDisease = AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'disease')
             || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'مرض')
+            || AgriculturalEntityCatalog::matchesSemanticToken($normalizedQuestion, 'maladie')
+            || AgriculturalEntityCatalog::matchesSemanticToken($normalizedQuestion, 'hastalık')
             || str_contains($normalizedQuestion, 'plant disease')
             || str_contains($normalizedQuestion, 'مرض في النبات');
 
@@ -2452,10 +2467,106 @@ class QueryUnderstandingService
             return false;
         }
 
+        // Specific disease identity, pathogen class, livestock/bee host, or Latin taxon
+        // makes clarification unnecessary — crop is not the only valid specificity.
+        if ($this->hasSpecificDiseaseOrPathogenIdentity($normalizedQuestion)) {
+            return false;
+        }
+
         $hasSpecifics = AgriculturalEntityCatalog::recognizeCrop($normalizedQuestion) !== null
-            || preg_match('/\b(mildew|rust|blight|wilt|virus|fungus|bacteria)\b/u', $normalizedQuestion) === 1;
+            || AgriculturalEntityCatalog::resolveCropCategory($normalizedQuestion) !== null
+            || preg_match(
+                '/\b(mildew|rust|blight|wilt|virus|fungus|fungal|bacteria|bacterial|pathogen|'
+                .'rouille|oïdium|oidium|pas|صدأ|بياض|لفحة|ذبول|بكتيريا|فطر|فيروس)\b/ui',
+                $normalizedQuestion,
+            ) === 1;
 
         return ! $hasSpecifics;
+    }
+
+    /**
+     * Named disease / pathogen / host-animal framing that is already scientifically specific
+     * without a crop entity (e.g. brood diseases of bees, Latin pathogen binomials).
+     */
+    private function hasSpecificDiseaseOrPathogenIdentity(string $normalizedQuestion): bool
+    {
+        $hay = mb_strtolower(trim($normalizedQuestion));
+        if ($hay === '') {
+            return false;
+        }
+
+        // Multi-word named diseases / brood–hive disease lexicon (EN/FR/AR/TR).
+        if (preg_match(
+            '/\b(?:american\s+foulbrood|european\s+foulbrood|foulbrood|loque\s+américaine|'
+            .'loque\s+europeenne|loque\s+européenne|nosema|varroa|'
+            .'تعفن\s+الحضنة|مرض\s+الحضنة|الحضنة\s+الأمريكي|الحضنة\s+الامريكي|'
+            .'yavru\s+çürüklüğü|yavru\s+curuklugu)\b/ui',
+            $hay,
+        ) === 1) {
+            return true;
+        }
+
+        // Disease framing with an animal / bee / livestock host (not requiring a crop).
+        $hasAnimalHost = preg_match(
+            '/\b(?:bee|bees|honey\s*bee|honeybee|livestock|cattle|poultry|sheep|goat|'
+            .'abeille|abeilles|nahl|arı|arılar|نحل|ماشية|دواجن|أغنام|ابقار)\b/ui',
+            $hay,
+        ) === 1;
+        if ($hasAnimalHost && (
+            AgriculturalEntityCatalog::containsTerm($hay, 'disease')
+            || AgriculturalEntityCatalog::containsTerm($hay, 'مرض')
+            || AgriculturalEntityCatalog::matchesSemanticToken($hay, 'maladie')
+            || AgriculturalEntityCatalog::matchesSemanticToken($hay, 'hastalık')
+        )) {
+            return true;
+        }
+
+        // Latin taxonomic identity in the question (pathogen/pest binomial or genus).
+        if (preg_match('/\b([a-z]{3,})\s+([a-z]{4,})\b/u', $hay) === 1
+            && ! AgriculturalEntityCatalog::asksCausalAffectQuestion($hay)) {
+            // Lowercase binomial after normalizeQuestion — accept when disease/pest framing present.
+            return AgriculturalEntityCatalog::hasPlantDiseaseOrPathogenSignal($hay)
+                || preg_match('/\b(?:pest|insect|larva|pathogen|آفة|حشر|يرق)\b/ui', $hay) === 1;
+        }
+
+        return false;
+    }
+
+    /**
+     * Insect/pest organism questions: Latin binomial + management framing, or pest-class lexicon.
+     * Catalog-driven cues — not a per-species allowlist.
+     */
+    private function hasPestOrganismFraming(string $normalizedQuestion): bool
+    {
+        $hay = mb_strtolower(trim($normalizedQuestion));
+        if ($hay === '') {
+            return false;
+        }
+
+        $pestClass = preg_match(
+            '/\b(?:aphid|aphids|whitefl(?:y|ies)|thrips|mite|mites|weevil|weevils|'
+            .'leafminer|leafminers|caterpillar|caterpillars|nematode|nematodes|'
+            .'insect\s+pest|pest\s+insect|آفة|آفات|حشر|منّ|المن|نيماتود)\b/ui',
+            $hay,
+        ) === 1;
+
+        $managementFraming = preg_match(
+            '/\b(?:life\s+cycle|lifecycle|damage|damages|control|management|ipm|'
+            .'larva|larvae|infestation|'
+            .'cycle\s+de\s+vie|contrôle|controle|dégâts|degats|'
+            .'yaşam\s+döngüsü|mucadele|mücadele|'
+            .'دورة\s+حياة|أضرار|اضرار|مكافحة|إدارة\s+آفات)\b/ui',
+            $hay,
+        ) === 1;
+
+        // Reject English false positives ("the life") — keep real taxa (Tuta absoluta).
+        $latinBinomial = AgriculturalEntityCatalog::extractLatinBinomialCandidates($hay, false) !== [];
+
+        if ($pestClass) {
+            return true;
+        }
+
+        return $latinBinomial && $managementFraming;
     }
 
     private function intentRequiresEntity(string $researchIntent): bool
