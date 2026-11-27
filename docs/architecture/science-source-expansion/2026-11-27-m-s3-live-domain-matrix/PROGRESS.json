@@ -41,5 +41,7 @@
     "php e2e-tmp/_ms3_live_domain_matrix.php → minimum_three_domains_x4=true"
   ],
   "open_defects": [],
-  "next_action": "Commit/push mission-eligible files only; do not start another mission"
+  "commit": "69f99c65351caefd35e23a5d3871c156793bd42e",
+  "remote_sync": true,
+  "next_action": "Mission complete; do not start another mission automatically"
 }

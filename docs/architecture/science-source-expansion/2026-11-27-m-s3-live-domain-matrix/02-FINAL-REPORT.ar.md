@@ -164,8 +164,10 @@
 ## K. Git
 
 - الفرع: `phase-18-m18-ai-marketing-communications`
-- تُدرَج فقط ملفات المهمة؛ WIP غير المتعلق (CapVer/CSQ/Feature tests/nginx…) يبقى خارج الـ commit.
-- يُحدَّث هذا القسم بعد الدفع برؤوس Local/Remote.
+- Commit: `69f99c65351caefd35e23a5d3871c156793bd42e`
+- Local HEAD = Remote HEAD: `69f99c6` (متزامنان بعد الدفع)
+- Push: ناجح إلى `origin/phase-18-m18-ai-marketing-communications`
+- WIP غير المتعلق (CapVer/CSQ/Feature tests/nginx/…) بقي خارج الـ commit ولم يُمس.
 
 ---
 
