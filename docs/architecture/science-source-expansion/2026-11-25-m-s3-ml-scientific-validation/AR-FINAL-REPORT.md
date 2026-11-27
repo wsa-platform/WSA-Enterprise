@@ -76,7 +76,16 @@ UI: NOT APPLICABLE
 
 ## H. Git
 
-يُحدَّث بعد الالتزام والدفع في نفس القسم عند الإصدار.
+| | SHA |
+|---|---|
+| Continuation start | `0eaae95f0b958ad4b424cd2ff192816a52cc1674` |
+| Feature (RC-ML-QTYPE-01) | `5cd76d9df232b20b0e81b5bc8bcaa46786d1a162` |
+| Prior Latin taxon fix | `e2bb272d35327863a6695b8d914e9b4552170d0f` |
+| Local HEAD | `5cd76d9df232b20b0e81b5bc8bcaa46786d1a162` |
+| Remote HEAD | `5cd76d9df232b20b0e81b5bc8bcaa46786d1a162` |
+| Push | SUCCESS |
+| Sync | **MATCH** |
+| WIP غير مرتبط | تُرك دون لمس |
 
 ## I. القيود
 
