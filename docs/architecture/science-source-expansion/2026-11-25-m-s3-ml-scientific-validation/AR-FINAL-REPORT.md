@@ -1,156 +1,114 @@
 # التقرير النهائي — M-S3-ML-SCIENTIFIC-VALIDATION
 
-**التاريخ:** 2026-11-25  
+**التاريخ:** 2026-11-25 (تحديث استمرار)  
 **الفرع:** `phase-18-m18-ai-marketing-communications`  
 **Mission ID:** `M-S3-ML-SCIENTIFIC-VALIDATION`  
 **Mission Name:** `GENERAL_SCIENTIFIC_ENGINE_ENGINEERING_AND_VALIDATION`
 
 ## A. الملخص التنفيذي
 
-أُصلح سبب جذري عام في مطابقة الكيانات اللاتينية عبر اللغات الأربع، كان يمنع التحقق العلمي (Stage-4) والإسناد عندما يظهر اسم الجنس اللاتيني مجرداً في أسئلة غير إنجليزية/تركية.
+أُصلحت آليتان عامّتان في المحرك العلمي متعدد اللغات:
+
+1. **RC-ML-ENTITY-01** (سابق): مطابقة الجنس اللاتيني المجرد عبر AR/EN/FR/TR.
+2. **RC-ML-QTYPE-01** (هذه الجولة): منع فتحات الاستفهام السطحية (`ما هو` / `nedir` / كمية) من إسقاط `question_type` إلى `definition`/`quantity` بعد أن يُحلّ القصد العلمي (`scientific_intent_qualifier` / sense).
 
 **النتيجة النهائية:** `PARTIALLY_COMPLETED` مع `WITH_LIMITATIONS`
 
-- Biodiversity/Pollinators: AR/EN/FR/TR → `LIVE_ANSWER_VERIFIED` على أدلة LocalIndex حقيقية.
-- بقية المجالات الأساسية: تغطية تخطيط السؤال (`PLAN_OK`) دون Live Answer شامل.
-- سجل المصادر (11): موثّق؛ الحي العميق لعينة LocalIndex/scholarly فقط.
+لا `COMPLETE_VERIFIED` لأن Live Answer الشامل لكل المجالات ولكل المصادر المسجّلة غير مكتمل.
 
-## B. تصنيف المهمة
+## B. التصنيفات
 
 | البعد | القيمة |
 |---|---|
 | Baseline | `BASELINE_READY_WITH_LIMITATIONS` |
 | Final Status | `PARTIALLY_COMPLETED` |
 | Limitations | `WITH_LIMITATIONS` |
-| CONTRACT_VERIFIED | نعم (عقد Latin taxon متعدد اللغات) |
-| LIVE_ANSWER_VERIFIED | نعم لمجال الملقحات × 4 لغات |
-| LIVE_ANSWER لجميع المجالات/المصادر | لا |
+| CONTRACT_VERIFIED | نعم (Latin taxon + QUS intent parity) |
+| LIVE_ANSWER_VERIFIED | نعم لمجال الملقحات × 4 لغات (من الجولة السابقة) |
+| LIVE_ANSWER لكل المجالات/المصادر | لا |
 
-## C. تحليل الأسباب الجذرية
+## C. الأسباب الجذرية
 
-| Root Cause ID | المشكلة | السبب | المكون | الأعراض | الإصلاح | التحقق |
-|---|---|---|---|---|---|---|
-| RC-ML-ENTITY-01 | فشل `entity_matched` لـ FR/AR رغم وجود نفس الجنس اللاتيني | استخراج الثنائيات فقط؛ EN/TR شكّلا ثنائيات زائفة | `ScientificEvidenceRelevanceGate` | validated_count=0، supporting فقط، no_validated_evidence | مرشحو جنس لاتيني + قائمة إيقاف غير تصنيفية + إشارات faunistic متعددة اللغات | وحدة + مسبار حي 4 لغات |
-
-## D. التغييرات الهندسية
-
-1. **`ScientificEvidenceRelevanceGate`**: `latinTaxonCandidatesInText()` يستخرج الجنس اللاتيني المجرد والثنائيات؛ يستبعد كلمات الخطاب المرسملة غير التصنيفية.
-2. **`ScientificEvidenceDirectnessAssessor`**: توسيع قصد faunistic/pollinator لإشارات EN/FR/AR/TR دون ربط بمصدر أو نوع محدد.
-3. **اختبار عقد جديد**: `ScientificEvidenceRelevanceLatinTaxonContractTest` (Mentha/Andrena عبر 4 لغات + رفض discourse openers).
-
-لا استثناءات لـ Nomada/OSMIA/FR كحالات خاصة.
-
-## E. الجودة العلمية
-
-- لم تُضعَف بوابات المحاصيل/الري/القياسات الكمية.
-- اختبار DirectnessAssessor السابق (4) بقي ناجحاً.
-- مطابقة الكيان تتطلب ظهور المرشح اللاتيني في نص الدليل أيضاً (لا اختراع كيان).
-
-## F. نتائج اللغات
-
-| لغة | Biodiversity Live Answer | validated | composer |
-|---|---|---:|---|
-| EN | PASS | 2 | synthesis_completed_partial |
-| FR | PASS | 2 | synthesis_completed_partial |
-| AR | PASS | 2 | synthesis_completed_partial |
-| TR | PASS | 2 | synthesis_completed_partial |
-
-## G. تغطية المجالات العلمية
-
-| مجال | خطة 4 لغات | Live Answer |
-|---|---|---|
-| Crops and Yield | PLAN_OK | NOT_RUN |
-| Water and Irrigation | PLAN_OK | NOT_RUN |
-| Soil | PLAN_OK | NOT_RUN |
-| Fertilizers and Plant Nutrition | PLAN_OK | NOT_RUN |
-| Diseases and Pests | PLAN_OK | NOT_RUN |
-| Biodiversity and Pollinators | PLAN_OK | **PASS ×4** |
-| Climate and Environment | PLAN_OK | NOT_RUN |
-| Plant Physiology and Genetics | PLAN_OK | NOT_RUN |
-
-ملاحظة: QUS ما زال يصنّف بعض أسئلة الري AR/TR كـ `definition` بدل `requirements` (قيد متبقٍ، ليس محور هذا الإصلاح).
-
-## H. مصفوفة اللغة × المجال (أساسية)
-
-كل خلية أساسية: `PARTIAL` (فهم/تخطيط) ما عدا Biodiversity = `PASS` (Live Answer).  
-الخلايا غير الحية: السبب = لم يُنفَّذ مسار إجابة حية كامل في هذه المهمة؛ الأولوية كانت للإصلاح المشترك للكيانات متعددة اللغات.
-
-## I. مصفوفة تغطية المصادر
-
-**Total Registered Sources:** 11
-
-| Source | Adapter family | Knowledge type | Contract | Live Retrieval | Live Answer |
+| ID | المشكلة | السبب | المكوّن | الإصلاح | التحقق |
 |---|---|---|---|---|---|
-| openalex | REST scholarly | scholarly_evidence | Inspected | NOT_LIVE_VERIFIED (هذه المهمة) | NOT_LIVE_VERIFIED |
-| crossref | REST scholarly | scholarly_evidence | Inspected | NOT_LIVE_VERIFIED | NOT_LIVE_VERIFIED |
-| semantic_scholar | REST scholarly | scholarly_evidence | Inspected | NOT_LIVE_VERIFIED | NOT_LIVE_VERIFIED |
-| consensus | REST review | review_evidence | Inspected | NOT_LIVE_VERIFIED | NOT_LIVE_VERIFIED |
-| fao_stat | Stats portal | statistical_observation | Inspected | NOT_LIVE_VERIFIED | NOT_LIVE_VERIFIED |
-| agris | LocalIndex | agricultural_practice | Inspected | NOT_LIVE_VERIFIED | NOT_LIVE_VERIFIED |
-| dr_duke | LocalIndex | chemical_association | Inspected | NOT_LIVE_VERIFIED | NOT_LIVE_VERIFIED |
-| gbif | REST JSON | taxonomic_identity | Inspected | NOT_LIVE_VERIFIED | NOT_LIVE_VERIFIED |
-| organic_eprints | LocalIndex | agricultural_practice | Inspected | NOT_LIVE_VERIFIED | NOT_LIVE_VERIFIED |
-| bhl | REST JSON | bibliographic_heritage | Inspected | NOT_LIVE_VERIFIED | NOT_LIVE_VERIFIED |
-| osmia | LocalIndex | scholarly_evidence | Verified | LIVE_RETRIEVAL_VERIFIED | LIVE_ANSWER_VERIFIED |
+| RC-ML-ENTITY-01 | فشل entity_matched لـ FR/AR | استخراج ثنائيات فقط | RelevanceGate | latinTaxonCandidates + stop list | وحدة + حي ملقحات |
+| RC-ML-QTYPE-01 | AR/TR ري → definition؛ سماد FR/TR غير متسق | أولوية فتحات التعريف/الكمية قبل القصد المحلول؛ معاجم ناقصة | QUS + EntityCatalog | `questionTypeFromResolvedIntent` + recommendation-over-quantity + معاجم AR/FR/TR | مصفوفة تخطيط 5 عائلات × 4 لغات + 37 اختباراً |
 
-عينة حية واحدة لا تُعمَّم على جميع المصادر.
+لا استثناءات باسم مصدر أو DOI أو سؤال واحد.
 
-## J. أدلة الاختبارات
+## D. التغييرات
 
-| الأمر | Passed | Failed | Exit |
+### جولة سابقة (`e2bb272`)
+- `ScientificEvidenceRelevanceGate` / `ScientificEvidenceDirectnessAssessor`
+- `ScientificEvidenceRelevanceLatinTaxonContractTest`
+
+### جولة الاستمرار
+- `QueryUnderstandingService`: أسبقية القصد المحلول؛ تفضيل recommendation على quantity عند إشارات التوصية.
+- `AgriculturalEntityCatalog`: توسيع معاجم requirements / nitrogen / fertilization / recommendation لـ AR/FR/TR.
+- `MultilingualQuestionTypeIntentParityContractTest`: ري + ملوحة + سماد × 4 لغات + تعريف سلبي.
+
+## E. نتائج اللغات (تخطيط QUS)
+
+| عائلة علمية | EN | FR | AR | TR | توحيد النوع/الحس/الدليل |
+|---|---|---|---|---|---|
+| Irrigation requirement | requirements | requirements | requirements | requirements | **نعم** |
+| Yield / deficit effect | causes | causes | causes | causes | **نعم** |
+| Salinity physiology | causes | causes | causes | causes | **نعم** |
+| Fertilizer recommendation | recommendation + plant_nutrition | نفس | نفس | نفس | **نعم** |
+| Pollinator host | general | general | general | general | **نعم** |
+
+## F. Live Answer / المصادر
+
+| مستوى | الحالة |
+|---|---|
+| Pollinator × 4 لغات | LIVE_ANSWER_VERIFIED (سابق) |
+| Irrigation/Yield/Fertilizer Live Answer | NOT_VERIFIED في هذه الجولة (إصلاح تخطيط فقط) |
+| مصادر مسجّلة | 11 |
+| مصادر Live Answer | osmia (عيّنة) — لا تعميم |
+
+## G. الاختبارات
+
+| الأمر | Passed | Assertions | Exit |
 |---|---:|---:|---:|
-| Baseline Directness+Osmia+RelevanceSense | 21 | 0 | 0 |
-| LatinTaxon + Directness + OsmiaG305 | 12 | 0 | 0 |
-| `_ms3_ml_validation_diag.php` (4 لغات ملقحات) | 4/4 validated≥1 | 0 | 0 |
+| Regression filter (Latin+Directness+Osmia+RelevanceSense+QUS parity) | 37 | 125 | 0 |
 
 UI: NOT APPLICABLE
 
-## K. Git و Push
+## H. Git
 
-| | SHA |
-|---|---|
-| Starting HEAD | `39c0884dacc7115153d5b2127ed95beb272ee993` |
-| Feature + docs | `e2bb272d35327863a6695b8d914e9b4552170d0f` |
-| Local HEAD | `e2bb272d35327863a6695b8d914e9b4552170d0f` |
-| Remote HEAD | `e2bb272d35327863a6695b8d914e9b4552170d0f` |
-| Push | SUCCESS |
-| Sync | **MATCH** |
-| WIP غير مرتبط | تُرك دون لمس |
+يُحدَّث بعد الالتزام والدفع في نفس القسم عند الإصدار.
 
-## L. القيود والمخاطر المتبقية
+## I. القيود
 
-1. Live Answer غير منفّذ لـ 7 مجالات أساسية × 4 لغات.
-2. عدم التحقق الحي لـ 10/11 مصدراً في هذه المهمة.
-3. عدم اتساق `question_type` للري في AR/TR (`definition` vs `requirements`).
-4. قائمة إيقاف الكلمات المرسملة قد تحتاج توسيعاً تدريجياً دون إعادة ثغرة الجنس اللاتيني.
-
-لا تمنع اعتماد إصلاح RC-ML-ENTITY-01؛ تمنع `COMPLETE_VERIFIED`.
+1. Live Answer غير منفّذ لـ 7 مجالات × 4 لغات.
+2. 10/11 مصدراً بلا تحقق حي في هذه المهمة.
+3. مصفوفة أدلة عبر-لغوية كاملة (سؤال بلغة × دليل بلغة أخرى) جزئية.
+4. معاجم التوصية/المغذيات قد تحتاج توسعة لاحقة دون إعادة فتحة التعريف.
 
 ---
 
-## M. المهمة الهندسية التالية — مقترح فقط
+## J. المهمة التالية — مقترح فقط
 
 ### A. Mission Name
-`M-S3-QUS-MULTILINGUAL-QUESTION-TYPE-ALIGNMENT`
+`M-S3-LIVE-DOMAIN-MATRIX-AR-EN-FR-TR`
 
 ### B. Rationale
-- **Gap:** أسئلة الري/الاحتياج في AR/TR تُصنَّف أحياناً `definition` بدل `requirements` رغم تطابق المعنى العلمي مع EN/FR.
-- **Evidence:** مصفوفة التخطيط في هذه المهمة (`irrigation_ar`/`irrigation_tr` → definitional_statement).
-- **Impact:** يوجّه التحقق ونوع الدليل المطلوب مساراً غير مناسب للمجال الكمي.
+- **Gap:** إصلاح التخطيط متعدد اللغات مثبت؛ مسار الإجابة الحية غير مثبت لـ Water/Yield/Soil/Fertilizer/Disease.
+- **Evidence:** مصفوفة QUS PASS؛ Live Answer فقط للملقحات.
+- **Impact:** لا ضمان أن Stage-3→4→Composer يحترم أنواع الدليل الجديدة خارج biodiversity.
 
 ### C. Scope / Out of Scope
-Scope: محاذاة question_type / required_evidence_type عبر AR/EN/FR/TR للمجالات الكمية.  
-Out of scope: مصادر جديدة؛ إضعاف بوابات القياس.
+Scope: Live Answer لمصفوفة مجالات أساسية × 4 لغات + عينة مصادر متنوعة.  
+Out: مصادر جديدة؛ إضعاف بوابات القياس.
 
 ### D. Current State
-- Entity Latin matching: `VERIFIED`
-- Pollinator live answer 4-lang: `VERIFIED`
-- Irrigation QUS parity: `NOT_VERIFIED`
-- All-domain live answers: `NOT_VERIFIED`
+- Latin entity ML: `VERIFIED`
+- QUS intent parity (ري/ملوحة/سماد): `VERIFIED`
+- Domain live answers beyond pollinators: `NOT_VERIFIED`
+- All-source live: `NOT_VERIFIED`
 
 ### E–L
-معمارية: توسيع عقود QUS/CSQ للقيود الكمية متعددة اللغات.  
-اختبارات: مصفوفة لغة×مجال لـ Water/Yield/Fertilizer.  
-Acceptance: AR/TR requirements questions تحافظ على sense=crop_water_requirement وrequired_evidence_type المناسب دون كسر EN/FR.  
-Readiness: `READY_WITH_DEPENDENCIES` (يعتمد على ثبات Relevance الحالي).  
+عينة مصادر: LocalIndex (agris/oe/osmia) + scholarly REST.  
+Acceptance: ≥3 مجالات × 4 لغات LIVE_ANSWER_VERIFIED دون انحدار QUS/Latin.  
+Readiness: `READY`  
 **Execution Authorization:** `NOT_AUTHORIZED — Awaiting user approval.`

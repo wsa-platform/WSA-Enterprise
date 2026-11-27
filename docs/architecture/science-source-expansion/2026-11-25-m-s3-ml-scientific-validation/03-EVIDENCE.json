@@ -3,53 +3,59 @@
   "mission_name": "GENERAL_SCIENTIFIC_ENGINE_ENGINEERING_AND_VALIDATION",
   "final_status": "PARTIALLY_COMPLETED",
   "limitations": "WITH_LIMITATIONS",
-  "starting_head": "39c0884dacc7115153d5b2127ed95beb272ee993",
-  "feature_commit": "e2bb272d35327863a6695b8d914e9b4552170d0f",
-  "local_head": "e2bb272d35327863a6695b8d914e9b4552170d0f",
-  "remote_head": "e2bb272d35327863a6695b8d914e9b4552170d0f",
-  "push_result": "SUCCESS",
-  "local_remote_sync": "MATCH",
+  "continuation_head_start": "0eaae95f0b958ad4b424cd2ff192816a52cc1674",
+  "prior_feature_commit": "e2bb272d35327863a6695b8d914e9b4552170d0f",
   "baseline": {
     "decision": "BASELINE_READY_WITH_LIMITATIONS",
     "branch": "phase-18-m18-ai-marketing-communications",
     "wip_protected": true,
-    "baseline_tests": {
-      "command": "php artisan test --filter=ScientificEvidenceDirectnessAssessorTest|OsmiaG305OnboardingTest|RelevanceGateMeasurementSenseContractTest",
-      "passed": 21,
+    "baseline_regression": {
+      "command": "php artisan test --filter=ScientificEvidenceRelevanceLatinTaxonContractTest|ScientificEvidenceDirectnessAssessorTest|OsmiaG305OnboardingTest|RelevanceGateMeasurementSenseContractTest",
+      "passed": 24,
       "failed": 0,
-      "exit": 0,
-      "classification": "PRE_EXISTING_none_blocking"
+      "exit": 0
     }
   },
   "root_causes": [
     {
       "id": "RC-ML-ENTITY-01",
-      "problem": "FR/AR questions with bare Latin taxa failed entity_matched while EN/TR passed",
-      "cause": "matchesEntity extracted only binomials (Genus + latin epithet); EN/TR accidentally formed false binomials (Nomada wild / Nomada yabani); FR/AR placed non-Latin tokens after the genus",
-      "component": "ScientificEvidenceRelevanceGate",
-      "fix": "latinTaxonCandidatesInText + non-taxon stop list; multilingual faunistic intent cues",
+      "status": "VERIFIED_PRIOR",
+      "commit": "e2bb272d35327863a6695b8d914e9b4552170d0f"
+    },
+    {
+      "id": "RC-ML-QTYPE-01",
+      "problem": "AR/TR (and FR fertilizer) surface openers forced definition/quantity after scientific_intent_qualifier/sense already resolved",
+      "cause": "detectQuestionType preferred copula/nedir/quantity keyword hits before intent-aligned mapping; requirements/nitrogen lexicons incomplete for AR/FR/TR",
+      "component": "QueryUnderstandingService + AgriculturalEntityCatalog",
+      "fix": "questionTypeFromResolvedIntent precedence; recommendation-over-quantity framing; multilingual requirements/nitrogen/fertilizer lexicons",
       "verified": true
     }
   ],
-  "pollinator_live_answer_matrix": {
-    "en": {"entity_matched": true, "directness": "direct", "validated_count": 2, "composer": "synthesis_completed_partial"},
-    "fr": {"entity_matched": true, "directness": "direct", "validated_count": 2, "composer": "synthesis_completed_partial"},
-    "ar": {"entity_matched": true, "directness": "direct", "validated_count": 2, "composer": "synthesis_completed_partial"},
-    "tr": {"entity_matched": true, "directness": "direct", "validated_count": 2, "composer": "synthesis_completed_partial"},
-    "evidence_source": "osmia LocalIndex DOI 10.47446/osmia10.7",
-    "verification_level": "LIVE_ANSWER_VERIFIED"
+  "qus_parity_matrix": {
+    "irrigation_requirement": {"question_type_uniform": true, "sense_uniform": true, "evidence_uniform": true},
+    "yield_effect": {"question_type_uniform": true, "sense_uniform": true, "evidence_uniform": true},
+    "salinity": {"question_type_uniform": true, "sense_uniform": true, "evidence_uniform": true},
+    "fertilizer": {"question_type_uniform": true, "sense_uniform": true, "evidence_uniform": true},
+    "pollinator_host": {"question_type_uniform": true, "sense_uniform": true, "evidence_uniform": true}
   },
-  "unit_tests": {
-    "ScientificEvidenceRelevanceLatinTaxonContractTest": {"passed": 3, "exit": 0},
-    "ScientificEvidenceDirectnessAssessorTest": {"passed": 4, "exit": 0},
-    "OsmiaG305OnboardingTest": {"passed": 5, "exit": 0},
-    "combined_filter": {"passed": 12, "assertions": 43, "exit": 0}
+  "unit_tests_continuation": {
+    "command": "php artisan test --filter=MultilingualQuestionTypeIntentParityContractTest|ScientificEvidenceRelevanceLatinTaxonContractTest|ScientificEvidenceDirectnessAssessorTest|OsmiaG305OnboardingTest|RelevanceGateMeasurementSenseContractTest",
+    "passed": 37,
+    "assertions": 125,
+    "failed": 0,
+    "exit": 0
+  },
+  "pollinator_live_answer_matrix": {
+    "note": "Prior LIVE_ANSWER_VERIFIED retained from e2bb272; not re-run as unchanged path",
+    "verification_level": "LIVE_ANSWER_VERIFIED",
+    "languages": ["en", "fr", "ar", "tr"]
   },
   "registered_sources_total": 11,
   "live_answer_sources": ["osmia"],
-  "files_changed": [
-    "backend/app/Services/Agriculture/Research/Search/ScientificEvidenceRelevanceGate.php",
-    "backend/app/Services/Agriculture/Research/Search/ScientificEvidenceDirectnessAssessor.php",
-    "backend/tests/Unit/Agriculture/Research/Search/ScientificEvidenceRelevanceLatinTaxonContractTest.php"
+  "files_changed_continuation": [
+    "backend/app/Services/Agriculture/Research/QueryUnderstandingService.php",
+    "backend/app/Services/Agriculture/Research/AgriculturalEntityCatalog.php",
+    "backend/tests/Unit/Agriculture/Research/MultilingualQuestionTypeIntentParityContractTest.php",
+    "docs/architecture/science-source-expansion/2026-11-25-m-s3-ml-scientific-validation/"
   ]
 }

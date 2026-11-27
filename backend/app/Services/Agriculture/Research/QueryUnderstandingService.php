@@ -1943,6 +1943,23 @@ class QueryUnderstandingService
                 )) {
                 return 'range';
             }
+            // Copula / "nedir" / "ما هو" keyword hits must not erase an already-resolved
+            // scientific intent (requirement/effect/range) across AR/EN/FR/TR.
+            if (in_array($best, ['definition', 'general'], true)) {
+                $fromIntent = $this->questionTypeFromResolvedIntent(
+                    $scientificSense,
+                    $intentQualifier,
+                    $researchIntent,
+                );
+                if ($fromIntent !== null) {
+                    return $fromIntent;
+                }
+            }
+            // Recommended fertilizer/nutrient rates are recommendations, not bare quantities,
+            // when explicit recommendation framing is present in any supported language.
+            if ($best === 'quantity' && $this->hasRecommendationFraming($haystack)) {
+                return 'recommendation';
+            }
 
             return $best;
         }
@@ -1969,7 +1986,17 @@ class QueryUnderstandingService
             return 'range';
         }
 
-        // Bare copula interrogative is definition only when no measurement/value framing matched.
+        $fromIntent = $this->questionTypeFromResolvedIntent(
+            $scientificSense,
+            $intentQualifier,
+            $researchIntent,
+        );
+        if ($fromIntent !== null) {
+            return $fromIntent;
+        }
+
+        // Bare copula interrogative is definition only when no measurement/value framing
+        // and no resolved scientific intent matched.
         if (preg_match('/\bwhat\s+is\b/u', $haystack) === 1
             || preg_match('/\bwhat\s+are\b/u', $haystack) === 1
             || AgriculturalEntityCatalog::containsTerm($haystack, 'ما هو')
@@ -1990,6 +2017,55 @@ class QueryUnderstandingService
             $researchIntent === 'disease' => 'symptoms',
             default => 'general',
         };
+    }
+
+    private function hasRecommendationFraming(string $haystack): bool
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return false;
+        }
+
+        return preg_match(
+            '/\b(?:recommend(?:ed|ation)?|best\s+(?:method|way|practice)|'
+            .'recommand(?:é|ée|ation)|önerilen|öneri|tavsiye)\b|'
+            .'موصى|توصية|أفضل\s+طريقة/u',
+            $hay,
+        ) === 1;
+    }
+
+    /**
+     * Map already-resolved scientific sense/qualifier to question_type.
+     * Language-agnostic: prevents surface openers from forcing definitional_statement
+     * when CSQ already encodes a non-definition intent.
+     */
+    private function questionTypeFromResolvedIntent(
+        string $scientificSense,
+        string $intentQualifier,
+        string $researchIntent,
+    ): ?string {
+        $qualifier = trim($intentQualifier);
+        $sense = trim($scientificSense);
+
+        // Prefer explicit intent qualifiers only — do not infer from sense alone
+        // (e.g. crop_water_requirement + effect must stay causes, not requirements).
+        if ($qualifier === 'requirement') {
+            return 'requirements';
+        }
+        if ($qualifier === 'effect') {
+            return 'causes';
+        }
+        if ($qualifier === 'optimal_range') {
+            return in_array($sense, ['seed_germination', 'plant_growth'], true) || $sense === ''
+                ? 'range'
+                : 'recommendation';
+        }
+
+        if ($researchIntent === 'disease') {
+            return 'symptoms';
+        }
+
+        return null;
     }
 
     /**
@@ -2351,6 +2427,8 @@ class QueryUnderstandingService
             || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'fertilization')
             || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'سماد')
             || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'تسميد')
+            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'engrais')
+            || AgriculturalEntityCatalog::containsTerm($normalizedQuestion, 'gübre')
             || str_contains($normalizedQuestion, 'best fertil')
             || str_contains($normalizedQuestion, 'أفضل سماد');
 

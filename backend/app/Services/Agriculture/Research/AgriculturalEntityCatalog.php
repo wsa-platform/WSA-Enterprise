@@ -79,7 +79,10 @@ final class AgriculturalEntityCatalog
             'irrigation' => [
                 'irrigation', 'water scheduling', 'drip', 'water requirement', 'الماء', 'ري', 'مياه',
             ],
-            'fertilization' => ['fertilizer', 'fertilization', 'fertiliser', 'سماد', 'تسميد'],
+            'fertilization' => [
+                'fertilizer', 'fertilization', 'fertiliser', 'سماد', 'تسميد',
+                'engrais', 'fertilisation', 'gübre', 'gubre',
+            ],
             'soil_management' => [
                 'soil management', 'soil preparation', 'soil fertility', 'soil health',
                 'إدارة التربة', 'تحضير التربة', 'خصوبة التربة',
@@ -96,6 +99,7 @@ final class AgriculturalEntityCatalog
             'plant_nutrition' => [
                 'plant nutrition', 'nutrient deficiency', 'potassium', 'بوتاسيوم',
                 'نقص البوتاسيوم', 'تغذية النبات', 'نقص عناصر',
+                'engrais', 'azote', 'azoté', 'gübre', 'azot', 'azotlu',
             ],
             'disease' => [
                 'disease', 'pathogen', 'blight', 'rust', 'mildew', 'wilt', 'severity',
@@ -169,6 +173,7 @@ final class AgriculturalEntityCatalog
             ],
             'nitrogen' => [
                 'nitrogen', 'n deficiency', 'نيتروجين', 'نقص النيتروجين',
+                'azote', 'azoté', 'engrais azoté', 'azot', 'azotlu', 'nitrojen',
             ],
             'phosphorus' => [
                 'phosphorus', 'phosphate', 'فوسفور', 'نقص الفوسفور',
@@ -638,16 +643,21 @@ final class AgriculturalEntityCatalog
                 'nedir', 'tanım',
             ],
             'recommendation' => [
-                'best method', 'recommend', 'recommendation', 'how to', 'best way',
-                'أفضل طريقة', 'توصية', 'كيف',
-                'meilleure méthode', 'recommandation', 'comment',
-                'en iyi yöntem', 'öneri', 'nasıl',
+                'best method', 'recommend', 'recommendation', 'recommended', 'how to', 'best way',
+                'أفضل طريقة', 'توصية', 'موصى', 'موصى بها', 'كيف',
+                'meilleure méthode', 'recommandation', 'recommandée', 'recommandé', 'comment',
+                'en iyi yöntem', 'öneri', 'önerilen', 'tavsiye', 'nasıl',
             ],
             'requirements' => [
                 'requirement', 'requirements', 'needs', 'conditions required',
-                'متطلبات', 'احتياجات', 'شروط',
-                'exigences', 'besoins',
-                'gereksinimler', 'şartlar',
+                'water requirement', 'crop water requirement',
+                // AR: singular/plural need forms (not only "احتياجات")
+                'متطلبات', 'احتياجات', 'احتياج', 'الاحتياج', 'شروط',
+                'الاحتياج المائي', 'الاحتياجات المائية',
+                // FR
+                'exigences', 'besoins', 'besoin en eau',
+                // TR: surface "ihtiyacı/ihtiyaç" must outrank bare "nedir" definition openers
+                'gereksinimler', 'gereksinim', 'şartlar', 'ihtiyaç', 'ihtiyacı', 'ihtiyac',
             ],
         ];
     }
