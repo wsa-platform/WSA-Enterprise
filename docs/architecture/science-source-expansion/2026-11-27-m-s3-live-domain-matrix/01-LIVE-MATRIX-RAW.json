@@ -1,0 +1,1228 @@
+{
+    "mission_id": "M-S3-LIVE-DOMAIN-MATRIX-AR-EN-FR-TR",
+    "db_path": "/var/lib/wsa/scientific_records/scientific_record_store.v2.sqlite",
+    "selected_domains": [
+        "water_irrigation",
+        "plant_diseases_pests",
+        "biodiversity_pollinators"
+    ],
+    "matrix_selected": {
+        "water_irrigation": {
+            "en": "PASS",
+            "fr": "PASS",
+            "ar": "PASS",
+            "tr": "PASS"
+        },
+        "plant_diseases_pests": {
+            "en": "PASS",
+            "fr": "PASS",
+            "ar": "PASS",
+            "tr": "PASS"
+        },
+        "biodiversity_pollinators": {
+            "en": "PASS",
+            "fr": "PASS",
+            "ar": "PASS",
+            "tr": "PASS"
+        }
+    },
+    "matrix_full_eight": {
+        "crops_yield": {
+            "en": "NOT_RUN",
+            "fr": "NOT_RUN",
+            "ar": "NOT_RUN",
+            "tr": "NOT_RUN"
+        },
+        "water_irrigation": {
+            "en": "PASS",
+            "fr": "PASS",
+            "ar": "PASS",
+            "tr": "PASS"
+        },
+        "soil": {
+            "en": "NOT_RUN",
+            "fr": "NOT_RUN",
+            "ar": "NOT_RUN",
+            "tr": "NOT_RUN"
+        },
+        "fertilizers_nutrition": {
+            "en": "NOT_RUN",
+            "fr": "NOT_RUN",
+            "ar": "NOT_RUN",
+            "tr": "NOT_RUN"
+        },
+        "plant_diseases_pests": {
+            "en": "PASS",
+            "fr": "PASS",
+            "ar": "PASS",
+            "tr": "PASS"
+        },
+        "biodiversity_pollinators": {
+            "en": "PASS",
+            "fr": "PASS",
+            "ar": "PASS",
+            "tr": "PASS"
+        },
+        "climate_environment": {
+            "en": "NOT_RUN",
+            "fr": "NOT_RUN",
+            "ar": "NOT_RUN",
+            "tr": "NOT_RUN"
+        },
+        "plant_physiology_genetics": {
+            "en": "NOT_RUN",
+            "fr": "NOT_RUN",
+            "ar": "NOT_RUN",
+            "tr": "NOT_RUN"
+        }
+    },
+    "domains_pass_all_four_languages": {
+        "water_irrigation": true,
+        "plant_diseases_pests": true,
+        "biodiversity_pollinators": true
+    },
+    "minimum_three_domains_x4": true,
+    "runs": [
+        {
+            "domain": "water_irrigation",
+            "domain_label": "Water and Irrigation",
+            "family": "A",
+            "lang": "en",
+            "question": "What is the crop water requirement of wheat?",
+            "detected_language": "en",
+            "question_type": "requirements",
+            "scientific_sense": "crop_water_requirement",
+            "intent_qualifier": "requirement",
+            "required_evidence_type": "requirement_specification",
+            "crop_id": "wheat",
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "gbif"
+            ],
+            "attempted": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar"
+            ],
+            "failed": [
+                "agris"
+            ],
+            "empty": [],
+            "retrieval_count": 51,
+            "result_sources": [
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "sample_ids": [
+                "https://openalex.org/W3196355954",
+                "https://openalex.org/W2279270365",
+                "10.15666/aeer/1902_915932",
+                "10.1515/agri-2015-0007",
+                "10.54302/mausam.v47i4.3761"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 50,
+            "rejected_count": 0,
+            "validated_ids": [
+                "10.9734/ijecc/2021/v11i930475",
+                "https://openalex.org/W1183317783",
+                "https://openalex.org/W2699808922",
+                "https://openalex.org/W2492785571",
+                "https://openalex.org/W3196355954",
+                "10.15666/aeer/1902_915932",
+                "https://openalex.org/W2279270365",
+                "10.20546/ijcmas.2018.702.110",
+                "10.1515/agri-2015-0007",
+                "10.3390/agriculture10030060",
+                "10.5194/egusphere-egu24-20135",
+                "10.1002/ird.629",
+                "10.30955/gnj.08266",
+                "10.19080/ijesnr.2019.21.556054",
+                "10.1556/0806.44.2016.051",
+                "10.47176/jcpp.12.3.35162",
+                "10.54302/mausam.v47i4.3761",
+                "10.59797/ija.v64i2.5256",
+                "10.59797/ija.v49i1.5141",
+                "10.59797/ija.v48i2.3052",
+                "10.15740/has/ijas/11.1/45-49",
+                "10.2166/aqua.2023.032",
+                "10.1002/ird.2546",
+                "10.3390/w12020607",
+                "10.21123/bsj.9.2.207-213",
+                "10.21123/bsj.2012.9.2.207-213",
+                "https://openalex.org/W2055245859",
+                "10.4172/2168-9881.1000156",
+                "10.1007/978-3-031-41173-1_4",
+                "10.1007/s00271-026-01098-1",
+                "10.58809/twdj7680",
+                "10.55362/ije/2023/4069",
+                "10.21608/ajas.2019.41278",
+                "10.21608/ajas.2020.104372",
+                "10.59797/ija.v61i3.4371",
+                "10.1007/s11269-009-9505-3",
+                "10.67063/pjr.vol.24.issue.03.07",
+                "10.54083/resbio/5.1.2023/27-32",
+                "10.1016/j.agwat.2010.09.006",
+                "10.1007/s12524-011-0065-7",
+                "10.54302/mausam.v57i2.514",
+                "10.1016/j.agwat.2006.02.003",
+                "10.5958/2348-7542.2015.00091.1",
+                "10.1016/s0378-3774(96)01284-x",
+                "10.5958/2348-7542.2016.00102.9",
+                "10.1007/s12892-019-0173-0",
+                "10.65822/j.pcl/2025.26",
+                "10.47176/jcpp.10.1.25856",
+                "10.9734/ajea/2015/14316",
+                "10.22099/iar.2021.37190.1395"
+            ],
+            "validated_sources": [
+                "semantic_scholar",
+                "openalex",
+                "crossref"
+            ],
+            "composer_status": "synthesis_completed_with_partial_conflicts",
+            "claim_count": 1,
+            "citation_count": 9,
+            "answer_prefix": "Based on validated direct scientific evidence for this question:\n1. **To meet the increasing demand for the growing population the issue of low soil fertility needs to be addressed moreover, excessive pumping of groundwater over the years to meet the high irrigation water require",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 12379
+        },
+        {
+            "domain": "water_irrigation",
+            "domain_label": "Water and Irrigation",
+            "family": "A",
+            "lang": "fr",
+            "question": "Quel est le besoin en eau de la culture du blé?",
+            "detected_language": "fr",
+            "question_type": "requirements",
+            "scientific_sense": "crop_water_requirement",
+            "intent_qualifier": "requirement",
+            "required_evidence_type": "requirement_specification",
+            "crop_id": "wheat",
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "gbif"
+            ],
+            "attempted": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar"
+            ],
+            "failed": [
+                "agris"
+            ],
+            "empty": [],
+            "retrieval_count": 54,
+            "result_sources": [
+                "crossref",
+                "semantic_scholar",
+                "openalex"
+            ],
+            "sample_ids": [
+                "10.3390/agriculture10030060",
+                "10.3329/agric.v14i1.29096",
+                "10.1111/jac.12775",
+                "10.3390/agronomy13071839",
+                "https://openalex.org/W2598170814"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 51,
+            "rejected_count": 0,
+            "validated_ids": [
+                "10.1111/jac.12775",
+                "10.1177/11786221241274019",
+                "10.1111/jac.12760",
+                "10.3390/agronomy13071839",
+                "10.56093/ijas.v94i11.152091",
+                "10.56093/ijas.v94i2.124185",
+                "10.3329/agric.v14i1.29096",
+                "10.56093/ijas.v88i10.84237",
+                "10.3390/agriculture10030060",
+                "10.5194/egusphere-egu24-20135",
+                "10.59797/ija.v46i3.3293",
+                "10.19080/ijesnr.2019.21.556054",
+                "10.1556/0806.44.2016.051",
+                "10.1002/ird.629",
+                "10.47176/jcpp.12.3.35162",
+                "10.54302/mausam.v47i4.3761",
+                "10.59797/ija.v64i2.5256",
+                "10.59797/ija.v49i1.5141",
+                "10.59797/ija.v48i2.3052",
+                "10.15740/has/ijas/11.1/45-49",
+                "10.2166/aqua.2023.032",
+                "10.1002/ird.2546",
+                "10.3390/w12020607",
+                "https://openalex.org/W4400743675",
+                "10.21123/bsj.2012.9.2.207-213",
+                "10.21123/bsj.9.2.207-213",
+                "10.1007/bf00275430",
+                "10.30955/gnj.08266",
+                "10.4172/2168-9881.1000156",
+                "10.1007/978-3-031-41173-1_4",
+                "10.67063/pjr.vol.24.issue.03.07",
+                "10.54083/resbio/5.1.2023/27-32",
+                "10.1007/s00271-026-01098-1",
+                "https://openalex.org/W2598170814",
+                "10.1007/s12892-019-0173-0",
+                "10.58809/twdj7680",
+                "10.55362/ije/2023/4069",
+                "10.21608/ajas.2019.41278",
+                "10.21608/ajas.2020.104372",
+                "10.65822/j.pcl/2025.26",
+                "10.47176/jcpp.10.1.25856",
+                "https://openalex.org/W2043681056",
+                "10.59797/ija.v61i3.4371",
+                "10.9734/ajea/2015/14316",
+                "10.1007/s12524-011-0065-7",
+                "10.54302/mausam.v57i2.514",
+                "10.1016/j.agwat.2006.02.003",
+                "10.5958/2348-7542.2015.00091.1",
+                "10.1007/s11269-009-9505-3",
+                "10.1016/s0378-3774(96)01284-x",
+                "10.1016/j.agwat.2010.09.006"
+            ],
+            "validated_sources": [
+                "semantic_scholar",
+                "crossref",
+                "openalex"
+            ],
+            "composer_status": "synthesis_completed_with_partial_conflicts",
+            "claim_count": 1,
+            "citation_count": 4,
+            "answer_prefix": "Sur la base de preuves scientifiques directes validées pour cette question :\n1. **Extrait de la source (langue d'origine) : The 50% MAD (DI) treatment produced the highest grain yield and water use efficiency in both seasons.**\n2. **Extrait de la source (langue d'origine) : The h",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 7451
+        },
+        {
+            "domain": "water_irrigation",
+            "domain_label": "Water and Irrigation",
+            "family": "A",
+            "lang": "ar",
+            "question": "ما هو الاحتياج المائي لمحصول القمح؟",
+            "detected_language": "ar",
+            "question_type": "requirements",
+            "scientific_sense": "crop_water_requirement",
+            "intent_qualifier": "requirement",
+            "required_evidence_type": "requirement_specification",
+            "crop_id": "wheat",
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "gbif"
+            ],
+            "attempted": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar"
+            ],
+            "failed": [
+                "agris"
+            ],
+            "empty": [
+                "fao_stat"
+            ],
+            "retrieval_count": 49,
+            "result_sources": [
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "sample_ids": [
+                "https://openalex.org/W2492785571",
+                "https://openalex.org/W3196355954",
+                "10.15666/aeer/1902_915932",
+                "10.1515/agri-2015-0007",
+                "10.54302/mausam.v47i4.3761"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 48,
+            "rejected_count": 0,
+            "validated_ids": [
+                "10.9734/ijecc/2021/v11i930475",
+                "https://openalex.org/W1183317783",
+                "https://openalex.org/W2699808922",
+                "https://openalex.org/W2492785571",
+                "https://openalex.org/W3196355954",
+                "10.15666/aeer/1902_915932",
+                "https://openalex.org/W2279270365",
+                "10.20546/ijcmas.2018.702.110",
+                "10.1515/agri-2015-0007",
+                "10.19080/ijesnr.2019.21.556054",
+                "10.1556/0806.44.2016.051",
+                "10.5194/egusphere-egu24-20135",
+                "10.54302/mausam.v47i4.3761",
+                "10.1002/ird.629",
+                "10.59797/ija.v64i2.5256",
+                "10.2166/aqua.2023.032",
+                "10.1002/ird.2546",
+                "10.3390/agriculture10030060",
+                "10.3390/w12020607",
+                "10.21123/bsj.9.2.207-213",
+                "10.21123/bsj.2012.9.2.207-213",
+                "https://openalex.org/W2055245859",
+                "10.15740/has/ijas/11.1/45-49",
+                "10.4172/2168-9881.1000156",
+                "10.1007/978-3-031-41173-1_4",
+                "10.67063/pjr.vol.24.issue.03.07",
+                "10.54083/resbio/5.1.2023/27-32",
+                "10.30955/gnj.08266",
+                "10.1007/s00271-026-01098-1",
+                "10.1007/s12892-019-0173-0",
+                "10.58809/twdj7680",
+                "10.55362/ije/2023/4069",
+                "10.21608/ajas.2019.41278",
+                "10.21608/ajas.2020.104372",
+                "10.47176/jcpp.12.3.35162",
+                "10.65822/j.pcl/2025.26",
+                "10.47176/jcpp.10.1.25856",
+                "10.59797/ija.v49i1.5141",
+                "10.59797/ija.v48i2.3052",
+                "10.59797/ija.v61i3.4371",
+                "10.9734/ajea/2015/14316",
+                "10.1007/s12524-011-0065-7",
+                "10.1016/j.agwat.2006.02.003",
+                "10.1007/s11269-009-9505-3",
+                "10.1016/s0378-3774(96)01284-x",
+                "10.1016/j.agwat.2010.09.006",
+                "10.5958/2348-7542.2015.00091.1",
+                "10.22099/iar.2021.37190.1395"
+            ],
+            "validated_sources": [
+                "semantic_scholar",
+                "openalex",
+                "crossref"
+            ],
+            "composer_status": "synthesis_completed_with_partial_conflicts",
+            "claim_count": 1,
+            "citation_count": 9,
+            "answer_prefix": "استنادًا إلى أدلة علمية مباشرة معتمدة لهذا السؤال:\n1. **مقتطف من المصدر (باللغة الأصلية): To meet the increasing demand for the growing population the issue of low soil fertility needs to be addressed moreover, excessive pumping of groundwater over the years to meet the high irri",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 6330
+        },
+        {
+            "domain": "water_irrigation",
+            "domain_label": "Water and Irrigation",
+            "family": "A",
+            "lang": "tr",
+            "question": "Buğdayın sulama suyu ihtiyacı nedir?",
+            "detected_language": "tr",
+            "question_type": "requirements",
+            "scientific_sense": "crop_water_requirement",
+            "intent_qualifier": "requirement",
+            "required_evidence_type": "requirement_specification",
+            "crop_id": "wheat",
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "gbif"
+            ],
+            "attempted": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar"
+            ],
+            "failed": [
+                "agris"
+            ],
+            "empty": [],
+            "retrieval_count": 51,
+            "result_sources": [
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "sample_ids": [
+                "https://openalex.org/W3196355954",
+                "https://openalex.org/W2279270365",
+                "10.15666/aeer/1902_915932",
+                "10.1515/agri-2015-0007",
+                "10.54302/mausam.v47i4.3761"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 50,
+            "rejected_count": 0,
+            "validated_ids": [
+                "10.9734/ijecc/2021/v11i930475",
+                "https://openalex.org/W1183317783",
+                "https://openalex.org/W2699808922",
+                "https://openalex.org/W2492785571",
+                "https://openalex.org/W3196355954",
+                "10.15666/aeer/1902_915932",
+                "https://openalex.org/W2279270365",
+                "10.20546/ijcmas.2018.702.110",
+                "10.1515/agri-2015-0007",
+                "10.3390/agriculture10030060",
+                "10.5194/egusphere-egu24-20135",
+                "10.1002/ird.629",
+                "10.30955/gnj.08266",
+                "10.19080/ijesnr.2019.21.556054",
+                "10.1556/0806.44.2016.051",
+                "10.47176/jcpp.12.3.35162",
+                "10.54302/mausam.v47i4.3761",
+                "10.59797/ija.v64i2.5256",
+                "10.59797/ija.v49i1.5141",
+                "10.59797/ija.v48i2.3052",
+                "10.2166/aqua.2023.032",
+                "10.1002/ird.2546",
+                "10.3390/w12020607",
+                "10.15740/has/ijas/11.1/45-49",
+                "10.21123/bsj.9.2.207-213",
+                "10.21123/bsj.2012.9.2.207-213",
+                "https://openalex.org/W2055245859",
+                "10.4172/2168-9881.1000156",
+                "10.1007/978-3-031-41173-1_4",
+                "10.1007/s00271-026-01098-1",
+                "10.58809/twdj7680",
+                "10.55362/ije/2023/4069",
+                "10.21608/ajas.2019.41278",
+                "10.21608/ajas.2020.104372",
+                "10.59797/ija.v61i3.4371",
+                "10.1007/s11269-009-9505-3",
+                "10.67063/pjr.vol.24.issue.03.07",
+                "10.54083/resbio/5.1.2023/27-32",
+                "10.1016/j.agwat.2010.09.006",
+                "10.1007/s12524-011-0065-7",
+                "10.54302/mausam.v57i2.514",
+                "10.1016/j.agwat.2006.02.003",
+                "10.5958/2348-7542.2015.00091.1",
+                "10.1016/s0378-3774(96)01284-x",
+                "10.5958/2348-7542.2016.00102.9",
+                "10.1007/s12892-019-0173-0",
+                "10.65822/j.pcl/2025.26",
+                "10.47176/jcpp.10.1.25856",
+                "10.9734/ajea/2015/14316",
+                "10.22099/iar.2021.37190.1395"
+            ],
+            "validated_sources": [
+                "semantic_scholar",
+                "openalex",
+                "crossref"
+            ],
+            "composer_status": "synthesis_completed_with_partial_conflicts",
+            "claim_count": 1,
+            "citation_count": 9,
+            "answer_prefix": "Bu soru için doğrulanmış doğrudan bilimsel kanıtlara dayanarak:\n1. **Kaynak alıntısı (özgün dil): To meet the increasing demand for the growing population the issue of low soil fertility needs to be addressed moreover, excessive pumping of groundwater over the years to meet the h",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 4991
+        },
+        {
+            "domain": "plant_diseases_pests",
+            "domain_label": "Plant Diseases and Pests",
+            "family": "B",
+            "lang": "en",
+            "question": "What causes wheat rust disease and how does it affect crop yield?",
+            "detected_language": "en",
+            "question_type": "causes",
+            "scientific_sense": "disease",
+            "intent_qualifier": "effect",
+            "required_evidence_type": "causal_relationship",
+            "crop_id": "wheat",
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "gbif"
+            ],
+            "attempted": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar"
+            ],
+            "failed": [
+                "agris"
+            ],
+            "empty": [
+                "fao_stat"
+            ],
+            "retrieval_count": 56,
+            "result_sources": [
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "sample_ids": [
+                "https://openalex.org/W4313435592",
+                "10.3390/plants12183239",
+                "10.17513/use.37656",
+                "10.15517/am.v33i1.46141",
+                "10.3389/fpls.2023.1256770"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 55,
+            "rejected_count": 0,
+            "validated_ids": [
+                "https://openalex.org/W4313435592",
+                "10.1016/j.jgeb.2024.100357",
+                "10.3389/fpls.2023.1256770",
+                "10.3390/plants12162932",
+                "10.3390/plants12183239",
+                "10.59324/stss.2024.1(1).03",
+                "10.21203/rs.3.rs-2210221/v1",
+                "10.28983/asj.y2023i5pp16-23",
+                "10.15517/am.v33i1.46141",
+                "10.1186/s12870-024-05124-2",
+                "10.54910/sabrao2026.58.3.1",
+                "https://openalex.org/W3113204369",
+                "10.1038/s41437-022-00525-1",
+                "10.15406/apar.2017.07.00244",
+                "10.2139/ssrn.4258549",
+                "10.59512/aaz.2023.62.4.10",
+                "10.17513/use.37656",
+                "10.19080/artoaj.2018.16.555997",
+                "10.21162/pakjas/17.3493",
+                "10.1007/978-981-10-5538-6_5",
+                "10.21203/rs.3.rs-1267332/v1",
+                "10.54910/sabrao2026.58.5.8",
+                "10.29013/ysj-21-2.3-31-43",
+                "10.34101/actaagrar/41/2693",
+                "https://openalex.org/W2168039024",
+                "https://openalex.org/W2051121280",
+                "10.24425/jppr.2020.134914",
+                "10.2139/ssrn.4378078",
+                "10.18699/icg-plantgen2019-17",
+                "10.7176/jbah/12-12-03",
+                "https://openalex.org/W2096144184",
+                "10.2139/ssrn.5236427",
+                "10.1023/a:1003913004580",
+                "10.29321/maj.10.197324",
+                "https://openalex.org/W1974969638",
+                "10.1094/phyto-61-1501",
+                "10.1007/bf00035884",
+                "10.13080/z-a.2014.101.038",
+                "10.19045/bspab.2015.43004",
+                "10.1016/j.nbt.2012.08.368",
+                "10.1016/j.nbt.2012.08.385",
+                "https://openalex.org/W2089355020",
+                "10.1111/jph.13417/v1/decision1",
+                "10.1111/jph.13417/v2/decision1",
+                "10.1111/jph.13417/v1/review2",
+                "10.1111/jph.13417/v2/review1",
+                "10.1111/jph.13417/v1/review1",
+                "10.1094/pd-77-0359",
+                "10.1094/phyto-67-759",
+                "10.1094/phyto-64-1105",
+                "10.1094/phyto-78-451",
+                "10.1002/(sici)1096-9063(199704)49:4<397::aid-ps477>3.0.co;2-y",
+                "10.14264/uql.2019.161",
+                "10.1021/acs.jafc.3c06280.s001",
+                "10.1021/acs.jafc.3c06280.s002"
+            ],
+            "validated_sources": [
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "composer_status": "synthesis_completed_with_partial_conflicts",
+            "claim_count": 1,
+            "citation_count": 5,
+            "answer_prefix": "Based on validated direct scientific evidence for this question:\n1. **So, the resistance genes Lr1 to Lr3ka, Lr10 to Lr13, Lr14b to Lr17b, Lr20, Lr22b, Lr27, Lr30, Lr31, Lr33, Lr34, Lr46, Lr48, Lr49, Lr52, Lr60, Lr67 to Lr70, Lr73 to Lr75, Lr78 and Lr80 theses all resistance gene",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 4206
+        },
+        {
+            "domain": "plant_diseases_pests",
+            "domain_label": "Plant Diseases and Pests",
+            "family": "B",
+            "lang": "fr",
+            "question": "Quelles sont les causes de la rouille du blé et comment affecte-t-elle le rendement?",
+            "detected_language": "fr",
+            "question_type": "causes",
+            "scientific_sense": "disease",
+            "intent_qualifier": "effect",
+            "required_evidence_type": "causal_relationship",
+            "crop_id": "wheat",
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "gbif"
+            ],
+            "attempted": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar"
+            ],
+            "failed": [
+                "agris"
+            ],
+            "empty": [],
+            "retrieval_count": 56,
+            "result_sources": [
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "sample_ids": [
+                "https://openalex.org/W4313435592",
+                "10.3390/plants12183239",
+                "10.17513/use.37656",
+                "10.15517/am.v33i1.46141",
+                "10.3389/fpls.2023.1256770"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 17,
+            "rejected_count": 0,
+            "validated_ids": [
+                "https://openalex.org/W4313435592",
+                "10.3390/plants12162932",
+                "10.3390/plants12183239",
+                "10.1016/j.jgeb.2024.100357",
+                "10.3389/fpls.2023.1256770",
+                "10.59324/stss.2024.1(1).03",
+                "10.28983/asj.y2023i5pp16-23",
+                "10.15517/am.v33i1.46141",
+                "10.1186/s12870-024-05124-2",
+                "10.21203/rs.3.rs-2210221/v1",
+                "10.17513/use.37656",
+                "10.19080/artoaj.2018.16.555997",
+                "https://openalex.org/W2168039024",
+                "https://openalex.org/W2051121280",
+                "10.2139/ssrn.4378078",
+                "10.34101/actaagrar/41/2693",
+                "https://openalex.org/W2096144184"
+            ],
+            "validated_sources": [
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "composer_status": "synthesis_completed_with_partial_conflicts",
+            "claim_count": 1,
+            "citation_count": 4,
+            "answer_prefix": "Sur la base de preuves scientifiques directes validées pour cette question :\n1. **Extrait de la source (langue d'origine) : So, the resistance genes Lr1 to Lr3ka, Lr10 to Lr13, Lr14b to Lr17b, Lr20, Lr22b, Lr27, Lr30, Lr31, Lr33, Lr34, Lr46, Lr48, Lr49, Lr52, Lr60, Lr67 to Lr70, ",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 3483
+        },
+        {
+            "domain": "plant_diseases_pests",
+            "domain_label": "Plant Diseases and Pests",
+            "family": "B",
+            "lang": "ar",
+            "question": "ما أسباب مرض صدأ القمح وكيف يؤثر على إنتاجية المحصول؟",
+            "detected_language": "ar",
+            "question_type": "causes",
+            "scientific_sense": "disease",
+            "intent_qualifier": "general",
+            "required_evidence_type": "causal_relationship",
+            "crop_id": "wheat",
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "gbif"
+            ],
+            "attempted": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar"
+            ],
+            "failed": [
+                "agris"
+            ],
+            "empty": [
+                "fao_stat"
+            ],
+            "retrieval_count": 56,
+            "result_sources": [
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "sample_ids": [
+                "https://openalex.org/W4313435592",
+                "10.3390/plants12183239",
+                "10.17513/use.37656",
+                "10.15517/am.v33i1.46141",
+                "10.3389/fpls.2023.1256770"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 17,
+            "rejected_count": 0,
+            "validated_ids": [
+                "https://openalex.org/W4313435592",
+                "10.1016/j.jgeb.2024.100357",
+                "10.3390/plants12162932",
+                "10.3389/fpls.2023.1256770",
+                "10.3390/plants12183239",
+                "10.1186/s12870-024-05124-2",
+                "https://openalex.org/W2168039024",
+                "https://openalex.org/W2051121280",
+                "https://openalex.org/W2096144184",
+                "10.59324/stss.2024.1(1).03",
+                "10.28983/asj.y2023i5pp16-23",
+                "10.15517/am.v33i1.46141",
+                "10.21203/rs.3.rs-2210221/v1",
+                "10.17513/use.37656",
+                "10.19080/artoaj.2018.16.555997",
+                "10.2139/ssrn.4378078",
+                "10.34101/actaagrar/41/2693"
+            ],
+            "validated_sources": [
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "composer_status": "synthesis_completed_with_partial_conflicts",
+            "claim_count": 1,
+            "citation_count": 5,
+            "answer_prefix": "استنادًا إلى أدلة علمية مباشرة معتمدة لهذا السؤال:\n1. **مقتطف من المصدر (باللغة الأصلية): So, the resistance genes Lr1 to Lr3ka, Lr10 to Lr13, Lr14b to Lr17b, Lr20, Lr22b, Lr27, Lr30, Lr31, Lr33, Lr34, Lr46, Lr48, Lr49, Lr52, Lr60, Lr67 to Lr70, Lr73 to Lr75, Lr78 and Lr80 theses",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 7375
+        },
+        {
+            "domain": "plant_diseases_pests",
+            "domain_label": "Plant Diseases and Pests",
+            "family": "B",
+            "lang": "tr",
+            "question": "Buğday pas hastalığının nedenleri nelerdir ve ürün verimini nasıl etkiler?",
+            "detected_language": "tr",
+            "question_type": "causes",
+            "scientific_sense": "disease",
+            "intent_qualifier": "effect",
+            "required_evidence_type": "causal_relationship",
+            "crop_id": "wheat",
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "gbif"
+            ],
+            "attempted": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar"
+            ],
+            "failed": [
+                "agris"
+            ],
+            "empty": [],
+            "retrieval_count": 56,
+            "result_sources": [
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "sample_ids": [
+                "https://openalex.org/W4313435592",
+                "10.3390/plants12183239",
+                "10.17513/use.37656",
+                "10.15517/am.v33i1.46141",
+                "10.3389/fpls.2023.1256770"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 17,
+            "rejected_count": 0,
+            "validated_ids": [
+                "https://openalex.org/W4313435592",
+                "10.3390/plants12162932",
+                "10.3390/plants12183239",
+                "10.1016/j.jgeb.2024.100357",
+                "10.3389/fpls.2023.1256770",
+                "10.59324/stss.2024.1(1).03",
+                "10.28983/asj.y2023i5pp16-23",
+                "10.15517/am.v33i1.46141",
+                "10.1186/s12870-024-05124-2",
+                "10.21203/rs.3.rs-2210221/v1",
+                "10.17513/use.37656",
+                "10.19080/artoaj.2018.16.555997",
+                "https://openalex.org/W2168039024",
+                "https://openalex.org/W2051121280",
+                "10.2139/ssrn.4378078",
+                "10.34101/actaagrar/41/2693",
+                "https://openalex.org/W2096144184"
+            ],
+            "validated_sources": [
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "composer_status": "synthesis_completed_with_partial_conflicts",
+            "claim_count": 1,
+            "citation_count": 4,
+            "answer_prefix": "Bu soru için doğrulanmış doğrudan bilimsel kanıtlara dayanarak:\n1. **Kaynak alıntısı (özgün dil): So, the resistance genes Lr1 to Lr3ka, Lr10 to Lr13, Lr14b to Lr17b, Lr20, Lr22b, Lr27, Lr30, Lr31, Lr33, Lr34, Lr46, Lr48, Lr49, Lr52, Lr60, Lr67 to Lr70, Lr73 to Lr75, Lr78 and Lr8",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 3918
+        },
+        {
+            "domain": "biodiversity_pollinators",
+            "domain_label": "Biodiversity and Pollinators",
+            "family": "C",
+            "lang": "en",
+            "question": "What host associations are known for Nomada wild bees?",
+            "detected_language": "en",
+            "question_type": "general",
+            "scientific_sense": "general_knowledge",
+            "intent_qualifier": "general",
+            "required_evidence_type": "topic_aligned_scientific_claim",
+            "crop_id": null,
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "osmia"
+            ],
+            "attempted": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "osmia"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "osmia"
+            ],
+            "failed": [],
+            "empty": [],
+            "retrieval_count": 70,
+            "result_sources": [
+                "osmia",
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "sample_ids": [
+                "10.47446/osmia13.3",
+                "https://openalex.org/W3039700003",
+                "10.3390/microorganisms11051276",
+                "10.3390/agriculture15080847",
+                "https://openalex.org/W2909527484"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 7,
+            "rejected_count": 0,
+            "validated_ids": [
+                "10.47446/osmia13.3",
+                "10.47446/osmia8.5",
+                "10.47446/osmia10.7",
+                "10.47446/osmia9.11",
+                "10.47446/osmia10.1",
+                "10.47446/osmia2.4",
+                "10.47446/osmia4.6"
+            ],
+            "validated_sources": [
+                "osmia"
+            ],
+            "composer_status": "synthesis_completed_partial",
+            "claim_count": 1,
+            "citation_count": 7,
+            "answer_prefix": "Based on validated direct scientific evidence for this question:\n1. **In this paper, a second case of gynandromorphy is unveiled in a specimen of Nomada lathburiana found in Tournai (Belgium).**",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 6222
+        },
+        {
+            "domain": "biodiversity_pollinators",
+            "domain_label": "Biodiversity and Pollinators",
+            "family": "C",
+            "lang": "fr",
+            "question": "Quelles associations d'hôtes sont connues pour les abeilles Nomada?",
+            "detected_language": "fr",
+            "question_type": "general",
+            "scientific_sense": "general_knowledge",
+            "intent_qualifier": "general",
+            "required_evidence_type": "topic_aligned_scientific_claim",
+            "crop_id": null,
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "osmia"
+            ],
+            "attempted": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "osmia"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "osmia"
+            ],
+            "failed": [],
+            "empty": [],
+            "retrieval_count": 70,
+            "result_sources": [
+                "osmia",
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "sample_ids": [
+                "10.47446/osmia13.3",
+                "https://openalex.org/W3039700003",
+                "10.3390/microorganisms11051276",
+                "10.3390/agriculture15080847",
+                "https://openalex.org/W2909527484"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 7,
+            "rejected_count": 0,
+            "validated_ids": [
+                "10.47446/osmia13.3",
+                "10.47446/osmia8.5",
+                "10.47446/osmia10.7",
+                "10.47446/osmia9.11",
+                "10.47446/osmia10.1",
+                "10.47446/osmia2.4",
+                "10.47446/osmia4.6"
+            ],
+            "validated_sources": [
+                "osmia"
+            ],
+            "composer_status": "synthesis_completed_partial",
+            "claim_count": 1,
+            "citation_count": 7,
+            "answer_prefix": "Sur la base de preuves scientifiques directes validées pour cette question :\n1. **Extrait de la source (langue d'origine) : In this paper, a second case of gynandromorphy is unveiled in a specimen of Nomada lathburiana found in Tournai (Belgium).**",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 4752
+        },
+        {
+            "domain": "biodiversity_pollinators",
+            "domain_label": "Biodiversity and Pollinators",
+            "family": "C",
+            "lang": "ar",
+            "question": "ما ارتباطات العائل المعروفة لنحل Nomada البري؟",
+            "detected_language": "ar",
+            "question_type": "general",
+            "scientific_sense": "general_knowledge",
+            "intent_qualifier": "general",
+            "required_evidence_type": "topic_aligned_scientific_claim",
+            "crop_id": null,
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "osmia"
+            ],
+            "attempted": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "osmia"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "osmia"
+            ],
+            "failed": [
+                "agris"
+            ],
+            "empty": [],
+            "retrieval_count": 70,
+            "result_sources": [
+                "osmia",
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "sample_ids": [
+                "10.47446/osmia13.3",
+                "https://openalex.org/W3039700003",
+                "10.3390/microorganisms11051276",
+                "10.3390/agriculture15080847",
+                "https://openalex.org/W2909527484"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 7,
+            "rejected_count": 0,
+            "validated_ids": [
+                "10.47446/osmia13.3",
+                "10.47446/osmia8.5",
+                "10.47446/osmia10.7",
+                "10.47446/osmia9.11",
+                "10.47446/osmia10.1",
+                "10.47446/osmia2.4",
+                "10.47446/osmia4.6"
+            ],
+            "validated_sources": [
+                "osmia"
+            ],
+            "composer_status": "synthesis_completed_partial",
+            "claim_count": 1,
+            "citation_count": 7,
+            "answer_prefix": "استنادًا إلى أدلة علمية مباشرة معتمدة لهذا السؤال:\n1. **مقتطف من المصدر (باللغة الأصلية): In this paper, a second case of gynandromorphy is unveiled in a specimen of Nomada lathburiana found in Tournai (Belgium).**",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 4323
+        },
+        {
+            "domain": "biodiversity_pollinators",
+            "domain_label": "Biodiversity and Pollinators",
+            "family": "C",
+            "lang": "tr",
+            "question": "Nomada yabani arılarının bilinen konukçu ilişkileri nelerdir?",
+            "detected_language": "tr",
+            "question_type": "general",
+            "scientific_sense": "general_knowledge",
+            "intent_qualifier": "general",
+            "required_evidence_type": "topic_aligned_scientific_claim",
+            "crop_id": null,
+            "selected_sources": [
+                "fao_stat",
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "agris",
+                "osmia"
+            ],
+            "attempted": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "osmia"
+            ],
+            "successful": [
+                "openalex",
+                "crossref",
+                "semantic_scholar",
+                "osmia"
+            ],
+            "failed": [],
+            "empty": [],
+            "retrieval_count": 70,
+            "result_sources": [
+                "osmia",
+                "openalex",
+                "semantic_scholar",
+                "crossref"
+            ],
+            "sample_ids": [
+                "10.47446/osmia13.3",
+                "https://openalex.org/W3039700003",
+                "10.3390/microorganisms11051276",
+                "10.3390/agriculture15080847",
+                "https://openalex.org/W2909527484"
+            ],
+            "validation_status": "validation_completed",
+            "validated_count": 7,
+            "rejected_count": 0,
+            "validated_ids": [
+                "10.47446/osmia13.3",
+                "10.47446/osmia8.5",
+                "10.47446/osmia10.7",
+                "10.47446/osmia9.11",
+                "10.47446/osmia10.1",
+                "10.47446/osmia2.4",
+                "10.47446/osmia4.6"
+            ],
+            "validated_sources": [
+                "osmia"
+            ],
+            "composer_status": "synthesis_completed_partial",
+            "claim_count": 1,
+            "citation_count": 7,
+            "answer_prefix": "Bu soru için doğrulanmış doğrudan bilimsel kanıtlara dayanarak:\n1. **Kaynak alıntısı (özgün dil): In this paper, a second case of gynandromorphy is unveiled in a specimen of Nomada lathburiana found in Tournai (Belgium).**",
+            "live_answer_verified": true,
+            "verification_level": "LIVE_ANSWER_VERIFIED",
+            "cell_status": "PASS",
+            "elapsed_ms": 8297
+        }
+    ]
+}

@@ -77,6 +77,31 @@ final class OsmiaG305OnboardingTest extends TestCase
         );
     }
 
+    public function test_osmia_query_specializer_prioritizes_latin_taxon_over_discourse_binomials(): void
+    {
+        foreach ([
+            'What host associations are known for Nomada wild bees?',
+            'Quelles associations d\'hôtes sont connues pour les abeilles Nomada?',
+            'ما ارتباطات العائل المعروفة لنحل Nomada البري؟',
+            'Nomada yabani arılarının bilinen konukçu ilişkileri nelerdir?',
+        ] as $question) {
+            $queries = (new OsmiaLocalIndexQuerySpecializer())->retrievalQueries($this->plan($question));
+            $this->assertNotEmpty($queries, $question);
+            $firstTwo = array_slice($queries, 0, 2);
+            $this->assertTrue(
+                in_array('Nomada', $firstTwo, true),
+                'Nomada must occupy a first-two LocalIndex slot for: '.$question.' got '.json_encode($queries)
+            );
+            foreach ($firstTwo as $q) {
+                $this->assertDoesNotMatchRegularExpression(
+                    '/^(What|Quelles)(\s|$)/u',
+                    $q,
+                    'Discourse openers must not occupy early OSMIA slots'
+                );
+            }
+        }
+    }
+
     public function test_jsonl_fixture_ingests_and_is_searchable(): void
     {
         $seat = CurrentMembershipNearReadySeatCatalog::get('G3-05');

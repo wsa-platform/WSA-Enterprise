@@ -284,6 +284,21 @@ class ScientificEvidenceDirectnessAssessor
                 ];
             }
 
+            // Named plant-disease questions: crop + generic effect/yield is not DIRECT
+            // unless the asked disease/pathogen identity appears in the evidence.
+            if ($this->isPlantDiseaseCausalQuestion($plan)
+                && ! $this->hasAskedDiseaseAlignment($plan, $haystack)) {
+                return [
+                    'directness' => self::SUPPORTING,
+                    'score' => 13.0 + (8.0 * $factorCoverage),
+                    'reasons' => ['asked_disease_identity_not_aligned'],
+                    'factor_coverage' => round($factorCoverage, 3),
+                    'sense_coverage' => $senseCoverage,
+                    'entity_matched' => true,
+                    'topic_matched' => true,
+                ];
+            }
+
             // Land classification inventory: asked geography must appear for DIRECT.
             if ($landClassification && ! $this->landClassificationGeoSatisfied($plan, $haystack)) {
                 return [
@@ -680,6 +695,49 @@ class ScientificEvidenceDirectnessAssessor
         ) === 1;
     }
 
+    private function isPlantDiseaseCausalQuestion(KnowledgeQueryPlan $plan): bool
+    {
+        $intent = mb_strtolower(trim((string) $plan->researchIntent));
+        $sense = mb_strtolower(trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? '')));
+        if (! in_array($intent, ['disease', 'pest'], true) && $sense !== 'disease') {
+            return false;
+        }
+
+        $question = trim(implode(' ', array_filter([
+            $plan->normalizedQuery->originalQuestion,
+            $plan->normalizedQuery->normalizedQuestion,
+        ])));
+
+        return AgriculturalEntityCatalog::hasPlantDiseaseOrPathogenSignal($question)
+            || AgriculturalEntityCatalog::namedPlantDiseaseRetrievalTerms($question) !== [];
+    }
+
+    private function hasAskedDiseaseAlignment(KnowledgeQueryPlan $plan, string $haystack): bool
+    {
+        $question = trim(implode(' ', array_filter([
+            $plan->normalizedQuery->originalQuestion,
+            $plan->normalizedQuery->normalizedQuestion,
+        ])));
+        $asked = AgriculturalEntityCatalog::namedPlantDiseaseRetrievalTerms($question);
+        if ($asked === []) {
+            // Generic disease question: require some disease/pathogen cue in evidence.
+            return preg_match(
+                '/\b(?:disease|pathogen|rust|blight|mildew|wilt|fung(?:us|al)|puccinia|infection|'
+                .'rouille|maladie|hastalık|صدأ|مرض)\b/ui',
+                $haystack,
+            ) === 1;
+        }
+
+        foreach ($asked as $term) {
+            $needle = mb_strtolower(trim($term));
+            if ($needle !== '' && str_contains($haystack, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function hasRequirementAnswerability(string $haystack): bool
     {
         return preg_match(
@@ -991,8 +1049,8 @@ class ScientificEvidenceDirectnessAssessor
             .'hymenoptera|apoidea|apidae|andrenidae|megachilidae|halictidae|'
             .'host\s+associat(?:ion|ions)?|nesting\s+habitat|first\s+(?:record|mention)|'
             .'rediscover(?:y|ed)|occurrence|abeille(?:s)?(?:\s+sauvages?)?|'
-            .'yabani\s+arı|arılar(?:ın|ı)?|konak|habitat(?:ı|i)?)\b|'
-            .'نحل|ملقحات|موئل|عائل|تلقيح|حشرات\s+مفيدة/u',
+            .'yabani\s+arı\w*|arılar(?:ın|ı|ının)?|konak|konukçu|konukcu|habitat(?:ı|i)?)\b|'
+            .'نحل|ملقحات|موئل|عائل|تلقيح|حشرات\s+مفيدة/ui',
             $question
         ) === 1;
 

@@ -67,7 +67,7 @@ final class ScientificEvidenceRelevanceLatinTaxonContractTest extends TestCase
             'en' => 'What is known about Andrena wild bee host associations and habitat?',
             'fr' => 'Quelles données sur les abeilles sauvages Andrena et leur habitat?',
             'ar' => 'ما المعروف عن ارتباطات العائل والموئل لنحل Andrena البري؟',
-            'tr' => 'Andrena yabani arılarının konak ilişkileri ve habitatı hakkında ne bilinmektedir?',
+            'tr' => 'Andrena yabani arılarının konukçu ilişkileri ve habitatı hakkında ne bilinmektedir?',
         ] as $lang => $question) {
             $plan = $this->plan($question, $lang);
             $assessment = $directness->assess($plan, $title, $abstract, '10.1000/andrena.test', null, 'openalex');

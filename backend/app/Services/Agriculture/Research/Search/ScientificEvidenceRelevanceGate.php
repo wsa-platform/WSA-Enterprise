@@ -527,13 +527,44 @@ class ScientificEvidenceRelevanceGate
         }
         $out = [];
         foreach ($captures as $capture) {
-            $binomial = trim(($capture[1] ?? '').' '.($capture[2] ?? ''));
-            if ($binomial !== '' && ! in_array($binomial, $out, true)) {
+            $genus = trim((string) ($capture[1] ?? ''));
+            $epithet = trim((string) ($capture[2] ?? ''));
+            if ($genus === '' || $this->isNonTaxonCapitalizedToken($genus)) {
+                continue;
+            }
+            // Reject English/French discourse pairs mistaken for binomials
+            // ("What host", "Nomada wild", "Quelles associations").
+            if ($this->isNonTaxonomicBinomialEpithet($epithet)) {
+                continue;
+            }
+            $binomial = $genus.' '.$epithet;
+            if (! in_array($binomial, $out, true)) {
                 $out[] = $binomial;
             }
         }
 
         return $out;
+    }
+
+    private function isNonTaxonomicBinomialEpithet(string $epithet): bool
+    {
+        $epithet = mb_strtolower(trim($epithet));
+        if ($epithet === '') {
+            return true;
+        }
+
+        static $junk = null;
+        if ($junk === null) {
+            $junk = array_fill_keys([
+                'host', 'hosts', 'wild', 'bee', 'bees', 'associations', 'association',
+                'habitat', 'habitats', 'causes', 'cause', 'disease', 'diseases',
+                'sont', 'est', 'des', 'les', 'une', 'aux', 'pour', 'dans', 'sur',
+                'about', 'known', 'from', 'with', 'under', 'over', 'into', 'data',
+                'yabani', 'arı', 'arilar', 'arılar', 'konukçu', 'konukcu', 'konak',
+            ], true);
+        }
+
+        return isset($junk[$epithet]);
     }
 
     /**

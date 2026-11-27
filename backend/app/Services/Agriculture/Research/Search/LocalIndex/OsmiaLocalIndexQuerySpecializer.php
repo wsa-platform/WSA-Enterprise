@@ -26,47 +26,70 @@ final class OsmiaLocalIndexQuerySpecializer
         $normalized = (string) $plan->normalizedQuery->normalizedQuestion;
         $hay = trim($original.' '.$normalized);
 
-        $queries = [];
+        // Prefer Latin taxa / bee-scope tokens first. Orchestrator tries only
+        // MAX_VARIANTS_PER_PROVIDER (=2) queries — discourse false-binomials
+        // ("What host", "Quelles associations") must not occupy those slots.
+        $priority = [];
+        $secondary = [];
+
+        $scientific = trim((string) ($plan->normalizedQuery->scientificName ?? ''));
+        if ($scientific !== '') {
+            $priority[] = $scientific;
+            $genus = trim(explode(' ', $scientific)[0] ?? '');
+            if ($genus !== '' && strcasecmp($genus, $scientific) !== 0) {
+                $priority[] = $genus;
+            }
+        }
+
+        foreach ($this->bareLatinGenera($original) as $genus) {
+            $priority[] = $genus;
+        }
+
         foreach ($this->binomials($hay) as $binomial) {
-            $queries[] = $binomial;
             $genus = trim(explode(' ', $binomial)[0] ?? '');
-            if ($genus !== '') {
-                $queries[] = $genus;
+            if ($genus !== '' && ! $this->isDiscourseCapitalizedToken($genus)) {
+                $priority[] = $genus;
+                if (! $this->isJunkBinomialEpithet(trim(explode(' ', $binomial)[1] ?? ''))) {
+                    $secondary[] = $binomial;
+                }
             }
         }
 
         foreach ($this->familyOrHigherTaxa($hay) as $taxon) {
-            $queries[] = $taxon;
+            $priority[] = $taxon;
             if ($this->hasBeeScope($hay)) {
-                $queries[] = $taxon.' bee';
-                $queries[] = 'classification '.$taxon;
+                $secondary[] = $taxon.' bee';
+                $secondary[] = 'classification '.$taxon;
             }
         }
 
         if ($this->hasBeeScope($hay)) {
             if ($this->isTaxonomyQuestion($plan, $hay)) {
-                $queries[] = 'classification abeilles';
-                $queries[] = 'classification bees';
-                $queries[] = 'classification taxonomique abeilles';
-                $queries[] = 'Melittidae Apis mellifera';
-                $queries[] = 'abeille Melittidae';
-                $queries[] = 'abeilles Melittidae';
+                $secondary[] = 'classification abeilles';
+                $secondary[] = 'classification bees';
+                $secondary[] = 'classification taxonomique abeilles';
+                $priority[] = 'Melittidae';
+                $secondary[] = 'Melittidae Apis mellifera';
+                $secondary[] = 'abeille Melittidae';
+                $secondary[] = 'abeilles Melittidae';
             }
-            $queries[] = 'Nomada';
-            $queries[] = 'abeille';
-            $queries[] = 'abeilles';
-            $queries[] = 'bee pollinator';
-        }
-
-        $scientific = trim((string) ($plan->normalizedQuery->scientificName ?? ''));
-        if ($scientific !== '') {
-            array_unshift($queries, $scientific);
+            // Keep Nomada as a known hymenoptera host-association corpus anchor when
+            // the question already has bee/pollinator scope (not a hardcoded answer).
+            if (preg_match('/\bnomada\b/ui', $hay) === 1) {
+                $priority[] = 'Nomada';
+            }
+            $secondary[] = 'abeille';
+            $secondary[] = 'abeilles';
+            $secondary[] = 'bee pollinator';
         }
 
         $out = [];
-        foreach ($queries as $q) {
+        foreach ([...$priority, ...$secondary] as $q) {
             $q = trim(preg_replace('/\s+/u', ' ', $q) ?? $q);
-            if ($q !== '' && ! in_array($q, $out, true)) {
+            if ($q === '' || $this->isDiscourseCapitalizedToken($q)) {
+                continue;
+            }
+            if (! in_array($q, $out, true)) {
                 $out[] = $q;
             }
         }
@@ -96,6 +119,28 @@ final class OsmiaLocalIndexQuerySpecializer
     /**
      * @return list<string>
      */
+    private function bareLatinGenera(string $text): array
+    {
+        if (preg_match_all('/\b([A-Z][a-z]{3,})\b/u', $text, $captures) === 0) {
+            return [];
+        }
+        $out = [];
+        foreach ($captures[1] as $token) {
+            $token = trim((string) $token);
+            if ($token === '' || $this->isDiscourseCapitalizedToken($token)) {
+                continue;
+            }
+            if (! in_array($token, $out, true)) {
+                $out[] = $token;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return list<string>
+     */
     private function binomials(string $text): array
     {
         if (preg_match_all('/\b([A-Z][a-z]{2,})\s+([a-z]{3,})\b/u', $text, $captures, PREG_SET_ORDER) === 0) {
@@ -103,13 +148,67 @@ final class OsmiaLocalIndexQuerySpecializer
         }
         $out = [];
         foreach ($captures as $capture) {
-            $binomial = trim(($capture[1] ?? '').' '.($capture[2] ?? ''));
-            if ($binomial !== '' && ! in_array($binomial, $out, true)) {
+            $genus = trim((string) ($capture[1] ?? ''));
+            $epithet = trim((string) ($capture[2] ?? ''));
+            if ($genus === '' || $this->isDiscourseCapitalizedToken($genus) || $this->isJunkBinomialEpithet($epithet)) {
+                continue;
+            }
+            $binomial = $genus.' '.$epithet;
+            if (! in_array($binomial, $out, true)) {
                 $out[] = $binomial;
             }
         }
 
         return $out;
+    }
+
+    private function isDiscourseCapitalizedToken(string $token): bool
+    {
+        static $stop = null;
+        if ($stop === null) {
+            $stop = array_fill_keys([
+                'What', 'Which', 'When', 'Where', 'Why', 'How', 'Who', 'Whom',
+                'The', 'This', 'That', 'These', 'Those', 'There', 'Their', 'Then',
+                'Based', 'According', 'Recent', 'First', 'After', 'Before', 'During',
+                'About', 'Under', 'Over', 'With', 'From', 'Into', 'Only', 'Also',
+                'Some', 'Many', 'Most', 'More', 'Less', 'Such', 'Each', 'Both',
+                'Does', 'Did', 'Have', 'Has', 'Had', 'Will', 'Would', 'Could', 'Should',
+                'Can', 'May', 'Might', 'Must', 'Need', 'Known', 'Effect', 'Effects',
+                'Impact', 'Impacts', 'Role', 'Roles', 'Type', 'Types', 'Level', 'Levels',
+                'Quelles', 'Quelle', 'Quels', 'Quel', 'Comment', 'Pourquoi', 'Quand',
+                'Dans', 'Pour', 'Sur', 'Avec', 'Sans', 'Chez', 'Entre', 'Après', 'Avant',
+                'Selon', 'Parmi', 'Ainsi', 'Aussi', 'Donc', 'Mais', 'Puis', 'Lors',
+                'Une', 'Des', 'Les', 'Ces', 'Cet', 'Cette', 'Ceux', 'Celles',
+                'Données', 'Donnee', 'Etude', 'Étude', 'Analyse', 'Présence', 'Presence',
+                'Nedir', 'Nasıl', 'Hangi', 'Neden', 'Ne', 'Bir', 'Bu', 'Şu', 'Su',
+                'Için', 'İçin', 'Göre', 'Kadar', 'Daha', 'En', 'Ve', 'Ile', 'İle',
+                'Hakkında', 'Olarak', 'Arasında', 'Üzerinde', 'Uzerinde',
+                'Europe', 'France', 'Spain', 'Italy', 'Africa', 'Asia', 'America',
+            ], true);
+        }
+
+        return isset($stop[$token]);
+    }
+
+    private function isJunkBinomialEpithet(string $epithet): bool
+    {
+        $epithet = mb_strtolower(trim($epithet));
+        if ($epithet === '') {
+            return true;
+        }
+
+        static $junk = null;
+        if ($junk === null) {
+            $junk = array_fill_keys([
+                'host', 'hosts', 'wild', 'bee', 'bees', 'associations', 'association',
+                'habitat', 'habitats', 'causes', 'cause', 'disease', 'diseases',
+                'sont', 'est', 'des', 'les', 'une', 'aux', 'pour', 'dans',
+                'about', 'known', 'from', 'with', 'under', 'over', 'into',
+                'yabani', 'arı', 'arilar', 'arılar', 'konukçu', 'konukcu', 'konak',
+            ], true);
+        }
+
+        return isset($junk[$epithet]);
     }
 
     /**

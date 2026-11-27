@@ -41,11 +41,12 @@ class ScientificSearchQueryBuilder
      */
     public function buildVariantsFromPlan(KnowledgeQueryPlan $plan): array
     {
-        if ($plan->normalizedQuery->canonicalQuestion !== null) {
-            return $this->buildVariantsFromCanonicalSpecification($plan);
-        }
+        $variants = $plan->normalizedQuery->canonicalQuestion !== null
+            ? $this->buildVariantsFromCanonicalSpecification($plan)
+            : $this->buildLegacyVariantsFromPlan($plan);
 
-        return $this->buildLegacyVariantsFromPlan($plan);
+        // Shared across CSQ + legacy: named disease identity must lead Stage-3 variants.
+        return $this->prependNamedDiseaseIdentityVariants($plan, $variants);
     }
 
     /**
@@ -1557,6 +1558,54 @@ class ScientificSearchQueryBuilder
         }
 
         return $unique;
+    }
+
+    /**
+     * Prefixed named-disease retrieval terms (rust/rouille/صدأ/pas → rust/Puccinia)
+     * so CSQ and legacy paths both preserve disease identity under MAX_VARIANTS.
+     *
+     * @param  list<string>  $variants
+     * @return list<string>
+     */
+    private function prependNamedDiseaseIdentityVariants(KnowledgeQueryPlan $plan, array $variants): array
+    {
+        $sense = trim((string) ($plan->normalizedQuery->constraints['scientific_sense'] ?? ''));
+        $intent = mb_strtolower(trim((string) $plan->researchIntent));
+        if ($sense !== 'disease' && ! in_array($intent, ['disease', 'pest'], true)) {
+            return $variants;
+        }
+
+        $query = $plan->normalizedQuery;
+        $diseaseTerms = AgriculturalEntityCatalog::namedPlantDiseaseRetrievalTerms(
+            trim($query->originalQuestion.' '.$query->normalizedQuestion)
+        );
+        if ($diseaseTerms === []) {
+            return $variants;
+        }
+
+        $entity = $this->resolveEntityTerm($plan);
+        if ($entity === null && $plan->normalizedQuery->canonicalQuestion !== null) {
+            $spec = RetrievalSpecification::fromCanonical($plan->normalizedQuery->canonicalQuestion);
+            $entity = $this->specExecutableEntityTerm($spec);
+        }
+        if ($entity === null) {
+            return $variants;
+        }
+
+        $primaryCommon = $this->resolveCommonEntityLabels($plan)[0] ?? null;
+        $diseaseVariants = [];
+        foreach ($diseaseTerms as $diseaseTerm) {
+            $diseaseVariants[] = $this->joinTerms([$entity, $diseaseTerm]);
+            $diseaseVariants[] = $this->joinTerms([$entity, $diseaseTerm, 'yield']);
+            if ($primaryCommon !== null && strcasecmp($primaryCommon, $entity) !== 0) {
+                $diseaseVariants[] = $this->joinTerms([$primaryCommon, $diseaseTerm, 'disease']);
+            }
+        }
+
+        $merged = [...$diseaseVariants, ...$variants];
+        $location = $this->resolveAskedLocation($plan);
+
+        return $this->uniqueBoundedVariantsPreservingLocation($merged, $location);
     }
 
     private function resolveCanonicalGeographyLabel(CanonicalScientificQuestion $csq): ?string

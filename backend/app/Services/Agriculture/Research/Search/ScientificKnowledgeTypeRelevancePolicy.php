@@ -248,8 +248,9 @@ final class ScientificKnowledgeTypeRelevancePolicy
             '/\b(?:wild\s+bees?|solitary\s+bees?|honey\s*bees?|bumblebees?|pollinators?|pollination|'
             .'hymenoptera|nomada|osmia|megachile|andrena|halictus|lasioglossum|'
             .'host\s+associat(?:ion|ions)?|nesting\s+habitat|first\s+(?:record|mention)|'
-            .'rediscover(?:y|ed)|occurrence|abeille(?:s)?\s+sauvages?)\b|'
-            .'نحل|ملقحات|تعايش العائل/u',
+            .'rediscover(?:y|ed)|occurrence|abeille(?:s)?(?:\s+sauvages?)?|'
+            .'yabani\s+arı\w*|konukçu|konukcu|konak)\b|'
+            .'نحل|ملقحات|عائل|تعايش العائل/ui',
             $question
         ) === 1;
     }

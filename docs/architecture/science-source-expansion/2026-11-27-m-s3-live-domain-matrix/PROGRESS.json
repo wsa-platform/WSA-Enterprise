@@ -1,0 +1,45 @@
+{
+  "mission_id": "M-S3-LIVE-DOMAIN-MATRIX-AR-EN-FR-TR",
+  "current_stage": "complete_verified",
+  "completed_stages": [
+    "preflight_git",
+    "preflight_sources",
+    "baseline_tests",
+    "live_matrix_initial",
+    "root_cause_repairs",
+    "live_matrix_verified_3x4",
+    "regression_tests",
+    "arabic_report"
+  ],
+  "starting_head": "3f63b28b70999c5cc46adf18ebd3695e3243e8f3",
+  "baseline": "BASELINE_READY_WITH_LIMITATIONS",
+  "final_classification": "COMPLETE_VERIFIED",
+  "minimum_three_domains_x4": true,
+  "domains_pass_all_four": [
+    "water_irrigation",
+    "plant_diseases_pests",
+    "biodiversity_pollinators"
+  ],
+  "source_coverage": {
+    "localindex": "osmia LIVE_ANSWER_VERIFIED (biodiversity)",
+    "rest_api": "openalex + crossref (+ semantic_scholar) LIVE_ANSWER_VERIFIED",
+    "partial": ["agris gen=0", "organic_eprints unavailable", "dr_duke unavailable"]
+  },
+  "modified_files": [
+    "backend/app/Services/Agriculture/Research/AgriculturalEntityCatalog.php",
+    "backend/app/Services/Agriculture/Research/Search/LocalIndex/OsmiaLocalIndexQuerySpecializer.php",
+    "backend/app/Services/Agriculture/Research/Search/ScientificEvidenceDirectnessAssessor.php",
+    "backend/app/Services/Agriculture/Research/Search/ScientificEvidenceRelevanceGate.php",
+    "backend/app/Services/Agriculture/Research/Search/ScientificKnowledgeTypeRelevancePolicy.php",
+    "backend/app/Services/Agriculture/Research/Search/ScientificSearchQueryBuilder.php",
+    "backend/tests/Unit/Agriculture/Research/NamedPlantDiseaseRetrievalTermsTest.php",
+    "backend/tests/Unit/Agriculture/Research/Search/OsmiaG305OnboardingTest.php",
+    "backend/tests/Unit/Agriculture/Research/Search/ScientificEvidenceRelevanceLatinTaxonContractTest.php"
+  ],
+  "tests_executed": [
+    "php artisan test --filter=NamedPlantDiseaseRetrievalTermsTest|OsmiaG305OnboardingTest|ScientificEvidenceRelevanceLatinTaxonContractTest|ScientificKnowledgeTypeRelevancePolicyTest|ScientificEvidenceDirectnessAssessorTest → 21 passed",
+    "php e2e-tmp/_ms3_live_domain_matrix.php → minimum_three_domains_x4=true"
+  ],
+  "open_defects": [],
+  "next_action": "Commit/push mission-eligible files only; do not start another mission"
+}

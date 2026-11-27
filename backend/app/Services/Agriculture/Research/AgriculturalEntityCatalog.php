@@ -1190,6 +1190,11 @@ final class AgriculturalEntityCatalog
             'drying_processing' => ['drying', 'dehydration'],
             'storage' => ['storage', 'postharvest'],
             'plant_nutrition' => ['plant nutrition', 'nutrient deficiency'],
+            'disease' => [
+                'plant disease', 'disease', 'pathogen', 'rust', 'blight', 'mildew', 'wilt',
+                'fungal', 'infection', 'puccinia',
+            ],
+            'pest' => ['pest', 'pest management', 'insect'],
             'agricultural_economics' => ['agricultural economics', 'farm profitability'],
             'agricultural_extension' => ['agricultural extension', 'farmer adoption'],
             'agricultural_industry' => ['processing', 'value chain'],
@@ -1292,7 +1297,10 @@ final class AgriculturalEntityCatalog
                 'agricultural land types', 'soil types', 'soil taxonomy',
             ],
             'plant_nutrition' => ['plant nutrition', 'nutrient deficiency', 'agriculture'],
-            'disease' => ['plant disease', 'pathogen', 'agriculture'],
+            'disease' => [
+                'plant disease', 'disease', 'pathogen', 'rust', 'blight', 'mildew', 'wilt',
+                'fungal', 'infection', 'Puccinia', 'agriculture',
+            ],
             'pest' => ['pest management', 'agriculture'],
             'productivity' => ['yield', 'productivity', 'agriculture'],
             'varieties' => ['cultivar', 'variety', 'agriculture'],
@@ -2934,6 +2942,59 @@ final class AgriculturalEntityCatalog
         }
 
         return false;
+    }
+
+    /**
+     * Named plant-disease cues from multilingual question text → English scholarly retrieval terms.
+     *
+     * Preserves the asked disease identity (e.g. rust / rouille / صدأ / pas) so Stage-3
+     * variants do not collapse to generic "plant disease" and retrieve unrelated pathogens.
+     *
+     * @return list<string>
+     */
+    public static function namedPlantDiseaseRetrievalTerms(string $haystack): array
+    {
+        $hay = mb_strtolower(trim($haystack));
+        if ($hay === '') {
+            return [];
+        }
+
+        $terms = [];
+
+        // Wheat / cereal rust family (EN/FR/AR/TR + Latin genus).
+        $rustAsked = self::matchesSemanticToken($hay, 'rust')
+            || self::matchesSemanticToken($hay, 'rouille')
+            || self::containsTerm($hay, 'صدأ')
+            || self::containsTerm($hay, 'الصدأ')
+            || self::matchesSemanticToken($hay, 'puccinia')
+            || preg_match('/\bpas\s+hastal/u', $hay) === 1
+            || preg_match('/\bbuğday\s+pas\b/u', $hay) === 1
+            || preg_match('/\bpas\s+hastal[ıi]ğ/u', $hay) === 1;
+        if ($rustAsked) {
+            $terms[] = 'rust';
+            $terms[] = 'Puccinia';
+        }
+
+        if (self::matchesSemanticToken($hay, 'blight')
+            || self::matchesSemanticToken($hay, 'brûlure')
+            || self::containsTerm($hay, 'لفحة')) {
+            $terms[] = 'blight';
+        }
+
+        if (self::matchesSemanticToken($hay, 'mildew')
+            || self::matchesSemanticToken($hay, 'oïdium')
+            || self::matchesSemanticToken($hay, 'oidium')
+            || self::containsTerm($hay, 'بياض')) {
+            $terms[] = 'mildew';
+        }
+
+        if (self::matchesSemanticToken($hay, 'wilt')
+            || self::matchesSemanticToken($hay, 'flétrissement')
+            || self::containsTerm($hay, 'ذبول')) {
+            $terms[] = 'wilt';
+        }
+
+        return array_values(array_unique($terms));
     }
 
     /**
